@@ -90,17 +90,21 @@ To enable HTTPS, follow the steps below:
 
 1. Set the `ENABLE_SECURITY` parameter to `true` as explained in the [Instructions](#instructions) section.
 1. Copy the file `config/nginx/multiomics_intermediate_safe_dist.conf` and paste it into `config/nginx/conf.d/` with the name `multiomics_intermediate.conf`.
-1. Get the `.pem` files for both the certificate and the private key and put them in the `config/nginx/certificates` folder.
-1. Edit the `multiomics_intermediate.conf` file that we pasted in point 2. Uncomment the lines where both `.pem` files must be specified.
-1. Edit the `docker-compose.yml` file so that the `nginx` service exposes both port 8000 and 443. It should look something like this:
+1. Get the `.crt` and `.pem` files for both the certificate and the private key and put them in the `config/nginx/certificates` folder.
+1. Edit the `multiomics_intermediate.conf` file that we pasted in point 2. Uncomment the lines where both `.crt` and `.pem` files must be specified.
+1. Edit the `docker-compose.yml` file so that the `nginx` service exposes both port 8000 and 443. Also you need to add `certificates` folder to `volumes` section. It should look something like this:
 
 ```yaml
 ...
 nginx:
-   image: nginx:1.19.3
-   ports:
-      - 80:8000
-      - 443:443
+    image: nginx:1.19.3
+    ports:
+        - 80:8000
+        - 443:443
+    # ...
+    volumes:
+        ...
+        - ./config/nginx/certificates:/etc/nginx/certificates
 ...
 ```
 
