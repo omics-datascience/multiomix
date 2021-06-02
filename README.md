@@ -45,3 +45,10 @@ This document is focused on the **development** of the system. If you are lookin
 ### Linter
 
 [ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools.
+
+
+## License
+
+Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
+
+[ggca]: https://pypi.org/project/ggca/
