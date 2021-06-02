@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+    # PostgreSQL
+    db:
+        image: postgres:13
+        container_name: multiomics_dev_db
+        restart: always
+        ports:
+            - 5432:5432
+        command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: example
+            POSTGRES_DB: multiomics
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/
+            - ./config/postgres/postgres.conf:/etc/postgresql/postgresql.conf
+
+    # MongoDB Server
+    mongo:
+        image: mongo:4.2
+        container_name: multiomics_dev_mongo_db
+        restart: always
+        ports:
+            - 27017:27017
+        # Sets the config file
+        command: --config /etc/mongo/mongod.conf
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+        volumes:
+            - mongo_data:/data/db
+            - mongo_data:/data/configdb
+            - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
+
+    # Redis Server for Websocket connections
+    redis:
+        image: redis:6.0.8
+        container_name: multiomics_dev_websocket_channel_redis
+        restart: always
+        ports:
+            - 6379:6379
+
+    # Web-based DB admin interface for PostgreSQL management
+    adminer:
+        image: adminer
+        container_name: multiomics_dev_adminer
+        restart: always
+        ports:
+            - 8080:8080
+
+
+    # Web-based MongoDB admin interface, written with Node.js and express 
+    mongo-express:
+        image: mongo-express
+        container_name: multiomics_dev_mongo_express
+        restart: always
+        ports:
+            - 8081:8081
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: root
+            ME_CONFIG_MONGODB_ADMINPASSWORD: example
+
+volumes:
+    mongo_data:
+        external:
+            name: 'multiomics_intermediate_mongo_data'
+    mongo_config:
+        external:
+            name: 'multiomics_intermediate_mongo_config'
+    postgres_data:
+        external:
+            name: 'multiomics_intermediate_postgres_data'

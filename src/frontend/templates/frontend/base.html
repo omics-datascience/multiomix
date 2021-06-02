@@ -1,0 +1,51 @@
+{% load static %}
+{% load render_bundle from webpack_loader %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
+        <title>Multiomix {% block title %}{% endblock %}</title>
+
+        {# Favicon #}
+        <link rel="shortcut icon" href="{% static "frontend/img/favicon.ico" %}" type="image/x-icon">
+        <link rel="icon" href="{% static "frontend/img/favicon.ico" %}" type="image/x-icon">
+        
+        {# General CSS #}
+        {% render_bundle 'base' 'css' %}
+
+        {# Custom page CSS #}
+        {% block css %}{% endblock %}
+    </head>
+    <body>
+        {# Custom page content #}
+        {% block content %}{% endblock %}
+        
+        {# General JS #}
+        <script>
+            const multiomixVersion = "{{ VERSION }}"
+            const CSRFToken = "{{ csrf_token }}"
+            const usingHTTPS = "{{ ENABLE_SECURITY }}" == "True"
+            const urlIndex = "{% url 'index' %}"
+            const urlPipeline = "{% url 'gem' %}"
+            const urlDatasets = "{% url 'datasets' %}"
+            const urlInstitutions = "{% url 'institutions' %}"
+            const urlUserInstitutions = "{% url 'user_institutions' %}"
+            const urlLogin = "{% url 'login' %}"
+            const urlLogout = "{% url 'logout' %}"
+            const urlTagsCRUD = "{% url 'tags' %}" {# REST CRUD URL User Tags #}
+            const urlAllUserFiles = "{% url 'all_user_files' %}" {# REST URL to get <all></all> User Files #}
+            const urlUserFilesCRUD = "{% url 'user_files' %}" {# REST CRUD URL User Files #}
+            const urlCGDSStudiesCRUD = "{% url 'cgds_studies' %}" {# URL CGDS Studies #}
+            const urlCurrentUser = "{% url 'current_user' %}" {# URL to get the current logged user #}
+            const urlCGDSPanel = "{% url 'cgds_panel' %}" {# URL to the CGDS Panel #}
+            const urlSurvival = "{% url 'survival' %}" {# URL to the Survival Analysis Panel #}
+            const urlAboutUs = "{% url 'about_us' %}" {# URL to About us page #}
+        </script>
+
+        {% render_bundle 'base' 'js' %}
+
+        {# Custom page JS #}
+        {% block js %}{% endblock %}
+    </body>
+</html>

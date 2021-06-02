@@ -1,0 +1,13 @@
+*.pyc
+.idea
+.vscode
+src/frontend/static/frontend/node_modules
+src/frontend/static/frontend/dist
+src/venv
+src/static
+src/media
+.mypy_cache
+src/db.sqlite3
+src/api_service/experiments/venv
+docker-compose.yml
+src/secretkey.txt

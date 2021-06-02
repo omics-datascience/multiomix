@@ -1,0 +1,22 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block css %}
+    {% render_bundle 'login' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="login-form"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+                const loginError = "{{ loginError }}"
+                const loginWarning = "{{ loginWarning }}"
+                const loginSuccess = "{{ loginSuccess }}"
+                const urlAuthenticate = "{% url 'authentication' %}"
+                const urlCreateUser = "{% url 'create_user' %}"
+        </script>
+        {% render_bundle 'login' 'js' %}
+{% endblock %}

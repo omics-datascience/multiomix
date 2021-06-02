@@ -1,0 +1,22 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| My Institutions{% endblock %}
+
+{% block css %}
+        {% render_bundle 'institutions' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="institutions-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+            const urlUserInstitutionsAsAdmin = "{% url 'user_institutions_as_admin' %}"
+            const urlGetUsersCandidates = "{% url 'user_candidates' %}"
+            const urlAddRemoveUserToInstitution = "{% url 'add_remove_user_to_institution' %}"
+        </script>
+        {% render_bundle 'institutions' 'js' %}
+{% endblock %}

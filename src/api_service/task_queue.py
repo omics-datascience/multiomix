@@ -1,0 +1,132 @@
+import time
+from .models import Experiment
+from .models_choices import ExperimentState
+from concurrent.futures import ThreadPoolExecutor
+from .pipelines import global_pipeline_manager
+from .exceptions import ExperimentFailed, NoSamplesInCommon
+from pymongo.errors import ServerSelectionTimeoutError
+import logging
+from django.db.models import Q, QuerySet
+from django.conf import settings
+from django.db import connection
+from .utils import close_db_connection
+
+
+class TaskQueue(object):
+    """
+    Process experiments in a Thread Pool as explained at https://docs.python.org/3.7/library/concurrent.futures.html
+    """
+    executor: ThreadPoolExecutor = None
+    use_transaction: bool
+
+    def __init__(self):
+        # Instantiates the executor
+        # IMPORTANT: ProcessPoolExecutor doesn't work well with Channels. It wasn't sending
+        # websockets messages by some weird reason that I couldn't figure out. Let's use Threads instead of
+        # processes
+        self.executor = ThreadPoolExecutor(max_workers=settings.THREAD_POOL_SIZE)
+        self.use_transaction = settings.USE_TRANSACTION_IN_EXPERIMENT
+
+    def __commit_or_rollback(self, is_commit: bool, experiment: Experiment):
+        """
+        Executes a COMMIT or ROLLBACK sentence in DB
+        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
+        """
+        if self.use_transaction:
+            query = "COMMIT" if is_commit else "ROLLBACK"
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+        elif not is_commit:
+            # Simulates a rollback removing all associated combinations
+            logging.warning(f'Rolling back {experiment.pk} manually')
+            start = time.time()
+            experiment.combinations.delete()
+            logging.warning(f'Tiempo de rollback manual de {experiment.pk} -> {time.time() - start} segundos')
+
+    def eval_mrna_gem_experiment(self, experiment: Experiment) -> None:
+        """
+        Computes a mRNA x miRNA/CNA/Methylation experiment
+        """
+        experiment.state = ExperimentState.IN_PROCESS
+        experiment.save()
+
+        # Computes the experiment
+        try:
+            logging.warning(f'ID EXPERIMENTO -> {experiment.pk}')
+            # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
+            # with exceptions thrown in subprocesses
+            if self.use_transaction:
+                with connection.cursor() as cursor:
+                    cursor.execute("BEGIN")
+
+            # Computes pearson
+            start = time.time()
+            total_row_count, final_row_count, evaluated_combinations = global_pipeline_manager.compute_experiment(
+                experiment
+            )
+            logging.warning(f'Tiempo total de experimento {experiment.pk} -> {time.time() - start} segundos')
+
+            self.__commit_or_rollback(is_commit=True, experiment=experiment)
+
+            # Saves some data about the result of the experiment
+            experiment.evaluated_row_count = evaluated_combinations
+            experiment.result_total_row_count = total_row_count
+            experiment.result_final_row_count = final_row_count
+            experiment.state = ExperimentState.COMPLETED
+        except NoSamplesInCommon:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error('No samples in common')
+            experiment.state = ExperimentState.NO_SAMPLES_IN_COMMON
+        except ExperimentFailed:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error(f'Experiment {experiment.pk} has failed. Check logs for more info')
+            experiment.state = ExperimentState.FINISHED_WITH_ERROR
+        except ServerSelectionTimeoutError:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error('MongoDB connection timeout!')
+            experiment.state = ExperimentState.WAITING_FOR_QUEUE
+        except Exception as e:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.exception(e)
+            logging.warning(f'Setting ExperimentState.FINISHED_WITH_ERROR to {experiment.pk}')
+            experiment.state = ExperimentState.FINISHED_WITH_ERROR
+
+        # Saves changes in DB
+        experiment.save()
+
+        close_db_connection()
+
+    def add_experiment(self, experiment: Experiment):
+        """
+        Adds an experiment to the ThreadPool to be processed
+        @param experiment: Experiment to be processed
+        """
+        self.executor.submit(self.eval_mrna_gem_experiment, experiment)
+
+
+global_task_queue = TaskQueue()
+
+
+def compute_pending_experiments():
+    """"
+    Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
+    if the TaskQueue is being created It couldn't be processing experiments. Some experiments
+    could be in that state due to unexpected errors in server
+    """
+    logging.info('Checking pending experiments')
+    experiments: QuerySet = Experiment.objects.filter(
+        Q(state=ExperimentState.WAITING_FOR_QUEUE)
+        | Q(state=ExperimentState.IN_PROCESS)
+    ).order_by('submit_date')
+    logging.info(f'{experiments.count()} pending experiments are being sent for processing')
+    for experiment in experiments:
+        global_task_queue.add_experiment(experiment)
+
+    close_db_connection()
+
+
+# Gets the pending experiments
+# if settings.COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP:
+    # MUST be in an thread as it could block the main thread preventing the server to start
+    # FIXME: this is blocking the main thread
+    # threading.Thread(target=compute_pending_experiments).start()

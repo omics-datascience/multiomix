@@ -1,0 +1,174 @@
+.margin-left-1 {
+    margin-left: 1% !important;
+}
+
+.margin-left-2 {
+    margin-left: 2% !important;
+}
+
+.margin-left-5 {
+    margin-left: 5% !important;
+}
+
+.margin-left-30 {
+    margin-left: 30% !important;
+}
+
+.margin-top-2 {
+    margin-top: 2% !important;
+}
+
+.margin-top-5 {
+    margin-top: 5% !important;
+}
+
+.margin-top-10 {
+    margin-top: 10% !important;
+}
+
+.margin-bottom-2 {
+    margin-bottom: 2% !important;
+}
+
+.margin-bottom-5 {
+    margin-bottom: 5% !important;
+}
+
+.no-margin-left {
+    margin-left: 0 !important;
+}
+
+.no-margin-right {
+    margin-right: 0 !important;
+}
+
+.pull-left {
+    float: left;
+}
+
+.pull-right {
+    float: right;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.align-center {
+    text-align: center !important;
+}
+
+.align-left {
+    text-align: left !important;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* Removes box shadow to buttons inside a 'divided' Grid */
+.no-box-shadow, .ui.basic.button.borderless-button.no-box-shadow, .ui.basic.button.borderless-button.no-box-shadow:hover, .ui.basic.button.borderless-button.no-box-shadow:visited, .ui.basic.button.borderless-button.no-box-shadow:focus {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+/* The 'div.ellipsis > button' part is to cover Form.Button components
+where the class 'ellipsis' is added to the parent div and not to the button */
+.ellipsis, div.ellipsis > button {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.padded-left-10 {
+    padding-left: 10% !important;
+}
+
+.padded-right-10 {
+    padding-right: 10% !important;
+}
+
+.box-shadow:hover {
+    box-shadow: 0 2px 8px #bbb !important;
+}
+
+/* Fix modals floating to the left of the screen */
+.ui.fullscreen.modal.transition.visible.active {
+    right: 0;
+}
+
+/* Removes the border that adds Semantic UI to the buttons */
+.ui.basic.button.borderless-button,
+.ui.basic.button.borderless-button:hover,
+.ui.basic.button.borderless-button:visited,
+.ui.basic.button.borderless-button:focus {
+    box-shadow: inherit !important;
+}
+
+.ui.inverted.menu {
+    border-radius: 0 !important;
+}
+
+.full-height {
+    height: 100% !important;
+}
+
+/* Same styles that .ui.form .field > label. Used for custom labels */
+.bolder {
+    display: block !important;
+    margin: 0 0 .28571429rem 0 !important;
+    color: rgba(0,0,0,.87) !important;
+    font-size: .92857143em !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+}
+
+/* A little separator between the main navbar and the page content */
+#main-navbar {
+    margin-bottom: 0;
+}
+
+.table-bordered {
+    border: 1.5px solid !important;
+}
+
+/* Fixes height of Modals */
+.ui.modal .scrolling.content {
+    max-height: calc(80vh) !important;
+}
+
+.info-popup-on-top {
+    position: absolute;
+    right: 2%;
+    top: 5%;
+    z-index: 999;
+}
+
+/* Support for Header with centered image */
+.ui.image.header.aligned {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.ui.image.header .image {
+    float: none;
+    display: block;
+    line-height: 1;
+    padding: 0;
+    opacity: 1;
+    height: 50px;
+    width: 100%;
+    margin-bottom: 5%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.ui.image.header {
+    max-width: 92px;
+}
+
+#footer {
+    background: #1b1c1d;
+    padding: 2em 0em;
+}

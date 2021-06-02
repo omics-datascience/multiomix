@@ -1,0 +1,13 @@
+*.pyc
+.idea
+.vscode
+.mypy_cache
+src/frontend/static/frontend/node_modules
+src/frontend/static/frontend/dist
+src/venv
+src/static
+src/uploads
+src/media
+src/db.sqlite3
+src/api_service/experiments/venv
+src/multiomics_intermediate/settings_prod.py

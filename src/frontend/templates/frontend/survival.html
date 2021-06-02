@@ -1,0 +1,22 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| Survival Analysis{% endblock %}
+
+{% block css %}
+    {% render_bundle 'survival' 'css' %}
+<!--    <link href="{% static "frontend/dist/survival.css" %}" rel="stylesheet" />-->
+{% endblock %}
+
+{% block content %}
+        <div id="survival-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+            const urlDatasetColumnName = "{% url 'get_dataset_columns_name' %}"
+        </script>
+        {% render_bundle 'survival' 'js' %}
+<!--        <script src="{% static "frontend/dist/survival.js" %}"></script>-->
+{% endblock %}

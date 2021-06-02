@@ -1,0 +1,17 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| My Datasets{% endblock %}
+
+{% block css %}
+        {% render_bundle 'files' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="files-app"></div>
+{% endblock %}
+
+{% block js %}
+        {% render_bundle 'files' 'js' %}
+{% endblock %}

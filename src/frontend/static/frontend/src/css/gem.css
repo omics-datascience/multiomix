@@ -1,0 +1,184 @@
+#label-minimum-threshold {
+    margin-left: -2%;
+}
+
+#experiment-result-info-popup {
+    top: 35%;
+}
+
+#experiment-result-column {
+    background-color: #ababab3d;
+}
+
+#last-experiments-cards-group {
+    display: inline !important;
+}
+
+.experiment-data-card {
+    margin-left: 3px !important;
+    margin-right: 0 !important;
+    box-shadow: 0 2px 1px 0 #6f6f6f, 0 0 0 2px #a0a0a0 !important;
+}
+
+.experiment-data-card-header {
+    font-size: medium !important;
+}
+
+.experiment-data-card-description,
+.experiment-data-card-submit-date {
+    font-size: small !important;
+}
+
+.experiment-data-card-submit-date {
+    color: rgba(0, 0, 0, 0.61) !important;
+}
+
+.experiment-tab {
+    width: 70px;
+}
+
+.last-experiment-name{
+    display: inline-block !important;
+    width: 60% !important;
+}
+
+.menu-with-bolder-border {
+    border: 1px solid rgba(29, 29, 29, 0.82) !important;
+}
+
+.menu-with-bolder-border .item:before {
+    background: rgba(29, 29, 29, 0.82) !important;
+}
+
+.menu-with-bolder-border .active.item {
+    background: rgba(0, 0, 0, 0.15) !important;
+    color: rgba(0,0,0,.95) !important;
+    font-weight: bolder !important;
+}
+
+#all-experiments-tab {
+    background-color: #2284ce8c !important;
+    border-color: #2284ce8c !important;
+    color: #fff !important;
+}
+
+#all-experiments-tab.active {
+    background-color: #2185d0 !important;
+    border-color: #2185d0 !important;
+}
+
+#label-new-experiment-selected-tag {
+    width: 70%
+}
+
+#user-datasets-table-header > tr > th {
+    background-color: #767676fc !important;
+    color: white !important;
+    text-align: center !important;
+}
+
+#gene-gem-modal {
+    height: 95% !important;
+}
+
+#loading-panel-icon {
+    width: max-content !important;
+}
+
+.no-padding-left {
+  padding-left: 0 !important;
+}
+
+.no-padding-top {
+  padding-top: 0 !important;
+}
+
+.source-popup-header {
+    color: rgb(128, 128, 128) !important;
+}
+
+.stats-header {
+    font-size: 3.5em !important;
+}
+
+.survival-header {
+    font-size: 2.5em !important;
+}
+
+.stats-column {
+    position: sticky;
+}
+
+.assumption-step .content {
+    max-width: 85%;
+}
+
+#stats-number-of-combinations * {
+    vertical-align: -moz-middle-with-baseline;
+    vertical-align: -webkit-baseline-middle;
+}
+
+#header-details-modal .content {
+    font-size: 2em;
+}
+
+#references-cards-group .ui.link.card {
+    width: calc(16.111% - 1em) !important;
+}
+
+.no-margin-right-form-field * {
+    margin-right: 0 !important;
+}
+
+#sorting-order-data {
+    text-align: left;
+    margin-left: 0.5%;
+}
+
+/* Prevents the Popup to be over some modals */
+#clinical-source-popup, .ui.dimmer {
+    z-index: 2000 !important;
+}
+
+/* Prevents modals to be over the popups */
+.popup {
+    z-index: 2500 !important;
+}
+
+/* Prevents the clinical source Popup to be over UserFiles modal */
+#user-files-modal {
+    z-index: 3000;
+}
+
+#advice-infer-interest {
+    bottom: 8%;
+    position: absolute;
+}
+
+#analysis-progress-bar {
+    margin-bottom: 15% !important;
+}
+
+#score-source-header {
+    font-size: 4em;
+}
+
+.cell.red {
+    background-color: #db2828 !important;
+    color: #fff;
+}
+
+.cell.orange {
+    background-color: #f2711c !important;
+    color: #fff;
+}
+
+.cell.yellow {
+    background-color: #fbbd08 !important;
+    color: #fff;
+}
+
+.cell.olive {
+    background-color: #b5cc18 !important;
+    color: #fff;
+}

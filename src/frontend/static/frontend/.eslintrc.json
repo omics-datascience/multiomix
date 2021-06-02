@@ -1,0 +1,59 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "extends": [
+        "plugin:react/recommended",
+        "standard"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "react",
+        "@typescript-eslint",
+        "jsdoc",
+        "react-hooks"
+    ],
+    "rules": {
+        "indent": [
+            "error",
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "error",
+        "no-undef": "off",
+        "camelcase": "off",
+        "react/no-unescaped-entities": "off",
+        "jsdoc/check-alignment": 1,
+        "jsdoc/check-param-names": 1,
+        "jsdoc/check-tag-names": 1,
+        "jsdoc/check-types": 1,
+        "jsdoc/implements-on-classes": 1,
+        "jsdoc/no-undefined-types": 1,
+        "jsdoc/require-jsdoc": 1,
+        "jsdoc/require-param": 1,
+        "jsdoc/require-param-description": 1,
+        "jsdoc/require-param-name": 1,
+        "jsdoc/require-returns-check": 1,
+        "jsdoc/require-returns-description": 1,
+        "jsdoc/valid-types": 1,
+        "jsdoc/require-returns": 1,
+        // Hooks plugin config
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn"
+    }
+}

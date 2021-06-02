@@ -1,0 +1,20 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| CGDS Panel{% endblock %}
+
+{% block css %}
+        {% render_bundle 'cgds' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="cgds-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+                const urlSyncCGDSStudy = "{% url 'sync_cgds_study' %}"
+        </script>
+        {% render_bundle 'cgds' 'js' %}
+{% endblock %}

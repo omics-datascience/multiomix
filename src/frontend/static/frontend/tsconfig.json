@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": false,
+        "noImplicitAny": false,
+        "module": "commonjs",
+        "target": "es6",
+        "lib": [
+            "es2019"
+        ],
+        "jsx": "react",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strictNullChecks": true
+    },
+    "exclude": [
+        "node_modules",
+        "webpack.*.js"
+    ]
+}

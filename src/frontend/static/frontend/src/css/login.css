@@ -1,0 +1,105 @@
+.ui.fluid.input > input {
+  height: 45px;
+}
+
+.action-button button {
+	background-color: white !important;
+}
+
+#login-form-icon {
+	margin-right: 0;
+	box-shadow: inherit;
+}
+
+.container-login {
+  width: 100%;  
+  min-height: 100vh;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  background-image: url('../../img/login.jpg');
+  background-repeat: no-repeat;
+  background-position: left;
+  background-size: cover;
+  position: relative;
+  z-index: 1;  
+}
+
+.container-login::before {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(255,255,255,0.7);
+}
+
+.wrap-login {
+  width: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 55px 55px 37px 55px;
+  background: #2185d0;
+  background: -webkit-linear-gradient(top, #4fb5e7, #2185d0);
+  background: -o-linear-gradient(top, #4fb5e7, #2185d0);
+  background: -moz-linear-gradient(top, #4fb5e7, #2185d0);
+  background: linear-gradient(top, #4fb5e7, #2185d0);
+}
+
+.login-form {
+  width: 100%;
+}
+
+.login-form-logo {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.login-form-title {
+	font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+	font-size: 2.5em;
+	color: #fff;
+	line-height: 1.2;
+	text-align: center;
+	text-transform: uppercase;
+	padding-bottom: 5% !important;
+    padding-top: 10% !important;
+	display: block;
+}
+
+.wrap-login-input {
+  width: 100%;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+/* This rule prevent success/warning messages to be hidden in the login form */
+.ui.form .success.message, .ui.form .warning.message {
+  display: inherit;
+}
+
+.password-repeated-input {
+  margin-bottom: 0 !important;
+}
+
+#sign-up-password-helper {
+  color: white;
+  font-weight: bold;
+  margin-top: 1%;
+}

@@ -1,0 +1,38 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block css %}
+        {% render_bundle 'main' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="gem-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+            const urlRunExperiment = "{% url 'run_experiment' %}"
+            const urlUserExperiments = "{% url 'mrna_gem_experiment' %}"
+            const urlGetFullUserExperiment = "{% url 'get_full_experiment' %}"
+            const urlLastExperiments = "{% url 'last_experiments' %}"
+            const urlGetExperimentData = "{% url 'get_experiment_data' %}"
+            const currentUserId = "{{ user.id }}"
+            const urlCorrelationGraph = "{% url 'correlation_graph' %}"
+            const urlMiRNAInteraction = "{% url 'mirna_interaction' %}"
+            const urlMiRNADiseases = "{% url 'mirna_diseases' %}"
+            const urlMiRNAeDrugs = "{% url 'mirna_drugs' %}"
+            const urlGetMiRNAData = "{% url 'get_mirna_data' %}"
+            const urlGetCommonSamples = "{% url 'get_number_samples_in_common' %}"
+            const urlGetCommonSamplesOneFront = "{% url 'get_number_samples_in_common_one_front' %}"
+            const urlGetStatisticalProperties = "{% url 'get_combination_stats' %}"
+            const urlDownloadFullResult = "{% url 'download_full_result' %}"
+            const urlDownloadResultWithFilters = "{% url 'download_result_with_filters' %}"
+            const urlClinicalSourceUserFileCRUD = "{% url 'clinical_source_user_file' %}"
+            const urlUnlinkClinicalSourceUserFile = "{% url 'unlink_clinical_source_user_file' %}"
+            const urlSurvivalData = "{% url 'get_survival_data' %}"
+            const maximumNumberOfOpenTabs = Number.parseInt("{{ maximum_number_of_open_tabs }}")
+            const thresholdToConsiderOrdinal = Number.parseInt("{{ threshold_to_consider_ordinal }}")
+        </script>
+        {% render_bundle 'gem' 'js' %}
+{% endblock %}

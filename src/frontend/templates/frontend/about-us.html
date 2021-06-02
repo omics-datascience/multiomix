@@ -1,0 +1,15 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block css %}
+        {% render_bundle 'main' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="about-us-app"></div>
+{% endblock %}
+
+{% block js %}
+        {% render_bundle 'aboutUs' 'js' %}
+{% endblock %}
