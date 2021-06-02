@@ -40,8 +40,6 @@ const HomepageHeading = (props: HomepageHeadingProps) => (
             <Grid stackable>
                 <Grid.Row columns={2}>
                     <Grid.Column>
-                        {/* TODO: limit to logged used */}
-                        {/* TODO: fix link */}
                         <Button primary size='huge' fluid as='a' href={urlPipeline}>
                             Get Started
                             <Icon name='arrow right' />
@@ -49,7 +47,7 @@ const HomepageHeading = (props: HomepageHeadingProps) => (
                     </Grid.Column>
                     <Grid.Column>
                         {/* TODO: fix link */}
-                        <Button color='orange' size='huge' fluid as='a' href='#'>
+                        <Button color='orange' size='huge' fluid as='a' href='#' target='_blank'>
                             Tutorials
                             <Icon className='margin-left-2' name='youtube' />
                         </Button>
@@ -117,8 +115,7 @@ export const Homepage = () => {
                     </Container>
 
                     <Container text textAlign='center' className='margin-top-2'>
-                        {/* TODO: fix link */}
-                        <Button id='source-button' secondary basic as='a' size='huge' href='#' inverted>
+                        <Button id='source-button' secondary basic as='a' size='huge' href='https://github.com/omics-datascience/multiomix' target='_blank' inverted>
                             Source
                             <Icon name='github' className='margin-left-5' />
                         </Button>
