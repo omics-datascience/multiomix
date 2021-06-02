@@ -46,8 +46,7 @@ const HomepageHeading = (props: HomepageHeadingProps) => (
                         </Button>
                     </Grid.Column>
                     <Grid.Column>
-                        {/* TODO: fix link */}
-                        <Button color='orange' size='huge' fluid as='a' href='#' target='_blank'>
+                        <Button color='orange' size='huge' fluid as='a' href='https://youtube.com/playlist?list=PL1P-aHbALFjuwUjNeyA5G7vhqJMRjuoAS' target='_blank'>
                             Tutorials
                             <Icon className='margin-left-2' name='youtube' />
                         </Button>
