@@ -3,9 +3,9 @@ import { Container, Divider, Grid, Header, Image, List } from 'semantic-ui-react
 import { Base } from '../Base'
 
 const EMAILS: string[] = [
+    'mcabba@gmail.com',
     'matias.butti@gmail.com',
-    'genarocamele@gmail.com',
-    'mcabba@gmail.com'
+    'genarocamele@gmail.com'
 ]
 
 /**
@@ -89,12 +89,15 @@ export const AboutUs = () => {
                                     Contact:
                                 </Header>
 
-                                <p>For contact write to:</p>
+                                <p>For questions or suggestions please contact us:</p>
+
                                 {EMAILS.map((email) => (
                                     <p key={email}>
                                         <a href={`mailto:${email}`}>{email}</a>
                                     </p>
                                 ))}
+
+                                <p>You can also contact us for creating your research institution. It will let researchers share datasets inside Multiomix.</p>
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>
