@@ -84,8 +84,10 @@ def authenticate_action(request):
                 return render(
                     request,
                     "frontend/login.html",
-                    {'loginWarning': 'Your account has not been validated yet. Please, check you email account for our '
-                                     'verification email'}
+                    {
+                        'loginWarning': 'Your account has not been validated yet. Please, check your email account for '
+                                        'our verification email'
+                    }
                 )
             return view_bad_credentials(request)
         except User.DoesNotExist:
