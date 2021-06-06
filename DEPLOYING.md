@@ -125,6 +125,40 @@ Otherwise, you could set all the mandatory variables found in `settings_prod.py`
 **IMPORTANT:** note that as Multiomix is deployed in Docker there are some parameters like `SECURE_SSL_REDIRECT` that are not required as the solution is provided by the NGINX service. Probably the above commands will throw warnings that are covered and do not represent a problem.
 
 
+## Modulector integration
+
+To integrate with [Modulector][modulector] using `docker-compose.yml` files in the same host:
+
+1. Create a common network with the `overlay` driver: `docker network create --driver overlay --attachable multiomix-modulector`.
+2. Add the following block to the end of the Multiomix and Modulector `docker-compose.yml` files:
+
+```yaml
+networks:
+    default:
+        external:
+            name: 'multiomix-modulector'
+```
+
+3. Change the Modulector configuration so that it does not conflict with the Multiomix configuration:
+   1. Rename all the services in the Modulector `docker-compose.yml` file with the suffix `_modulector`. **NOTE:** do not forget to rename the `depends_on` parameters, and the database connection parameters to point to the new service name.
+   1. Change the following block in the `config/nginx/conf.d/modulector.conf` configuration file:
+   ```
+   # Old
+   # upstream web {
+   #   ip_hash;
+   #   server web:8000;
+   # }
+   
+   # New
+   upstream web {
+     ip_hash;
+     server web_modulector:8000;
+   }
+   ```
+4. Set Multiomix parameter `MODULECTOR_HOST` to `nginx_modulector`, and parameter `MODULECTOR_PORT` to `8000`.
+5. Redo the deployment with Docker.
+
+
 ## Creating Dumps and Restoring from Dumps
 
 
@@ -170,3 +204,4 @@ In order to create a database dump you can execute the following command **insid
 That command will restore the database using a compressed dump as source. You can use the flags `--numInsertionWorkersPerCollection [number of workers]` to increase importing speed or `-vvvv` to check importing status.
 
 [docker-swarm]: https://docs.docker.com/engine/swarm/
+[modulector]: https://github.com/omics-datascience/modulector
