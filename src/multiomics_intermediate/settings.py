@@ -246,7 +246,7 @@ else:
 EMAIL_NEW_USER_CONFIRMATION_ENABLED: bool = os.getenv('EMAIL_NEW_USER_CONFIRMATION_ENABLED', 'false') == 'true'
 EMAIL_ACTIVE_FIELD = 'is_active'
 EMAIL_SERVER = os.getenv('EMAIL_SERVER')
-EMAIL_PORT: int = int(os.getenv('EMAIL_PORT'))
+EMAIL_PORT: int = int(os.getenv('EMAIL_PORT', 0))
 EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
 EMAIL_FROM_ADDRESS = os.getenv('EMAIL_FROM_ADDRESS', 'noreply@multiomix.org')
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
