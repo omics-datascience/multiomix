@@ -65,7 +65,9 @@ const Base = (props: BaseProps) => {
             <MainNavbar activeItem={props.activeItem}/>
 
             {/* Composition part */}
-            {props.children}
+            <div className='wrapper'>
+                {props.children}
+            </div>
 
             {/* Footer */}
             {/* TODO: add license */}
