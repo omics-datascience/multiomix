@@ -173,7 +173,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '4.6.0'
+VERSION: str = '4.6.1'
 
 # Max result DataFrame row count. If the number of rows is higher
 # the DataFrame is truncated. None for prevent truncation
