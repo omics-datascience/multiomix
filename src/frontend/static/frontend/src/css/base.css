@@ -181,3 +181,8 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     background: #1b1c1d;
     padding: 2em 0em;
 }
+
+/* Fixed heigh 100% for html and body */
+.ui.popup {
+    height: fit-content !important;
+}
