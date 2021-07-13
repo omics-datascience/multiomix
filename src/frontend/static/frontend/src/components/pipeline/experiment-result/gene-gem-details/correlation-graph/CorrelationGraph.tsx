@@ -4,7 +4,7 @@ import { ApexOptions } from 'apexcharts'
 import { Dropdown, DropdownItemProps, Grid } from 'semantic-ui-react'
 import { DjangoMRNAxGEMResultRow } from '../../../../../utils/django_interfaces'
 import { Nullable } from '../../../../../utils/interfaces'
-import { getGeneAndGEMFromSelectedRow, listToDropdownOptions } from '../../../../../utils/util_functions'
+import { getGemDescription, getGeneAndGEMFromSelectedRow, listToDropdownOptions } from '../../../../../utils/util_functions'
 import { GeneGEMDataErrorMessage } from '../GeneGEMDataErrorMessage'
 import { CorrelationChartData, ApexChartJSSerie } from './../GeneGemDetailsModal'
 import d3 from 'd3'
@@ -26,6 +26,7 @@ interface CorrelationGraphProps {
  */
 export const CorrelationGraph = (props: CorrelationGraphProps) => {
     const [gene, gem] = getGeneAndGEMFromSelectedRow(props.selectedRow)
+    const gemDescription = props.selectedRow ? getGemDescription(props.selectedRow.experiment_type, 'ExperimentType') : ''
 
     if (!props.chartData) {
         return null
@@ -112,7 +113,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
         },
         xaxis: {
             title: {
-                text: gem,
+                text: `${gem} (${gemDescription})`,
                 offsetY: 8,
                 style: {
                     fontSize: '2em'
@@ -126,7 +127,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
         },
         yaxis: {
             title: {
-                text: gene,
+                text: `${gene} (mRNA)`,
                 style: {
                     fontSize: '2em'
                 }

@@ -194,7 +194,6 @@ export const CorrelationBoxplot = (props: CorrelationBoxplotProps) => {
                                     id="box_violin_lines_pattern"
                                     height={4}
                                     width={4}
-                                    // stroke="#fff"
                                     stroke="#1e72b1"
                                     strokeWidth={1}
                                     background="rgba(0,0,100,0.2)"

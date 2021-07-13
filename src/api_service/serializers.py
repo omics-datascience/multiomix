@@ -10,10 +10,12 @@ from rest_framework import serializers
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
     """GeneGEMCombination serializer"""
     gene_extra_data = GeneForResultTableSerializer(source='gene', read_only=True)
+    experiment_type = serializers.IntegerField(source='experiment.type')
 
     class Meta:
         model = GeneGEMCombination
-        fields = ['id', 'gene', 'gem', 'correlation', 'p_value', 'adjusted_p_value', 'gene_extra_data']
+        fields = ['id', 'gene', 'gem', 'correlation', 'p_value', 'adjusted_p_value', 'gene_extra_data',
+                  'experiment_type']
         abstract = True
 
 

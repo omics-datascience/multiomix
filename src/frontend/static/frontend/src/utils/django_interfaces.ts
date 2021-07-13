@@ -184,6 +184,7 @@ interface DjangoMRNAxGEMResultRow {
     correlation: number,
     p_value: number,
     adjusted_p_value: number,
+    experiment_type: ExperimentType,
     gene_extra_data: Nullable<GeneExtraData>
 }
 
