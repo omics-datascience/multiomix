@@ -580,7 +580,7 @@ def generate_result_file_response(
     file_to_send = ContentFile(df.to_csv(sep='\t', decimal='.', index=False))
     response = HttpResponse(file_to_send, 'text/csv')
     response['Content-Length'] = file_to_send.size
-    response['Content-Disposition'] = f'attachment; filename="{experiment_name}.csv"'
+    response['Content-Disposition'] = f'attachment; filename="{experiment_name}.tsv"'
     return response
 
 
