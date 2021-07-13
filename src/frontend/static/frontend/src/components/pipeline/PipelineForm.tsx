@@ -100,12 +100,14 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
 
         const gemData = getExperimentTypeObj(this.props.gemFileType, 'FileType')
 
+        // Prevents showing a red progress bar which was a minor change in journal revision
+        const uploadPercentage = Math.max(30, this.props.uploadPercentage)
         const progressOrButton = this.props.sendingRequest
             ? (
                 <Progress
                     id='analysis-progress-bar'
                     className='margin-top-2'
-                    percent={this.props.uploadPercentage}
+                    percent={uploadPercentage}
                     indicating
                     label='Preparing analysis'
                 />
