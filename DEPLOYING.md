@@ -5,7 +5,7 @@ The following are the steps to perform a deployment in production. In case you w
 
 ## Requirements
 
-1. All the deployment was configured to be simple from the [Docker Compose] tool (https://docs.docker.com/compose/install/).
+1. All the deployment was configured to be simple from the [Docker Compose](https://docs.docker.com/compose/install/) tool.
 
 
 ## Instructions
