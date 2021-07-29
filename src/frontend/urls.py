@@ -11,6 +11,7 @@ urlpatterns = [
     path('authenticate', views.authenticate_action, name='authentication'),
     path('create-user', views.create_user_action, name='create_user'),
     path('about-us', views.about_us_action, name='about_us'),
+    path('site-policy', views.terms_and_privacy_policy_action, name='site_policy'),
     path('logout', views.logout_action, name='logout'),
     path('user', views.CurrentUserView.as_view(), name='current_user')
 ]

@@ -6,6 +6,7 @@ import { Nullable } from '../utils/interfaces'
 import { Container, Grid, Segment } from 'semantic-ui-react'
 
 declare const urlCurrentUser: string
+declare const urlSitePolicy: string
 declare const multiomixVersion: string
 
 /**
@@ -59,6 +60,8 @@ const Base = (props: BaseProps) => {
         })
     }
 
+    const sitePolicyLink = <a id='site-policy-link' href={urlSitePolicy}>Terms and privacy policy</a>
+
     return (
         <CurrentUserContext.Provider value={currentUser}>
             {/* Navbar */}
@@ -77,7 +80,7 @@ const Base = (props: BaseProps) => {
                         <Grid.Row columns={1}>
                             <Grid.Column>
                                 <p>
-                                    OmicsDataScience | Multiomix v{multiomixVersion}
+                                    OmicsDataScience | Multiomix v{multiomixVersion} | {sitePolicyLink}
                                 </p>
                             </Grid.Column>
                         </Grid.Row>

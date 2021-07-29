@@ -24,6 +24,11 @@ def about_us_action(request):
     return render(request, "frontend/about-us.html")
 
 
+def terms_and_privacy_policy_action(request):
+    """Site policy view"""
+    return render(request, "frontend/site-policy.html")
+
+
 @login_required
 def gem_action(request):
     """GEM analysis view"""

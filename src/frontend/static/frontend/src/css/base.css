@@ -186,3 +186,11 @@ where the class 'ellipsis' is added to the parent div and not to the button */
 .ui.popup {
     height: fit-content !important;
 }
+
+#site-policy-link {
+    color: white;
+}
+
+#site-policy-link:hover {
+    text-decoration: underline;
+}
