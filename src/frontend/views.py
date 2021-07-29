@@ -20,7 +20,7 @@ def index_action(request):
 
 
 def about_us_action(request):
-    """Index view"""
+    """About us view"""
     return render(request, "frontend/about-us.html")
 
 

@@ -9,7 +9,7 @@ const EMAILS: string[] = [
 ]
 
 /**
- * Homepage component
+ * About us page
  * @returns Component
  */
 export const AboutUs = () => {
@@ -74,7 +74,7 @@ export const AboutUs = () => {
                                 </Header>
 
                                 <Header as='h3'>
-                                    Collaborators: Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, PhD. Waldo Hasperué
+                                    Collaborators: Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, Julián Muhlberger, Ramiro Lasorsa, PhD. Waldo Hasperué
                                 </Header>
                             </Grid.Column>
                         </Grid.Row>
