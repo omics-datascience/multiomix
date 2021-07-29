@@ -70,11 +70,11 @@ export const AboutUs = () => {
                                 </Header>
 
                                 <Header as='h3'>
-                                    Main contributor: Lic. Genaro Camele
+                                    Main contributor: B.Comp.Sc. Genaro Camele
                                 </Header>
 
                                 <Header as='h3'>
-                                    Collaborators: Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, Julián Muhlberger, Ramiro Lasorsa, PhD. Waldo Hasperué
+                                    Collaborators: Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, B.Comp.Sc. Julián Muhlberger, St. Ramiro Lasorsa, PhD. Waldo Hasperué
                                 </Header>
                             </Grid.Column>
                         </Grid.Row>
