@@ -853,7 +853,6 @@ class SurvivalDataDetails(APIView):
             gem_values = gem_values[non_nan_idx]
             clinical_time_values = clinical_time_values[non_nan_idx]
             clinical_event_values = clinical_event_values[non_nan_idx]
-            clinical_samples = clinical_samples[non_nan_idx]  # TODO: remove as not necessary, document that
 
             # Generates low and high groups
             fields_of_interest = request.data.get('fieldsInterest')
