@@ -9,7 +9,6 @@ declare const urlCreateUser: string
 declare const loginError: string
 declare const loginWarning: string
 declare const loginSuccess: string
-declare const document: any // TODO: remove all the automatic login stuff after paper revision
 
 /**
  * Component's state
@@ -80,25 +79,6 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
             newPassword: '',
             newPasswordRepeated: '',
             showSignUpForm: false
-        }
-    }
-
-    /**
-     * TODO: remove all the automatic login stuff after paper revision
-     */
-    componentDidMount () {
-        const params = new URLSearchParams(window.location.search)
-        const demoUsername = params.get('demoUsername')
-        const demoPassword = params.get('demoPassword')
-        if (demoUsername && demoPassword) {
-            this.setState({
-                username: demoUsername,
-                password: demoPassword
-            }, () => {
-                // Removes params to prevent cyclic login fail
-                window.history.replaceState({}, document.title, '/')
-                document.getElementById('login-submit-button').click()
-            })
         }
     }
 
@@ -202,7 +182,6 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
                     </Form.Field>
 
                     <Form.Button
-                        id='login-submit-button' // TODO: remove all the automatic login stuff after paper revision
                         fluid
                         size='huge'
                         type='submit'
