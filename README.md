@@ -47,6 +47,27 @@ This document is focused on the **development** of the system. If you are lookin
 [ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools.
 
 
+## Considerations
+
+If you use any part of our code, or the platform itself is useful for your research, please consider citing:
+
+```
+@article{10.1093/bioinformatics/btab678,
+    author = {Camele, Genaro and Menazzi, Sebastian and Chanfreau, Hernán and Marraco, Agustin and Hasperué, Waldo and Butti, Matias D and Abba, Martin C},
+    title = "{Multiomix: a cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation}",
+    journal = {Bioinformatics},
+    year = {2021},
+    month = {09},
+    abstract = "{Large-scale cancer genome projects have generated genomic, transcriptomic, epigenomic and clinicopathological data from thousands of samples in almost every human tumor site. Although most omics data and their associated resources are publicly available, its full integration and interpretation to dissect the sources of gene expression modulation require specialized knowledge and software.We present Multiomix, an interactive cloud-based platform that allows biologists to identify genetic and epigenetic events associated with the transcriptional modulation of cancer-related genes through the analysis of multi-omics data available on public functional genomic databases or user-uploaded datasets. Multiomix consists of an integrated set of functions, pipelines and a graphical user interface that allows retrieval, aggregation, analysis and visualization of different omics data sources. After the user provides the data to be analyzed, Multiomix identifies all significant correlations between mRNAs and non-mRNA genomics features (e.g. miRNA, DNA methylation and CNV) across the genome, the predicted sequence-based interactions (e.g. miRNA–mRNA) and their associated prognostic values.Multiomix is available at https://www.multiomix.org. The source code is freely available at https://github.com/omics-datascience/multiomix.Supplementary data are available at Bioinformatics online.}",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btab678},
+    url = {https://doi.org/10.1093/bioinformatics/btab678},
+    note = {btab678},
+    eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab678/40533116/btab678.pdf},
+}
+```
+
+
 ## License
 
 Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
