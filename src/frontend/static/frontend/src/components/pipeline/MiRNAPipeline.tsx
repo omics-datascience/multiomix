@@ -24,6 +24,7 @@ declare const urlGetExperimentData: string
 declare const urlGetFullUserExperiment: string
 declare const urlTagsCRUD: string
 declare const urlUserExperiments: string
+declare const urlStopExperiment: string
 declare const maximumNumberOfOpenTabs: number
 declare const currentUserId: string
 
@@ -133,9 +134,11 @@ interface MiRNAPipelineState {
     experimentTabs: DictOfExperimentTabs,
     /** ID of the experiment it's assigning a tag */
     experimentWhichIsSelectingTag: Nullable<DjangoExperiment>,
-    selectedExperimentToDelete: Nullable<DjangoExperiment>,
+    selectedExperimentToDeleteOrStop: Nullable<DjangoExperiment>,
     showDeleteExperimentModal: boolean,
+    showStopExperimentModal: boolean,
     deletingExperiment: boolean,
+    stoppingExperiment: boolean,
     newTagForLastExperiment: DjangoTag,
     addingTag: boolean,
     showFollowUpButton: boolean,
@@ -195,9 +198,11 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
             experimentTabs: {},
             activeTab: 'all-experiments',
             experimentWhichIsSelectingTag: null,
-            selectedExperimentToDelete: null,
+            selectedExperimentToDeleteOrStop: null,
             showDeleteExperimentModal: false,
+            showStopExperimentModal: false,
             deletingExperiment: false,
+            stoppingExperiment: false,
             newTagForLastExperiment: getDefaultNewTag(),
             addingTag: false,
             showFollowUpButton: false,
@@ -557,8 +562,19 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
      */
     confirmExperimentDeletion = (experiment: DjangoExperiment) => {
         this.setState({
-            selectedExperimentToDelete: experiment,
+            selectedExperimentToDeleteOrStop: experiment,
             showDeleteExperimentModal: true
+        })
+    }
+
+    /**
+     * Show a modal to confirm an experiment stop
+     * @param experiment Experiment to stop
+     */
+    confirmExperimentStop = (experiment: DjangoExperiment) => {
+        this.setState({
+            selectedExperimentToDeleteOrStop: experiment,
+            showStopExperimentModal: true
         })
     }
 
@@ -587,21 +603,26 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
     }
 
     /**
-     * Closes the deletion confirm modals
+     * Closes the deletion confirm modal
      */
-    handleClose = () => { this.setState({ showDeleteExperimentModal: false }) }
+    handleCloseDelete = () => { this.setState({ showDeleteExperimentModal: false }) }
+
+    /**
+     * Closes the stopping confirm modal
+     */
+    handleCloseStop = () => { this.setState({ showStopExperimentModal: false }) }
 
     /**
      * Makes a request to delete an Experiment
      */
     deleteExperiment = () => {
-        if (this.state.selectedExperimentToDelete === null) {
+        if (this.state.selectedExperimentToDeleteOrStop === null) {
             return
         }
 
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
-        const deleteURL = `${urlUserExperiments}/${this.state.selectedExperimentToDelete.id}`
+        const deleteURL = `${urlUserExperiments}/${this.state.selectedExperimentToDeleteOrStop.id}`
         this.setState({ deletingExperiment: true }, () => {
             ky.delete(deleteURL, { headers: myHeaders, timeout: false }).then((response) => {
                 // If OK is returned refresh the experiments
@@ -615,7 +636,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     this.props.updateAllExperimentsTables()
 
                     // If the experiment which was deleted is the same which is being edited, cleans the form
-                    if (this.state.selectedExperimentToDelete?.id === this.props.newExperiment.id) {
+                    if (this.state.selectedExperimentToDeleteOrStop?.id === this.props.newExperiment.id) {
                         this.props.resetExperimentForm()
                     }
                 }
@@ -628,26 +649,92 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
     }
 
     /**
+     * Makes a request to delete an Experiment
+     */
+    stopExperiment = () => {
+        if (this.state.selectedExperimentToDeleteOrStop === null) {
+            return
+        }
+
+        // Sets the Request's Headers
+        const myHeaders = getDjangoHeader()
+        const experimentId = this.state.selectedExperimentToDeleteOrStop.id
+        this.setState({ stoppingExperiment: true }, () => {
+            ky.get(urlStopExperiment, {
+                headers: myHeaders,
+                searchParams: { experimentId: experimentId }
+            }).then((response) => {
+                // If OK is returned refresh the experiments
+                if (response.ok) {
+                    this.setState({
+                        stoppingExperiment: false,
+                        showStopExperimentModal: false
+                    })
+
+                    // Refresh the experiments tables
+                    this.props.updateAllExperimentsTables()
+
+                    // If the experiment which was deleted is the same which is being edited, cleans the form
+                    if (this.state.selectedExperimentToDeleteOrStop?.id === this.props.newExperiment.id) {
+                        this.props.resetExperimentForm()
+                    }
+                }
+            }).catch((err) => {
+                this.setState({ stoppingExperiment: false })
+                alertGeneralError()
+                console.log('Error deleting experiment ->', err)
+            })
+        })
+    }
+
+    /**
      * Generates the modal to confirm an Experiment deletion
      * @returns Modal component. Null if no Experiment was selected to delete
      */
     getExperimentDeletionConfirmModals () {
-        if (!this.state.selectedExperimentToDelete) {
+        if (!this.state.selectedExperimentToDeleteOrStop) {
             return null
         }
 
         return (
-            <Modal size='small' open={this.state.showDeleteExperimentModal} onClose={this.handleClose} centered={false}>
-                <Header icon='trash' content='Delete tag' />
+            <Modal size='small' open={this.state.showDeleteExperimentModal} onClose={this.handleCloseDelete} centered={false}>
+                <Header icon='trash' content='Delete experiment' />
                 <Modal.Content>
-                    Are you sure you want to delete the experiment <strong>{this.state.selectedExperimentToDelete.name}</strong>?
+                    Are you sure you want to delete the experiment <strong>{this.state.selectedExperimentToDeleteOrStop.name}</strong>?
                 </Modal.Content>
                 <Modal.Actions>
-                    <Button onClick={this.handleClose}>
+                    <Button onClick={this.handleCloseDelete}>
                         Cancel
                     </Button>
                     <Button color='red' onClick={this.deleteExperiment} loading={this.state.deletingExperiment} disabled={this.state.deletingExperiment}>
                         Delete
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
+
+    /**
+     * Generates the modal to confirm an Experiment stopping
+     * @returns Modal component. Null if no Experiment was selected to stop
+     */
+    getExperimentStopConfirmModals () {
+        if (!this.state.selectedExperimentToDeleteOrStop) {
+            return null
+        }
+
+        return (
+            <Modal size='small' open={this.state.showStopExperimentModal} onClose={this.handleCloseStop} centered={false}>
+                <Header icon='stop' content='Stop experiment' />
+                <Modal.Content>
+                    Are you sure you want to stop the experiment <strong>{this.state.selectedExperimentToDeleteOrStop.name}</strong>?
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={this.handleCloseStop}>
+                        Cancel
+                    </Button>
+                    <Button color='red' onClick={this.stopExperiment} loading={this.state.stoppingExperiment} disabled={this.state.stoppingExperiment}>
+                        Stop
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -671,6 +758,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     seeResult={this.seeResult}
                     editExperiment={this.props.editExperiment}
                     confirmExperimentDeletion={this.confirmExperimentDeletion}
+                    confirmExperimentStop={this.confirmExperimentStop}
                     handleSortAllExperiments={this.props.handleSortAllExperiments}
                     handleTableControlChangesAllExperiments={this.props.handleTableControlChangesAllExperiments}
                 />
@@ -735,6 +823,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         tagOptions.unshift({ key: 'no-tag', value: null, text: 'No Tag' })
 
         const experimentDeletionConfirmModal = this.getExperimentDeletionConfirmModals()
+        const experimentStopConfirmModal = this.getExperimentStopConfirmModals()
 
         const middlePanel = this.getCurrentActiveTabContent()
 
@@ -745,6 +834,9 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
             <div>
                 {/* Experiment deletion confirm modal */}
                 {experimentDeletionConfirmModal}
+
+                {/* Experiment stopping confirm modal */}
+                {experimentStopConfirmModal}
 
                 {/* Pipeline */}
                 <Segment>

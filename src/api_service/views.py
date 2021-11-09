@@ -824,16 +824,16 @@ class SurvivalDataDetails(APIView):
             event_attribute = survival_column.event_column
 
             # Gets Gene and GEM expression with time values
-            gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples,\
-                clinical_samples = global_pipeline_manager.get_valid_data_from_sources(
-                    experiment,
-                    gene,
-                    gem,
-                    round_values=False,
-                    return_samples_identifiers=True,
-                    clinical_attribute=time_attribute,
-                    fill_clinical_missing_samples=False
-                )
+            gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
+            clinical_samples = global_pipeline_manager.get_valid_data_from_sources(
+                experiment,
+                gene,
+                gem,
+                round_values=False,
+                return_samples_identifiers=True,
+                clinical_attribute=time_attribute,
+                fill_clinical_missing_samples=False
+            )
 
             # Gets event values
             clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attribute(
@@ -889,3 +889,49 @@ class SurvivalDataDetails(APIView):
         return Response(response)
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+@login_required
+def stop_experiment_action(request):
+    """Stops an experiment"""
+    experiment_id = request.GET.get('experimentId')
+
+    # Check if all the required parameters are in request
+    if experiment_id is None:
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message='Invalid request params'
+            )
+        }
+    else:
+        try:
+            # Gets experiment
+            experiment_id = int(experiment_id)
+            experiment: Experiment = Experiment.objects.get(pk=experiment_id, user=request.user)
+
+            global_task_queue.stop_experiment(experiment)
+
+            response = {
+                'status': ResponseStatus(ResponseCode.SUCCESS)
+            }
+        except ValueError as ex:
+            # Cast errors...
+            logging.exception(ex)
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params type'
+                )
+            }
+        except Experiment.DoesNotExist:
+            # If the experiment does not exist, returns an error
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='The experiment does not exists'
+                )
+            }
+
+    # Formats to JSON the ResponseStatus object
+    return encode_json_response_status(response)

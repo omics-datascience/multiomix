@@ -10,5 +10,9 @@ class ExperimentIsNotRunning(permissions.BasePermission):
     def has_object_permission(self, request: Request, view, obj: Experiment):
         # If the user is deleting an experiment, the experiment cannot be running or waiting in the queue
         if request.method == 'DELETE':
-            return obj.state not in (ExperimentState.IN_PROCESS, ExperimentState.WAITING_FOR_QUEUE)
+            return obj.state not in (
+                ExperimentState.IN_PROCESS,
+                ExperimentState.WAITING_FOR_QUEUE,
+                ExperimentState.STOPPING
+            )
         return True

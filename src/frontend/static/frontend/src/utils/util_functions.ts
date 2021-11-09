@@ -201,6 +201,22 @@ const getStateObj = (state: ExperimentState): ExperimentStateInfo => {
                 title: 'The experiment is being processed'
             }
             break
+        case ExperimentState.STOPPING:
+            stateIcon = {
+                iconName: 'stop',
+                loading: false,
+                title: 'The experiment is being stopped',
+                className: 'experiment-stopping-icon'
+            }
+            break
+        case ExperimentState.STOPPED:
+            stateIcon = {
+                iconName: 'stop',
+                color: 'red',
+                loading: false,
+                title: 'The experiment was stopped'
+            }
+            break
     }
     return stateIcon
 }

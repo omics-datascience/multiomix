@@ -1,13 +1,14 @@
 import os
 import tempfile
 import time
+from threading import Event
 import pandas as pd
 import numpy as np
 from typing.io import IO
 from common.constants import GEM_INDEX_NAME
 from common.methylation import get_cpg_from_cpg_format_gem, get_gene_from_cpg_format_gem, \
     map_cpg_to_genes_df
-from .exceptions import NoSamplesInCommon, ExperimentFailed
+from .exceptions import NoSamplesInCommon, ExperimentFailed, ExperimentStopped
 from django.conf import settings
 from typing import Tuple, Type, List, cast, Optional, Union, Iterator
 from .models import ExperimentSource, Experiment, GeneGEMCombination
@@ -281,16 +282,16 @@ class PipelineManager(object):
                 )
                 for cor_result in chunk
             ]
-            logging.warning(f'Tiempo de insert_statements.append -> {time.time() - start} segundos')
+            logging.warning(f'insert_statements.append execution time -> {time.time() - start} seconds')
 
             start = time.time()
             insert_query = insert_query_prefix + ','.join(insert_statements)
-            logging.warning(f'Tiempo de join de insert_query -> {time.time() - start} segundos')
+            logging.warning(f'insert_query join execution time -> {time.time() - start} seconds')
 
             start = time.time()
             with connection.cursor() as cursor:
                 cursor.execute(insert_query)
-            logging.warning(f'Tiempo de INSERT -> {time.time() - start} segundos')
+            logging.warning(f'INSERT execution time -> {time.time() - start} seconds')
 
     def __generate_clean_temp_file(
             self,
@@ -359,19 +360,23 @@ class PipelineManager(object):
             self,
             experiment: Experiment,
             common_samples: np.ndarray,
-            combination_class: Type[GeneGEMCombination]
+            combination_class: Type[GeneGEMCombination],
+            stop_event: Event
     ) -> int:
         """
         Compute Pearson correlation splitting DataFrames in chunks to avoid memory errors
         @param experiment: Experiment to compute in chunks
         @param common_samples: Numpy array with the samples in common
         @param combination_class: Model class to create the bulk and insert
+        @param stop_event: Stop event to cancel the experiment
         @return Number of evaluated combinations
         """
         # Parameters to make the insert query
         table_name = combination_class._meta.db_table
 
         # Generates temp files to be consumed by Rust
+        self.__check_if_stopped(stop_event)
+
         mrna_temp_file, mrna_number_of_rows, _ = self.__generate_clean_temp_file(experiment.mRNA_source, common_samples,
                                                                                  experiment, 'geneID',
                                                                                  check_cpg_platform=False)
@@ -389,6 +394,9 @@ class PipelineManager(object):
         # Checks if it should collect GEM dataset in memory
         collect_gem_dataset = self.__should_collect_gem_dataset(gem_file_path)
 
+        self.__check_if_stopped(stop_event)
+
+        logging.warning(f'Starting Rust execution')
         start = time.time()
         analysis_result: Tuple[List[CorResult], int] = ggca.correlate(
             mrna_file_path,
@@ -402,34 +410,37 @@ class PipelineManager(object):
             collect_gem_dataset=collect_gem_dataset
         )
         result_combinations, number_of_evaluated_combinations = analysis_result
-        logging.warning(f'Tiempo de ejecucion en Rust -> {time.time() - start} segundos')
-        logging.warning(f'Combinaciones resultantes -> {len(result_combinations)}')
+        logging.warning(f'Rust execution time -> {time.time() - start} seconds')
+        logging.warning(f'Number of combinations -> {len(result_combinations)}')
 
         # Concatenates Gene with CpG Site IDs (if needed)
+        self.__check_if_stopped(stop_event)
+
         if is_cpg_analysis:
             result_combinations = self.__concatenate_gene_and_cpg_as_gem(result_combinations)
 
         # Saves in DB. It spawns a new Process to prevent high memory consumption
+        self.__check_if_stopped(stop_event)
+
         start = time.time()
         p = Process(target=self.__save_result_in_db, args=(result_combinations, experiment, table_name))
         p.start()
         p.join()
         if p.exitcode != 0:
             raise ExperimentFailed
-        logging.warning(f'Tiempo de __save_res -> {time.time() - start} segundos')
+        logging.warning(f'self.__save_res execution time -> {time.time() - start} seconds')
 
         # Deletes temp files
-        start = time.time()
         os.unlink(mrna_file_path)
         os.unlink(gem_file_path)
-        logging.warning(f'Tiempo de close temp -> {time.time() - start} segundos')
 
         return number_of_evaluated_combinations
 
-    def compute_experiment(self, experiment: Experiment) -> Tuple[int, int, int]:
+    def compute_experiment(self, experiment: Experiment, stop_event: Event) -> Tuple[int, int, int]:
         """
         Computes the correlation between all the rows from a Cartesian Product between two Dataframes
         @param experiment: Experiment to compute
+        @param stop_event: Stop event to cancel the experiment
         @raise NoSamplesInCommon If there's not any sample in common between both sources
         @return Total row count, the final row count (used in case it's truncated) and number of evaluated combinations
         """
@@ -442,13 +453,19 @@ class PipelineManager(object):
         combination_class: Type[GeneGEMCombination] = experiment.get_combination_class()
 
         # Computes the correlation un chunks/batches
+        self.__check_if_stopped(stop_event)
+
         start = time.time()
         number_of_evaluated_combinations = self.compute_correlation_and_p_values(
             experiment,
             common_samples,
             combination_class,
+            stop_event
         )
-        logging.warning(f'Tiempo total de correlacion -> {time.time() - start} segundos')
+        logging.warning(f'Total correlation execution time -> {time.time() - start} seconds')
+
+        # Computes final number of combinations
+        self.__check_if_stopped(stop_event)
 
         # Sets total row count
         combinations = experiment.combinations
@@ -466,20 +483,29 @@ class PipelineManager(object):
 
             # Then deletes the first N elements (the ones with worst correlation values)
             count_elements_to_delete = total_row_count - result_limit_row_count
-            logging.warning(f'Filtrando top {result_limit_row_count}')
+
             start = time.time()
             combinations.filter(id__in=list(
                 combinations_sorted_by_abs_corr.values_list('pk', flat=True)[:count_elements_to_delete])
             ).delete()
-            logging.warning(f'Tiempo total de filtrado de top N con IN -> {time.time() - start} segundos')
+            logging.warning(f'Filter top N with IN clause -> {time.time() - start} seconds')
 
             # Sets the final parameter
             final_row_count = result_limit_row_count
         else:
             final_row_count = total_row_count
-        logging.warning(f'Tiempo total de contabilizacion de tuplas resultantes -> {time.time() - start} segundos')
 
         return total_row_count, final_row_count, number_of_evaluated_combinations
+
+    @staticmethod
+    def __check_if_stopped(stop_event: Event):
+        """
+        Check if the experiment was stopped raising the corresponding exception
+        @param stop_event: Stop event to check if the experiment was stopped
+        @raise ExperimentStopped If the stop event is set
+        """
+        if stop_event.is_set():
+            raise ExperimentStopped
 
 
 global_pipeline_manager = PipelineManager()

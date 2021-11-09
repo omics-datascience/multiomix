@@ -182,3 +182,21 @@
     background-color: #b5cc18 !important;
     color: #fff;
 }
+
+.experiment-stopping-icon {
+    animation-name: stop-color-palette;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes stop-color-palette {
+  0% {
+    color: black;
+    font-size: 1em;
+  }
+  100% {
+    color: #db2828;
+    font-size: 1.1em;
+  }
+}

@@ -183,9 +183,10 @@ type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'met
  */
 interface ExperimentStateInfo {
     iconName: SemanticICONS,
-    color: SemanticCOLORS,
+    color?: SemanticCOLORS,
     loading: boolean,
-    title: string
+    title: string,
+    className?: string
 }
 
 /**
