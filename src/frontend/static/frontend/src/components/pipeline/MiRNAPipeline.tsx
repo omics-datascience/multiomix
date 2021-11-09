@@ -603,7 +603,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         const myHeaders = getDjangoHeader()
         const deleteURL = `${urlUserExperiments}/${this.state.selectedExperimentToDelete.id}`
         this.setState({ deletingExperiment: true }, () => {
-            ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
+            ky.delete(deleteURL, { headers: myHeaders, timeout: false }).then((response) => {
                 // If OK is returned refresh the experiments
                 if (response.ok) {
                     this.setState({
