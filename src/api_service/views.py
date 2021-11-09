@@ -38,6 +38,7 @@ from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, 
 from .enums import CorrelationType
 from .mrna_service import global_mrna_service
 from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_correlation
+from .permissions import ExperimentIsNotRunning
 from .pipelines import global_pipeline_manager
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
@@ -236,7 +237,7 @@ class ExperimentDetail(generics.RetrieveUpdateDestroyAPIView):
         return Experiment.objects.filter(user=self.request.user)
 
     serializer_class = ExperimentSerializerDetail
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, ExperimentIsNotRunning]
 
 
 @login_required
