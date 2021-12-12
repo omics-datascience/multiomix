@@ -50,8 +50,8 @@ services:
             - ./config/nginx/conf.d:/etc/nginx/conf.d
             - ./config/nginx/certificates:/etc/nginx/certificates
             - ./src:/src
-            - ./src/static:/static
-            - ./src/media:/media
+            - static_data:/static
+            - media_data:/media
         depends_on:
             - web
             
@@ -60,7 +60,7 @@ services:
         image: omicsdatascience/multiomics:5.0-beta
         # Note: uses dev settings when generates the key to avoid FileNotFoundError exception
         # when the key is generated at the first time
-        environment:
+        #environment:
           #APP_PORT=8000
           #LISTEN_IP=0.0.0.0
           #DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
@@ -84,6 +84,9 @@ services:
           # Redis
           #REDIS_HOST: 'redis'
           #REDIS_PORT: 6379          
+        volumes:
+            - static_data:/src/static
+            - media_data:/src/media
         depends_on:
             - db
             - mongo
@@ -98,3 +101,9 @@ volumes:
     postgres_data:
         external:
             name: 'multiomics_intermediate_postgres_data'
+    static_data:
+        external:
+            name: 'multiomics_intermediate_static_data'
+    media_data:
+        external:
+            name: 'multiomics_intermediate_media_data'
