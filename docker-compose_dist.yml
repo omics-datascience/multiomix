@@ -8,9 +8,10 @@ services:
         environment:
             # IMPORTANT: these three params must be the same than POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
             # below in 'web' service respectively
-            POSTGRES_USER: ''
-            POSTGRES_PASSWORD: ''
+            POSTGRES_USER: 'multiomics'
+            POSTGRES_PASSWORD: 'multiomics'
             POSTGRES_DB: 'multiomics'
+            POSTGRES_HOST_AUTH_METHOD: 'trust'
         volumes:
             - postgres_data:/var/lib/postgresql/data/
             - ./config/postgres/postgres.conf:/etc/postgresql/postgresql.conf
@@ -25,8 +26,8 @@ services:
         environment:
             # IMPORTANT: these three params must be the same than MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
             # below in 'web' service respectively
-            MONGO_INITDB_ROOT_USERNAME: ''
-            MONGO_INITDB_ROOT_PASSWORD: ''
+            MONGO_INITDB_ROOT_USERNAME: 'multiomics'
+            MONGO_INITDB_ROOT_PASSWORD: 'multiomics'
             MONGO_INITDB_DATABASE: 'multiomics'
         # Sets the config file
         command: --config /etc/mongo/mongod.conf
@@ -56,48 +57,36 @@ services:
             
     # Django Backend Server
     web:
-        image: omicsdatascience/multiomics:4.3
+        image: omicsdatascience/multiomics:5.0-beta
         # Note: uses dev settings when generates the key to avoid FileNotFoundError exception
         # when the key is generated at the first time
-        command: bash -c "cd frontend/static/frontend &&
-            npm i &&
-            npm run prod &&
-            cd /src &&
-            python3 manage.py generate_secret_key --settings='multiomics_intermediate.settings' && 
-            python3 manage.py collectstatic --no-input &&
-            python3 manage.py makemigrations && 
-            python3 manage.py migrate && 
-            daphne -b 0.0.0.0 -p 8000 multiomics_intermediate.asgi:application"
-        volumes:
-            - ./src:/src
-            - ./src/static:/static
-            - ./src/media:/media
+        environment:
+          #APP_PORT=8000
+          #LISTEN_IP=0.0.0.0
+          #DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
+          #RESULT_DATAFRAME_LIMIT_ROWS: 500
+          #TABLE_PAGE_SIZE: 10
+
+          # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+          #POSTGRES_USERNAME: 'multiomics'
+          #POSTGRES_PASSWORD: 'multiomics'
+          #POSTGRES_HOST: 'db'
+          #POSTGRES_PORT: 5432
+          #POSTGRES_DB: 'multiomics'
+    
+          # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+          #MONGO_USERNAME: 'multiomics'
+          #MONGO_PASSWORD: 'multiomics'
+          #MONGO_HOST: 'mongo'
+          #MONGO_PORT: 27017
+          #MONGO_DB: 'multiomics'
+
+          # Redis
+          #REDIS_HOST: 'redis'
+          #REDIS_PORT: 6379          
         depends_on:
             - db
             - mongo
-        environment:
-            # Django
-            DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
-            RESULT_DATAFRAME_LIMIT_ROWS: 500
-            TABLE_PAGE_SIZE: 10
-
-            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
-            POSTGRES_USERNAME: ''
-            POSTGRES_PASSWORD: ''
-            POSTGRES_HOST: 'db'
-            POSTGRES_PORT: 5432
-            POSTGRES_DB: 'multiomics'
-                
-            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
-            MONGO_USERNAME: ''
-            MONGO_PASSWORD: ''
-            MONGO_HOST: 'mongo'
-            MONGO_PORT: 27017
-            MONGO_DB: 'multiomics'
-
-            # Redis
-            REDIS_HOST: 'redis'
-            REDIS_PORT: 6379
 
 volumes:
     mongo_data:
