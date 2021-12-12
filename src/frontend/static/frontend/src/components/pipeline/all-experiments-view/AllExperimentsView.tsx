@@ -17,6 +17,7 @@ interface AllExperimentsViewProps {
     seeResult: (experiment: DjangoExperiment) => void,
     editExperiment: (experiment: DjangoExperiment) => void,
     confirmExperimentDeletion: (experiment: DjangoExperiment) => void,
+    confirmExperimentStop: (experiment: DjangoExperiment) => void,
     handleSortAllExperiments: (headerServerCodeToSort: string) => void,
     handleTableControlChangesAllExperiments: (name: string, value: any, resetPagination?: boolean) => void
 }
@@ -112,6 +113,7 @@ class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExp
                     seeResult={this.props.seeResult}
                     editExperiment={this.props.editExperiment}
                     confirmExperimentDeletion={this.props.confirmExperimentDeletion}
+                    confirmExperimentStop={this.props.confirmExperimentStop}
                 />
             )
         })

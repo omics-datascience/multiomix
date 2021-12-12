@@ -38,6 +38,11 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
             color: 'olive',
             image: '/static/frontend/img/assumptions/StatisticsSolutions.png',
             href: 'https://www.statisticssolutions.com/correlation-pearson-kendall-spearman/'
+        },
+        {
+            color: 'green',
+            image: '/static/frontend/img/assumptions/GenericReference.png',
+            href: 'http://www.biostathandbook.com/linearregression.html'
         }
     ]
 

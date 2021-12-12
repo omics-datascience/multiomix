@@ -1,9 +1,11 @@
 import time
+from threading import Event
+from typing import Dict, Tuple
 from .models import Experiment
 from .models_choices import ExperimentState
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 from .pipelines import global_pipeline_manager
-from .exceptions import ExperimentFailed, NoSamplesInCommon
+from .exceptions import ExperimentFailed, NoSamplesInCommon, ExperimentStopped
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
 from django.db.models import Q, QuerySet
@@ -18,6 +20,7 @@ class TaskQueue(object):
     """
     executor: ThreadPoolExecutor = None
     use_transaction: bool
+    experiments_futures: Dict[int, Tuple[Future, Event]] = {}
 
     def __init__(self):
         # Instantiates the executor
@@ -26,6 +29,7 @@ class TaskQueue(object):
         # processes
         self.executor = ThreadPoolExecutor(max_workers=settings.THREAD_POOL_SIZE)
         self.use_transaction = settings.USE_TRANSACTION_IN_EXPERIMENT
+        self.experiments_futures = {}
 
     def __commit_or_rollback(self, is_commit: bool, experiment: Experiment):
         """
@@ -41,18 +45,20 @@ class TaskQueue(object):
             logging.warning(f'Rolling back {experiment.pk} manually')
             start = time.time()
             experiment.combinations.delete()
-            logging.warning(f'Tiempo de rollback manual de {experiment.pk} -> {time.time() - start} segundos')
+            logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
 
-    def eval_mrna_gem_experiment(self, experiment: Experiment) -> None:
+    def eval_mrna_gem_experiment(self, experiment: Experiment, stop_event: Event) -> None:
         """
         Computes a mRNA x miRNA/CNA/Methylation experiment
+        @param experiment: Experiment to be processed
+        @param stop_event: Stop event to cancel the experiment
         """
         experiment.state = ExperimentState.IN_PROCESS
         experiment.save()
 
         # Computes the experiment
         try:
-            logging.warning(f'ID EXPERIMENTO -> {experiment.pk}')
+            logging.warning(f'ID EXPERIMENT -> {experiment.pk}')
             # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
             # with exceptions thrown in subprocesses
             if self.use_transaction:
@@ -62,17 +68,22 @@ class TaskQueue(object):
             # Computes pearson
             start = time.time()
             total_row_count, final_row_count, evaluated_combinations = global_pipeline_manager.compute_experiment(
-                experiment
+                experiment,
+                stop_event
             )
-            logging.warning(f'Tiempo total de experimento {experiment.pk} -> {time.time() - start} segundos')
+            logging.warning(f'Experiment {experiment.pk} total time -> {time.time() - start} seconds')
 
-            self.__commit_or_rollback(is_commit=True, experiment=experiment)
+            # If user cancel the experiment, discard changes
+            if stop_event.is_set():
+                raise ExperimentStopped
+            else:
+                self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
-            # Saves some data about the result of the experiment
-            experiment.evaluated_row_count = evaluated_combinations
-            experiment.result_total_row_count = total_row_count
-            experiment.result_final_row_count = final_row_count
-            experiment.state = ExperimentState.COMPLETED
+                # Saves some data about the result of the experiment
+                experiment.evaluated_row_count = evaluated_combinations
+                experiment.result_total_row_count = total_row_count
+                experiment.result_final_row_count = final_row_count
+                experiment.state = ExperimentState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
@@ -85,6 +96,11 @@ class TaskQueue(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('MongoDB connection timeout!')
             experiment.state = ExperimentState.WAITING_FOR_QUEUE
+        except ExperimentStopped:
+            # If user cancel the experiment, discard changes
+            logging.warning(f'Experiment {experiment.pk} was stopped')
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            experiment.state = ExperimentState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.exception(e)
@@ -94,6 +110,9 @@ class TaskQueue(object):
         # Saves changes in DB
         experiment.save()
 
+        # Removes key
+        self.__removes_experiment_future(experiment.pk)
+
         close_db_connection()
 
     def add_experiment(self, experiment: Experiment):
@@ -101,7 +120,36 @@ class TaskQueue(object):
         Adds an experiment to the ThreadPool to be processed
         @param experiment: Experiment to be processed
         """
-        self.executor.submit(self.eval_mrna_gem_experiment, experiment)
+        experiment_event = Event()
+        experiment_future = self.executor.submit(self.eval_mrna_gem_experiment, experiment, experiment_event)
+        self.experiments_futures[experiment.pk] = (experiment_future, experiment_event)
+
+    def stop_experiment(self, experiment: Experiment):
+        """
+        Stops a specific experiment
+        @param experiment: Experiment to stop
+        """
+        if experiment.pk in self.experiments_futures:
+            (experiment_future, experiment_event) = self.experiments_futures[experiment.pk]
+            if experiment_future.cancel():
+                # If cancel() returns True it means that the experiment was waiting in queue and was
+                # successfully canceled
+                experiment.state = ExperimentState.STOPPED
+            else:
+                # Sends signal to stop the experiment
+                experiment.state = ExperimentState.STOPPING
+                experiment_event.set()
+            experiment.save()
+
+            # Removes key
+            self.__removes_experiment_future(experiment.pk)
+
+    def __removes_experiment_future(self, experiment_pk: int):
+        """
+        Removes a specific key from self.experiments_futures
+        @param experiment_pk: PK to remove
+        """
+        del self.experiments_futures[experiment_pk]
 
 
 global_task_queue = TaskQueue()

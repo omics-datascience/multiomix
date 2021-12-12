@@ -194,3 +194,8 @@ where the class 'ellipsis' is added to the parent div and not to the button */
 #site-policy-link:hover {
     text-decoration: underline;
 }
+
+/* This prevents help icons to be over navbar menu */
+h2.menu .menu.transition.visible {
+    z-index: 9999;
+}
