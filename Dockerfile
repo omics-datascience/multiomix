@@ -48,7 +48,8 @@ WORKDIR /src
 ADD src .
 
 # Media folder
-VOLUME /media
+VOLUME /src/media
+
 # Healtchecker and Housekeeping
 HEALTHCHECK --interval=5m --timeout=30s CMD ["/bin/bash", "-c", "/src/tools/checks.sh"]
 
