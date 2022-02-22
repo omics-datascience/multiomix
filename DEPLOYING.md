@@ -47,7 +47,7 @@ The following are the steps to perform a deployment in production. In case you w
         - `EMAIL_NEW_USER_CONFIRMATION_ENABLED`: set the string `true` to send an email with a confirmation token when a user is created from the Sign Up panel. Default `false`.
         - `EMAIL_SERVER`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. SMTP server address to send mails.
         - `EMAIL_PORT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. SMTP server port to send mails.
-        - `EMAIL_ADDRESS`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Email user of the account with which the mails are going to be sent.
+        - `EMAIL_ADDRESS`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Email user of the account with which the e-mails will be sent.
         - `EMAIL_FROM_ADDRESS`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Alias with which the sender of the mail will appear.
         - `EMAIL_PASSWORD`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. The password of the mail user with which the mails will be sent.
         - `EMAIL_MAIL_SUBJECT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Title with which the confirmation emails will be sent. By default `Confirm your email`.
