@@ -278,7 +278,6 @@ interface DjangoMiRNADataJSON {
 interface DjangoMiRNADiseasesJSON {
     id: number,
     category: string,
-    mirna: string,
     disease: string,
     pubmed: string,
     description: string
