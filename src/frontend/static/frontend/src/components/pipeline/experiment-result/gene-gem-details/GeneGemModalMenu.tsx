@@ -120,7 +120,6 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                 </React.Fragment>
             }
 
-            {/* TODO: temporarily hidden. Uncomment after some fixes
             <Menu.Item
                 active={props.activeItem === ActiveItemMenu.ASSUMPTIONS}
                 onClick={() => props.setActiveItem(ActiveItemMenu.ASSUMPTIONS)}
@@ -133,7 +132,7 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                     onEvent='hover'
                     extraClassName='margin-left-5'
                 />
-            </Menu.Item> */}
+            </Menu.Item>
 
             <Menu.Item
                 active={props.activeItem === ActiveItemMenu.SURVIVAL_ANALYSIS}

@@ -7,6 +7,7 @@ import { DeleteExperimentButton } from './DeleteExperimentButton'
 import { SourcePopup } from './SourcePopup'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { ClinicalSourcePopup } from './ClinicalSourcePopup'
+import { StopExperimentButton } from './StopExperimentButton'
 
 declare const urlDownloadFullResult: string
 
@@ -21,7 +22,8 @@ interface AllExperimentRowProps {
     getAllUserExperiments: (retryIfNotFound?: boolean) => void,
     seeResult: (experiment: DjangoExperiment) => void,
     editExperiment: (experiment: DjangoExperiment) => void,
-    confirmExperimentDeletion: (experiment: DjangoExperiment) => void
+    confirmExperimentDeletion: (experiment: DjangoExperiment) => void,
+    confirmExperimentStop: (experiment: DjangoExperiment) => void
 }
 
 /**
@@ -34,6 +36,10 @@ export const AllExperimentsRow = (props: AllExperimentRowProps) => {
 
     // Generates Experiment's state info
     const experimentState = getStateObj(experiment.state)
+
+    const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
+        experiment.state === ExperimentState.WAITING_FOR_QUEUE ||
+        experiment.state === ExperimentState.STOPPING)
 
     // Generates ExperimentType info
     const experimentTypeInfo = getExperimentTypeObj(experiment.type, 'ExperimentType')
@@ -51,7 +57,13 @@ export const AllExperimentsRow = (props: AllExperimentRowProps) => {
             <TableCellWithTitle value={experiment.description}/>
             <TableCellWithTitle value={formatDateLocale(experiment.submit_date, 'LLL')} />
             <Table.Cell>
-                <Icon title={experimentState.title} name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading}/>
+                <Icon
+                    title={experimentState.title}
+                    className={experimentState.className}
+                    name={experimentState.iconName}
+                    color={experimentState.color}
+                    loading={experimentState.loading}
+                />
             </Table.Cell>
             <Table.Cell>{experimentTypeInfo.description}</Table.Cell>
             <Table.Cell>{experimentCorrelationMethodInfo.description}</Table.Cell>
@@ -115,10 +127,20 @@ export const AllExperimentsRow = (props: AllExperimentRowProps) => {
                     disabled={experiment.state !== ExperimentState.COMPLETED}
                 />
 
+                {/* Stop button */}
+                {(!isFinished && experiment.state !== ExperimentState.STOPPING) &&
+                    <StopExperimentButton
+                        experiment={experiment}
+                        onClick={() => props.confirmExperimentStop(experiment)}
+                    />
+                }
+
                 {/* Delete button */}
-                {/* TODO: remove this, is a temporal fix to prevent errors in server. A stop thread function should be implemented */}
-                {!(experiment.state === ExperimentState.IN_PROCESS || experiment.state === ExperimentState.WAITING_FOR_QUEUE) &&
-                    <DeleteExperimentButton experiment={experiment} onClick={() => props.confirmExperimentDeletion(experiment)}/>
+                {isFinished &&
+                    <DeleteExperimentButton
+                        experiment={experiment}
+                        onClick={() => props.confirmExperimentDeletion(experiment)}
+                    />
                 }
             </Table.Cell>
         </Table.Row>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Grid, Header, Segment } from 'semantic-ui-react'
+import { Card, Grid, Header } from 'semantic-ui-react'
 import { ReferenceCard } from '../../../../../utils/interfaces'
 
 /**

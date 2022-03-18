@@ -10,7 +10,9 @@ enum ExperimentState {
     IN_PROCESS = 2,
     COMPLETED = 3,
     FINISHED_WITH_ERROR = 4,
-    NO_SAMPLES_IN_COMMON = 5
+    NO_SAMPLES_IN_COMMON = 5,
+    STOPPING = 6,
+    STOPPED = 7
 }
 
 /**
@@ -276,7 +278,6 @@ interface DjangoMiRNADataJSON {
 interface DjangoMiRNADiseasesJSON {
     id: number,
     category: string,
-    mirna: string,
     disease: string,
     pubmed: string,
     description: string

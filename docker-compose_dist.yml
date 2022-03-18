@@ -56,7 +56,7 @@ services:
             
     # Django Backend Server
     web:
-        image: omicsdatascience/multiomics:4.3
+        image: omicsdatascience/multiomics:4.4
         # Note: uses dev settings when generates the key to avoid FileNotFoundError exception
         # when the key is generated at the first time
         command: bash -c "cd frontend/static/frontend &&

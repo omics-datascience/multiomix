@@ -109,7 +109,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     <Form.Field>
                         <LabelWithInfoPopup
                             labelText='Correlation method'
-                            popupContent='Correlation method to use: Pearson, Spearman or Kendall. You can see if the selected method is appropriated for your data in the Assumptions panel in the result view once the experiment has finished'
+                            popupContent='Correlation method to use: Pearson, Spearman or Kendall (Tau-b). You can see if the selected method is appropriated for your data in the Assumptions panel in the result view once the experiment has finished'
                         />
 
                         <Select
