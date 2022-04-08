@@ -200,3 +200,7 @@
     font-size: 1.1em;
   }
 }
+
+#slider-cor-filter-label {
+    background-color: inherit;
+}

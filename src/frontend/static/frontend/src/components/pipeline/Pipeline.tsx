@@ -534,7 +534,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             name: '',
             description: '',
             correlationCoefficient: 0.7,
-            standardDeviationGene: 0.001,
+            standardDeviationGene: 0.0,
             standardDeviationGEM: 0.2,
             correlationMethod: CorrelationMethod.PEARSON,
             adjustmentMethod: PValuesAdjustmentMethod.BENJAMINI_HOCHBERG,
