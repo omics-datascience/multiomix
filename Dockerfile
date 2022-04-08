@@ -1,13 +1,13 @@
-# omicsdatascience/multiomics:2.0
+# omicsdatascience/multiomics:4.4.1
 FROM python:3.8.6-buster
 
 # Installs system dependencies
 RUN apt-get update
 RUN apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev
 
-# Installs Node JS 12 LTS (using Node.Melroy)
-RUN curl -sL https://node.melroy.org/deb/setup_12.x | bash -
-RUN apt-get install -y nodejs npm
+# Installs Node JS 16 LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
 
 # Installs Python dependencies
 RUN mkdir /config
