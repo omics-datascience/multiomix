@@ -1,7 +1,8 @@
+from typing import Optional
 from django.test import TestCase
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, CGDSDatasetSynchronizationState,\
     CGDSStudySynchronizationState
-from datasets_synchronization.synchronization_service import SynchronizationService, global_synchronization_service
+from datasets_synchronization.synchronization_service import global_synchronization_service
 import os
 import logging
 
@@ -32,7 +33,11 @@ class ExperimentCommonsTestCase(TestCase):
         return os.path.join(dir_name, f'tests_files/{filename}')
 
     @staticmethod
-    def __create_cgds_dataset(file_path: str, mongo_collection_name: str) -> CGDSDataset:
+    def __create_cgds_dataset(
+            file_path: str,
+            mongo_collection_name: str,
+            header_row_index: Optional[int] = 0
+    ) -> CGDSDataset:
         """
         Creates a new saved in DB CGDSDataset instance
         @param file_path: Model's file_path field
@@ -43,6 +48,7 @@ class ExperimentCommonsTestCase(TestCase):
             file_path=file_path,
             observation=None,
             separator='\t',
+            header_row_index=header_row_index,
             date_last_synchronization=None,
             state=CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED,
             mongo_collection_name=mongo_collection_name
@@ -60,7 +66,7 @@ class ExperimentCommonsTestCase(TestCase):
             'data_methylation_hm27.txt',
             'methylation_dataset'
         )
-        self.clinical_dataset = self.__create_cgds_dataset('data_clinical_patient.txt', 'clinical_dataset')
+        self.clinical_dataset = self.__create_cgds_dataset('data_clinical_patient.txt', 'clinical_dataset', 4)
 
         # CGDS studies
         self.study_url_error = CGDSStudy.objects.create(
@@ -73,7 +79,8 @@ class ExperimentCommonsTestCase(TestCase):
             mirna_dataset=None,
             cna_dataset=None,
             methylation_dataset=None,
-            clinical_dataset=None
+            clinical_patient_dataset=None,
+            clinical_sample_dataset=None
         )
 
         # NOTE: this object is only to prevent DB integrity errors in CGDSDataset entity
@@ -81,7 +88,7 @@ class ExperimentCommonsTestCase(TestCase):
             name='Normal study',
             description='Just a normal study',
             date_last_synchronization=None,
-            # Don't care about the invalid URL, the download is not tested because performance issues but we need
+            # Don't care about the invalid URL, the download is not tested because performance issues, but we need
             # the file name
             url='http://not.exists.org/test_laml_tcga_pub.tar.gz',
             state=CGDSStudySynchronizationState.IN_PROCESS,
@@ -89,7 +96,8 @@ class ExperimentCommonsTestCase(TestCase):
             mirna_dataset=self.mirna_dataset,
             cna_dataset=self.cna_dataset,
             methylation_dataset=self.methylation_dataset,
-            clinical_dataset=self.clinical_dataset
+            clinical_patient_dataset=self.clinical_dataset,
+            clinical_sample_dataset=None
         )
 
     def test_cgds_studies_states(self):
