@@ -1,10 +1,40 @@
+from channels.http import AsgiRequest
+from chunked_upload.models import ChunkedUpload
+from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q, Count, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer
 from .models import UserFile
+from django.forms.models import model_to_dict
+
+
+# TODO: check security
+class UserFileChunkedUploadView(ChunkedUploadView):
+    model = ChunkedUpload
+    field_name = 'file_obj'
+
+
+# TODO: check security
+class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
+    model = ChunkedUpload
+
+    def on_completion(self, uploaded_file: UploadedFile, request):
+        data = request.POST.dict()
+        data['file_obj'] = uploaded_file
+        serializer = UserFileSerializer(data=data, context={'request': request})
+        if not serializer.is_valid():
+            raise Exception('Invalid UserFile data')
+
+        serializer.save()
+
+    def get_response_data(self, chunked_upload: ChunkedUpload, request: AsgiRequest):
+        uploaded_file_obj = UserFile.objects.filter(user=chunked_upload.user).last()
+        serializer = UserFileSerializer()
+        return serializer.to_representation(uploaded_file_obj)
 
 
 def get_an_user_file(user: User, user_file_pk: int) -> UserFile:
@@ -67,7 +97,7 @@ def get_user_files(user: User, public_only: bool, private_only: bool, with_survi
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
 
-class AllUserFileList(generics.ListCreateAPIView):
+class AllUserFileList(generics.ListAPIView):
     """REST endpoint: list and create for UserFile model"""
 
     def get_queryset(self):

@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
-    'genes'
+    'genes',
+    'chunked_upload',
 ]
 
 MIDDLEWARE = [

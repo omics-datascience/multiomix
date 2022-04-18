@@ -2,13 +2,14 @@ import React from 'react'
 import { Base } from '../Base'
 import { Grid, Header, Button, Modal, Segment, Icon, Select, DropdownItemProps, Checkbox } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
-import ky, { ResponsePromise, Options, Input } from 'ky'
+import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
 import { FilesList } from './FilesList'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
 import { NewFileForm } from './NewFileForm'
+import { startUpload } from '../../utils/file_uploader'
 
 const FILE_INPUT_LABEL = 'Add a new file'
 
@@ -17,6 +18,8 @@ declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
 declare const urlAllUserFiles: string
 declare const urlUserInstitutions: string
+declare const urlChunkUpload: string
+declare const urlChunkUploadComplete: string
 
 /**
  * New File Form fields
@@ -461,7 +464,42 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * Checks if It's editing an existing file
      * @returns True if It's editing, false otherwise
      */
-    isEditing = (): boolean => this.state.newFile.id !== null && this.state.newFile.id !== undefined;
+    isEditing = (): boolean => this.state.newFile.id !== null && this.state.newFile.id !== undefined
+
+    /**
+     * On success callback during file upload
+     * @param responseJSON JSON response with uploaded UserFile data
+     */
+    uploadSuccess = (responseJSON: DjangoUserFile) => {
+        if (responseJSON && responseJSON.id) {
+            // If everything gone OK, resets the New File Form...
+            this.setState({ newFile: this.getDefaultNewFile() })
+
+            // ... and refresh the user files
+            this.getUserFiles()
+        }
+    }
+
+    /**
+     * On error callback during file upload
+     * @param error Error object
+     */
+    uploadError = (error) => {
+        error.response.json().then((errorBody: DjangoResponseUploadUserFileError) => {
+            console.log(errorBody)
+            // NOTE: Parses int as Django Rest Framework returns as string
+            // Related issue https://github.com/encode/django-rest-framework/issues/7532
+            const internalCode = errorBody && errorBody.file_obj
+                ? parseInt(errorBody.file_obj.status.internal_code as unknown as string)
+                : null
+            if (internalCode === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
+                alert('The file has an incorrect format: all columns except the index must be numerical data')
+            } else {
+                alertGeneralError()
+            }
+        }).catch(alertGeneralError)
+        console.log('Error uploading file ->', error)
+    }
 
     /**
      * Uploads a file
@@ -470,10 +508,8 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         if (!this.newFileIsValid()) {
             return
         }
+
         const myHeaders = getDjangoHeader()
-
-        const isEditing = this.isEditing()
-
         const newFileForm = this.state.newFile
 
         const formData = new FormData()
@@ -501,52 +537,42 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             formData.append('platform', newFileForm.platform.toString())
         }
 
-        // It's only valid to append a new File object if is a new User's file
-        let requestMethod: (url: Input, options?: Options) => ResponsePromise, addOrEditURL: string
-        if (isEditing) {
-            requestMethod = ky.patch
-            addOrEditURL = `${urlUserFilesCRUD}${newFileForm.id}/`
-        } else {
-            requestMethod = ky.post
-            addOrEditURL = urlUserFilesCRUD
-            formData.append('file_obj', this.newFileInputRef.current.files[0])
-        }
-
+        // Checks if it is an edition or creation
         this.setState({ uploadingFile: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, body: formData, timeout: false }).then((response) => {
-                response.json().then((responseJSON: DjangoUserFile) => {
-                    if (responseJSON && responseJSON.id) {
-                        // If everything gone OK, resets the New File Form...
-                        this.setState({
-                            uploadingFile: false,
-                            newFile: this.getDefaultNewFile()
+            if (this.isEditing()) {
+                // In case of edition, just call Django REST API as no file upload is required
+                const editUrl = `${urlUserFilesCRUD}${newFileForm.id}/`
+                this.setState({ uploadingFile: true }, () => {
+                    ky.patch(editUrl, { headers: myHeaders, body: formData, timeout: false })
+                        .then((response) => {
+                            response.json().then(this.uploadSuccess).catch((err) => {
+                                console.log('Error parsing JSON ->', err)
+                                alertGeneralError()
+                            })
                         })
-
-                        // ... and refresh the user files
-                        this.getUserFiles()
-                    }
-                }).catch((err) => {
-                    this.setState({ uploadingFile: false })
-                    alertGeneralError()
-                    console.log('Error parsing JSON ->', err)
+                        .catch(this.uploadError)
+                        .finally(() => {
+                            this.setState({ uploadingFile: false })
+                        })
                 })
-            }).catch((error) => {
-                this.setState({ uploadingFile: false })
-                error.response.json().then((errorBody: DjangoResponseUploadUserFileError) => {
-                    console.log(errorBody)
-                    // NOTE: Parses int as Django Rest Framework returns as string
-                    // Related issue https://github.com/encode/django-rest-framework/issues/7532
-                    const internalCode = errorBody && errorBody.file_obj
-                        ? parseInt(errorBody.file_obj.status.internal_code as unknown as string)
-                        : null
-                    if (internalCode === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
-                        alert('The file has an incorrect format: all columns except the index must be numerical data')
-                    } else {
+            } else {
+                // TODO: add progress bar when progress callback is implemented
+                // In case of creation, an upload in chunks is required
+                startUpload({
+                    url: urlChunkUpload,
+                    urlComplete: urlChunkUploadComplete,
+                    headers: myHeaders,
+                    file: this.newFileInputRef.current.files[0],
+                    completeData: formData
+                }).then(this.uploadSuccess)
+                    .catch((err) => {
+                        console.log('Error uploading file ->', err)
                         alertGeneralError()
-                    }
-                }).catch(alertGeneralError)
-                console.log('Error uploading file ->', error)
-            })
+                    })
+                    .finally(() => {
+                        this.setState({ uploadingFile: false })
+                    })
+            }
         })
     }
 
@@ -728,13 +754,13 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                         <Segment>
                             {/* Reset filter button */}
                             <Button fluid color="grey" onClick={this.resetFilter} icon labelPosition='left'>
-                                <Icon name='undo'/>
+                                <Icon name='undo' />
                                 Reset filter
                             </Button>
 
                             {/* File type filter */}
                             <Header textAlign="center">
-                                <Icon name='file'/>
+                                <Icon name='file' />
                                 <Header.Content>File type</Header.Content>
                             </Header>
 
@@ -751,7 +777,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                         <Segment>
                             {/* File type filter */}
                             <Header textAlign="center">
-                                <Icon name='building'/>
+                                <Icon name='building' />
                                 <Header.Content>Institutions</Header.Content>
                             </Header>
 
