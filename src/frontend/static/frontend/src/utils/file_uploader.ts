@@ -1,11 +1,15 @@
 import ky from 'ky'
 import * as SparkMD5 from 'spark-md5'
 
-// TODO: add docs
+/** Upload service configuration. */
 type ChunkFileUploaderConfig = {
+    /** URL to send every chunk. */
     url: string,
+    /** URL to complete the upload after every chunk was successfully uploaded. */
     urlComplete: string,
+    /** Extra headers to send to backend. */
     headers: Headers,
+    /** File to send. */
     file: File,
     /** Any extra data to send when the upload is complete. If not specified an empty FormData is assigned. */
     completeData?: FormData, // Django chunk library needs data in a FormData
@@ -15,10 +19,10 @@ type ChunkFileUploaderConfig = {
     onChunkUpload?: (percentDone: number) => void
 }
 
-// TODO: add docs
+/** Response structure from the Django chunk upload library. */
 type ChunkUploadResponse = { upload_id: string, offset: number, expires: string}
 
-// TODO: complete docs and instance variables
+/** Util class to upload a file in chunks. */
 class ChunkFileUploader {
     private url: string
     private urlComplete: string
@@ -38,6 +42,10 @@ class ChunkFileUploader {
         this.onChunkUpload = config.onChunkUpload
     }
 
+    /**
+     * Computes MD5 hash to check in backend.
+     * @returns MD5 hash in hexadecimal.
+     */
     private calculateMD5 (): Promise<number> {
         const promise = new Promise<number>((resolve, reject) => {
             const chunks = Math.ceil(this.file.size / this.chunkSize)
@@ -61,9 +69,7 @@ class ChunkFileUploader {
                 reject(e)
             }
 
-            /**
-             * TODO: complete
-             */
+            /** Reads next chunk of file. */
             const loadNext = () => {
                 var start = currentChunk * this.chunkSize
                 var end = ((start + this.chunkSize) >= this.file.size) ? this.file.size : start + this.chunkSize
@@ -78,9 +84,9 @@ class ChunkFileUploader {
     }
 
     /**
-     * TODO: complete
-     * @param uploadId
-     * @returns
+     * Sends last request to finish the file upload.
+     * @param uploadId Upload ID to check in backend
+     * @returns A promise with the backend response
      */
     private completeUpload<T> (uploadId: string): Promise<T> {
         return new Promise<T>((resolve, reject) => {
@@ -98,7 +104,8 @@ class ChunkFileUploader {
     }
 
     /**
-     * TODO: complete
+     * Uploads a file
+     * @returns A promise with the backend response.
      */
     public uploadFile<T> (): Promise<T> {
         return new Promise<T>((resolve, reject) => {
@@ -106,17 +113,18 @@ class ChunkFileUploader {
             const file = this.file
 
             /**
-             * TODO: complete
-             * @param start
+             * Generates the HTTP head 'Content-Range' which is needed in backend to check offsets.
+             * @param start Offset start.
+             * @returns HTTP header content.
              */
-            const getContentRange = (start: number) => {
+            const getContentRange = (start: number): string => {
                 const end = Math.min(start + this.chunkSize, file.size)
                 return `bytes ${start}-${end - 1}/${file.size}`
             }
 
             /**
-             * TODO: complete
-             * @param start
+             * Reads the next chunk of the file from an offset.
+             * @param start Start offset to read from.
              */
             const loadNextFrom = (start: number) => {
                 reader.readAsArrayBuffer(file.slice(start, start + this.chunkSize))
@@ -139,7 +147,6 @@ class ChunkFileUploader {
                     response.json().then((responseJSON: ChunkUploadResponse) => {
                         const offset = responseJSON.offset
 
-                        // TODO: use both below const to send to a callback for each chunk
                         const sizeDone = Math.min(file.size, responseJSON.offset)
                         const percentDone = Math.floor((sizeDone / file.size) * 100)
 
@@ -172,8 +179,9 @@ class ChunkFileUploader {
 }
 
 /**
- * TODO: complete this doc and the above one
- * @param config
+ * Uploads a file in chunks.
+ * @param config Configuration as URLs and callbacks.
+ * @returns A promise with the backend response.
  */
 function startUpload<T> (config: ChunkFileUploaderConfig): Promise<T> {
     const uploader = new ChunkFileUploader(config)
