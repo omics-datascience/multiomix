@@ -10,7 +10,7 @@ This document is focused on the **development** of the system. If you are lookin
 ## Pre-requisites
 
 - Python 3.7 or Python 3.8
-- Node JS (tested version: `12.11.1`)
+- Node JS (tested version: `16.x`)
 
 
 ## Installation 
