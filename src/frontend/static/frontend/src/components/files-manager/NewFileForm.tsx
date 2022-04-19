@@ -1,5 +1,5 @@
 import React from 'react'
-import { DropdownItemProps, Form, Header, Label, List, Segment } from 'semantic-ui-react'
+import { DropdownItemProps, Form, Header, Label, List, Progress, Segment } from 'semantic-ui-react'
 import { ACCEPTED_FILE_TYPES } from '../../utils/constants'
 import { DjangoMethylationPlatform } from '../../utils/django_interfaces'
 import { FileType } from '../../utils/interfaces'
@@ -19,6 +19,7 @@ interface NewFileFormProps {
     tagOptions: DropdownItemProps[],
     institutionsOptions: DropdownItemProps[],
     uploadingFile: boolean,
+    uploadPercentage: number,
     newFileIsValid: boolean,
     isEditing: boolean,
     uploadFile: () => void,
@@ -38,9 +39,30 @@ interface NewFileFormProps {
 export const NewFileForm = (props: NewFileFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
+    const progressOrButton = props.uploadingFile
+        ? (
+            <Form.Field width={2}>
+                <Progress
+                    percent={props.uploadPercentage}
+                    indicating
+                    label='Uploading file'
+                />
+            </Form.Field>
+        ) : (
+            <Form.Button
+                fluid
+                className='ellipsis'
+                content={props.isEditing ? 'Editing...' : props.newFile.newFileName}
+                color='blue'
+                onClick={() => props.newFileInputRef.current.click()}
+                width={2}
+                disabled={props.isEditing || props.uploadingFile}
+            />
+        )
+
     return (
         <Segment>
-            <Form loading={props.uploadingFile}>
+            <Form>
                 <Form.Group>
                     <InfoPopup
                         content={
@@ -69,15 +91,9 @@ export const NewFileForm = (props: NewFileFormProps) => {
                     />
 
                     {/* New file button */}
-                    <Form.Button
-                        fluid
-                        className='ellipsis'
-                        content={props.isEditing ? 'Editing...' : props.newFile.newFileName}
-                        color='blue'
-                        onClick={() => props.newFileInputRef.current.click()}
-                        width={2}
-                        disabled={props.isEditing}
-                    />
+                    {progressOrButton}
+
+                    {/* This hidden input must be present in DOM to prevent issues with React ref */}
                     <input
                         ref={props.newFileInputRef}
                         type="file"
@@ -94,6 +110,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         onChange={checkedHandleFormChanges}
                         width={3}
                         maxLength={150}
+                        disabled={props.uploadingFile}
                     />
 
                     {/* File type */}
@@ -105,6 +122,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
                         placeholder='File type'
                         width={2}
+                        disabled={props.uploadingFile}
                     />
 
                     {/* File description input */}
@@ -115,6 +133,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         onChange={checkedHandleFormChanges}
                         width={3}
                         maxLength={300}
+                        disabled={props.uploadingFile}
                     />
 
                     <Form.Dropdown
@@ -128,6 +147,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         value={props.newFile.newTag as number}
                         onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
                         placeholder='Tag (optional)'
+                        disabled={props.uploadingFile}
                     />
 
                     {/* Submit button */}
@@ -135,7 +155,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         fluid
                         content={props.isEditing ? 'Save' : 'Upload'}
                         color='green'
-                        disabled={!props.newFileIsValid}
+                        disabled={!props.newFileIsValid || props.uploadingFile}
                         onClick={props.uploadFile}
                         width={2}
                     />
@@ -146,7 +166,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         icon='trash'
                         color="red"
                         onClick={props.resetNewFileForm}
-                        disabled={!props.newFileIsValid}
+                        disabled={!props.newFileIsValid || props.uploadingFile}
                         title="Clear the form"
                     />
                 </Form.Group>
@@ -158,6 +178,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         name='institutions'
                         institutionsOptions={props.institutionsOptions}
                         handleChange={props.handleAddFileInputsChange}
+                        disabled={props.uploadingFile}
                     />
 
                     {props.newFile.newFileType === FileType.METHYLATION &&
@@ -173,6 +194,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
                                 placeholder='File type'
                                 width={2}
+                                disabled={props.uploadingFile}
                             />
 
                             {props.newFile.isCpGSiteId &&
@@ -188,6 +210,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                     onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
                                     placeholder='File type'
                                     width={2}
+                                    disabled={props.uploadingFile}
                                 />
                             }
                         </React.Fragment>
@@ -206,6 +229,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         handleSurvivalFormDatasetChanges={props.handleSurvivalFormDatasetChanges}
                         addSurvivalFormTuple={props.addSurvivalFormTuple}
                         removeSurvivalFormTuple={props.removeSurvivalFormTuple}
+                        disabled={props.uploadingFile}
                     />
                 }
             </Form>

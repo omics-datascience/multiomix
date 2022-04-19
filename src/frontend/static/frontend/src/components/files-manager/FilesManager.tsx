@@ -64,7 +64,8 @@ interface FilesManagerState {
     uploadingFile: boolean,
     newFile: NewFile,
     filter: FilesManagerFilter,
-    addingTag: boolean
+    addingTag: boolean,
+    uploadPercentage: number
 }
 
 /**
@@ -91,7 +92,8 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             uploadingFile: false,
             filter: this.getDefaultFilter(),
             newFile: this.getDefaultNewFile(),
-            addingTag: false
+            addingTag: false,
+            uploadPercentage: 0
         }
     }
 
@@ -473,7 +475,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     uploadSuccess = (responseJSON: DjangoUserFile) => {
         if (responseJSON && responseJSON.id) {
             // If everything gone OK, resets the New File Form...
-            this.setState({ newFile: this.getDefaultNewFile() })
+            this.setState({ newFile: this.getDefaultNewFile(), uploadPercentage: 0 })
 
             // ... and refresh the user files
             this.getUserFiles()
@@ -563,9 +565,11 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                     urlComplete: urlChunkUploadComplete,
                     headers: myHeaders,
                     file: this.newFileInputRef.current.files[0],
-                    completeData: formData
+                    completeData: formData,
+                    onChunkUpload: (percentDone) => { this.setState({ uploadPercentage: percentDone }) }
                 }).then(this.uploadSuccess)
                     .catch((err) => {
+                        this.setState({ uploadPercentage: 0 })
                         console.log('Error uploading file ->', err)
                         alertGeneralError()
                     })
@@ -821,6 +825,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                             tagOptions={tagOptions}
                             institutionsOptions={institutionsOptions}
                             uploadingFile={this.state.uploadingFile}
+                            uploadPercentage={this.state.uploadPercentage}
                             fileChange={this.fileChange}
                             handleAddFileInputsChange={this.handleAddFileInputsChange}
                             uploadFile={this.uploadFile}
