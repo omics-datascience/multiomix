@@ -9,7 +9,6 @@ from rest_framework import generics, permissions, filters, status
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer
 from .models import UserFile
-from django.forms.models import model_to_dict
 
 
 # TODO: check security
@@ -21,14 +20,13 @@ class UserFileChunkedUploadView(ChunkedUploadView):
 # TODO: check security
 class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
     model = ChunkedUpload
+    do_md5_check = True
 
     def on_completion(self, uploaded_file: UploadedFile, request):
         data = request.POST.dict()
         data['file_obj'] = uploaded_file
         serializer = UserFileSerializer(data=data, context={'request': request})
-        if not serializer.is_valid():
-            raise Exception('Invalid UserFile data')
-
+        serializer.is_valid(raise_exception=True)
         serializer.save()
 
     def get_response_data(self, chunked_upload: ChunkedUpload, request: AsgiRequest):

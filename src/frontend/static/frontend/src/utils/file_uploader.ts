@@ -1,6 +1,16 @@
 import ky from 'ky'
 import * as SparkMD5 from 'spark-md5'
 
+/** Enum indicating current state of a file upload. */
+enum UploadState {
+    /** Indicates that chunks are being uploaded. */
+    UPLOADING_CHUNKS = 0,
+    /** Indicates that JS is computing MD5 hash in browser. */
+    COMPUTING_MD5 = 1,
+    /** Indicates that Django is checking MD5 and other things like decimal separator and valid cells values. */
+    CHECKING_IN_BACKEND = 2
+}
+
 /** Upload service configuration. */
 type ChunkFileUploaderConfig = {
     /** URL to send every chunk. */
@@ -16,7 +26,9 @@ type ChunkFileUploaderConfig = {
     /** Chunk size in bytes. Default `104857600` (100MB). */
     chunkSize?: number,
     /** Callback on every chunk upload. Receives the percentage of the file currently uploaded. */
-    onChunkUpload?: (percentDone: number) => void
+    onChunkUpload?: (percentDone: number) => void,
+    /** Callback on every upload state change. */
+    onUploadStateChange?: (currentState: UploadState) => void
 }
 
 /** Response structure from the Django chunk upload library. */
@@ -24,6 +36,7 @@ type ChunkUploadResponse = { upload_id: string, offset: number, expires: string}
 
 /** Util class to upload a file in chunks. */
 class ChunkFileUploader {
+    // TODO: refactor to just config
     private url: string
     private urlComplete: string
     private headers: Headers
@@ -31,6 +44,7 @@ class ChunkFileUploader {
     private completeData: FormData
     private chunkSize: number
     private onChunkUpload?: (percentDone: number) => void
+    private onUploadStateChange?: (currentState: UploadState) => void
 
     public constructor (config: ChunkFileUploaderConfig) {
         this.url = config.url
@@ -40,6 +54,7 @@ class ChunkFileUploader {
         this.completeData = config.completeData ?? new FormData()
         this.chunkSize = config.chunkSize ?? 104857600 // 100MB
         this.onChunkUpload = config.onChunkUpload
+        this.onUploadStateChange = config.onUploadStateChange
     }
 
     /**
@@ -90,9 +105,17 @@ class ChunkFileUploader {
      */
     private completeUpload<T> (uploadId: string): Promise<T> {
         return new Promise<T>((resolve, reject) => {
+            if (this.onUploadStateChange) {
+                this.onUploadStateChange(UploadState.COMPUTING_MD5)
+            }
+
             this.calculateMD5().then((md5) => {
                 this.completeData.append('upload_id', uploadId)
                 this.completeData.append('md5', md5.toString())
+
+                if (this.onUploadStateChange) {
+                    this.onUploadStateChange(UploadState.CHECKING_IN_BACKEND)
+                }
 
                 ky.post(this.urlComplete, { headers: this.headers, body: this.completeData, timeout: false }).then((response) => {
                     response.json().then((responseJSON: T) => {
@@ -108,6 +131,10 @@ class ChunkFileUploader {
      * @returns A promise with the backend response.
      */
     public uploadFile<T> (): Promise<T> {
+        if (this.onUploadStateChange) {
+            this.onUploadStateChange(UploadState.UPLOADING_CHUNKS)
+        }
+
         return new Promise<T>((resolve, reject) => {
             const reader = new FileReader()
             const file = this.file
@@ -188,4 +215,4 @@ function startUpload<T> (config: ChunkFileUploaderConfig): Promise<T> {
     return uploader.uploadFile()
 }
 
-export { startUpload }
+export { startUpload, UploadState }

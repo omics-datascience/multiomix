@@ -2,12 +2,35 @@ import React from 'react'
 import { DropdownItemProps, Form, Header, Label, List, Progress, Segment } from 'semantic-ui-react'
 import { ACCEPTED_FILE_TYPES } from '../../utils/constants'
 import { DjangoMethylationPlatform } from '../../utils/django_interfaces'
-import { FileType } from '../../utils/interfaces'
+import { UploadState } from '../../utils/file_uploader'
+import { FileType, Nullable } from '../../utils/interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { NewFile } from './FilesManager'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
+
+/**
+ * Renders a label component with a help popup.
+ * @returns Component
+ */
+const UploadLabel = () => (
+    <span>
+        Checking file
+
+        <InfoPopup
+            content={
+                <React.Fragment>
+                    <Header>Ensuring file quality</Header>
+
+                    <p>We perform a serie of checks to ensure that the data received on our server is correct. Please note that <strong>this process may take a few minutes depending on the size of the file</strong>. Thanks for your patience.</p>
+                </React.Fragment>
+            }
+            onTop={false}
+            extraClassName='margin-left-5'
+        />
+    </span>
+)
 
 /**
  * Component's props
@@ -22,6 +45,7 @@ interface NewFileFormProps {
     uploadPercentage: number,
     newFileIsValid: boolean,
     isEditing: boolean,
+    uploadState: Nullable<UploadState>
     uploadFile: () => void,
     fileChange: (e: any) => void,
     handleAddFileInputsChange: (name: string, value: any) => void,
@@ -39,16 +63,20 @@ interface NewFileFormProps {
 export const NewFileForm = (props: NewFileFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
-    const progressOrButton = props.uploadingFile
-        ? (
+    let progressOrButton
+    if (props.uploadingFile) {
+        const label = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS ? 'Uploading file' : <UploadLabel/>
+
+        progressOrButton = (
             <Form.Field width={2}>
                 <Progress
                     percent={props.uploadPercentage}
                     indicating
-                    label='Uploading file'
-                />
+                >{label}</Progress>
             </Form.Field>
-        ) : (
+        )
+    } else {
+        progressOrButton = (
             <Form.Button
                 fluid
                 className='ellipsis'
@@ -59,6 +87,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                 disabled={props.isEditing || props.uploadingFile}
             />
         )
+    }
 
     return (
         <Segment>
