@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "check-lint": "eslint ./src/**/*.{ts,tsx,js}",
+    "check-tsc": "tsc --noEmit",
+    "check-all": "npm run check-tsc && npm run check-lint",
     "dev": "webpack --config webpack.dev.js",
     "watch": "webpack --config webpack.dev.js --watch",
     "prod": "webpack --config webpack.prod.js"
@@ -56,5 +59,10 @@
     "semantic-ui-react": "^0.88.2",
     "spark-md5": "^3.0.2",
     "typeface-roboto": "0.0.75"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
   }
 }

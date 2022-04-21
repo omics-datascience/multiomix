@@ -52,9 +52,15 @@ Every time you want to work with Multiomix, you need to follow the below steps:
         - `npm run prod`: compiles code in production mode.
 
 
-### Linter
+### Linter and Typescript
 
-[ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools.
+All the scripts mentioned below must be run inside the `src/frontend/static/frontend` folder.
+
+[ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools. To check if all ESLint rules are being complied, run: `npm run check-lint`.
+
+[Typescript](https://www.typescriptlang.org/) provides type support for safe and robust development. You can verify that all rules comply by running the following command: `npm run check-tsc`
+
+To check no breaking changes when you are working on Multiomix, you can run `npm run check-all`. This command will run both ESLint and Typescript checks.
 
 
 ## Considerations
