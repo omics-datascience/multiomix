@@ -5,31 +5,33 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q, Count, QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, filters, status
+from rest_framework import generics, permissions, filters
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer
 from .models import UserFile
 
 
-# TODO: check security
 class UserFileChunkedUploadView(ChunkedUploadView):
+    """API to upload a chunk of a user file"""
     model = ChunkedUpload
     field_name = 'file_obj'
 
 
-# TODO: check security
 class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
+    """API to complete the upload"""
     model = ChunkedUpload
     do_md5_check = True
 
-    def on_completion(self, uploaded_file: UploadedFile, request):
+    def on_completion(self, uploaded_file: UploadedFile, request: AsgiRequest):
+        """Callback when the upload is complete"""
         data = request.POST.dict()
-        data['file_obj'] = uploaded_file
+        data['file_obj'] = uploaded_file  # Assigns the uploaded file to the new object
         serializer = UserFileSerializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)  # is_valid() must be called
         serializer.save()
 
     def get_response_data(self, chunked_upload: ChunkedUpload, request: AsgiRequest):
+        """Final response, returns the created UserFile object"""
         uploaded_file_obj = UserFile.objects.filter(user=chunked_upload.user).last()
         serializer = UserFileSerializer()
         return serializer.to_representation(uploaded_file_obj)
@@ -39,7 +41,7 @@ def get_an_user_file(user: User, user_file_pk: int) -> UserFile:
     """
     Returns the specific User's file object from DB
     @param user: User to retrieve his Dataset
-    @param user_file_pk: Id of the UserFile to retrieve
+    @param user_file_pk: ID of the UserFile to retrieve
     @raise UserFile.DoesNotExist if the object isn't in the DB
     @return: UserFile object
     """
@@ -120,7 +122,7 @@ class UserFileList(AllUserFileList):
 
 class UserFileDetail(generics.RetrieveUpdateDestroyAPIView):
     """
-    REST endpoint: get, modify or delete for UserFile model. An User can modify or delete ONLY the files which were
+    REST endpoint: get, modify or delete for UserFile model. A User can modify or delete ONLY the files which were
     uploaded by himself or belongs to an Institution which his is the admin of
     """
 
