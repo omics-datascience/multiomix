@@ -9,7 +9,7 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Pre-requisites
 
-- Python 3.7 or Python 3.8
+- Python 3.7 or Python 3.8 (newer Python versions present [a bug with processes][process-bug])
 - Node JS (tested version: `16.x`)
 
 
@@ -20,11 +20,17 @@ This document is focused on the **development** of the system. If you are lookin
     1. `python3 -m venv venv`
     1. `source venv/bin/activate` (run only when you need to work)
     1. `pip install -r ../config/requirements.txt`
-1. Install Node JS dependencies:
+2. Install Node JS dependencies:
     1. `cd frontend/static/frontend`
-    1. `npm i`
-    1. `npm run dev` (only run once)
-1. Go back to the project root folder to create the DB and an admin user: 
+    2. `npm i`
+    3. `npm run dev` (only run once, during development we recommend running the `watch` script instead)
+3. Multiomix needs a SQL DB, a MongoDB and a Redis DB to work properly. You can install all three on your machine, or you can choose to use the Docker configuration already available (recommended). For the latter solution follow the steps below on the project root folder:
+    1. Create the needed volumes:
+       1. `docker volume create --name=multiomics_intermediate_mongo_data`
+       2. `docker volume create --name=multiomics_intermediate_mongo_config`
+       3. `docker volume create --name=multiomics_intermediate_postgres_data`
+    2. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
+4. Go back to the `src` folder to create the DB and an admin user: 
     1. `python3 manage.py makemigrations`
     1. `python3 manage.py migrate`
     1. `python3 manage.py createsuperuser`
@@ -33,9 +39,11 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Development
 
-1. Start Django server. In the `src` folder and with the virtual environment enabled, run: `python3 manage.py runserver`. A server will be run on __http://127.0.0.1:8000/__.
-1. Start up the Mongo DB and Redis DB (which takes care of the Websocket). If you have [docker-compose](https://docs.docker.com/compose/install/) installed you can simply run (from the root of the project) the following command: `docker-compose -f docker-compose.dev.yml up -d` and all the necessary services will be deployed on your machine.
+Every time you want to work with Multiomix, you need to follow the below steps:
+
+1. Start up the Postgres, Mongo DB and Redis DB (which takes care of the Websocket). If you have [docker-compose](https://docs.docker.com/compose/install/) installed you can simply run (from the root of the project) the following command: `docker-compose -f docker-compose.dev.yml up -d` and all the necessary services will be deployed on your machine.
     - In case you want to shut down all the Docker services, just run: `docker-compose -f docker-compose.dev.yml down`.
+1. Start Django server. In the `src` folder and with the virtual environment enabled, run: `python3 manage.py runserver`. A server will be run on __http://127.0.0.1:8000/__.
 1. For frontend development:
     1. `cd src/frontend/static/frontend`
     1. Run the script you need:
@@ -74,4 +82,6 @@ If you use any part of our code, or Multiomix is useful for your research, pleas
 
 Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
 
+
+[process-bug]: https://bugs.python.org/issue43944
 [ggca]: https://pypi.org/project/ggca/
