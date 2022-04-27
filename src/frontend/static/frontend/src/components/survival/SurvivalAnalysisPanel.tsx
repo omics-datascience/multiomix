@@ -234,7 +234,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
     render () {
         return (
             <div>
-                <Base activeItem='survival'>
+                <Base activeItem='survival' wrapperClass='wrapper'>
                     <Segment>
                         {/* Datasets form */}
                         <Grid columns={3} stackable textAlign='left' divided>

@@ -654,7 +654,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         const cgdsStudySyncConfirmModal = this.getCGDSStudySyncConfirmModal()
 
         return (
-            <Base activeItem='cgds'>
+            <Base activeItem='cgds' wrapperClass='wrapper'>
                 {/* CGDS Study deletion modal */}
                 {cgdsStudyDeletionConfirmModal}
 

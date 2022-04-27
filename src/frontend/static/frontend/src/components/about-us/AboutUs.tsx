@@ -15,7 +15,7 @@ const EMAILS: string[] = [
 export const AboutUs = () => {
     return (
         <div>
-            <Base activeItem='about-us'>
+            <Base activeItem='about-us' wrapperClass='wrapper'>
                 <Container text className='margin-top-2 margin-bottom-5'>
                     <Grid stackable>
                         {/* Image */}
