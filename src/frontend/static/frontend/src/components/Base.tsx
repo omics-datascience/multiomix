@@ -15,6 +15,7 @@ declare const multiomixVersion: string
 interface BaseProps {
     activeItem?: ActiveItemOptions,
     children: React.ReactNode
+    wrapperClass: string
 }
 
 /** A context to get the current logged user in all the site */
@@ -68,7 +69,7 @@ const Base = (props: BaseProps) => {
             <MainNavbar activeItem={props.activeItem}/>
 
             {/* Composition part */}
-            <div className='wrapper'>
+            <div className={props.wrapperClass}>
                 {props.children}
             </div>
 

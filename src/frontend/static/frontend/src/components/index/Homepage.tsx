@@ -64,7 +64,7 @@ const HomepageHeading = (props: HomepageHeadingProps) => (
 export const Homepage = () => {
     return (
         <div>
-            <Base activeItem='home'>
+            <Base activeItem='home' wrapperClass='wrapper'>
                 <HomepageHeading mobile={false} />
                 {/* <ResponsiveContainer> */}
                 <Segment className='padded-segment' vertical>

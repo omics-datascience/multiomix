@@ -714,7 +714,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         const allFileTypeOptions = getFileTypeSelectOptions()
 
         return (
-            <Base activeItem='files'>
+            <Base activeItem='files' wrapperClass='wrapper'>
                 {/* Tag deletion modal */}
                 {tagDeletionConfirmModal}
 
