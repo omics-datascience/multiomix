@@ -48,7 +48,6 @@ services:
         volumes:
             - ./config/nginx/conf.d:/etc/nginx/conf.d
             - ./config/nginx/certificates:/etc/nginx/certificates
-            - ./src:/src
             - ./src/static:/static
             - ./src/media:/media
         depends_on:
