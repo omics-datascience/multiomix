@@ -98,7 +98,7 @@ def get_user_files(user: User, public_only: bool, private_only: bool, with_survi
 
 
 class AllUserFileList(generics.ListAPIView):
-    """REST endpoint: list and create for UserFile model"""
+    """REST endpoint: only list for UserFile model"""
 
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
