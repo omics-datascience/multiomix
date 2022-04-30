@@ -45,7 +45,6 @@ WORKDIR /src
 ADD src .
 RUN pip3 install -r /config/requirements.txt && npm --prefix /src/frontend/static/frontend i \
     && npm --prefix /src/frontend/static/frontend run prod \
-    && python3 /src/manage.py generate_secret_key --settings="multiomics_intermediate.settings" \
     && python3 /src/manage.py collectstatic --no-input
 
 # Media folder
