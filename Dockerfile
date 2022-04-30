@@ -8,7 +8,7 @@ ARG LISTEN_IP="0.0.0.0"
 # Default values for deploying with multiomix image
 ENV LISTEN_PORT $LISTEN_PORT
 ENV LISTEN_IP $LISTEN_IP
-ENV DJANGO_SETTINGS_MODULE "multiomics_intermediate.settings_prod"
+#ENV DJANGO_SETTINGS_MODULE "multiomics_intermediate.settings_prod"
 ENV RESULT_DATAFRAME_LIMIT_ROWS 500
 ENV TABLE_PAGE_SIZE 10
 
