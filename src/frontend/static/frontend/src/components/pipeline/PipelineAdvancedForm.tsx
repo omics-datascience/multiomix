@@ -1,14 +1,20 @@
 import React, { useState } from 'react'
 import { Form, Select, Label, Icon, PopupContentProps } from 'semantic-ui-react'
-import { Slider } from 'react-semantic-ui-range'
+import { SingleRangeSlider, SingleRangeSliderProps, SliderProps } from 'neo-react-semantic-ui-range'
 import { NewExperiment, FileType } from '../../utils/interfaces'
 import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } from '../../utils/util_functions'
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
 import { CorrelationMethod } from '../../utils/django_interfaces'
 
+// Slider styles
+import 'neo-react-semantic-ui-range/dist/styles.min.css'
+
 /** Minimum value possible for minimum correlation threshold Slider */
 const MIN_VALUE_CORRELATION = 0.5
+
+/** Minimum value possible for minimum correlation threshold Slider */
+const MAX_FILTER_VALUE = 0.95
 
 /**
  * LabelWithInfoPopup's props
@@ -61,26 +67,31 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
     const [showAdvancedSettings, setShowAdvancedSetting] = useState<boolean>(false)
 
     // Generates Slider settings
-    const generalSliderSettings = {
-        start: props.newExperiment.correlationCoefficient,
-        min: 0.0,
-        max: 0.99,
-        step: 0.05
+    const generalSliderSettings: SliderProps = {
+        step: 0.05,
+        color: 'blue',
+        defaultMinValue: 0.00,
+        defaultMaxValue: MAX_FILTER_VALUE,
+        className: 'margin-top-10 margin-bottom-10',
+        disabled: props.isEditing
     }
 
-    const correlationSliderSettings = {
+    const correlationSliderSettings: SingleRangeSliderProps = {
         ...generalSliderSettings,
-        min: MIN_VALUE_CORRELATION,
-        onChange: (newValue: number) => props.handleFormInputsChange('correlationCoefficient', newValue)
+        value: props.newExperiment.correlationCoefficient,
+        defaultMinValue: MIN_VALUE_CORRELATION,
+        onChange: (newValue: number) => { props.handleFormInputsChange('correlationCoefficient', newValue) }
     }
 
     const stdGeneSliderSettings = {
         ...generalSliderSettings,
+        value: props.newExperiment.standardDeviationGene,
         onChange: (newValue: number) => props.handleFormInputsChange('standardDeviationGene', newValue)
     }
 
     const stdGemSliderSettings = {
         ...generalSliderSettings,
+        value: props.newExperiment.standardDeviationGEM,
         onChange: (newValue: number) => props.handleFormInputsChange('standardDeviationGEM', newValue)
     }
 
@@ -109,7 +120,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     <Form.Field>
                         <LabelWithInfoPopup
                             labelText='Correlation method'
-                            popupContent='Correlation method to use: Pearson, Spearman or Kendall. You can see if the selected method is appropriated for your data in the Assumptions panel in the result view once the experiment has finished'
+                            popupContent='Correlation method to use: Pearson, Spearman or Kendall (Tau-b). You can see if the selected method is appropriated for your data in the Assumptions panel in the result view once the experiment has finished'
                         />
 
                         <Select
@@ -158,15 +169,10 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                             centered
                         />
 
-                        <Slider
-                            value={props.newExperiment.correlationCoefficient}
-                            color="blue"
-                            inverted={false}
-                            settings={correlationSliderSettings}
-                            disabled={props.isEditing}
-                        />
-                        <Label color="blue" pointing='above'>{MIN_VALUE_CORRELATION}</Label>
-                        <Label color="blue" pointing='above' className="pull-right">1</Label>
+                        <SingleRangeSlider {...correlationSliderSettings}/>
+
+                        <Label color="blue">{MIN_VALUE_CORRELATION}</Label>
+                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* Minimum Standard Deviation for Genes */}
@@ -177,15 +183,10 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                             centered
                         />
 
-                        <Slider
-                            value={props.newExperiment.standardDeviationGene}
-                            color="blue"
-                            inverted={false}
-                            settings={stdGeneSliderSettings}
-                            disabled={props.isEditing}
-                        />
-                        <Label color="blue" pointing='above'>0</Label>
-                        <Label color="blue" pointing='above' className="pull-right">1</Label>
+                        <SingleRangeSlider {...stdGeneSliderSettings} />
+
+                        <Label color="blue">0</Label>
+                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* Minimum Standard Deviation for GEM */}
@@ -196,15 +197,9 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                             centered
                         />
 
-                        <Slider
-                            value={props.newExperiment.standardDeviationGEM}
-                            color="blue"
-                            inverted={false}
-                            settings={stdGemSliderSettings}
-                            disabled={props.isEditing}
-                        />
-                        <Label color="blue" pointing='above'>0</Label>
-                        <Label color="blue" pointing='above' className="pull-right">1</Label>
+                        <SingleRangeSlider {...stdGemSliderSettings} />
+                        <Label color="blue">0</Label>
+                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* P-value adjustment method */}

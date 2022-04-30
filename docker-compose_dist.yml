@@ -57,11 +57,11 @@ services:
             
     # Django Backend Server
     web:
-        image: omicsdatascience/multiomics:5.0-beta
+        image: omicsdatascience/multiomics:4.7.0
         # Note: uses dev settings when generates the key to avoid FileNotFoundError exception
         # when the key is generated at the first time
         #environment:
-          #APP_PORT=8000
+          #LISTEN_PORT=8000
           #LISTEN_IP=0.0.0.0
           #DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
           #RESULT_DATAFRAME_LIMIT_ROWS: 500
@@ -84,6 +84,8 @@ services:
           # Redis
           #REDIS_HOST: 'redis'
           #REDIS_PORT: 6379          
+        ports:
+            - 8080:8000
         volumes:
             - static_data:/src/static
             - media_data:/src/media

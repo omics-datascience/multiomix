@@ -2,26 +2,8 @@
 
 FE_DIR=/src/frontend/static/frontend
 BASE_DIR=/src
-
-echo "##############################################"
-echo "Executing npm install..."
-echo "##############################################"
-npm --prefix $FE_DIR i
-
-echo "##############################################"
-echo "Executing npm run prod..."
-echo "##############################################"
-npm --prefix $FE_DIR run prod
-
-echo "##############################################"
-echo "Generating key..."
-echo "##############################################"
-python3 ${BASE_DIR}/manage.py generate_secret_key --settings="multiomics_intermediate.settings"
-
-echo "##############################################"
-echo "Collectstatic..."
-echo "##############################################"
-python3 ${BASE_DIR}/manage.py collectstatic --no-input
+LISTEN_IP=${:-"0.0.0.0"}
+LISTEN_PORT=${:-8000}
 
 echo "##############################################"
 echo "Make migrations..."
@@ -36,5 +18,7 @@ python3 ${BASE_DIR}/manage.py migrate
 echo "##############################################"
 echo "Running multiomics..."
 echo "##############################################"
-daphne -b 0.0.0.0 -p 8000 --root-path=${BASE_DIR} multiomics_intermediate.asgi:application
+echo ${LISTEN_IP}
+echo ${LISTEN_PORT}
+daphne -b "${LISTEN_IP}" -p "${LISTEN_PORT}" --root-path=${BASE_DIR} multiomics_intermediate.asgi:application
 

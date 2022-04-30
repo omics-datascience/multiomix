@@ -43,6 +43,10 @@ body > div {
     margin-bottom: 5% !important;
 }
 
+.margin-bottom-10 {
+    margin-bottom: 10% !important;
+}
+
 .no-margin-left {
     margin-left: 0 !important;
 }

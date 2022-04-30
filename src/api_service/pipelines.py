@@ -14,19 +14,42 @@ from typing import Tuple, Type, List, cast, Optional, Union, Iterator
 from .models import ExperimentSource, Experiment, GeneGEMCombination
 from django.db import connection
 import ggca
-from .ordering import annotate_by_correlation
 import logging
-from multiprocessing import Process
+from multiprocessing import Process, Pool
 
 
-# TODO: when implement GGCA as Python Package remove this definition and use MyPy
-class CorResult:
-    gene: str
-    gem: str
-    cpg_site_id: str
-    correlation: float
-    p_value: float
-    adjusted_p_value: float
+def run_ggca(
+    mrna_file_path: str,
+    gem_file_path: str,
+    experiment: Experiment,
+    collect_gem_dataset: bool,
+    is_cpg_analysis: bool,
+    keep_top_n: Optional[int]
+) -> Tuple[List[ggca.CorResult], int, int]:
+    """
+    Runs GGCA correlation analysis
+
+    @param mrna_file_path: mRNA temp file path
+    @param gem_file_path: GEM temp file path
+    @param collect_gem_dataset: True to make the GEM dataset available in memory
+    @param experiment: Experiment object with params for correlation analysis
+    @param is_cpg_analysis: True to indicate that the second column in GEM dataset contains CpG Site IDs
+    @param keep_top_n: To truncate results. None to keep all the resulting combinations
+    @return: A tuple with a vec of CorResult, the number of combinations before truncating by 'keep_top_n' parameter
+    and the number of combinations evaluated
+    """
+    return ggca.correlate(
+        mrna_file_path,
+        gem_file_path,
+        correlation_method=experiment.correlation_method,
+        correlation_threshold=experiment.minimum_coefficient_threshold,
+        sort_buf_size=settings.SORT_BUFFER_SIZE,
+        adjustment_method=experiment.p_values_adjustment_method,
+        is_all_vs_all=experiment.correlate_with_all_genes,
+        gem_contains_cpg=is_cpg_analysis,
+        collect_gem_dataset=collect_gem_dataset,
+        keep_top_n=keep_top_n
+    )
 
 
 class PipelineManager(object):
@@ -53,11 +76,11 @@ class PipelineManager(object):
         @param experiment: Experiment to get the source data
         @param gene_index: Gene row's index to retrieve
         @param gem_index: GEM row's index to retrieve
-        @param round_values: True if want to round to 3 decimal, False to keep original value
+        @param round_values: True if you want to round to 3 decimal, False to keep original value
         @param clinical_attribute: Clinical attribute  to retrieve
         @param fill_clinical_missing_samples: If True it fills the samples which don't exist in clinical source with
         'NA' values. If False, those samples will be discarded
-        @param return_samples_identifiers: True if want to get samples which the expressions correspond to
+        @param return_samples_identifiers: True if you want to get samples which the expressions correspond to
         @return: Numpy' arrays with the specified info
         """
         # Keeps only the samples in common
@@ -218,7 +241,7 @@ class PipelineManager(object):
         """
         Filters and sorts column of two DataFrames
         @param df: DataFrame to prepare
-        @param minimum_std: Minimun Standard Deviation normalized to filter
+        @param minimum_std: Minimum Standard Deviation normalized to filter
         @param common_columns: Columns in common between both Sources' DataFrame
         @param index: Index name to set to the df
         @return: A tuple with both processed DataFrames
@@ -257,9 +280,9 @@ class PipelineManager(object):
         for i in range(0, len(lst), page_size):
             yield lst[i:i + page_size]
 
-    def __save_result_in_db(self, combinations: List[CorResult], experiment: Experiment, table_name: str):
+    def __save_result_in_db(self, combinations: List[ggca.CorResult], experiment: Experiment, table_name: str):
         """
-        Saves in Db a list of combinations resulting from an experiment 
+        Saves in Db a list of combinations resulting from an experiment
         @param combinations: List of combinations to insert in DB
         @param experiment: Experiment object to retrieve some information
         @param table_name: Table name where combinations will be inserted
@@ -330,7 +353,7 @@ class PipelineManager(object):
         return temp_file, number_of_rows, gem_platform_df is not None
 
     @staticmethod
-    def __concatenate_gene_and_cpg_as_gem(combinations: List[CorResult]) -> List[CorResult]:
+    def __concatenate_gene_and_cpg_as_gem(combinations: List[ggca.CorResult]) -> List[ggca.CorResult]:
         """
         Concatenates Gene and CpG Site ID for methylation results
         @param combinations: List of analysis result combinations
@@ -361,13 +384,15 @@ class PipelineManager(object):
             experiment: Experiment,
             common_samples: np.ndarray,
             combination_class: Type[GeneGEMCombination],
+            result_limit_row_count: Optional[int],
             stop_event: Event
-    ) -> int:
+    ) -> Tuple[int, int]:
         """
         Compute Pearson correlation splitting DataFrames in chunks to avoid memory errors
         @param experiment: Experiment to compute in chunks
         @param common_samples: Numpy array with the samples in common
         @param combination_class: Model class to create the bulk and insert
+        @param result_limit_row_count: TODO: complete
         @param stop_event: Stop event to cancel the experiment
         @return Number of evaluated combinations
         """
@@ -396,22 +421,25 @@ class PipelineManager(object):
 
         self.__check_if_stopped(stop_event)
 
-        logging.warning(f'Starting Rust execution')
-        start = time.time()
-        analysis_result: Tuple[List[CorResult], int] = ggca.correlate(
-            mrna_file_path,
-            gem_file_path,
-            correlation_method=experiment.correlation_method,
-            correlation_threshold=experiment.minimum_coefficient_threshold,
-            sort_buf_size=settings.SORT_BUFFER_SIZE,
-            adjustment_method=experiment.p_values_adjustment_method,
-            all_vs_all=experiment.correlate_with_all_genes,
-            gem_contains_cpg=is_cpg_analysis,
-            collect_gem_dataset=collect_gem_dataset
-        )
-        result_combinations, number_of_evaluated_combinations = analysis_result
-        logging.warning(f'Rust execution time -> {time.time() - start} seconds')
-        logging.warning(f'Number of combinations -> {len(result_combinations)}')
+        # Runs GGCA correlation in a Process to allow user stopping
+        with Pool(processes=1) as pool:
+            cor_process = pool.apply_async(func=run_ggca, args=(mrna_file_path, gem_file_path,
+                                                                experiment, collect_gem_dataset,
+                                                                is_cpg_analysis, result_limit_row_count))
+            while not cor_process.ready():
+                cor_process.wait(timeout=1)
+                if stop_event.is_set():
+                    pool.terminate()
+                    raise ExperimentStopped
+
+            try:
+                analysis_result = cor_process.get()
+            except Exception as ex:
+                logging.error('Correlation process has raised an exception')
+                logging.exception(ex)
+                raise ExperimentFailed
+
+        result_combinations, total_row_count, number_of_evaluated_combinations = analysis_result
 
         # Concatenates Gene with CpG Site IDs (if needed)
         self.__check_if_stopped(stop_event)
@@ -434,7 +462,7 @@ class PipelineManager(object):
         os.unlink(mrna_file_path)
         os.unlink(gem_file_path)
 
-        return number_of_evaluated_combinations
+        return total_row_count, number_of_evaluated_combinations
 
     def compute_experiment(self, experiment: Experiment, stop_event: Event) -> Tuple[int, int, int]:
         """
@@ -444,7 +472,7 @@ class PipelineManager(object):
         @raise NoSamplesInCommon If there's not any sample in common between both sources
         @return Total row count, the final row count (used in case it's truncated) and number of evaluated combinations
         """
-        # First of all checks if there's any sample in common
+        # First checks if there's any sample in common
         common_samples = self.get_common_samples(experiment.mRNA_source, experiment.gem_source)
         if common_samples.size == 0:
             raise NoSamplesInCommon
@@ -455,45 +483,23 @@ class PipelineManager(object):
         # Computes the correlation un chunks/batches
         self.__check_if_stopped(stop_event)
 
+        # Truncates the result if specified in settings.py
+        result_limit_row_count = int(settings.RESULT_DATAFRAME_LIMIT_ROWS) \
+            if settings.RESULT_DATAFRAME_LIMIT_ROWS \
+            else None
+
         start = time.time()
-        number_of_evaluated_combinations = self.compute_correlation_and_p_values(
+        total_row_count, number_of_evaluated_combinations = self.compute_correlation_and_p_values(
             experiment,
             common_samples,
             combination_class,
+            result_limit_row_count,
             stop_event
         )
         logging.warning(f'Total correlation execution time -> {time.time() - start} seconds')
 
         # Computes final number of combinations
-        self.__check_if_stopped(stop_event)
-
-        # Sets total row count
-        combinations = experiment.combinations
-        total_row_count = combinations.count()
-
-        # Truncates the result if specified in settings.py
-        start = time.time()
-        result_limit_row_count = int(settings.RESULT_DATAFRAME_LIMIT_ROWS) \
-            if settings.RESULT_DATAFRAME_LIMIT_ROWS \
-            else None
-
-        if result_limit_row_count is not None and total_row_count > result_limit_row_count:
-            # First sorts by correlation in ascending order
-            combinations_sorted_by_abs_corr = annotate_by_correlation(combinations).order_by('abs_correlation')
-
-            # Then deletes the first N elements (the ones with worst correlation values)
-            count_elements_to_delete = total_row_count - result_limit_row_count
-
-            start = time.time()
-            combinations.filter(id__in=list(
-                combinations_sorted_by_abs_corr.values_list('pk', flat=True)[:count_elements_to_delete])
-            ).delete()
-            logging.warning(f'Filter top N with IN clause -> {time.time() - start} seconds')
-
-            # Sets the final parameter
-            final_row_count = result_limit_row_count
-        else:
-            final_row_count = total_row_count
+        final_row_count = experiment.combinations.count()
 
         return total_row_count, final_row_count, number_of_evaluated_combinations
 
