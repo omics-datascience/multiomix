@@ -1,7 +1,7 @@
 name: PR pipeline to verify tests and code rules
 on: [pull_request]
 jobs:
-  Python tests:
+  Python-tests:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -21,7 +21,7 @@ jobs:
     - name: Run Tests
       run: |
         python src/manage.py test
-  Node checks:
+  Node-checks:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
