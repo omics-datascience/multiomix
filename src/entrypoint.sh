@@ -12,6 +12,11 @@ echo "##############################################"
 python3 ${BASE_DIR}/manage.py generate_secret_key --settings="${DJANGO_SETTINGS_MODULE}"
 
 echo "##############################################"
+echo "Collect static..."
+echo "##############################################"
+python3 ${BASE_DIR}/manage.py collectstatic --no-input
+
+echo "##############################################"
 echo "Make migrations..."
 echo "##############################################"
 python3 ${BASE_DIR}/manage.py makemigrations
