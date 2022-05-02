@@ -5,6 +5,7 @@ import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod,
 import dayjs from 'dayjs'
 import countBy from 'lodash/countBy'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
+import { MAX_FILE_SIZE_IN_MB_ERROR } from './constants'
 
 dayjs.extend(localizedFormat)
 
@@ -567,7 +568,8 @@ const experimentSourceIsValid = (source: Source): boolean => {
     return (
         source.type === SourceType.NEW_DATASET &&
         source.newUploadedFileRef.current !== null &&
-        source.newUploadedFileRef.current.files.length > 0
+        source.newUploadedFileRef.current.files.length > 0 &&
+        getFileSizeInMB(source.newUploadedFileRef.current.files[0].size) <= MAX_FILE_SIZE_IN_MB_ERROR
     ) || (
         source.type === SourceType.UPLOADED_DATASETS &&
         source.selectedExistingFile !== null
