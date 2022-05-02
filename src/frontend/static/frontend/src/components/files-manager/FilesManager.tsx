@@ -162,13 +162,31 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     }
 
     /**
+     * Prevents users from closing browser tag when upload is in process.
+     *
+     * @param e Event
+     */
+    onUnload = e => { // the method that will be used for both add and remove event
+        if (this.state.uploadingFile) {
+            e.preventDefault()
+            e.returnValue = 'A file is being uploaded. If you close the tab the upload will be canceled.'
+        }
+    }
+
+    /**
      * When the component has been mounted, It requests for
-     * tags and files
+     * tags and files.
      */
     componentDidMount () {
+        window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
         this.getUserFiles()
         this.getUserInstitutions()
+    }
+
+    /** Removes event on component unmount. */
+    componentWillUnmount () {
+        window.removeEventListener('beforeunload', this.onUnload)
     }
 
     /**
