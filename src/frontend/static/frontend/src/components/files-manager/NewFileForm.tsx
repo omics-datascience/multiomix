@@ -12,25 +12,33 @@ import { InstitutionsDropdown } from './InstitutionsDropdown'
 
 /**
  * Renders a label component with a help popup.
+ * @param props Component props.
  * @returns Component
  */
-const UploadLabel = () => (
-    <span>
-        Checking file
+const UploadLabel = (props: { uploadState: Nullable<UploadState> }) => {
+    const isUploading = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS
+    const [header, description]: [string, string] = isUploading
+        ? ['Uploading file', 'The file is being uploaded in chunks']
+        : ['Ensuring file quality', 'We perform a serie of checks to ensure that the data received on our server is correct']
 
-        <InfoPopup
-            content={
-                <React.Fragment>
-                    <Header>Ensuring file quality</Header>
+    return (
+        <span>
+            {isUploading ? 'Uploading file' : 'Checking file'}
 
-                    <p>We perform a serie of checks to ensure that the data received on our server is correct. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
-                </React.Fragment>
-            }
-            onTop={false}
-            extraClassName='margin-left-5'
-        />
-    </span>
-)
+            <InfoPopup
+                content={
+                    <React.Fragment>
+                        <Header>{header}</Header>
+
+                        <p>{description}. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
+                    </React.Fragment>
+                }
+                onTop={false}
+                extraClassName='margin-left-5'
+            />
+        </span>
+    )
+}
 
 /**
  * Component's props
@@ -65,14 +73,14 @@ export const NewFileForm = (props: NewFileFormProps) => {
 
     let progressOrButton
     if (props.uploadingFile) {
-        const label = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS ? 'Uploading file' : <UploadLabel/>
-
         progressOrButton = (
             <Form.Field width={2}>
                 <Progress
                     percent={props.uploadPercentage}
                     indicating
-                >{label}</Progress>
+                >
+                    <UploadLabel uploadState={props.uploadState}/>
+                </Progress>
             </Form.Field>
         )
     } else {
