@@ -218,6 +218,14 @@ const getStateObj = (state: ExperimentState): ExperimentStateInfo => {
                 title: 'The experiment was stopped'
             }
             break
+        case ExperimentState.REACHED_ATTEMPTS_LIMIT:
+            stateIcon = {
+                iconName: 'undo',
+                color: 'red',
+                loading: false,
+                title: 'The experiment has failed several times. Try changing some parameters and try again.'
+            }
+            break
     }
     return stateIcon
 }
