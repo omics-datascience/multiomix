@@ -9,7 +9,7 @@ import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import isEqual from 'lodash/isEqual'
 import intersection from 'lodash/intersection'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
-import { MAX_FILE_SIZE_IN_MB } from '../../utils/constants'
+import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
 
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesGEM'
 type NewExperimentSourceStateName = 'mRNASource' | 'gemSource'
@@ -281,7 +281,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
         }
 
         const fileSizeInMB = getFileSizeInMB(sourceInFront.newUploadedFileRef.current.files[0].size)
-        if (fileSizeInMB < MAX_FILE_SIZE_IN_MB) {
+        if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
             const file = sourceInFront.newUploadedFileRef.current.files[0]
             getInputFileCSVColumns(file).then((headersColumnsNames) => {
                 // Sets the Request's Headers

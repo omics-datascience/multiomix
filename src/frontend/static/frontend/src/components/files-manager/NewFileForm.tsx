@@ -2,12 +2,43 @@ import React from 'react'
 import { DropdownItemProps, Form, Header, Label, List, Progress, Segment } from 'semantic-ui-react'
 import { ACCEPTED_FILE_TYPES } from '../../utils/constants'
 import { DjangoMethylationPlatform } from '../../utils/django_interfaces'
-import { FileType } from '../../utils/interfaces'
+import { UploadState } from '../../utils/file_uploader'
+import { FileType, Nullable } from '../../utils/interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { NewFile } from './FilesManager'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
+
+/**
+ * Renders a label component with a help popup.
+ * @param props Component props.
+ * @returns Component
+ */
+const UploadLabel = (props: { uploadState: Nullable<UploadState> }) => {
+    const isUploading = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS
+    const [header, description]: [string, string] = isUploading
+        ? ['Uploading file', 'The file is being uploaded in chunks']
+        : ['Ensuring file quality', 'We perform a serie of checks to ensure that the data received on our server is correct']
+
+    return (
+        <span>
+            {isUploading ? 'Uploading file' : 'Checking file'}
+
+            <InfoPopup
+                content={
+                    <React.Fragment>
+                        <Header>{header}</Header>
+
+                        <p>{description}. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
+                    </React.Fragment>
+                }
+                onTop={false}
+                extraClassName='margin-left-5'
+            />
+        </span>
+    )
+}
 
 /**
  * Component's props
@@ -22,6 +53,7 @@ interface NewFileFormProps {
     uploadPercentage: number,
     newFileIsValid: boolean,
     isEditing: boolean,
+    uploadState: Nullable<UploadState>
     uploadFile: () => void,
     fileChange: (e: any) => void,
     handleAddFileInputsChange: (name: string, value: any) => void,
@@ -39,16 +71,20 @@ interface NewFileFormProps {
 export const NewFileForm = (props: NewFileFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
-    const progressOrButton = props.uploadingFile
-        ? (
+    let progressOrButton
+    if (props.uploadingFile) {
+        progressOrButton = (
             <Form.Field width={2}>
                 <Progress
                     percent={props.uploadPercentage}
                     indicating
-                    label='Uploading file'
-                />
+                >
+                    <UploadLabel uploadState={props.uploadState}/>
+                </Progress>
             </Form.Field>
-        ) : (
+        )
+    } else {
+        progressOrButton = (
             <Form.Button
                 fluid
                 className='ellipsis'
@@ -59,6 +95,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                 disabled={props.isEditing || props.uploadingFile}
             />
         )
+    }
 
     return (
         <Segment>

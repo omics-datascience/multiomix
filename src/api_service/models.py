@@ -293,6 +293,8 @@ class Experiment(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, default=None)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     type = models.IntegerField(choices=ExperimentType.choices)
+    # Number of attempts to prevent a buggy experiment running forever
+    attempt = models.PositiveSmallIntegerField(default=1)
 
     # TODO: analyze if this go here, maybe when refactor the GEM type for UserFile and CGDSDataset
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema

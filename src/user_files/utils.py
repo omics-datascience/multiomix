@@ -19,7 +19,7 @@ def get_decimal_separator(
     @param file: File path or StringIO to read in CSV format
     @param seek_beginning: If True seeks to 0 the content to prevent reading errors with TextIOWrapper
     @param all_rows: If True reads all the DataFrame to check if they are float. False to try only one (faster)
-    @return:
+    @return: decimal separator if DataFrame is valid, None otherwise
     """
     nrows = None if all_rows else 1
     for name, decimal_separator in zip(FileDecimalSeparator.names, FileDecimalSeparator.values):

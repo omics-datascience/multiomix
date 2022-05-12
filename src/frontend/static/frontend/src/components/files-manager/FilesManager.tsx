@@ -9,7 +9,7 @@ import { FilesList } from './FilesList'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
 import { NewFileForm } from './NewFileForm'
-import { startUpload } from '../../utils/file_uploader'
+import { startUpload, UploadState } from '../../utils/file_uploader'
 
 const FILE_INPUT_LABEL = 'Add a new file'
 
@@ -65,7 +65,8 @@ interface FilesManagerState {
     newFile: NewFile,
     filter: FilesManagerFilter,
     addingTag: boolean,
-    uploadPercentage: number
+    uploadPercentage: number,
+    uploadState: Nullable<UploadState>
 }
 
 /**
@@ -93,7 +94,8 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             filter: this.getDefaultFilter(),
             newFile: this.getDefaultNewFile(),
             addingTag: false,
-            uploadPercentage: 0
+            uploadPercentage: 0,
+            uploadState: null
         }
     }
 
@@ -160,13 +162,31 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     }
 
     /**
+     * Prevents users from closing browser tag when upload is in process.
+     *
+     * @param e Event
+     */
+    onUnload = e => { // the method that will be used for both add and remove event
+        if (this.state.uploadingFile) {
+            e.preventDefault()
+            e.returnValue = 'A file is being uploaded. If you close the tab the upload will be canceled.'
+        }
+    }
+
+    /**
      * When the component has been mounted, It requests for
-     * tags and files
+     * tags and files.
      */
     componentDidMount () {
+        window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
         this.getUserFiles()
         this.getUserInstitutions()
+    }
+
+    /** Removes event on component unmount. */
+    componentWillUnmount () {
+        window.removeEventListener('beforeunload', this.onUnload)
     }
 
     /**
@@ -475,7 +495,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     uploadSuccess = (responseJSON: DjangoUserFile) => {
         if (responseJSON && responseJSON.id) {
             // If everything gone OK, resets the New File Form...
-            this.setState({ newFile: this.getDefaultNewFile(), uploadPercentage: 0 })
+            this.setState({ newFile: this.getDefaultNewFile() })
 
             // ... and refresh the user files
             this.getUserFiles()
@@ -558,7 +578,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                         })
                 })
             } else {
-                // TODO: add progress bar when progress callback is implemented
                 // In case of creation, an upload in chunks is required
                 startUpload({
                     url: urlChunkUpload,
@@ -566,15 +585,15 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                     headers: myHeaders,
                     file: this.newFileInputRef.current.files[0],
                     completeData: formData,
-                    onChunkUpload: (percentDone) => { this.setState({ uploadPercentage: percentDone }) }
+                    onChunkUpload: (percentDone) => { this.setState({ uploadPercentage: percentDone }) },
+                    onUploadStateChange: (currentState) => { this.setState({ uploadState: currentState }) }
                 }).then(this.uploadSuccess)
                     .catch((err) => {
-                        this.setState({ uploadPercentage: 0 })
                         console.log('Error uploading file ->', err)
                         alertGeneralError()
                     })
                     .finally(() => {
-                        this.setState({ uploadingFile: false })
+                        this.setState({ uploadingFile: false, uploadPercentage: 0 })
                     })
             }
         })
@@ -826,6 +845,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                             institutionsOptions={institutionsOptions}
                             uploadingFile={this.state.uploadingFile}
                             uploadPercentage={this.state.uploadPercentage}
+                            uploadState={this.state.uploadState}
                             fileChange={this.fileChange}
                             handleAddFileInputsChange={this.handleAddFileInputsChange}
                             uploadFile={this.uploadFile}
