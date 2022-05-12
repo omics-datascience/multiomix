@@ -25,13 +25,17 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Create virtual environment
+      run: |
+        pip install virtualenv
+        virtualenv venv
     - name: Install Dependencies
       run: |
-        #apt-get update
-        #apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev
+        source venv/bin/activate
         pip install -r config/requirements.txt
     - name: Run Tests
       run: |
+        source venv/bin/activate
         python src/manage.py test src --settings=multiomics_intermediate.settings_ci
   Node-checks:
     runs-on: ubuntu-latest
