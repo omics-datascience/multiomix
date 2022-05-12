@@ -27,6 +27,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Dependencies
       run: |
+        apt-get update
+        apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev
         pip install -r config/requirements.txt
     - name: Run Tests
       run: |
