@@ -23,7 +23,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: multiomics
           MONGO_INITDB_DATABASE: multiomics
         options: >-
-          --health-cmd "curl --connect-timeout 10 --silent --show-error localhost:27017"
+          --health-cmd 'mongo --norc --quiet --host=localhost:27017 --eval "db.getMongo()"'
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
