@@ -3,6 +3,7 @@ on: [pull_request]
 jobs:
   Python-tests:
     runs-on: ubuntu-latest
+    container: python:3.8.6-buster
     strategy:
       max-parallel: 4
       matrix:
