@@ -16,6 +16,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      postgres:
+        # Docker Hub image
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: multiomics
+          POSTGRES_USER: multiomics
+          POSTGRES_DB: multiomics
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5          
       mongo:
         image: "mongo:4.2"
         env:
@@ -34,6 +47,10 @@ jobs:
       MONGO_DB: multiomics
       MONGO_USERNAME: multiomics
       MONGO_PASSWORD: multiomics
+      POSTGRES_USERNAME: multiomics
+      POSTGRES_PASSWORD: multiomics
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: multiomics
 
     steps:
     - uses: actions/checkout@v2
