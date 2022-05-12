@@ -33,12 +33,12 @@ jobs:
     - name: Install Dependencies
       shell: bash
       run: |
-        source venv/bin/activate
+        . venv/bin/activate
         pip install -r config/requirements.txt
     - name: Run Tests
       shell: bash
       run: |
-        source venv/bin/activate
+        . venv/bin/activate
         python src/manage.py test src --settings=multiomics_intermediate.settings_ci
   Node-checks:
     runs-on: ubuntu-latest
