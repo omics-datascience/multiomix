@@ -26,17 +26,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Create virtual environment
-      shell: bash
       run: |
         pip install virtualenv
         virtualenv venv
     - name: Install Dependencies
-      shell: bash
       run: |
         . venv/bin/activate
         pip install -r config/requirements.txt
     - name: Run Tests
-      shell: bash
       run: |
         . venv/bin/activate
         python src/manage.py test src --settings=multiomics_intermediate.settings_ci
