@@ -1,4 +1,5 @@
 import React from 'react'
+import { CurrentUserContext } from '../Base'
 import { Table, Pagination, Icon, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoCGDSDataset, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState, RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, Nullable } from '../../utils/interfaces'
@@ -23,9 +24,7 @@ interface CGDSStudiesListProps {
 /**
  * Component's state
  */
-interface CGDSStudiesListState {
-    headers: RowHeader<DjangoCGDSStudy>[]
-}
+interface CGDSStudiesListState {}
 
 /**
  * State icon info
@@ -43,24 +42,11 @@ interface CGDSStudyAndDatasetStateInfo {
  * TODO: make this a function instead a Class
  */
 export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSStudiesListState> {
+    static contextType = CurrentUserContext;
+
     constructor (props: CGDSStudiesListProps) {
         super(props)
-
-        this.state = {
-            headers: [
-                { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                { name: 'Description', serverCodeToSort: 'description', width: 2 },
-                { name: 'Sync Date', serverCodeToSort: 'date_last_synchronization', width: 2 },
-                { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1 },
-                { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1 },
-                { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1 },
-                { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1 },
-                { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1 },
-                { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1 },
-                { name: 'State', width: 1 },
-                { name: 'Actions' }
-            ]
-        }
+        this.state = {}
     }
 
     /**
@@ -244,8 +230,26 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
         // Sets the order icon in Table's header
         const columnSorted = this.props.tableControl.sortField
         const sortOrder = this.props.tableControl.sortOrderAscendant ? 'ascending' : 'descending'
+        const user = this.context
 
-        const headers = this.state.headers.map((header) => {
+        const headersOptions:RowHeader<DjangoCGDSStudy>[] = [
+            { name: 'Name', serverCodeToSort: 'name', width: 3 },
+            { name: 'Description', serverCodeToSort: 'description', width: 2 },
+            { name: 'Sync Date', serverCodeToSort: 'date_last_synchronization', width: 2 },
+            { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1 },
+            { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1 },
+            { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1 },
+            { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1 },
+            { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1 },
+            { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1 },
+            { name: 'State', width: 1 }
+        ]
+
+        if (user?.is_superuser) {
+            headersOptions.push({ name: 'Actions' })
+        }
+
+        const headers = headersOptions.map((header) => {
             const sorted = columnSorted === header.serverCodeToSort ? sortOrder : undefined
 
             // If the column is not sortable the there's not callback
@@ -289,6 +293,7 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
                     <Table.Cell title={studyState.title}>
                         <Icon name={studyState.iconName} color={studyState.color} loading={studyState.loading}/>
                     </Table.Cell>
+                    {user?.is_superuser &&
                     <Table.Cell>
                         {/* Sync button */}
                         <Icon
@@ -310,7 +315,7 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
                             disabled={studyState.loading || this.props.sendingSyncRequest}
                             onClick={() => this.props.editCGDSStudy(CGDSStudy)}
                         />
-                    </Table.Cell>
+                    </Table.Cell>}
                 </Table.Row>
             )
         })
