@@ -23,7 +23,7 @@ const UploadLabel = () => (
                 <React.Fragment>
                     <Header>Ensuring file quality</Header>
 
-                    <p>We perform a serie of checks to ensure that the data received on our server is correct. Please note that <strong>this process may take a few minutes depending on the size of the file</strong>. Thanks for your patience.</p>
+                    <p>We perform a serie of checks to ensure that the data received on our server is correct. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
                 </React.Fragment>
             }
             onTop={false}
