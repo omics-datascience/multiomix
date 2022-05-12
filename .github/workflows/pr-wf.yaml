@@ -30,7 +30,7 @@ jobs:
         pip install -r config/requirements.txt
     - name: Run Tests
       run: |
-        python src/manage.py test
+        python src/manage.py test src --settings=multiomics_intermediate.settings_ci
   Node-checks:
     runs-on: ubuntu-latest
     strategy:
