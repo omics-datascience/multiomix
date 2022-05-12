@@ -98,7 +98,7 @@
   margin-bottom: 0 !important;
 }
 
-#sign-up-password-helper {
+.error-message-helper {
   color: white;
   font-weight: bold;
   margin-top: 1%;

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Base } from '../Base'
+import { Base, CurrentUserContext } from '../Base'
 import { Grid, Header, Button, Modal } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode } from '../../utils/django_interfaces'
 import ky from 'ky'
@@ -660,41 +660,47 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
                 {/* CGDS Study synchronization modal */}
                 {cgdsStudySyncConfirmModal}
-
-                <Grid columns={2} padded stackable textAlign='center' divided>
-                    {/* New CGDS Study Panel */}
-                    <Grid.Column width={3} textAlign='left'>
-                        <NewCGDSStudyForm
-                            newCGDSStudy={this.state.newCGDSStudy}
-                            handleFormChanges={this.handleFormChanges}
-                            handleKeyDown={this.handleKeyDown}
-                            addingOrEditingCGDSStudy={this.state.addingOrEditingCGDSStudy}
-                            addCGDSDataset={this.addCGDSDataset}
-                            removeCGDSDataset={this.removeCGDSDataset}
-                            handleFormDatasetChanges={this.handleFormDatasetChanges}
-                            addSurvivalFormTuple={this.addSurvivalFormTuple}
-                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                            canAddCGDSStudy={this.canAddCGDSStudy}
-                            addOrEditStudy={this.addOrEditStudy}
-                            cleanForm={this.cleanForm}
-                            isFormEmpty={this.isFormEmpty}
-                        />
-                    </Grid.Column>
-
-                    {/* List of CGDS Studies */}
-                    <Grid.Column width={13} textAlign='center'>
-                        <CGDSStudiesList
-                            CGDSStudies={this.state.CGDSStudies}
-                            tableControl={this.state.tableControl}
-                            sendingSyncRequest={this.state.sendingSyncRequest}
-                            handleSort={this.handleSort}
-                            handleTableControlChanges={this.handleTableControlChanges}
-                            confirmCGDSStudyDeletionOrSync={this.confirmCGDSStudyDeletionOrSync}
-                            editCGDSStudy={this.editCGDSStudy}
-                        />
-                    </Grid.Column>
-                </Grid>
+                <CurrentUserContext.Consumer>
+                    { currentUser =>
+                        (
+                            <Grid columns={2} padded stackable textAlign='center' divided>
+                                {/* New CGDS Study Panel */}
+                                {currentUser?.is_superuser
+                                    ? <Grid.Column width={3} textAlign='left'>
+                                        <NewCGDSStudyForm
+                                            newCGDSStudy={this.state.newCGDSStudy}
+                                            handleFormChanges={this.handleFormChanges}
+                                            handleKeyDown={this.handleKeyDown}
+                                            addingOrEditingCGDSStudy={this.state.addingOrEditingCGDSStudy}
+                                            addCGDSDataset={this.addCGDSDataset}
+                                            removeCGDSDataset={this.removeCGDSDataset}
+                                            handleFormDatasetChanges={this.handleFormDatasetChanges}
+                                            addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                            canAddCGDSStudy={this.canAddCGDSStudy}
+                                            addOrEditStudy={this.addOrEditStudy}
+                                            cleanForm={this.cleanForm}
+                                            isFormEmpty={this.isFormEmpty}
+                                        />
+                                    </Grid.Column> : null
+                                }
+                                {/* List of CGDS Studies */}
+                                <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
+                                    <CGDSStudiesList
+                                        CGDSStudies={this.state.CGDSStudies}
+                                        tableControl={this.state.tableControl}
+                                        sendingSyncRequest={this.state.sendingSyncRequest}
+                                        handleSort={this.handleSort}
+                                        handleTableControlChanges={this.handleTableControlChanges}
+                                        confirmCGDSStudyDeletionOrSync={this.confirmCGDSStudyDeletionOrSync}
+                                        editCGDSStudy={this.editCGDSStudy}
+                                    />
+                                </Grid.Column>
+                            </Grid>
+                        )
+                    }
+                </CurrentUserContext.Consumer>
             </Base>
         )
     }

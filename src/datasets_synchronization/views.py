@@ -16,8 +16,8 @@ import json
 def cgds_panel_action(request):
     """Gets the datasets panel template. Only for superusers"""
     # If the current user is not a super user, returns Forbidden Response
-    if not request.user.is_superuser:
-        return HttpResponseForbidden()
+    # if not request.user.is_superuser:
+    #    return HttpResponseForbidden()
     return render(request, "frontend/cgds.html")
 
 
