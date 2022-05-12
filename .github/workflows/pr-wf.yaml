@@ -16,9 +16,25 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mongo:
+        image: "mongo:4.2"
+        env:
+          MONGO_INITDB_ROOT_USERNAME: multiomics
+          MONGO_INITDB_ROOT_PASSWORD: multiomics
+          MONGO_INITDB_DATABASE: multiomics
+        options: >-
+          --health-cmd "curl --connect-timeout 10 --silent --show-error localhost:27017"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      MONGO_HOST: mongo
+      MONGO_DB: multiomics
+      MONGO_USERNAME: multiomics
+      MONGO_PASSWORD: multiomics
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
