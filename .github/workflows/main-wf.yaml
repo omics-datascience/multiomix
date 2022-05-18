@@ -4,7 +4,7 @@ on:
     branches:
       - "main"
 jobs:
-  docker-modulector:
+  docker-multiomix:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
