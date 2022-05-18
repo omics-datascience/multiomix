@@ -22,7 +22,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: omicsdatascience/multiomix:${{ env.VERSION }}
       - name: multimomix current version docker image exists?
-        if: ((!steps.is_image_exist.outputs.image_exist))
+        if: ((steps.is_image_exist.outputs.image_exist))
         uses: actions/github-script@v3
         with:
           script: |
