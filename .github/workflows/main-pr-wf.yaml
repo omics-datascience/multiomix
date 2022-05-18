@@ -18,7 +18,7 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/multiomix:${{ env.VERSION }}
+          image: omicsdatascience/multiomix:${{ env.VERSION }}
       - name: multimomix current version docker image exists?
         if: ((!steps.is_image_exist.outputs.image_exist))
         uses: actions/github-script@v3
