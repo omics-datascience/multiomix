@@ -1,0 +1,28 @@
+name: Check if version exist on docker registry
+on:
+  pull_request:
+    branches:
+      - "main"
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh >> $GITHUB_ENV
+      - name: Check multiomix current version
+        id: is_image_exist
+        uses: tm-bverret/docker-exist-action@v1.1.2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/multiomix:${{ env.VERSION }}
+      - name: multimomix current version docker image exists?
+        if: ((!steps.is_image_exist.outputs.image_exist))
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('This multiomix version already exists on docker registry')
+

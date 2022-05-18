@@ -2,6 +2,8 @@
 
 # Multiomix
 
+[![Last Build & Push](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml/badge.svg)](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml)
+
 Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation.
 
 This document is focused on the **development** of the system. If you are looking for documentation for a production deployment see [DEPLOYING.md](DEPLOYING.md).
