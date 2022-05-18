@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Get version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh
+      - name: Set version
         run: BASEDIR=$(pwd) ./tools/get_version.sh >> $GITHUB_ENV
       - name: Check multiomix current version
         id: is_image_exist
