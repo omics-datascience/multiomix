@@ -42,7 +42,6 @@ data:
 
       # Static files
       location /static/ {
-          autoindex on;
           alias /static/;
 
           # Cache policy
@@ -56,13 +55,6 @@ data:
           proxy_cache_lock on;
       }
 
-      # Media files
-      location /media/ {
-          autoindex on;
-          alias /media/;
-          # Force download
-          add_header Content-Disposition 'attachment';
-      }
 
       # Main proxy
       location / {
