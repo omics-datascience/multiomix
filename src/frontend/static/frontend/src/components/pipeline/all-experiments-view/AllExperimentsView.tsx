@@ -101,22 +101,6 @@ class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExp
                 </Table.HeaderCell>
             )
         })
-        const rows = this.props.allExperiments.map((experiment) => {
-            return (
-                <AllExperimentsRow
-                    key={experiment.id}
-                    experiment={experiment}
-                    openPopup={this.openPopup}
-                    closePopup={this.closePopup}
-                    showPopup={this.state.clinicalPopupOpenId === experiment.id}
-                    getAllUserExperiments={this.props.getAllUserExperiments}
-                    seeResult={this.props.seeResult}
-                    editExperiment={this.props.editExperiment}
-                    confirmExperimentDeletion={this.props.confirmExperimentDeletion}
-                    confirmExperimentStop={this.props.confirmExperimentStop}
-                />
-            )
-        })
 
         const selectPageSizeOptions = [
             { key: '10', text: '10', value: 10 },
@@ -217,7 +201,20 @@ class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExp
 
                     {/* Body */}
                     <Table.Body>
-                        {rows}
+                        {this.props.allExperiments.map((experiment) => (
+                            <AllExperimentsRow
+                                key={experiment.id}
+                                experiment={experiment}
+                                openPopup={this.openPopup}
+                                closePopup={this.closePopup}
+                                showPopup={this.state.clinicalPopupOpenId === experiment.id}
+                                getAllUserExperiments={this.props.getAllUserExperiments}
+                                seeResult={this.props.seeResult}
+                                editExperiment={this.props.editExperiment}
+                                confirmExperimentDeletion={this.props.confirmExperimentDeletion}
+                                confirmExperimentStop={this.props.confirmExperimentStop}
+                            />
+                        ))}
                     </Table.Body>
                 </Table>
 
