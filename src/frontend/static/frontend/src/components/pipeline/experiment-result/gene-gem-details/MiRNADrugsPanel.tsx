@@ -84,7 +84,7 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
                 headerTitle='miRNA drugs associations'
                 headers={headers}
                 customFilters={customInputs}
-                showSearchInput={true}
+                showSearchInput
                 searchLabel='Condition/Small molecule/Exp. Pattern'
                 searchPlaceholder='Search by drug, S.M. or Exp. P.'
                 queryParams={{

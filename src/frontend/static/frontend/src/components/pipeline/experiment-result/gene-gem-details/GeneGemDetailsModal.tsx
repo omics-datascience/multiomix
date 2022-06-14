@@ -239,7 +239,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         <MiRNAInteractionPanel
                             miRNAData={this.state.miRNAData}
                             miRNA={gem}
-                            showGeneSearchInput={true}
+                            showGeneSearchInput
                         />
                     </React.Fragment>
                 )

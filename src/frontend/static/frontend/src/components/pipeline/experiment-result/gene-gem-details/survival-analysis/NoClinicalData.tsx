@@ -28,7 +28,7 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
                 <ClinicalSourcePopup
                     experiment={props.experiment}
                     // In survival analysis tabs is necessary to have survival tuples
-                    showOnlyClinicalDataWithSurvivalTuples={true}
+                    showOnlyClinicalDataWithSurvivalTuples
                     showPopup={showPopup}
                     position='bottom center'
                     iconExtraClassNames='margin-top-5'

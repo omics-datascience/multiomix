@@ -1,0 +1,21 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| Biomarkers{% endblock %}
+
+{% block css %}
+        {% render_bundle 'biomarkers' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="biomarkers-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+                const urlBiomarkers = "{% url 'biomarkers' %}"
+                const urlBiomarkersCRUD = "{% url 'biomarkers_api'' %}"
+        </script>
+        {% render_bundle 'biomarkers' 'js' %}
+{% endblock %}

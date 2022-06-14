@@ -262,7 +262,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                 {props.newFile.newFileType === FileType.CLINICAL &&
                     <SurvivalTuplesForm
                         survivalColumns={props.newFile.survivalColumns}
-                        inline={true}
+                        inline
                         handleSurvivalFormDatasetChanges={props.handleSurvivalFormDatasetChanges}
                         addSurvivalFormTuple={props.addSurvivalFormTuple}
                         removeSurvivalFormTuple={props.removeSurvivalFormTuple}

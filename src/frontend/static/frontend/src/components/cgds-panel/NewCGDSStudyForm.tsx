@@ -154,7 +154,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 newCGDSDataset={props.newCGDSStudy.clinical_patient_dataset}
                 nameToShow='Clinical Patients'
                 datasetName='clinical_patient_dataset'
-                showSurvivalTuplesForm={true}
+                showSurvivalTuplesForm
                 addingOrEditingCGDSStudy={props.addingOrEditingCGDSStudy}
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addSurvivalFormTuple={props.addSurvivalFormTuple}

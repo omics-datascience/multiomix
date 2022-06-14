@@ -40,7 +40,7 @@ interface PaginatedTableProps<T> {
     /** Backend API URL to retrieve data */
     urlToRetrieveData: string,
     /** Initial query params to send the backend API (extra params will be attached) */
-    queryParams: any,
+    queryParams?: any,
     /** Array of custom inputs to render */
     customFilters?: PaginationCustomFilter[],
     /** Field and order if needed to order by default by any field */

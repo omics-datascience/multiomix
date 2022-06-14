@@ -18,6 +18,7 @@ module.exports = {
         main: `${PATHS.src}/index.tsx`,
         files: `${PATHS.src}/files.tsx`,
         institutions: `${PATHS.src}/institutions.tsx`,
+        biomarkers: `${PATHS.src}/biomarkers.tsx`,
         login: `${PATHS.src}/login.tsx`,
         cgds: `${PATHS.src}/cgds.tsx`,
         survival: `${PATHS.src}/survival.tsx`,
