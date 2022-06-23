@@ -113,7 +113,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 <List bulleted>
                                     <List.Item>First row <strong>must be a header</strong></List.Item>
                                     <List.Item>First column <strong>must be the index</strong>, the rest the samples expression data</List.Item>
-                                    <List.Item>CSV, TSV or TXT files are accepted. Excel files will be supported in a near future</List.Item>
+                                    <List.Item>CSV, TSV, TXT, XLS or XLSX files are accepted</List.Item>
                                     <List.Item>The column and decimal delimiters will be inferred from the data</List.Item>
                                 </List>
 
