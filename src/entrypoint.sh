@@ -2,10 +2,9 @@
 
 FE_DIR=/src/frontend/static/frontend
 BASE_DIR=/src
-LISTEN_IP=${:-"0.0.0.0"}
-LISTEN_PORT=${:-8000}
-DJANGO_SETTINGS_MODULE=${:-"multiomics_intermediate.settings"}
-
+LISTEN_IP=${LISTEN_IP:-"0.0.0.0"}
+LISTEN_PORT=${LISTEN_PORT:-8000}
+DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-"multiomics_intermediate.settings"}
 echo "##############################################"
 echo "Generate key..."
 echo "##############################################"
