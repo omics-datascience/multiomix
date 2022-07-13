@@ -30,6 +30,6 @@ echo "Running multiomics..."
 echo "##############################################"
 echo ${LISTEN_IP}
 echo ${LISTEN_PORT}
-daphne -b "${LISTEN_IP}" -p "${LISTEN_PORT}" --root-path=${BASE_DIR} multiomics_intermediate.asgi:application
+daphne -b "${LISTEN_IP}" -p "${LISTEN_PORT}" multiomics_intermediate.asgi:application
 
 
