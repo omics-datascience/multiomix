@@ -2,6 +2,7 @@ import React from 'react'
 import { Form, Message, Button, Image } from 'semantic-ui-react'
 import { Nullable } from '../../utils/interfaces'
 import { CsrfInput } from './CsrfInput'
+import validator from 'validator'
 
 declare const urlIndex: string
 declare const urlAuthenticate: string
@@ -108,7 +109,16 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
             this.state.email.trim().length > 0 &&
             newPasswordTrimmed.length > 0 &&
             newPasswordRepeatedTrimmed.length > 0 &&
-            newPasswordTrimmed === newPasswordRepeatedTrimmed
+            newPasswordTrimmed === newPasswordRepeatedTrimmed &&
+            this.emailIsValid()
+    }
+
+    /**
+     * Checks that the provided mail is valid!
+     * @returns True if the informed mail is valid, false otherwise
+     */
+    emailIsValid (): boolean {
+        return validator.isEmail(this.state.email.trim())
     }
 
     /**
@@ -208,6 +218,7 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
      */
     getSignUpPanel () {
         const passwordsMismatch = this.state.newPassword !== this.state.newPasswordRepeated
+        const emailIsNotValid = this.state.email != null && this.state.email.trim().length > 0 && !this.emailIsValid()
 
         return (
             <GeneralForm title={'Sign Up'} url={urlCreateUser}>
@@ -227,10 +238,15 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
                     iconPosition='left'
                     placeholder='Email'
                     name='email'
+                    error={emailIsNotValid}
                     value={this.state.email}
                     onChange={this.handleInputChange}
                 />
-
+                {emailIsNotValid &&
+                    <p className='align-center error-message-helper'>
+                        Please provide a valid <i>email</i> address
+                    </p>
+                }
                 <Form.Input
                     fluid
                     icon='lock'
@@ -241,7 +257,6 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
                     onChange={this.handleInputChange}
                     type='password'
                 />
-
                 <Form.Input
                     fluid
                     icon='lock'
@@ -255,7 +270,7 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
                     type='password'
                 />
                 {passwordsMismatch &&
-                    <p id="sign-up-password-helper" className='align-center'>
+                    <p className='align-center error-message-helper'>
                         This value is different to <i>Password</i> field
                     </p>
                 }

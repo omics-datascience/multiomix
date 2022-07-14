@@ -345,7 +345,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         const isAnUploadedDataset = this.state.clinicalSource.type === SourceType.UPLOADED_DATASETS
         const isaNewDataset = this.state.clinicalSource.type === SourceType.NEW_DATASET
         const showSurvivalTuplesForm = isAnUploadedDataset || isaNewDataset
-        const clinicalIsDisabled = experiment.state !== ExperimentState.COMPLETED
+        const clinicalIsDisabled = experiment.state !== ExperimentState.COMPLETED || experiment.result_final_row_count === 0
         const clinicalButtonClassName = clinicalIsDisabled
             ? ''
             : 'clickable ' + this.props.iconExtraClassNames ?? ''

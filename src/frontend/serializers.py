@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
-    """User serializer with less data"""
+    """User serializer with fewer data"""
     class Meta:
         model = get_user_model()
         fields = ['id', 'username']

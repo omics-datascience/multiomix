@@ -1,4 +1,4 @@
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
@@ -14,10 +14,7 @@ import json
 
 @login_required
 def cgds_panel_action(request):
-    """Gets the datasets panel template. Only for superusers"""
-    # If the current user is not a super user, returns Forbidden Response
-    if not request.user.is_superuser:
-        return HttpResponseForbidden()
+    """Gets the datasets' panel template"""
     return render(request, "frontend/cgds.html")
 
 

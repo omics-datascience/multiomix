@@ -2,13 +2,13 @@ import os
 from django.test import TestCase
 from api_service.models import ExperimentSource, Experiment, GeneMiRNACombination
 from api_service.pipelines import global_pipeline_manager
+from genes.models import Gene
 from statistical_properties.statistics_utils import compute_source_statistical_properties, COMMON_DECIMAL_PLACES,\
     P_VALUES_DECIMAL_PLACES
 from common.tests_utils import create_experiment_source, create_user_file, create_toy_experiment
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from django.contrib.auth.models import User
-# TODO: put these tests in statistical_properties app with others datasets
 
 
 class GeneGEMTestCase(TestCase):
@@ -66,8 +66,9 @@ class GeneGEMTestCase(TestCase):
         # Experiment
         self.mrna_mirna_experiment = create_toy_experiment(self.mrna_normal_source, self.mirna_normal_source, self.user)
 
+        gene_obj = Gene.objects.get(name='AADAT')  # Genes are loaded during DB migration
         self.mrna_mirna_combination = GeneMiRNACombination.objects.create(
-            gene='AADAT',
+            gene=gene_obj,
             gem='hsa-mir-676',
             correlation=0.0,  # Not needed
             p_value=0.0,  # Not needed

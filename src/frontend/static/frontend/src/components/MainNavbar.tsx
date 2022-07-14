@@ -127,8 +127,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 />
 
                                 {/* cBioPortal Datasets panel */}
-                                {/* TODO: uncomment this when the panel is available for normal users */}
-                                {/* {cBioPortalOption} */}
+                                {cBioPortalOption}
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
@@ -142,9 +141,6 @@ const MainNavbar = (props: MainNavbarProps) => {
                         <Dropdown.Menu>
                             {currentUser.is_superuser &&
                                 <React.Fragment>
-                                    {/* cBioPortal Datasets panel */}
-                                    {cBioPortalOption}
-
                                     {/* User's Datasets panel */}
                                     <Dropdown.Item
                                         text='Database: Genes'

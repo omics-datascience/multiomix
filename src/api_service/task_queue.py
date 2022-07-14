@@ -144,6 +144,32 @@ class TaskQueue(object):
             # Removes key
             self.__removes_experiment_future(experiment.pk)
 
+    def compute_pending_experiments(self):
+        """
+        Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
+        if the TaskQueue is being created It couldn't be processing experiments. Some experiments
+        could be in that state due to unexpected errors in server
+        """
+        logging.warning('Checking pending experiments')
+        # Gets the experiment by submit date (ASC)
+        experiments: QuerySet = Experiment.objects.filter(
+            Q(state=ExperimentState.WAITING_FOR_QUEUE)
+            | Q(state=ExperimentState.IN_PROCESS)
+        ).order_by('submit_date')
+        logging.warning(f'{experiments.count()} pending experiments are being sent for processing')
+        for experiment in experiments:
+            # If the experiment has already reached a limit of attempts, it's marked as error
+            if experiment.attempt == 3:
+                experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
+                experiment.save()
+            else:
+                experiment.attempt += 1
+                experiment.save()
+                logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
+                self.add_experiment(experiment)
+
+        close_db_connection()
+
     def __removes_experiment_future(self, experiment_pk: int):
         """
         Removes a specific key from self.experiments_futures
@@ -153,28 +179,3 @@ class TaskQueue(object):
 
 
 global_task_queue = TaskQueue()
-
-
-def compute_pending_experiments():
-    """"
-    Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
-    if the TaskQueue is being created It couldn't be processing experiments. Some experiments
-    could be in that state due to unexpected errors in server
-    """
-    logging.info('Checking pending experiments')
-    experiments: QuerySet = Experiment.objects.filter(
-        Q(state=ExperimentState.WAITING_FOR_QUEUE)
-        | Q(state=ExperimentState.IN_PROCESS)
-    ).order_by('submit_date')
-    logging.info(f'{experiments.count()} pending experiments are being sent for processing')
-    for experiment in experiments:
-        global_task_queue.add_experiment(experiment)
-
-    close_db_connection()
-
-
-# Gets the pending experiments
-# if settings.COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP:
-    # MUST be in an thread as it could block the main thread preventing the server to start
-    # FIXME: this is blocking the main thread
-    # threading.Thread(target=compute_pending_experiments).start()

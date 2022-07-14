@@ -1,10 +1,10 @@
 import React from 'react'
 import { Form, Icon, Label, Statistic } from 'semantic-ui-react'
-import { Slider } from 'react-semantic-ui-range'
 import { CorrelationType, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
 import { InfoPopup } from './gene-gem-details/InfoPopup'
 import { generatesOrderingQueryMultiField } from '../../../utils/util_functions'
 import { DjangoExperiment } from '../../../utils/django_interfaces'
+import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
 
 declare const urlDownloadResultWithFilters: string
 
@@ -52,14 +52,6 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
         { key: '50', text: '50', value: 50 },
         { key: '100', text: '100', value: 100 }
     ]
-
-    // FIXME: there's a bug with the library https://github.com/iozbeyli/react-semantic-ui-range/issues/18
-    const sliderSettings = {
-        min: props.minimumCoefficientThreshold,
-        max: 0.99,
-        step: 0.05,
-        onChange: (value: number) => props.handleTableControlChanges('coefficientThreshold', value)
-    }
 
     const isShowingHighPrecision = props.tableControl.showHighPrecision
 
@@ -110,22 +102,31 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
 
                 {/* Correlation threshold */}
                 <Form.Field width={6}>
-                    <Label className="align-center bolder">Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}</Label>
-                    <Slider
+                    <Label
+                        id='slider-cor-filter-label'
+                        className="align-center bolder"
+                    >
+                        Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}
+                    </Label>
+
+                    <SingleRangeSlider
                         value={props.tableControl.coefficientThreshold}
                         color="green"
-                        inverted={false}
-                        settings={sliderSettings}
+                        defaultMinValue={props.minimumCoefficientThreshold}
+                        className='margin-bottom-5'
+                        defaultMaxValue={0.95}
+                        step={0.05}
+                        onChange={(value: number) => props.handleTableControlChanges('coefficientThreshold', value)}
                     />
+
                     <Label
                         id="label-minimum-threshold"
                         color="green"
-                        pointing='above'
                         className="pull-left"
                     >
                         {props.minimumCoefficientThreshold.toFixed(2)}
                     </Label>
-                    <Label color="green" pointing='above' className="pull-right">1</Label>
+                    <Label color="green" className="pull-right">0.95</Label>
                 </Form.Field>
 
                 {/* Correlation type */}

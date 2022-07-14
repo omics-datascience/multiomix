@@ -27,7 +27,7 @@ export const InfoPopup = (props: InfoPopupProps) => {
     const mustAddOnTopClass = props.onTop ?? true
     const onTopClassName = mustAddOnTopClass ? 'info-popup-on-top' : ''
     const extraClassName = props.extraClassName ?? ''
-    const id = props.id ?? ''
+    const id = props.id ?? undefined
     const onEvent = props.onEvent ?? 'click'
 
     return (

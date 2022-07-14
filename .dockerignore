@@ -10,4 +10,3 @@ src/uploads
 src/media
 src/db.sqlite3
 src/api_service/experiments/venv
-src/multiomics_intermediate/settings_prod.py

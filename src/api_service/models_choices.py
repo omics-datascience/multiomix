@@ -20,6 +20,7 @@ class ExperimentState(models.IntegerChoices):
     NO_SAMPLES_IN_COMMON = 5
     STOPPING = 6
     STOPPED = 7
+    REACHED_ATTEMPTS_LIMIT = 8
 
 
 class CorrelationMethod(models.IntegerChoices):
