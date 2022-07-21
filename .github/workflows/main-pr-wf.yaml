@@ -24,7 +24,7 @@ jobs:
       - name: evaluation result?
         env:
           RESULT: ${{ steps.is_image_exist.outputs.image_exist }}          
-        run: echo "Result of image check was: $RESULT" 
+        run: echo "Result of image check was: ${{ env.RESULT }}" 
       - name: multimomix current version docker image exists?
         if: steps.is_image_exist.outputs.image_exist == 1
         uses: actions/github-script@v3
