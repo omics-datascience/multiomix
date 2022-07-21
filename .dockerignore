@@ -10,3 +10,4 @@ src/uploads
 src/media
 src/db.sqlite3
 src/api_service/experiments/venv
+tools/k8s
