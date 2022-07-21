@@ -56,7 +56,7 @@ class UserFileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """
         IMPORTANT: makes a nested representation of the UserFile's Tag object only
-        # when it gets the object (representation), but we can still sending only the Tag's id when creating
+        when it gets the object (representation), but we can still sending only the Tag's id when creating
         """
         data = super(UserFileSerializer, self).to_representation(instance)
 
@@ -164,3 +164,13 @@ class UserFileSerializer(serializers.ModelSerializer):
             # NOTE: it's not necessary to compute post saved field as File object has not changed
             instance.save()
         return instance
+
+
+class UserFileWithoutFileObjSerializer(UserFileSerializer):
+    """Same serializer as UserFileSerializer but without the file_obj field"""
+
+    def to_representation(self, instance):
+        """Removes the file_obj to prevent exposure of the media URL"""
+        data = super(UserFileWithoutFileObjSerializer, self).to_representation(instance)
+        data['file_obj'] = ''
+        return data

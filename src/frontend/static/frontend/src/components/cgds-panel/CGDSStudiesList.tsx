@@ -232,7 +232,7 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
         const sortOrder = this.props.tableControl.sortOrderAscendant ? 'ascending' : 'descending'
         const user = this.context
 
-        const headersOptions:RowHeader<DjangoCGDSStudy>[] = [
+        const headersOptions: RowHeader<DjangoCGDSStudy>[] = [
             { name: 'Name', serverCodeToSort: 'name', width: 3 },
             { name: 'Description', serverCodeToSort: 'description', width: 2 },
             { name: 'Sync Date', serverCodeToSort: 'date_last_synchronization', width: 2 },
@@ -294,28 +294,29 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
                         <Icon name={studyState.iconName} color={studyState.color} loading={studyState.loading}/>
                     </Table.Cell>
                     {user?.is_superuser &&
-                    <Table.Cell>
-                        {/* Sync button */}
-                        <Icon
-                            name='sync alternate'
-                            color='blue'
-                            className='clickable'
-                            title='Sync study'
-                            loading={studyState.loading}
-                            disabled={studyState.loading || this.props.sendingSyncRequest}
-                            onClick={() => this.props.confirmCGDSStudyDeletionOrSync(CGDSStudy, false)}
-                        />
+                        <Table.Cell>
+                            {/* Sync button */}
+                            <Icon
+                                name='sync alternate'
+                                color='blue'
+                                className='clickable'
+                                title='Sync study'
+                                loading={studyState.loading}
+                                disabled={studyState.loading || this.props.sendingSyncRequest}
+                                onClick={() => this.props.confirmCGDSStudyDeletionOrSync(CGDSStudy, false)}
+                            />
 
-                        {/* Edit button */}
-                        <Icon
-                            name='pencil'
-                            color='yellow'
-                            className='clickable margin-left-30'
-                            title='Edit study'
-                            disabled={studyState.loading || this.props.sendingSyncRequest}
-                            onClick={() => this.props.editCGDSStudy(CGDSStudy)}
-                        />
-                    </Table.Cell>}
+                            {/* Edit button */}
+                            <Icon
+                                name='pencil'
+                                color='yellow'
+                                className='clickable margin-left-30'
+                                title='Edit study'
+                                disabled={studyState.loading || this.props.sendingSyncRequest}
+                                onClick={() => this.props.editCGDSStudy(CGDSStudy)}
+                            />
+                        </Table.Cell>
+                    }
                 </Table.Row>
             )
         })
