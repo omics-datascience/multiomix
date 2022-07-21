@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multiomix-mongo-conf
+  namespace: your_namespace
+data:
+  # Atention:
+  # ---------
+  #
+  # This is the content of nginx configuration file. It can be addapted to your needs and is configured to use the deploy containers config
+  #
+  multiomics_intermediate.conf: |
+    # Cache settings
+    proxy_cache_path /usr/share/nginx/cache levels=1:2 keys_zone=my_cache:10m max_size=2g inactive=60m use_temp_path=off;
+    # Connection with Djan
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mongo
+  name: mongo
+  namespace: your_namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - image: mongo:4.2
+        name: mongo
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "multiomix"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "multiomix"
+        - name: MONGO_INITDB_DATABASE
+          value: "multiomics"          
+        resources: {}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 27017 
+            name: mongo
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  type: NodePort
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+      name: mongo

@@ -21,8 +21,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: omicsdatascience/multiomix:${{ env.VERSION }}
+      - name: evaluation result?
+        run: |
+          echo "Result of image check was: ${{ env.RESULT }}" 
+        env:
+          RESULT: ${{ steps.is_image_exist.outputs.image_exist }}          
       - name: multimomix current version docker image exists?
-        if: ((steps.is_image_exist.outputs.image_exist))
+        if: steps.is_image_exist.outputs.image_exist == 1
         uses: actions/github-script@v3
         with:
           script: |
