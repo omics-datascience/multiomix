@@ -21,7 +21,7 @@ This document is focused on the **development** of the system. If you are lookin
     1. `cd src`
     1. `python3 -m venv venv`
     1. `source venv/bin/activate` (run only when you need to work)
-    1. `pip install -r ../config/requirements.txt`
+    1. `pip install -r ../config/requirements.txt`. Maybe you need to run `python3.exe -m pip install -r ../config/requirements.txt` in Windows instead.
 2. Install Node JS dependencies:
     1. `cd frontend/static/frontend`
     2. `npm i`
