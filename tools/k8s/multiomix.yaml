@@ -124,7 +124,7 @@ spec:
           - key: "multiomics_intermediate.conf"
             path: "multiomics_intermediate.conf"          
       containers:
-      - image: omicsdatascience/multiomix:4.7.0
+      - image: omicsdatascience/multiomix:4.7.1
         name: multiomix
         env:
         - name: POSTGRES_USERNAME
@@ -191,7 +191,6 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      name: multiomix-django
 
 ---
 apiVersion: networking.k8s.io/v1
