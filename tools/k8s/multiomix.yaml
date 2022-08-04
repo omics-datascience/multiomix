@@ -1,0 +1,212 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: multiomix-secret-key
+  namespace: your_namespace
+type: Opaque
+stringData:
+  secretkey: your_secret_key
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multiomix-conf
+  namespace: your_namespace
+data:
+  # Atention:
+  # ---------
+  #
+  # This is the content of nginx configuration file. It can be addapted to your needs and is configured to use the deploy containers config
+  #
+  multiomics_intermediate.conf: |
+    # Cache settings
+    proxy_cache_path /usr/share/nginx/cache levels=1:2 keys_zone=my_cache:10m max_size=2g inactive=60m use_temp_path=off;
+    # Connection with Django server
+    upstream web {
+      ip_hash;
+      server localhost:8000;
+    }
+
+    server {
+      client_max_body_size 0;
+
+      # Websocket proxy
+      location /ws/ {
+          proxy_pass http://web;
+          proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection "Upgrade";
+      }
+
+      # Static files
+      location /static/ {
+          alias /static/;
+
+          # Cache policy
+          expires 365d;
+          proxy_cache my_cache;
+          proxy_cache_revalidate on;
+          proxy_cache_min_uses 3;
+          proxy_cache_use_stale error timeout updating http_500 http_502
+                              http_503 http_504;
+          proxy_cache_background_update on;
+          proxy_cache_lock on;
+      }
+
+
+      # Main proxy
+      location / {
+          proxy_pass http://web/;
+      }
+
+      # Listening port and server name
+      listen 8080;
+      server_name localhost;
+
+      # GZIP settings
+      gzip on;
+      gzip_proxied any;
+      gzip_min_length 256;
+      gzip_types
+          text/css
+          text/javascript
+          text/xml
+          text/plain
+          application/javascript
+          application/x-javascript
+          application/json
+          application/vnd.ms-fontobject
+          application/x-font-ttf
+          font/opentype
+          image/svg+xml
+          image/x-icon;
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: multiomix
+  name: multiomix
+  namespace: your_namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multiomix
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: multiomix
+    spec:
+      # Atention:
+      # ---------
+      #
+      # This volumes are non persistent after pod reboot. This is configure to be able to start the application in the cluster
+      # if you want to have persistent volumes need to change this and fit it to your k8s specific.
+      #
+      volumes:
+      - name: static-data
+        emptyDir: {}           
+      - name: media-data
+        emptyDir: {} 
+      - name: config
+        configMap: 
+          name: multiomix-conf
+          items:
+          - key: "multiomics_intermediate.conf"
+            path: "multiomics_intermediate.conf"          
+      containers:
+      - image: omicsdatascience/multiomix:4.7.1
+        name: multiomix
+        env:
+        - name: POSTGRES_USERNAME
+          value: "multiomix"
+        - name: POSTGRES_PASSWORD
+          value: "multiomix"
+        - name: POSTGRES_HOST
+          value: "multiomix-db"          
+        - name: POSTGRES_DB
+          value: "multiomix"          
+        - name: MONGO_USERNAME
+          value: "multiomix"          
+        - name: MONGO_PASSWORD
+          value: "multiomix"          
+        - name: MONGO_HOST
+          value: "mongo"          
+        - name: MONGO_DB
+          value: "multiomics"          
+        - name: MONGO_PORT
+          value: "27017"          
+        - name: REDIS_HOST
+          value: "redis" 
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: multiomix-secret-key
+              key: secretkey
+        volumeMounts:
+        - name: static-data
+          mountPath: /src/static
+        - name: media-data
+          mountPath: /src/media
+        resources: {}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8000 
+      - image: nginx:1.19.3
+        name: nginx
+        volumeMounts:
+        - name: static-data
+          mountPath: /static
+        - name: media-data
+          mountPath: /media
+        - name: config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true            
+        resources: {}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080 
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: multiomix
+spec:
+  type: NodePort
+  selector:
+    app: multiomix
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multiomix
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "your-host-name.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: multiomix
+            port:
+              number: 8080

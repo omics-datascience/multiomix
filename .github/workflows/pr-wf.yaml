@@ -1,0 +1,89 @@
+name: PR pipeline to verify tests and code rules
+on: [pull_request]
+jobs:
+  Python-tests:
+    runs-on: ubuntu-latest
+    container: python:3.8-bullseye
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        # Docker Hub image
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: multiomics
+          POSTGRES_USER: multiomics
+          POSTGRES_DB: multiomics
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5          
+      mongo:
+        image: "mongo:4.2"
+        env:
+          MONGO_INITDB_ROOT_USERNAME: multiomics
+          MONGO_INITDB_ROOT_PASSWORD: multiomics
+          MONGO_INITDB_DATABASE: multiomics
+        options: >-
+          --health-cmd "/bin/bash -c 'mongo --norc --quiet --host=localhost:27017 --eval \"db.getMongo()\"'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MONGO_HOST: mongo
+      MONGO_DB: multiomics
+      MONGO_USERNAME: multiomics
+      MONGO_PASSWORD: multiomics
+      POSTGRES_USERNAME: multiomics
+      POSTGRES_PASSWORD: multiomics
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: multiomics
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Create virtual environment
+      run: |
+        pip install virtualenv
+        virtualenv venv
+    - name: Install Dependencies
+      run: |
+        . venv/bin/activate
+        pip install -r config/requirements.txt
+    - name: Run Tests
+      run: |
+        . venv/bin/activate
+        python src/manage.py test src --settings=multiomics_intermediate.settings_ci
+  Node-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        node-version: [16.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: NPM install
+      run: npm --prefix src/frontend/static/frontend i
+    - name: NPM linter checks
+      run: npm --prefix src/frontend/static/frontend run check-all        

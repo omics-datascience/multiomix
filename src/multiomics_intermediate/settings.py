@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
-    'api_service',
+    'api_service.apps.ApiServiceConfig',
     'frontend',
     'rest_framework',
     'websockets',
@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
-    'genes'
+    'genes',
+    'chunked_upload',
 ]
 
 MIDDLEWARE = [
@@ -173,7 +174,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '4.6.2'
+VERSION: str = '4.7.1'
 
 # Max result DataFrame row count. If the number of rows is higher
 # the DataFrame is truncated. None for prevent truncation

@@ -1,4 +1,8 @@
+<img align="right" src="src/frontend/static/frontend/img/logo-readme.png" alt="Multiomix logo">
+
 # Multiomix
+
+[![Last Build & Push](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml/badge.svg)](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml)
 
 Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation.
 
@@ -7,8 +11,8 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Pre-requisites
 
-- Python 3.7 or Python 3.8
-- Node JS (tested version: `12.11.1`)
+- Python 3.7 or Python 3.8 (newer Python versions present [a bug with processes][process-bug])
+- Node JS (tested version: `16.x`)
 
 
 ## Installation 
@@ -17,12 +21,18 @@ This document is focused on the **development** of the system. If you are lookin
     1. `cd src`
     1. `python3 -m venv venv`
     1. `source venv/bin/activate` (run only when you need to work)
-    1. `pip install -r ../config/requirements.txt`
-1. Install Node JS dependencies:
+    1. `pip install -r ../config/requirements.txt`. Maybe you need to run `python3.exe -m pip install -r ../config/requirements.txt` in Windows instead.
+2. Install Node JS dependencies:
     1. `cd frontend/static/frontend`
-    1. `npm i`
-    1. `npm run dev` (only run once)
-1. Go back to the project root folder to create the DB and an admin user: 
+    2. `npm i`
+    3. `npm run dev` (only run once, during development we recommend running the `watch` script instead)
+3. Multiomix needs a SQL DB, a MongoDB and a Redis DB to work properly. You can install all three on your machine, or you can choose to use the Docker configuration already available (recommended). For the latter solution follow the steps below on the project root folder:
+    1. Create the needed volumes:
+       1. `docker volume create --name=multiomics_intermediate_mongo_data`
+       2. `docker volume create --name=multiomics_intermediate_mongo_config`
+       3. `docker volume create --name=multiomics_intermediate_postgres_data`
+    2. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
+4. Go back to the `src` folder to create the DB and an admin user: 
     1. `python3 manage.py makemigrations`
     1. `python3 manage.py migrate`
     1. `python3 manage.py createsuperuser`
@@ -31,9 +41,11 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Development
 
-1. Start Django server. In the `src` folder and with the virtual environment enabled, run: `python3 manage.py runserver`. A server will be run on __http://127.0.0.1:8000/__.
-1. Start up the Mongo DB and Redis DB (which takes care of the Websocket). If you have [docker-compose](https://docs.docker.com/compose/install/) installed you can simply run (from the root of the project) the following command: `docker-compose -f docker-compose.dev.yml up -d` and all the necessary services will be deployed on your machine.
+Every time you want to work with Multiomix, you need to follow the below steps:
+
+1. Start up the Postgres, Mongo DB and Redis DB (which takes care of the Websocket). If you have [docker-compose](https://docs.docker.com/compose/install/) installed you can simply run (from the root of the project) the following command: `docker-compose -f docker-compose.dev.yml up -d` and all the necessary services will be deployed on your machine.
     - In case you want to shut down all the Docker services, just run: `docker-compose -f docker-compose.dev.yml down`.
+1. Start Django server. In the `src` folder and with the virtual environment enabled, run: `python3 manage.py runserver`. A server will be run on __http://127.0.0.1:8000/__.
 1. For frontend development:
     1. `cd src/frontend/static/frontend`
     1. Run the script you need:
@@ -42,9 +54,36 @@ This document is focused on the **development** of the system. If you are lookin
         - `npm run prod`: compiles code in production mode.
 
 
-### Linter
+### Linter and Typescript
 
-[ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools.
+All the scripts mentioned below must be run inside the `src/frontend/static/frontend` folder.
+
+[ESLint](https://eslint.org/) was added to the project to make all the code respects a standard. It also allows detecting errors and unused elements. It is installed when `npm i` is run and can be [integrated](https://eslint.org/docs/user-guide/integrations) with many current development tools. To check if all ESLint rules are being complied, run: `npm run check-lint`.
+
+[Typescript](https://www.typescriptlang.org/) provides type support for safe and robust development. You can verify that all rules comply by running the following command: `npm run check-tsc`
+
+To check no breaking changes when you are working on Multiomix, you can run `npm run check-all`. This command will run both ESLint and Typescript checks.
+
+
+## Considerations
+
+If you use any part of our code, or Multiomix is useful for your research, please consider citing:
+
+```
+@article{10.1093/bioinformatics/btab678,
+    author = {Camele, Genaro and Menazzi, Sebastian and Chanfreau, Hernán and Marraco, Agustin and Hasperué, Waldo and Butti, Matias D and Abba, Martin C},
+    title = "{Multiomix: a cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation}",
+    journal = {Bioinformatics},
+    year = {2021},
+    month = {09},
+    abstract = "{Large-scale cancer genome projects have generated genomic, transcriptomic, epigenomic, and clinicopathological data from thousands of samples in almost every human tumor site. Although most omics data and their associated resources are publicly available, its full integration and interpretation to dissect the sources of gene expression modulation require specialized knowledge and software.We present Multiomix, an interactive cloud-based platform that allows biologists to identify genetic and epigenetic events associated with the transcriptional modulation of cancer-related genes through the analysis of multi-omics data available on public functional genomic databases or user-uploaded datasets. Multiomix consists of an integrated set of functions, pipelines, and a graphical user interface that allows retrieval, aggregation, analysis and visualization of different omics data sources. After the user provides the data to be analyzed, Multiomix identifies all significant correlations between mRNAs and non-mRNA genomics features (e.g.: miRNA, DNA methylation and CNV) across the genome, the predicted sequence based interactions (e.g., miRNA-mRNA), and their associated prognostic values.Multiomix is available at https://www.multiomix.org The source code is freely available at https://github.com/omics-datascience/multiomixSupplementary data are available at Bioinformatics online.}",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btab678},
+    url = {https://doi.org/10.1093/bioinformatics/btab678},
+    note = {btab678},
+    eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab678/40472409/btab678.pdf},
+}
+```
 
 
 ## Considerations
@@ -72,4 +111,6 @@ If you use any part of our code, or the platform itself is useful for your resea
 
 Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
 
+
+[process-bug]: https://bugs.python.org/issue43944
 [ggca]: https://pypi.org/project/ggca/

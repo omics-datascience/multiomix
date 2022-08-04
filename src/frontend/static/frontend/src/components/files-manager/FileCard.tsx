@@ -5,6 +5,8 @@ import { TagLabel } from '../common/TagLabel'
 import { getFileRowDescriptionInPlural } from '../../utils/util_functions'
 import { FileType } from '../../utils/interfaces'
 
+declare const downloadFileURL: string
+
 /**
  * Component's props
  */
@@ -86,7 +88,7 @@ const FileCard = (props: FileCardProps) => {
                 <Button
                     icon
                     as='a'
-                    href={props.file.file_obj}
+                    href={`${downloadFileURL}${props.file.id}`}
                     target="_blank"
                     color="blue"
                     title="Download file"
