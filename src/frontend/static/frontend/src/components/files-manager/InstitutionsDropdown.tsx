@@ -9,7 +9,8 @@ interface InstitutionsDropdownProps {
     name: string,
     institutionsOptions: DropdownItemProps[],
     disabled?: boolean,
-    handleChange: (string, any) => void,
+    showLabel?: boolean,
+    handleChange: (name: string, value: any) => void,
 }
 
 /**
@@ -26,6 +27,7 @@ export const InstitutionsDropdown = (props: InstitutionsDropdownProps) => (
         selection
         clearable
         multiple
+        label={props.showLabel ? 'Institutions' : undefined}
         name={props.name}
         value={props.value}
         onChange={(_, { name, value }) => props.handleChange(name, value)}
