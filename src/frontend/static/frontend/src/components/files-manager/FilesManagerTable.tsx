@@ -37,8 +37,9 @@ interface FilesManagerTableProps {
     tagOptions: DropdownItemProps[],
     confirmFileDeletion: (file: DjangoUserFile) => void,
     editFile: (fileToEdit: DjangoUserFile) => void,
-    handleFilterChanges : (name: string, value: any) => void,
-    handleFilterTagChanges : (value: any) => void
+    handleFilterChanges : (name: string, value: any, resetPagination?: boolean) => void,
+    handleFilterTagChanges : (value: any) => void,
+    handleSortUserFile : (headerServerCodeToSort: string) => void
 }
 
 /**
@@ -128,9 +129,9 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
 
             // If the column is not sortable the there's not callback
             // Uses '!==' as it could be 'undefined' and that would mean that is sortable
-            // const onClickCallback = (header.serverCodeToSort)
-            //     ? () => this.props.handleSortUserFile(header.serverCodeToSort as string)
-            //     : null
+            const onClickCallback = (header.serverCodeToSort)
+                ? () => this.props.handleSortUserFile(header.serverCodeToSort as string)
+                : null
 
             return (
                 <Table.HeaderCell
@@ -138,6 +139,7 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
                     title={header.name}
                     width={header.width}
                     sorted={sorted}
+                    onClick={onClickCallback}
                 >
                     {header.name}
                 </Table.HeaderCell>
@@ -169,7 +171,7 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
                     <Form.Group>
                         {/* Name/Description search */}
                         <Form.Input
-                            width={5}
+                            width={4}
                             icon='search' iconPosition='left'
                             label='Name/Description'
                             placeholder='Search by name/description'
@@ -209,6 +211,7 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
                             showLabel
                             name="Institutions"
                             institutionsOptions={this.props.institutionsOptions}
+                            width={4}
                             disabled={this.props.filesManagerTableControl.visibility === 'private'}
                             handleChange={this.props.handleFilterChanges}
                         />
@@ -227,7 +230,7 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
                         {/* Page size */}
                         <Form.Select
                             fluid
-                            width={2}
+                            width={1}
                             label='Entries'
                             value={this.props.filesManagerTableControl.pageSize}
                             options={selectPageSizeOptions}
@@ -262,7 +265,7 @@ class FilesManagerTable extends React.Component<FilesManagerTableProps, FilesMan
                 {/* Pagination control */}
                 <Pagination
                     activePage={this.props.filesManagerTableControl.pageNumber}
-                    onPageChange={(_, { activePage }) => this.props.handleFilterChanges('pageNumber', activePage)}
+                    onPageChange={(_, { activePage }) => this.props.handleFilterChanges('pageNumber', activePage, false)}
                     size='mini'
                     totalPages={totalPages}
                 />

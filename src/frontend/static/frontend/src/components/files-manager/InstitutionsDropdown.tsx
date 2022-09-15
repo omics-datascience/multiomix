@@ -1,5 +1,5 @@
 import React from 'react'
-import { DropdownItemProps, Form } from 'semantic-ui-react'
+import { DropdownItemProps, Form, SemanticWIDTHS } from 'semantic-ui-react'
 
 /**
  * Component's props
@@ -8,6 +8,7 @@ interface InstitutionsDropdownProps {
     value: number[],
     name: string,
     institutionsOptions: DropdownItemProps[],
+    width?: SemanticWIDTHS,
     disabled?: boolean,
     showLabel?: boolean,
     handleChange: (name: string, value: any) => void,
@@ -21,7 +22,7 @@ interface InstitutionsDropdownProps {
 export const InstitutionsDropdown = (props: InstitutionsDropdownProps) => (
     <Form.Dropdown
         fluid
-        width={8}
+        width={props.width !== undefined ? props.width : 16}
         options={props.institutionsOptions}
         search
         selection
