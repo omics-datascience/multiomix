@@ -415,7 +415,6 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             : this.state.clinicalSource.selectedExistingFile?.survival_columns as DjangoSurvivalColumnsTupleSimple[]}
                                         disabled={isAnUploadedDataset || this.state.addingOrEditingSource}
                                         loading={this.state.addingOrEditingSource}
-                                        inline={false}
                                         handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                                         addSurvivalFormTuple={this.addSurvivalFormTuple}
                                         removeSurvivalFormTuple={this.removeSurvivalFormTuple}

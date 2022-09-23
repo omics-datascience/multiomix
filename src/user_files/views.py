@@ -102,9 +102,8 @@ def get_user_files(user: User, public_only: bool, private_only: bool, with_survi
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
 
-class AllUserFileList(generics.ListAPIView):
-    """REST endpoint: only list for UserFile model"""
-
+class UserFileList(generics.ListAPIView):
+    """REST endpoint: list for UserFile model. """
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
         public_only = 'public' in self.request.query_params
@@ -117,11 +116,7 @@ class AllUserFileList(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['tag', 'file_type', 'institutions']
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user']
-
-
-class UserFileList(AllUserFileList):
-    """REST endpoint: list and create for UserFile model. The same as AllUserFileList but with pagination"""
+    ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user', 'file_type']
     pagination_class = StandardResultsSetPagination
 
 
