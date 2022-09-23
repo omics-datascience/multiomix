@@ -1,5 +1,5 @@
 import React from 'react'
-import { Segment, Grid, Icon, Header, Button, Form, Label, DropdownMenuProps, Progress } from 'semantic-ui-react'
+import { Segment, Grid, Icon, Header, Button, Form, Label, DropdownMenuProps, Progress, Select, DropdownItemProps } from 'semantic-ui-react'
 import { FileType, SourceType, NewExperiment } from '../../utils/interfaces'
 import { checkedValidityCallback, experimentSourceIsValid, getExperimentTypeObj } from '../../utils/util_functions'
 import { ExperimentTagInfo } from './ExperimentTagInfo'
@@ -123,29 +123,25 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                 />
             )
 
+        const selectOptions: DropdownItemProps[] = [
+            { key: 'miRNA', text: 'miRNA', value: FileType.MIRNA },
+            { key: 'CNA', text: 'CNA', value: FileType.CNA },
+            { key: 'Met.', text: 'Methylation', value: FileType.METHYLATION }
+        ]
+
         return (
             <div>
-                <div className='full-width margin-bottom-5'>
-                    <Button.Group size='tiny'>
-                        <Button
-                            active={selectedGEMFileType === FileType.MIRNA}
-                            onClick={() => this.props.selectGEMFileType(FileType.MIRNA)}
-                        >
-                            miRNA
-                        </Button>
-                        <Button
-                            active={selectedGEMFileType === FileType.CNA}
-                            onClick={() => this.props.selectGEMFileType(FileType.CNA)}
-                        >
-                            CNA
-                        </Button>
-                        <Button
-                            active={selectedGEMFileType === FileType.METHYLATION}
-                            onClick={() => this.props.selectGEMFileType(FileType.METHYLATION)}
-                        >
-                            Met.
-                        </Button>
-                    </Button.Group>
+                <div>
+                    <Select id='select-gem-file-type'
+                        button
+                        fluid
+                        floating
+                        className="margin-bottom-2"
+                        value={this.props.gemFileType}
+                        options={selectOptions}
+                        placeholder='Select dataset...'
+                        onChange={(_e, { value }) => this.props.selectGEMFileType(value as FileType)}
+                    />
                 </div>
 
                 {/* Files Panel */}
