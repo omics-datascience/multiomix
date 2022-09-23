@@ -22,7 +22,7 @@ def user_directory_path(instance, filename):
 
 class UserFile(models.Model):
     """User Files to submit experiments: mRNA and Gene Expression Modulators (GEM) file (miRNA, CNA or Methylation)"""
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=200)
     description = models.CharField(max_length=300, blank=True, null=True)
     file_obj = models.FileField(upload_to=user_directory_path)
     file_type = models.IntegerField(choices=FileType.choices)
