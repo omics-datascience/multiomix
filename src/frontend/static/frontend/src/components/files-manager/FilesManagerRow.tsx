@@ -1,7 +1,7 @@
 import React from 'react'
 import { formatDateLocale, getFileTypeName } from '../../utils/util_functions'
 import { DjangoUserFile } from '../../utils/django_interfaces'
-import { Table, Icon, Button } from 'semantic-ui-react'
+import { Table, Icon } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
 
@@ -62,30 +62,35 @@ export const FilesManagerRow = (props: FilesManagerRowProps) => {
             <Table.Cell><TagLabel tag={props.file.tag}/></Table.Cell>
             <Table.Cell>
                 {/* Shows a download button if specified */}
-                <Button
-                    icon
-                    as='a'
-                    href={`${downloadFileURL}${file.id}`}
-                    target="_blank"
-                    color="blue"
-                    title="Download file"
-                >
-                    <Icon name='cloud download' />
-                </Button>
+                <Icon
+                    name='cloud download'
+                    color='blue'
+                    className='clickable margin-left-5'
+                    title='Download result'
+                    onClick={() => window.open(`${downloadFileURL}${file.id}`, '_blank')}
+                />
 
                 {/* Users can modify or delete own files or the ones which belongs to an
                 Institution which the user is admin of */}
                 {canEditOrDelete &&
                     <React.Fragment>
                         {/* Shows a edit button if specified */}
-                        <Button icon color="yellow" onClick={() => props.editCallback(props.file)} title="Edit file">
-                            <Icon name='pencil' />
-                        </Button>
+                        <Icon
+                            name='pencil'
+                            className='clickable margin-left-5'
+                            color='yellow'
+                            title='Edit'
+                            onClick={() => props.editCallback(props.file)}
+                        />
 
                         {/* Shows a delete button if specified */}
-                        <Button icon color="red" onClick={() => props.confirmFileDeletion(props.file)} title="Delete file">
-                            <Icon name='trash' />
-                        </Button>
+                        <Icon
+                            name='trash'
+                            className='clickable margin-left-5'
+                            color='red'
+                            title='Delete experiment'
+                            onClick={() => props.confirmFileDeletion(props.file)}
+                        />
                     </React.Fragment>
                 }
 
