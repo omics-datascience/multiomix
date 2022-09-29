@@ -85,10 +85,6 @@
     width: max-content !important;
 }
 
-.no-padding-left {
-  padding-left: 0 !important;
-}
-
 .no-padding-top {
   padding-top: 0 !important;
 }
@@ -146,7 +142,7 @@
 }
 
 /* Prevents the clinical source Popup to be over UserFiles modal */
-#user-files-modal {
+#user-files-modal, #select-gem-file-type {
     z-index: 3000;
 }
 

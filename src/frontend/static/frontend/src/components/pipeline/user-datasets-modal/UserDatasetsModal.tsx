@@ -4,7 +4,7 @@ import { DjangoUserFile } from '../../../utils/django_interfaces'
 import { FileType, DatasetModalUserFileTableControl, Nullable } from '../../../utils/interfaces'
 import { DatasetType } from '../SourceForm'
 import { UserDatasetsTable } from './UserDatasetsTable'
-import { getDefaultPageSizeOption } from '../../../utils/util_functions'
+import { getDefaultPageSizeOption, getFileTypeName } from '../../../utils/util_functions'
 
 /**
  * Component's props
@@ -47,27 +47,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
         return null
     }
 
-    let fileType: string
-    switch (props.selectingFileType) {
-        case FileType.MRNA:
-            fileType = 'mRNA'
-            break
-        case FileType.MIRNA:
-            fileType = 'miRNA'
-            break
-        case FileType.CNA:
-            fileType = 'CNA'
-            break
-        case FileType.METHYLATION:
-            fileType = 'methylation'
-            break
-        case FileType.CLINICAL:
-            fileType = 'clinical'
-            break
-        default:
-            fileType = ''
-            break
-    }
+    const fileType = getFileTypeName(props.selectingFileType)
 
     const selectPageSizeOptions = getDefaultPageSizeOption()
 

@@ -174,7 +174,11 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '4.7.1'
+VERSION: str = '4.7.2'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Max result DataFrame row count. If the number of rows is higher
 # the DataFrame is truncated. None for prevent truncation
