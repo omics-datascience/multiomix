@@ -11,7 +11,6 @@ import { PaginatedTable } from '../common/PaginatedTable'
 import { NewBiomarkerForm } from './NewBiomarkerForm'
 
 // URLs defined in biomarkers.html
-declare const urlBiomarkers: string
 declare const urlBiomarkersCRUD: string
 
 /**
@@ -92,7 +91,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         // Sets the new state and gets new experiment info
         this.setState({ tableControl }, () => {
             clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout(this.getCGDSStudies, 300)
+            this.filterTimeout = window.setTimeout(this.getAllBiomarkers, 300)
         })
     }
 
@@ -110,7 +109,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             // If it's the same just change the sort order
             tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
         }
-        this.setState({ tableControl }, () => this.getCGDSStudies())
+        this.setState({ tableControl }, () => this.getAllBiomarkers())
     }
 
     /**
@@ -162,13 +161,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * tags and files
      */
     componentDidMount () {
-        this.getCGDSStudies()
+        this.getAllBiomarkers()
     }
 
     /**
      * Fetches the CGDS Studies
      */
-    getCGDSStudies = () => {
+    getAllBiomarkers = () => {
         const searchParams: CGDSStudiesSearchParams = {
             page: this.state.tableControl.pageNumber,
             page_size: this.state.tableControl.pageSize,
@@ -208,7 +207,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             commandsToAttend: [
                 {
                     key: 'update_cgds_studies',
-                    functionToExecute: this.getCGDSStudies
+                    functionToExecute: this.getAllBiomarkers
                 }
             ]
         }
@@ -247,7 +246,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     if (biomarker && biomarker.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
                         this.cleanForm()
-                        this.getCGDSStudies()
+                        this.getAllBiomarkers()
                     }
                 }).catch((err) => {
                     alertGeneralError()
@@ -281,7 +280,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         deletingBiomarker: false,
                         showDeleteBiomarkerModal: false
                     })
-                    this.getCGDSStudies()
+                    this.getAllBiomarkers()
                 }
             }).catch((err) => {
                 this.setState({ deletingBiomarker: false })
@@ -452,7 +451,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const deletionConfirmModal = this.getDeletionConfirmModal()
 
         return (
-            <Base activeItem='cgds'>
+            <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
 
@@ -492,7 +491,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         showSearchInput
                                         searchLabel='Name'
                                         searchPlaceholder='Search by name'
-                                        urlToRetrieveData={urlBiomarkers}
+                                        urlToRetrieveData={urlBiomarkersCRUD}
                                         mapFunction={(diseaseRow: Biomarker) => {
                                             return (
                                                 <Table.Row key={diseaseRow.id as number}>

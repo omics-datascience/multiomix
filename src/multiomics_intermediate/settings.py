@@ -52,8 +52,7 @@ INSTALLED_APPS = [
     'webpack_loader',
     'django_email_verification',
     'genes',
-    'chunked_upload',
-    'biomarkers'
+    'chunked_upload'
 ]
 
 MIDDLEWARE = [
@@ -176,7 +175,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '4.7.2'
+VERSION: str = '5.0.0'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

@@ -10,7 +10,8 @@ declare const urlLogin: string
 declare const urlLogout: string
 declare const urlPipeline: string
 declare const urlDatasets: string
-declare const urlSurvival: string
+// declare const urlSurvival: string
+declare const urlBiomarkers: string
 declare const urlInstitutions: string
 declare const urlCGDSPanel: string
 declare const urlAboutUs: string
@@ -56,7 +57,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us';
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions
@@ -103,12 +104,21 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 />
 
                                 {/* Survival Analysis panel */}
-                                <Dropdown.Item
+                                {/* TODO: discuss with team! Maybe this is the "Stats validation panel in Biomarkers page" */}
+                                {/* <Dropdown.Item
                                     text='Survival'
                                     icon='heart'
                                     as='a' href={urlSurvival}
                                     active={props.activeItem === 'survival'}
                                     disabled
+                                /> */}
+
+                                {/* Biomarkers panel */}
+                                <Dropdown.Item
+                                    text='Biomarkers'
+                                    icon='list layout'
+                                    as='a' href={urlBiomarkers}
+                                    active={props.activeItem === 'biomarkers'}
                                 />
                             </Dropdown.Menu>
                         </Dropdown>
