@@ -51,7 +51,7 @@ services:
             - 8080:8080
 
 
-    # Web-based MongoDB admin interface, written with Node.js and express 
+    Web-based MongoDB admin interface, written with Node.js and express 
     mongo-express:
         image: mongo-express:0.54.0
         container_name: multiomics_dev_mongo_express

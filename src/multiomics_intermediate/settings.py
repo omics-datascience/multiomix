@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django_email_verification',
     'genes',
     'chunked_upload',
+    'biomarkers'
 ]
 
 MIDDLEWARE = [
