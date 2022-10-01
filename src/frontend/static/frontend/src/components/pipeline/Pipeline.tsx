@@ -973,9 +973,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
     render () {
         return (
-            <div>
+            <div style={{ height: '100%' }}>
                 {/* Show GEM menu */}
-                <Base activeItem='pipeline'>
+                <Base activeItem='pipeline' wrapperClass='wrapper'>
                     <MiRNAPipeline
                         newExperiment={this.state.newExperiment}
                         gemFileType={this.state.gemFileType}

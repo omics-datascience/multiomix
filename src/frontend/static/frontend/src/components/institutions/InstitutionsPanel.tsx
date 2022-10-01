@@ -55,6 +55,12 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         }
     }
 
+    selectedInstitutionChanged (institution: DjangoInstitution) {
+        this.setState({
+            selectedInstitution: institution
+        })
+    }
+
     /**
      * When the component has been mounted, It requests for
      * tags and files
@@ -235,7 +241,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         const formIsDisabled = this.formIsDisabled()
 
         return (
-            <Base activeItem='institutions'>
+            <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
                 {/* Modal to confirm User removal from an Institution */}
                 <RemoveUserFromInstitutionModal
                     selectedUserToRemove={this.state.selectedUserToRemove}
@@ -245,23 +251,23 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     handleClose={this.handleClose}
                     removeUser={this.removeUserFromInstitution}
                 />
-
-                <Grid columns={2} padded stackable divided>
+                <Grid columns={2} padded stackable divided stretched={true}>
                     {/* List of institutions */}
-                    <Grid.Column width={4} textAlign='left'>
+                    <Grid.Column width={4} textAlign='left' stretched={true}>
                         <Segment>
-                            <Header textAlign="center">
+                            <Header textAlign="center" >
                                 <Icon name='building' />
-                                <Header.Content>My institutions</Header.Content>
+                                <Header.Content className='headerContent'><span>My institutions</span>
+                                    <div style={{ float: 'right', height: '10px' }}>
+                                        <InfoPopup onTop={false} extraClassName='questionIcon' content='In this form you can add institutions and colleagues to collaborate sharing datasets (and experiment results in a near future)'/>
+                                    </div>
+                                </Header.Content>
                             </Header>
 
                             <InstitutionsList
                                 institutions={this.state.institutions}
                                 showUsers={this.showUsers}
-                            />
-
-                            <InfoPopup
-                                content='In this form you can add institutions and colleagues to collaborate sharing datasets (and experiment results in a near future)'
+                                selectedInstitution={this.state.selectedInstitution}
                             />
                         </Segment>
                     </Grid.Column>
@@ -269,15 +275,15 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     {/* Files overview panel */}
                     <Grid.Column width={12}>
                         <Segment>
-                            <Grid columns={2}>
-                                <Grid.Column width={8} textAlign='left'>
+                            <Grid stretched={true} >
+                                <Grid.Column width={16} textAlign='left' stretched={true}>
                                     <Header textAlign="center">
                                         <Icon name='key' />
                                         <Header.Content>Manage access</Header.Content>
                                     </Header>
 
-                                    <Form>
-                                        <Form.Group>
+                                    <Form unstackable={true}>
+                                        <Form.Group fluid >
                                             {/* User Search */}
                                             <Form.Dropdown
                                                 fluid
@@ -294,7 +300,6 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                             />
 
                                             <Form.Button
-                                                fluid
                                                 color='green'
                                                 onClick={this.addUserToInstitution}
                                                 disabled={formIsDisabled || !this.state.selectedUserIdToAdd}
@@ -306,7 +311,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                     </Form>
 
                                 </Grid.Column>
-                                <Grid.Column width={8}>
+                                <Grid.Column width={12} stretched={true}>
                                     {/* Institution's Users info */}
                                     <InstitutionUsersInfo
                                         selectedInstitution={this.state.selectedInstitution}

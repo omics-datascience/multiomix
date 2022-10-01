@@ -1,22 +1,20 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Header, Button, Modal, Segment, Icon, Select, DropdownItemProps, Checkbox } from 'semantic-ui-react'
+import { Grid, Header, Button, Modal, DropdownItemProps } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
-import { FilesList } from './FilesList'
-import { FileType, Nullable } from '../../utils/interfaces'
-import { InstitutionsDropdown } from './InstitutionsDropdown'
+import { FileType, GeneralTableControl, Nullable, ResponseRequestWithPagination } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
+import { FilesManagerTable } from './FilesManagerTable'
 
 const FILE_INPUT_LABEL = 'Add a new file'
 
 // URLs defined in files.html
 declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
-declare const urlAllUserFiles: string
 declare const urlUserInstitutions: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
@@ -40,11 +38,11 @@ interface NewFile {
 /**
  * File Manager filter
  */
-interface FilesManagerFilter {
+interface FilesManagerTableControl extends GeneralTableControl {
     fileType: FileType,
     tag: Nullable<DjangoTag>,
     institutions: number[],
-    showPrivatesOnly: boolean
+    visibility: 'all' | 'private'
 }
 
 /**
@@ -63,7 +61,7 @@ interface FilesManagerState {
     deletingFile: boolean,
     uploadingFile: boolean,
     newFile: NewFile,
-    filter: FilesManagerFilter,
+    filesManagerTableControl: FilesManagerTableControl,
     addingTag: boolean,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
@@ -75,6 +73,7 @@ interface FilesManagerState {
  */
 class FilesManager extends React.Component<{}, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
+    filterTimeout: number | undefined
 
     constructor (props) {
         super(props)
@@ -91,7 +90,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             deletingTag: false,
             deletingFile: false,
             uploadingFile: false,
-            filter: this.getDefaultFilter(),
+            filesManagerTableControl: this.getDefaultTableControl(),
             newFile: this.getDefaultNewFile(),
             addingTag: false,
             uploadPercentage: 0,
@@ -121,12 +120,14 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * Generates a default filter
      * @returns An object with all the field with default values
      */
-    getDefaultFilter (): FilesManagerFilter {
+    getDefaultTableControl (): FilesManagerTableControl {
+        const defaultTableControl = getDefaultGeneralTableControl()
         return {
+            ...defaultTableControl,
             fileType: FileType.ALL,
             tag: null,
             institutions: [],
-            showPrivatesOnly: false
+            visibility: 'all'
         }
     }
 
@@ -227,12 +228,17 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     /**
      * Fetches the User's uploaded files
      */
-    getUserFiles () {
+    getUserFiles = () => {
         // Generates the query params
         // IMPORTANT: uses Array of Arrays format because the 'institutions' params parsed by Django could
         // be repeated. In object format repeated keys are not possible
-        const searchParams: Array<Array<string | number | boolean>> = []
-        const filter = this.state.filter
+        const filter = this.state.filesManagerTableControl
+        const searchParams: Array<Array<string | number | boolean>> = [
+            ['page', filter.pageNumber],
+            ['page_size', filter.pageSize],
+            ['search', filter.textFilter],
+            ['ordering', generatesOrderingQuery(filter.sortField, filter.sortOrderAscendant)]
+        ]
 
         // If a File type was selected, adds the filter
         if (filter.fileType !== FileType.ALL) {
@@ -251,16 +257,17 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             })
         }
 
-        if (filter.showPrivatesOnly) {
+        if (filter.visibility) {
             // Sets to null because Django Rest Framework needs the key 'private' present only
             // (without any value) to work
             // @ts-ignore
             searchParams.push(['private', null])
         }
 
-        ky.get(urlAllUserFiles, { searchParams: searchParams }).then((response) => {
-            response.json().then((files: DjangoUserFile[]) => {
-                this.setState({ files })
+        ky.get(urlUserFilesCRUD, { searchParams: searchParams }).then((response) => {
+            response.json().then((files: ResponseRequestWithPagination<DjangoUserFile>) => {
+                filter.totalRowCount = files.count
+                this.setState({ files: files.results, filesManagerTableControl: filter })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -600,24 +607,61 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     }
 
     /**
-     * Handles filter changes
-     * @param name Filter field to change
+     * Handles filterTag changes
      * @param value Value to assign to the specified field
      */
-    handleFilterChanges = (name: string, value: any) => {
-        const filter = this.state.filter
-        filter[name] = value
-        this.setState({ filter }, this.getUserFiles)
+    handleFilterTagChanges = (value: any) => {
+        const filter = this.state.filesManagerTableControl
+
+        // Reset pagination always
+        filter.pageNumber = 1
+
+        filter.tag = this.state.tags.find((element) => element.id === value) ?? null
+        this.setState({ filesManagerTableControl: filter }, this.getUserFiles)
     }
 
     /**
-     * Toggles filter's showPrivatesOnly option
+     * Handles the table's control filters, select, etc changes
+     * @param name Name of the state field to modify
+     * @param value Value to set to the state field
+     * @param resetPagination If true, resets pagination to pageNumber = 1. Useful when the filters change
      */
-    togglePrivateFilter = () => {
-        const filter = this.state.filter
-        filter.showPrivatesOnly = !filter.showPrivatesOnly
-        filter.institutions = [] // Needs to restart the institutions for consistency
-        this.setState({ filter }, this.getUserFiles)
+    handleFilterChanges = (name: string, value: any, resetPagination: boolean = true) => {
+        // Updates filter information and makes the request again
+        const tableControl = this.state.filesManagerTableControl
+        tableControl[name] = value
+
+        // If pagination reset is required...
+        if (resetPagination) {
+            tableControl.pageNumber = 1
+        }
+
+        if (tableControl.visibility === 'private') {
+            tableControl.institutions = [] // Needs to restart the institutions for consistency
+        }
+
+        // Sets the new state and gets new experiment info
+        this.setState({ filesManagerTableControl: tableControl }, () => {
+            clearTimeout(this.filterTimeout)
+            this.filterTimeout = window.setTimeout(this.getUserFiles, 300)
+        })
+    }
+
+    /**
+     * Handles sorting on table of all experiments
+     * @param headerServerCodeToSort Server code of the selected column to send to the server for sorting
+     */
+    handleSortAllUserFiles = (headerServerCodeToSort: 'name' | 'description' | 'type' | 'date' | 'institutions' | 'tag') => {
+        // If the user has selected other column for sorting...
+        const tableControl = this.state.filesManagerTableControl
+        if (this.state.filesManagerTableControl.sortField !== headerServerCodeToSort) {
+            tableControl.sortField = headerServerCodeToSort
+            tableControl.sortOrderAscendant = true
+        } else {
+            // If it's the same just change the sort order
+            tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
+        }
+        this.setState({ filesManagerTableControl: tableControl }, this.getUserFiles)
     }
 
     /**
@@ -651,7 +695,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * Resets the filter and refresh the user file list
      */
     resetFilter = () => {
-        this.setState({ filter: this.getDefaultFilter() }, () => {
+        this.setState({ filesManagerTableControl: this.getDefaultTableControl() }, () => {
             this.getUserFiles()
         })
     }
@@ -753,17 +797,14 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: null, text: 'No tag' })
+        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
 
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
 
-        // Get Select options, with 'All' option included
-        const allFileTypeOptions = getFileTypeSelectOptions()
-
         return (
-            <Base activeItem='files'>
+            <Base activeItem='files' wrapperClass='wrapper'>
                 {/* Tag deletion modal */}
                 {tagDeletionConfirmModal}
 
@@ -773,69 +814,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                 <Grid columns={2} padded stackable textAlign='center' divided>
                     {/* Filtering */}
                     <Grid.Column width={3} textAlign='left'>
-                        {/* By FileType */}
-                        <Segment>
-                            {/* Reset filter button */}
-                            <Button fluid color="grey" onClick={this.resetFilter} icon labelPosition='left'>
-                                <Icon name='undo' />
-                                Reset filter
-                            </Button>
-
-                            {/* File type filter */}
-                            <Header textAlign="center">
-                                <Icon name='file' />
-                                <Header.Content>File type</Header.Content>
-                            </Header>
-
-                            <Select
-                                fluid
-                                value={this.state.filter.fileType}
-                                options={allFileTypeOptions}
-                                name="fileType"
-                                onChange={(_, { name, value }) => this.handleFilterChanges(name, value)}
-                            />
-                        </Segment>
-
-                        {/* By Visibility/Institutions */}
-                        <Segment>
-                            {/* File type filter */}
-                            <Header textAlign="center">
-                                <Icon name='building' />
-                                <Header.Content>Institutions</Header.Content>
-                            </Header>
-
-                            <Checkbox
-                                label='Show only private datasets'
-                                className='margin-bottom-2'
-                                checked={this.state.filter.showPrivatesOnly}
-                                onChange={this.togglePrivateFilter}
-                            />
-
-                            <InstitutionsDropdown
-                                value={this.state.filter.institutions}
-                                name='institutions'
-                                institutionsOptions={institutionsOptions}
-                                disabled={this.state.filter.showPrivatesOnly}
-                                handleChange={this.handleFilterChanges}
-                            />
-                        </Segment>
-
-                        {/* By Tags */}
-                        <TagsPanel
-                            tags={this.state.tags}
-                            newTag={this.state.newTag}
-                            addingTag={this.state.addingTag}
-                            handleAddTagInputsChange={this.handleAddTagInputsChange}
-                            handleKeyDown={this.handleKeyDown}
-                            confirmTagDeletion={this.confirmTagDeletion}
-                            editTag={this.editTag}
-                            handleFilterChanges={this.handleFilterChanges}
-                            selectedTag={this.state.filter.tag}
-                        />
-                    </Grid.Column>
-
-                    {/* Files overview panel */}
-                    <Grid.Column width={13} textAlign='center'>
+                        {/* By New File */}
                         <NewFileForm
                             newFileInputRef={this.newFileInputRef}
                             newFile={this.state.newFile}
@@ -856,10 +835,37 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                         />
 
-                        <FilesList
+                        {/* By Tags */}
+                        <TagsPanel
+                            tags={this.state.tags}
+                            newTag={this.state.newTag}
+                            addingTag={this.state.addingTag}
+                            handleAddTagInputsChange={this.handleAddTagInputsChange}
+                            handleKeyDown={this.handleKeyDown}
+                            confirmTagDeletion={this.confirmTagDeletion}
+                            editTag={this.editTag}
+                            handleFilterChanges={this.handleFilterChanges}
+                            selectedTag={this.state.filesManagerTableControl.tag}
+                        />
+                    </Grid.Column>
+
+                    {/* Files overview panel */}
+                    <Grid.Column
+                        id="files-manager-result-column"
+                        width={13}
+                        textAlign='center'
+                    >
+                        <FilesManagerTable
                             files={this.state.files}
-                            editFile={this.editFile}
+                            filesManagerTableControl={this.state.filesManagerTableControl}
+                            valueInstitutionDropDown={this.state.filesManagerTableControl.institutions}
+                            institutionsOptions={institutionsOptions}
+                            tagOptions={tagOptions}
                             confirmFileDeletion={this.confirmFileDeletion}
+                            editFile={this.editFile}
+                            handleFilterChanges={this.handleFilterChanges}
+                            handleFilterTagChanges={this.handleFilterTagChanges}
+                            handleSortUserFile={this.handleSortAllUserFiles}
                         />
                     </Grid.Column>
                 </Grid>
@@ -868,4 +874,4 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     }
 }
 
-export { NewFile, FilesManager }
+export { NewFile, FilesManager, FilesManagerTableControl }

@@ -10,7 +10,7 @@ export const SitePolicy = () => {
     const multiomixLink = <a href='/'>www.multiomix.org</a>
     return (
         <div>
-            <Base>
+            <Base wrapperClass='wrapper'>
                 <Container text className='margin-top-2 margin-bottom-5'>
                     <Grid stackable>
                         {/* Image */}

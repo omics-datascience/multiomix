@@ -2,6 +2,8 @@
 
 # Multiomix
 
+[![Last Build & Push](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml/badge.svg)](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml)
+
 Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation.
 
 This document is focused on the **development** of the system. If you are looking for documentation for a production deployment see [DEPLOYING.md](DEPLOYING.md).
@@ -19,7 +21,7 @@ This document is focused on the **development** of the system. If you are lookin
     1. `cd src`
     1. `python3 -m venv venv`
     1. `source venv/bin/activate` (run only when you need to work)
-    1. `pip install -r ../config/requirements.txt`
+    1. `pip install -r ../config/requirements.txt`. Maybe you need to run `python3.exe -m pip install -r ../config/requirements.txt` in Windows instead.
 2. Install Node JS dependencies:
     1. `cd frontend/static/frontend`
     2. `npm i`

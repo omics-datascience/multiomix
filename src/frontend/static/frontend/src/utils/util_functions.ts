@@ -637,6 +637,36 @@ const generateBinData = (data: number[]): BinData[] => {
     return binData
 }
 
+/**
+ * Generate FileType description
+ * @param type the FileType
+ * @returns FileType description
+ */
+const getFileTypeName = (type: FileType): string => {
+    let fileType: string
+    switch (type) {
+        case FileType.MRNA:
+            fileType = 'mRNA'
+            break
+        case FileType.MIRNA:
+            fileType = 'miRNA'
+            break
+        case FileType.CNA:
+            fileType = 'CNA'
+            break
+        case FileType.METHYLATION:
+            fileType = 'Methylation'
+            break
+        case FileType.CLINICAL:
+            fileType = 'Clinical'
+            break
+        default:
+            fileType = ''
+            break
+    }
+    return fileType
+}
+
 export {
     getDjangoHeader,
     alertGeneralError,
@@ -670,5 +700,6 @@ export {
     experimentSourceIsValid,
     getFileSizeInMB,
     getScoreClassData,
-    generateBinData
+    generateBinData,
+    getFileTypeName
 }

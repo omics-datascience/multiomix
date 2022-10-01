@@ -1,8 +1,9 @@
 import React, { useContext } from 'react'
-import { List, Icon, Header, Segment } from 'semantic-ui-react'
+import { List, Icon, Header, Segment, ListContent } from 'semantic-ui-react'
 import { DjangoInstitution, DjangoUser } from '../../utils/django_interfaces'
 import { Nullable } from '../../utils/interfaces'
 import { CurrentUserContext } from '../Base'
+import Avatar from 'react-avatar'
 
 /**
  * Component's props
@@ -51,6 +52,7 @@ export const InstitutionUsersInfo = (props: InstitutionUsersInfoProps) => {
                                     />
                                 }
                             </List.Content>
+                            <ListContent floated='left'><Avatar name={institutionUser.username as string} size="16px"/></ListContent>
                             <List.Content>
                                 <List.Header>{institutionUser.username}</List.Header>
                             </List.Content>

@@ -1,13 +1,17 @@
+from typing import Optional
 from channels.http import AsgiRequest
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q, Count, QuerySet
+from django.http import HttpRequest, HttpResponse, Http404
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from common.pagination import StandardResultsSetPagination
-from .serializers import UserFileSerializer
+from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
 
 
@@ -42,15 +46,16 @@ def get_an_user_file(user: User, user_file_pk: int) -> UserFile:
     Returns the specific User's file object from DB
     @param user: User to retrieve his Dataset
     @param user_file_pk: ID of the UserFile to retrieve
-    @raise UserFile.DoesNotExist if the object isn't in the DB
+    @raise 404 HTTP error if the object isn't in the DB
     @return: UserFile object
     """
-    return get_user_files(
+    queryset = get_user_files(
         user,
         public_only=False,
         private_only=False,
         with_survival_only=False
-    ).get(pk=user_file_pk)
+    )
+    return get_object_or_404(queryset, pk=user_file_pk)
 
 
 def get_own_or_as_admin_user_files(user: User):
@@ -97,9 +102,8 @@ def get_user_files(user: User, public_only: bool, private_only: bool, with_survi
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
 
-class AllUserFileList(generics.ListAPIView):
-    """REST endpoint: only list for UserFile model"""
-
+class UserFileList(generics.ListAPIView):
+    """REST endpoint: list for UserFile model. """
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
         public_only = 'public' in self.request.query_params
@@ -107,16 +111,12 @@ class AllUserFileList(generics.ListAPIView):
         with_survival_only = 'with_survival_only' in self.request.query_params
         return get_user_files(self.request.user, public_only, private_only, with_survival_only)
 
-    serializer_class = UserFileSerializer
+    serializer_class = UserFileWithoutFileObjSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['tag', 'file_type', 'institutions']
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user']
-
-
-class UserFileList(AllUserFileList):
-    """REST endpoint: list and create for UserFile model"""
+    ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user', 'file_type']
     pagination_class = StandardResultsSetPagination
 
 
@@ -131,3 +131,19 @@ class UserFileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = UserFileSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@login_required
+def download_user_file(request: HttpRequest, pk: Optional[int] = None):
+    """Downloads the specified file considering security"""
+    if not pk:
+        raise Http404()
+
+    # This function raises a 404 error in case of non-existing UserFile
+    user_file = get_an_user_file(user=request.user, user_file_pk=pk)
+
+    file_obj = user_file.file_obj.file
+    response = HttpResponse(file_obj, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename={user_file.name}'
+
+    return response
