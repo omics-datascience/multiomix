@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Optional, Dict, Union
+from django.http import JsonResponse, Http404
 
 
 class ResponseStatus:
@@ -12,3 +14,15 @@ class ResponseStatus:
 
     def to_json(self):
         return self.__dict__
+
+
+def generate_json_response_or_404(data: Optional[Dict]) -> Union[JsonResponse, Http404]:
+    """
+    Checks if the data is None, if not return a JsonResponse with its content, otherwise raises a 404 error
+    @param data: JSON data to return
+    @raise Http404 if data is None
+    @return: A JsonResponse if data is valid
+    """
+    if data is not None:
+        return JsonResponse(data, safe=False)
+    raise Http404('Element not found')

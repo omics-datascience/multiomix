@@ -1,4 +1,4 @@
-# omicsdatascience/multiomics:4.7.0
+# omicsdatascience/multiomics:5.0.0
 FROM python:3.8.6-buster
 
 # Docker Files Vars
@@ -12,9 +12,13 @@ ENV DJANGO_SETTINGS_MODULE "multiomics_intermediate.settings_prod"
 ENV RESULT_DATAFRAME_LIMIT_ROWS 500
 ENV TABLE_PAGE_SIZE 10
 
-# PostgreSQL DB connection parameters
+# Modulector connection parameters
 ENV MODULECTOR_HOST "127.0.0.1"
 ENV MODULECTOR_PORT "8001"
+
+# BioAPI connection parameters
+ENV BIOAPI_HOST "127.0.0.1"
+ENV BIOAPI_PORT "8002"
 
 # PostgreSQL DB connection parameters
 ENV POSTGRES_USERNAME "multiomics"

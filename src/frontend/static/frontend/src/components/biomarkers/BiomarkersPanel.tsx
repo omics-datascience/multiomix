@@ -12,6 +12,8 @@ import { NewBiomarkerForm } from './NewBiomarkerForm'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlGeneSymbol: string
+declare const urlGenesSymbols: string
 
 /**
  * Request search params to get the CGDSStudies' datasets

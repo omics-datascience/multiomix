@@ -15,6 +15,8 @@
 {% block js %}
         <script>
                 const urlBiomarkersCRUD = "{% url 'biomarkers_api' %}"
+                const urlGeneSymbol = "{% url 'gene_symbol' %}"
+                const urlGenesSymbols = "{% url 'genes_symbols' %}"
         </script>
         {% render_bundle 'biomarkers' 'js' %}
 {% endblock %}

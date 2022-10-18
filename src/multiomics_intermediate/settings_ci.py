@@ -262,5 +262,11 @@ MODULECTOR_SETTINGS = {
     'port': os.getenv('MODULECTOR_PORT', '8001')
 }
 
+# BioAPI settings
+BIOAPI_SETTINGS = {
+    'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
+    'port': os.getenv('BIOAPI_PORT', '8002')
+}
+
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
