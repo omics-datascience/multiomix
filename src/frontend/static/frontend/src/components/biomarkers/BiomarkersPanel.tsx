@@ -12,7 +12,7 @@ import { NewBiomarkerForm } from './NewBiomarkerForm'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
-declare const urlGeneSymbol: string
+declare const urlGeneSymbolsFinder: string
 declare const urlGenesSymbols: string
 
 /**

@@ -43,15 +43,13 @@ def biomarkers_action(request):
     return render(request, "frontend/biomarkers.html")
 
 
-class GeneSymbol(APIView):
-    """Get the alias for a specific genes"""
+class GenesFinder(APIView):
+    """Generates a query to search genes through BioAPI"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def get(request, gene_id: Optional[str]):
-        if not gene_id:
-            raise Http404('Missing required parameters')
-        data = global_mrna_service.get_bioapi_service_content(f'gene-symbol/{gene_id}', request.GET, is_paginated=False)
+    def get(request):
+        data = global_mrna_service.get_bioapi_service_content('genes-symbols-finder', request.GET, is_paginated=False)
         return generate_json_response_or_404(data)
 
 
