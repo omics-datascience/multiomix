@@ -6,9 +6,10 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery } from '../../utils/util_functions'
 import { FileType, NameOfCGDSDataset, GeneralTableControl, WebsocketConfig, ResponseRequestWithPagination, Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker } from './types'
+import { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
 import { PaginatedTable } from '../common/PaginatedTable'
-import { NewBiomarkerForm } from './NewBiomarkerForm'
+import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
+import _ from 'lodash'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -35,7 +36,9 @@ interface BiomarkersPanelState {
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
-    tableControl: GeneralTableControl
+    tableControl: GeneralTableControl,
+    formBiomarker: FormBiomarkerData,
+    formBiomarkerModal: boolean,
 }
 
 /**
@@ -45,7 +48,6 @@ interface BiomarkersPanelState {
 export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     filterTimeout: number | undefined;
     websocketClient: WebsocketClientCustom;
-
     constructor (props) {
         super(props)
 
@@ -59,7 +61,45 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
             addingOrEditingBiomarker: false,
-            tableControl: this.getDefaultTableControl()
+            tableControl: this.getDefaultTableControl(),
+            formBiomarker: this.getDefaultFormBiomarker(),
+            /*  biomarkersMolecules: this.getDefaultbiomarkersMolecules(), */
+            formBiomarkerModal: false
+        }
+    }
+
+    handleChangeModalState (option:boolean) {
+        this.setState(
+            {
+                ...this.state,
+                formBiomarkerModal: option
+            }
+        )
+    }
+    /*  getDefaultbiomarkersMolecules (): FormBiomarkerData {
+        return {
+
+        }
+    } */
+    /**
+     * Generates a default formBiomarker
+     * @returns Default FormBiomarkerData object
+     */
+
+    getDefaultFormBiomarker (): FormBiomarkerData {
+        return {
+            biomarkerName: '',
+            biomarkerDescription: '',
+            tag: '',
+            moleculeSelected: BiomarkerType.MIRNA,
+            molecule: 0,
+            moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
+            moleculesSection: {
+                [BiomarkerType.CNA]: [],
+                [BiomarkerType.MIRNA]: [],
+                [BiomarkerType.METHYLATION]: [],
+                [BiomarkerType.MRNA]: []
+            }
         }
     }
 
@@ -70,6 +110,88 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultTableControl (): GeneralTableControl {
         const defaultTableControl = getDefaultGeneralTableControl()
         return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
+    }
+
+    /**
+     * Handles the table's control filters, select, etc changes
+     * @param value Value to set to the state moleculeSelected in formBiomarkerState
+     */
+    handleChangeMoleculeSelected = (value: BiomarkerType) => {
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculeSelected: value
+            }
+        })
+    }
+
+    /**
+     * Handles the table's control filters, select, etc changes
+     * @param value Value to set to the state moleculesTypeOfSelection in formBiomarkerState
+     */
+        handleChangeMoleculeInputSelected = (value: MoleculesTypeOfSelection) => {
+            this.setState({
+                ...this.state,
+                formBiomarker: {
+                    ...this.state.formBiomarker,
+                    moleculesTypeOfSelection: value
+                }
+            })
+        }
+
+        /**
+         * Handles the table's control filters, select, etc changes
+         * @param value Value to add to the molecules section that is selected
+         */
+
+    handleAddMoleculeToSection= (value: MoleculesSectionData) => {
+        if (_.find(this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected], (item: MoleculesSectionData) => value.value === item.value)) {
+            return
+        }
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesSection: {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [this.state.formBiomarker.moleculeSelected]: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected], value]
+                }
+            }
+        })
+    }
+
+    /**
+     * Handles the table's control filters, select, etc changes
+     * @param section Value to add to the molecules section that is selected
+     * @param molecule molecule to remove of the array
+     */
+    handleRemoveMolecule= (section:BiomarkerType, molecule: MoleculesSectionData) => {
+        const asd = _.map(this.state.formBiomarker.moleculesSection[section], (item:MoleculesSectionData) => {
+            if (item.fakeId === molecule.fakeId) return
+            if (molecule.isRepeat) {
+                const checkIfRemoveRepeat = _.filter(this.state.formBiomarker.moleculesSection[section], (item:MoleculesSectionData) => item.value === molecule.value).length
+                if (checkIfRemoveRepeat > 2) {
+                    return item
+                } else {
+                    return {
+                        ...item,
+                        isRepeat: false
+                    }
+                }
+            }
+            return item
+        })
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesSection: {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [section]: _.filter(asd, (item: MoleculesSectionData) => item)
+                }
+            }
+        })
     }
 
     /**
@@ -215,9 +337,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Cleans the new/edit biomarker form
+     * Cleans the FormBiomarkerData
      */
-    cleanForm = () => { this.setState({ newBiomarker: this.getDefaultNewBiomarker() }) }
+    cleanForm = () => { this.setState({ formBiomarker: this.getDefaultFormBiomarker() }) }
 
     /**
      * Does a request to add a new Biomarker
@@ -443,7 +565,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @returns True is any of the form's field contains any data. False otherwise
      */
     isFormEmpty = (): boolean => {
-        return this.state.newBiomarker.name.trim().length === 0
+        return JSON.stringify(this.state.formBiomarker) === JSON.stringify(this.getDefaultFormBiomarker())
     }
 
     render () {
@@ -458,50 +580,82 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 <CurrentUserContext.Consumer>
                     { currentUser =>
                         (
-                            <Grid columns={2} padded stackable textAlign='center' divided>
-                                {/* New Biomarker Panel */}
-                                {currentUser?.is_superuser
-                                    ? <Grid.Column width={3} textAlign='left'>
-                                        {/*  <NewBiomarkerForm
-                                            newBiomarker={this.state.newBiomarker}
-                                            handleFormChanges={this.handleFormChanges}
-                                            handleKeyDown={this.handleKeyDown}
-                                            addingOrEditingBiomarker={this.state.addingOrEditingBiomarker}
-                                            addCGDSDataset={this.addCGDSDataset}
-                                            removeCGDSDataset={this.removeCGDSDataset}
-                                            handleFormDatasetChanges={this.handleFormDatasetChanges}
-                                            addSurvivalFormTuple={this.addSurvivalFormTuple}
-                                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                            canAddBiomarker={this.canAddBiomarker}
-                                            addOrEditBiomarker={this.addOrEditBiomarker}
-                                            cleanForm={this.cleanForm}
-                                            isFormEmpty={this.isFormEmpty}
-                                        /> */}
-                                    </Grid.Column> : null
-                                }
-                                {/* List of CGDS Studies */}
-                                <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
-                                    <PaginatedTable<Biomarker>
-                                        headerTitle='Biomarkers'
-                                        headers={[
-                                            { name: 'Name', serverCodeToSort: 'name' },
-                                            { name: 'Actions' }
-                                        ]}
-                                        showSearchInput
-                                        searchLabel='Name'
-                                        searchPlaceholder='Search by name'
-                                        urlToRetrieveData={urlBiomarkersCRUD}
-                                        mapFunction={(diseaseRow: Biomarker) => {
-                                            return (
-                                                <Table.Row key={diseaseRow.id as number}>
-                                                    <Table.Cell>{diseaseRow.name}</Table.Cell>
-                                                </Table.Row>
-                                            )
-                                        }}
+                            <>
+                                <Grid columns={2} padded stackable textAlign='center' divided>
+                                    {/* New Biomarker Panel */}
+                                    {currentUser?.is_superuser
+                                        ? <Grid.Column width={3} textAlign='left'>
+                                            {/* { <NewBiomarkerForm
+                                                handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
+                                                biomarkerForm={this.state.formBiomarker}
+                                                handleFormChanges={this.handleFormChanges}
+                                                handleKeyDown={this.handleKeyDown}
+                                                addCGDSDataset={/* this.addCGDSDataset () => {}}
+                                                removeCGDSDataset={/* this.removeCGDSDataset () => {}}
+                                                handleFormDatasetChanges={this.handleFormDatasetChanges}
+                                                addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                                removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                                handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                                cleanForm={this.cleanForm}
+                                                isFormEmpty={this.isFormEmpty}
+                                                addingOrEditingCGDSStudy={true}
+                                                canAddCGDSStudy={ () => true }
+                                                addOrEditStudy={ () => {} }
+                                                handleChangeInputTypeSelected={this.handleChangeInputTypeSelected}
+                                            /> */}
+                                            <button onClick={() => this.handleChangeModalState(true)}>openMOdal</button>
+
+                                        </Grid.Column> : null
+                                    }
+                                    {/* List of CGDS Studies */}
+                                    <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
+                                        <PaginatedTable<Biomarker>
+                                            headerTitle='Biomarkers'
+                                            headers={[
+                                                { name: 'Name', serverCodeToSort: 'name' },
+                                                { name: 'Actions' }
+                                            ]}
+                                            showSearchInput
+                                            searchLabel='Name'
+                                            searchPlaceholder='Search by name'
+                                            urlToRetrieveData={urlBiomarkersCRUD}
+                                            mapFunction={(diseaseRow: Biomarker) => {
+                                                return (
+                                                    <Table.Row key={diseaseRow.id as number}>
+                                                        <Table.Cell>{diseaseRow.name}</Table.Cell>
+                                                    </Table.Row>
+                                                )
+                                            }}
+                                        />
+                                    </Grid.Column>
+                                </Grid>
+                                <Modal
+                                    style={{ width: '90%', height: '90%' }}
+                                    onClose={() => this.handleChangeModalState(false)}
+                                    onOpen={() => this.handleChangeModalState(true)}
+                                    open={this.state.formBiomarkerModal}>
+                                    <ModalContentBiomarker
+                                        handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
+                                        handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
+                                        biomarkerForm={this.state.formBiomarker}
+                                        handleFormChanges={this.handleFormChanges}
+                                        handleKeyDown={this.handleKeyDown}
+                                        addCGDSDataset={() => {}}
+                                        removeCGDSDataset={() => {}}
+                                        handleFormDatasetChanges={this.handleFormDatasetChanges}
+                                        addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                        cleanForm={this.cleanForm}
+                                        isFormEmpty={this.isFormEmpty}
+                                        addingOrEditingCGDSStudy={true}
+                                        canAddCGDSStudy={this.canAddBiomarker}
+                                        addOrEditStudy={() => {}}
+                                        handleAddMoleculeToSection={this.handleAddMoleculeToSection}
+                                        handleRemoveMolecule={this.handleRemoveMolecule}
                                     />
-                                </Grid.Column>
-                            </Grid>
+                                </Modal>
+                            </>
                         )
                     }
                 </CurrentUserContext.Consumer>

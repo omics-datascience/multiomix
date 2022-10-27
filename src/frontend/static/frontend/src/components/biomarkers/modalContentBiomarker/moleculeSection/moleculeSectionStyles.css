@@ -1,0 +1,12 @@
+.biomarkers--molecules--container {
+    width: 100%;
+    max-height: 400px;
+    overflow-y: scroll;
+}
+.biomarkers--molecules--container--item {
+    display: inline-block;
+    margin: 0.5rem;
+}
+.biomarkers--molecules--container--grid {
+    width: 100%;
+}
