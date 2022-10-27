@@ -212,9 +212,9 @@ def logout_action(request):
 
 class CurrentUserView(APIView):
     """Gets current User info"""
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
-
-    permission_classes = [permissions.IsAuthenticated]

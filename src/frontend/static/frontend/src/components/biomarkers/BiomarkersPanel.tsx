@@ -13,6 +13,8 @@ import _ from 'lodash'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlGeneSymbolsFinder: string
+declare const urlGenesSymbols: string
 
 /**
  * Request search params to get the CGDSStudies' datasets

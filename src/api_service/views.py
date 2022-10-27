@@ -22,7 +22,7 @@ from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_integer_enum_from_value, encode_json_response_status, \
     request_bool_to_python_bool, get_intersection, create_survival_columns_from_json
 from common.pagination import StandardResultsSetPagination
-from common.response import ResponseStatus
+from common.response import ResponseStatus, generate_json_response_or_404
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
     SurvivalColumnsTupleUserFile
 from genes.models import Gene
@@ -492,23 +492,11 @@ def get_number_samples_in_common_action_one_front(request):
     return encode_json_response_status(response)
 
 
-def generate_modulector_response(data: Optional[Dict]) -> Union[JsonResponse, Http404]:
-    """
-    Checks if the data is None, if not return a JsonResponse with its content, otherwise raises a 404 error
-    @param data: JSON data to return
-    @raise Http404 if data is None
-    @return: A JsonResponse if data is valid
-    """
-    if data is not None:
-        return JsonResponse(data, safe=False)
-    raise Http404('Element not found')
-
-
 @login_required
 def get_mirna_data_action(request):
     """Gets miRNA data from Modulector"""
     data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
@@ -529,14 +517,14 @@ def get_mirna_interaction_action(request):
 def get_mirna_diseases_action(request):
     """Searches in papers miRNA associations with diseases"""
     data = global_mrna_service.get_modulector_service_content('diseases', request.GET, is_paginated=True)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_drugs_action(request):
     """Searches in papers miRNA associations with drugs"""
     data = global_mrna_service.get_modulector_service_content('drugs', request.GET, is_paginated=True)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
