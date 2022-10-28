@@ -31,7 +31,7 @@ services:
             MONGO_INITDB_ROOT_PASSWORD: example
         volumes:
             - mongo_data:/data/db
-            - mongo_data:/data/configdb
+            - mongo_config:/data/configdb
             - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
 
     # Redis Server for Websocket connections

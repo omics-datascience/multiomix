@@ -33,7 +33,7 @@ services:
         command: --config /etc/mongo/mongod.conf
         volumes:
             - mongo_data:/data/db
-            - mongo_data:/data/configdb
+            - mongo_config:/data/configdb
             - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
 
     # Redis Server for Websockets connections

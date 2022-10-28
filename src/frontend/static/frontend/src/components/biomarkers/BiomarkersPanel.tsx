@@ -12,7 +12,24 @@ import { TagLabel } from '../common/TagLabel'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+<<<<<<< HEAD
 declare const urlTagsCRUD: string
+=======
+declare const urlGeneSymbolsFinder: string
+declare const urlGenesSymbols: string
+
+/**
+ * Request search params to get the CGDSStudies' datasets
+ */
+type CGDSStudiesSearchParams = {
+    /** Page Number */
+    page: number,
+    /** Page Size */
+    page_size: number,
+    /** Field to sort */
+    ordering: string
+}
+>>>>>>> biomarkers
 
 /**
  * Component's state
