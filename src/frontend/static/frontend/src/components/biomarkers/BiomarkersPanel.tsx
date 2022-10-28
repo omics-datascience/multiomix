@@ -12,9 +12,7 @@ import { TagLabel } from '../common/TagLabel'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
-<<<<<<< HEAD
 declare const urlTagsCRUD: string
-=======
 declare const urlGeneSymbolsFinder: string
 declare const urlGenesSymbols: string
 
@@ -29,7 +27,6 @@ type CGDSStudiesSearchParams = {
     /** Field to sort */
     ordering: string
 }
->>>>>>> biomarkers
 
 /**
  * Component's state
