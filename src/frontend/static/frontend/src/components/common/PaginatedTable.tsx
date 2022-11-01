@@ -2,10 +2,13 @@ import ky from 'ky'
 import React, { ReactElement } from 'react'
 import { DropdownItemProps, Form, Grid, Header, Pagination, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
-import { GeneralTableControl, ResponseRequestWithPagination } from '../../utils/interfaces'
+import { GeneralTableControl, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
+import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
+
+declare const currentUserId: string
 
 /**
  * Type of sorting settings
@@ -51,6 +54,8 @@ interface PaginatedTableProps<T> {
     searchLabel?: string,
     /** Search input's placeholder */
     searchPlaceholder?: string,
+    /** Websocket key to listen and refresh the table's data */
+    updateWSKey?: string,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
 }
@@ -72,9 +77,13 @@ interface PaginatedTableState<T> {
  */
 class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, PaginatedTableState<T>> {
     private filterTimeout: number | undefined;
+    websocketClient: WebsocketClientCustom;
 
     constructor (props: PaginatedTableProps<T>) {
         super(props)
+
+        // Initializes the websocket client
+        this.initializeWebsocketClient()
 
         // Generates TableControl
         const generalTableControl = getDefaultGeneralTableControl()
@@ -219,6 +228,24 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 }}
             />
         ))
+    }
+
+    /**
+     * Instantiates a Websocket Client
+     */
+    initializeWebsocketClient () {
+        if (this.props.updateWSKey) {
+            const websocketConfig: WebsocketConfig = {
+                channelUrl: `/ws/users/${currentUserId}/`,
+                commandsToAttend: [
+                    {
+                        key: this.props.updateWSKey,
+                        functionToExecute: this.getData
+                    }
+                ]
+            }
+            this.websocketClient = new WebsocketClientCustom(websocketConfig)
+        }
     }
 
     render () {

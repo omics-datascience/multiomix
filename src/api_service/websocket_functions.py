@@ -36,3 +36,14 @@ def send_update_cgds_studies_command():
         'command': 'update_cgds_studies'
     }
     send_message(user_group_name, message)
+
+
+def send_update_biomarkers_command(user_id: int):
+    """
+    Sends a message indicating that an Biomarker's state update has occurred
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_biomarkers'
+    }
+    send_message(user_group_name, message)

@@ -2,12 +2,13 @@ import React from 'react'
 import { Label } from 'semantic-ui-react'
 import { DjangoTag } from '../../utils/django_interfaces'
 import { SemanticSIZES } from 'semantic-ui-react/dist/commonjs/generic'
+import { Nullable } from '../../utils/interfaces'
 
 /**
  * Component's props
  */
 interface TagLabelProps {
-    tag: DjangoTag,
+    tag: Nullable<DjangoTag>,
     id?: string,
     className?: string,
     fluid?: boolean,

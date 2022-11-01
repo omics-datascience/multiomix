@@ -23,8 +23,8 @@ class BiomarkerList(generics.ListCreateAPIView):
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['tag']
-    search_fields = ['name']
-    ordering_fields = ['name']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'description', 'tag', 'upload_date']
 
 
 class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
