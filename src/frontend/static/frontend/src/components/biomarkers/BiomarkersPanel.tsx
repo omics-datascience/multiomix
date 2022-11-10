@@ -1,18 +1,21 @@
 import React from 'react'
 import { Base, CurrentUserContext } from '../Base'
-import { Grid, Header, Button, Modal, Table } from 'semantic-ui-react'
-import { DjangoCGDSDataset, DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
+import { Grid, Header, Button, Modal, Table, DropdownItemProps, Icon } from 'semantic-ui-react'
+import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery } from '../../utils/util_functions'
-import { FileType, NameOfCGDSDataset, GeneralTableControl, WebsocketConfig, ResponseRequestWithPagination, Nullable } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
+import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
-import { PaginatedTable } from '../common/PaginatedTable'
 import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
+import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
+import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import { TagLabel } from '../common/TagLabel'
 import _ from 'lodash'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlTagsCRUD: string
 declare const urlGeneSymbolsFinder: string
 declare const urlGenesSymbols: string
 
@@ -41,6 +44,7 @@ interface BiomarkersPanelState {
     tableControl: GeneralTableControl,
     formBiomarker: FormBiomarkerData,
     formBiomarkerModal: boolean,
+    tags: DjangoTag[]
 }
 
 /**
@@ -53,9 +57,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     constructor (props) {
         super(props)
 
-        // Initializes the websocket client
-        this.initializeWebsocketClient()
-
         this.state = {
             biomarkers: [],
             newBiomarker: this.getDefaultNewBiomarker(),
@@ -66,7 +67,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             tableControl: this.getDefaultTableControl(),
             formBiomarker: this.getDefaultFormBiomarker(),
             /*  biomarkersMolecules: this.getDefaultbiomarkersMolecules(), */
-            formBiomarkerModal: false
+            formBiomarkerModal: false,
+            tags: []
         }
     }
     /**
@@ -305,67 +307,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Handles the table's control filters, select, etc changes
-     * @param name Name of the state field to modify
-     * @param value Value to set to the state field
-     * @param resetPagination If true, resets pagination to pageNumber = 1. Useful when the filters change
-     */
-    handleTableControlChanges = (name: string, value: any, resetPagination: boolean = true) => {
-        // Updates filter information and makes the request again
-        const tableControl = this.state.tableControl
-        tableControl[name] = value
-
-        // If pagination reset is required...
-        if (resetPagination) {
-            tableControl.pageNumber = 1
-        }
-
-        // Sets the new state and gets new experiment info
-        this.setState({ tableControl }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout(this.getAllBiomarkers, 300)
-        })
-    }
-
-    /**
-     * Handles sorting on table
-     * @param headerServerCodeToSort Server code of the selected column to send to the server for sorting
-     */
-    handleSort = (headerServerCodeToSort: string) => {
-        // If the user has selected other column for sorting...
-        const tableControl = this.state.tableControl
-        if (this.state.tableControl.sortField !== headerServerCodeToSort) {
-            tableControl.sortField = headerServerCodeToSort
-            tableControl.sortOrderAscendant = true
-        } else {
-            // If it's the same just change the sort order
-            tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
-        }
-        this.setState({ tableControl }, () => this.getAllBiomarkers())
-    }
-
-    /**
      * Generates a default new file form
      * @returns An object with all the field with default values
      */
     getDefaultNewBiomarker (): Biomarker {
         return {
             id: null,
-            name: ''
+            name: '',
+            description: '',
+            tag: null,
+            number_of_mrnas: 0,
+            number_of_mirnas: 0,
+            number_of_cna: 0,
+            number_of_methylation: 0,
+            contains_nan_values: false,
+            column_used_as_index: ''
         }
-    }
-
-    /**
-     * Escapes nullable fields to avoid React errors
-     * @param dataset Dataset to escape
-     * @returns Escaped CGDSDataset object
-     */
-    escapeDatasetNullFields (dataset: Nullable<DjangoCGDSDataset>): Nullable<DjangoCGDSDataset> {
-        if (dataset !== null) {
-            dataset.observation = dataset.observation ?? ''
-        }
-
-        return dataset
     }
 
     /**
@@ -378,48 +335,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates a default filter
-     * @returns An object with all the field with default values
-     */
-    getDefaultFilter () {
-        return {
-            fileType: FileType.ALL,
-            tag: null
-        }
-    }
-
-    /**
      * When the component has been mounted, It requests for
      * tags and files
      */
     componentDidMount () {
-        this.getAllBiomarkers()
-    }
-
-    /**
-     * Fetches the CGDS Studies
-     */
-    getAllBiomarkers = () => {
-        const searchParams: CGDSStudiesSearchParams = {
-            page: this.state.tableControl.pageNumber,
-            page_size: this.state.tableControl.pageSize,
-            ordering: generatesOrderingQuery(
-                this.state.tableControl.sortField,
-                this.state.tableControl.sortOrderAscendant
-            )
-        }
-
-        ky.get(urlBiomarkersCRUD, { searchParams: searchParams }).then((response) => {
-            response.json().then((jsonResponse: ResponseRequestWithPagination<Biomarker>) => {
-                const tableControl = this.state.tableControl
-                tableControl.totalRowCount = jsonResponse.count
-                this.setState({ biomarkers: jsonResponse.results, tableControl })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log('Error getting studies ->', err)
-        })
+        this.getUserTags()
     }
 
     /**
@@ -431,23 +351,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Instantiates a Websocket Client
-     */
-    initializeWebsocketClient () {
-        const websocketConfig: WebsocketConfig = {
-            channelUrl: '/ws/admins/',
-            commandsToAttend: [
-                {
-                    key: 'update_cgds_studies',
-                    functionToExecute: this.getAllBiomarkers
-                }
-            ]
-        }
-        this.websocketClient = new WebsocketClientCustom(websocketConfig)
-    }
-
-    /**
-     * Cleans the FormBiomarkerData
+     * Cleans the new/edit biomarker form
      */
     cleanForm = () => { this.setState({ formBiomarker: this.getDefaultFormBiomarker() }) }
 
@@ -478,7 +382,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     if (biomarker && biomarker.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
                         this.cleanForm()
-                        this.getAllBiomarkers()
                     }
                 }).catch((err) => {
                     alertGeneralError()
@@ -512,7 +415,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         deletingBiomarker: false,
                         showDeleteBiomarkerModal: false
                     })
-                    this.getAllBiomarkers()
                 }
             }).catch((err) => {
                 this.setState({ deletingBiomarker: false })
@@ -576,6 +478,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * TODO: Check if needed
      * Handles CGDS Dataset form changes
      * @param datasetName Name of the edited CGDS dataset
      * @param name Field of the CGDS dataset to change
@@ -591,6 +494,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * TODO: Check if needed
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
      */
@@ -609,6 +513,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * TODO: Check if needed
      * Removes a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
      * @param idxSurvivalTuple Index in survival tuple
@@ -623,6 +528,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * TODO: Check if needed
      * Handles CGDS Dataset form changes in fields of Survival data tuples
      * @param datasetName Name of the edited CGDS dataset
      * @param idxSurvivalTuple Index in survival tuple
@@ -678,6 +584,61 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         return JSON.stringify(this.state.formBiomarker) === JSON.stringify(this.getDefaultFormBiomarker())
     }
 
+    /**
+     * Generates default table's headers
+     * @returns Default object for table's headers
+     */
+    getDefaultHeaders (): RowHeader<Biomarker>[] {
+        return [
+            { name: 'Name', serverCodeToSort: 'name' },
+            { name: 'Description', serverCodeToSort: 'description', width: 3 },
+            { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
+            { name: 'Date', serverCodeToSort: 'upload_date' },
+            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 2 },
+            { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 2 },
+            { name: '# CNA', serverCodeToSort: 'number_of_cna', width: 1 },
+            { name: '# Methylation', serverCodeToSort: 'number_of_methylation', width: 2 },
+            { name: 'Actions' }
+        ]
+    }
+
+    /**
+     * Generates default table's Filters
+     * @returns Default object for table's Filters
+     */
+    getDefaultFilters (): PaginationCustomFilter[] {
+        const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
+            const id = tag.id as number
+            return { key: id, value: id, text: tag.name }
+        })
+
+        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+
+        return [
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', options: tagOptions }
+        ]
+    }
+
+    /**
+     * Fetches the User's defined tags
+     */
+    getUserTags () {
+        // Gets only File's Tags
+        const searchParams = {
+            type: TagType.FILE
+        }
+
+        ky.get(urlTagsCRUD, { searchParams: searchParams }).then((response) => {
+            response.json().then((tags: DjangoTag[]) => {
+                this.setState({ tags })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log("Error getting user's tags ->", err)
+        })
+    }
+
     render () {
         // Biomarker deletion modal
         const deletionConfirmModal = this.getDeletionConfirmModal()
@@ -721,21 +682,39 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
                                         <PaginatedTable<Biomarker>
                                             headerTitle='Biomarkers'
-                                            headers={[
-                                                { name: 'Name', serverCodeToSort: 'name' },
-                                                { name: 'Actions' }
-                                            ]}
+                                            headers={this.getDefaultHeaders()}
+                                            customFilters={this.getDefaultFilters()}
                                             showSearchInput
                                             searchLabel='Name'
                                             searchPlaceholder='Search by name'
                                             urlToRetrieveData={urlBiomarkersCRUD}
-                                            mapFunction={(diseaseRow: Biomarker) => {
-                                                return (
-                                                    <Table.Row key={diseaseRow.id as number}>
-                                                        <Table.Cell>{diseaseRow.name}</Table.Cell>
-                                                    </Table.Row>
-                                                )
-                                            }}
+                                            updateWSKey='update_biomarkers'
+                                            mapFunction={(diseaseRow: Biomarker) => (
+                                                <Table.Row key={diseaseRow.id as number}>
+                                                    <TableCellWithTitle value={diseaseRow.name} />
+                                                    <TableCellWithTitle value={diseaseRow.description !== null ? diseaseRow.description : 'No description'} />
+                                                    <Table.Cell><TagLabel tag={diseaseRow.tag} /> </Table.Cell>
+                                                    <TableCellWithTitle value={formatDateLocale(diseaseRow.upload_date as string, 'LLL')} />
+                                                    <Table.Cell></Table.Cell>
+                                                    <Table.Cell></Table.Cell>
+                                                    <Table.Cell></Table.Cell>
+                                                    <Table.Cell></Table.Cell>
+                                                    <Table.Cell>
+                                                        {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
+                                                        <React.Fragment>
+
+                                                            {/* Shows a delete button if specified */}
+                                                            <Icon
+                                                                name='trash'
+                                                                className='clickable margin-left-5'
+                                                                color='red'
+                                                                title='Delete biomarker'
+                                                                onClick={() => this.confirmBiomarkerDeletion(diseaseRow)}
+                                                            />
+                                                        </React.Fragment>
+                                                    </Table.Cell>
+                                                </Table.Row>
+                                            )}
                                         />
                                     </Grid.Column>
                                 </Grid>
@@ -776,3 +755,5 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         )
     }
 }
+
+export { Biomarker }

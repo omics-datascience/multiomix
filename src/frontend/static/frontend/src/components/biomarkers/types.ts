@@ -1,3 +1,4 @@
+import { DjangoTag } from '../../utils/django_interfaces'
 import { Nullable } from '../../utils/interfaces'
 
 /** Possible types of a Biomarker. */
@@ -16,7 +17,15 @@ enum MoleculesTypeOfSelection {
 interface Biomarker {
     id: Nullable<number>,
     name: string,
-    // TODO: complete
+    description: string,
+    tag: Nullable<DjangoTag>,
+    upload_date?: string,
+    number_of_mrnas: number,
+    number_of_mirnas: number,
+    number_of_cna: number,
+    number_of_methylation: number,
+    contains_nan_values: boolean,
+    column_used_as_index: string
 }
 
 interface MoleculesMultipleSelection {

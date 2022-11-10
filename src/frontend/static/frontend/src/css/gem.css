@@ -143,7 +143,7 @@
 
 /* Prevents the clinical source Popup to be over UserFiles modal */
 #user-files-modal, #select-gem-file-type {
-    z-index: 3000;
+    z-index: 2000;
 }
 
 #advice-infer-interest {

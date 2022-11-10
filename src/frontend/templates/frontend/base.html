@@ -44,6 +44,7 @@
             const urlSurvival = "{% url 'survival' %}" {# URL to the Survival Analysis Panel #}
             const urlBiomarkers = "{% url 'biomarkers' %}" {# URL to the Biomarkers Panel #}
             const urlAboutUs = "{% url 'about_us' %}" {# URL to About us page #}
+            const currentUserId = "{{ user.id }}"
         </script>
 
         {% render_bundle 'base' 'js' %}
