@@ -23,7 +23,10 @@ interface ModalContentBiomarkerProps {
     handleChangeMoleculeSelected: (value: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
-    handleRemoveMolecule: (section:BiomarkerType, molecule: MoleculesSectionData) => void,
+    handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
+    handleGenesSymbolsFinder: (query: string) => void,
+    handleGenesSymbols: (genes: string[]) => void,
+    handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
 }
 
 export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
@@ -48,12 +51,20 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                     handleChangeMoleculeSelected={props.handleChangeMoleculeSelected}
                     handleChangeMoleculeInputSelected={props.handleChangeMoleculeInputSelected}
                     handleAddMoleculeToSection={props.handleAddMoleculeToSection}
+                    handleGenesSymbolsFinder={props.handleGenesSymbolsFinder}
+                    handleGenesSymbols={props.handleGenesSymbols}
                 />
             </Grid.Column>
             <Grid.Column width={12}>
                 <Grid columns={2} stackable className='biomarkers--modal--container'>
                     {Object.values(BiomarkerType).map(item => (
-                        <MoleculeSection key={item} title={item} biomarkerFormData={props.biomarkerForm.moleculesSection[item]} handleRemoveMolecule={props.handleRemoveMolecule}/>
+                        <MoleculeSection
+                            key={item}
+                            title={item}
+                            biomarkerFormData={props.biomarkerForm.moleculesSection[item]}
+                            handleRemoveMolecule={props.handleRemoveMolecule}
+                            handleSelectOptionMolecule={props.handleSelectOptionMolecule}
+                        />
                     ))}
                 </Grid>
             </Grid.Column>

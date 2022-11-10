@@ -69,6 +69,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarkerModal: false
         }
     }
+    /**
+     * Method that get symbols while user is writing in Select molecules input
+     * @param option State of modal
+     */
 
     handleChangeModalState (option:boolean) {
         this.setState(
@@ -78,11 +82,127 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }
         )
     }
-    /*  getDefaultbiomarkersMolecules (): FormBiomarkerData {
-        return {
 
+    /**
+     * Method that get symbols while user is writing in Select molecules input
+     * @param option State of modal
+     */
+
+    handleSelectOptionMolecule= (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => {
+        const indexChoosed = this.state.formBiomarker.moleculesSection[section].findIndex((item) => item.value === itemSelected)
+        const newFormBiomarkerByMoleculesSection:FormBiomarkerData = {
+            ...this.state.formBiomarker
         }
-    } */
+        if (indexChoosed !== -1) {
+            newFormBiomarkerByMoleculesSection.moleculesSection[section] = [...newFormBiomarkerByMoleculesSection.moleculesSection[section]].filter(item => JSON.stringify(item.value) !== JSON.stringify(mol.value))
+        } else {
+            const indexToSelect = this.state.formBiomarker.moleculesSection[section].findIndex((item) => JSON.stringify(item.value) === JSON.stringify(mol.value))
+            const sectionModified = [...this.state.formBiomarker.moleculesSection[section]]
+            sectionModified[indexToSelect].isValid = true
+            sectionModified[indexToSelect].value = itemSelected
+            newFormBiomarkerByMoleculesSection.moleculesSection[section] = sectionModified
+        }
+        return this.setState(
+            {
+                formBiomarker: newFormBiomarkerByMoleculesSection
+            }
+        )
+    }
+
+    /**
+     * Method that get symbols while user is writing in Select molecules input
+     * @param query string that is sending to the api
+     */
+
+    handleGenesSymbolsFinder = (query:string):void => {
+        ky.get(urlGeneSymbolsFinder, { searchParams: { query, limit: 5 } }).then((response) => {
+            response.json().then((jsonResponse: string[]) => {
+                const formBiomarker = this.state.formBiomarker
+                formBiomarker.genesSymbolsFinder = [{
+                    key: '0',
+                    text: 'Select molecules',
+                    value: ''
+                }].concat(jsonResponse.map(gen => ({
+                    key: gen,
+                    text: gen,
+                    value: gen
+                })))
+                this.setState({
+                    formBiomarker: formBiomarker
+                })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting genes ->', err)
+        })
+    }
+    /**
+     * Method that get symbols while user is writing in Select molecules input
+     * @param genes array of strings that is sending to the api
+     */
+
+    handleGenesSymbols = (genes:string[]):void => {
+        const settings = {
+            headers: getDjangoHeader(),
+            json: {
+                genes_ids: genes
+            }
+        }
+        ky.post(urlGenesSymbols, settings).then((response) => {
+            response.json().then((jsonResponse: {[key:string]:string[]}) => {
+                const genes = Object.entries(jsonResponse)
+                const genesArray: MoleculesSectionData[] = []
+                genes.forEach(gene => {
+                    let condition
+                    switch (gene[1].length) {
+                        case 0:
+                            condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].concat(genesArray).filter(item => item.value === gene[0])
+                            if (!condition.length) {
+                                genesArray.push({
+                                    isValid: false,
+                                    value: gene[0]
+                                })
+                            }
+                            break
+                        case 1:
+                            condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].concat(genesArray).filter(item => item.value === gene[1][0])
+                            if (!condition.length) {
+                                genesArray.push({
+                                    isValid: true,
+                                    value: gene[1][0]
+                                })
+                            }
+                            break
+                        default:
+                            condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].concat(genesArray).filter(item => JSON.stringify(item.value) === JSON.stringify(gene[1]))
+                            if (!condition.length) {
+                                genesArray.push({
+                                    isValid: false,
+                                    value: gene[1]
+                                })
+                            }
+                            break
+                    }
+                })
+                const moleculesSection = {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [this.state.formBiomarker.moleculeSelected]: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected]].concat(genesArray)
+                }
+                this.setState({
+                    formBiomarker: {
+                        ...this.state.formBiomarker,
+                        moleculesSection: moleculesSection
+                    }
+                })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting genes ->', err)
+        })
+    }
+
     /**
      * Generates a default formBiomarker
      * @returns Default FormBiomarkerData object
@@ -101,7 +221,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 [BiomarkerType.MIRNA]: [],
                 [BiomarkerType.METHYLATION]: [],
                 [BiomarkerType.MRNA]: []
-            }
+            },
+            genesSymbolsFinder: []
         }
     }
 
@@ -120,7 +241,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleChangeMoleculeSelected = (value: BiomarkerType) => {
         this.setState({
-            ...this.state,
             formBiomarker: {
                 ...this.state.formBiomarker,
                 moleculeSelected: value
@@ -132,33 +252,32 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Handles the table's control filters, select, etc changes
      * @param value Value to set to the state moleculesTypeOfSelection in formBiomarkerState
      */
-        handleChangeMoleculeInputSelected = (value: MoleculesTypeOfSelection) => {
-            this.setState({
-                ...this.state,
-                formBiomarker: {
-                    ...this.state.formBiomarker,
-                    moleculesTypeOfSelection: value
-                }
-            })
-        }
+    handleChangeMoleculeInputSelected = (value: MoleculesTypeOfSelection) => {
+        this.setState({
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesTypeOfSelection: value
+            }
+        })
+    }
 
-        /**
-         * Handles the table's control filters, select, etc changes
-         * @param value Value to add to the molecules section that is selected
-         */
+    /**
+     * Handles the table's control filters, select, etc changes
+     * @param value Value to add to the molecules section that is selected
+     */
 
     handleAddMoleculeToSection= (value: MoleculesSectionData) => {
         if (_.find(this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected], (item: MoleculesSectionData) => value.value === item.value)) {
             return
         }
+        const moleculesSection = {
+            ...this.state.formBiomarker.moleculesSection,
+            [this.state.formBiomarker.moleculeSelected]: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected], value]
+        }
         this.setState({
-            ...this.state,
             formBiomarker: {
                 ...this.state.formBiomarker,
-                moleculesSection: {
-                    ...this.state.formBiomarker.moleculesSection,
-                    [this.state.formBiomarker.moleculeSelected]: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected], value]
-                }
+                moleculesSection: moleculesSection
             }
         })
     }
@@ -169,19 +288,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param molecule molecule to remove of the array
      */
     handleRemoveMolecule= (section:BiomarkerType, molecule: MoleculesSectionData) => {
-        const asd = _.map(this.state.formBiomarker.moleculesSection[section], (item:MoleculesSectionData) => {
-            if (item.fakeId === molecule.fakeId) return
-            if (molecule.isRepeat) {
-                const checkIfRemoveRepeat = _.filter(this.state.formBiomarker.moleculesSection[section], (item:MoleculesSectionData) => item.value === molecule.value).length
-                if (checkIfRemoveRepeat > 2) {
-                    return item
-                } else {
-                    return {
-                        ...item,
-                        isRepeat: false
-                    }
-                }
-            }
+        const data = _.map(this.state.formBiomarker.moleculesSection[section], (item:MoleculesSectionData) => {
+            if (item.value === molecule.value) return
             return item
         })
         this.setState({
@@ -190,7 +298,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 ...this.state.formBiomarker,
                 moleculesSection: {
                     ...this.state.formBiomarker.moleculesSection,
-                    [section]: _.filter(asd, (item: MoleculesSectionData) => item)
+                    [section]: _.filter(data, (item: MoleculesSectionData) => item)
                 }
             }
         })
@@ -655,6 +763,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         addOrEditStudy={() => {}}
                                         handleAddMoleculeToSection={this.handleAddMoleculeToSection}
                                         handleRemoveMolecule={this.handleRemoveMolecule}
+                                        handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
+                                        handleGenesSymbols={this.handleGenesSymbols}
+                                        handleSelectOptionMolecule={this.handleSelectOptionMolecule}
                                     />
                                 </Modal>
                             </>

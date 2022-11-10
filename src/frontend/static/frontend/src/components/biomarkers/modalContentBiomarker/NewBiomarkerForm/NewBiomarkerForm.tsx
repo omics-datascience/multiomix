@@ -29,6 +29,8 @@ interface NewBiomarkerFormProps {
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
+    handleGenesSymbolsFinder:(query:string)=>void,
+    handleGenesSymbols: (genes:string[]) => void,
 }
 
 /**
@@ -96,12 +98,14 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             {
                 props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT &&
                 <SelectDropDownSingleMolecule
-                    handleAddMoleculeToSection={props.handleAddMoleculeToSection} />
+                    handleAddMoleculeToSection={props.handleAddMoleculeToSection}
+                    handleSearchNewData={props.handleGenesSymbolsFinder}
+                    options={props.biomarkerForm.genesSymbolsFinder} />
             }
             {
                 props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA &&
                 <TextAreaMolecules
-                    handleAddMoleculeToSection={props.handleAddMoleculeToSection} />
+                    handleGenesSymbols={props.handleGenesSymbols} />
             }
             {/* Submit form button */}
             <Container className='biomarkers--side--bar--buttons--box'>

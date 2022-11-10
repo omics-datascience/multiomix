@@ -33,6 +33,11 @@ interface FormBiomarkerData {
     molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
+    genesSymbolsFinder: {
+        key: string,
+        text: string,
+        value: string
+    }[],
 }
 type MoleculesSection = {
     [BiomarkerType.CNA]: MoleculesSectionData[],
@@ -42,9 +47,7 @@ type MoleculesSection = {
 }
 interface MoleculesSectionData {
     isValid: boolean,
-    value: string,
-    fakeId: string,
-    isRepeat: boolean,
+    value: string | string[],
 }
 
 export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData }
