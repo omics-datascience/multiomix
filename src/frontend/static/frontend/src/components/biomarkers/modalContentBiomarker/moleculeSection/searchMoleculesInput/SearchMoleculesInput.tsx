@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Input, Button } from 'semantic-ui-react'
+import { Input, Button, Icon } from 'semantic-ui-react'
 interface SerachMoleculesProps {
     handleSearchData: (searchData: string) => void
 }
@@ -15,7 +15,15 @@ export const SearchMoleculesInput = ({ handleSearchData }: SerachMoleculesProps)
             >
                 <input
                 />
-                <Button onClick={() => handleSearchData(inputData)}>Search</Button>
+                <Button onClick={() => handleSearchData(inputData)}>
+                    <Icon name='search' />
+                </Button>
+                <Button onClick={() => {
+                    setInputData('')
+                    handleSearchData('')
+                }}>
+                    <Icon name='delete' />
+                </Button>
             </Input>
         </div>
     )

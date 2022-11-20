@@ -6,10 +6,13 @@ interface SelectDropDownSingleMoleculeProps {
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void
     handleSearchNewData: (query: string) => void,
     options: {
-        key: string,
-        text: string,
-        value: string,
-    }[]
+        isLoading: boolean,
+        data: {
+            key: string,
+            text: string,
+            value: string,
+        }[]
+    }
 }
 export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handleSearchNewData, options }: SelectDropDownSingleMoleculeProps) => {
     const [inputString, setInputString] = useState({
@@ -31,8 +34,10 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
         }
     }
     const handleSearchNewMolecules = useCallback((stringToSearch: string) => {
-        handleSearchNewData(stringToSearch)
-    }, [handleSearchNewData])
+        if (debouncedInputString) {
+            handleSearchNewData(stringToSearch)
+        }
+    }, [debouncedInputString, handleSearchNewData])
 
     useEffect(() => {
         if (inputString) {
@@ -42,6 +47,7 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
     return (
         <Container className='biomarkers--side--bar--box'>
             <Dropdown
+                loading={options.isLoading}
                 className='biomarkers--side--bar--input'
                 placeholder='Select molecules'
                 fluid
@@ -54,7 +60,7 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
                 }}
                 value=''
                 selection
-                options={options}
+                options={options.data}
             />
         </Container>
     )

@@ -1,7 +1,7 @@
 .biomarkers--molecules--container {
     width: 100%;
     overflow-y: scroll;
-    height: 35vh;
+    height: 32vh;
 }
 .biomarkers--molecules--container--item {
     display: inline-block;

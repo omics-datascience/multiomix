@@ -65,8 +65,8 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     return (
         <Segment className='biomarkers--side--bar--container'>
             <Header textAlign="center">
-                <Icon name='database' />
-                <Header.Content>Un titulo bien piola</Header.Content>
+                <Icon name='th' />
+                <Header.Content>New Biomarker</Header.Content>
             </Header>
 
             {/* Name */}

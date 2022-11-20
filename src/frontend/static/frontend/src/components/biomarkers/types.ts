@@ -43,20 +43,28 @@ interface FormBiomarkerData {
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
     genesSymbolsFinder: {
-        key: string,
-        text: string,
-        value: string
-    }[],
+        isLoading: boolean,
+        data: {
+            key: string,
+            text: string,
+            value: string
+        }[]
+    },
 }
 type MoleculesSection = {
-    [BiomarkerType.CNA]: MoleculesSectionData[],
-    [BiomarkerType.MIRNA]: MoleculesSectionData[],
-    [BiomarkerType.METHYLATION]: MoleculesSectionData[],
-    [BiomarkerType.MRNA]: MoleculesSectionData[],
+    [BiomarkerType.CNA]: MoleculeSectionItem,
+    [BiomarkerType.MIRNA]: MoleculeSectionItem,
+    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
+    [BiomarkerType.MRNA]: MoleculeSectionItem,
 }
+interface MoleculeSectionItem {
+    isLoading: boolean,
+    data: MoleculesSectionData[]
+}
+
 interface MoleculesSectionData {
     isValid: boolean,
     value: string | string[],
 }
 
-export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData }
+export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem }
