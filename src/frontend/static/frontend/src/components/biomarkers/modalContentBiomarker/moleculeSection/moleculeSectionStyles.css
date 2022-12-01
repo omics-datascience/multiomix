@@ -3,13 +3,20 @@
     overflow-y: scroll;
     height: 32vh;
 }
+
 .biomarkers--molecules--container--item {
     display: inline-block;
     margin: 0.5rem;
 }
+
 .biomarkers--molecules--container--grid {
     width: 100%;
 }
+
 .biomarkers--section--container {
     display: flex;
+}
+
+.biomarker--section--icon {
+    padding: 0 1rem;
 }

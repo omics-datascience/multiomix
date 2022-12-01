@@ -1,30 +1,34 @@
-import React, { useState } from 'react'
-import { Input, Button, Icon } from 'semantic-ui-react'
+import React, { FormEvent, useState } from 'react'
+import { Input, Icon } from 'semantic-ui-react'
+import './../MoleculeSectionStyles.css'
 interface SerachMoleculesProps {
     handleSearchData: (searchData: string) => void
 }
 export const SearchMoleculesInput = ({ handleSearchData }: SerachMoleculesProps) => {
     const [inputData, setInputData] = useState('')
+    const handleSubmitSearch = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        handleSearchData(inputData)
+    }
     return (
-        <div>
-            <Input
-                value={inputData}
-                type='text'
-                placeholder='Search...'
-                onChange={(e) => setInputData(e.target.value)}
-            >
-                <input
+        <>
+            <form onSubmit={handleSubmitSearch}>
+                <Input
+                    value={inputData}
+                    type='text'
+                    placeholder='Search...'
+                    onChange={(e) => setInputData(e.target.value)}
+                    icon={<Icon name='search' inverted circular link onClick={() => handleSearchData(inputData)} />}
                 />
-                <Button onClick={() => handleSearchData(inputData)}>
-                    <Icon name='search' />
-                </Button>
-                <Button onClick={() => {
-                    setInputData('')
-                    handleSearchData('')
-                }}>
-                    <Icon name='delete' />
-                </Button>
-            </Input>
-        </div>
+                <Icon
+                    className='biomarker--section--icon'
+                    name='trash'
+                    onClick={() => {
+                        setInputData('')
+                        handleSearchData('')
+                    }} />
+            </form>
+
+        </>
     )
 }

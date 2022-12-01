@@ -103,7 +103,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const newFormBiomarkerByMoleculesSection:FormBiomarkerData = {
             ...this.state.formBiomarker
         }
-        console.log(indexChoosed)
         if (indexChoosed !== -1) {
             newFormBiomarkerByMoleculesSection.moleculesSection[section].data = [...newFormBiomarkerByMoleculesSection.moleculesSection[section].data].filter(item => JSON.stringify(item.value) !== JSON.stringify(mol.value))
         } else {
@@ -137,15 +136,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 const formBiomarker = this.state.formBiomarker
                 formBiomarker.genesSymbolsFinder = {
                     isLoading: false,
-                    data: [{
-                        key: '0',
-                        text: 'Select molecules',
-                        value: ''
-                    }].concat(jsonResponse.map(gen => ({
+                    data: jsonResponse.map(gen => ({
                         key: gen,
                         text: gen,
                         value: gen
-                    })))
+                    }))
                 }
                 this.setState({
                     formBiomarker: formBiomarker
@@ -741,7 +736,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                                 addOrEditStudy={ () => {} }
                                                 handleChangeInputTypeSelected={this.handleChangeInputTypeSelected}
                                             /> */}
-                                            <button onClick={() => this.handleChangeModalState('infoModal', true)}>openMOdal</button>
+                                            <Button icon onClick={() => this.handleChangeModalState('infoModal', true)}>
+                                                <Icon name='bars' />
+                                            </Button>
 
                                         </Grid.Column> : null
                                     }

@@ -47,18 +47,19 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
     return (
         <Container className='biomarkers--side--bar--box'>
             <Dropdown
+                selectOnBlur={false}
+                selectOnNavigation={false}
                 loading={options.isLoading}
                 className='biomarkers--side--bar--input'
                 placeholder='Select molecules'
                 fluid
                 search
+                clearable
                 name="moleculesMultiple"
                 searchQuery={inputString.query}
                 onSearchChange={(_, { searchQuery }) => setInputString({ ...inputString, query: searchQuery })}
-                onChange={(_, { value }) => {
-                    handleDropDownChange(typeof value === 'string' ? value : '')
-                }}
-                value=''
+                onChange={(e, { value }) => handleDropDownChange(String(value) || '')}
+                noResultsMessage="Molecule not found"
                 selection
                 options={options.data}
             />
