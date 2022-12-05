@@ -28,16 +28,17 @@ interface Biomarker {
     column_used_as_index: string
 }
 
-interface MoleculesMultipleSelection {
-    key: number;
-    text: string;
-    value: number;
+interface ConfirmModal {
+    confirmModal: boolean,
+    headerText: string,
+    contentText: string,
+    onConfirm: Function,
 }
-
 interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
     tag: any,
+    isOpenModal: boolean,
     moleculeSelected: BiomarkerType,
     molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
@@ -51,6 +52,12 @@ interface FormBiomarkerData {
         }[]
     },
 }
+interface MoleculesMultipleSelection {
+    key: number;
+    text: string;
+    value: number;
+}
+
 type MoleculesSection = {
     [BiomarkerType.CNA]: MoleculeSectionItem,
     [BiomarkerType.MIRNA]: MoleculeSectionItem,
@@ -67,4 +74,4 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
-export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem }
+export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }

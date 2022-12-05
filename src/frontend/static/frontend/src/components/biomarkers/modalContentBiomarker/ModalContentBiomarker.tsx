@@ -27,6 +27,8 @@ interface ModalContentBiomarkerProps {
     handleGenesSymbolsFinder: (query: string) => void,
     handleGenesSymbols: (genes: string[]) => void,
     handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
+    handleRemoveInvalidGenes:(sector:BiomarkerType)=> void,
+    handleChangeConfirmModalState:(setOption:boolean, headerText:string, contentText:string, onConfirm: Function) => void,
 }
 
 export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
@@ -53,6 +55,7 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                     handleAddMoleculeToSection={props.handleAddMoleculeToSection}
                     handleGenesSymbolsFinder={props.handleGenesSymbolsFinder}
                     handleGenesSymbols={props.handleGenesSymbols}
+                    handleChangeConfirmModalState={props.handleChangeConfirmModalState}
                 />
             </Grid.Column>
             <Grid.Column width={12}>
@@ -64,6 +67,7 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                             biomarkerFormData={props.biomarkerForm.moleculesSection[item]}
                             handleRemoveMolecule={props.handleRemoveMolecule}
                             handleSelectOptionMolecule={props.handleSelectOptionMolecule}
+                            handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
                         />
                     ))}
                 </Grid>

@@ -6,7 +6,7 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
 import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
+import { Biomarker, BiomarkerType, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
 import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -42,10 +42,7 @@ interface BiomarkersPanelState {
     addingOrEditingBiomarker: boolean,
     tableControl: GeneralTableControl,
     formBiomarker: FormBiomarkerData,
-    formBiomarkerModal: {
-        infoModal: boolean,
-        confirmModal: boolean,
-    },
+    confirmModal: ConfirmModal
     tags: DjangoTag[]
 }
 
@@ -70,25 +67,47 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             tableControl: this.getDefaultTableControl(),
             formBiomarker: this.getDefaultFormBiomarker(),
             /*  biomarkersMolecules: this.getDefaultbiomarkersMolecules(), */
-            formBiomarkerModal: {
-                infoModal: false,
-                confirmModal: false
-            },
+            confirmModal: this.getDefaultConfirmModal(),
             tags: []
         }
     }
+
     /**
-     * Method that get symbols while user is writing in Select molecules input
-     * @param option State of modal
+     * Generates a default confirm modal structure
+     * @returns Default confirmModal object
+     */
+    getDefaultConfirmModal= ():ConfirmModal => {
+        return {
+            confirmModal: false,
+            headerText: '',
+            contentText: '',
+            onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+        }
+    }
+
+    handleCancelConfirmModalState () {
+        this.setState({
+            confirmModal: this.getDefaultConfirmModal()
+        })
+    }
+
+    /**
+     * Method change confirm modal state
+     * @param option name of modalState to change
+     * @param setOption new state of option
+     * @param headerText optional text of header in confirm modal, by default will be empty
+     * @param contentText optional text of content in confirm modal, by default will be empty
      */
 
-    handleChangeModalState (option:string, setOption:boolean) {
-        const formBiomarkerModal = this.state.formBiomarkerModal
-        formBiomarkerModal[option] = setOption
+    handleChangeConfirmModalState = (setOption:boolean, headerText:string, contentText:string, onConfirm: Function) => {
+        const confirmModal = this.state.confirmModal
+        confirmModal.confirmModal = setOption
+        confirmModal.headerText = headerText
+        confirmModal.contentText = contentText
+        confirmModal.onConfirm = onConfirm
         this.setState(
             {
-                ...this.state,
-                formBiomarkerModal: formBiomarkerModal
+                confirmModal: confirmModal
             }
         )
     }
@@ -150,6 +169,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         }).catch((err) => {
             console.log('Error getting genes ->', err)
+        })
+    }
+
+    /**
+     * Method that removes invalid genes of the sector selected
+     * @param sector string of the sector selected to change state
+     */
+
+    handleRemoveInvalidGenes = (sector:BiomarkerType):void => {
+        const formBiomarker = this.state.formBiomarker
+        formBiomarker.moleculesSection[sector].data = this.state.formBiomarker.moleculesSection[sector].data.filter(gen => !(!gen.isValid && !Array.isArray(gen.value)))
+        this.setState({
+            formBiomarker: formBiomarker
         })
     }
     /**
@@ -241,6 +273,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     getDefaultFormBiomarker (): FormBiomarkerData {
         return {
+            isOpenModal: false,
             biomarkerName: '',
             biomarkerDescription: '',
             tag: '',
@@ -313,6 +346,14 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
 
     handleAddMoleculeToSection= (value: MoleculesSectionData) => {
+        const genesSymbolsFinder = this.state.formBiomarker.genesSymbolsFinder
+        genesSymbolsFinder.data = []
+        this.setState({
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                genesSymbolsFinder: genesSymbolsFinder
+            }
+        })
         if (_.find(this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data, (item: MoleculesSectionData) => value.value === item.value)) {
             return
         }
@@ -403,7 +444,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Cleans the new/edit biomarker form
      */
-    cleanForm = () => { this.setState({ formBiomarker: this.getDefaultFormBiomarker() }) }
+    cleanForm = () => { this.setState({ formBiomarker: { ...this.getDefaultFormBiomarker(), isOpenModal: true }, confirmModal: this.getDefaultConfirmModal() }) }
 
     /**
      * Does a request to add a new Biomarker
@@ -689,15 +730,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    closeModal = () => {
-        const formBiomarker = this.getDefaultFormBiomarker()
-        const modalState = {
-            infoModal: false,
-            confirmModal: false
-        }
+    closeBiomarkerModal = () => {
         this.setState({
-            formBiomarker: formBiomarker,
-            formBiomarkerModal: modalState
+            formBiomarker: this.getDefaultFormBiomarker(),
+            confirmModal: this.getDefaultConfirmModal()
         })
     }
 
@@ -736,7 +772,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                                 addOrEditStudy={ () => {} }
                                                 handleChangeInputTypeSelected={this.handleChangeInputTypeSelected}
                                             /> */}
-                                            <Button icon onClick={() => this.handleChangeModalState('infoModal', true)}>
+                                            <Button icon onClick={() => this.setState({ formBiomarker: { ...this.getDefaultFormBiomarker(), isOpenModal: true } }) }>
                                                 <Icon name='bars' />
                                             </Button>
 
@@ -788,9 +824,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     closeOnDimmerClick={false}
                                     closeOnDocumentClick={false}
                                     style={{ width: '92%', height: '92%' }}
-                                    onClose={() => this.handleChangeModalState('confirmModal', true)}
-                                    onOpen={() => this.handleChangeModalState('infoModal', true)}
-                                    open={this.state.formBiomarkerModal.infoModal}>
+                                    onClose={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
+                                    open={this.state.formBiomarker.isOpenModal}>
                                     <ModalContentBiomarker
                                         handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
                                         handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
@@ -813,21 +848,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
                                         handleGenesSymbols={this.handleGenesSymbols}
                                         handleSelectOptionMolecule={this.handleSelectOptionMolecule}
+                                        handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
+                                        handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                                     />
                                 </Modal>
                                 <Confirm
                                     className='biomarkers--confirm--modal'
-                                    open={this.state.formBiomarkerModal.confirmModal}
-                                    header="You are going to lose all the data inserted"
-                                    content="Are you sure?"
+                                    open={this.state.confirmModal.confirmModal}
+                                    header={this.state.confirmModal.headerText}
+                                    content={this.state.confirmModal.contentText}
                                     size="large"
-                                    onCancel={() => this.setState({
-                                        formBiomarkerModal: {
-                                            infoModal: true,
-                                            confirmModal: false
-                                        }
-                                    })}
-                                    onConfirm={() => this.closeModal()} />
+                                    onCancel={() => this.handleCancelConfirmModalState()}
+                                    onConfirm={() => this.state.confirmModal.onConfirm() } />
                             </>
                         )
                     }

@@ -1,10 +1,12 @@
 import React, { FormEvent, useState } from 'react'
 import { Input, Icon } from 'semantic-ui-react'
+import { BiomarkerType } from '../../../types'
 import './../MoleculeSectionStyles.css'
 interface SerachMoleculesProps {
-    handleSearchData: (searchData: string) => void
+    handleSearchData: (searchData: string) => void,
+    handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
-export const SearchMoleculesInput = ({ handleSearchData }: SerachMoleculesProps) => {
+export const SearchMoleculesInput = ({ handleSearchData, handleRemoveInvalidGenes }: SerachMoleculesProps) => {
     const [inputData, setInputData] = useState('')
     const handleSubmitSearch = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -21,12 +23,17 @@ export const SearchMoleculesInput = ({ handleSearchData }: SerachMoleculesProps)
                     icon={<Icon name='search' inverted circular link onClick={() => handleSearchData(inputData)} />}
                 />
                 <Icon
-                    className='biomarker--section--icon'
+                    className='biomarker--section--icon clickable'
                     name='trash'
                     onClick={() => {
                         setInputData('')
                         handleSearchData('')
                     }} />
+                <Icon
+                    className='biomarker--section--icon clickable'
+                    name='ban'
+                    color='red'
+                    onClick={handleRemoveInvalidGenes} />
             </form>
 
         </>

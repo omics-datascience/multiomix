@@ -7,6 +7,7 @@ import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOf
 import { ButtonsForTypeOfInsert } from './buttonsForTypeOfInsert'
 import './newBiomarkerFormStyles.css'
 import { SelectDropDownSingleMolecule } from './selectDropdownSingleMolecule/SelectDropDownSingleMolecule'
+import './../../../../css/base.css'
 
 /**
  * Component's props
@@ -29,8 +30,9 @@ interface NewBiomarkerFormProps {
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
-    handleGenesSymbolsFinder:(query:string)=>void,
-    handleGenesSymbols: (genes:string[]) => void,
+    handleGenesSymbolsFinder: (query: string) => void,
+    handleGenesSymbols: (genes: string[]) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
 }
 
 /**
@@ -63,25 +65,11 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
         }
     ]
     return (
-        <Segment className='biomarkers--side--bar--container'>
+        <Segment className='biomarkers--side--bar--container table-bordered'>
             <Header textAlign="center">
                 <Icon name='th' />
                 <Header.Content>New Biomarker</Header.Content>
             </Header>
-
-            {/* Name */}
-            {/*         <Input
-                icon='asterisk'
-                fluid
-                name='name'
-                className="no-margin-right"
-                value={props.biomarkers.name}
-                onChange={checkedHandleFormChanges}
-                onKeyDown={props.handleKeyDown}
-                disabled={props.addingOrEditingCGDSStudy}
-                placeholder='Name'
-                maxLength={150}
-            /> */}
 
             <Select
                 className='biomarkers--side--bar--input--selection'
@@ -122,10 +110,11 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 <Container className='biomarkers--side--bar--box'>
                     <Button
                         color='red'
-                        content='Clean Form'
+                        content='Reset Form'
                         fluid
-                        onClick={props.cleanForm}
-                        disabled={props.isFormEmpty()}
+                        onClick={() => props.handleChangeConfirmModalState(true, 'You are going to reset the form and clean all the data inserted', 'Are you sure?', props.cleanForm)}
+                    // chequear la opinion antes de borrar isFormEmpty
+                    // disabled={props.isFormEmpty()}
                     />
                 </Container>
             </Container>

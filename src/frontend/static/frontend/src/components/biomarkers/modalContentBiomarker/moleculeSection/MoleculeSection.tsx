@@ -3,14 +3,16 @@ import { Button, Dimmer, Grid, Icon, Loader, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../types'
 import './moleculeSectionStyles.css'
 import { SearchMoleculesInput } from './searchMoleculesInput/SearchMoleculesInput'
+import './../../../../css/base.css'
 
 interface MoleculeSectionProps {
     title: BiomarkerType,
     biomarkerFormData: MoleculeSectionItem,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
+    handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
-export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule, handleSelectOptionMolecule }: MoleculeSectionProps) => {
+export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule, handleSelectOptionMolecule, handleRemoveInvalidGenes }: MoleculeSectionProps) => {
     const [dataToShow, setDataToShow] = useState<MoleculesSectionData[]>([])
     const orderData = (data: MoleculesSectionData[]) => {
         return data.sort((a, b) => {
@@ -47,8 +49,8 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <h5>{title}</h5>
-            <SearchMoleculesInput handleSearchData={handleSearchData} />
-            <Segment className='biomarkers--molecules--container'>
+            <SearchMoleculesInput handleSearchData={handleSearchData} handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)} />
+            <Segment className='biomarkers--molecules--container table-bordered'>
                 <Dimmer active={biomarkerFormData.isLoading} inverted>
                     <Loader />
                 </Dimmer>
