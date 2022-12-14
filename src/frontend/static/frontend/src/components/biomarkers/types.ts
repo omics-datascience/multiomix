@@ -43,6 +43,7 @@ interface FormBiomarkerData {
     molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
+    validation: ValidationSection
     genesSymbolsFinder: {
         isLoading: boolean,
         data: {
@@ -51,6 +52,12 @@ interface FormBiomarkerData {
             value: string
         }[]
     },
+}
+interface ValidationSection {
+    haveAmbiguous: boolean,
+    haveInvalid: boolean,
+    isLoading: boolean,
+    checkBox: boolean,
 }
 interface MoleculesMultipleSelection {
     key: number;

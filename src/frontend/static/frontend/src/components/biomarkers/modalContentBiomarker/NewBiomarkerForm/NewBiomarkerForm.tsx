@@ -1,5 +1,5 @@
 import React from 'react'
-import { Segment, Header, Icon, Button, Select, Container } from 'semantic-ui-react'
+import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox } from 'semantic-ui-react'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 import { TextAreaMolecules } from './textAreaMolecules'
 /* import { checkedValidityCallback } from '../../utils/util_functions' */
@@ -33,6 +33,9 @@ interface NewBiomarkerFormProps {
     handleGenesSymbolsFinder: (query: string) => void,
     handleGenesSymbols: (genes: string[]) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleValidateForm: () => void,
+    handleChangeCheckBox: (value: boolean) => void,
+    handleValidateFormCheckBox: () => void,
 }
 
 /**
@@ -64,6 +67,12 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             text: BiomarkerType.METHYLATION
         }
     ]
+    const handleSendForm = () => {
+        if (!props.biomarkerForm.validation.checkBox) {
+            return props.handleValidateForm()
+        }
+        return props.handleValidateFormCheckBox()
+    }
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
             <Header textAlign="center">
@@ -96,14 +105,37 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                     handleGenesSymbols={props.handleGenesSymbols} />
             }
             {/* Submit form button */}
+
             <Container className='biomarkers--side--bar--buttons--box'>
+                {props.biomarkerForm.validation.haveInvalid &&
+                    <div className='biomarkers--side--bar--validation--items'>
+                        <Label color={'red'}>
+                            Remove the invalid molecules (in red) from the molecule panels
+                        </Label>
+                    </div>
+                }
+                {props.biomarkerForm.validation.haveAmbiguous &&
+                    <div className='biomarkers--side--bar--validation--items'>
+                        <Label color={'yellow'}>
+                            There are some ambiguous molecules (in yellow). Please select the appropriate ones in the molecule panels.
+                        </Label>
+                    </div>
+                }
+
+                <Checkbox
+                    className='biomarkers--side--bar--validation--items'
+                    label='Ignore molecules with errors'
+                    checked={props.biomarkerForm.validation.checkBox}
+                    onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
+                />
                 <Container className='biomarkers--side--bar--box'>
                     <Button
                         color='green'
                         content={'Send Form'}
                         fluid
-                        onClick={() => { }}
-                        disabled={true}
+                        onClick={handleSendForm}
+                        loading={props.biomarkerForm.validation.isLoading}
+                        disabled={props.biomarkerForm.validation.isLoading}
                     />
                 </Container>
                 {/* Cancel button  */}
@@ -113,6 +145,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         content='Reset Form'
                         fluid
                         onClick={() => props.handleChangeConfirmModalState(true, 'You are going to reset the form and clean all the data inserted', 'Are you sure?', props.cleanForm)}
+                        disabled={props.biomarkerForm.validation.isLoading}
                     // chequear la opinion antes de borrar isFormEmpty
                     // disabled={props.isFormEmpty()}
                     />
