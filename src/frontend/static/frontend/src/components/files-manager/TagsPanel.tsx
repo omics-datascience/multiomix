@@ -10,13 +10,13 @@ import { TagForm } from '../common/TagForm'
 interface TagsPanelProps {
     newTag: DjangoTag,
     tags: DjangoTag[],
-    selectedTag: Nullable<DjangoTag>,
+    selectedTag?: Nullable<DjangoTag>,
     addingTag: boolean,
     handleAddTagInputsChange: (name: string, value: any) => void
     handleKeyDown: (any) => void,
     confirmTagDeletion: (any) => void,
     editTag: (any) => void,
-    handleFilterChanges: (string, any) => void
+    handleFilterChanges?: (string, any) => void
 }
 
 /**
@@ -32,7 +32,11 @@ export const TagsPanel = (props: TagsPanelProps) => {
         return (
             <List.Item
                 key={tag.id as number}
-                onDoubleClick={() => props.handleFilterChanges('tag', tag)}
+                onDoubleClick={() => {
+                    if (props.handleFilterChanges !== undefined) {
+                        props.handleFilterChanges('tag', tag)
+                    }
+                }}
                 className='clickable ellipsis'
             >
                 <List.Content floated='right'>

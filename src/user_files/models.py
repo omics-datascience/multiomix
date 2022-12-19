@@ -233,6 +233,9 @@ class UserFile(models.Model):
         # Sends a websocket message to update the state in the frontend
         send_update_user_file_command(self.user.id)
 
+    class Meta:
+        ordering = ['-id']
+
 @receiver(post_delete, sender=UserFile)
 def user_file_post_delete(sender, instance, **kwargs):
     """
