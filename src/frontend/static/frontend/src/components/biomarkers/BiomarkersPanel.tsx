@@ -444,7 +444,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         mapFunction={(diseaseRow: Biomarker) => (
                                             <Table.Row key={diseaseRow.id as number}>
                                                 <TableCellWithTitle value={diseaseRow.name} />
-                                                <TableCellWithTitle value={diseaseRow.description !== null ? diseaseRow.description : 'No description'} />
+                                                <TableCellWithTitle value={diseaseRow.description} />
                                                 <Table.Cell><TagLabel tag={diseaseRow.tag} /> </Table.Cell>
                                                 <TableCellWithTitle value={formatDateLocale(diseaseRow.upload_date as string, 'LLL')} />
                                                 <Table.Cell></Table.Cell>

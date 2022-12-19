@@ -28,6 +28,8 @@ type PaginationCustomFilter = {
     keyForServer: string,
     /** Default value for Select */
     defaultValue: any,
+    /** Placeholder for select */
+    placeholder?: string
     /** Form.Select options */
     options: DropdownItemProps[]
 }
@@ -54,7 +56,7 @@ interface PaginatedTableProps<T> {
     searchLabel?: string,
     /** Search input's placeholder */
     searchPlaceholder?: string,
-    /** Websocket key to listen and refresh the table's data */
+    /** Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private Websocket channel. */
     updateWSKey?: string,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
@@ -220,6 +222,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             <Form.Select
                 key={filter.keyForServer}
                 label={filter.label}
+                placeholder={filter.placeholder}
                 options={filter.options}
                 name={filter.keyForServer}
                 value={this.state.tableControl.filters[filter.keyForServer]}

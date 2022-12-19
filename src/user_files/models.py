@@ -13,6 +13,7 @@ import pandas as pd
 from user_files.models_choices import FileType, FileDecimalSeparator
 from user_files.utils import get_decimal_separator
 from django.conf import settings
+from api_service.websocket_functions import send_update_user_file_command
 
 
 def user_directory_path(instance, filename):
@@ -218,6 +219,19 @@ class UserFile(models.Model):
         # Subtracts 1 as it's assumed to have a header row in the file
         return row_count - 1
 
+    def delete(self, *args, **kwargs):
+        """Deletes the instance and sends a websockets message to update state in the frontend"""
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the user file state in the frontend
+        send_update_user_file_command(self.user.id)
+
+    def save(self, *args, **kwargs):
+        """Everytime the user file status changes, uses websocket to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websocket message to update the state in the frontend
+        send_update_user_file_command(self.user.id)
 
 @receiver(post_delete, sender=UserFile)
 def user_file_post_delete(sender, instance, **kwargs):

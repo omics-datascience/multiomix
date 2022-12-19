@@ -347,6 +347,7 @@ export class CGDSStudiesList extends React.Component<CGDSStudiesListProps, CGDSS
 
                 <InfoPopup
                     content='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'
+                    extraClassName='margin-left-2 no-margin-right pull-right'
                 />
 
                 <Table sortable celled textAlign="center" fixed singleLine>

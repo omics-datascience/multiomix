@@ -1,14 +1,16 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Header, Button, Modal, DropdownItemProps } from 'semantic-ui-react'
-import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
+import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
+import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery, formatDateLocale, getFileTypeName } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
 import { FileType, GeneralTableControl, Nullable, ResponseRequestWithPagination } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
-import { FilesManagerTable } from './FilesManagerTable'
+import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
+import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import { TagLabel } from '../common/TagLabel'
 
 const FILE_INPUT_LABEL = 'Add a new file'
 
@@ -18,6 +20,7 @@ declare const urlUserFilesCRUD: string
 declare const urlUserInstitutions: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
+declare const downloadFileURL: string
 
 /**
  * New File Form fields
@@ -692,15 +695,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     }
 
     /**
-     * Resets the filter and refresh the user file list
-     */
-    resetFilter = () => {
-        this.setState({ filesManagerTableControl: this.getDefaultTableControl() }, () => {
-            this.getUserFiles()
-        })
-    }
-
-    /**
      * Generates the modal to confirm a File deletion
      * @returns Modal component. Null if no File was selected to delete
      */
@@ -785,6 +779,51 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         this.setState({ newFile })
     }
 
+    /**
+     * Generates default table's headers
+     * @returns Default object for table's headers
+     */
+    getDefaultHeaders (): RowHeader<DjangoUserFile>[] {
+        return [
+            { name: 'Name', serverCodeToSort: 'name' },
+            { name: 'Description', serverCodeToSort: 'description', width: 3 },
+            { name: 'Type', serverCodeToSort: 'file_type' },
+            { name: 'Date', serverCodeToSort: 'upload_date' },
+            { name: 'Institutions', width: 2 },
+            { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
+            { name: 'Actions', width: 2 }
+        ]
+    }
+
+    /**
+     * Generates default table's Filters
+     * @returns Default object for table's Filters
+     */
+    getDefaultFilters (): PaginationCustomFilter[] {
+        const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
+            const id = tag.id as number
+            return { key: id, value: id, text: tag.name }
+        })
+
+        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+
+        const selectVisibilityOptions = [
+            { key: 'all', text: 'All', value: 'all' },
+            { key: 'private', text: 'Private', value: 'private' }
+        ]
+
+        const instsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
+            return { key: institution.id, value: institution.id, text: institution.name }
+        })
+
+        return [
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions },
+            { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', options: selectVisibilityOptions },
+            { label: 'Institutions', keyForServer: 'institutions', defaultValue: '', options: instsOptions },
+            { label: 'File type', keyForServer: 'file_type', defaultValue: FileType.ALL, options: getFileTypeSelectOptions() }
+        ]
+    }
+
     render () {
         // Tag and File deletion modals
         const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
@@ -855,17 +894,85 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                         width={13}
                         textAlign='center'
                     >
-                        <FilesManagerTable
-                            files={this.state.files}
-                            filesManagerTableControl={this.state.filesManagerTableControl}
-                            valueInstitutionDropDown={this.state.filesManagerTableControl.institutions}
-                            institutionsOptions={institutionsOptions}
-                            tagOptions={tagOptions}
-                            confirmFileDeletion={this.confirmFileDeletion}
-                            editFile={this.editFile}
-                            handleFilterChanges={this.handleFilterChanges}
-                            handleFilterTagChanges={this.handleFilterTagChanges}
-                            handleSortUserFile={this.handleSortAllUserFiles}
+                        <PaginatedTable<DjangoUserFile>
+                            headerTitle='File Manager'
+                            headers={this.getDefaultHeaders()}
+                            customFilters={this.getDefaultFilters()}
+                            showSearchInput
+                            searchLabel='Name'
+                            searchPlaceholder='Search by name'
+                            urlToRetrieveData={urlUserFilesCRUD}
+                            updateWSKey='update_user_files'
+                            mapFunction={(userFileRow: DjangoUserFile) => (
+                                <Table.Row key={userFileRow.id as number}>
+                                    <TableCellWithTitle value={userFileRow.name} />
+                                    <TableCellWithTitle value={userFileRow.description} />
+                                    <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
+                                    <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'LLL')} />
+                                    <Table.Cell>
+                                        {userFileRow.institutions.length > 0 &&
+                                                <Icon
+                                                    name='building'
+                                                    size='large'
+                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                                />
+                                        }
+                                    </Table.Cell>
+                                    <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell>
+                                        {/* Shows a download button if specified */}
+                                        <Icon
+                                            name='cloud download'
+                                            color='blue'
+                                            className='clickable margin-left-5'
+                                            title='Download result'
+                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                        />
+
+                                        {/* Users can modify or delete own files or the ones which belongs to an
+                                        Institution which the user is admin of */}
+                                        {userFileRow.is_private_or_institution_admin &&
+                                            <React.Fragment>
+                                                {/* Shows a edit button if specified */}
+                                                <Icon
+                                                    name='pencil'
+                                                    className='clickable margin-left-5'
+                                                    color='yellow'
+                                                    title='Edit'
+                                                    onClick={() => this.editFile(userFileRow)}
+                                                />
+
+                                                {/* Shows a delete button if specified */}
+                                                <Icon
+                                                    name='trash'
+                                                    className='clickable margin-left-5'
+                                                    color='red'
+                                                    title='Delete experiment'
+                                                    onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                />
+                                            </React.Fragment>
+                                        }
+
+                                        {/* Extra information: */}
+                                        <Icon
+                                            name='info'
+                                            className='margin-left-2'
+                                            color='blue'
+                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
+                                        />
+
+                                        {/* NaNs warning */}
+                                        {userFileRow.contains_nan_values &&
+                                            <Icon
+                                                name='warning sign'
+                                                className='margin-left-2'
+                                                color='yellow'
+                                                title='The dataset contains NaN values'
+                                            />
+                                        }
+                                    </Table.Cell>
+                                </Table.Row>
+                            )}
                         />
                     </Grid.Column>
                 </Grid>
