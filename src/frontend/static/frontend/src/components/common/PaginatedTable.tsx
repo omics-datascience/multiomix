@@ -46,6 +46,8 @@ interface PaginatedTableProps<T> {
     urlToRetrieveData: string,
     /** Initial query params to send the backend API (extra params will be attached) */
     queryParams?: any,
+    /** List of elements to render before the custom filters. Every element must be inside a `Form.Item` */
+    customElements?: JSX.Element[],
     /** Array of custom inputs to render */
     customFilters?: PaginationCustomFilter[],
     /** Field and order if needed to order by default by any field */
@@ -58,6 +60,8 @@ interface PaginatedTableProps<T> {
     searchPlaceholder?: string,
     /** Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private Websocket channel. */
     updateWSKey?: string,
+    /** If specified, an Information popup will be displayed on the top-right corner of the table */
+    infoPopupContent?: string,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
 }
@@ -275,8 +279,18 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                             {this.props.headerTitle}
                         </Header>
 
+                        {this.props.infoPopupContent &&
+                            <InfoPopup
+                                content={this.props.infoPopupContent}
+                                extraClassName='no-margin-right pull-right info-popup-paginated-table'
+                                onTop={false}
+                            />
+                        }
+
                         <Form>
                             <Form.Group>
+                                {this.props.customElements}
+
                                 {/* Search input */ }
                                 {this.props.showSearchInput &&
                                     <Form.Input

@@ -158,6 +158,13 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     max-height: calc(80vh) !important;
 }
 
+.info-popup-paginated-table {
+    position: absolute;
+    right: 2%;
+    z-index: 999;
+    top: -1%;
+}
+
 .info-popup-on-top {
     position: absolute;
     right: 2%;
@@ -210,4 +217,9 @@ where the class 'ellipsis' is added to the parent div and not to the button */
 /* This prevents help icons to be over navbar menu */
 h2.menu, .menu.transition.visible {
     z-index: 9999;
+}
+
+.pull-down {
+    position: absolute;
+    bottom: 0;
 }
