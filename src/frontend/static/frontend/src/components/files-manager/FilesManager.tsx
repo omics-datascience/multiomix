@@ -677,7 +677,13 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         return [
             { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions },
             { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', options: selectVisibilityOptions },
-            { label: 'Institutions', keyForServer: 'institutions', defaultValue: '', options: instsOptions },
+            {
+                label: 'Institutions',
+                keyForServer: 'institutions',
+                defaultValue: '',
+                options: instsOptions,
+                disabledFunction: (actualValues) => actualValues.visibility === 'private'
+            },
             { label: 'File type', keyForServer: 'file_type', defaultValue: FileType.ALL, options: getFileTypeSelectOptions() }
         ]
     }

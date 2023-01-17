@@ -31,7 +31,9 @@ type PaginationCustomFilter = {
     /** Placeholder for select */
     placeholder?: string
     /** Form.Select options */
-    options: DropdownItemProps[]
+    options: DropdownItemProps[],
+    /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
+    disabledFunction?: (actualValues: {[key: string]: any}) => boolean
 }
 
 /**
@@ -230,6 +232,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 options={filter.options}
                 name={filter.keyForServer}
                 value={this.state.tableControl.filters[filter.keyForServer]}
+                disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
                 onChange={(_, { value }) => {
                     this.handleTableControlChanges(filter.keyForServer, value, true, true)
                 }}
