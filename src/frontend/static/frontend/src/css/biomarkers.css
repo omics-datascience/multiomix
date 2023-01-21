@@ -4,3 +4,9 @@
 .biomarkers--confirm--modal {
     margin-top: 40vh !important;
 }
+
+.biomarkers--button--modal{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

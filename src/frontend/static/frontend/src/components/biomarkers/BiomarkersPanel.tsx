@@ -1,6 +1,6 @@
 import React from 'react'
 import { Base, CurrentUserContext } from '../Base'
-import { Grid, Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm } from 'semantic-ui-react'
+import { Grid, Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
@@ -12,6 +12,7 @@ import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
 import _ from 'lodash'
+import './../../css/biomarkers.css'
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
@@ -875,33 +876,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         (
                             <>
                                 <Grid columns={2} padded stackable textAlign='center' divided>
-                                    {/* New Biomarker Panel */}
-                                    {currentUser?.is_superuser
-                                        ? <Grid.Column width={3} textAlign='left'>
-                                            {/* { <NewBiomarkerForm
-                                                handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
-                                                biomarkerForm={this.state.formBiomarker}
-                                                handleFormChanges={this.handleFormChanges}
-                                                handleKeyDown={this.handleKeyDown}
-                                                addCGDSDataset={/* this.addCGDSDataset () => {}}
-                                                removeCGDSDataset={/* this.removeCGDSDataset () => {}}
-                                                handleFormDatasetChanges={this.handleFormDatasetChanges}
-                                                addSurvivalFormTuple={this.addSurvivalFormTuple}
-                                                removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                                                handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                                cleanForm={this.cleanForm}
-                                                isFormEmpty={this.isFormEmpty}
-                                                addingOrEditingCGDSStudy={true}
-                                                canAddCGDSStudy={ () => true }
-                                                addOrEditStudy={ () => {} }
-                                                handleChangeInputTypeSelected={this.handleChangeInputTypeSelected}
-                                            /> */}
-                                            <Button icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), isOpenModal: true }) }>
-                                                <Icon name='bars' />
-                                            </Button>
-
-                                        </Grid.Column> : null
-                                    }
                                     {/* List of CGDS Studies */}
                                     <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
                                         <PaginatedTable<Biomarker>
@@ -909,6 +883,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             headers={this.getDefaultHeaders()}
                                             customFilters={this.getDefaultFilters()}
                                             showSearchInput
+                                            customElements={[
+                                                <Form.Field key={1}className='biomarkers--button--modal'>
+                                                    <Button icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), isOpenModal: true }) }>
+                                                        <Icon name='bars' />
+                                                    </Button>
+                                                </Form.Field>
+                                            ]}
                                             searchLabel='Name'
                                             searchPlaceholder='Search by name'
                                             urlToRetrieveData={urlBiomarkersCRUD}

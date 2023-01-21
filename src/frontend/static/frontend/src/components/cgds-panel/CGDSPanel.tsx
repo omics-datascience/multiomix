@@ -1,14 +1,15 @@
 import React from 'react'
 import { Base, CurrentUserContext } from '../Base'
-import { Grid, Header, Button, Modal } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode } from '../../utils/django_interfaces'
+import { Grid, Header, Button, Modal, Table, SemanticICONS, SemanticCOLORS, Icon } from 'semantic-ui-react'
+import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode, RowHeader, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery, formatDateLocale } from '../../utils/util_functions'
 import { FileType, CGDSDatasetSeparator, NameOfCGDSDataset, GeneralTableControl, WebsocketConfig, ResponseRequestWithPagination, Nullable } from '../../utils/interfaces'
 import { NewCGDSStudyForm } from './NewCGDSStudyForm'
-import { CGDSStudiesList } from './CGDSStudiesList'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { survivalTupleIsValid } from '../survival/utils'
+import { PaginatedTable } from '../common/PaginatedTable'
+import { TableCellWithTitle } from '../common/TableCellWithTitle'
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
@@ -40,6 +41,16 @@ interface CGDSPanelState {
     deletingCGDSStudy: boolean,
     addingOrEditingCGDSStudy: boolean,
     tableControl: GeneralTableControl
+}
+
+/**
+ * State icon info
+ */
+interface CGDSStudyAndDatasetStateInfo {
+    iconName: SemanticICONS,
+    color: SemanticCOLORS,
+    loading: boolean,
+    title: string
 }
 
 /**
@@ -648,6 +659,230 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             this.state.newCGDSStudy.clinical_sample_dataset === null
     }
 
+    /**
+     * Generates default table's headers
+     * @param isSuperuser is a superuser or not?
+     * @returns Default object for table's headers
+     */
+    getDefaultHeaders (isSuperuser: boolean | undefined): RowHeader<DjangoCGDSStudy>[] {
+        const headersOptions: RowHeader<DjangoCGDSStudy>[] = [
+            { name: 'Name', serverCodeToSort: 'name', width: 2 },
+            { name: 'Description', serverCodeToSort: 'description', width: 2 },
+            { name: 'Sync Date', serverCodeToSort: 'date_last_synchronization', width: 2 },
+            { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1 },
+            { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1 },
+            { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1 },
+            { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1 },
+            { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1 },
+            { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1 },
+            { name: 'State', width: 1 }
+        ]
+
+        if (isSuperuser) {
+            headersOptions.push({ name: 'Actions' })
+        }
+
+        return headersOptions
+    }
+
+    /**
+     * Gets info about the state to display in the card
+     * @param CGDSDataset CGDSDataset object
+     * @param isClinicalData True if the dataset is about clinical data as its data is transposed
+     * @returns The corresponding info of the current CGDS Dataset state
+     */
+    getCGDSDatasetStateObj (CGDSDataset: DjangoCGDSDataset, isClinicalData: boolean): CGDSStudyAndDatasetStateInfo {
+        let stateIcon: CGDSStudyAndDatasetStateInfo
+        switch (CGDSDataset.state) {
+            case CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED:
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'grey',
+                    loading: false,
+                    title: 'The Dataset has not yet been synchronized'
+                }
+                break
+            case CGDSDatasetSynchronizationState.SUCCESS: {
+                let numberOfRowsAndSamplesMessage: string
+                if (isClinicalData) {
+                    // Case of clinical data where samples are as rows indexes
+                    numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} samples x ${CGDSDataset.number_of_samples} attributes`
+                } else {
+                    numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} rows x ${CGDSDataset.number_of_samples} samples`
+                }
+
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'green',
+                    loading: false,
+                    title: `The Dataset was synchronized successfully: ${numberOfRowsAndSamplesMessage}`
+                }
+            }
+                break
+            case CGDSDatasetSynchronizationState.FINISHED_WITH_ERROR:
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'red',
+                    loading: false,
+                    title: 'The synchronization has finished with errors. See logs and try again'
+                }
+                break
+            case CGDSDatasetSynchronizationState.FILE_DOES_NOT_EXIST:
+                stateIcon = {
+                    iconName: 'file',
+                    color: 'red',
+                    loading: false,
+                    title: "The file doesn't exist in the tar.gz file. Edit that field and try again"
+                }
+                break
+            case CGDSDatasetSynchronizationState.NO_PATIENT_ID_COLUMN_FOUND:
+                stateIcon = {
+                    iconName: 'table',
+                    color: 'red',
+                    loading: false,
+                    title: 'The patient id column was not found. The parameter skip rows (i.e. header index) seems to be wrong'
+                }
+                break
+            case CGDSDatasetSynchronizationState.COULD_NOT_SAVE_IN_MONGO:
+            default:
+                stateIcon = {
+                    iconName: 'database',
+                    color: 'red',
+                    loading: false,
+                    title: 'Could not save dataset in Mongo. Is the MongoDB service down?'
+                }
+                break
+        }
+        return stateIcon
+    }
+
+    /**
+     * Renders a Table Cell for a CGDS Dataset of a CGDS Study
+     * @param CGDSDataset CGDS Dataset to evaluate
+     * @param isClinicalData True if the dataset is about clinical data as its data is transposed
+     * @returns JSX element
+     */
+    generateDatasetCell (CGDSDataset: Nullable<DjangoCGDSDataset>, isClinicalData: boolean = false): React.ReactNode {
+        if (CGDSDataset) {
+            const datasetState = this.getCGDSDatasetStateObj(CGDSDataset, isClinicalData)
+            return (
+                <Icon
+                    title={datasetState.title}
+                    name={datasetState.iconName}
+                    color={datasetState.color}
+                    loading={datasetState.loading}
+                />
+            )
+        }
+
+        return '-'
+    }
+
+    /**
+     * Renders a Table Cell for a CGDS study
+     * @param CGDSStudy CGDS study to evaluate
+     * @returns JSX element
+     */
+    generateStudyCell (CGDSStudy: Nullable<CGDSStudySynchronizationState> | undefined): React.ReactNode {
+        if (CGDSStudy) {
+            const studyState = this.getStateObj(CGDSStudy)
+            return (
+                <Icon
+                    title={studyState.title}
+                    name={studyState.iconName}
+                    color={studyState.color}
+                    loading={studyState.loading}
+                />
+            )
+        }
+
+        return '-'
+    }
+
+    /**
+     * Gets info about the state to display in the card
+     * @param state CGDSStudy state
+     * @returns The corresponding info of the current study's state
+     */
+    getStateObj (state: CGDSStudySynchronizationState | undefined): CGDSStudyAndDatasetStateInfo {
+        let stateIcon: CGDSStudyAndDatasetStateInfo
+        switch (state) {
+            case CGDSStudySynchronizationState.NOT_SYNCHRONIZED:
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'grey',
+                    loading: false,
+                    title: 'The study has not yet been synchronized'
+                }
+                break
+            case CGDSStudySynchronizationState.COMPLETED:
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'green',
+                    loading: false,
+                    title: 'The study was synchronized successfully'
+                }
+                break
+            case CGDSStudySynchronizationState.FINISHED_WITH_ERROR:
+                stateIcon = {
+                    iconName: 'circle',
+                    color: 'red',
+                    loading: false,
+                    title: 'The synchronization has finished with errors. See logs and try again'
+                }
+                break
+            case CGDSStudySynchronizationState.URL_ERROR:
+                stateIcon = {
+                    iconName: 'unlink',
+                    color: 'red',
+                    loading: false,
+                    title: 'The URL of this study in unreachable. Edit that field and try again'
+                }
+                break
+            case CGDSStudySynchronizationState.WAITING_FOR_QUEUE:
+                stateIcon = {
+                    iconName: 'wait',
+                    color: 'yellow',
+                    loading: false,
+                    title: 'The synchronization of this study will start soon'
+                }
+                break
+            case CGDSStudySynchronizationState.IN_PROCESS:
+                stateIcon = {
+                    iconName: 'sync alternate',
+                    color: 'yellow',
+                    loading: true,
+                    title: 'The study is being synchronized'
+                }
+                break
+            case CGDSStudySynchronizationState.CONNECTION_TIMEOUT_ERROR:
+                stateIcon = {
+                    iconName: 'wi-fi',
+                    color: 'red',
+                    loading: false,
+                    title: 'cBioPortal is not responding. Try again later'
+                }
+                break
+            case CGDSStudySynchronizationState.READ_TIMEOUT_ERROR:
+                stateIcon = {
+                    iconName: 'stopwatch',
+                    color: 'red',
+                    loading: false,
+                    title: 'cBioPortal is not sending data. Try again later'
+                }
+                break
+            default:
+                stateIcon = {
+                    iconName: 'question',
+                    color: 'grey',
+                    loading: false,
+                    title: 'Unknown error. See logs'
+                }
+                break
+        }
+        return stateIcon
+    }
+
     render () {
         // CGDS Study deletion modal
         const cgdsStudyDeletionConfirmModal = this.getCGDSStudyDeletionConfirmModal()
@@ -687,14 +922,52 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                 }
                                 {/* List of CGDS Studies */}
                                 <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
-                                    <CGDSStudiesList
-                                        CGDSStudies={this.state.CGDSStudies}
-                                        tableControl={this.state.tableControl}
-                                        sendingSyncRequest={this.state.sendingSyncRequest}
-                                        handleSort={this.handleSort}
-                                        handleTableControlChanges={this.handleTableControlChanges}
-                                        confirmCGDSStudyDeletionOrSync={this.confirmCGDSStudyDeletionOrSync}
-                                        editCGDSStudy={this.editCGDSStudy}
+                                    <PaginatedTable<DjangoCGDSStudy>
+                                        headerTitle='cBioPortal'
+                                        headers={this.getDefaultHeaders(currentUser?.is_superuser)}
+                                        urlToRetrieveData={urlCGDSStudiesCRUD}
+                                        infoPopupContent='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'
+                                        mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => (
+                                            <Table.Row key={CGDSStudyFileRow.id as number}>
+                                                <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
+                                                <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
+                                                <Table.Cell>{CGDSStudyFileRow.date_last_synchronization
+                                                    ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
+                                                    : '-'}
+                                                </Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.mrna_dataset)}</Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.mirna_dataset)}</Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.cna_dataset)}</Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.methylation_dataset)}</Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.clinical_patient_dataset, true)}</Table.Cell>
+                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
+                                                <Table.Cell>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
+                                                {currentUser?.is_superuser &&
+                                                    <Table.Cell>
+                                                        {/* Sync button */}
+                                                        <Icon
+                                                            name='sync alternate'
+                                                            color='blue'
+                                                            className='clickable'
+                                                            title='Sync study'
+                                                            loading={this.getStateObj(CGDSStudyFileRow.state).loading}
+                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                            onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
+                                                        />
+
+                                                        {/* Edit button */}
+                                                        <Icon
+                                                            name='pencil'
+                                                            color='yellow'
+                                                            className='clickable margin-left-30'
+                                                            title='Edit study'
+                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                            onClick={() => this.editCGDSStudy(CGDSStudyFileRow)}
+                                                        />
+                                                    </Table.Cell>
+                                                }
+                                            </Table.Row>
+                                        )}
                                     />
                                 </Grid.Column>
                             </Grid>

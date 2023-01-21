@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-
+from api_service.websocket_functions import send_update_user_file_command
 
 class TagType(models.IntegerChoices):
     """Tags are different for Files and Experiments"""
@@ -19,3 +19,17 @@ class Tag(models.Model):
     def __str__(self):
         description = self.description if self.description is not None else '-'
         return f'{self.name}: {description}'
+
+    def delete(self, *args, **kwargs):
+        """Updates UserFiles' status in frontend to prevent inconsistencies with related tags"""
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the user file state in the frontend
+        send_update_user_file_command(self.user.id)
+
+    def save(self, *args, **kwargs):
+        """Updates UserFiles' status in frontend to prevent inconsistencies with related tags"""
+        super().save(*args, **kwargs)
+
+        # Sends a websocket message to update the state in the frontend
+        send_update_user_file_command(self.user.id)

@@ -47,3 +47,14 @@ def send_update_biomarkers_command(user_id: int):
         'command': 'update_biomarkers'
     }
     send_message(user_group_name, message)
+
+
+def send_update_user_file_command(user_id: int):
+    """
+    Sends a message indicating that an user file's state update has occurred
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_user_files'
+    }
+    send_message(user_group_name, message)
