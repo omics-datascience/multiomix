@@ -37,7 +37,7 @@ interface ConfirmModal {
 interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
-    tag: any,
+    tag: any, // se esta laburando salu2
     moleculeSelected: BiomarkerType,
     molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
