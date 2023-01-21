@@ -10,6 +10,8 @@ enum BiomarkerType {
     HETEROGENEOUS = 5
 }
 
+// TODO: attributes 'number_of_...' only are used in API GET service, not in the form, define and use
+// TODO: two different interfaces
 /** Django Biomarker model. */
 interface Biomarker {
     id: Nullable<number>,
@@ -17,10 +19,10 @@ interface Biomarker {
     description: string,
     tag: Nullable<DjangoTag>,
     upload_date?: string,
-    number_of_mrnas: number,
+    number_of_genes: number,
     number_of_mirnas: number,
-    number_of_cna: number,
-    number_of_methylation: number,
+    number_of_cnas: number,
+    number_of_methylations: number,
     contains_nan_values: boolean,
     column_used_as_index: string
 }

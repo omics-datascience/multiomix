@@ -73,10 +73,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: '',
             description: '',
             tag: null,
-            number_of_mrnas: 0,
+            number_of_genes: 0,
             number_of_mirnas: 0,
-            number_of_cna: 0,
-            number_of_methylation: 0,
+            number_of_cnas: 0,
+            number_of_methylations: 0,
             contains_nan_values: false,
             column_used_as_index: ''
         }
@@ -351,10 +351,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             { name: 'Description', serverCodeToSort: 'description', width: 3 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
             { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 2 },
+            { name: '# mRNAS', serverCodeToSort: 'number_of_genes', width: 2 },
             { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 2 },
-            { name: '# CNA', serverCodeToSort: 'number_of_cna', width: 1 },
-            { name: '# Methylation', serverCodeToSort: 'number_of_methylation', width: 2 },
+            { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
+            { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 2 },
             { name: 'Actions' }
         ]
     }
