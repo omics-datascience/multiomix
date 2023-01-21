@@ -38,7 +38,6 @@ interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
     tag: any,
-    isOpenModal: boolean,
     moleculeSelected: BiomarkerType,
     molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,

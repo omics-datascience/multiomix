@@ -29,7 +29,8 @@ interface ModalContentBiomarkerProps {
     handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleValidateForm: () => void,
+    handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
+    handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
     handleValidateFormCheckBox: () => void,
 }
@@ -60,6 +61,7 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                     handleGenesSymbols={props.handleGenesSymbols}
                     handleChangeConfirmModalState={props.handleChangeConfirmModalState}
                     handleValidateForm={props.handleValidateForm}
+                    handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
                     handleValidateFormCheckBox={props.handleValidateFormCheckBox}
                 />

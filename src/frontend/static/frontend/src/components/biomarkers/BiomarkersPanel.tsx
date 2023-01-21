@@ -43,7 +43,8 @@ interface BiomarkersPanelState {
     tableControl: GeneralTableControl,
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
-    tags: DjangoTag[]
+    tags: DjangoTag[],
+    isOpenModal:boolean
 }
 
 /**
@@ -68,7 +69,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarker: this.getDefaultFormBiomarker(),
             /*  biomarkersMolecules: this.getDefaultbiomarkersMolecules(), */
             confirmModal: this.getDefaultConfirmModal(),
-            tags: []
+            tags: [],
+            isOpenModal: false
         }
     }
 
@@ -273,7 +275,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     getDefaultFormBiomarker (): FormBiomarkerData {
         return {
-            isOpenModal: false,
             biomarkerName: '',
             biomarkerDescription: '',
             tag: '',
@@ -322,22 +323,47 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarker: formBiomarker
         })
     }
-
     /**
      * validates if the form is correct, if not change state of labels alerts bars
      */
 
     handleValidateForm = () => {
-        let dataToSend: MoleculesSectionData[] = []
+        let haveAmbiguous = false
+        let haveInvalid = false
+        for (const option of Object.values(BiomarkerType)) {
+            if (!haveAmbiguous) {
+                const indexOfAmbiguos = this.state.formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
+                if (indexOfAmbiguos >= 0) {
+                    haveAmbiguous = true
+                }
+            }
+            if (!haveInvalid && !this.state.formBiomarker.validation.checkBox) {
+                const indexOfInvalid = this.state.formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && !Array.isArray(item.value))
+                if (indexOfInvalid >= 0) {
+                    haveInvalid = true
+                }
+            }
+        }
+
+        return {
+            haveAmbiguous: haveAmbiguous,
+            haveInvalid: haveInvalid
+        }
+    }
+
+    /**
+     * prepare data to send
+     */
+
+    handleSendForm = () => {
+        // let dataToSend: MoleculesSectionData[] = []
         const formBiomarker = this.state.formBiomarker
         formBiomarker.validation.isLoading = true
-        formBiomarker.validation.haveAmbiguous = false
-        formBiomarker.validation.haveInvalid = false
         this.setState({
             formBiomarker: formBiomarker
         })
         setTimeout(() => {
-            for (const option of Object.values(BiomarkerType)) {
+            /* for (const option of Object.values(BiomarkerType)) {
                 if (!formBiomarker.validation.haveAmbiguous) {
                     const indexOfAmbiguos = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
                     if (indexOfAmbiguos >= 0) {
@@ -358,8 +384,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
             if (formBiomarker.validation.haveAmbiguous && formBiomarker.validation.haveInvalid) {
 
-            }
-            console.log('ready to send!', dataToSend)
+            } */
+            console.log('ready to send!')//, dataToSend)
             formBiomarker.validation.isLoading = false
             return this.setState({
                 formBiomarker: formBiomarker
@@ -541,7 +567,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Cleans the new/edit biomarker form
      */
-    cleanForm = () => { this.setState({ formBiomarker: { ...this.getDefaultFormBiomarker(), isOpenModal: true }, confirmModal: this.getDefaultConfirmModal() }) }
+    cleanForm = () => { this.setState({ isOpenModal: true, formBiomarker: this.getDefaultFormBiomarker(), confirmModal: this.getDefaultConfirmModal() }) }
 
     /**
      * Does a request to add a new Biomarker
@@ -830,6 +856,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     closeBiomarkerModal = () => {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
+            isOpenModal: false,
             confirmModal: this.getDefaultConfirmModal()
         })
     }
@@ -869,7 +896,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                                 addOrEditStudy={ () => {} }
                                                 handleChangeInputTypeSelected={this.handleChangeInputTypeSelected}
                                             /> */}
-                                            <Button icon onClick={() => this.setState({ formBiomarker: { ...this.getDefaultFormBiomarker(), isOpenModal: true } }) }>
+                                            <Button icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), isOpenModal: true }) }>
                                                 <Icon name='bars' />
                                             </Button>
 
@@ -922,7 +949,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     closeOnDocumentClick={false}
                                     style={{ width: '92%', height: '92%' }}
                                     onClose={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
-                                    open={this.state.formBiomarker.isOpenModal}>
+                                    open={this.state.isOpenModal}>
                                     <ModalContentBiomarker
                                         handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
                                         handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
@@ -948,6 +975,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
                                         handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                                         handleValidateForm={this.handleValidateForm}
+                                        handleSendForm={this.handleSendForm}
                                         handleChangeCheckBox={this.handleChangeCheckBox}
                                         handleValidateFormCheckBox={this.handleValidateFormCheckBox}
                                     />

@@ -33,7 +33,8 @@ interface NewBiomarkerFormProps {
     handleGenesSymbolsFinder: (query: string) => void,
     handleGenesSymbols: (genes: string[]) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleValidateForm: () => void,
+    handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
+    handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
     handleValidateFormCheckBox: () => void,
 }
@@ -45,6 +46,7 @@ interface NewBiomarkerFormProps {
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     /* const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges) */
+    const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
     const biomarkersOptions = [
         {
             key: BiomarkerType.MRNA,
@@ -69,7 +71,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     ]
     const handleSendForm = () => {
         if (!props.biomarkerForm.validation.checkBox) {
-            return props.handleValidateForm()
+            return props.handleSendForm()
         }
         return props.handleValidateFormCheckBox()
     }
@@ -107,14 +109,14 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             {/* Submit form button */}
 
             <Container className='biomarkers--side--bar--buttons--box'>
-                {props.biomarkerForm.validation.haveInvalid &&
+                {haveInvalid &&
                     <div className='biomarkers--side--bar--validation--items'>
                         <Label color={'red'}>
                             Remove the invalid molecules (in red) from the molecule panels
                         </Label>
                     </div>
                 }
-                {props.biomarkerForm.validation.haveAmbiguous &&
+                {haveAmbiguous &&
                     <div className='biomarkers--side--bar--validation--items'>
                         <Label color={'yellow'}>
                             There are some ambiguous molecules (in yellow). Please select the appropriate ones in the molecule panels.
@@ -135,7 +137,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         fluid
                         onClick={handleSendForm}
                         loading={props.biomarkerForm.validation.isLoading}
-                        disabled={props.biomarkerForm.validation.isLoading}
+                        disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid)}
                     />
                 </Container>
                 {/* Cancel button  */}

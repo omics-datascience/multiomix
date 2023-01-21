@@ -25,6 +25,7 @@ export const SearchMoleculesInput = ({ handleSearchData, handleRemoveInvalidGene
                 <Icon
                     className='biomarker--section--icon clickable'
                     name='trash'
+                    title='Clean search'
                     onClick={() => {
                         setInputData('')
                         handleSearchData('')
@@ -32,6 +33,7 @@ export const SearchMoleculesInput = ({ handleSearchData, handleRemoveInvalidGene
                 <Icon
                     className='biomarker--section--icon clickable'
                     name='ban'
+                    title='Remove molecules with errors (in red)'
                     color='red'
                     onClick={handleRemoveInvalidGenes} />
             </form>
