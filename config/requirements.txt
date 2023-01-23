@@ -20,3 +20,4 @@ django-email-verification==0.0.7
 lifelines==0.25.8
 ggca==0.4.1
 django-chunked-upload==2.0.0
+drf-writable-nested==0.7.0
