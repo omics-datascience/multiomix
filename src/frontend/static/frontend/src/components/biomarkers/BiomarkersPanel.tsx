@@ -6,13 +6,15 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
 import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
 import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
 import _ from 'lodash'
 import './../../css/biomarkers.css'
+import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
+import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
@@ -42,6 +44,7 @@ interface BiomarkersPanelState {
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
     tableControl: GeneralTableControl,
+    biomarkerTypeSelected: BiomarkerTypeSelected,
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
     tags: DjangoTag[],
@@ -61,6 +64,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         this.state = {
             biomarkers: [],
+            biomarkerTypeSelected: BiomarkerTypeSelected.BASE,
             newBiomarker: this.getDefaultNewBiomarker(),
             showDeleteBiomarkerModal: false,
             selectedBiomarkerToDeleteOrSync: null,
@@ -137,6 +141,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         return this.setState(
             {
                 formBiomarker: newFormBiomarkerByMoleculesSection
+            }
+        )
+    }
+
+    /**
+     * Method that select how the user is going to create a Biomarker
+     * @param type Select the way to create a Biomarker
+     */
+
+    handleSelectModal= (type:BiomarkerTypeSelected) => {
+        this.setState(
+            {
+                biomarkerTypeSelected: type
             }
         )
     }
@@ -858,7 +875,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
             isOpenModal: false,
-            confirmModal: this.getDefaultConfirmModal()
+            confirmModal: this.getDefaultConfirmModal(),
+            biomarkerTypeSelected: BiomarkerTypeSelected.BASE
         })
     }
 
@@ -928,38 +946,49 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     closeOnEscape={false}
                                     closeOnDimmerClick={false}
                                     closeOnDocumentClick={false}
-                                    style={{ width: '92%', height: '92%' }}
-                                    onClose={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
+                                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '50%', height: '50%' } : { width: '92%', height: '92%' }}
+                                    onClose={() => this.state.biomarkerTypeSelected !== BiomarkerTypeSelected.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
                                     open={this.state.isOpenModal}>
-                                    <ModalContentBiomarker
-                                        handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
-                                        handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
-                                        biomarkerForm={this.state.formBiomarker}
-                                        handleFormChanges={this.handleFormChanges}
-                                        handleKeyDown={this.handleKeyDown}
-                                        addCGDSDataset={() => {}}
-                                        removeCGDSDataset={() => {}}
-                                        handleFormDatasetChanges={this.handleFormDatasetChanges}
-                                        addSurvivalFormTuple={this.addSurvivalFormTuple}
-                                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                        cleanForm={this.cleanForm}
-                                        isFormEmpty={this.isFormEmpty}
-                                        addingOrEditingCGDSStudy={true}
-                                        canAddCGDSStudy={this.canAddBiomarker}
-                                        addOrEditStudy={() => {}}
-                                        handleAddMoleculeToSection={this.handleAddMoleculeToSection}
-                                        handleRemoveMolecule={this.handleRemoveMolecule}
-                                        handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
-                                        handleGenesSymbols={this.handleGenesSymbols}
-                                        handleSelectOptionMolecule={this.handleSelectOptionMolecule}
-                                        handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
-                                        handleChangeConfirmModalState={this.handleChangeConfirmModalState}
-                                        handleValidateForm={this.handleValidateForm}
-                                        handleSendForm={this.handleSendForm}
-                                        handleChangeCheckBox={this.handleChangeCheckBox}
-                                        handleValidateFormCheckBox={this.handleValidateFormCheckBox}
-                                    />
+                                    {
+                                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE &&
+                                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal}/>
+                                    }
+                                    {
+                                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.MANUAL &&
+                                        <ModalContentBiomarker
+                                            handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
+                                            handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
+                                            biomarkerForm={this.state.formBiomarker}
+                                            handleFormChanges={this.handleFormChanges}
+                                            handleKeyDown={this.handleKeyDown}
+                                            addCGDSDataset={() => {}}
+                                            removeCGDSDataset={() => {}}
+                                            handleFormDatasetChanges={this.handleFormDatasetChanges}
+                                            addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                            cleanForm={this.cleanForm}
+                                            isFormEmpty={this.isFormEmpty}
+                                            addingOrEditingCGDSStudy={true}
+                                            canAddCGDSStudy={this.canAddBiomarker}
+                                            addOrEditStudy={() => {}}
+                                            handleAddMoleculeToSection={this.handleAddMoleculeToSection}
+                                            handleRemoveMolecule={this.handleRemoveMolecule}
+                                            handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
+                                            handleGenesSymbols={this.handleGenesSymbols}
+                                            handleSelectOptionMolecule={this.handleSelectOptionMolecule}
+                                            handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
+                                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                            handleValidateForm={this.handleValidateForm}
+                                            handleSendForm={this.handleSendForm}
+                                            handleChangeCheckBox={this.handleChangeCheckBox}
+                                            handleValidateFormCheckBox={this.handleValidateFormCheckBox}
+                                        />
+                                    }
+                                    {
+                                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.FEATURE_SELECTION &&
+                                        <FeatureSelectionPanel />
+                                    }
                                 </Modal>
                                 <Confirm
                                     className='biomarkers--confirm--modal'

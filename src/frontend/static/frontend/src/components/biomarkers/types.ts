@@ -8,6 +8,11 @@ enum BiomarkerType {
     CNA = 'CNA',
     METHYLATION = 'METHYLATION',
 }
+enum BiomarkerTypeSelected {
+    BASE,
+    MANUAL,
+    FEATURE_SELECTION,
+}
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
     AREA = 'area',
@@ -80,4 +85,4 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
-export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }
+export { BiomarkerTypeSelected, Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }
