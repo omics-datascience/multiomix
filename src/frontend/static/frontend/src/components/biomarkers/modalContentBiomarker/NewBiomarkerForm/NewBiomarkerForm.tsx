@@ -36,7 +36,6 @@ interface NewBiomarkerFormProps {
     handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleValidateFormCheckBox: () => void,
 }
 
 /**
@@ -70,10 +69,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
         }
     ]
     const handleSendForm = () => {
-        if (!props.biomarkerForm.validation.checkBox) {
-            return props.handleSendForm()
-        }
-        return props.handleValidateFormCheckBox()
+        return props.handleSendForm()
     }
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>

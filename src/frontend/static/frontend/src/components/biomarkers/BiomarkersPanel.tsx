@@ -6,7 +6,7 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
 import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
+import { Biomarker, BiomarkerType, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure } from './types'
 import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -363,70 +363,17 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             formBiomarker: formBiomarker
         })
-        setTimeout(() => {
-            /* for (const option of Object.values(BiomarkerType)) {
-                if (!formBiomarker.validation.haveAmbiguous) {
-                    const indexOfAmbiguos = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
-                    if (indexOfAmbiguos >= 0) {
-                        formBiomarker.validation.haveAmbiguous = true
-                    }
-                }
-                if (!formBiomarker.validation.haveInvalid) {
-                    const indexOfInvalid = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && !Array.isArray(item.value))
-                    if (indexOfInvalid >= 0) {
-                        formBiomarker.validation.haveInvalid = true
-                    }
-                }
-                if (formBiomarker.validation.haveInvalid && formBiomarker.validation.haveAmbiguous) {
-                    break
-                }
-                dataToSend = dataToSend.concat(formBiomarker.moleculesSection[option].data)
-            }
-
-            if (formBiomarker.validation.haveAmbiguous && formBiomarker.validation.haveInvalid) {
-
-            } */
-            console.log('ready to send!')//, dataToSend)
-            formBiomarker.validation.isLoading = false
-            return this.setState({
-                formBiomarker: formBiomarker
-            })
-        }, 3000)
-    }
-    /**
-     * Validates if form does not have ambiguos data, ignore de invalid data
-     */
-
-    handleValidateFormCheckBox = () => {
-        let dataToSend: MoleculesSectionData[] = []
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker.validation.isLoading = true
-        formBiomarker.validation.haveAmbiguous = false
-        formBiomarker.validation.haveInvalid = false
+        const biomarkerToSend: SaveBiomarkerStructure = {
+            name: formBiomarker.biomarkerName,
+            description: formBiomarker.biomarkerDescription,
+            mrnas: formBiomarker.moleculesSection.MRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier),
+            mirnas: formBiomarker.moleculesSection.MIRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier)
+        }
+        formBiomarker.validation.isLoading = false
         this.setState({
             formBiomarker: formBiomarker
         })
-        setTimeout(() => {
-            for (const option of Object.values(BiomarkerType)) {
-                if (!formBiomarker.validation.haveAmbiguous) {
-                    const indexOfAmbiguos = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
-                    if (indexOfAmbiguos >= 0) {
-                        formBiomarker.validation.haveAmbiguous = true
-                        break
-                    }
-                    dataToSend = dataToSend.concat(formBiomarker.moleculesSection[option].data.filter(item => item.isValid))
-                }
-            }
-
-            if (formBiomarker.validation.haveAmbiguous) {
-
-            }
-            formBiomarker.validation.isLoading = false
-            console.log('ready to send!', dataToSend)
-            return this.setState({
-                formBiomarker: formBiomarker
-            })
-        }, 3000)
+        console.log(biomarkerToSend)
     }
 
     /**
@@ -958,7 +905,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         handleValidateForm={this.handleValidateForm}
                                         handleSendForm={this.handleSendForm}
                                         handleChangeCheckBox={this.handleChangeCheckBox}
-                                        handleValidateFormCheckBox={this.handleValidateFormCheckBox}
                                     />
                                 </Modal>
                                 <Confirm

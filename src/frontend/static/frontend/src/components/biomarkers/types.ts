@@ -65,6 +65,14 @@ interface MoleculesMultipleSelection {
     text: string;
     value: number;
 }
+interface SaveBiomarkerStructure {
+    name: string,
+    description: string,
+    mrnas:
+        { identifier: string }[],
+    mirnas:
+        { identifier: string }[],
+}
 
 type MoleculesSection = {
     [BiomarkerType.CNA]: MoleculeSectionItem,
@@ -82,4 +90,4 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
-export { Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }
+export { SaveBiomarkerStructure, Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }

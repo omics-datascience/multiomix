@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react'
 import { Input, Icon } from 'semantic-ui-react'
 import { BiomarkerType } from '../../../types'
-import './../MoleculeSectionStyles.css'
+import './../moleculeSectionStyles.css'
 interface SerachMoleculesProps {
     handleSearchData: (searchData: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,

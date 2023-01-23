@@ -32,7 +32,6 @@ interface ModalContentBiomarkerProps {
     handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleValidateFormCheckBox: () => void,
 }
 
 export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
@@ -63,7 +62,6 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                     handleValidateForm={props.handleValidateForm}
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
-                    handleValidateFormCheckBox={props.handleValidateFormCheckBox}
                 />
             </Grid.Column>
             <Grid.Column width={12}>
