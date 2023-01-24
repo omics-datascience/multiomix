@@ -1,8 +1,8 @@
 /* All the main components must have 100% browser height */
 body > div {
     height: 100% !important;
+    z-index: 10000 !important;
 }
-
 .wrapper {
   min-height: 100%;
 }
