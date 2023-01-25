@@ -29,10 +29,11 @@ interface ModalContentBiomarkerProps {
     handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
+    handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleValidateFormCheckBox: () => void,
+    handleChangeInputForm: (value: string, name: 'biomarkerName' | 'biomarkerDescription') => void,
+
 }
 
 export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
@@ -40,6 +41,7 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
         <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
             <Grid.Column width={4} textAlign='left'>
                 <NewBiomarkerForm
+                    handleChangeInputForm={props.handleChangeInputForm}
                     biomarkerForm={props.biomarkerForm}
                     handleFormChanges={props.handleFormChanges}
                     handleKeyDown={props.handleKeyDown}
@@ -63,7 +65,6 @@ export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
                     handleValidateForm={props.handleValidateForm}
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
-                    handleValidateFormCheckBox={props.handleValidateFormCheckBox}
                 />
             </Grid.Column>
             <Grid.Column width={12}>

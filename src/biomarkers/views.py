@@ -1,6 +1,4 @@
-from typing import Optional
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
 from django.shortcuts import render
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service

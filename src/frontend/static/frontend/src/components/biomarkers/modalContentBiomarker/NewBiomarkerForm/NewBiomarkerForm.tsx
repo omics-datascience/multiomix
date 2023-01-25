@@ -1,5 +1,5 @@
 import React from 'react'
-import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox } from 'semantic-ui-react'
+import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea } from 'semantic-ui-react'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 import { TextAreaMolecules } from './textAreaMolecules'
 /* import { checkedValidityCallback } from '../../utils/util_functions' */
@@ -33,10 +33,10 @@ interface NewBiomarkerFormProps {
     handleGenesSymbolsFinder: (query: string) => void,
     handleGenesSymbols: (genes: string[]) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleValidateForm: () => {haveAmbiguous:boolean, haveInvalid:boolean},
+    handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleValidateFormCheckBox: () => void,
+    handleChangeInputForm: (value: string, name: 'biomarkerName' | 'biomarkerDescription') => void,
 }
 
 /**
@@ -70,10 +70,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
         }
     ]
     const handleSendForm = () => {
-        if (!props.biomarkerForm.validation.checkBox) {
-            return props.handleSendForm()
-        }
-        return props.handleValidateFormCheckBox()
+        return props.handleSendForm()
     }
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
@@ -81,7 +78,19 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 <Icon name='th' />
                 <Header.Content>New Biomarker</Header.Content>
             </Header>
-
+            <Input
+                onChange={(e) => props.handleChangeInputForm(e.target.value, 'biomarkerName')}
+                type='text'
+                placeholder='Name'
+                className='biomarkers--side--bar--container--item--margin'
+                value={props.biomarkerForm.biomarkerName}
+            />
+            <TextArea
+                onChange={(_, e) => props.handleChangeInputForm(e.value ? e.value.toString() : '', 'biomarkerDescription')}
+                placeholder='Description'
+                className='biomarkers--side--bar--container--item--margin'
+                value={props.biomarkerForm.biomarkerDescription}
+            />
             <Select
                 className='biomarkers--side--bar--input--selection'
                 placeholder='Select molecule'

@@ -6,7 +6,7 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
 import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure } from './types'
 import { ModalContentBiomarker } from './modalContentBiomarker/ModalContentBiomarker'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -380,70 +380,30 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             formBiomarker: formBiomarker
         })
-        setTimeout(() => {
-            /* for (const option of Object.values(BiomarkerType)) {
-                if (!formBiomarker.validation.haveAmbiguous) {
-                    const indexOfAmbiguos = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
-                    if (indexOfAmbiguos >= 0) {
-                        formBiomarker.validation.haveAmbiguous = true
-                    }
-                }
-                if (!formBiomarker.validation.haveInvalid) {
-                    const indexOfInvalid = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && !Array.isArray(item.value))
-                    if (indexOfInvalid >= 0) {
-                        formBiomarker.validation.haveInvalid = true
-                    }
-                }
-                if (formBiomarker.validation.haveInvalid && formBiomarker.validation.haveAmbiguous) {
-                    break
-                }
-                dataToSend = dataToSend.concat(formBiomarker.moleculesSection[option].data)
-            }
-
-            if (formBiomarker.validation.haveAmbiguous && formBiomarker.validation.haveInvalid) {
-
-            } */
-            console.log('ready to send!')//, dataToSend)
-            formBiomarker.validation.isLoading = false
-            return this.setState({
-                formBiomarker: formBiomarker
+        const biomarkerToSend: SaveBiomarkerStructure = {
+            name: formBiomarker.biomarkerName,
+            description: formBiomarker.biomarkerDescription,
+            mrnas: formBiomarker.moleculesSection.MRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier),
+            mirnas: formBiomarker.moleculesSection.MIRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier)
+        }
+        const settings = {
+            headers: getDjangoHeader(),
+            json: biomarkerToSend
+        }
+        ky.post(urlBiomarkersCRUD, settings).then((response) => {
+            response.json().then((jsonResponse: any) => {
+                console.log(jsonResponse)
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
             })
-        }, 3000)
-    }
-    /**
-     * Validates if form does not have ambiguos data, ignore de invalid data
-     */
-
-    handleValidateFormCheckBox = () => {
-        let dataToSend: MoleculesSectionData[] = []
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker.validation.isLoading = true
-        formBiomarker.validation.haveAmbiguous = false
-        formBiomarker.validation.haveInvalid = false
+        }).catch((err) => {
+            console.log('Error getting genes ->', err)
+        })
+        formBiomarker.validation.isLoading = false
         this.setState({
             formBiomarker: formBiomarker
         })
-        setTimeout(() => {
-            for (const option of Object.values(BiomarkerType)) {
-                if (!formBiomarker.validation.haveAmbiguous) {
-                    const indexOfAmbiguos = formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
-                    if (indexOfAmbiguos >= 0) {
-                        formBiomarker.validation.haveAmbiguous = true
-                        break
-                    }
-                    dataToSend = dataToSend.concat(formBiomarker.moleculesSection[option].data.filter(item => item.isValid))
-                }
-            }
-
-            if (formBiomarker.validation.haveAmbiguous) {
-
-            }
-            formBiomarker.validation.isLoading = false
-            console.log('ready to send!', dataToSend)
-            return this.setState({
-                formBiomarker: formBiomarker
-            })
-        }, 3000)
+        console.log(biomarkerToSend)
     }
 
     /**
@@ -453,6 +413,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultTableControl (): GeneralTableControl {
         const defaultTableControl = getDefaultGeneralTableControl()
         return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
+    }
+
+    /**
+     * change name or description of manual form
+     * @param value new value for input form
+     * @param name type of input to change
+     */
+
+    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+        const formBiomarker = this.state.formBiomarker
+        formBiomarker[name] = value
+        this.setState({
+            formBiomarker: formBiomarker
+        })
     }
 
     /**
@@ -548,10 +522,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: '',
             description: '',
             tag: null,
-            number_of_mrnas: 0,
+            number_of_genes: 0,
             number_of_mirnas: 0,
-            number_of_cna: 0,
-            number_of_methylation: 0,
+            number_of_cnas: 0,
+            number_of_methylations: 0,
             contains_nan_values: false,
             column_used_as_index: ''
         }
@@ -826,10 +800,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             { name: 'Description', serverCodeToSort: 'description', width: 3 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
             { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 2 },
+            { name: '# mRNAS', serverCodeToSort: 'number_of_genes', width: 2 },
             { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 2 },
-            { name: '# CNA', serverCodeToSort: 'number_of_cna', width: 1 },
-            { name: '# Methylation', serverCodeToSort: 'number_of_methylation', width: 2 },
+            { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
+            { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 2 },
             { name: 'Actions' }
         ]
     }
@@ -961,8 +935,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             biomarkerForm={this.state.formBiomarker}
                                             handleFormChanges={this.handleFormChanges}
                                             handleKeyDown={this.handleKeyDown}
-                                            addCGDSDataset={() => {}}
-                                            removeCGDSDataset={() => {}}
+                                            addCGDSDataset={() => { } }
+                                            removeCGDSDataset={() => { } }
                                             handleFormDatasetChanges={this.handleFormDatasetChanges}
                                             addSurvivalFormTuple={this.addSurvivalFormTuple}
                                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
@@ -971,7 +945,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             isFormEmpty={this.isFormEmpty}
                                             addingOrEditingCGDSStudy={true}
                                             canAddCGDSStudy={this.canAddBiomarker}
-                                            addOrEditStudy={() => {}}
+                                            addOrEditStudy={() => { } }
                                             handleAddMoleculeToSection={this.handleAddMoleculeToSection}
                                             handleRemoveMolecule={this.handleRemoveMolecule}
                                             handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
@@ -982,7 +956,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             handleValidateForm={this.handleValidateForm}
                                             handleSendForm={this.handleSendForm}
                                             handleChangeCheckBox={this.handleChangeCheckBox}
-                                            handleValidateFormCheckBox={this.handleValidateFormCheckBox}
+                                            handleChangeInputForm={this.handleChangeInputForm}
                                         />
                                     }
                                     {
