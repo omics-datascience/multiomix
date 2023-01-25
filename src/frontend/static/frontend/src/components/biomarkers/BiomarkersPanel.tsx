@@ -369,6 +369,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             mrnas: formBiomarker.moleculesSection.MRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier),
             mirnas: formBiomarker.moleculesSection.MIRNA.data.map(item => ((!Array.isArray(item.value) && item.isValid) ? { identifier: item.value } : { identifier: '' })).filter(item => item.identifier)
         }
+        const settings = {
+            headers: getDjangoHeader(),
+            json: biomarkerToSend
+        }
+        ky.post(urlBiomarkersCRUD, settings).then((response) => {
+            response.json().then((jsonResponse: any) => {
+                console.log(jsonResponse)
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting genes ->', err)
+        })
         formBiomarker.validation.isLoading = false
         this.setState({
             formBiomarker: formBiomarker
@@ -383,6 +396,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultTableControl (): GeneralTableControl {
         const defaultTableControl = getDefaultGeneralTableControl()
         return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
+    }
+
+    /**
+     * change name or description of manual form
+     * @param value new value for input form
+     * @param name type of input to change
+     */
+
+    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+        const formBiomarker = this.state.formBiomarker
+        formBiomarker[name] = value
+        this.setState({
+            formBiomarker: formBiomarker
+        })
     }
 
     /**
@@ -879,6 +906,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     onClose={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
                                     open={this.state.isOpenModal}>
                                     <ModalContentBiomarker
+                                        handleChangeInputForm={this.handleChangeInputForm}
                                         handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
                                         handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
                                         biomarkerForm={this.state.formBiomarker}
