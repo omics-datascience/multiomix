@@ -62,7 +62,7 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                         : Array.isArray(mol.value)
                             ? <Segment key={index + title + mol.value.length} className="biomarkers--molecules--container--item">
                                 {mol.value.map((item, i) => (
-                                    <Button key={title + item + i} color='yellow' compact onClick={() => handleSelectOptionMolecule(mol, title, item)} >
+                                    <Button key={title + item + i} color='yellow' compact onClick={() => { handleSelectOptionMolecule(mol, title, item) }} >
                                         {item}
                                     </Button>
                                 ))}

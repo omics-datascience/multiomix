@@ -50,6 +50,7 @@ type MoleculesSymbolFinder = {
     data: MoleculeSymbol[]
 }
 
+/** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
@@ -61,24 +62,32 @@ interface FormBiomarkerData {
     validation: ValidationSection
     moleculesSymbolsFinder: MoleculesSymbolFinder,
 }
+
 interface ValidationSection {
     haveAmbiguous: boolean,
     haveInvalid: boolean,
     isLoading: boolean,
     checkBox: boolean,
 }
+
 interface MoleculesMultipleSelection {
     key: number;
     text: string;
     value: number;
 }
+
+/** Structure to create/update a molecule in a Biomarker. */
+type SaveMoleculeStructure = {
+    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
+    identifier: string
+}
+
+/** Structure to make a request and create/update a Biomarker. */
 interface SaveBiomarkerStructure {
     name: string,
     description: string,
-    mrnas:
-    { identifier: string }[],
-    mirnas:
-    { identifier: string }[],
+    mrnas: SaveMoleculeStructure[],
+    mirnas: SaveMoleculeStructure[],
 }
 
 type MoleculesSection = {
@@ -98,6 +107,7 @@ interface MoleculesSectionData {
 }
 
 export {
+    SaveMoleculeStructure,
     SaveBiomarkerStructure,
     Biomarker,
     BiomarkerType,
