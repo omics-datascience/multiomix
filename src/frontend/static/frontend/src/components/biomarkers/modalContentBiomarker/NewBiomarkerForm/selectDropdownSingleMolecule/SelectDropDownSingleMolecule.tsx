@@ -69,7 +69,7 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
                 name="moleculesMultiple"
                 searchQuery={inputString.query}
                 onSearchChange={(_, { searchQuery }) => setInputString({ ...inputString, query: searchQuery })}
-                onChange={(e, { value }) => handleDropDownChange(String(value) || '')}
+                onChange={(_e, { value }) => handleDropDownChange(String(value) || '')}
                 noResultsMessage="Molecule not found"
                 selection
                 options={options.data}
