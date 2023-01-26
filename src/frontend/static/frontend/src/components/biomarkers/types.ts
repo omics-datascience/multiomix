@@ -36,6 +36,20 @@ interface ConfirmModal {
     contentText: string,
     onConfirm: Function,
 }
+
+/** Represents a molecule info to show in molecules Dropdown. */
+type MoleculeSymbol = {
+    key: string,
+    text: string,
+    value: string
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
+type MoleculesSymbolFinder = {
+    isLoading: boolean,
+    data: MoleculeSymbol[]
+}
+
 interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
@@ -45,14 +59,7 @@ interface FormBiomarkerData {
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
     validation: ValidationSection
-    genesSymbolsFinder: {
-        isLoading: boolean,
-        data: {
-            key: string,
-            text: string,
-            value: string
-        }[]
-    },
+    moleculesSymbolsFinder: MoleculesSymbolFinder,
 }
 interface ValidationSection {
     haveAmbiguous: boolean,
@@ -69,9 +76,9 @@ interface SaveBiomarkerStructure {
     name: string,
     description: string,
     mrnas:
-        { identifier: string }[],
+    { identifier: string }[],
     mirnas:
-        { identifier: string }[],
+    { identifier: string }[],
 }
 
 type MoleculesSection = {
@@ -90,4 +97,16 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
-export { SaveBiomarkerStructure, Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }
+export {
+    SaveBiomarkerStructure,
+    Biomarker,
+    BiomarkerType,
+    FormBiomarkerData,
+    MoleculesTypeOfSelection,
+    MoleculesMultipleSelection,
+    MoleculesSectionData,
+    MoleculeSectionItem,
+    ConfirmModal,
+    MoleculeSymbol,
+    MoleculesSymbolFinder
+}
