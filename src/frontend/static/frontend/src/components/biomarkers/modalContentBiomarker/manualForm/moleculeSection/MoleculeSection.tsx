@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Dimmer, Grid, Icon, Loader, Segment } from 'semantic-ui-react'
-import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../types'
+import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import './moleculeSectionStyles.css'
 import { SearchMoleculesInput } from './searchMoleculesInput/SearchMoleculesInput'
-import './../../../../css/base.css'
+import './../../../../../css/base.css'
 
 interface MoleculeSectionProps {
     title: BiomarkerType,
@@ -62,7 +62,7 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                         : Array.isArray(mol.value)
                             ? <Segment key={index + title + mol.value.length} className="biomarkers--molecules--container--item">
                                 {mol.value.map((item, i) => (
-                                    <Button key={title + item + i} color='yellow' compact onClick={() => handleSelectOptionMolecule(mol, title, item)} >
+                                    <Button key={title + item + i} color='yellow' compact onClick={() => { handleSelectOptionMolecule(mol, title, item) }} >
                                         {item}
                                     </Button>
                                 ))}

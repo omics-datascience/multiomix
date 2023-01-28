@@ -16,6 +16,9 @@ class BiomarkerList(generics.ListCreateAPIView):
     def get_queryset(self):
         return Biomarker.objects.filter(user=self.request.user)
 
+    def perform_create(self, biomarker: Biomarker):
+        biomarker.save(user=self.request.user)
+
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination

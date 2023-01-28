@@ -1,26 +1,47 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Container, Dropdown } from 'semantic-ui-react'
-import { useDebounce } from '../../../../../utils/hooks/useDebounce'
-import { MoleculesSectionData } from '../../../types'
+import { debounce } from 'lodash'
+import { MoleculesSectionData, MoleculesSymbolFinder } from '../../../../types'
+
+/** SelectDropDownSingleMolecule props. */
 interface SelectDropDownSingleMoleculeProps {
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void
     handleSearchNewData: (query: string) => void,
-    options: {
-        isLoading: boolean,
-        data: {
-            key: string,
-            text: string,
-            value: string,
-        }[]
-    }
+    options: MoleculesSymbolFinder
 }
-export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handleSearchNewData, options }: SelectDropDownSingleMoleculeProps) => {
+
+/**
+ * Renders a Select Dropdown to select a molecule (mRNA, miRNA, CNA, Methylation)
+ * @param props Component props
+ * @returns Component
+ */
+export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMoleculeProps) => {
     const [inputString, setInputString] = useState({
         query: '',
         value: ''
     })
-    const debouncedInputString = useDebounce(inputString.query, 1000)
 
+    const { handleAddMoleculeToSection, handleSearchNewData, options } = props
+
+    /** Makes the query to Modulector/Bio-API to retrieve molecules. */
+    const makeSearchRequest = useCallback(
+        debounce((search: string) => {
+            handleSearchNewData(search)
+        }, 1000),
+        []
+    )
+
+    /** Every time the query changes, makes a debounced request. */
+    useEffect(() => {
+        if (inputString.query) {
+            makeSearchRequest(inputString.query)
+        }
+    }, [inputString.query])
+
+    /**
+     * Handles changes on Dropdown.
+     * @param value New value
+     */
     const handleDropDownChange = (value: string) => {
         if (value) {
             handleAddMoleculeToSection({
@@ -33,17 +54,7 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
             })
         }
     }
-    const handleSearchNewMolecules = useCallback((stringToSearch: string) => {
-        if (debouncedInputString) {
-            handleSearchNewData(stringToSearch)
-        }
-    }, [debouncedInputString, handleSearchNewData])
 
-    useEffect(() => {
-        if (inputString) {
-            handleSearchNewMolecules(debouncedInputString)
-        }
-    }, [debouncedInputString, handleSearchNewMolecules])
     return (
         <Container className='biomarkers--side--bar--box'>
             <Dropdown
@@ -58,7 +69,7 @@ export const SelectDropDownSingleMolecule = ({ handleAddMoleculeToSection, handl
                 name="moleculesMultiple"
                 searchQuery={inputString.query}
                 onSearchChange={(_, { searchQuery }) => setInputString({ ...inputString, query: searchQuery })}
-                onChange={(e, { value }) => handleDropDownChange(String(value) || '')}
+                onChange={(_e, { value }) => handleDropDownChange(String(value) || '')}
                 noResultsMessage="Molecule not found"
                 selection
                 options={options.data}

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { TextArea } from 'semantic-ui-react'
-import { useDebounce } from '../../../../../utils/hooks/useDebounce'
+import { useDebounce } from '../../../../../../utils/hooks/useDebounce'
 import './textAreaMoleculesStyles.css'
 interface TextAreaMoleculesProps {
     handleGenesSymbols: (genes: string[]) => void,

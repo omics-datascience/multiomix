@@ -1,10 +1,10 @@
 import React from 'react'
 import { Grid } from 'semantic-ui-react'
-import { NameOfCGDSDataset } from '../../../utils/interfaces'
-import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from '../types'
+import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './NewBiomarkerForm/NewBiomarkerForm'
-import './modalContentBiomarkerStyles.css'
+import './manualFormStyles.css'
 import { MoleculeSection } from './moleculeSection/MoleculeSection'
+import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 interface ModalContentBiomarkerProps {
     biomarkerForm: FormBiomarkerData,
     handleFormChanges: (name: string, value) => void,
@@ -36,7 +36,7 @@ interface ModalContentBiomarkerProps {
 
 }
 
-export const ModalContentBiomarker = (props: ModalContentBiomarkerProps) => {
+export const ManualForm = (props: ModalContentBiomarkerProps) => {
     return (
         <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
             <Grid.Column width={4} textAlign='left'>

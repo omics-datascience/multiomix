@@ -1,6 +1,6 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { DropdownItemProps, Form, Grid, Header, Pagination, Table } from 'semantic-ui-react'
+import { DropdownItemProps, Form, Grid, Header, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
@@ -46,6 +46,8 @@ interface PaginatedTableProps<T> {
     headers: RowHeader<T>[]
     /** Backend API URL to retrieve data */
     urlToRetrieveData: string,
+    /** Grid.Column width. */
+    width?: SemanticWIDTHSNUMBER,
     /** Initial query params to send the backend API (extra params will be attached) */
     queryParams?: any,
     /** List of elements to render before the custom filters. Every element must be inside a `Form.Item` */
@@ -275,9 +277,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         return (
             <Grid padded stackable textAlign='center' divided>
                 <Grid.Row>
-
                     {/* Predicted table */}
-                    <Grid.Column textAlign='left'>
+                    <Grid.Column textAlign='left' width={this.props.width ?? 16}>
                         <Header as='h4' textAlign='left'>
                             {this.props.headerTitle}
                         </Header>

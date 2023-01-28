@@ -41,6 +41,21 @@ interface ConfirmModal {
     contentText: string,
     onConfirm: Function,
 }
+
+/** Represents a molecule info to show in molecules Dropdown. */
+type MoleculeSymbol = {
+    key: string,
+    text: string,
+    value: string
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
+type MoleculesSymbolFinder = {
+    isLoading: boolean,
+    data: MoleculeSymbol[]
+}
+
+/** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
@@ -50,33 +65,34 @@ interface FormBiomarkerData {
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
     validation: ValidationSection
-    genesSymbolsFinder: {
-        isLoading: boolean,
-        data: {
-            key: string,
-            text: string,
-            value: string
-        }[]
-    },
+    moleculesSymbolsFinder: MoleculesSymbolFinder,
 }
+
 interface ValidationSection {
     haveAmbiguous: boolean,
     haveInvalid: boolean,
     isLoading: boolean,
     checkBox: boolean,
 }
+
 interface MoleculesMultipleSelection {
     key: number;
     text: string;
     value: number;
 }
+
+/** Structure to create/update a molecule in a Biomarker. */
+type SaveMoleculeStructure = {
+    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
+    identifier: string
+}
+
+/** Structure to make a request and create/update a Biomarker. */
 interface SaveBiomarkerStructure {
     name: string,
     description: string,
-    mrnas:
-        { identifier: string }[],
-    mirnas:
-        { identifier: string }[],
+    mrnas: SaveMoleculeStructure[],
+    mirnas: SaveMoleculeStructure[],
 }
 
 type MoleculesSection = {
@@ -95,4 +111,18 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
-export { BiomarkerTypeSelected, SaveBiomarkerStructure, Biomarker, BiomarkerType, FormBiomarkerData, MoleculesTypeOfSelection, MoleculesMultipleSelection, MoleculesSectionData, MoleculeSectionItem, ConfirmModal }
+export {
+    BiomarkerTypeSelected,
+    SaveMoleculeStructure,
+    SaveBiomarkerStructure,
+    Biomarker,
+    BiomarkerType,
+    FormBiomarkerData,
+    MoleculesTypeOfSelection,
+    MoleculesMultipleSelection,
+    MoleculesSectionData,
+    MoleculeSectionItem,
+    ConfirmModal,
+    MoleculeSymbol,
+    MoleculesSymbolFinder
+}

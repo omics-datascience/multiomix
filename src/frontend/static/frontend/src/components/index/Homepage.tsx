@@ -5,20 +5,13 @@ import { Base } from '../Base'
 // Declared in base.html
 declare const urlPipeline: string
 
-/** Component's props */
-interface HomepageHeadingProps {
-    mobile: boolean
-}
-
 /**
  * Homepage heading
- * @param props Component's props
  * @returns Component
  */
-const HomepageHeading = (props: HomepageHeadingProps) => (
-    /* TODO: refactor with css */
+const HomepageHeading = () => (
     <Segment id='homepage-heading' inverted>
-        <Grid stackable textAlign='center'>
+        <Grid stackable textAlign='center' className='margin-top-2'>
             <Grid.Row columns={1}>
                 <Image rounded size='big' src='/static/frontend/img/homepage/multiomix-logo-name.png' />
             </Grid.Row>
@@ -28,10 +21,6 @@ const HomepageHeading = (props: HomepageHeadingProps) => (
                     id='header-title'
                     inverted
                     content='Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation'
-                    style={{
-                        /* TODO: implement responsiveness */
-                        fontSize: props.mobile ? '2em' : '4em'
-                    }}
                 />
             </Grid.Row>
         </Grid>
@@ -65,7 +54,8 @@ export const Homepage = () => {
     return (
         <div>
             <Base activeItem='home' wrapperClass='wrapper'>
-                <HomepageHeading mobile={false} />
+                <HomepageHeading />
+
                 {/* <ResponsiveContainer> */}
                 <Segment className='padded-segment' vertical>
                     {/* <Grid container stackable verticalAlign='middle'> */}
@@ -113,7 +103,7 @@ export const Homepage = () => {
                         </p>
                     </Container>
 
-                    <Container text textAlign='center' className='margin-top-2'>
+                    <Container text textAlign='center' className='margin-top-5'>
                         <Button id='source-button' secondary basic as='a' size='huge' href='https://github.com/omics-datascience/multiomix' target='_blank' inverted>
                             Source
                             <Icon name='github' className='margin-left-5' />

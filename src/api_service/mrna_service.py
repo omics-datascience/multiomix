@@ -56,13 +56,13 @@ class MRNAService(object):
             else:
                 data = requests.post(url, json=request_params)
 
-            if data.status_code == 404:
+            if data.status_code != 200:
                 return None
 
             return data.json()
         except (ConnectionError, JSONDecodeError) as ex:
+            logging.error(f'Received data from Modulector/BioAPI: {data}')
             logging.exception(ex)
-            logging.error(f'Received data from Modulector: {data}')
 
             if is_paginated:
                 return {
