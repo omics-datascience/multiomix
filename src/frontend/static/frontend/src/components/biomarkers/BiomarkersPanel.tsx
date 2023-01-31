@@ -406,7 +406,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         ky.post(urlBiomarkersCRUD, settings).then((response) => {
             response.json().then((jsonResponse: Biomarker) => {
-                // TODO: jsonResponse has the data of the created Biomarker. Just discard this if not used.
                 console.log(jsonResponse)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
@@ -414,13 +413,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }).catch((err) => {
             console.log('Error getting genes ->', err)
         }).finally(() => {
-            // TODO: put here loading = false. Maybe it's needed to move loading state to another single variable instead of a BiomarkerForm attribute
-        })
-
-        // TODO: put loading = false in ky.finally() and remove this block
-        formBiomarker.validation.isLoading = false
-        this.setState({
-            formBiomarker: formBiomarker
+            formBiomarker.validation.isLoading = false
+            this.setState({ formBiomarker })
         })
     }
 
@@ -930,7 +924,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '50%', height: '50%' } : { width: '92%', height: '92%' }}
+                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '60%', height: '60%' } : { width: '92%', height: '92%' }}
                     onClose={() => this.state.biomarkerTypeSelected !== BiomarkerTypeSelected.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
                     open={this.state.isOpenModal}>
                     {
@@ -944,19 +938,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
                             handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
                             biomarkerForm={this.state.formBiomarker}
-                            handleFormChanges={this.handleFormChanges}
-                            handleKeyDown={this.handleKeyDown}
-                            addCGDSDataset={() => { }}
-                            removeCGDSDataset={() => { }}
-                            handleFormDatasetChanges={this.handleFormDatasetChanges}
-                            addSurvivalFormTuple={this.addSurvivalFormTuple}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                             handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                             cleanForm={this.cleanForm}
                             isFormEmpty={this.isFormEmpty}
-                            addingOrEditingCGDSStudy={true}
-                            canAddCGDSStudy={this.canAddBiomarker}
-                            addOrEditStudy={() => { }}
                             handleAddMoleculeToSection={this.handleAddMoleculeToSection}
                             handleRemoveMolecule={this.handleRemoveMolecule}
                             handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}

@@ -7,19 +7,10 @@ import { MoleculeSection } from './moleculeSection/MoleculeSection'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 interface ModalContentBiomarkerProps {
     biomarkerForm: FormBiomarkerData,
-    handleFormChanges: (name: string, value) => void,
-    handleKeyDown: (e) => void,
-    addCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    removeCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    handleFormDatasetChanges: (datasetName: NameOfCGDSDataset, name: string, value: any) => void,
-    addSurvivalFormTuple: (datasetName: NameOfCGDSDataset) => void,
     removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
     handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
     cleanForm: () => void,
     isFormEmpty: () => boolean,
-    addingOrEditingCGDSStudy: boolean,
-    canAddCGDSStudy: () => boolean,
-    addOrEditStudy: () => void,
     handleChangeMoleculeSelected: (value: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
@@ -43,19 +34,8 @@ export const ManualForm = (props: ModalContentBiomarkerProps) => {
                 <NewBiomarkerForm
                     handleChangeInputForm={props.handleChangeInputForm}
                     biomarkerForm={props.biomarkerForm}
-                    handleFormChanges={props.handleFormChanges}
-                    handleKeyDown={props.handleKeyDown}
-                    addCGDSDataset={/* this.addCGDSDataset () => {} */() => { }}
-                    removeCGDSDataset={/* this.removeCGDSDataset () => {} */() => { }}
-                    handleFormDatasetChanges={props.handleFormDatasetChanges}
-                    addSurvivalFormTuple={props.addSurvivalFormTuple}
-                    removeSurvivalFormTuple={props.removeSurvivalFormTuple}
-                    handleSurvivalFormDatasetChanges={props.handleSurvivalFormDatasetChanges}
                     cleanForm={props.cleanForm}
                     isFormEmpty={props.isFormEmpty}
-                    addingOrEditingCGDSStudy={true}
-                    canAddCGDSStudy={() => true}
-                    addOrEditStudy={() => { }}
                     handleChangeMoleculeSelected={props.handleChangeMoleculeSelected}
                     handleChangeMoleculeInputSelected={props.handleChangeMoleculeInputSelected}
                     handleAddMoleculeToSection={props.handleAddMoleculeToSection}

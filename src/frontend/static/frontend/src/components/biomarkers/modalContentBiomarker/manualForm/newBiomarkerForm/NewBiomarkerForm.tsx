@@ -14,17 +14,6 @@ import { SelectDropDownSingleMolecule } from './selectDropdownSingleMolecule/Sel
  */
 interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
-    addingOrEditingCGDSStudy: boolean,
-    handleFormDatasetChanges: (datasetName: NameOfCGDSDataset, name: string, value: any) => void,
-    addSurvivalFormTuple: (datasetName: NameOfCGDSDataset) => void,
-    removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
-    handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
-    handleFormChanges: (name: string, value: any) => void,
-    handleKeyDown: (e) => void,
-    addCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    removeCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    canAddCGDSStudy: () => boolean,
-    addOrEditStudy: () => void,
     isFormEmpty: () => boolean,
     cleanForm: () => void,
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
@@ -45,7 +34,6 @@ interface NewBiomarkerFormProps {
  * @returns Component
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
-    /* const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges) */
     const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
     const biomarkersOptions = [
         {
