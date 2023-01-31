@@ -85,9 +85,11 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 placeholder='Name'
                 className='biomarkers--side--bar--container--item--margin'
                 value={props.biomarkerForm.biomarkerName}
+                icon='asterisk'
             />
 
             <TextArea
+                style={{ maxWidth: '100%', minWidth: '100%' }}
                 onChange={(_, e) => props.handleChangeInputForm(e.value ? e.value.toString() : '', 'biomarkerDescription')}
                 placeholder='Description'
                 className='biomarkers--side--bar--container--item--margin'
@@ -122,14 +124,14 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             <Container className='biomarkers--side--bar--buttons--box'>
                 {haveInvalid &&
                     <div className='biomarkers--side--bar--validation--items'>
-                        <Label color='red'>
+                        <Label color='red' className='biomarkers--side--bar--validation--labels'>
                             Remove the invalid molecules (in red) from the molecule panels
                         </Label>
                     </div>
                 }
                 {haveAmbiguous &&
                     <div className='biomarkers--side--bar--validation--items'>
-                        <Label color='yellow'>
+                        <Label color='yellow' className='biomarkers--side--bar--validation--labels'>
                             There are some ambiguous molecules (in yellow). Please select the appropriate ones in the molecule panels.
                         </Label>
                     </div>
@@ -150,7 +152,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         fluid
                         onClick={handleSendForm}
                         loading={props.biomarkerForm.validation.isLoading}
-                        disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid)}
+                        disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid) || !props.biomarkerForm.biomarkerName}
                     />
                 </Container>
 

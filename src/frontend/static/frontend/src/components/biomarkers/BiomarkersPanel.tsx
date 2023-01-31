@@ -11,7 +11,7 @@ import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
-import { isEqual } from 'lodash/isEqual'
+import _ from 'lodash'
 import './../../css/biomarkers.css'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
@@ -128,11 +128,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
         if (indexChosen !== -1) {
             newFormBiomarkerByMoleculesSection.moleculesSection[section].data = [...newFormBiomarkerByMoleculesSection.moleculesSection[section].data].filter(
-                (item) => isEqual(item.value, molecule.value)
+                (item) => _.isEqual(item.value, molecule.value)
             )
         } else {
             const indexToSelect = this.state.formBiomarker.moleculesSection[section].data.findIndex(
-                (item) => isEqual(item.value, molecule.value)
+                (item) => _.isEqual(item.value, molecule.value)
             )
             const sectionModified = [...this.state.formBiomarker.moleculesSection[section].data]
             sectionModified[indexToSelect].isValid = true
@@ -179,10 +179,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     formBiomarker: formBiomarker
                 })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            console.log('Error getting genes ->', err)
+            console.error('Error getting genes ->', err)
         }).finally(() => {
             const formBiomarker = this.state.formBiomarker
             formBiomarker.moleculesSymbolsFinder.isLoading = false
@@ -256,8 +256,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             }
                             break
                         default:
+                            console.log(gene[1], this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray))
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(
-                                item => isEqual(item.value, gene[1])
+                                item => _.isEqual(item.value, gene[1])
                             )
 
                             if (!condition.length) {
@@ -283,10 +284,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     }
                 })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            console.log('Error getting genes ->', err)
+            console.error('Error getting genes ->', err)
         })
     }
 
@@ -805,7 +806,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Checks if the form is entirely empty. Useful to enable 'Cancel' button
      * @returns True is any of the form's field contains any data. False otherwise
      */
-    isFormEmpty = (): boolean => isEqual(this.state.formBiomarker, this.getDefaultFormBiomarker())
+    isFormEmpty = (): boolean => _.isEqual(this.state.formBiomarker, this.getDefaultFormBiomarker())
 
     /**
      * Generates default table's headers
