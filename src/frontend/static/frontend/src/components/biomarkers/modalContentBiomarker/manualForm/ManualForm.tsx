@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
-import { NewBiomarkerForm } from './NewBiomarkerForm/NewBiomarkerForm'
+import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import './manualFormStyles.css'
 import { MoleculeSection } from './moleculeSection/MoleculeSection'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
