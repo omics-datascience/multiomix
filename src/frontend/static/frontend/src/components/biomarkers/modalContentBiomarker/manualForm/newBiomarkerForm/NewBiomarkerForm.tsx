@@ -5,8 +5,7 @@ import { TextAreaMolecules } from './textAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import './newBiomarkerFormStyles.css'
 import './../../../../../css/base.css'
-import { ButtonsForTypeOfInsert } from './buttonsForTypeOfInsert'
-import { NameOfCGDSDataset } from '../../../../../utils/interfaces'
+import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './selectDropdownSingleMolecule/SelectDropDownSingleMolecule'
 
 /**

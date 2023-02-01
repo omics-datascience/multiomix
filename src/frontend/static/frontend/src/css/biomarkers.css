@@ -1,6 +1,7 @@
 .biomarkers--side--bar--box {
     margin: 1rem 0;
 }
+
 .biomarkers--confirm--modal {
     margin-top: 40vh !important;
 }
@@ -9,4 +10,8 @@
     display: flex;
     justify-content: center;
     align-items: flex-end;
+}
+
+.biomarkers--side--bar--buttons-group {
+    width: 100%;
 }
