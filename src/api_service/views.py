@@ -744,6 +744,8 @@ def generate_survival_groups(
     low_group: List[KaplanMeierSample] = []
     high_group: List[KaplanMeierSample] = []
 
+    # Divides the data into two groups, those whose expression is below the mean,
+    # and those whose expression is above the mean.
     for (time, event, expression) in zip(clinical_time_values, clinical_event_values, expression_values):
         event_valid_value = 1 if event in fields_interest else 0  # 1 = interest, 0 = censored
         new_value = cast(KaplanMeierSample, [time, event_valid_value])
