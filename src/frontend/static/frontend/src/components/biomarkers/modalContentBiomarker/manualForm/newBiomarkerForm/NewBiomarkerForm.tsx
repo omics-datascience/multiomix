@@ -1,12 +1,10 @@
 import React from 'react'
 import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea } from 'semantic-ui-react'
-import { TextAreaMolecules } from './textAreaMolecules'
-/* import { checkedValidityCallback } from '../../utils/util_functions' */
+import { TextAreaMolecules } from './TextAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import './newBiomarkerFormStyles.css'
-import './../../../../../css/base.css'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
-import { SelectDropDownSingleMolecule } from './selectDropdownSingleMolecule/SelectDropDownSingleMolecule'
+import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 
 /**
  * Component's props

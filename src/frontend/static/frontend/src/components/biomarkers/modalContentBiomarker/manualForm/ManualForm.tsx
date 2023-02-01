@@ -2,10 +2,11 @@ import React from 'react'
 import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
-import './manualFormStyles.css'
 import { MoleculeSection } from './moleculeSection/MoleculeSection'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
-interface ModalContentBiomarkerProps {
+
+/** ManualForm's props. */
+interface ManualFormProps {
     biomarkerForm: FormBiomarkerData,
     removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
     handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
@@ -27,7 +28,7 @@ interface ModalContentBiomarkerProps {
 
 }
 
-export const ManualForm = (props: ModalContentBiomarkerProps) => {
+export const ManualForm = (props: ManualFormProps) => {
     return (
         <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
             <Grid.Column width={4} textAlign='left'>

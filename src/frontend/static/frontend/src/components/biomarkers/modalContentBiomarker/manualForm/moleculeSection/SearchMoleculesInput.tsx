@@ -1,7 +1,6 @@
 import React, { FormEvent, useState } from 'react'
 import { Input, Icon } from 'semantic-ui-react'
-import { BiomarkerType } from '../../../../types'
-import './../moleculeSectionStyles.css'
+import { BiomarkerType } from '../../../types'
 
 interface SearchMoleculesProps {
     handleSearchData: (searchData: string) => void,

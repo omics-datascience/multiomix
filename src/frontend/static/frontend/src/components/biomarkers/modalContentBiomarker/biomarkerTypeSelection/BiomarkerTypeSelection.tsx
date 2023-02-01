@@ -1,10 +1,12 @@
 import React from 'react'
 import { Card, Grid, Header, Image } from 'semantic-ui-react'
 import { BiomarkerTypeSelected } from '../../types'
-import './BiomarkerTypeSelectionStyles.css'
+import './biomarkerTypeSelectionStyles.css'
+
 interface BiomarkerTypeSelectionProps {
     handleSelectModal: (type: BiomarkerTypeSelected) => void,
 }
+
 export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
     const cards = [
         {
@@ -14,7 +16,7 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
             image: '/static/frontend/img/biomarkers/Empty.png'
         },
         {
-            title: 'Feature Selection/Machine Learning',
+            title: 'Feature Selection/ML',
             description: 'As a starting point, you can select a previously discovered Biomarker, a well-known Biomarker, or a superset of genes that you would like to test. This method will select the molecular subset that fits the better prediction',
             action: () => props.handleSelectModal(BiomarkerTypeSelected.FEATURE_SELECTION),
             image: '/static/frontend/img/biomarkers/Fs3.png'
@@ -25,6 +27,7 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
             <Header as="h2" textAlign="center">
                 Create a new Biomarker
             </Header>
+
             <Grid stackable >
                 <Grid.Row columns={3} className='grid--container'>
                     <Grid.Column width={16}>
@@ -39,7 +42,8 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
                                     className='card--container'
                                 >
                                     <Card.Content className='card--content'>
-                                        <Image src={card.image} alt={card.title} size='small' />
+                                        <Image src={card.image} alt={card.title} size='small' className='margin-bottom-5' />
+
                                         <Card.Header textAlign='center'>
                                             {card.title}
                                         </Card.Header>
@@ -51,10 +55,8 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
                             </Grid.Column>
                         ))
                     }
-
                 </Grid.Row>
             </Grid>
-
         </>
     )
 }

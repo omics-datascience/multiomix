@@ -10,9 +10,11 @@
     width: 100%;
     height: 100%;
 }
+
 .biomarkers--side--bar--container--item--margin {
     margin: 0.5rem 0;
 }
+
 .biomarkers--side--bar--buttons--box {
     align-self: flex-end;
     display: flex;

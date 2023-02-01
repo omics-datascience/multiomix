@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Container, Dropdown } from 'semantic-ui-react'
 import { debounce } from 'lodash'
-import { MoleculesSectionData, MoleculesSymbolFinder } from '../../../../types'
+import { MoleculesSectionData, MoleculesSymbolFinder } from '../../../types'
 
 /** SelectDropDownSingleMolecule props. */
 interface SelectDropDownSingleMoleculeProps {

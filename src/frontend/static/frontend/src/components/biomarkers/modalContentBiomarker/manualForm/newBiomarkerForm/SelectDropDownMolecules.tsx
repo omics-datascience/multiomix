@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Container, Dropdown, DropdownItemProps } from 'semantic-ui-react'
-import { useDebounce } from '../../../../../../utils/hooks/useDebounce'
-import { MoleculesMultipleSelection } from '../../../../types'
+import { useDebounce } from '../../../../../utils/hooks/useDebounce'
+import { MoleculesMultipleSelection } from '../../../types'
 import './selectDropDownMoleculesStyles.css'
 
 interface SelectDropDownMoleculesProps {
