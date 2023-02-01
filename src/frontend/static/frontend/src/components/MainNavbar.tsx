@@ -91,7 +91,7 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous &&
                 <React.Fragment>
-                    <Menu.Menu>
+                    <Menu.Menu as='h2'>
                         <Dropdown text='Analysis' className='link item' icon={null}>
                             <Dropdown.Menu>
                                 {/* GEM panel */}

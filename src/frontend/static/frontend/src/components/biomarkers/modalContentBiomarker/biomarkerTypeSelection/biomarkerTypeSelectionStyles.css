@@ -1,0 +1,18 @@
+.text--subtitle {
+    padding: 2rem 0;
+}
+
+.grid--container {
+    margin: 0 4rem;
+}
+
+.card--content{
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.card--container{
+    height: 40vh;
+}

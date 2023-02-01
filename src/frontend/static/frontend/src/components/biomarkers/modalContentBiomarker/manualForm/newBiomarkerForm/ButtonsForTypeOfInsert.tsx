@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, Container } from 'semantic-ui-react'
 import { MoleculesTypeOfSelection } from '../../../types'
-import './buttonsForTypeOfInsertStyles.css'
+
 interface ButtonsForTypeOfInsertProps {
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     moleculesTypeOfSelection: MoleculesTypeOfSelection

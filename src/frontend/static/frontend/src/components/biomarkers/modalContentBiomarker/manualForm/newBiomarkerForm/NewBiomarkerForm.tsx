@@ -1,30 +1,16 @@
 import React from 'react'
 import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea } from 'semantic-ui-react'
-import { NameOfCGDSDataset } from '../../../../utils/interfaces'
-import { TextAreaMolecules } from './textAreaMolecules'
-/* import { checkedValidityCallback } from '../../utils/util_functions' */
-import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from '../../types'
-import { ButtonsForTypeOfInsert } from './buttonsForTypeOfInsert'
+import { TextAreaMolecules } from './TextAreaMolecules'
+import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import './newBiomarkerFormStyles.css'
-import { SelectDropDownSingleMolecule } from './selectDropdownSingleMolecule/SelectDropDownSingleMolecule'
-import './../../../../css/base.css'
+import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
+import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 
 /**
  * Component's props
  */
 interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
-    addingOrEditingCGDSStudy: boolean,
-    handleFormDatasetChanges: (datasetName: NameOfCGDSDataset, name: string, value: any) => void,
-    addSurvivalFormTuple: (datasetName: NameOfCGDSDataset) => void,
-    removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
-    handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
-    handleFormChanges: (name: string, value: any) => void,
-    handleKeyDown: (e) => void,
-    addCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    removeCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
-    canAddCGDSStudy: () => boolean,
-    addOrEditStudy: () => void,
     isFormEmpty: () => boolean,
     cleanForm: () => void,
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
@@ -45,7 +31,6 @@ interface NewBiomarkerFormProps {
  * @returns Component
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
-    /* const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges) */
     const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
     const biomarkersOptions = [
         {
@@ -85,9 +70,11 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 placeholder='Name'
                 className='biomarkers--side--bar--container--item--margin'
                 value={props.biomarkerForm.biomarkerName}
+                icon='asterisk'
             />
 
             <TextArea
+                style={{ maxWidth: '100%', minWidth: '100%' }}
                 onChange={(_, e) => props.handleChangeInputForm(e.value ? e.value.toString() : '', 'biomarkerDescription')}
                 placeholder='Description'
                 className='biomarkers--side--bar--container--item--margin'
@@ -122,14 +109,14 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             <Container className='biomarkers--side--bar--buttons--box'>
                 {haveInvalid &&
                     <div className='biomarkers--side--bar--validation--items'>
-                        <Label color='red'>
+                        <Label color='red' className='biomarkers--side--bar--validation--labels'>
                             Remove the invalid molecules (in red) from the molecule panels
                         </Label>
                     </div>
                 }
                 {haveAmbiguous &&
                     <div className='biomarkers--side--bar--validation--items'>
-                        <Label color='yellow'>
+                        <Label color='yellow' className='biomarkers--side--bar--validation--labels'>
                             There are some ambiguous molecules (in yellow). Please select the appropriate ones in the molecule panels.
                         </Label>
                     </div>
@@ -150,7 +137,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         fluid
                         onClick={handleSendForm}
                         loading={props.biomarkerForm.validation.isLoading}
-                        disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid)}
+                        disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid) || !props.biomarkerForm.biomarkerName}
                     />
                 </Container>
 

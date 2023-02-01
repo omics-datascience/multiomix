@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Dimmer, Grid, Icon, Loader, Segment } from 'semantic-ui-react'
-import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../types'
+import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import './moleculeSectionStyles.css'
-import { SearchMoleculesInput } from './searchMoleculesInput/SearchMoleculesInput'
-import './../../../../css/base.css'
+import { SearchMoleculesInput } from './SearchMoleculesInput'
 
 interface MoleculeSectionProps {
     title: BiomarkerType,

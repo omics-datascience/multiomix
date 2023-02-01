@@ -1,12 +1,13 @@
 import React, { FormEvent, useState } from 'react'
 import { Input, Icon } from 'semantic-ui-react'
 import { BiomarkerType } from '../../../types'
-import './../moleculeSectionStyles.css'
-interface SerachMoleculesProps {
+
+interface SearchMoleculesProps {
     handleSearchData: (searchData: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
-export const SearchMoleculesInput = ({ handleSearchData, handleRemoveInvalidGenes }: SerachMoleculesProps) => {
+
+export const SearchMoleculesInput = ({ handleSearchData, handleRemoveInvalidGenes }: SearchMoleculesProps) => {
     const [inputData, setInputData] = useState('')
     const handleSubmitSearch = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
