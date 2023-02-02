@@ -3,7 +3,6 @@ on: [pull_request]
 jobs:
   Python-tests:
     runs-on: ubuntu-latest
-    container: python:3.8-bullseye
     strategy:
       max-parallel: 4
       matrix:
@@ -16,8 +15,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 6379:6379
       postgres:
-        # Docker Hub image
         image: postgres:13
         env:
           POSTGRES_PASSWORD: multiomics
@@ -28,7 +28,9 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5          
+          --health-retries 5  
+        ports:
+          - 5432:5432         
       mongo:
         image: "mongo:4.2"
         env:
@@ -40,6 +42,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 27017:27017
     env:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
