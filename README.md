@@ -38,7 +38,7 @@ This document is focused on the **development** of the system. If you are lookin
     1. `python3 manage.py createsuperuser`
     1. Now you can access to `\<URL:port\>/admin` panel
 
-
+1
 ## Development
 
 Every time you want to work with Multiomix, you need to follow the below steps:
