@@ -41,15 +41,15 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      REDIS_HOST: redis
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
-      MONGO_HOST: mongo
+      MONGO_HOST: localhost
       MONGO_DB: multiomics
       MONGO_USERNAME: multiomics
       MONGO_PASSWORD: multiomics
       POSTGRES_USERNAME: multiomics
       POSTGRES_PASSWORD: multiomics
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: localhost
       POSTGRES_DB: multiomics
 
     steps:
