@@ -3,7 +3,6 @@ on: [pull_request]
 jobs:
   Python-tests:
     runs-on: ubuntu-latest
-    container: python:3.8-bullseye
     strategy:
       max-parallel: 4
       matrix:
@@ -17,7 +16,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       postgres:
-        # Docker Hub image
         image: postgres:13
         env:
           POSTGRES_PASSWORD: multiomics
