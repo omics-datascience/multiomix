@@ -20,6 +20,10 @@ declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
 declare const urlGeneSymbolsFinder: string
 declare const urlGenesSymbols: string
+declare const urlMiRNAsFinder: string
+declare const urlMiRNAsSymbols: string
+declare const urlMethylationsFinder: string
+declare const urlMethylationsSymbols: string
 
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {

@@ -67,3 +67,54 @@ class GenesSymbols(APIView):
             method='post'
         )
         return generate_json_response_or_404(data)
+
+
+class MiRNAsFinder(APIView):
+    """Generates a query to search miRNAs through Modulector"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request):
+        data = global_mrna_service.get_modulector_service_content('mirnas-finder', request.GET, is_paginated=False)
+        return generate_json_response_or_404(data)
+
+
+class MiRNAsSymbols(APIView):
+    """Get the aliases for a list of miRNAs"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def post(request):
+        data = global_mrna_service.get_modulector_service_content(
+            'mirnas-symbols',
+            request_params=request.data,
+            is_paginated=False,
+            method='post'
+        )
+        return generate_json_response_or_404(data)
+
+
+class MethylationsFinder(APIView):
+    """Generates a query to search Methylations through Modulector"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request):
+        data = global_mrna_service.get_modulector_service_content('methylations-finder', request.GET,
+                                                                  is_paginated=False)
+        return generate_json_response_or_404(data)
+
+
+class MethylationsSymbols(APIView):
+    """Get the aliases for a list of miRNAs"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def post(request):
+        data = global_mrna_service.get_modulector_service_content(
+            'methylations-symbols',
+            request_params=request.data,
+            is_paginated=False,
+            method='post'
+        )
+        return generate_json_response_or_404(data)
