@@ -168,10 +168,21 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         // loading aca
         const formBiomarkerPreLoad = this.state.formBiomarker
         formBiomarkerPreLoad.moleculesSymbolsFinder.isLoading = true
+        let urlToFind = urlGeneSymbolsFinder
+        switch (this.state.formBiomarker.moleculeSelected) {
+            case BiomarkerType.MIRNA:
+                urlToFind = urlMiRNAsFinder
+                break
+            case BiomarkerType.METHYLATION:
+                urlToFind = urlMethylationsFinder
+                break
+            default:
+                break
+        }
         this.setState({
             formBiomarker: formBiomarkerPreLoad
         })
-        ky.get(urlGeneSymbolsFinder, { searchParams: { query, limit: 5 } }).then((response) => {
+        ky.get(urlToFind, { searchParams: { query, limit: 5 } }).then((response) => {
             response.json().then((jsonResponse: string[]) => {
                 const formBiomarker = this.state.formBiomarker
                 formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(gen => ({
@@ -232,8 +243,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 moleculesSection: moleculesSectionPreload
             }
         })
-
-        ky.post(urlGenesSymbols, settings).then((response) => {
+        let urlToFind = urlGenesSymbols
+        switch (this.state.formBiomarker.moleculeSelected) {
+            case BiomarkerType.MIRNA:
+                urlToFind = urlMiRNAsSymbols
+                break
+            case BiomarkerType.METHYLATION:
+                urlToFind = urlMethylationsSymbols
+                break
+            default:
+                break
+        }
+        ky.post(urlToFind, settings).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
                 const genesArray: MoleculesSectionData[] = []
@@ -449,11 +470,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param value Value to set to the state moleculeSelected in formBiomarkerState
      */
     handleChangeMoleculeSelected = (value: BiomarkerType) => {
+        const formBiomarker = this.state.formBiomarker
+        formBiomarker.moleculeSelected = value
+        formBiomarker.moleculesSymbolsFinder.data = []
         this.setState({
-            formBiomarker: {
-                ...this.state.formBiomarker,
-                moleculeSelected: value
-            }
+            formBiomarker
         })
     }
 
