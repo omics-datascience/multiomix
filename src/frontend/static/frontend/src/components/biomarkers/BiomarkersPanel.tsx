@@ -420,8 +420,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const biomarkerToSend: SaveBiomarkerStructure = {
             name: formBiomarker.biomarkerName,
             description: formBiomarker.biomarkerDescription,
-            mrnas: formBiomarker.moleculesSection.MRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            mirnas: formBiomarker.moleculesSection.MIRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
+            mrnas: formBiomarker.moleculesSection.mRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
+            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
 
         const settings = {
