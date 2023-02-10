@@ -12,6 +12,14 @@ import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
 
+/** Structure returned from the chunk upload service. */
+type UploadResponse = {
+    /** If the upload was successful. */
+    ok: boolean,
+    /** Error message to show (only set in case ok === false). */
+    errorMsg?: string
+}
+
 const FILE_INPUT_LABEL = 'Add a new file'
 
 // URLs defined in files.html
@@ -421,10 +429,16 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * On success callback during file upload
      * @param responseJSON JSON response with uploaded UserFile data
      */
-    uploadSuccess = (responseJSON: DjangoUserFile) => {
-        if (responseJSON && responseJSON.id) {
+    uploadSuccess = (responseJSON: UploadResponse) => {
+        if (responseJSON.ok) {
             // If everything gone OK, resets the New File Form...
             this.setState({ newFile: this.getDefaultNewFile() })
+        } else {
+            if (responseJSON.errorMsg) {
+                alert(responseJSON.errorMsg)
+            } else {
+                alertGeneralError()
+            }
         }
     }
 

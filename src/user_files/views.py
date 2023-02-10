@@ -2,14 +2,15 @@ from typing import Optional
 from channels.http import AsgiRequest
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q, Count, QuerySet
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
+from rest_framework.exceptions import ValidationError
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
@@ -25,23 +26,33 @@ class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
     """API to complete the upload"""
     model = ChunkedUpload
     do_md5_check = True
+    raised_exception: Optional[ValidationError] = None  # To use in the get_response_data
 
     def on_completion(self, uploaded_file: UploadedFile, request: AsgiRequest):
         """Callback when the upload is complete"""
         data = request.POST.dict()
         data['file_obj'] = uploaded_file  # Assigns the uploaded file to the new object
         serializer = UserFileSerializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)  # is_valid() must be called
-        serializer.save()
+        try:
+            serializer.is_valid(raise_exception=True)  # is_valid() must be called
+            serializer.save()
+        except ValidationError as ex:
+            self.raised_exception = ex
 
     def get_response_data(self, chunked_upload: ChunkedUpload, request: AsgiRequest):
         """Final response, returns the created UserFile object"""
-        uploaded_file_obj = UserFile.objects.filter(user=chunked_upload.user).last()
-        serializer = UserFileSerializer()
-        return serializer.to_representation(uploaded_file_obj)
+        if self.raised_exception is None:
+            return { 'ok': True }
+
+        error_msg = self.raised_exception.detail['file_obj']['status']['message']
+        return {
+            'ok': False,
+            'file': None,
+            'errorMsg': error_msg
+        }
 
 
-def get_an_user_file(user: User, user_file_pk: int) -> UserFile:
+def get_an_user_file(user: AbstractBaseUser, user_file_pk: int) -> UserFile:
     """
     Returns the specific User's file object from DB
     @param user: User to retrieve his Dataset
@@ -58,7 +69,7 @@ def get_an_user_file(user: User, user_file_pk: int) -> UserFile:
     return get_object_or_404(queryset, pk=user_file_pk)
 
 
-def get_own_or_as_admin_user_files(user: User):
+def get_own_or_as_admin_user_files(user: AbstractBaseUser):
     """
     Returns only the User's Files which were uploaded by himself or belongs to an Institution which his is the admin of
     @param user: User to retrieve his Datasets
@@ -70,7 +81,7 @@ def get_own_or_as_admin_user_files(user: User):
     )).distinct()
 
 
-def get_user_files(user: User, public_only: bool, private_only: bool, with_survival_only: bool) -> QuerySet:
+def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool, with_survival_only: bool) -> QuerySet:
     """
     Returns the User's files objects from DB
     @param user: User to retrieve his Datasets
@@ -106,9 +117,10 @@ class UserFileList(generics.ListAPIView):
     """REST endpoint: list for UserFile model. """
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
-        public_only = 'public' in self.request.query_params
-        private_only = not public_only and 'private' in self.request.query_params
-        with_survival_only = 'with_survival_only' in self.request.query_params
+        public_only = 'public' in self.request.GET
+        private_only = not public_only and 'private' in self.request.GET \
+                       or self.request.GET.get('visibility') == 'private'  # This adds support for paginated table in UserFiles panel
+        with_survival_only = 'with_survival_only' in self.request.GET
         return get_user_files(self.request.user, public_only, private_only, with_survival_only)
 
     serializer_class = UserFileWithoutFileObjSerializer
