@@ -27,7 +27,7 @@ interface Biomarker {
     description: string,
     tag: Nullable<DjangoTag>,
     upload_date?: string,
-    number_of_genes: number,
+    number_of_mrnas: number,
     number_of_mirnas: number,
     number_of_cnas: number,
     number_of_methylations: number,

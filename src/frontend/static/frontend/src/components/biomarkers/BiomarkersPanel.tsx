@@ -325,7 +325,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             biomarkerName: '',
             biomarkerDescription: '',
             tag: '',
-            moleculeSelected: BiomarkerType.MIRNA,
+            moleculeSelected: BiomarkerType.MRNA,
             molecule: 0,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
             validation: {
@@ -561,7 +561,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: '',
             description: '',
             tag: null,
-            number_of_genes: 0,
+            number_of_mrnas: 0,
             number_of_mirnas: 0,
             number_of_cnas: 0,
             number_of_methylations: 0,
@@ -837,7 +837,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             { name: 'Description', serverCodeToSort: 'description', width: 4 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
             { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: '# mRNAS', serverCodeToSort: 'number_of_genes', width: 1 },
+            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
             { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
             { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
             { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
@@ -922,7 +922,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             <TableCellWithTitle value={biomarker.description} />
                             <Table.Cell><TagLabel tag={biomarker.tag} /> </Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
-                            <Table.Cell>{biomarker.number_of_genes}</Table.Cell>
+                            <Table.Cell>{biomarker.number_of_mrnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_mirnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_cnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_methylations}</Table.Cell>

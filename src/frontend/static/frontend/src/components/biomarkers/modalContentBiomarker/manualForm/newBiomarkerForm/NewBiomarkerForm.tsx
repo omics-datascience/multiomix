@@ -87,7 +87,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 name='moleculeSelected'
                 options={biomarkersOptions}
                 value={props.biomarkerForm.moleculeSelected}
-                onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MIRNA)}
+                onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MRNA)}
             />
 
             <ButtonsForTypeOfInsert
