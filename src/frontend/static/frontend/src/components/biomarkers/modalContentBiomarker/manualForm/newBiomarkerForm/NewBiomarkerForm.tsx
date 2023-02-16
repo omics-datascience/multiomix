@@ -57,7 +57,6 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     const handleSendForm = () => {
         return props.handleSendForm()
     }
-    console.log(props.biomarkerForm.id)
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
             <Header textAlign="center">
