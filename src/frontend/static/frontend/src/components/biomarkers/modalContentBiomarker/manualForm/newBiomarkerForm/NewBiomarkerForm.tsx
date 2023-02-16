@@ -57,6 +57,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     const handleSendForm = () => {
         return props.handleSendForm()
     }
+    console.log(props.biomarkerForm.id)
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
             <Header textAlign="center">
@@ -133,7 +134,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 <Container className='biomarkers--side--bar--box'>
                     <Button
                         color='green'
-                        content='Send Form'
+                        content={props.biomarkerForm.id ? 'Save changes' : 'Send Form'}
                         fluid
                         onClick={handleSendForm}
                         loading={props.biomarkerForm.validation.isLoading}

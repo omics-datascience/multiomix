@@ -159,6 +159,56 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }
         )
     }
+    /**
+     * Method that select how the user is going to create a Biomarker
+     * @param biomarker Biomarker selected to update
+     */
+
+    handleOpenEditBiomarker= (biomarker:Biomarker) => {
+        console.log(biomarker)
+        this.setState(
+            {
+                biomarkerTypeSelected: BiomarkerTypeSelected.MANUAL,
+                isOpenModal: true,
+                formBiomarker: {
+                    id: biomarker.id,
+                    biomarkerName: biomarker.name,
+                    biomarkerDescription: biomarker.description,
+                    tag: biomarker.tag,
+                    moleculeSelected: BiomarkerType.MIRNA,
+                    moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
+                    moleculesSection: {
+                        [BiomarkerType.CNA]: {
+                            isLoading: false,
+                            data: []
+                        },
+                        [BiomarkerType.MIRNA]: {
+                            isLoading: false,
+                            data: biomarker.mirnas.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.METHYLATION]: {
+                            isLoading: false,
+                            data: biomarker.methylations.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.MRNA]: {
+                            isLoading: false,
+                            data: []
+                        }
+                    },
+                    validation: {
+                        haveAmbiguous: false,
+                        haveInvalid: false,
+                        isLoading: false,
+                        checkBox: false
+                    },
+                    moleculesSymbolsFinder: {
+                        isLoading: false,
+                        data: []
+                    }
+                }
+            }
+        )
+    }
 
     /**
      * Method that get symbols while user is writing in Select molecules input
@@ -281,7 +331,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             }
                             break
                         default:
-                            console.log(gene[1], this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray))
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(
                                 item => _.isEqual(item.value, gene[1])
                             )
@@ -322,11 +371,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultFormBiomarker (): FormBiomarkerData {
         return {
+            id: null,
             biomarkerName: '',
             biomarkerDescription: '',
-            tag: '',
+            tag: null,
             moleculeSelected: BiomarkerType.MIRNA,
-            molecule: 0,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
             validation: {
                 haveAmbiguous: false,
@@ -423,24 +472,37 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             mrnas: formBiomarker.moleculesSection.MRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
             mirnas: formBiomarker.moleculesSection.MIRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
-
         const settings = {
             headers: getDjangoHeader(),
             json: biomarkerToSend
         }
-
-        ky.post(urlBiomarkersCRUD, settings).then((response) => {
-            response.json().then((jsonResponse: Biomarker) => {
-                console.log(jsonResponse)
+        if (!formBiomarker.id) {
+            ky.post(urlBiomarkersCRUD, settings).then((response) => {
+                response.json().then((jsonResponse: Biomarker) => {
+                    console.log(jsonResponse)
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.log('Error getting genes ->', err)
+            }).finally(() => {
+                formBiomarker.validation.isLoading = false
+                this.setState({ formBiomarker })
             })
-        }).catch((err) => {
-            console.log('Error getting genes ->', err)
-        }).finally(() => {
-            formBiomarker.validation.isLoading = false
-            this.setState({ formBiomarker })
-        })
+        } else {
+            ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
+                response.json().then((jsonResponse: Biomarker) => {
+                    console.log(jsonResponse)
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                console.log('Error getting genes ->', err)
+            }).finally(() => {
+                formBiomarker.validation.isLoading = false
+                this.setState({ formBiomarker })
+            })
+        }
     }
 
     /**
@@ -566,7 +628,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_cnas: 0,
             number_of_methylations: 0,
             contains_nan_values: false,
-            column_used_as_index: ''
+            column_used_as_index: '',
+            methylations: [],
+            mirnas: []
         }
     }
 
@@ -937,6 +1001,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         color='red'
                                         title='Delete biomarker'
                                         onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                    />
+                                    <Icon
+                                        name='pencil'
+                                        className='clickable margin-left-5'
+                                        color='yellow'
+                                        title='Edit biomarker'
+                                        onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                     />
                                 </React.Fragment>
                             </Table.Cell>
