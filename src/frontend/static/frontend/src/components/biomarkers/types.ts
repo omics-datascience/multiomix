@@ -3,10 +3,10 @@ import { Nullable } from '../../utils/interfaces'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
-    MRNA = 'MRNA',
-    MIRNA = 'MIRNA',
+    MRNA = 'mRNA',
+    MIRNA = 'miRNA',
     CNA = 'CNA',
-    METHYLATION = 'METHYLATION',
+    METHYLATION = 'Methylation',
 }
 enum BiomarkerTypeSelected {
     BASE,
