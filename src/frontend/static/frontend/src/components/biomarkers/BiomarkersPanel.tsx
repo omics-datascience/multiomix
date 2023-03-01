@@ -182,7 +182,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param type Select the way to create a Biomarker
      */
 
-    handleSelectModal= (type:BiomarkerTypeSelected) => {
+    handleSelectModal = (type: BiomarkerTypeSelected) => {
         this.setState(
             {
                 biomarkerTypeSelected: type
@@ -194,7 +194,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param biomarker Biomarker selected to update
      */
 
-    handleOpenEditBiomarker= (biomarker:Biomarker) => {
+    handleOpenEditBiomarker = (biomarker: Biomarker) => {
         this.setState(
             {
                 biomarkerTypeSelected: BiomarkerTypeSelected.MANUAL,
@@ -322,6 +322,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 moleculesSection: moleculesSectionPreload
             }
         })
+
         let urlToFind = urlGenesSymbols
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
@@ -333,6 +334,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
+
         ky.post(urlToFind, settings).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
@@ -391,6 +393,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         }).catch((err) => {
             console.error('Error getting genes ->', err)
+        }).finally(() => {
+            // Sets loading in false
+            const formBiomarker = this.state.formBiomarker
+            formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
+            this.setState({ formBiomarker })
         })
     }
 
@@ -1088,7 +1095,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     open={this.state.isOpenModal}>
                     {
                         this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE &&
-                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal}/>
+                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
                     }
                     {
                         this.state.biomarkerTypeSelected === BiomarkerTypeSelected.MANUAL &&
@@ -1126,7 +1133,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     content={this.state.confirmModal.contentText}
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm() } />
+                    onConfirm={() => this.state.confirmModal.onConfirm()} />
 
                 <Alert
                     onClose={this.handleCloseAlert}
