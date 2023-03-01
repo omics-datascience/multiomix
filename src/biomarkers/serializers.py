@@ -1,13 +1,13 @@
 from rest_framework import serializers
-from .models import Biomarker, GeneIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier
+from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier
 from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
 
-class GeneIdentifierSerializer(serializers.ModelSerializer):
-    """GeneIdentifier serializer"""
+class MRNAIdentifierSerializer(serializers.ModelSerializer):
+    """MRNAIdentifier serializer"""
 
     class Meta:
-        model = GeneIdentifier
+        model = MRNAIdentifier
         exclude = ['biomarker']
 
 class MiRNAIdentifierSerializer(serializers.ModelSerializer):
@@ -34,12 +34,12 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
 
 class BiomarkerSerializer(WritableNestedModelSerializer):
     """Biomarker model serializer"""
-    number_of_genes = serializers.SerializerMethodField(method_name='get_number_of_genes')
+    number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
     number_of_mirnas = serializers.SerializerMethodField(method_name='get_number_of_mirnas')
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
     number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
 
-    genes = GeneIdentifierSerializer(many=True, required=False)
+    mrnas = MRNAIdentifierSerializer(many=True, required=False)
     mirnas = MiRNAIdentifierSerializer(many=True, required=False)
     cnas = CNAIdentifierSerializer(many=True, required=False)
     methylations = MethylationIdentifierSerializer(many=True, required=False)
@@ -51,9 +51,9 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
         exclude = ['user']
 
     @staticmethod
-    def get_number_of_genes(ins: Biomarker) -> int:
+    def get_number_of_mrnas(ins: Biomarker) -> int:
         """Gets the number of genes in this Biomarker"""
-        return ins.genes.count()
+        return ins.mrnas.count()
 
     @staticmethod
     def get_number_of_mirnas(ins: Biomarker) -> int:

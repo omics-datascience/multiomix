@@ -4,7 +4,7 @@ import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } 
 import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
-import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
+import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -15,6 +15,7 @@ import _ from 'lodash'
 import './../../css/biomarkers.css'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
+import { Alert } from '../common/Alert'
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
@@ -56,7 +57,8 @@ interface BiomarkersPanelState {
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
     tags: DjangoTag[],
-    isOpenModal: boolean
+    isOpenModal: boolean,
+    alert: CustomAlert
 }
 
 /**
@@ -80,7 +82,21 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarker: this.getDefaultFormBiomarker(),
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
-            isOpenModal: false
+            isOpenModal: false,
+            alert: this.getDefaultAlertProps()
+        }
+    }
+
+    /**
+     * Generates a default alert structure
+     * @returns Default the default Alert
+     */
+    getDefaultAlertProps = (): CustomAlert => {
+        return {
+            message: 'Example text, this have to change during cycle of component',
+            isOpen: false,
+            type: CustomAlertTypes.success,
+            duration: 400
         }
     }
 
@@ -97,6 +113,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
     }
 
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCloseAlert = () => {
+        const alert = this.state.alert
+        alert.isOpen = false
+        this.setState({
+            alert: alert
+        })
+    }
+
+    /**
+     * Reset the confirm modal, to be used again
+     */
     handleCancelConfirmModalState () {
         this.setState({
             confirmModal: this.getDefaultConfirmModal()
@@ -165,7 +195,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
 
     handleOpenEditBiomarker= (biomarker:Biomarker) => {
-        console.log(biomarker)
         this.setState(
             {
                 biomarkerTypeSelected: BiomarkerTypeSelected.MANUAL,
@@ -180,7 +209,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     moleculesSection: {
                         [BiomarkerType.CNA]: {
                             isLoading: false,
-                            data: []
+                            data: biomarker.cnas.map(item => ({ isValid: true, value: item.identifier }))
                         },
                         [BiomarkerType.MIRNA]: {
                             isLoading: false,
@@ -192,7 +221,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         },
                         [BiomarkerType.MRNA]: {
                             isLoading: false,
-                            data: []
+                            data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
                         }
                     },
                     validation: {
@@ -470,37 +499,69 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: formBiomarker.biomarkerName,
             description: formBiomarker.biomarkerDescription,
             mrnas: formBiomarker.moleculesSection.mRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
+            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
+            methylations: formBiomarker.moleculesSection.Methylation.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
+            cnas: formBiomarker.moleculesSection.CNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
         const settings = {
             headers: getDjangoHeader(),
             json: biomarkerToSend
         }
+        formBiomarker.validation.isLoading = false
+        this.setState({ formBiomarker })
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCRUD, settings).then((response) => {
                 response.json().then((jsonResponse: Biomarker) => {
                     console.log(jsonResponse)
+                    const alert = this.state.alert
+                    alert.isOpen = true
+                    alert.type = CustomAlertTypes.success
+                    alert.message = 'Biomarker created sucessfully!'
+                    this.setState({
+                        alert,
+                        formBiomarker: this.getDefaultFormBiomarker(),
+                        isOpenModal: false,
+                        confirmModal: this.getDefaultConfirmModal(),
+                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                    })
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 console.log('Error getting genes ->', err)
-            }).finally(() => {
+                const alert = this.state.alert
+                alert.isOpen = true
+                alert.type = CustomAlertTypes.error
+                alert.message = 'Error creating biomarker!'
                 formBiomarker.validation.isLoading = false
-                this.setState({ formBiomarker })
+                this.setState({ alert, formBiomarker })
             })
         } else {
             ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
                 response.json().then((jsonResponse: Biomarker) => {
                     console.log(jsonResponse)
+                    const alert = this.state.alert
+                    alert.isOpen = true
+                    alert.type = CustomAlertTypes.success
+                    alert.message = 'Biomarker edited sucessfully!'
+                    this.setState({
+                        alert,
+                        formBiomarker: this.getDefaultFormBiomarker(),
+                        isOpenModal: false,
+                        confirmModal: this.getDefaultConfirmModal(),
+                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                    })
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 console.log('Error getting genes ->', err)
-            }).finally(() => {
+                const alert = this.state.alert
+                alert.isOpen = true
+                alert.type = CustomAlertTypes.error
+                alert.message = 'Error editing biomarker!'
                 formBiomarker.validation.isLoading = false
-                this.setState({ formBiomarker })
+                this.setState({ alert, formBiomarker })
             })
         }
     }
@@ -623,14 +684,16 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: '',
             description: '',
             tag: null,
-            number_of_genes: 0,
+            number_of_mrnas: 0,
             number_of_mirnas: 0,
             number_of_cnas: 0,
             number_of_methylations: 0,
             contains_nan_values: false,
             column_used_as_index: '',
             methylations: [],
-            mirnas: []
+            mirnas: [],
+            cnas: [],
+            mrnas: []
         }
     }
 
@@ -901,7 +964,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             { name: 'Description', serverCodeToSort: 'description', width: 4 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
             { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: '# mRNAS', serverCodeToSort: 'number_of_genes', width: 1 },
+            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
             { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
             { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
             { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
@@ -986,7 +1049,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             <TableCellWithTitle value={biomarker.description} />
                             <Table.Cell><TagLabel tag={biomarker.tag} /> </Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
-                            <Table.Cell>{biomarker.number_of_genes}</Table.Cell>
+                            <Table.Cell>{biomarker.number_of_mrnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_mirnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_cnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_methylations}</Table.Cell>
@@ -996,18 +1059,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                                     {/* Shows a delete button if specified */}
                                     <Icon
-                                        name='trash'
-                                        className='clickable margin-left-5'
-                                        color='red'
-                                        title='Delete biomarker'
-                                        onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                    />
-                                    <Icon
                                         name='pencil'
                                         className='clickable margin-left-5'
                                         color='yellow'
                                         title='Edit biomarker'
                                         onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                    />
+                                    <Icon
+                                        name='trash'
+                                        className='clickable margin-left-5'
+                                        color='red'
+                                        title='Delete biomarker'
+                                        onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                     />
                                 </React.Fragment>
                             </Table.Cell>
@@ -1064,6 +1127,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => this.state.confirmModal.onConfirm() } />
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
             </Base>
         )
     }

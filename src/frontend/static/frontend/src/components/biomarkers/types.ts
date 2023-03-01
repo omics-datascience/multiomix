@@ -27,14 +27,16 @@ interface Biomarker {
     description: string,
     tag: Nullable<DjangoTag>,
     upload_date?: string,
-    number_of_genes: number,
+    number_of_mrnas: number,
     number_of_mirnas: number,
     number_of_cnas: number,
     number_of_methylations: number,
     contains_nan_values: boolean,
     column_used_as_index: string,
     mirnas: SaveMoleculeStructure[],
-    methylations: SaveMoleculeStructure[]
+    methylations: SaveMoleculeStructure[],
+    cnas: SaveMoleculeStructure[],
+    mrnas: SaveMoleculeStructure[]
 }
 
 interface ConfirmModal {
@@ -95,6 +97,8 @@ interface SaveBiomarkerStructure {
     description: string,
     mrnas: SaveMoleculeStructure[],
     mirnas: SaveMoleculeStructure[],
+    methylations: SaveMoleculeStructure[],
+    cnas: SaveMoleculeStructure[],
 }
 
 type MoleculesSection = {

@@ -37,9 +37,9 @@ class MoleculeIdentifier(models.Model):
         abstract = True
 
 
-class GeneIdentifier(MoleculeIdentifier):
+class MRNAIdentifier(MoleculeIdentifier):
     """Genes in a Biomarker"""
-    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='genes')
+    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='mrnas')
 
 class MiRNAIdentifier(MoleculeIdentifier):
     """miRNAs in a Biomarker"""
