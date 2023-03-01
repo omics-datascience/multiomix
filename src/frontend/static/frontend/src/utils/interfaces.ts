@@ -270,10 +270,10 @@ type DataUICategoricalBinnedDatumShape = {
 /**
  * Types of alerts
  */
-enum CustomAlertTypes{
-    warning,
-    error,
-    success
+enum CustomAlertTypes {
+    WARNING = 1,
+    ERROR = 2,
+    SUCCESS = 3
 }
 
 /**

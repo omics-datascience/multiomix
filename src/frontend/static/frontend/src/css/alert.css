@@ -1,23 +1,30 @@
+.alert--icon {
+    align-items: center;
+    display: flex !important;
+}
+
+.alert--message {
+    word-break: break-word;
+}
+
 .alert--container--transition {
-    z-index: 1000;
-    position: fixed;
+    left: 40%;
     max-height: 0;
     padding: 1rem;
-    left: 80%;
-    top: 10%;
+    position: fixed;
+    top: 5%;
     width: 100%;
+    z-index: 1000;
 }
 
 .alert--container--alert {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    text-align: center;
     align-items: center;
     background-color: #ffffff;
     border-radius: 8px;
-    max-width: 250px;
-    word-break: break-all;
-    padding: 0.5rem;
     box-shadow: 0 0 20px 10px rgb(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    max-width: 250px;
+    padding: 0.5rem;
+    text-align: center;
 }

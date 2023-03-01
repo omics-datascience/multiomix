@@ -93,10 +93,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultAlertProps = (): CustomAlert => {
         return {
-            message: 'Example text, this have to change during cycle of component',
+            message: '', // This have to change during cycle of component
             isOpen: false,
-            type: CustomAlertTypes.success,
-            duration: 400
+            type: CustomAlertTypes.SUCCESS,
+            duration: 500
         }
     }
 
@@ -515,7 +515,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     console.log(jsonResponse)
                     const alert = this.state.alert
                     alert.isOpen = true
-                    alert.type = CustomAlertTypes.success
+                    alert.type = CustomAlertTypes.SUCCESS
                     alert.message = 'Biomarker created sucessfully!'
                     this.setState({
                         alert,
@@ -531,7 +531,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 console.log('Error getting genes ->', err)
                 const alert = this.state.alert
                 alert.isOpen = true
-                alert.type = CustomAlertTypes.error
+                alert.type = CustomAlertTypes.ERROR
                 alert.message = 'Error creating biomarker!'
                 formBiomarker.validation.isLoading = false
                 this.setState({ alert, formBiomarker })
@@ -542,7 +542,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     console.log(jsonResponse)
                     const alert = this.state.alert
                     alert.isOpen = true
-                    alert.type = CustomAlertTypes.success
+                    alert.type = CustomAlertTypes.SUCCESS
                     alert.message = 'Biomarker edited sucessfully!'
                     this.setState({
                         alert,
@@ -558,7 +558,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 console.log('Error getting genes ->', err)
                 const alert = this.state.alert
                 alert.isOpen = true
-                alert.type = CustomAlertTypes.error
+                alert.type = CustomAlertTypes.ERROR
                 alert.message = 'Error editing biomarker!'
                 formBiomarker.validation.isLoading = false
                 this.setState({ alert, formBiomarker })
@@ -1127,6 +1127,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => this.state.confirmModal.onConfirm() } />
+
                 <Alert
                     onClose={this.handleCloseAlert}
                     isOpen={this.state.alert.isOpen}
