@@ -17,12 +17,15 @@ export const ButtonsForTypeOfInsert = ({ handleChangeMoleculeInputSelected, mole
                 <Button
                     onClick={() => handleChangeMoleculeInputSelected(MoleculesTypeOfSelection.INPUT)}
                     active={moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT}
-                >Select<br />molecules
+                >
+                    Select<br />molecules
                 </Button>
+
                 <Button
                     onClick={() => handleChangeMoleculeInputSelected(MoleculesTypeOfSelection.AREA)}
                     active={moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA}
-                >Insert<br />Molecules
+                >
+                    Insert<br />Molecules
                 </Button>
             </Button.Group>
         </Container>

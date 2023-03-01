@@ -112,7 +112,7 @@ class MethylationsSymbols(APIView):
     @staticmethod
     def post(request):
         data = global_mrna_service.get_modulector_service_content(
-            'methylations-symbols',
+            'methylation-sites',
             request_params=request.data,
             is_paginated=False,
             method='post'

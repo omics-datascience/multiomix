@@ -54,6 +54,10 @@ class MRNAService(object):
                     url += f'/?{params}'
                 data = requests.get(url)
             else:
+                # Prevents issues with Django APPEND_SLASH option
+                if not url.endswith('/'):
+                    url += '/'
+
                 data = requests.post(url, json=request_params)
 
             if data.status_code != 200:
@@ -81,7 +85,7 @@ class MRNAService(object):
             method: Literal['get', 'post'] = 'get'
     ) -> Optional[Dict]:
         """
-        Makes a request to a Modulector service
+        Makes a request to a Modulector service.
         @param service_name: Modulector service to consume
         @param request_params: GET/POST params with query params to send to DRF backend
         @param is_paginated: True if the expected response is paginated to generate a default response in case of error
