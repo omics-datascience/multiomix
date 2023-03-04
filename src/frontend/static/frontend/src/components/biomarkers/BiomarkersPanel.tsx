@@ -4,7 +4,7 @@ import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } 
 import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
-import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable } from '../../utils/interfaces'
+import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -15,6 +15,7 @@ import _ from 'lodash'
 import './../../css/biomarkers.css'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
+import { Alert } from '../common/Alert'
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
@@ -56,7 +57,8 @@ interface BiomarkersPanelState {
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
     tags: DjangoTag[],
-    isOpenModal: boolean
+    isOpenModal: boolean,
+    alert: CustomAlert
 }
 
 /**
@@ -80,7 +82,21 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarker: this.getDefaultFormBiomarker(),
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
-            isOpenModal: false
+            isOpenModal: false,
+            alert: this.getDefaultAlertProps()
+        }
+    }
+
+    /**
+     * Generates a default alert structure
+     * @returns Default the default Alert
+     */
+    getDefaultAlertProps = (): CustomAlert => {
+        return {
+            message: '', // This have to change during cycle of component
+            isOpen: false,
+            type: CustomAlertTypes.SUCCESS,
+            duration: 500
         }
     }
 
@@ -97,6 +113,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
     }
 
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCloseAlert = () => {
+        const alert = this.state.alert
+        alert.isOpen = false
+        this.setState({
+            alert: alert
+        })
+    }
+
+    /**
+     * Reset the confirm modal, to be used again
+     */
     handleCancelConfirmModalState () {
         this.setState({
             confirmModal: this.getDefaultConfirmModal()
@@ -152,10 +182,59 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param type Select the way to create a Biomarker
      */
 
-    handleSelectModal= (type:BiomarkerTypeSelected) => {
+    handleSelectModal = (type: BiomarkerTypeSelected) => {
         this.setState(
             {
                 biomarkerTypeSelected: type
+            }
+        )
+    }
+    /**
+     * Method that select how the user is going to create a Biomarker
+     * @param biomarker Biomarker selected to update
+     */
+
+    handleOpenEditBiomarker = (biomarker: Biomarker) => {
+        this.setState(
+            {
+                biomarkerTypeSelected: BiomarkerTypeSelected.MANUAL,
+                isOpenModal: true,
+                formBiomarker: {
+                    id: biomarker.id,
+                    biomarkerName: biomarker.name,
+                    biomarkerDescription: biomarker.description,
+                    tag: biomarker.tag,
+                    moleculeSelected: BiomarkerType.MIRNA,
+                    moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
+                    moleculesSection: {
+                        [BiomarkerType.CNA]: {
+                            isLoading: false,
+                            data: biomarker.cnas.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.MIRNA]: {
+                            isLoading: false,
+                            data: biomarker.mirnas.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.METHYLATION]: {
+                            isLoading: false,
+                            data: biomarker.methylations.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.MRNA]: {
+                            isLoading: false,
+                            data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
+                        }
+                    },
+                    validation: {
+                        haveAmbiguous: false,
+                        haveInvalid: false,
+                        isLoading: false,
+                        checkBox: false
+                    },
+                    moleculesSymbolsFinder: {
+                        isLoading: false,
+                        data: []
+                    }
+                }
             }
         )
     }
@@ -243,6 +322,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 moleculesSection: moleculesSectionPreload
             }
         })
+
         let urlToFind = urlGenesSymbols
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
@@ -254,6 +334,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
+
         ky.post(urlToFind, settings).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
@@ -281,7 +362,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             }
                             break
                         default:
-                            console.log(gene[1], this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray))
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(
                                 item => _.isEqual(item.value, gene[1])
                             )
@@ -313,6 +393,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         }).catch((err) => {
             console.error('Error getting genes ->', err)
+        }).finally(() => {
+            // Sets loading in false
+            const formBiomarker = this.state.formBiomarker
+            formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
+            this.setState({ formBiomarker })
         })
     }
 
@@ -322,11 +407,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultFormBiomarker (): FormBiomarkerData {
         return {
+            id: null,
             biomarkerName: '',
             biomarkerDescription: '',
-            tag: '',
-            moleculeSelected: BiomarkerType.MRNA,
-            molecule: 0,
+            tag: null,
+            moleculeSelected: BiomarkerType.MIRNA,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
             validation: {
                 haveAmbiguous: false,
@@ -421,26 +506,71 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             name: formBiomarker.biomarkerName,
             description: formBiomarker.biomarkerDescription,
             mrnas: formBiomarker.moleculesSection.mRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
+            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
+            methylations: formBiomarker.moleculesSection.Methylation.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
+            cnas: formBiomarker.moleculesSection.CNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
-
         const settings = {
             headers: getDjangoHeader(),
             json: biomarkerToSend
         }
-
-        ky.post(urlBiomarkersCRUD, settings).then((response) => {
-            response.json().then((jsonResponse: Biomarker) => {
-                console.log(jsonResponse)
+        formBiomarker.validation.isLoading = false
+        this.setState({ formBiomarker })
+        if (!formBiomarker.id) {
+            ky.post(urlBiomarkersCRUD, settings).then((response) => {
+                response.json().then((jsonResponse: Biomarker) => {
+                    console.log(jsonResponse)
+                    const alert = this.state.alert
+                    alert.isOpen = true
+                    alert.type = CustomAlertTypes.SUCCESS
+                    alert.message = 'Biomarker created sucessfully!'
+                    this.setState({
+                        alert,
+                        formBiomarker: this.getDefaultFormBiomarker(),
+                        isOpenModal: false,
+                        confirmModal: this.getDefaultConfirmModal(),
+                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                    })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.log('Error getting genes ->', err)
+                const alert = this.state.alert
+                alert.isOpen = true
+                alert.type = CustomAlertTypes.ERROR
+                alert.message = 'Error creating biomarker!'
+                formBiomarker.validation.isLoading = false
+                this.setState({ alert, formBiomarker })
             })
-        }).catch((err) => {
-            console.log('Error getting genes ->', err)
-        }).finally(() => {
-            formBiomarker.validation.isLoading = false
-            this.setState({ formBiomarker })
-        })
+        } else {
+            ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
+                response.json().then((jsonResponse: Biomarker) => {
+                    console.log(jsonResponse)
+                    const alert = this.state.alert
+                    alert.isOpen = true
+                    alert.type = CustomAlertTypes.SUCCESS
+                    alert.message = 'Biomarker edited sucessfully!'
+                    this.setState({
+                        alert,
+                        formBiomarker: this.getDefaultFormBiomarker(),
+                        isOpenModal: false,
+                        confirmModal: this.getDefaultConfirmModal(),
+                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                    })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                console.log('Error getting genes ->', err)
+                const alert = this.state.alert
+                alert.isOpen = true
+                alert.type = CustomAlertTypes.ERROR
+                alert.message = 'Error editing biomarker!'
+                formBiomarker.validation.isLoading = false
+                this.setState({ alert, formBiomarker })
+            })
+        }
     }
 
     /**
@@ -566,7 +696,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_cnas: 0,
             number_of_methylations: 0,
             contains_nan_values: false,
-            column_used_as_index: ''
+            column_used_as_index: '',
+            methylations: [],
+            mirnas: [],
+            cnas: [],
+            mrnas: []
         }
     }
 
@@ -932,6 +1066,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                                     {/* Shows a delete button if specified */}
                                     <Icon
+                                        name='pencil'
+                                        className='clickable margin-left-5'
+                                        color='yellow'
+                                        title='Edit biomarker'
+                                        onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                    />
+                                    <Icon
                                         name='trash'
                                         className='clickable margin-left-5'
                                         color='red'
@@ -954,7 +1095,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     open={this.state.isOpenModal}>
                     {
                         this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE &&
-                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal}/>
+                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
                     }
                     {
                         this.state.biomarkerTypeSelected === BiomarkerTypeSelected.MANUAL &&
@@ -992,7 +1133,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     content={this.state.confirmModal.contentText}
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm() } />
+                    onConfirm={() => this.state.confirmModal.onConfirm()} />
+
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
             </Base>
         )
     }

@@ -32,7 +32,11 @@ interface Biomarker {
     number_of_cnas: number,
     number_of_methylations: number,
     contains_nan_values: boolean,
-    column_used_as_index: string
+    column_used_as_index: string,
+    mirnas: SaveMoleculeStructure[],
+    methylations: SaveMoleculeStructure[],
+    cnas: SaveMoleculeStructure[],
+    mrnas: SaveMoleculeStructure[]
 }
 
 interface ConfirmModal {
@@ -57,11 +61,11 @@ type MoleculesSymbolFinder = {
 
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
+    id:Nullable<number>,
     biomarkerName: string,
     biomarkerDescription: string,
     tag: any, // se esta laburando salu2
     moleculeSelected: BiomarkerType,
-    molecule: number,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
     validation: ValidationSection
@@ -93,6 +97,8 @@ interface SaveBiomarkerStructure {
     description: string,
     mrnas: SaveMoleculeStructure[],
     mirnas: SaveMoleculeStructure[],
+    methylations: SaveMoleculeStructure[],
+    cnas: SaveMoleculeStructure[],
 }
 
 type MoleculesSection = {

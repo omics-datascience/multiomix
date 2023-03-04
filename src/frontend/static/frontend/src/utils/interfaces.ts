@@ -267,8 +267,28 @@ type DataUICategoricalBinnedDatumShape = {
     bin: string,
     count: number,
 }
+/**
+ * Types of alerts
+ */
+enum CustomAlertTypes {
+    WARNING = 1,
+    ERROR = 2,
+    SUCCESS = 3
+}
+
+/**
+ * Alert interface
+ */
+interface CustomAlert {
+    message: string,
+    isOpen: boolean,
+    type: CustomAlertTypes,
+    duration: number,
+}
 
 export {
+    CustomAlertTypes,
+    CustomAlert,
     Nullable,
     FileType,
     Command,
