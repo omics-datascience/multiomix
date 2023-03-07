@@ -6,7 +6,7 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
 import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -58,7 +58,8 @@ interface BiomarkersPanelState {
     confirmModal: ConfirmModal
     tags: DjangoTag[],
     isOpenModal: boolean,
-    alert: CustomAlert
+    alert: CustomAlert,
+    featureSelection: FeatureSelectionPanelData
 }
 
 /**
@@ -83,14 +84,27 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
             isOpenModal: false,
-            alert: this.getDefaultAlertProps()
+            alert: this.getDefaultAlertProps(),
+            featureSelection: this.getDefaultfeatureSelectionProps()
         }
     }
 
     /**
+     * Generates default feature selection creation structure
+     * @returns Default the default Alert
+     */
+    getDefaultfeatureSelectionProps = ():FeatureSelectionPanelData => {
+        return {
+            step: 1,
+            biomarker: null,
+            selectedBiomarker: null
+        }
+    }
+    /**
      * Generates a default alert structure
      * @returns Default the default Alert
      */
+
     getDefaultAlertProps = (): CustomAlert => {
         return {
             message: '', // This have to change during cycle of component
@@ -980,6 +994,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Callback to mark a Biomarker as selected
+     * @param biomarker Selected biomarker to mark
+     */
+    markBiomarkerAsSelected = (biomarker: Biomarker) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.selectedBiomarker = biomarker
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * @param selectedBiomarker Biomarker selected to continue process
+     */
+    handleCompleteStep1 = (selectedBiomarker: Biomarker) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.biomarker = selectedBiomarker
+        featureSelection.step = 2
+        this.setState({ featureSelection })
+    }
+
+    /**
      * Generates default table's Filters
      * @returns Default object for table's Filters
      */
@@ -1122,7 +1156,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     }
                     {
                         this.state.biomarkerTypeSelected === BiomarkerTypeSelected.FEATURE_SELECTION &&
-                        <FeatureSelectionPanel />
+                        <FeatureSelectionPanel
+                            featureSelection={this.state.featureSelection}
+                            getDefaultFilters={this.getDefaultFilters()}
+                            urlBiomarkersCRUD={urlBiomarkersCRUD}
+                            markBiomarkerAsSelected={this.markBiomarkerAsSelected}
+                            handleCompleteStep1={this.handleCompleteStep1}
+                        />
                     }
                 </Modal>
 

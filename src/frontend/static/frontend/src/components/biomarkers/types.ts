@@ -117,7 +117,15 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 
+/** Structure for feature selection. */
+interface FeatureSelectionPanelData {
+    step: number;
+    biomarker:Nullable<Biomarker>;
+    selectedBiomarker:Nullable<Biomarker>;
+}
+
 export {
+    FeatureSelectionPanelData,
     BiomarkerTypeSelected,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,
