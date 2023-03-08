@@ -44,24 +44,24 @@ def biomarkers_action(request):
     return render(request, "frontend/biomarkers.html")
 
 
-class GenesFinder(APIView):
+class GeneSymbolsFinder(APIView):
     """Generates a query to search genes through BioAPI"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request):
-        data = global_mrna_service.get_bioapi_service_content('genes-symbols-finder', request.GET, is_paginated=False)
+        data = global_mrna_service.get_bioapi_service_content('gene-symbols-finder', request.GET, is_paginated=False)
         return generate_json_response_or_404(data)
 
 
-class GenesSymbols(APIView):
-    """Get the aliases for a list of genes"""
+class GeneSymbols(APIView):
+    """Get the aliases for a list of genes from BioAPI"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def post(request):
         data = global_mrna_service.get_bioapi_service_content(
-            'genes-symbols',
+            'gene-symbols',
             request_params=request.data,
             is_paginated=False,
             method='post'
@@ -69,24 +69,24 @@ class GenesSymbols(APIView):
         return generate_json_response_or_404(data)
 
 
-class MiRNAsFinder(APIView):
+class MiRNACodesFinder(APIView):
     """Generates a query to search miRNAs through Modulector"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request):
-        data = global_mrna_service.get_modulector_service_content('mirnas-finder', request.GET, is_paginated=False)
+        data = global_mrna_service.get_modulector_service_content('mirna-codes-finder', request.GET, is_paginated=False)
         return generate_json_response_or_404(data)
 
 
-class MiRNAsSymbols(APIView):
+class MiRNACodes(APIView):
     """Get the aliases for a list of miRNAs"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def post(request):
         data = global_mrna_service.get_modulector_service_content(
-            'mirnas-symbols',
+            'mirna-codes',
             request_params=request.data,
             is_paginated=False,
             method='post'
@@ -94,19 +94,19 @@ class MiRNAsSymbols(APIView):
         return generate_json_response_or_404(data)
 
 
-class MethylationsFinder(APIView):
-    """Generates a query to search Methylations through Modulector"""
+class MethylationSitesFinder(APIView):
+    """Generates a query to search Methylation sites through Modulector"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request):
-        data = global_mrna_service.get_modulector_service_content('methylations-finder', request.GET,
+        data = global_mrna_service.get_modulector_service_content('methylation-sites-finder', request.GET,
                                                                   is_paginated=False)
         return generate_json_response_or_404(data)
 
 
-class MethylationsSymbols(APIView):
-    """Get the aliases for a list of miRNAs"""
+class MethylationSites(APIView):
+    """Get the aliases for a list of Methylation sites from Modulector"""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
