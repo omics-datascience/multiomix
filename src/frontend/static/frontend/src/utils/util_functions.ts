@@ -146,7 +146,8 @@ const parseValue = (value: any | null): string => {
 }
 
 /**
- * Makes a copy of an object
+ * Makes a copy of an object.
+ * TODO: check if it can be replaced by structuredClone.
  * @param anObject Object to copy
  * @returns Copy of the param object
  */
