@@ -3,8 +3,8 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
-import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale } from '../../utils/util_functions'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -40,7 +40,6 @@ interface BiomarkersPanelState {
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
-    tableControl: GeneralTableControl,
     biomarkerTypeSelected: BiomarkerTypeSelected,
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
@@ -66,7 +65,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
             addingOrEditingBiomarker: false,
-            tableControl: this.getDefaultTableControl(),
             formBiomarker: this.getDefaultFormBiomarker(),
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
@@ -560,15 +558,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates a default table control object sorted by name and pageSize = 50
-     * @returns Default GeneralTableControl object
-     */
-    getDefaultTableControl (): GeneralTableControl {
-        const defaultTableControl = getDefaultGeneralTableControl()
-        return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
-    }
-
-    /**
      * change name or description of manual form
      * @param value new value for input form
      * @param name type of input to change
@@ -611,7 +600,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Handles the table's control filters, select, etc changes
      * @param value Value to add to the molecules section that is selected
      */
-
     handleAddMoleculeToSection = (value: MoleculesSectionData) => {
         const genesSymbolsFinder = this.state.formBiomarker.moleculesSymbolsFinder
         genesSymbolsFinder.data = []
