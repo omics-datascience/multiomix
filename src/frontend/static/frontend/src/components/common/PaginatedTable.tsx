@@ -41,7 +41,7 @@ type PaginationCustomFilter = {
  */
 interface PaginatedTableProps<T> {
     /** Title above the table */
-    headerTitle: string,
+    headerTitle?: string,
     /** List of headers to render as HeaderCell */
     headers: RowHeader<T>[]
     /** Backend API URL to retrieve data */
@@ -284,9 +284,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 <Grid.Row>
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
-                        <Header as='h4' textAlign='left'>
-                            {this.props.headerTitle}
-                        </Header>
+                        {this.props.headerTitle &&
+                            <Header as='h4' textAlign='left'>
+                                {this.props.headerTitle}
+                            </Header>
+                        }
 
                         {this.props.infoPopupContent &&
                             <InfoPopup
