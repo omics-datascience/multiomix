@@ -3,8 +3,8 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
-import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale } from '../../utils/util_functions'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -19,29 +19,17 @@ import { Alert } from '../common/Alert'
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
+declare const urlGeneSymbols: string
 declare const urlGeneSymbolsFinder: string
-declare const urlGenesSymbols: string
-declare const urlMiRNAsFinder: string
-declare const urlMiRNAsSymbols: string
-declare const urlMethylationsFinder: string
-declare const urlMethylationsSymbols: string
+declare const urlMiRNACodes: string
+declare const urlMiRNACodesFinder: string
+declare const urlMethylationSites: string
+declare const urlMethylationSitesFinder: string
 
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {
     haveAmbiguous: boolean,
     haveInvalid: boolean
-}
-
-/**
- * Request search params to get the CGDSStudies' datasets
- */
-type CGDSStudiesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Field to sort */
-    ordering: string
 }
 
 /** BiomarkersPanel's state */
@@ -52,7 +40,6 @@ interface BiomarkersPanelState {
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
-    tableControl: GeneralTableControl,
     biomarkerTypeSelected: BiomarkerTypeSelected,
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
@@ -79,7 +66,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
             addingOrEditingBiomarker: false,
-            tableControl: this.getDefaultTableControl(),
             formBiomarker: this.getDefaultFormBiomarker(),
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
@@ -264,10 +250,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         let urlToFind = urlGeneSymbolsFinder
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
-                urlToFind = urlMiRNAsFinder
+                urlToFind = urlMiRNACodesFinder
                 break
             case BiomarkerType.METHYLATION:
-                urlToFind = urlMethylationsFinder
+                urlToFind = urlMethylationSitesFinder
                 break
             default:
                 break
@@ -312,16 +298,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     /**
      * Method that gets symbols while user is writing in Select molecules input
-     * @param genes array of strings that is sending to the api
+     * @param molecules array of strings that is sending to the api
      */
-    handleGenesSymbols = (genes: string[]): void => {
-        const settings = {
-            headers: getDjangoHeader(),
-            json: {
-                genes_ids: genes
-            }
-        }
-
+    handleGeneSymbols = (molecules: string[]): void => {
         const moleculesSectionPreload = {
             ...this.state.formBiomarker.moleculesSection,
             [this.state.formBiomarker.moleculeSelected]: {
@@ -337,19 +316,24 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }
         })
 
-        let urlToFind = urlGenesSymbols
+        let urlToFind: string
+        let json: {[key: string]: string[]}
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
-                urlToFind = urlMiRNAsSymbols
+                urlToFind = urlMiRNACodes
+                json = { mirna_codes: molecules }
                 break
             case BiomarkerType.METHYLATION:
-                urlToFind = urlMethylationsSymbols
+                urlToFind = urlMethylationSites
+                json = { methylation_sites: molecules }
                 break
             default:
+                urlToFind = urlGeneSymbols
+                json = { gene_ids: molecules }
                 break
         }
 
-        ky.post(urlToFind, settings).then((response) => {
+        ky.post(urlToFind, { headers: getDjangoHeader(), json }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
                 const genesArray: MoleculesSectionData[] = []
@@ -588,15 +572,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates a default table control object sorted by name and pageSize = 50
-     * @returns Default GeneralTableControl object
-     */
-    getDefaultTableControl (): GeneralTableControl {
-        const defaultTableControl = getDefaultGeneralTableControl()
-        return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
-    }
-
-    /**
      * change name or description of manual form
      * @param value new value for input form
      * @param name type of input to change
@@ -639,7 +614,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Handles the table's control filters, select, etc changes
      * @param value Value to add to the molecules section that is selected
      */
-
     handleAddMoleculeToSection = (value: MoleculesSectionData) => {
         const genesSymbolsFinder = this.state.formBiomarker.moleculesSymbolsFinder
         genesSymbolsFinder.data = []
@@ -1124,7 +1098,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '60%', height: '60%' } : { width: '92%', height: '92%' }}
+                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%' }}
                     onClose={() => this.state.biomarkerTypeSelected !== BiomarkerTypeSelected.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
                     open={this.state.isOpenModal}>
                     {
@@ -1145,7 +1119,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleAddMoleculeToSection={this.handleAddMoleculeToSection}
                             handleRemoveMolecule={this.handleRemoveMolecule}
                             handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
-                            handleGenesSymbols={this.handleGenesSymbols}
+                            handleGenesSymbols={this.handleGeneSymbols}
                             handleSelectOptionMolecule={this.handleSelectOptionMolecule}
                             handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
                             handleChangeConfirmModalState={this.handleChangeConfirmModalState}

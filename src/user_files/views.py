@@ -117,10 +117,10 @@ class UserFileList(generics.ListAPIView):
     """REST endpoint: list for UserFile model. """
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
-        public_only = 'public' in self.request.GET
-        private_only = not public_only and 'private' in self.request.GET \
-                       or self.request.GET.get('visibility') == 'private'  # This adds support for paginated table in UserFiles panel
-        with_survival_only = 'with_survival_only' in self.request.GET
+        visibility = self.request.GET.get('visibility')
+        public_only = visibility == 'public'
+        private_only = visibility == 'private'
+        with_survival_only = self.request.GET.get('with_survival_only') == 'true'
         return get_user_files(self.request.user, public_only, private_only, with_survival_only)
 
     serializer_class = UserFileWithoutFileObjSerializer

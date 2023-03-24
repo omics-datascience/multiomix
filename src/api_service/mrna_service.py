@@ -33,7 +33,8 @@ class MRNAService(object):
             request_params: QueryDict,
             is_paginated: bool,
             url_prefix: str,
-            method: Literal['get', 'post']
+            method: Literal['get', 'post'],
+            append_slash: bool
     ) -> Optional[Dict]:
         """
         Generic function to make a request to a Modulector/BioAPI service
@@ -42,6 +43,7 @@ class MRNAService(object):
         @param is_paginated: True if the expected response is paginated to generate a default response in case of error
         @param url_prefix: URL of the Modulector or BioAPI service
         @param method: Request method (GET or POST)
+        @param append_slash: If True appends a slash to prevent issues with Django.
         @return: JSON data retrieved from the Modulector service. None if response has 404 status code
         """
         url = f'{url_prefix}/{service_name}'
@@ -55,12 +57,14 @@ class MRNAService(object):
                 data = requests.get(url)
             else:
                 # Prevents issues with Django APPEND_SLASH option
-                if not url.endswith('/'):
+                if append_slash and not url.endswith('/'):
                     url += '/'
 
                 data = requests.post(url, json=request_params)
 
             if data.status_code != 200:
+                logging.warning(f'{method.upper()} to {url} returned status_code {data.status_code} and '
+                                f'message: {data.content}')
                 return None
 
             return data.json()
@@ -92,7 +96,8 @@ class MRNAService(object):
         @param method: Request method (GET or POST)
         @return: JSON data retrieved from the Modulector service. None if response has 404 status code
         """
-        return self.__get_service_content(service_name, request_params, is_paginated, self.url_modulector_prefix, method)
+        return self.__get_service_content(service_name, request_params, is_paginated, self.url_modulector_prefix,
+                                          method, append_slash=True)
 
     def get_bioapi_service_content(
             self,
@@ -102,14 +107,15 @@ class MRNAService(object):
             method: Literal['get', 'post'] = 'get'
     ) -> Optional[Dict]:
         """
-        Makes a request to a BioAPI service
+        Makes a request to a BioAPI service.
         @param service_name: BioAPI service to consume
         @param request_params: GET/POST params with query params to send to DRF backend
         @param is_paginated: True if the expected response is paginated to generate a default response in case of error
         @param method: Request method (GET or POST)
         @return: JSON data retrieved from the Modulector service. None if response has 404 status code
         """
-        return self.__get_service_content(service_name, request_params, is_paginated, self.url_bioapi_prefix, method)
+        return self.__get_service_content(service_name, request_params, is_paginated, self.url_bioapi_prefix, method,
+                                          append_slash=False)
 
 
 global_mrna_service = MRNAService()
