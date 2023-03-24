@@ -11,54 +11,6 @@ import { HugeFileAdvice } from './HugeFileAdvice'
 
 declare const urlUserInstitutions: string
 
-/** Used to check which dataset retrieve in certain situations */
-enum DatasetType {
-    USER_FILE = 1,
-    CGDS = 2
-}
-
-/**
- * Request extra params to get the User's Files/Datasets
- */
-type GetUserFilesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Search String */
-    search?: string,
-    /** Field to sort */
-    ordering?: string,
-    /** FileType (mRNA, miRNA, etc) */
-    file_type: FileType
-    /** Id of tag */
-    tag?: number,
-    /** Institution ID for filtering. The name of field is in plural because Django Rest Framework */
-    institutions?: 'all' | 'private' | 'public' | number,
-    /** If specified, returns only User's private datasets */
-    private?: Nullable<string>,
-    /** If specified, returns only public datasets */
-    public?: Nullable<string>,
-    /** If specified, returns only clinical datasets which have at least one survival column tuple */
-    with_survival_only?: Nullable<string>,
-}
-
-/**
- * Request extra params to get the CGDSStudies
- */
-type GetCGDSStudiesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Search String */
-    search?: string,
-    /** Field to sort */
-    ordering?: string,
-    /** FileType (mRNA, miRNA, etc) */
-    file_type: FileType
-}
-
 /** Header icon/image */
 type HeaderIcon = {
     type: 'icon' | 'img'
@@ -101,9 +53,6 @@ interface SourceFormProps {
 interface SourceFormState {
     showUserDatasetsModal: boolean,
     showCGDSDatasetsModal: boolean,
-    gettingDatasets: boolean,
-    datasets: DjangoUserFile[],
-    CGDSStudies: DjangoCGDSStudy[],
     selectedFile: Nullable<DjangoUserFile>,
     selectedStudy: Nullable<DjangoCGDSStudy>,
     userInstitutions: DjangoInstitution[]
@@ -116,17 +65,12 @@ interface SourceFormState {
  * @returns Component
  */
 class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
-    filterTimeout: number | undefined
-
     constructor (props) {
         super(props)
 
         this.state = {
             showUserDatasetsModal: false,
             showCGDSDatasetsModal: false,
-            gettingDatasets: false,
-            datasets: [],
-            CGDSStudies: [],
             selectedFile: null,
             selectedStudy: null,
             userInstitutions: []
@@ -171,8 +115,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             showUserDatasetsModal: false,
             showCGDSDatasetsModal: false,
             selectedFile: null,
-            selectedStudy: null,
-            datasets: []
+            selectedStudy: null
         })
     }
 
@@ -318,7 +261,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             <Grid.Row>
                 {/* Select User's files modal */}
                 <UserDatasetsModal
-                    datasets={this.state.datasets}
                     showUserDatasetsModal={this.state.showUserDatasetsModal}
                     selectedFile={this.state.selectedFile}
                     selectingFileType={this.props.fileType}
@@ -333,7 +275,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 {/* Select CGDS Study modal */}
                 {showCBioPortalOption &&
                     <CGDSDatasetsModal
-                        studies={this.state.CGDSStudies}
                         showCGDSDatasetsModal={this.state.showCGDSDatasetsModal}
                         selectingFileType={this.props.fileType}
                         selectedStudy={this.state.selectedStudy}
@@ -369,4 +310,4 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
     }
 }
 
-export { SourceForm, DatasetType }
+export { SourceForm }

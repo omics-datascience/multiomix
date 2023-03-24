@@ -11,8 +11,6 @@ declare const urlCGDSStudiesCRUD: string
  * Component's props
  */
 interface CGDSDatasetsModalProps {
-    /** List of datasets to display in modal */
-    studies: DjangoCGDSStudy[],
     /** If true, opens the modal */
     showCGDSDatasetsModal: boolean,
     /** Type of FileType being selected to show a little label (mRNA, miRNA, CNA, etc) */

@@ -14,8 +14,6 @@ declare const urlUserFilesCRUD: string
  * Component's props
  */
 interface UserDatasetsModalProps {
-    /** List of datasets to display in modal */
-    datasets: DjangoUserFile[],
     /** If true, opens the modal */
     showUserDatasetsModal: boolean,
     /** Object of selected file to mark it in the modal and enable the confirmation button */
