@@ -61,7 +61,7 @@ type MoleculesSymbolFinder = {
 
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
-    id:Nullable<number>,
+    id: Nullable<number>,
     biomarkerName: string,
     biomarkerDescription: string,
     tag: any, // se esta laburando salu2
@@ -116,21 +116,57 @@ interface MoleculesSectionData {
     isValid: boolean,
     value: string | string[],
 }
+enum FeatureSelectionAlgorithms {
+    BLIND_SEARCH = 'Blind Search',
+    COX_REGRESSION = 'Cox Regression',
+    BBHA = 'BBHA',
+    PSO = 'PSO'
+}
+enum BlindSearchFitnessFunction {
+    CLUSTERING = 'Clustering',
+    SVM = 'SVM',
+    RF = 'RF'
+}
 
+enum ClusteringParameters {
+    K_MEANS = 'K-Means',
+}
+enum ClusteringButtons {
+    COX_REGRESSION = 'Cox Regression',
+    LOG_RANK_TEST = 'Log-Rank test'
+}
+
+interface FitnessFunctionClustering{
+    parameters: ClusteringParameters
+    selection: ClusteringButtons
+}
+
+interface BlindSearchFeatureSelection {
+    fitnessFunction: BlindSearchFitnessFunction
+    [BlindSearchFitnessFunction.CLUSTERING]: FitnessFunctionClustering
+}
 /** Structure for feature selection. */
 interface FeatureSelectionPanelData {
     step: number;
-    biomarker:Nullable<Biomarker>; // add docs
-    selectedBiomarker:Nullable<Biomarker>;
+    biomarker: Nullable<Biomarker>; // add docs
+    selectedBiomarker: Nullable<Biomarker>;
     clinicalSource: Source,
     mRNASource: Source,
     mirnaSource: Source,
     methylationSource: Source,
     cnaSource: Source,
+    algorithm: FeatureSelectionAlgorithms,
+    [FeatureSelectionAlgorithms.BLIND_SEARCH]: Nullable<BlindSearchFeatureSelection>
 }
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
+    FitnessFunctionClustering,
+    BlindSearchFeatureSelection,
+    BlindSearchFitnessFunction,
+    FeatureSelectionAlgorithms,
+    ClusteringButtons,
+    ClusteringParameters,
     SourceStateBiomarker,
     FeatureSelectionPanelData,
     BiomarkerTypeSelected,

@@ -6,7 +6,7 @@ import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, BlindSearchFeatureSelection, BlindSearchFitnessFunction, ClusteringParameters, ClusteringButtons } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -88,7 +88,23 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             mRNASource: this.getDefaultSource(),
             mirnaSource: this.getDefaultSource(),
             methylationSource: this.getDefaultSource(),
-            cnaSource: this.getDefaultSource()
+            cnaSource: this.getDefaultSource(),
+            algorithm: FeatureSelectionAlgorithms.BLIND_SEARCH,
+            [FeatureSelectionAlgorithms.BLIND_SEARCH]: this.getDefaultBlindSearch()
+        }
+    }
+
+    /**
+     * Generates default feature selection blind search creation structure
+     * @returns Default Blind search structure
+     */
+    getDefaultBlindSearch = ():BlindSearchFeatureSelection => {
+        return {
+            fitnessFunction: BlindSearchFitnessFunction.CLUSTERING,
+            [BlindSearchFitnessFunction.CLUSTERING]: {
+                parameters: ClusteringParameters.K_MEANS,
+                selection: ClusteringButtons.COX_REGRESSION
+            }
         }
     }
 

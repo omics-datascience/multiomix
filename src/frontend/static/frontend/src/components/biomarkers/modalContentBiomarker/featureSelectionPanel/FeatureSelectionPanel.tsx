@@ -60,7 +60,9 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                 />)
 
             default:
-                return <FeatureSelectionStep3 />
+                return (<FeatureSelectionStep3
+                    featureSelection={props.featureSelection}
+                />)
         }
     }
     return (

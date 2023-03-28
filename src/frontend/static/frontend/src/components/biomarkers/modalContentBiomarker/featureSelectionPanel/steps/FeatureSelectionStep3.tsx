@@ -1,18 +1,31 @@
 import React from 'react'
 import { Select } from 'semantic-ui-react'
+import { FeatureSelectionAlgorithms, FeatureSelectionPanelData } from '../../../types'
+import { BlindSearch } from './blindSearch/BlindSearch'
 
-export const FeatureSelectionStep3 = () => {
-    const options = [
-        { key: 'Blind Search', text: 'Blind Search', value: 'Blind Search', disabled: false },
-        { key: 'Cox Regression', text: 'Cox Regression', value: 'Cox Regression', disabled: true },
-        { key: 'BBHA', text: 'BBHA', value: 'BBHA', disabled: true },
-        { key: 'PSO', text: 'PSO', value: 'PSO', disabled: true }
-    ]
-    const options2 = [
-        { key: 'Clustering', text: 'Clustering', value: 'Clustering', disabled: false },
-        { key: 'SVM', text: 'SVM', value: 'SVM', disabled: false },
-        { key: 'RF', text: 'RF', value: 'RF', disabled: true }
-    ]
+interface Props {
+    featureSelection: FeatureSelectionPanelData,
+}
+const options = [
+    { key: FeatureSelectionAlgorithms.BLIND_SEARCH, text: FeatureSelectionAlgorithms.BLIND_SEARCH, value: FeatureSelectionAlgorithms.BLIND_SEARCH, disabled: false },
+    { key: FeatureSelectionAlgorithms.COX_REGRESSION, text: FeatureSelectionAlgorithms.COX_REGRESSION, value: FeatureSelectionAlgorithms.COX_REGRESSION, disabled: true },
+    { key: FeatureSelectionAlgorithms.BBHA, text: FeatureSelectionAlgorithms.BBHA, value: FeatureSelectionAlgorithms.BBHA, disabled: true },
+    { key: FeatureSelectionAlgorithms.PSO, text: FeatureSelectionAlgorithms.PSO, value: FeatureSelectionAlgorithms.PSO, disabled: true }
+]
+export const FeatureSelectionStep3 = (props: Props) => {
+    const { featureSelection } = props
+    const algorithmSelection = () => {
+        switch (featureSelection.algorithm) {
+            case FeatureSelectionAlgorithms.BLIND_SEARCH:
+
+                return (<BlindSearch
+                    blindSearch={featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH]}
+                />)
+
+            default:
+                break
+        }
+    }
     return (
         <div>
             <Select
@@ -20,17 +33,12 @@ export const FeatureSelectionStep3 = () => {
                 placeholder='Algorithm'
                 name='moleculeSelected'
                 options={options}
-                value={1}
+                value={featureSelection.algorithm}
                 onChange={(_, { value }) => console.log(value)}
             />
-            <Select
-                className=''
-                placeholder='Fitness function'
-                name='moleculeSelected'
-                options={options2}
-                value={1}
-                onChange={(_, { value }) => console.log(value)}
-            />
+            {
+                algorithmSelection()
+            }
         </div>
     )
 }
