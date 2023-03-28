@@ -1,4 +1,5 @@
-from typing import List, Dict, Any, Iterator, Optional
+from copy import deepcopy
+from typing import List, Dict, Any, Iterator, Optional, Union
 import pandas as pd
 from pymongo import MongoClient
 from pymongo.database import Database
@@ -7,7 +8,15 @@ import random
 import string
 from django.conf import settings
 import logging
+from user_files.models_choices import FileType
 from .exceptions import CouldNotDeleteInMongo
+from .mrna_service import global_mrna_service
+
+# Symbol used by cBioPortal to indicate the code of molecule (gene, miRNA, of Methylation CpG site ID)
+MOLECULE_SYMBOL = 'Hugo_Symbol'
+
+# Standard Symbol retrieve from Modulector/BioAPI
+STANDARD_SYMBOL = 'Standard_Symbol'
 
 
 class MongoService(object):
@@ -21,7 +30,7 @@ class MongoService(object):
     default_non_used_fields_query: Dict[str, int]  # Dict of usually not needed fields for anything else
 
     def __init__(self):
-        # Instantiates the Mongo's Client
+        # Instantiates the MongoDB Client
         self.client = self.__create_mongo_client()
         self.db = self.client[settings.MONGO_SETTINGS['db']]
 
@@ -32,7 +41,11 @@ class MongoService(object):
         self.default_non_used_fields_experiments = {**self.default_non_used_fields_pagination, '_id': 0}
 
         # Non used fields when querying the DB to, for instance, check samples in common
-        self.default_non_used_fields_query = {**self.default_non_used_fields_experiments, 'Hugo_Symbol': 0}
+        self.default_non_used_fields_query = {
+            **self.default_non_used_fields_experiments,
+            MOLECULE_SYMBOL: 0,
+            STANDARD_SYMBOL: 0
+        }
 
     @staticmethod
     def __create_mongo_client() -> MongoClient:
@@ -130,10 +143,10 @@ class MongoService(object):
 
     def get_only_columns_names(self, collection_name: str, exclude_special_fields: bool = True) -> List[str]:
         """
-        Gets a specific MongoDB collection's columns' names
-        @param collection_name: Collection to retrieve its columns' names
-        @param exclude_special_fields: If True exclude some special fields, set to False to exclude them
-        @return: List of columns' names
+        Gets a specific MongoDB collection's columns' names.
+        @param collection_name: Collection to retrieve its columns' names.
+        @param exclude_special_fields: If True excludes some special fields, set as False to exclude them.
+        @return: List of columns' names.
         """
         # IMPORTANT: as the CGDS Datasets has all the documents with the same key we can
         # retrieve only one document to check its keys
@@ -144,10 +157,10 @@ class MongoService(object):
 
     def get_specific_row(self, collection_name: str, row: str) -> List[float]:
         """
-        Gets a specific MongoDB collection's row
-        @param collection_name: Collection to retrieve the row
-        @param row: Row's identifier to retrieve
-        @return: List of rows values
+        Gets a specific MongoDB collection's row.
+        @param collection_name: Collection to retrieve the row.
+        @param row: Row's identifier to retrieve.
+        @return: List of rows values.
         """
         # Exclude '_id' field getting the second column
         column_names = self.get_only_columns_names(collection_name, exclude_special_fields=False)
@@ -166,19 +179,108 @@ class MongoService(object):
         """
         return self.db[collection_name].count_documents({})
 
-    def insert_cgds_dataset(self, dataset_df: pd.DataFrame, table_name: str) -> bool:
+    @staticmethod
+    def __get_standard_ids(file_type: FileType, molecules: List[str]) -> Optional[Dict]:
+        """
+        Gets standard IDs for a list of molecules from Modulector/BioAPI APIs.
+        @param file_type: File type to check if it is a request for Modulector (miRNA, Methylation), or BioAPI (genes).
+        @param molecules: List of molecules to send.
+        @return:
+        """
+        is_for_bioapi = file_type in [FileType.MRNA, FileType.CNA]
+        if is_for_bioapi:
+            logging.warning('Retrieving data from BioAPI')
+        else:
+            logging.warning('Retrieving data from Modulector')
+
+        if is_for_bioapi:
+            data = global_mrna_service.get_bioapi_service_content(
+                'gene-symbols',
+                request_params={'gene_ids': molecules},
+                is_paginated=False,
+                method='post'
+            )
+        elif file_type == FileType.MIRNA:
+            data = global_mrna_service.get_modulector_service_content(
+                'mirna-codes',
+                request_params={'mirna_codes': molecules},
+                is_paginated=False,
+                method='post'
+            )
+        else:
+            # In case of methylation
+            data = global_mrna_service.get_modulector_service_content(
+                'methylation-sites',
+                request_params={'methylation_sites': molecules},
+                is_paginated=False,
+                method='post'
+            )
+
+        return data
+
+    def insert_cgds_dataset(self, dataset_df: pd.DataFrame, table_name: str, file_type: FileType) -> bool:
         """
         Inserts a CGDS dataset Pandas DataFrame in MongoDB
         @param dataset_df: DataFrame to Insert
         @param table_name: Name of the MongoDB's collection where the DataFrame will be inserted
+        @param file_type: File type to check which service needs to invoke.
         @return: True if everything gone well, False otherwise
         """
-        # Gets experiment Mongo's Collection
+        # Gets experiment MongoDB Collection
         cgds_table = self.db[table_name]
 
         # Cast to Dict, then list, and the adds the UEK
         data_dict = dataset_df.to_dict("records")
         data_list = list(data_dict)
+
+        # In case of clinical data there is not molecules nor aliases
+        if file_type != FileType.CLINICAL:
+            # Gets standard IDs from Modulector/BioAPI
+            molecules = [elem[MOLECULE_SYMBOL] for elem in data_list]
+            molecules_std_ids = self.__get_standard_ids(file_type, molecules)
+            if molecules_std_ids is None:
+                logging.error(f'Could not retrieve Modulector/BioAPI data. Molecules of type ({file_type}):')
+                logging.error(molecules)
+                return False
+
+            # Appends the standard key to the data to be inserted
+            ambiguous_symbols: List[Dict[str, Any]] = []
+            for elem in data_list:
+                symbol = elem[MOLECULE_SYMBOL]
+                standard_symbols: Union[str, List[str]] = molecules_std_ids[symbol]
+                standard_symbol: str
+                if standard_symbols:
+                    if file_type in [FileType.MRNA, FileType.CNA, FileType.METHYLATION]:
+                        len_results = len(standard_symbols)
+                        # In case of empty symbol, just uses the original one
+                        if len_results == 0:
+                            standard_symbol = symbol
+                        elif len_results == 1:
+                            # Uses the only returned standard symbol
+                            standard_symbol = standard_symbols[0]
+                        else:
+                            # In case of ambiguity, copies the element for all the aliases
+                            standard_symbol = symbol  # To prevent later addition
+
+                            # Clones the element and adds standard symbol
+                            for aux_symbol in standard_symbols:
+                                # Omits the original symbol
+                                if aux_symbol != symbol:
+                                    new_elem = deepcopy(elem)
+                                    new_elem[STANDARD_SYMBOL] = aux_symbol
+                                    ambiguous_symbols.append(new_elem)
+                    else:
+                        # In case of miRNA, can be only one alias
+                        standard_symbol = standard_symbols if standard_symbols else symbol
+                else:
+                    # In case of empty symbol, just uses the original one
+                    standard_symbol = symbol
+
+                if standard_symbol is not None:
+                    elem[STANDARD_SYMBOL] = standard_symbol
+
+            # Concatenates ambiguous elements
+            data_list.extend(ambiguous_symbols)
 
         # Inserts in DB
         result = cgds_table.insert_many(data_list)

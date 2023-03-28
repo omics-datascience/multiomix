@@ -75,7 +75,8 @@ class SynchronizationService:
                 global_mongo_service.drop_collection(dataset.mongo_collection_name)
                 inserted_successfully = global_mongo_service.insert_cgds_dataset(
                     dataset_content,
-                    dataset.mongo_collection_name
+                    dataset.mongo_collection_name,
+                    dataset.file_type
                 )
 
                 # If everything goes well, change the dataset info
@@ -167,6 +168,20 @@ class SynchronizationService:
             self.sync_dataset(cgds_study.clinical_patient_dataset, extract_path, check_patient_column=True)
             self.sync_dataset(cgds_study.clinical_sample_dataset, extract_path, check_patient_column=True)
 
+    @staticmethod
+    def __all_dataset_finished_correctly(cgds_study: CGDSStudy) -> bool:
+        """
+        Returns True if all the datasets were correctly imported.
+        @param cgds_study: CGDSStudy instance to get its CGDSDatasets.
+        @return: True if all the datasets were correctly imported, False otherwise.
+        """
+        for dataset in cgds_study.get_all_datasets():
+            if dataset.state not in [CGDSDatasetSynchronizationState.SUCCESS,
+                                     CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED]:
+                return False
+
+        return True
+
     def sync_study(self, cgds_study: CGDSStudy):
         """
         Synchronizes a CGDS Study from CBioportal (https://www.cbioportal.org/)
@@ -207,7 +222,10 @@ class SynchronizationService:
                 self.extract_file_and_sync_datasets(cgds_study, downloaded_path)
 
             # Saves new state of the CGDSStudy
-            cgds_study.state = CGDSStudySynchronizationState.COMPLETED
+            if self.__all_dataset_finished_correctly(cgds_study):
+                cgds_study.state = CGDSStudySynchronizationState.COMPLETED
+            else:
+                cgds_study.state = CGDSStudySynchronizationState.FINISHED_WITH_ERROR
         except (ConnectionError, URLError, ValueError) as e:
             logging.error(f'The URL {cgds_study.url} of study with pk {cgds_study.pk} was not found: {e}')
             cgds_study.state = CGDSStudySynchronizationState.URL_ERROR

@@ -44,7 +44,7 @@ class ExperimentSource(models.Model):
 
     def get_valid_source(self) -> Union[UserFile, CGDSDataset]:
         """
-        Gets the valid source depending of which has been uploaded by the user
+        Gets the valid source depending on which has been uploaded by the user
         @return: Valid source: a UserFile or a CGDSDataset
         """
         return self.user_file if self.user_file else self.cgds_dataset
