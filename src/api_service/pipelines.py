@@ -295,7 +295,8 @@ class PipelineManager(object):
         for chunk in self.get_chunks_of_list(combinations, settings.INSERT_CHUNK_SIZE):
             start = time.time()
             insert_statements: List[str] = [
-                # Replaces single quotes to make them compatible with Postgres
+                # Replaces single quotes to make them compatible with Postgres.
+                # More info: https://stackoverflow.com/a/32586758/7058363
                 insert_template.format(
                     cor_result.gene.replace("'", "''"),
                     cor_result.gem.replace("'", "''"),

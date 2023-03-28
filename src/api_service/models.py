@@ -77,7 +77,7 @@ class ExperimentSource(models.Model):
         """
         row_data = self.get_valid_source().get_specific_row(row)
         if row_data.size == 0:
-            raise KeyError
+            raise KeyError(f'The row "{row}" was not found')
 
         if columns_idx is not None:
             row_data = row_data[columns_idx]
