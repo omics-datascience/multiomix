@@ -1,5 +1,5 @@
 import { DjangoTag } from '../../utils/django_interfaces'
-import { Nullable } from '../../utils/interfaces'
+import { Nullable, Source } from '../../utils/interfaces'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
@@ -120,11 +120,18 @@ interface MoleculesSectionData {
 /** Structure for feature selection. */
 interface FeatureSelectionPanelData {
     step: number;
-    biomarker:Nullable<Biomarker>;
+    biomarker:Nullable<Biomarker>; // add docs
     selectedBiomarker:Nullable<Biomarker>;
+    clinicalSource: Source,
+    mRNASource: Source,
+    mirnaSource: Source,
+    methylationSource: Source,
+    cnaSource: Source,
 }
+type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
+    SourceStateBiomarker,
     FeatureSelectionPanelData,
     BiomarkerTypeSelected,
     SaveMoleculeStructure,

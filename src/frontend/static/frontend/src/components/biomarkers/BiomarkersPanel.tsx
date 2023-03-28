@@ -1,12 +1,12 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
-import { DjangoSurvivalColumnsTupleSimple, DjangoTag, RowHeader, TagType } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale } from '../../utils/util_functions'
-import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, /* generatesOrderingQuery, */ formatDateLocale, cleanRef, getFilenameFromSource } from '../../utils/util_functions'
+import { NameOfCGDSDataset, GeneralTableControl, /* WebsocketConfig , FileType , ResponseRequestWithPagination , */ Nullable, CustomAlert, CustomAlertTypes, Source, SourceType } from '../../utils/interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -97,9 +97,30 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         return {
             step: 1,
             biomarker: null,
-            selectedBiomarker: null
+            selectedBiomarker: null,
+            clinicalSource: this.getDefaultSource(),
+            mRNASource: this.getDefaultSource(),
+            mirnaSource: this.getDefaultSource(),
+            methylationSource: this.getDefaultSource(),
+            cnaSource: this.getDefaultSource()
         }
     }
+
+    /**
+     * Generates a default Source
+     * @param msg Message to show as default filename
+     * @returns A source with all the field with default values
+     */
+    getDefaultSource = (msg: string = 'Choose File'): Source => {
+        return {
+            type: SourceType.NONE,
+            filename: msg,
+            newUploadedFileRef: React.createRef(),
+            selectedExistingFile: null,
+            CGDSStudy: null
+        }
+    }
+
     /**
      * Generates a default alert structure
      * @returns Default the default Alert
@@ -145,6 +166,87 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             confirmModal: this.getDefaultConfirmModal()
         })
+    }
+
+    /**
+     * Callback when a new file is selected in the uncontrolled component
+     * (input type=file)
+     */
+    selectNewFile = () => { this.updateSourceFilenamesAndCommonSamples() }
+
+    /**
+     * Selects a CGDS Study as a source
+     * @param selectedStudy Selected Study as Source
+     * @param sourceStateName Source's name in state object to update
+     */
+    selectStudy = (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => {
+        // Selects source to update
+        const featureSelection = this.state.featureSelection
+        const source = featureSelection[sourceStateName]
+
+        source.type = SourceType.CGDS
+        source.CGDSStudy = selectedStudy
+        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+    }
+
+    /**
+     * Selects a User's file as a source
+     * @param selectedFile Selected file as Source
+     * @param sourceStateName Source's name in state object to update
+     */
+    selectUploadedFile = (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => {
+        // Selects source to update
+        const featureSelection = this.state.featureSelection
+        const source = featureSelection[sourceStateName]
+
+        source.type = SourceType.UPLOADED_DATASETS
+        source.selectedExistingFile = selectedFile
+        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+    }
+
+    /**
+     * Change the source state to submit a pipeline
+     * @param sourceType New selected Source
+     * @param sourceStateName Source's name in state object to update
+     */
+    handleChangeSourceType = (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => {
+        // Selects source to update
+        const featureSelection = this.state.featureSelection
+        const source = featureSelection[sourceStateName]
+        // Change source type
+        source.type = sourceType
+
+        // Resets all source values
+        source.selectedExistingFile = null
+        source.CGDSStudy = null
+        cleanRef(source.newUploadedFileRef)
+
+        // After update state
+        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+    }
+
+    /**
+     * Updates Sources' filenames and common examples counter
+     */
+    updateSourceFilenamesAndCommonSamples = () => {
+        this.updateSourceFilenames()
+        // this.checkCommonSamples() TODO: check function and dependencies functions in file Pipeline.tsx
+    }
+
+    /**
+     * Handles file input changes to set data to show in form
+     * IMPORTANT: this is necessary because the file inputs are uncontrolled components
+     * and doesn't trigger an update of the state fields
+     */
+    updateSourceFilenames = () => {
+        // Updates state filenames
+        const featureSelection = this.state.featureSelection
+        featureSelection.mRNASource.filename = getFilenameFromSource(featureSelection.mRNASource)
+        featureSelection.clinicalSource.filename = getFilenameFromSource(featureSelection.clinicalSource)
+        featureSelection.cnaSource.filename = getFilenameFromSource(featureSelection.cnaSource)
+        featureSelection.methylationSource.filename = getFilenameFromSource(featureSelection.methylationSource)
+        featureSelection.mirnaSource.filename = getFilenameFromSource(featureSelection.mirnaSource)
+        this.setState({ featureSelection })
     }
 
     /**
@@ -1004,12 +1106,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Function to complete step 1
      * @param selectedBiomarker Biomarker selected to continue process
      */
     handleCompleteStep1 = (selectedBiomarker: Biomarker) => {
         const featureSelection = this.state.featureSelection
         featureSelection.biomarker = selectedBiomarker
         featureSelection.step = 2
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * Function to complete step 2
+     */
+    handleCompleteStep2 = () => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.step = 3
         this.setState({ featureSelection })
     }
 
@@ -1162,6 +1274,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             urlBiomarkersCRUD={urlBiomarkersCRUD}
                             markBiomarkerAsSelected={this.markBiomarkerAsSelected}
                             handleCompleteStep1={this.handleCompleteStep1}
+                            handleCompleteStep2={this.handleCompleteStep2}
+                            selectNewFile={this.selectNewFile}
+                            selectStudy={this.selectStudy}
+                            selectUploadedFile={this.selectUploadedFile}
+                            handleChangeSourceType={this.handleChangeSourceType}
                         />
                     }
                 </Modal>
