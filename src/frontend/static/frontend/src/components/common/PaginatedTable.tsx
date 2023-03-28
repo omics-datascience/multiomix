@@ -351,6 +351,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                                 key={header.name}
                                                 sorted={sorted}
                                                 width={header.width}
+                                                textAlign={header.textAlign}
                                                 onClick={onClickCallback}
                                             >
                                                 {header.name}

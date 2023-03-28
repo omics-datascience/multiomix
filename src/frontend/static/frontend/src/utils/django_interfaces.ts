@@ -1,6 +1,6 @@
 import { FileType, CGDSDatasetSeparator, ResponseRequestWithPagination, Nullable, MirDIPScoreClass } from './interfaces'
 import { SemanticShorthandItem, SemanticWIDTHS } from 'semantic-ui-react/dist/commonjs/generic'
-import { PopupContentProps } from 'semantic-ui-react'
+import { PopupContentProps, StrictTableCellProps } from 'semantic-ui-react'
 
 /**
  * Possible states for experiment evaluation
@@ -196,13 +196,15 @@ interface DjangoMRNAxGEMResultRow {
  * to handles some operations like sort or filter
  */
 interface RowHeader<T> {
-    /** Name to show as column header */
+    /** Name to show as column header. */
     name: string,
-    /** Key to send in 'ordering' Django endpoint's query param to apply a sorting by this field in backend */
+    /** Key to send in 'ordering' Django endpoint's query param to apply a sorting by this field in backend. */
     serverCodeToSort?: keyof T,
-    /** Width of column */
+    /** Width of the column. */
     width?: SemanticWIDTHS,
-    /** If it's defined, an InfoPopup is shown with this content */
+    /** Text align of the column. */
+    textAlign?: StrictTableCellProps['textAlign'],
+    /** If it's defined, an InfoPopup is shown with this content. */
     infoPopupContent?: SemanticShorthandItem<PopupContentProps>
 }
 
