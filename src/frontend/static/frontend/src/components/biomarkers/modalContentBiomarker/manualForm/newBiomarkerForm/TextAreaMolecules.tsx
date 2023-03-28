@@ -33,9 +33,11 @@ export const TextAreaMolecules = ({ handleGenesSymbols }: TextAreaMoleculesProps
 
     return (
         <TextArea
+            style={{ maxWidth: '100%', minWidth: '100%' }}
             className="biomarkers--side--bar--text--area"
             placeholder='Insert molecules'
             name='moleculesTextArea'
+            rows={10}
             value={textAreaString.value}
             onChange={(_, { value }) => setTextAreaString({ ...textAreaString, value: typeof value === 'string' ? value : '' })}
         />

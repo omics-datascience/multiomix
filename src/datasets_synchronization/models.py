@@ -65,7 +65,7 @@ class CGDSDataset(models.Model):
     platform = models.IntegerField(choices=MethylationPlatform.choices, blank=True, null=True)
 
     @property
-    def file_type(self):
+    def file_type(self) -> FileType:
         if hasattr(self, 'mrna_dataset'):
             return FileType.MRNA
         elif hasattr(self, 'mirna_dataset'):
@@ -76,7 +76,7 @@ class CGDSDataset(models.Model):
             return FileType.METHYLATION
         return FileType.CLINICAL
 
-    def get_reverse_study(self):
+    def __get_reverse_study(self):
         """Gets the related study model's name"""
         if hasattr(self, 'mrna_dataset'):
             return self.mrna_dataset
@@ -93,7 +93,7 @@ class CGDSDataset(models.Model):
 
     @property
     def study(self):
-        return self.get_reverse_study()
+        return self.__get_reverse_study()
 
     def __str__(self):
         study_name = self.study.name if self.study else '-'
@@ -257,6 +257,11 @@ class CGDSStudy(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_all_datasets(self) -> List[CGDSDataset]:
+        """Returns a list of all the associated CGDSDataset"""
+        return [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
+                self.clinical_sample_dataset, self.clinical_patient_dataset]
 
     def save(self, *args, **kwargs):
         """Everytime the CGDSStudy status changes, uses websocket to update state in the frontend"""

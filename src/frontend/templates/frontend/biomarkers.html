@@ -15,12 +15,12 @@
 {% block js %}
         <script>
                 const urlBiomarkersCRUD = "{% url 'biomarkers_api' %}"
+                const urlGeneSymbols = "{% url 'gene_symbols' %}"
                 const urlGeneSymbolsFinder = "{% url 'gene_symbols_finder' %}"
-                const urlGenesSymbols = "{% url 'genes_symbols' %}"
-                const urlMiRNAsFinder = "{% url 'mirnas_finder' %}"
-                const urlMiRNAsSymbols = "{% url 'mirnas_symbols' %}"
-                const urlMethylationsFinder = "{% url 'methylations_finder' %}"
-                const urlMethylationsSymbols = "{% url 'methylations_symbols' %}"
+                const urlMiRNACodes = "{% url 'mirna_codes' %}"
+                const urlMiRNACodesFinder = "{% url 'mirna_codes_finder' %}"
+                const urlMethylationSites = "{% url 'methylation_sites' %}"
+                const urlMethylationSitesFinder = "{% url 'methylation_sites_finder' %}"
         </script>
         {% render_bundle 'biomarkers' 'js' %}
 {% endblock %}

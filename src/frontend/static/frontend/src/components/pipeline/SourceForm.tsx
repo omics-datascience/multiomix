@@ -1,66 +1,15 @@
 import React from 'react'
 import { Grid, Select, Header, Icon, Label, DropdownItemProps, Image } from 'semantic-ui-react'
-import { FileType, SourceType, Source, ResponseRequestWithPagination, DatasetModalUserFileTableControl, GeneralTableControl, Nullable, KySearchParams } from '../../utils/interfaces'
+import { FileType, SourceType, Source, Nullable } from '../../utils/interfaces'
 import { UploadButton } from '../common/UploadButton'
 import { SemanticICONS } from 'semantic-ui-react/dist/commonjs/generic'
 import { UserDatasetsModal } from './user-datasets-modal/UserDatasetsModal'
 import { CGDSDatasetsModal } from './cgds-datasets-modal/CGDSDatasetsModal'
 import ky from 'ky'
 import { DjangoUserFile, DjangoCGDSStudy, DjangoInstitution } from '../../utils/django_interfaces'
-import { getDefaultGeneralTableControl } from '../../utils/util_functions'
 import { HugeFileAdvice } from './HugeFileAdvice'
 
-declare const urlUserFilesCRUD: string
-declare const urlCGDSStudiesCRUD: string
 declare const urlUserInstitutions: string
-
-/** Used to check which dataset retrieve in certain situations */
-enum DatasetType {
-    USER_FILE = 1,
-    CGDS = 2
-}
-
-/**
- * Request extra params to get the User's Files/Datasets
- */
-type GetUserFilesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Search String */
-    search?: string,
-    /** Field to sort */
-    ordering?: string,
-    /** FileType (mRNA, miRNA, etc) */
-    file_type: FileType
-    /** Id of tag */
-    tag?: number,
-    /** Institution ID for filtering. The name of field is in plural because Django Rest Framework */
-    institutions?: 'all' | 'private' | 'public' | number,
-    /** If specified, returns only User's private datasets */
-    private?: Nullable<string>,
-    /** If specified, returns only public datasets */
-    public?: Nullable<string>,
-    /** If specified, returns only clinical datasets which have at least one survival column tuple */
-    with_survival_only?: Nullable<string>,
-}
-
-/**
- * Request extra params to get the CGDSStudies
- */
-type GetCGDSStudiesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Search String */
-    search?: string,
-    /** Field to sort */
-    ordering?: string,
-    /** FileType (mRNA, miRNA, etc) */
-    file_type: FileType
-}
 
 /** Header icon/image */
 type HeaderIcon = {
@@ -104,13 +53,8 @@ interface SourceFormProps {
 interface SourceFormState {
     showUserDatasetsModal: boolean,
     showCGDSDatasetsModal: boolean,
-    gettingDatasets: boolean,
-    datasets: DjangoUserFile[],
-    CGDSStudies: DjangoCGDSStudy[],
     selectedFile: Nullable<DjangoUserFile>,
     selectedStudy: Nullable<DjangoCGDSStudy>,
-    tableControlUserDatasets: DatasetModalUserFileTableControl,
-    tableControlCGDSStudies: GeneralTableControl,
     userInstitutions: DjangoInstitution[]
 }
 
@@ -121,43 +65,22 @@ interface SourceFormState {
  * @returns Component
  */
 class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
-    filterTimeout: number | undefined
-
     constructor (props) {
         super(props)
 
         this.state = {
             showUserDatasetsModal: false,
             showCGDSDatasetsModal: false,
-            gettingDatasets: false,
-            datasets: [],
-            CGDSStudies: [],
             selectedFile: null,
             selectedStudy: null,
-            userInstitutions: [],
-            tableControlUserDatasets: {
-                ...this.getDefaultTableControl(),
-                tagId: null,
-                visibility: 'all'
-            },
-            tableControlCGDSStudies: this.getDefaultTableControl()
+            userInstitutions: []
         }
-    }
-
-    /**
-     * Generates a default table control object sorted by name and pageSize = 50
-     * @returns Default GeneralTableControl object
-     */
-    getDefaultTableControl (): GeneralTableControl {
-        const defaultTableControl = getDefaultGeneralTableControl()
-        return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
     }
 
     /**
      * Opens the modal for select the User's dataset
      */
     openUsersDatasetsSelectionModal = () => {
-        this.getUserDatasets()
         this.getUserInstitutions()
         this.setState({ showUserDatasetsModal: true })
     }
@@ -166,7 +89,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * Opens the modal for select the CGDSDataset
      */
     openCGDSDatasetsSelectionModal = () => {
-        this.getCGDSStudies()
         this.setState({ showCGDSDatasetsModal: true })
     }
 
@@ -186,177 +108,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
     }
 
     /**
-     * Updates the UserFiles  TableControl state
-     * @param field Field to update
-     * @param value New value for the field
-     * @param resetPagination If true, resets pagination to pageNumber = 1. Useful when the filters change
-     */
-    handleTableControlUserFiles = (field: string, value, resetPagination: boolean = true) => {
-        const tableControlUserDatasets = this.state.tableControlUserDatasets
-
-        tableControlUserDatasets[field] = value
-
-        // If pagination reset is required...
-        if (resetPagination) {
-            tableControlUserDatasets.pageNumber = 1
-        }
-
-        this.setState<never>({ tableControlUserDatasets }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout((this.getUserDatasets), 300)
-        })
-    }
-
-    /**
-     * Updates the CGDSStudies TableControl state
-     * @param field Field to update
-     * @param value New value for the field
-     * @param resetPagination If true, resets pagination to pageNumber = 1. Useful when the filters change
-     */
-    handleTableControlCGDSStudies = (field: string, value, resetPagination: boolean = true) => {
-        const tableControlCGDSStudies = this.state.tableControlCGDSStudies
-
-        tableControlCGDSStudies[field] = value
-
-        // If pagination reset is required...
-        if (resetPagination) {
-            tableControlCGDSStudies.pageNumber = 1
-        }
-
-        this.setState<never>({ tableControlCGDSStudies }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout((this.getCGDSStudies), 300)
-        })
-    }
-
-    /**
-     * Handles sorting on table (UsersFiles or CGDSStudies)
-     * @param headerServerCodeToSort Server code of the selected column to send to the server for sorting
-     * @param datasetType Dataset to check which state change and which dataset retrieve after sorting
-     */
-    handleSort = (headerServerCodeToSort: string, datasetType: DatasetType) => {
-        const tableControlName = datasetType === DatasetType.USER_FILE
-            ? 'tableControlUserDatasets'
-            : 'tableControlCGDSStudies'
-
-        const tableControl = this.state[tableControlName]
-
-        // If the user has selected other column for sorting...
-        if (tableControl.sortField !== headerServerCodeToSort) {
-            tableControl.sortField = headerServerCodeToSort
-            tableControl.sortOrderAscendant = true
-        } else {
-            // If it's the same just change the sort order
-            tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
-        }
-        this.setState<never>({ [tableControlName]: tableControl }, () => {
-            if (datasetType === DatasetType.USER_FILE) {
-                this.getUserDatasets()
-            } else {
-                this.getCGDSStudies()
-            }
-        })
-    }
-
-    /**
-     * Fetches the logged user files to submit a pipeline
-     */
-    getUserDatasets = () => {
-        const tableControl = this.state.tableControlUserDatasets
-
-        const searchParams: GetUserFilesSearchParams = {
-            file_type: this.props.fileType,
-            search: tableControl.textFilter,
-            page: tableControl.pageNumber,
-            page_size: tableControl.pageSize
-        }
-
-        if (tableControl.sortField) {
-            searchParams.ordering = `${tableControl.sortOrderAscendant ? '' : '-'}${tableControl.sortField}`
-        }
-
-        if (tableControl.tagId) {
-            searchParams.tag = tableControl.tagId
-        }
-
-        if (this.props.showOnlyClinicalDataWithSurvivalTuples) {
-            searchParams.with_survival_only = null
-        }
-
-        // NOTE: for 'private' and 'public' conditions the backend just need to check if the key is present in query params
-        // If an empty string is set Ky doesn't send the param, that's why it's setting the keys as null here
-        if (tableControl.visibility === 'private') {
-            searchParams.private = null
-        } else {
-            if (tableControl.visibility === 'public') {
-                searchParams.public = null
-            } else {
-                if (tableControl.visibility !== 'all') {
-                    searchParams.institutions = tableControl.visibility
-                }
-            }
-        }
-
-        this.setState({ gettingDatasets: true }, () => {
-            ky.get(urlUserFilesCRUD, { searchParams: searchParams as KySearchParams }).then((response) => {
-                this.setState({ gettingDatasets: false })
-
-                response.json().then((paginatedResponse: ResponseRequestWithPagination<DjangoUserFile>) => {
-                    const tableControlUserDatasets = this.state.tableControlUserDatasets
-                    tableControlUserDatasets.totalRowCount = paginatedResponse.count
-                    this.setState({
-                        datasets: paginatedResponse.results,
-                        tableControlUserDatasets
-                    })
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                this.setState({ gettingDatasets: false })
-                console.log('Error getting user datasets', err)
-            })
-        })
-    }
-
-    /**
-     * Fetches the CGDS studies to submit a pipeline
-     */
-    getCGDSStudies = () => {
-        const tableControl = this.state.tableControlCGDSStudies
-
-        const searchParams: GetCGDSStudiesSearchParams = {
-            file_type: this.props.fileType,
-            search: tableControl.textFilter,
-            page: tableControl.pageNumber,
-            page_size: tableControl.pageSize
-        }
-
-        if (tableControl.sortField) {
-            searchParams.ordering = `${tableControl.sortOrderAscendant ? '' : '-'}${tableControl.sortField}`
-        }
-
-        this.setState({ gettingDatasets: true }, () => {
-            ky.get(urlCGDSStudiesCRUD, { searchParams: searchParams as KySearchParams }).then((response) => {
-                this.setState({ gettingDatasets: false })
-
-                response.json().then((paginatedResponse: ResponseRequestWithPagination<DjangoCGDSStudy>) => {
-                    const tableControlCGDSStudies = this.state.tableControlCGDSStudies
-                    tableControlCGDSStudies.totalRowCount = paginatedResponse.count
-                    this.setState({
-                        CGDSStudies: paginatedResponse.results,
-                        tableControlCGDSStudies
-                    })
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                this.setState({ gettingDatasets: false })
-                console.log('Error getting user datasets', err)
-            })
-        })
-    }
-
-    /**
      * Closes the modal for select the dataset and cleans the files list
      */
     handleClose = () => {
@@ -364,8 +115,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             showUserDatasetsModal: false,
             showCGDSDatasetsModal: false,
             selectedFile: null,
-            selectedStudy: null,
-            datasets: []
+            selectedStudy: null
         })
     }
 
@@ -511,33 +261,26 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             <Grid.Row>
                 {/* Select User's files modal */}
                 <UserDatasetsModal
-                    datasets={this.state.datasets}
-                    tableControl={this.state.tableControlUserDatasets}
                     showUserDatasetsModal={this.state.showUserDatasetsModal}
                     selectedFile={this.state.selectedFile}
                     selectingFileType={this.props.fileType}
                     tagOptions={this.props.tagOptions}
                     institutionsOptions={institutionsOptions}
+                    showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples ?? false}
                     selectFile={this.selectUploadedFile}
                     handleClose={this.handleClose}
                     markFileAsSelected={this.markFileAsSelected}
-                    handleTableControlChanges={this.handleTableControlUserFiles}
-                    handleSort={this.handleSort}
                 />
 
                 {/* Select CGDS Study modal */}
                 {showCBioPortalOption &&
                     <CGDSDatasetsModal
-                        studies={this.state.CGDSStudies}
                         showCGDSDatasetsModal={this.state.showCGDSDatasetsModal}
-                        gettingDatasets={this.state.gettingDatasets}
+                        selectingFileType={this.props.fileType}
                         selectedStudy={this.state.selectedStudy}
-                        tableControl={this.state.tableControlCGDSStudies}
                         selectStudy={this.selectStudy}
                         handleClose={this.handleClose}
                         markStudyAsSelected={this.markStudyAsSelected}
-                        handleTableControlChanges={this.handleTableControlCGDSStudies}
-                        handleSort={this.handleSort}
                     />
                 }
                 <Header as='h4' icon={isIcon} image={!isIcon} textAlign="center">
@@ -567,4 +310,4 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
     }
 }
 
-export { SourceForm, DatasetType }
+export { SourceForm }

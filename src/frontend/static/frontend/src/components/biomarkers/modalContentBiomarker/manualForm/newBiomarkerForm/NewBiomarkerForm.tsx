@@ -75,6 +75,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
 
             <TextArea
                 style={{ maxWidth: '100%', minWidth: '100%' }}
+                rows={3}
                 onChange={(_, e) => props.handleChangeInputForm(e.value ? e.value.toString() : '', 'biomarkerDescription')}
                 placeholder='Description'
                 className='biomarkers--side--bar--container--item--margin'

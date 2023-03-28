@@ -3,16 +3,16 @@ import { Base, CurrentUserContext } from '../Base'
 import { Grid, Header, Button, Modal, Table, SemanticICONS, SemanticCOLORS, Icon } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode, RowHeader, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, getDefaultGeneralTableControl, generatesOrderingQuery, formatDateLocale } from '../../utils/util_functions'
-import { FileType, CGDSDatasetSeparator, NameOfCGDSDataset, GeneralTableControl, WebsocketConfig, ResponseRequestWithPagination, Nullable } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale } from '../../utils/util_functions'
+import { FileType, CGDSDatasetSeparator, NameOfCGDSDataset, Nullable } from '../../utils/interfaces'
 import { NewCGDSStudyForm } from './NewCGDSStudyForm'
-import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { survivalTupleIsValid } from '../survival/utils'
 import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
+
 // URLs defined in cgds.html
 declare const urlSyncCGDSStudy: string
 
@@ -40,7 +40,6 @@ interface CGDSPanelState {
     showSyncCGDSStudyModal: boolean,
     deletingCGDSStudy: boolean,
     addingOrEditingCGDSStudy: boolean,
-    tableControl: GeneralTableControl
 }
 
 /**
@@ -58,14 +57,8 @@ interface CGDSStudyAndDatasetStateInfo {
  * @returns Component
  */
 class CGDSPanel extends React.Component<{}, CGDSPanelState> {
-    filterTimeout: number | undefined;
-    websocketClient: WebsocketClientCustom;
-
     constructor (props) {
         super(props)
-
-        // Initializes the websocket client
-        this.initializeWebsocketClient()
 
         this.state = {
             CGDSStudies: [],
@@ -75,58 +68,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             sendingSyncRequest: false,
             selectedCGDSStudyToDeleteOrSync: null,
             deletingCGDSStudy: false,
-            addingOrEditingCGDSStudy: false,
-            tableControl: this.getDefaultTableControl()
+            addingOrEditingCGDSStudy: false
         }
-    }
-
-    /**
-     * Generates a default table control object sorted by name and pageSize = 50
-     * @returns Default GeneralTableControl object
-     */
-    getDefaultTableControl (): GeneralTableControl {
-        const defaultTableControl = getDefaultGeneralTableControl()
-        return { ...defaultTableControl, sortField: 'name', pageSize: 50 }
-    }
-
-    /**
-     * Handles the table's control filters, select, etc changes
-     * @param name Name of the state field to modify
-     * @param value Value to set to the state field
-     * @param resetPagination If true, resets pagination to pageNumber = 1. Useful when the filters change
-     */
-    handleTableControlChanges = (name: string, value: any, resetPagination: boolean = true) => {
-        // Updates filter information and makes the request again
-        const tableControl = this.state.tableControl
-        tableControl[name] = value
-
-        // If pagination reset is required...
-        if (resetPagination) {
-            tableControl.pageNumber = 1
-        }
-
-        // Sets the new state and gets new experiment info
-        this.setState({ tableControl }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout(this.getCGDSStudies, 300)
-        })
-    }
-
-    /**
-     * Handles sorting on table
-     * @param headerServerCodeToSort Server code of the selected column to send to the server for sorting
-     */
-    handleSort = (headerServerCodeToSort: string) => {
-        // If the user has selected other column for sorting...
-        const tableControl = this.state.tableControl
-        if (this.state.tableControl.sortField !== headerServerCodeToSort) {
-            tableControl.sortField = headerServerCodeToSort
-            tableControl.sortOrderAscendant = true
-        } else {
-            // If it's the same just change the sort order
-            tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
-        }
-        this.setState({ tableControl }, () => this.getCGDSStudies())
     }
 
     /**
@@ -193,61 +136,11 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     }
 
     /**
-     * When the component has been mounted, It requests for
-     * tags and files
-     */
-    componentDidMount () {
-        this.getCGDSStudies()
-    }
-
-    /**
-     * Fetches the CGDS Studies
-     */
-    getCGDSStudies = () => {
-        const searchParams: CGDSStudiesSearchParams = {
-            page: this.state.tableControl.pageNumber,
-            page_size: this.state.tableControl.pageSize,
-            ordering: generatesOrderingQuery(
-                this.state.tableControl.sortField,
-                this.state.tableControl.sortOrderAscendant
-            )
-        }
-
-        ky.get(urlCGDSStudiesCRUD, { searchParams: searchParams }).then((response) => {
-            response.json().then((jsonResponse: ResponseRequestWithPagination<DjangoCGDSStudy>) => {
-                const tableControl = this.state.tableControl
-                tableControl.totalRowCount = jsonResponse.count
-                this.setState({ CGDSStudies: jsonResponse.results, tableControl })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log('Error getting studies ->', err)
-        })
-    }
-
-    /**
      * Selects a new CGDS Study to edit
      * @param selectedCGDSStudy CGDS Study to edit
      */
     editTag = (selectedCGDSStudy: DjangoCGDSStudy) => {
         this.setState({ newCGDSStudy: copyObject(selectedCGDSStudy) })
-    }
-
-    /**
-     * Instantiates a Websocket Client
-     */
-    initializeWebsocketClient () {
-        const websocketConfig: WebsocketConfig = {
-            channelUrl: '/ws/admins/',
-            commandsToAttend: [
-                {
-                    key: 'update_cgds_studies',
-                    functionToExecute: this.getCGDSStudies
-                }
-            ]
-        }
-        this.websocketClient = new WebsocketClientCustom(websocketConfig)
     }
 
     /**
@@ -283,7 +176,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     if (CGDSStudy && CGDSStudy.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
                         this.cleanForm()
-                        this.getCGDSStudies()
                     }
                 }).catch((err) => {
                     alertGeneralError()
@@ -365,7 +257,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                         deletingCGDSStudy: false,
                         showDeleteCGDSStudyModal: false
                     })
-                    this.getCGDSStudies()
                 }
             }).catch((err) => {
                 this.setState({ deletingCGDSStudy: false })
@@ -924,6 +815,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                 <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
                                     <PaginatedTable<DjangoCGDSStudy>
                                         headerTitle='cBioPortal'
+                                        wsChannelUrl='/ws/admins/'
+                                        updateWSKey='update_cgds_studies'
                                         headers={this.getDefaultHeaders(currentUser?.is_superuser)}
                                         urlToRetrieveData={urlCGDSStudiesCRUD}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'

@@ -41,7 +41,7 @@ type PaginationCustomFilter = {
  */
 interface PaginatedTableProps<T> {
     /** Title above the table */
-    headerTitle: string,
+    headerTitle?: string,
     /** List of headers to render as HeaderCell */
     headers: RowHeader<T>[]
     /** Backend API URL to retrieve data */
@@ -62,8 +62,13 @@ interface PaginatedTableProps<T> {
     searchLabel?: string,
     /** Search input's placeholder */
     searchPlaceholder?: string,
-    /** Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private Websocket channel. */
+    /**
+     * Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private
+     * Websocket channel or to the `channelUrl` URL.
+     */
     updateWSKey?: string,
+    /** Websocket URL to listen for the `updateWSKey`. If this prop is not specified, it uses the current user's private Websocket channel. */
+    wsChannelUrl?: string,
     /** If specified, an Information popup will be displayed on the top-right corner of the table */
     infoPopupContent?: string,
     /** Callback to render custom components applied to data retrieved from backend API */
@@ -248,7 +253,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     initializeWebsocketClient () {
         if (this.props.updateWSKey) {
             const websocketConfig: WebsocketConfig = {
-                channelUrl: `/ws/users/${currentUserId}/`,
+                channelUrl: this.props.wsChannelUrl ?? `/ws/users/${currentUserId}/`,
                 commandsToAttend: [
                     {
                         key: this.props.updateWSKey,
@@ -279,9 +284,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 <Grid.Row>
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
-                        <Header as='h4' textAlign='left'>
-                            {this.props.headerTitle}
-                        </Header>
+                        {this.props.headerTitle &&
+                            <Header as='h4' textAlign='left'>
+                                {this.props.headerTitle}
+                            </Header>
+                        }
 
                         {this.props.infoPopupContent &&
                             <InfoPopup
