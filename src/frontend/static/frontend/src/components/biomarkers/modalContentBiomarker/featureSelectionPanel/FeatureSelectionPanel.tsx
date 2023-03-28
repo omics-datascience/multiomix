@@ -1,10 +1,12 @@
 import React from 'react'
 import { Icon, Segment, Step } from 'semantic-ui-react'
-import { RowHeader } from '../../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
+import { SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
-import { Biomarker, FeatureSelectionPanelData } from '../../types'
-import { FeatureSelectionStep1 } from './step1/FeatureSelectionStep1'
-import { FeatureSelectionStep2 } from './step2/FeatureSelectionStep2'
+import { Biomarker, FeatureSelectionPanelData, SourceStateBiomarker } from '../../types'
+import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
+import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
+import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
 
 interface FeatureSelectionPanelProps {
     getDefaultFilters: PaginationCustomFilter[],
@@ -12,6 +14,11 @@ interface FeatureSelectionPanelProps {
     featureSelection: FeatureSelectionPanelData,
     markBiomarkerAsSelected: (biomarker: Biomarker) => void,
     handleCompleteStep1: (selectedBiomarker: Biomarker) => void,
+    handleCompleteStep2: () => void,
+    selectNewFile: () => void,
+    selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => void,
+    selectUploadedFile: (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => void,
+    handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
 }
 
 /**
@@ -43,10 +50,19 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     handleCompleteStep1={props.handleCompleteStep1}
                 />)
             case 2:
-                return (<FeatureSelectionStep2 />)
+                return (<FeatureSelectionStep2
+                    featureSelection={props.featureSelection}
+                    selectNewFile={props.selectNewFile}
+                    selectStudy={props.selectStudy}
+                    selectUploadedFile={props.selectUploadedFile}
+                    handleChangeSourceType={props.handleChangeSourceType}
+                    handleCompleteStep2={props.handleCompleteStep2}
+                />)
 
             default:
-                return <></>
+                return (<FeatureSelectionStep3
+                    featureSelection={props.featureSelection}
+                />)
         }
     }
     return (
