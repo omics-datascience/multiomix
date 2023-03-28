@@ -106,12 +106,14 @@ class CGDSDataset(models.Model):
         self.number_of_rows = self.__get_row_count()
         self.number_of_samples = len(self.get_column_names())
 
-    def get_df(self) -> DataFrame:
+    def get_df(self, use_standard_column: bool = True) -> DataFrame:
         """
         Generates a DataFrame from a CGDSDataset's MongoDB collection
+        @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
+        column (useful for clinical datasets).
         @return: A DataFrame with the data to work
         """
-        return global_mongo_service.get_collection_as_df(self.mongo_collection_name)
+        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column)
 
     def get_df_in_chunks(self) -> Iterable[DataFrame]:
         """

@@ -85,16 +85,22 @@ class MongoService(object):
         dictionary['experiment_key'] = unique_key
         return dictionary
 
-    def get_collection_as_df(self, collection_name: str) -> pd.DataFrame:
+    def get_collection_as_df(self, collection_name: str, use_standard_column: bool) -> pd.DataFrame:
         """
-        Gets a MongoDB collection as a DataFrame
-        @param collection_name: Collection's name
-        @return: DataFrame with the collection data
+        Gets a MongoDB collection as a DataFrame.
+        @param collection_name: Collection's name.
+        @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
+        column (useful for clinical datasets).
+        @return: DataFrame with the collection data.
         """
         df = pd.DataFrame(list(self.db[collection_name].find({}, self.default_non_used_fields_experiments)))
 
         try:
-            df.set_index(STANDARD_SYMBOL, inplace=True)
+            if use_standard_column:
+                index_column = STANDARD_SYMBOL
+            else:
+                index_column = df.columns[0]
+            df.set_index(index_column, inplace=True)
         except Exception as e:
             logging.error(f'Error setting index {e}')
 
