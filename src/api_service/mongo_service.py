@@ -38,14 +38,14 @@ class MongoService(object):
         self.default_non_used_fields_pagination = {'Entrez_Gene_Id': 0}
 
         # Non used for experiments
-        self.default_non_used_fields_experiments = {**self.default_non_used_fields_pagination, '_id': 0}
+        self.default_non_used_fields_experiments = {
+            **self.default_non_used_fields_pagination,
+            '_id': 0,
+            MOLECULE_SYMBOL: 0  # Ignores molecule symbol to use the standardized one
+        }
 
         # Non used fields when querying the DB to, for instance, check samples in common
-        self.default_non_used_fields_query = {
-            **self.default_non_used_fields_experiments,
-            MOLECULE_SYMBOL: 0,
-            STANDARD_SYMBOL: 0
-        }
+        self.default_non_used_fields_query = {**self.default_non_used_fields_experiments, STANDARD_SYMBOL: 0}
 
     @staticmethod
     def __create_mongo_client() -> MongoClient:
@@ -94,7 +94,7 @@ class MongoService(object):
         df = pd.DataFrame(list(self.db[collection_name].find({}, self.default_non_used_fields_experiments)))
 
         try:
-            df.set_index(df.columns[0], inplace=True)
+            df.set_index(STANDARD_SYMBOL, inplace=True)
         except Exception as e:
             logging.error(f'Error setting index {e}')
 
@@ -103,13 +103,13 @@ class MongoService(object):
     @staticmethod
     def __process_batch(batch: List[Any]) -> pd.DataFrame:
         """
-        Generate a Pandas DataFrame from a batch retrieved from MongoDB and removes unused fields
-        @param batch: Batch to process
-        @return: Pandas DataFrame with batch data
+        Generate a Pandas DataFrame from a batch retrieved from MongoDB and removes unused fields.
+        @param batch: Batch to process.
+        @return: Pandas DataFrame with batch data.
         """
         df = pd.DataFrame(batch)
         df.drop('_id', axis=1, inplace=True)
-        df.set_index(df.columns[0], inplace=True)
+        df.set_index(STANDARD_SYMBOL, inplace=True)
         return df
 
     def get_collection_as_df_in_chunks(self, collection_name: str, chunk_size: int) -> Iterator[pd.DataFrame]:

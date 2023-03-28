@@ -27,16 +27,15 @@ def run_ggca(
     keep_top_n: Optional[int]
 ) -> Tuple[List[ggca.CorResult], int, int]:
     """
-    Runs GGCA correlation analysis
-
-    @param mrna_file_path: mRNA temp file path
-    @param gem_file_path: GEM temp file path
-    @param collect_gem_dataset: True to make the GEM dataset available in memory
-    @param experiment: Experiment object with params for correlation analysis
-    @param is_cpg_analysis: True to indicate that the second column in GEM dataset contains CpG Site IDs
-    @param keep_top_n: To truncate results. None to keep all the resulting combinations
+    Runs GGCA correlation analysis.
+    @param mrna_file_path: mRNA temp file path.
+    @param gem_file_path: GEM temp file path.
+    @param collect_gem_dataset: True to make the GEM dataset available in memory.
+    @param experiment: Experiment object with params for correlation analysis.
+    @param is_cpg_analysis: True to indicate that the second column in GEM dataset contains CpG Site IDs.
+    @param keep_top_n: To truncate results. None to keep all the resulting combinations.
     @return: A tuple with a vec of CorResult, the number of combinations before truncating by 'keep_top_n' parameter
-    and the number of combinations evaluated
+    and the number of combinations evaluated.
     """
     return ggca.correlate(
         mrna_file_path,
@@ -296,9 +295,10 @@ class PipelineManager(object):
         for chunk in self.get_chunks_of_list(combinations, settings.INSERT_CHUNK_SIZE):
             start = time.time()
             insert_statements: List[str] = [
+                # Replaces single quotes to make them compatible with Postgres
                 insert_template.format(
-                    cor_result.gene,
-                    cor_result.gem,
+                    cor_result.gene.replace("'", "''"),
+                    cor_result.gem.replace("'", "''"),
                     cor_result.correlation,
                     cor_result.p_value,
                     cor_result.adjusted_p_value
