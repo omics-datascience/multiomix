@@ -484,7 +484,7 @@ class PipelineManager(object):
         self.__check_if_stopped(stop_event)
 
         # Truncates the result if specified in settings.py
-        result_limit_row_count = int(settings.RESULT_DATAFRAME_LIMIT_ROWS) \
+        result_limit_row_count: Optional[int] = settings.RESULT_DATAFRAME_LIMIT_ROWS \
             if settings.RESULT_DATAFRAME_LIMIT_ROWS \
             else None
 
