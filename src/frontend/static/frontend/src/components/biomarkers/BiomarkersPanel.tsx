@@ -79,7 +79,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default feature selection creation structure
      * @returns Default the default Alert
      */
-    getDefaultfeatureSelectionProps = ():FeatureSelectionPanelData => {
+    getDefaultfeatureSelectionProps = (): FeatureSelectionPanelData => {
         return {
             step: 1,
             biomarker: null,
@@ -98,7 +98,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default feature selection blind search creation structure
      * @returns Default Blind search structure
      */
-    getDefaultBlindSearch = ():BlindSearchFeatureSelection => {
+    getDefaultBlindSearch = (): BlindSearchFeatureSelection => {
         return {
             fitnessFunction: FitnessFunctions.CLUSTERING,
             [FitnessFunctions.CLUSTERING]: this.getDefaultCluster(),

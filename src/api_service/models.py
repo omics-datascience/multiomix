@@ -77,7 +77,7 @@ class ExperimentSource(models.Model):
         """
         row_data = self.get_valid_source().get_specific_row(row)
         if row_data.size == 0:
-            raise KeyError
+            raise KeyError(f'The row "{row}" was not found')
 
         if columns_idx is not None:
             row_data = row_data[columns_idx]
@@ -209,7 +209,8 @@ class ExperimentClinicalSource(ExperimentSource):
                     raise KeyError
 
         if row_data.size == 0:
-            raise KeyError
+            samples_error = ', '.join(samples)
+            raise KeyError(f'Samples "{samples_error}" were not found')
 
         row_data = row_data[clinical_attribute].to_numpy()
         return row_data
@@ -219,8 +220,8 @@ class ExperimentClinicalSource(ExperimentSource):
         Generates a join Pandas DataFrame for both CGDSDatasets of clinical data (cBioPortal has two clinical files)
         @return: Pandas DataFrame
         """
-        df1: pd.DataFrame = self.cgds_dataset.get_df()  # The index is implicitly PATIENT_ID
-        df2: pd.DataFrame = self.extra_cgds_dataset.get_df()
+        df1: pd.DataFrame = self.cgds_dataset.get_df(use_standard_column=False)  # The index is implicitly PATIENT_ID
+        df2: pd.DataFrame = self.extra_cgds_dataset.get_df(use_standard_column=False)
         df2 = df2.reset_index(level=0)
         # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) to avoid breaking df join
         df2[PATIENT_ID_COLUMN] = df2[PATIENT_ID_COLUMN].str.replace(TCGA_CONVENTION, '', regex=True)

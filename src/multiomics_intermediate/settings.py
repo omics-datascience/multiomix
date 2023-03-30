@@ -161,7 +161,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 
-# Redirections
+# Redirection
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
@@ -185,7 +185,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # the DataFrame is truncated. None for prevent truncation
 RESULT_DATAFRAME_LIMIT_ROWS: int = int(os.getenv('RESULT_DATAFRAME_LIMIT_ROWS', 300000))
 
-# MongoDB credentials (should be setted as ENV vars)
+# MongoDB's credentials (should be set as ENV vars)
 MONGO_SETTINGS = {
     'username': os.getenv('MONGO_USERNAME', 'root'),
     'password': os.getenv('MONGO_PASSWORD', 'example'),

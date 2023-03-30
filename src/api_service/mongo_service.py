@@ -38,14 +38,14 @@ class MongoService(object):
         self.default_non_used_fields_pagination = {'Entrez_Gene_Id': 0}
 
         # Non used for experiments
-        self.default_non_used_fields_experiments = {**self.default_non_used_fields_pagination, '_id': 0}
+        self.default_non_used_fields_experiments = {
+            **self.default_non_used_fields_pagination,
+            '_id': 0,
+            MOLECULE_SYMBOL: 0  # Ignores molecule symbol to use the standardized one
+        }
 
         # Non used fields when querying the DB to, for instance, check samples in common
-        self.default_non_used_fields_query = {
-            **self.default_non_used_fields_experiments,
-            MOLECULE_SYMBOL: 0,
-            STANDARD_SYMBOL: 0
-        }
+        self.default_non_used_fields_query = {**self.default_non_used_fields_experiments, STANDARD_SYMBOL: 0}
 
     @staticmethod
     def __create_mongo_client() -> MongoClient:
@@ -85,16 +85,22 @@ class MongoService(object):
         dictionary['experiment_key'] = unique_key
         return dictionary
 
-    def get_collection_as_df(self, collection_name: str) -> pd.DataFrame:
+    def get_collection_as_df(self, collection_name: str, use_standard_column: bool) -> pd.DataFrame:
         """
-        Gets a MongoDB collection as a DataFrame
-        @param collection_name: Collection's name
-        @return: DataFrame with the collection data
+        Gets a MongoDB collection as a DataFrame.
+        @param collection_name: Collection's name.
+        @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
+        column (useful for clinical datasets).
+        @return: DataFrame with the collection data.
         """
         df = pd.DataFrame(list(self.db[collection_name].find({}, self.default_non_used_fields_experiments)))
 
         try:
-            df.set_index(df.columns[0], inplace=True)
+            if use_standard_column:
+                index_column = STANDARD_SYMBOL
+            else:
+                index_column = df.columns[0]
+            df.set_index(index_column, inplace=True)
         except Exception as e:
             logging.error(f'Error setting index {e}')
 
@@ -103,13 +109,13 @@ class MongoService(object):
     @staticmethod
     def __process_batch(batch: List[Any]) -> pd.DataFrame:
         """
-        Generate a Pandas DataFrame from a batch retrieved from MongoDB and removes unused fields
-        @param batch: Batch to process
-        @return: Pandas DataFrame with batch data
+        Generate a Pandas DataFrame from a batch retrieved from MongoDB and removes unused fields.
+        @param batch: Batch to process.
+        @return: Pandas DataFrame with batch data.
         """
         df = pd.DataFrame(batch)
         df.drop('_id', axis=1, inplace=True)
-        df.set_index(df.columns[0], inplace=True)
+        df.set_index(STANDARD_SYMBOL, inplace=True)
         return df
 
     def get_collection_as_df_in_chunks(self, collection_name: str, chunk_size: int) -> Iterator[pd.DataFrame]:
@@ -162,14 +168,11 @@ class MongoService(object):
         @param row: Row's identifier to retrieve.
         @return: List of rows values.
         """
-        # Exclude '_id' field getting the second column
-        column_names = self.get_only_columns_names(collection_name, exclude_special_fields=False)
-        row_identifier = column_names[1]
         document: Optional[Dict] = self.db[collection_name].find_one(
-            {row_identifier: row},
+            {STANDARD_SYMBOL: row},
             self.default_non_used_fields_query
         )
-        return list(document.values())
+        return list(document.values()) if document is not None else []
 
     def get_collection_row_count(self, collection_name: str) -> int:
         """
