@@ -1,25 +1,40 @@
 import React from 'react'
-import { Select } from 'semantic-ui-react'
-import { FeatureSelectionAlgorithms, FeatureSelectionPanelData } from '../../../types'
+import { Button, Select } from 'semantic-ui-react'
+import { FeatureSelectionAlgorithms, FeatureSelectionPanelData, FitnessFunctions } from '../../../types'
 import { BlindSearch } from './blindSearch/BlindSearch'
 
 interface Props {
     featureSelection: FeatureSelectionPanelData,
+    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithms) => void,
+    handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
+    handleChangeClusterOption: (value: number, key: string) => void,
+    handleChangeSvmOption: (value: number, key: string) => void,
+    handleGoBackStep2: () => void,
 }
 const options = [
-    { key: FeatureSelectionAlgorithms.BLIND_SEARCH, text: FeatureSelectionAlgorithms.BLIND_SEARCH, value: FeatureSelectionAlgorithms.BLIND_SEARCH, disabled: false },
-    { key: FeatureSelectionAlgorithms.COX_REGRESSION, text: FeatureSelectionAlgorithms.COX_REGRESSION, value: FeatureSelectionAlgorithms.COX_REGRESSION, disabled: true },
-    { key: FeatureSelectionAlgorithms.BBHA, text: FeatureSelectionAlgorithms.BBHA, value: FeatureSelectionAlgorithms.BBHA, disabled: true },
-    { key: FeatureSelectionAlgorithms.PSO, text: FeatureSelectionAlgorithms.PSO, value: FeatureSelectionAlgorithms.PSO, disabled: true }
+    { key: FeatureSelectionAlgorithms.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithms.BLIND_SEARCH, disabled: false },
+    { key: FeatureSelectionAlgorithms.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithms.COX_REGRESSION, disabled: false },
+    { key: FeatureSelectionAlgorithms.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithms.BBHA, disabled: false },
+    { key: FeatureSelectionAlgorithms.PSO, text: 'PSO', value: FeatureSelectionAlgorithms.PSO, disabled: false }
 ]
 export const FeatureSelectionStep3 = (props: Props) => {
-    const { featureSelection } = props
+    const {
+        featureSelection,
+        handleChangeAlgorithm,
+        handleChangeFitnessFunction,
+        handleChangeClusterOption,
+        handleChangeSvmOption,
+        handleGoBackStep2
+    } = props
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
             case FeatureSelectionAlgorithms.BLIND_SEARCH:
 
                 return (<BlindSearch
                     blindSearch={featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH]}
+                    handleChangeFitnessFunction={handleChangeFitnessFunction}
+                    handleChangeClusterOption={handleChangeClusterOption}
+                    handleChangeSvmOption={handleChangeSvmOption}
                 />)
 
             default:
@@ -34,11 +49,24 @@ export const FeatureSelectionStep3 = (props: Props) => {
                 name='moleculeSelected'
                 options={options}
                 value={featureSelection.algorithm}
-                onChange={(_, { value }) => console.log(value)}
+                onChange={(_, { value }) => handleChangeAlgorithm(value as FeatureSelectionAlgorithms)}
             />
             {
                 algorithmSelection()
             }
+            <Button
+                color="red"
+                onClick={() => handleGoBackStep2()}
+            >
+                Atras
+            </Button>
+            <Button
+                color="green"
+                onClick={() => console.log('se completo todo!', featureSelection)}
+            // disabled={props.featureSelection.clinicalSource === null}
+            >
+                Confirm
+            </Button>
         </div>
     )
 }

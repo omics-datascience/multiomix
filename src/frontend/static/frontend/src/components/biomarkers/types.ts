@@ -117,33 +117,46 @@ interface MoleculesSectionData {
     value: string | string[],
 }
 enum FeatureSelectionAlgorithms {
-    BLIND_SEARCH = 'Blind Search',
-    COX_REGRESSION = 'Cox Regression',
-    BBHA = 'BBHA',
-    PSO = 'PSO'
+    BLIND_SEARCH = 1,
+    COX_REGRESSION = 2,
+    BBHA = 3,
+    PSO = 4
 }
-enum BlindSearchFitnessFunction {
-    CLUSTERING = 'Clustering',
-    SVM = 'SVM',
-    RF = 'RF'
+enum FitnessFunctions {
+    CLUSTERING = 1,
+    SVM = 2,
+    RF = 3
 }
 
 enum ClusteringParameters {
-    K_MEANS = 'K-Means',
+    K_MEANS = 1,
 }
 enum ClusteringButtons {
-    COX_REGRESSION = 'Cox Regression',
-    LOG_RANK_TEST = 'Log-Rank test'
+    COX_REGRESSION = 1,
+    LOG_RANK_TEST = 2
 }
-
+enum SvmParameters {
+    LINEAR = 1,
+    POLYNOMIAL = 2,
+    RBF = 3,
+}
+enum SvmButtons {
+    RANKING = 1,
+    REGRESSION = 2
+}
 interface FitnessFunctionClustering{
     parameters: ClusteringParameters
     selection: ClusteringButtons
 }
+interface FitnessFunctionSvm{
+    parameters: SvmParameters
+    selection: SvmButtons
+}
 
 interface BlindSearchFeatureSelection {
-    fitnessFunction: BlindSearchFitnessFunction
-    [BlindSearchFitnessFunction.CLUSTERING]: FitnessFunctionClustering
+    fitnessFunction: FitnessFunctions
+    [FitnessFunctions.CLUSTERING]: Nullable<FitnessFunctionClustering>
+    [FitnessFunctions.SVM]: Nullable<FitnessFunctionSvm>
 }
 /** Structure for feature selection. */
 interface FeatureSelectionPanelData {
@@ -161,9 +174,12 @@ interface FeatureSelectionPanelData {
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
+    SvmParameters,
+    SvmButtons,
+    FitnessFunctionSvm,
     FitnessFunctionClustering,
     BlindSearchFeatureSelection,
-    BlindSearchFitnessFunction,
+    FitnessFunctions,
     FeatureSelectionAlgorithms,
     ClusteringButtons,
     ClusteringParameters,

@@ -3,7 +3,7 @@ import { Icon, Segment, Step } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
 import { SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
-import { Biomarker, FeatureSelectionPanelData, SourceStateBiomarker } from '../../types'
+import { Biomarker, FeatureSelectionAlgorithms, FeatureSelectionPanelData, FitnessFunctions, SourceStateBiomarker } from '../../types'
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
@@ -19,6 +19,12 @@ interface FeatureSelectionPanelProps {
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => void,
     selectUploadedFile: (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => void,
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
+    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithms) => void,
+    handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
+    handleChangeClusterOption: (value: number, key: string) => void,
+    handleChangeSvmOption: (value: number, key: string) => void,
+    handleGoBackStep1: () => void,
+    handleGoBackStep2: () => void,
 }
 
 /**
@@ -57,11 +63,17 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     selectUploadedFile={props.selectUploadedFile}
                     handleChangeSourceType={props.handleChangeSourceType}
                     handleCompleteStep2={props.handleCompleteStep2}
+                    handleGoBackStep1={props.handleGoBackStep1}
                 />)
 
             default:
                 return (<FeatureSelectionStep3
                     featureSelection={props.featureSelection}
+                    handleChangeAlgorithm={props.handleChangeAlgorithm}
+                    handleChangeFitnessFunction={props.handleChangeFitnessFunction}
+                    handleChangeClusterOption={props.handleChangeClusterOption}
+                    handleChangeSvmOption={props.handleChangeSvmOption}
+                    handleGoBackStep2={props.handleGoBackStep2}
                 />)
         }
     }

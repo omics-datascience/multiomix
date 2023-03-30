@@ -13,6 +13,7 @@ interface Props {
     selectUploadedFile: (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => void,
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
     handleCompleteStep2: () => void,
+    handleGoBackStep1: () => void,
 }
 export const FeatureSelectionStep2 = (props: Props) => {
     const {
@@ -21,9 +22,9 @@ export const FeatureSelectionStep2 = (props: Props) => {
         selectNewFile,
         selectUploadedFile,
         selectStudy,
-        handleCompleteStep2
+        handleCompleteStep2,
+        handleGoBackStep1
     } = props
-    console.log(props.featureSelection.clinicalSource)
     return (
         <>
             <div className='selections-grid-container'>
@@ -133,6 +134,12 @@ export const FeatureSelectionStep2 = (props: Props) => {
                     }}
                 />
             </div>
+            <Button
+                color="red"
+                onClick={() => handleGoBackStep1()}
+            >
+                Atras
+            </Button>
             <Button
                 color="green"
                 onClick={() => handleCompleteStep2()}
