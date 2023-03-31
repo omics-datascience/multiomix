@@ -6,7 +6,8 @@ import { SourceForm } from '../../../../pipeline/SourceForm'
 import { FeatureSelectionPanelData, SourceStateBiomarker } from '../../../types'
 import './../featureSelection.css'
 
-interface Props {
+/** FeatureSelectionStep2 props. */
+interface FeatureSelectionStep2Props {
     featureSelection: FeatureSelectionPanelData,
     selectNewFile: () => void,
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => void,
@@ -15,7 +16,8 @@ interface Props {
     handleCompleteStep2: () => void,
     handleGoBackStep1: () => void,
 }
-export const FeatureSelectionStep2 = (props: Props) => {
+
+export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
     const {
         featureSelection,
         handleChangeSourceType,
@@ -49,6 +51,8 @@ export const FeatureSelectionStep2 = (props: Props) => {
                         selectStudy(selectedStudy, 'clinicalSource')
                     }}
                 />
+
+                {/* mRNA */}
                 <SourceForm
                     source={featureSelection.mRNASource}
                     headerTitle='mRNA profile'
@@ -56,7 +60,7 @@ export const FeatureSelectionStep2 = (props: Props) => {
                         type: 'img',
                         src: '/static/frontend/img/profiles/mRNA.svg'
                     }}
-                    fileType={FileType.CNA}
+                    fileType={FileType.MRNA}
                     disabled={!featureSelection.selectedBiomarker?.number_of_mrnas}
                     tagOptions={[]}
                     handleChangeSourceType={(selectedSourceType) => {
@@ -70,48 +74,8 @@ export const FeatureSelectionStep2 = (props: Props) => {
                         selectStudy(selectedStudy, 'mRNASource')
                     }}
                 />
-                <SourceForm
-                    source={featureSelection.cnaSource}
-                    headerTitle='cna profile'
-                    headerIcon={{
-                        type: 'img',
-                        src: '/static/frontend/img/profiles/CNA.svg'
-                    }}
-                    fileType={FileType.METHYLATION}
-                    disabled={!featureSelection.selectedBiomarker?.number_of_cnas}
-                    tagOptions={[]}
-                    handleChangeSourceType={(selectedSourceType) => {
-                        handleChangeSourceType(selectedSourceType, 'cnaSource')
-                    }}
-                    selectNewFile={selectNewFile}
-                    selectUploadedFile={(selectedFile) => {
-                        selectUploadedFile(selectedFile, 'cnaSource')
-                    }}
-                    selectStudy={(selectedStudy) => {
-                        selectStudy(selectedStudy, 'cnaSource')
-                    }}
-                />
-                <SourceForm
-                    source={featureSelection.methylationSource}
-                    headerTitle='methylation profile'
-                    headerIcon={{
-                        type: 'img',
-                        src: '/static/frontend/img/profiles/methylation.svg'
-                    }}
-                    fileType={FileType.MIRNA}
-                    disabled={!featureSelection.selectedBiomarker?.number_of_methylations}
-                    tagOptions={[]}
-                    handleChangeSourceType={(selectedSourceType) => {
-                        handleChangeSourceType(selectedSourceType, 'methylationSource')
-                    }}
-                    selectNewFile={selectNewFile}
-                    selectUploadedFile={(selectedFile) => {
-                        selectUploadedFile(selectedFile, 'methylationSource')
-                    }}
-                    selectStudy={(selectedStudy) => {
-                        selectStudy(selectedStudy, 'methylationSource')
-                    }}
-                />
+
+                {/* miRNA */}
                 <SourceForm
                     source={featureSelection.mirnaSource}
                     headerTitle='mirna profile'
@@ -119,7 +83,7 @@ export const FeatureSelectionStep2 = (props: Props) => {
                         type: 'img',
                         src: '/static/frontend/img/profiles/miRNA.svg'
                     }}
-                    fileType={FileType.MRNA}
+                    fileType={FileType.MIRNA}
                     disabled={!featureSelection.selectedBiomarker?.number_of_mirnas}
                     tagOptions={[]}
                     handleChangeSourceType={(selectedSourceType) => {
@@ -133,12 +97,58 @@ export const FeatureSelectionStep2 = (props: Props) => {
                         selectStudy(selectedStudy, 'mirnaSource')
                     }}
                 />
+
+                {/* CNA */}
+                <SourceForm
+                    source={featureSelection.cnaSource}
+                    headerTitle='cna profile'
+                    headerIcon={{
+                        type: 'img',
+                        src: '/static/frontend/img/profiles/CNA.svg'
+                    }}
+                    fileType={FileType.CNA}
+                    disabled={!featureSelection.selectedBiomarker?.number_of_cnas}
+                    tagOptions={[]}
+                    handleChangeSourceType={(selectedSourceType) => {
+                        handleChangeSourceType(selectedSourceType, 'cnaSource')
+                    }}
+                    selectNewFile={selectNewFile}
+                    selectUploadedFile={(selectedFile) => {
+                        selectUploadedFile(selectedFile, 'cnaSource')
+                    }}
+                    selectStudy={(selectedStudy) => {
+                        selectStudy(selectedStudy, 'cnaSource')
+                    }}
+                />
+
+                {/* Methylation */}
+                <SourceForm
+                    source={featureSelection.methylationSource}
+                    headerTitle='methylation profile'
+                    headerIcon={{
+                        type: 'img',
+                        src: '/static/frontend/img/profiles/methylation.svg'
+                    }}
+                    fileType={FileType.METHYLATION}
+                    disabled={!featureSelection.selectedBiomarker?.number_of_methylations}
+                    tagOptions={[]}
+                    handleChangeSourceType={(selectedSourceType) => {
+                        handleChangeSourceType(selectedSourceType, 'methylationSource')
+                    }}
+                    selectNewFile={selectNewFile}
+                    selectUploadedFile={(selectedFile) => {
+                        selectUploadedFile(selectedFile, 'methylationSource')
+                    }}
+                    selectStudy={(selectedStudy) => {
+                        selectStudy(selectedStudy, 'methylationSource')
+                    }}
+                />
             </div>
             <Button
                 color="red"
                 onClick={() => handleGoBackStep1()}
             >
-                Atras
+                Go back
             </Button>
             <Button
                 color="green"

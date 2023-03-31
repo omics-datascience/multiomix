@@ -5,8 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
-import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, BlindSearchFeatureSelection, FitnessFunctions, ClusteringParameters, ClusteringButtons, FitnessFunctionClustering, SvmParameters, SvmButtons, FitnessFunctionSvm } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, FitnessFunctions, ClusteringParameters, ClusteringButtons, FitnessFunctionClustering, SvmParameters, SvmButtons, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -16,6 +15,7 @@ import './../../css/biomarkers.css'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
 import { Alert } from '../common/Alert'
+
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
 declare const urlTagsCRUD: string
@@ -50,11 +50,9 @@ interface BiomarkersPanelState {
 }
 
 /**
- * Renders a CRUD panel for a Biomarker
+ * Renders a CRUD panel for a Biomarker.
  */
 export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
-    filterTimeout: number | undefined;
-    websocketClient: WebsocketClientCustom;
     constructor (props) {
         super(props)
 
@@ -71,7 +69,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             tags: [],
             isOpenModal: false,
             alert: this.getDefaultAlertProps(),
-            featureSelection: this.getDefaultfeatureSelectionProps()
+            featureSelection: this.getDefaultFeatureSelectionProps()
         }
     }
 
@@ -79,7 +77,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default feature selection creation structure
      * @returns Default the default Alert
      */
-    getDefaultfeatureSelectionProps = (): FeatureSelectionPanelData => {
+    getDefaultFeatureSelectionProps = (): FeatureSelectionPanelData => {
         return {
             step: 1,
             biomarker: null,
@@ -90,27 +88,25 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             methylationSource: this.getDefaultSource(),
             cnaSource: this.getDefaultSource(),
             algorithm: FeatureSelectionAlgorithms.BLIND_SEARCH,
-            [FeatureSelectionAlgorithms.BLIND_SEARCH]: this.getDefaultBlindSearch()
-        }
-    }
-
-    /**
-     * Generates default feature selection blind search creation structure
-     * @returns Default Blind search structure
-     */
-    getDefaultBlindSearch = (): BlindSearchFeatureSelection => {
-        return {
             fitnessFunction: FitnessFunctions.CLUSTERING,
-            [FitnessFunctions.CLUSTERING]: this.getDefaultCluster(),
-            [FitnessFunctions.SVM]: null
+            fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters()
         }
     }
 
     /**
-     * Generates default cluster
+     * Generates default settings for all the fitness functions.
+     * @returns Default structure for all the fitness functions.
+     */
+    getDefaultFitnessFunctionParameters = (): FitnessFunctionParameters => ({
+        clusteringParameters: this.getDefaultClusteringParameters(),
+        svmParameters: this.getDefaultSvmParameters()
+    })
+
+    /**
+     * Generates default clustering parameters.
      * @returns Default Cluster structure
      */
-    getDefaultCluster = ():FitnessFunctionClustering => {
+    getDefaultClusteringParameters = ():FitnessFunctionClustering => {
         return {
             parameters: ClusteringParameters.K_MEANS,
             selection: ClusteringButtons.COX_REGRESSION
@@ -118,15 +114,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates default SVM
+     * Generates default SVM parameters.
      * @returns Default SVM structure
      */
-        getSvm = ():FitnessFunctionSvm => {
-            return {
-                parameters: SvmParameters.LINEAR,
-                selection: SvmButtons.RANKING
-            }
+    getDefaultSvmParameters = ():FitnessFunctionSvm => {
+        return {
+            parameters: SvmParameters.LINEAR,
+            selection: SvmButtons.RANKING
         }
+    }
 
     /**
      * Generates a default Source
@@ -147,7 +143,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates a default alert structure
      * @returns Default the default Alert
      */
-
     getDefaultAlertProps = (): CustomAlert => {
         return {
             message: '', // This have to change during cycle of component
@@ -200,78 +195,42 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Select the algorithm, initialize the state of the selected and clean the others states
      * @param algorithm algorithm selected
      */
-
-    handleChangeAlgorithm = (algorithm:FeatureSelectionAlgorithms) => {
+    handleChangeAlgorithm = (algorithm: FeatureSelectionAlgorithms) => {
         const featureSelection = this.state.featureSelection
         featureSelection.algorithm = algorithm
-        switch (algorithm) {
-            case FeatureSelectionAlgorithms.BLIND_SEARCH:
-                featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH] = this.getDefaultBlindSearch()
-                featureSelection[FeatureSelectionAlgorithms.BBHA] = null
-                featureSelection[FeatureSelectionAlgorithms.COX_REGRESSION] = null
-                featureSelection[FeatureSelectionAlgorithms.PSO] = null
-                break
-            default:
-                break
-        }
-        this.setState({
-            featureSelection
-        })
+        this.setState({ featureSelection })
     }
 
     /**
      * Select the algorithm, initialize the state of the selected and clean the others states
-     * @param algorithm algorithm selected
+     * @param fitnessFunction Fitness function selected
      */
-
-    handleChangeFitnessFunction = (fitnessFunction:FitnessFunctions) => {
+    handleChangeFitnessFunction = (fitnessFunction: FitnessFunctions) => {
         const featureSelection = this.state.featureSelection
-        featureSelection[featureSelection.algorithm].fitnessFunction = fitnessFunction
-        switch (fitnessFunction) {
-            case FitnessFunctions.CLUSTERING:
-                featureSelection[featureSelection.algorithm][FitnessFunctions.CLUSTERING] = this.getDefaultCluster()
-                featureSelection[featureSelection.algorithm][FitnessFunctions.RF] = null
-                featureSelection[featureSelection.algorithm][FitnessFunctions.SVM] = null
-                break
-            case FitnessFunctions.SVM:
-                featureSelection[featureSelection.algorithm][FitnessFunctions.CLUSTERING] = null
-                featureSelection[featureSelection.algorithm][FitnessFunctions.RF] = null
-                featureSelection[featureSelection.algorithm][FitnessFunctions.SVM] = this.getSvm()
-                break
-            default:
-                break
-        }
-        this.setState({
-            featureSelection
-        })
+        featureSelection.fitnessFunction = fitnessFunction
+        this.setState({ featureSelection })
     }
 
     /**
      * Manage the change of the option in cluster option in any algorithm selected inside a clustering
-     * @param value value selected
      * @param key name of the key that have changed
+     * @param value value selected
      */
-
-    handleChangeClusterOption = (value:number, key:string) => {
+    handleChangeClusterOption = (key: string, value: number) => {
         const featureSelection = this.state.featureSelection
-        featureSelection[featureSelection.algorithm][FitnessFunctions.CLUSTERING][key] = value
-        this.setState({
-            featureSelection
-        })
+        featureSelection.fitnessFunctionParameters.clusteringParameters[key] = value
+        this.setState({ featureSelection })
     }
 
     /**
      * Manage the change of the option in cluster option in any algorithm selected inside a clustering
-     * @param value value selected
      * @param key name of the key that have changed
+     * @param value value selected
      */
-
-    handleChangeSvmOption = (value:number, key:string) => {
+    handleChangeSvmOption = (key: string, value: number) => {
         const featureSelection = this.state.featureSelection
-        featureSelection[featureSelection.algorithm][FitnessFunctions.SVM][key] = value
-        this.setState({
-            featureSelection
-        })
+        featureSelection.fitnessFunctionParameters.svmParameters[key] = value
+        this.setState({ featureSelection })
     }
 
     /**
@@ -397,7 +356,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Method that select how the user is going to create a Biomarker
      * @param type Select the way to create a Biomarker
      */
-
     handleSelectModal = (type: BiomarkerTypeSelected) => {
         this.setState(
             {
@@ -1234,7 +1192,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const featureSelection = this.state.featureSelection
         featureSelection.step = 2
         featureSelection.algorithm = FeatureSelectionAlgorithms.BLIND_SEARCH
-        featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH] = this.getDefaultBlindSearch()
+        // featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH] = this.getDefaultBlindSearch()
         this.setState({ featureSelection })
     }
 
@@ -1278,7 +1236,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     closeBiomarkerModal = () => {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
-            featureSelection: this.getDefaultfeatureSelectionProps(),
+            featureSelection: this.getDefaultFeatureSelectionProps(),
             isOpenModal: false,
             confirmModal: this.getDefaultConfirmModal(),
             biomarkerTypeSelected: BiomarkerTypeSelected.BASE

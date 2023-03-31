@@ -8,11 +8,13 @@ enum BiomarkerType {
     CNA = 'CNA',
     METHYLATION = 'Methylation',
 }
+
 enum BiomarkerTypeSelected {
     BASE,
     MANUAL,
     FEATURE_SELECTION,
 }
+
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
     AREA = 'area',
@@ -107,6 +109,7 @@ type MoleculesSection = {
     [BiomarkerType.METHYLATION]: MoleculeSectionItem,
     [BiomarkerType.MRNA]: MoleculeSectionItem,
 }
+
 interface MoleculeSectionItem {
     isLoading: boolean,
     data: MoleculesSectionData[]
@@ -116,73 +119,101 @@ interface MoleculesSectionData {
     isValid: boolean,
     value: string | string[],
 }
+
+/** Available Feature Selection algorithms. */
 enum FeatureSelectionAlgorithms {
     BLIND_SEARCH = 1,
     COX_REGRESSION = 2,
     BBHA = 3,
     PSO = 4
 }
+
+/** Available fitness functions. */
 enum FitnessFunctions {
     CLUSTERING = 1,
     SVM = 2,
     RF = 3
 }
 
-enum ClusteringParameters {
+/** Clustering algorithm. */
+enum ClusteringAlgorithm {
     K_MEANS = 1,
 }
-enum ClusteringButtons {
+
+/** Clustering metric to optimize. */
+enum ClusteringMetric {
     COX_REGRESSION = 1,
     LOG_RANK_TEST = 2
 }
-enum SvmParameters {
+
+/** SVM's kernel */
+enum SvmKernel {
     LINEAR = 1,
     POLYNOMIAL = 2,
     RBF = 3,
 }
-enum SvmButtons {
+
+/** Task to execute with survival SVM. */
+enum SvmTask {
     RANKING = 1,
     REGRESSION = 2
 }
+
+/** Settings for the Clustering fitness function. */
 interface FitnessFunctionClustering{
-    parameters: ClusteringParameters
-    selection: ClusteringButtons
-}
-interface FitnessFunctionSvm{
-    parameters: SvmParameters
-    selection: SvmButtons
+    parameters: ClusteringAlgorithm
+    selection: ClusteringMetric
 }
 
-interface BlindSearchFeatureSelection {
-    fitnessFunction: FitnessFunctions
-    [FitnessFunctions.CLUSTERING]: Nullable<FitnessFunctionClustering>
-    [FitnessFunctions.SVM]: Nullable<FitnessFunctionSvm>
+/** Settings for the SVM fitness function. */
+interface FitnessFunctionSvm{
+    parameters: SvmKernel
+    selection: SvmTask
 }
-/** Structure for feature selection. */
+
+/** All the different fitness functions' parameters. */
+interface FitnessFunctionParameters {
+    clusteringParameters: FitnessFunctionClustering,
+    svmParameters: FitnessFunctionSvm
+}
+
+/** Structure for the Feature Selection panel. */
 interface FeatureSelectionPanelData {
+    /** Current Step in the panel. */
     step: number;
-    biomarker: Nullable<Biomarker>; // add docs
+    /** Biomarker instance to optimize with Feature Selection. */
+    biomarker: Nullable<Biomarker>;
+    /** Selected Biomarker instance in the Biomarkers table. */
     selectedBiomarker: Nullable<Biomarker>;
+    /** Clinical source. */
     clinicalSource: Source,
+    /** mRNA source. */
     mRNASource: Source,
+    /** mirna source. */
     mirnaSource: Source,
-    methylationSource: Source,
+    /** cna source. */
     cnaSource: Source,
+    /** methylation source. */
+    methylationSource: Source,
+    /** Algorithm to make Feature Selection. */
     algorithm: FeatureSelectionAlgorithms,
-    [FeatureSelectionAlgorithms.BLIND_SEARCH]: Nullable<BlindSearchFeatureSelection>
+    /** Fitness function to optimize in the algorithm. */
+    fitnessFunction: FitnessFunctions,
+    /** Parameters of the selected `fitnessFunction`. */
+    fitnessFunctionParameters: FitnessFunctionParameters
 }
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
-    SvmParameters,
-    SvmButtons,
+    SvmKernel as SvmParameters,
+    SvmTask as SvmButtons,
     FitnessFunctionSvm,
     FitnessFunctionClustering,
-    BlindSearchFeatureSelection,
+    FitnessFunctionParameters,
     FitnessFunctions,
     FeatureSelectionAlgorithms,
-    ClusteringButtons,
-    ClusteringParameters,
+    ClusteringMetric as ClusteringButtons,
+    ClusteringAlgorithm as ClusteringParameters,
     SourceStateBiomarker,
     FeatureSelectionPanelData,
     BiomarkerTypeSelected,

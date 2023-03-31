@@ -21,8 +21,8 @@ interface FeatureSelectionPanelProps {
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithms) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
-    handleChangeClusterOption: (value: number, key: string) => void,
-    handleChangeSvmOption: (value: number, key: string) => void,
+    handleChangeClusterOption: (key: string, value: number) => void,
+    handleChangeSvmOption: (key: string, value: number) => void,
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
 }
@@ -100,9 +100,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                 </Step>
             </Step.Group>
             <Segment>
-                {
-                    handleSectionActive()
-                }
+                {handleSectionActive()}
             </Segment>
         </div>
     )
