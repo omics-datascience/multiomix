@@ -405,11 +405,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }
         )
     }
+
     /**
      * Method that select how the user is going to create a Biomarker
      * @param biomarker Biomarker selected to update
      */
-
     handleOpenEditBiomarker = (biomarker: Biomarker) => {
         this.setState(
             {
@@ -420,7 +420,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     biomarkerName: biomarker.name,
                     biomarkerDescription: biomarker.description,
                     tag: biomarker.tag,
-                    moleculeSelected: BiomarkerType.MIRNA,
+                    moleculeSelected: BiomarkerType.MRNA,
                     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
                     moleculesSection: {
                         [BiomarkerType.CNA]: {
@@ -625,7 +625,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             biomarkerName: '',
             biomarkerDescription: '',
             tag: null,
-            moleculeSelected: BiomarkerType.MIRNA,
+            moleculeSelected: BiomarkerType.MRNA,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
             validation: {
                 haveAmbiguous: false,
