@@ -2,7 +2,7 @@
 import json
 from enum import Enum
 from typing import Optional, Dict, Type, Union, Iterable, cast
-from django.db import models
+from django.db import models, connection
 from django.http import JsonResponse
 from common.response import ResponseStatus
 import numpy as np
@@ -74,3 +74,11 @@ def create_survival_columns_from_json(survival_columns_json: str, user_file: Use
     survival_columns = json.loads(survival_columns_json)
     for survival_column in survival_columns:
         SurvivalColumnsTupleUserFile.objects.create(clinical_dataset=user_file, **survival_column)
+
+
+def close_db_connection():
+    """
+    Closes connections as a ThreadPoolExecutor in Django does not close them automatically
+    See: https://stackoverflow.com/questions/57211476/django-orm-leaks-connections-when-using-threadpoolexecutor
+    """
+    connection.close()

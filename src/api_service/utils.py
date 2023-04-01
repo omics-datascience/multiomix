@@ -1,6 +1,5 @@
 from typing import Optional, Literal, Tuple, Union
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.db import connection
 from django.http.request import HttpRequest
 from rest_framework.request import Request
 from api_service.enums import SourceType
@@ -130,11 +129,3 @@ def get_cgds_dataset(cgds_study: CGDSStudy, file_type: FileType) -> Optional[CGD
         return cgds_study.methylation_dataset
     else:
         return None
-
-
-def close_db_connection():
-    """
-    Closes connections as a ThreadPoolExecutor in Django does not close them automatically
-    See: https://stackoverflow.com/questions/57211476/django-orm-leaks-connections-when-using-threadpoolexecutor
-    """
-    connection.close()

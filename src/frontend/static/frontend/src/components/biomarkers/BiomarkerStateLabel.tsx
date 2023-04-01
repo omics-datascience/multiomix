@@ -17,7 +17,7 @@ interface BiomarkerStateLabelProps {
 export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
     let stateIcon: StateIconInfo
     switch (props.biomarkerState) {
-        case BiomarkerState.CREATED:
+        case BiomarkerState.COMPLETED:
             stateIcon = {
                 iconName: 'check',
                 color: 'green',
@@ -25,7 +25,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment is complete'
             }
             break
-        case BiomarkerState.FAILED:
+        case BiomarkerState.FINISHED_WITH_ERROR:
             stateIcon = {
                 iconName: 'times',
                 color: 'red',
@@ -33,12 +33,52 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment has finished with errors. Try again'
             }
             break
-        case BiomarkerState.PROCESSING:
+        case BiomarkerState.WAITING_FOR_QUEUE:
+            stateIcon = {
+                iconName: 'wait',
+                color: 'yellow',
+                loading: false,
+                title: 'The process of this experiment will start soon'
+            }
+            break
+        case BiomarkerState.NO_SAMPLES_IN_COMMON:
+            stateIcon = {
+                iconName: 'user outline',
+                color: 'red',
+                loading: false,
+                title: 'Datasets don\'t have samples in common'
+            }
+            break
+        case BiomarkerState.IN_PROCESS:
             stateIcon = {
                 iconName: 'sync alternate',
                 color: 'yellow',
                 loading: true,
                 title: 'The experiment is being processed'
+            }
+            break
+        case BiomarkerState.STOPPING:
+            stateIcon = {
+                iconName: 'stop',
+                loading: false,
+                title: 'The experiment is being stopped',
+                className: 'experiment-stopping-icon'
+            }
+            break
+        case BiomarkerState.STOPPED:
+            stateIcon = {
+                iconName: 'stop',
+                color: 'red',
+                loading: false,
+                title: 'The experiment was stopped'
+            }
+            break
+        case BiomarkerState.REACHED_ATTEMPTS_LIMIT:
+            stateIcon = {
+                iconName: 'undo',
+                color: 'red',
+                loading: false,
+                title: 'The experiment has failed several times. Try changing some parameters and try again.'
             }
             break
     }

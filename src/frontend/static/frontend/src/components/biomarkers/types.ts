@@ -21,9 +21,15 @@ enum BiomarkerOrigin {
 
 /** All the possible states of a Biomarker. */
 enum BiomarkerState {
-    CREATED = 1,
-    FAILED = 2,
-    PROCESSING = 3
+    COMPLETED = 1,
+    FINISHED_WITH_ERROR = 2,
+    IN_PROCESS = 3,
+    WAITING_FOR_QUEUE = 4,
+    NO_SAMPLES_IN_COMMON = 5,
+    STOPPING = 6,
+    STOPPED = 7,
+    REACHED_ATTEMPTS_LIMIT = 8
+
 }
 
 enum MoleculesTypeOfSelection {
@@ -174,14 +180,14 @@ enum SVMTask {
 
 /** Settings for the Clustering fitness function. */
 interface FitnessFunctionClustering{
-    parameters: ClusteringAlgorithm
-    selection: ClusteringMetric
+    algorithm: ClusteringAlgorithm
+    metric: ClusteringMetric
 }
 
 /** Settings for the SVM fitness function. */
 interface FitnessFunctionSvm{
-    parameters: SVMKernel
-    selection: SVMTask
+    kernel: SVMKernel
+    task: SVMTask
 }
 
 /** All the different fitness functions' parameters. */

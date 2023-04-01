@@ -113,8 +113,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultClusteringParameters = (): FitnessFunctionClustering => {
         return {
-            parameters: ClusteringAlgorithm.K_MEANS,
-            selection: ClusteringMetric.COX_REGRESSION
+            algorithm: ClusteringAlgorithm.K_MEANS,
+            metric: ClusteringMetric.COX_REGRESSION
         }
     }
 
@@ -124,8 +124,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultSvmParameters = (): FitnessFunctionSvm => {
         return {
-            parameters: SVMKernel.LINEAR,
-            selection: SVMTask.RANKING
+            kernel: SVMKernel.LINEAR,
+            task: SVMTask.RANKING
         }
     }
 
@@ -863,7 +863,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_cnas: 0,
             number_of_methylations: 0,
             origin: BiomarkerOrigin.BASE,
-            state: BiomarkerState.CREATED,
+            state: BiomarkerState.COMPLETED,
             contains_nan_values: false,
             column_used_as_index: '',
             methylations: [],

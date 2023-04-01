@@ -408,7 +408,8 @@ class PipelineManager(object):
                                                                                  check_cpg_platform=False)
         gem_temp_file, gem_number_of_rows, is_cpg_analysis = self.__generate_clean_temp_file(
             experiment.gem_source,
-            common_samples, experiment,
+            common_samples,
+            experiment,
             GEM_INDEX_NAME,
             check_cpg_platform=True
         )

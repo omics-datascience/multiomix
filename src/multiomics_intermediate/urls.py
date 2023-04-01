@@ -30,6 +30,7 @@ urlpatterns = [
     path('cgds/', include('datasets_synchronization.urls')),
     path('institutions/', include('institutions.urls')),
     path('biomarkers/', include('biomarkers.urls')),
+    path('feature-selection/', include('feature_selection.urls')),
     path('admin/', admin.site.urls),
     path('email/', include(mail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

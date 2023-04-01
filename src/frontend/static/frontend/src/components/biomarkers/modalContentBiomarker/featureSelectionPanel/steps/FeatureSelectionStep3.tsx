@@ -60,7 +60,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 color="red"
                 onClick={() => handleGoBackStep2()}
             >
-                Atras
+                Go back
             </Button>
 
             <Button

@@ -11,7 +11,7 @@ import logging
 from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
-from .utils import close_db_connection
+from common.functions import close_db_connection
 
 
 class TaskQueue(object):
@@ -65,7 +65,7 @@ class TaskQueue(object):
                 with connection.cursor() as cursor:
                     cursor.execute("BEGIN")
 
-            # Computes pearson
+            # Computes correlation analysis
             start = time.time()
             total_row_count, final_row_count, evaluated_combinations = global_pipeline_manager.compute_experiment(
                 experiment,
