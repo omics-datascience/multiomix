@@ -1,13 +1,13 @@
 import React from 'react'
 import { Button, Select } from 'semantic-ui-react'
-import { FeatureSelectionAlgorithms, FeatureSelectionPanelData, FitnessFunctions } from '../../../types'
+import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction } from '../../../types'
 import { BlindSearchPanel } from './blindSearch/BlindSearchPanel'
 
 /** FeatureSelectionStep3 props. */
 interface FeatureSelectionStep3Props {
     featureSelection: FeatureSelectionPanelData,
-    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithms) => void,
-    handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
+    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
+    handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
     handleChangeSvmOption: (key: string, value: number) => void,
     handleGoBackStep2: () => void,
@@ -26,7 +26,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
     } = props
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
-            case FeatureSelectionAlgorithms.BLIND_SEARCH:
+            case FeatureSelectionAlgorithm.BLIND_SEARCH:
                 return (
                     <BlindSearchPanel
                         fitnessFunction={featureSelection.fitnessFunction}
@@ -47,13 +47,13 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 placeholder='Algorithm'
                 name='moleculeSelected'
                 options={[
-                    { key: FeatureSelectionAlgorithms.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithms.BLIND_SEARCH, disabled: false },
-                    { key: FeatureSelectionAlgorithms.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithms.COX_REGRESSION, disabled: false },
-                    { key: FeatureSelectionAlgorithms.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithms.BBHA, disabled: false },
-                    { key: FeatureSelectionAlgorithms.PSO, text: 'PSO', value: FeatureSelectionAlgorithms.PSO, disabled: false }
+                    { key: FeatureSelectionAlgorithm.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithm.BLIND_SEARCH, disabled: false },
+                    { key: FeatureSelectionAlgorithm.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithm.COX_REGRESSION, disabled: false },
+                    { key: FeatureSelectionAlgorithm.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithm.BBHA, disabled: false },
+                    { key: FeatureSelectionAlgorithm.PSO, text: 'PSO', value: FeatureSelectionAlgorithm.PSO, disabled: false }
                 ]}
                 value={featureSelection.algorithm}
-                onChange={(_, { value }) => handleChangeAlgorithm(value as FeatureSelectionAlgorithms)}
+                onChange={(_, { value }) => handleChangeAlgorithm(value as FeatureSelectionAlgorithm)}
             />
             {algorithmSelection()}
             <Button

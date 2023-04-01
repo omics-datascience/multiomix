@@ -1,14 +1,14 @@
 import React from 'react'
 import { Select } from 'semantic-ui-react'
-import { FitnessFunctionParameters, FitnessFunctions } from '../../../../types'
+import { FitnessFunctionParameters, FitnessFunction } from '../../../../types'
 import { ClusteringPanel } from './ClusteringPanel'
 import { SVMPanel } from './SVMPanel'
 
 /** BlindSearch props. */
 interface BlindSearchProps {
-    fitnessFunction: FitnessFunctions,
+    fitnessFunction: FitnessFunction,
     fitnessFunctionParameters: FitnessFunctionParameters,
-    handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
+    handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
     handleChangeSvmOption: (key: string, value: number) => void,
 }
@@ -29,14 +29,14 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
 
     const getFitnessFunctionParametersPanel = () => {
         switch (fitnessFunction) {
-            case FitnessFunctions.CLUSTERING:
+            case FitnessFunction.CLUSTERING:
                 return (
                     <ClusteringPanel
                         settings={fitnessFunctionParameters?.clusteringParameters ?? null}
                         handleChangeClusterOption={handleChangeClusterOption}
                     />
                 )
-            case FitnessFunctions.SVM:
+            case FitnessFunction.SVM:
                 return (
                     <SVMPanel
                         parameters={fitnessFunctionParameters.svmParameters}
@@ -53,12 +53,12 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
             <Select
                 placeholder='Fitness function'
                 options={[
-                    { key: FitnessFunctions.CLUSTERING, text: 'Clustering', value: FitnessFunctions.CLUSTERING },
-                    { key: FitnessFunctions.SVM, text: 'SVM', value: FitnessFunctions.SVM },
-                    { key: FitnessFunctions.RF, text: 'RF', value: FitnessFunctions.RF, disabled: true }
+                    { key: FitnessFunction.CLUSTERING, text: 'Clustering', value: FitnessFunction.CLUSTERING },
+                    { key: FitnessFunction.SVM, text: 'SVM', value: FitnessFunction.SVM },
+                    { key: FitnessFunction.RF, text: 'RF', value: FitnessFunction.RF, disabled: true }
                 ]}
                 value={fitnessFunction ?? undefined}
-                onChange={(_, { value }) => handleChangeFitnessFunction(value as FitnessFunctions)}
+                onChange={(_, { value }) => handleChangeFitnessFunction(value as FitnessFunction)}
             />
             {getFitnessFunctionParametersPanel()}
         </div>

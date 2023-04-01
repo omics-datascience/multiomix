@@ -121,7 +121,7 @@ interface MoleculesSectionData {
 }
 
 /** Available Feature Selection algorithms. */
-enum FeatureSelectionAlgorithms {
+enum FeatureSelectionAlgorithm {
     BLIND_SEARCH = 1,
     COX_REGRESSION = 2,
     BBHA = 3,
@@ -129,7 +129,7 @@ enum FeatureSelectionAlgorithms {
 }
 
 /** Available fitness functions. */
-enum FitnessFunctions {
+enum FitnessFunction {
     CLUSTERING = 1,
     SVM = 2,
     RF = 3
@@ -196,9 +196,9 @@ interface FeatureSelectionPanelData {
     /** methylation source. */
     methylationSource: Source,
     /** Algorithm to make Feature Selection. */
-    algorithm: FeatureSelectionAlgorithms,
+    algorithm: FeatureSelectionAlgorithm,
     /** Fitness function to optimize in the algorithm. */
-    fitnessFunction: FitnessFunctions,
+    fitnessFunction: FitnessFunction,
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters
 }
@@ -210,8 +210,8 @@ export {
     FitnessFunctionSvm,
     FitnessFunctionClustering,
     FitnessFunctionParameters,
-    FitnessFunctions,
-    FeatureSelectionAlgorithms,
+    FitnessFunction,
+    FeatureSelectionAlgorithm,
     ClusteringMetric,
     ClusteringAlgorithm,
     SourceStateBiomarker,

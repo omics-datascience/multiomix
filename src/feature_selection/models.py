@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class FeatureSelectionAlgorithms(models.IntegerChoices):
+class FeatureSelectionAlgorithm(models.IntegerChoices):
     """Available Feature Selection algorithms."""
     BLIND_SEARCH = 1,
     COX_REGRESSION = 2,
@@ -9,7 +9,7 @@ class FeatureSelectionAlgorithms(models.IntegerChoices):
     PSO = 4
 
 
-class FitnessFunctions(models.IntegerChoices):
+class FitnessFunction(models.IntegerChoices):
     """Available fitness functions."""
     CLUSTERING = 1,
     SVM = 2,

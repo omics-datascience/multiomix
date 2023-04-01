@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, FitnessFunctions, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SvmKernel, SvmTask, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SvmKernel, SvmTask, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -90,8 +90,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             mirnaSource: this.getDefaultSource(),
             methylationSource: this.getDefaultSource(),
             cnaSource: this.getDefaultSource(),
-            algorithm: FeatureSelectionAlgorithms.BLIND_SEARCH,
-            fitnessFunction: FitnessFunctions.CLUSTERING,
+            algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
+            fitnessFunction: FitnessFunction.CLUSTERING,
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters()
         }
     }
@@ -198,7 +198,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Select the algorithm, initialize the state of the selected and clean the others states
      * @param algorithm algorithm selected
      */
-    handleChangeAlgorithm = (algorithm: FeatureSelectionAlgorithms) => {
+    handleChangeAlgorithm = (algorithm: FeatureSelectionAlgorithm) => {
         const featureSelection = this.state.featureSelection
         featureSelection.algorithm = algorithm
         this.setState({ featureSelection })
@@ -208,7 +208,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Select the algorithm, initialize the state of the selected and clean the others states
      * @param fitnessFunction Fitness function selected
      */
-    handleChangeFitnessFunction = (fitnessFunction: FitnessFunctions) => {
+    handleChangeFitnessFunction = (fitnessFunction: FitnessFunction) => {
         const featureSelection = this.state.featureSelection
         featureSelection.fitnessFunction = fitnessFunction
         this.setState({ featureSelection })
@@ -1194,7 +1194,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleGoBackStep2 = () => {
         const featureSelection = this.state.featureSelection
         featureSelection.step = 2
-        featureSelection.algorithm = FeatureSelectionAlgorithms.BLIND_SEARCH
+        featureSelection.algorithm = FeatureSelectionAlgorithm.BLIND_SEARCH
         this.setState({ featureSelection })
     }
 

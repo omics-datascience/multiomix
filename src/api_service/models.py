@@ -274,7 +274,7 @@ class ExperimentClinicalSource(ExperimentSource):
 
 
 class Experiment(models.Model):
-    """Base Class for common Experiment's fields"""
+    """Base Class for common Correlation experiment's fields"""
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     mRNA_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, related_name='mrna_source')

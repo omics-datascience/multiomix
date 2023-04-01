@@ -3,7 +3,7 @@ import { Icon, Segment, Step } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
 import { SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
-import { Biomarker, FeatureSelectionAlgorithms, FeatureSelectionPanelData, FitnessFunctions, SourceStateBiomarker } from '../../types'
+import { Biomarker, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, SourceStateBiomarker } from '../../types'
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
@@ -20,8 +20,8 @@ interface FeatureSelectionPanelProps {
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => void,
     selectUploadedFile: (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => void,
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
-    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithms) => void,
-    handleChangeFitnessFunction: (fitnessFunction: FitnessFunctions) => void,
+    handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
+    handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
     handleChangeSvmOption: (key: string, value: number) => void,
     handleGoBackStep1: () => void,
