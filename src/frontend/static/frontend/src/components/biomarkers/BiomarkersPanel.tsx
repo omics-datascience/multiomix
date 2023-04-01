@@ -3,9 +3,9 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, RowHeader, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, FitnessFunctions, ClusteringParameters, ClusteringButtons, FitnessFunctionClustering, SvmParameters, SvmButtons, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
+import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithms, FitnessFunctions, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SvmKernel, SvmTask, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -25,6 +25,7 @@ declare const urlMiRNACodes: string
 declare const urlMiRNACodesFinder: string
 declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
+declare const urlFeatureSelectionSubmit: string
 
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {
@@ -46,7 +47,8 @@ interface BiomarkersPanelState {
     tags: DjangoTag[],
     isOpenModal: boolean,
     alert: CustomAlert,
-    featureSelection: FeatureSelectionPanelData
+    featureSelection: FeatureSelectionPanelData,
+    submittingFSExperiment: boolean
 }
 
 /**
@@ -69,7 +71,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             tags: [],
             isOpenModal: false,
             alert: this.getDefaultAlertProps(),
-            featureSelection: this.getDefaultFeatureSelectionProps()
+            featureSelection: this.getDefaultFeatureSelectionProps(),
+            submittingFSExperiment: false
         }
     }
 
@@ -106,10 +109,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default clustering parameters.
      * @returns Default Cluster structure
      */
-    getDefaultClusteringParameters = ():FitnessFunctionClustering => {
+    getDefaultClusteringParameters = (): FitnessFunctionClustering => {
         return {
-            parameters: ClusteringParameters.K_MEANS,
-            selection: ClusteringButtons.COX_REGRESSION
+            parameters: ClusteringAlgorithm.K_MEANS,
+            selection: ClusteringMetric.COX_REGRESSION
         }
     }
 
@@ -117,10 +120,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default SVM parameters.
      * @returns Default SVM structure
      */
-    getDefaultSvmParameters = ():FitnessFunctionSvm => {
+    getDefaultSvmParameters = (): FitnessFunctionSvm => {
         return {
-            parameters: SvmParameters.LINEAR,
-            selection: SvmButtons.RANKING
+            parameters: SvmKernel.LINEAR,
+            selection: SvmTask.RANKING
         }
     }
 
@@ -1192,8 +1195,54 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const featureSelection = this.state.featureSelection
         featureSelection.step = 2
         featureSelection.algorithm = FeatureSelectionAlgorithms.BLIND_SEARCH
-        // featureSelection[FeatureSelectionAlgorithms.BLIND_SEARCH] = this.getDefaultBlindSearch()
         this.setState({ featureSelection })
+    }
+
+    /**
+     * Submits the Feature Selection experiment to backend
+     */
+    submitFeatureSelectionExperiment = () => {
+        // For short...
+        const fsSettings = this.state.featureSelection
+        if (!fsSettings.biomarker || this.state.submittingFSExperiment) {
+            return
+        }
+
+        this.setState({ submittingFSExperiment: true }, () => {
+            // Generates the FormData
+            const formData = new FormData()
+
+            // Appends Biomarker's pk and FS settings
+            formData.append('biomarkerPk', (fsSettings.biomarker?.id as number).toString())
+            formData.append('algorithm', fsSettings.algorithm.toString())
+            formData.append('fitnessFunction', fsSettings.fitnessFunction.toString())
+            formData.append('fitnessFunctionParameters', JSON.stringify(fsSettings.fitnessFunctionParameters))
+
+            // Appends the source type, and the file content depending of it (pk if selecting
+            // an existing file, Blob content if uploading a new file, etc)
+            makeSourceAndAppend(fsSettings.mRNASource, formData, 'mRNA')
+            makeSourceAndAppend(fsSettings.mirnaSource, formData, 'miRNA')
+            makeSourceAndAppend(fsSettings.cnaSource, formData, 'cna')
+            makeSourceAndAppend(fsSettings.methylationSource, formData, 'methylation')
+            makeSourceAndAppend(fsSettings.clinicalSource, formData, 'clinical')
+
+            // Sets the Request's Headers
+            const headers = getDjangoHeader()
+
+            ky.post(urlFeatureSelectionSubmit, { headers, body: formData }).then((response) => {
+                response.json().then((responseJSON /* TODO: type */) => {
+                    console.log('responseJSON: ', responseJSON) // TODO: remove
+                }).catch((err) => {
+                    alertGeneralError()
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error adding new Tag ->', err)
+            }).finally(() => {
+                this.setState({ submittingFSExperiment: false })
+            })
+        })
     }
 
     /**
@@ -1357,6 +1406,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeSvmOption={this.handleChangeSvmOption}
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
+                            submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}
                         />
                     }
                 </Modal>

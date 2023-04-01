@@ -11,10 +11,12 @@ interface FeatureSelectionStep3Props {
     handleChangeClusterOption: (key: string, value: number) => void,
     handleChangeSvmOption: (key: string, value: number) => void,
     handleGoBackStep2: () => void,
+    submitFeatureSelectionExperiment: () => void,
 }
 
 export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
     const {
+        submitFeatureSelectionExperiment,
         featureSelection,
         handleChangeAlgorithm,
         handleChangeFitnessFunction,
@@ -63,7 +65,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
 
             <Button
                 color="green"
-                onClick={() => console.log('se completo todo!', featureSelection)}
+                onClick={submitFeatureSelectionExperiment}
                 // disabled={props.featureSelection.clinicalSource === null}
             >
                 Confirm

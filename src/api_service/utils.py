@@ -1,7 +1,8 @@
-from typing import Optional, Literal, Tuple
+from typing import Optional, Literal, Tuple, Union
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import connection
 from django.http.request import HttpRequest
+from rest_framework.request import Request
 from api_service.enums import SourceType
 from api_service.models import ExperimentSource, ExperimentClinicalSource
 from api_service.models_choices import ExperimentType
@@ -29,10 +30,10 @@ def create_clinical_dataset_from_cgds_study(cgds_study: CGDSStudy) -> Optional[E
 
 
 def get_experiment_source(
-        source_type: int,
-        request: HttpRequest,
+        source_type: Optional[int],
+        request: Union[HttpRequest, Request],
         file_type: Optional[FileType],
-        prefix: Literal['mRNA', 'gem', 'clinical']
+        prefix: Literal['mRNA', 'gem', 'miRNA', 'cna', 'methylation', 'clinical']
 ) -> Tuple[Optional[ExperimentSource], Optional[ExperimentClinicalSource]]:
     """
     Generates a source object to run a pipeline. This method considers the source type
@@ -44,6 +45,9 @@ def get_experiment_source(
     @return: Generated ExperimentSource Object to add to the Experiment and a Clinical source in case the sources has
     that information
     """
+    if source_type is None:
+        return None, None
+
     is_clinical = prefix == 'clinical'
     source = ExperimentSource() if not is_clinical else ExperimentClinicalSource()
     clinical_source: Optional[ExperimentClinicalSource] = None
@@ -56,7 +60,7 @@ def get_experiment_source(
                 not is_clinical and
                 not has_uploaded_file_valid_format(source_file)
         ):
-            return None, clinical_source
+            return None, None
 
         user_file = UserFile(
             name=source_file.name,

@@ -21,7 +21,7 @@ class MRNAService(object):
     @staticmethod
     def __generate_rest_query_params(get_request: QueryDict) -> str:
         """
-        Generates a string with all the query params from GET request
+        Generates a string with all the query params from GET request.
         @param get_request: GET request with query params to send to DRF backend
         @return: String to send to Modulector/BioAPI APIs
         """

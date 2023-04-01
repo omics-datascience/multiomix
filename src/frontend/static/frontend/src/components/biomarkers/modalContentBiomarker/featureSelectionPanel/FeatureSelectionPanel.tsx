@@ -8,6 +8,7 @@ import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
 
+/** FeatureSelectionPanel props. */
 interface FeatureSelectionPanelProps {
     getDefaultFilters: PaginationCustomFilter[],
     urlBiomarkersCRUD: string,
@@ -25,14 +26,20 @@ interface FeatureSelectionPanelProps {
     handleChangeSvmOption: (key: string, value: number) => void,
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
+    submitFeatureSelectionExperiment: () => void,
 }
 
 /**
- * Generates default table's headers
- * @returns Default object for table's headers
+ * Renders a panel with a lot of steps to make a Feature Selection experiment.
+ * @param props Component props.
+ * @returns Component.
  */
-function getDefaultHeaders (): RowHeader<Biomarker>[] {
-    return [
+export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
+    /**
+     * Generates default table's headers
+     * @returns Default object for table's headers
+     */
+    const getDefaultHeaders = (): RowHeader<Biomarker>[] => [
         { name: 'Name', serverCodeToSort: 'name', width: 3 },
         { name: 'Description', serverCodeToSort: 'description', width: 4 },
         { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
@@ -42,8 +49,7 @@ function getDefaultHeaders (): RowHeader<Biomarker>[] {
         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 }
     ]
-}
-export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
+
     const handleSectionActive = () => {
         switch (props.featureSelection.step) {
             case 1:
@@ -74,9 +80,11 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     handleChangeClusterOption={props.handleChangeClusterOption}
                     handleChangeSvmOption={props.handleChangeSvmOption}
                     handleGoBackStep2={props.handleGoBackStep2}
+                    submitFeatureSelectionExperiment={props.submitFeatureSelectionExperiment}
                 />)
         }
     }
+
     return (
         <div>
             <Step.Group widths={3}>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Container, Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm, SvmButtons, SvmParameters } from '../../../../types'
+import { FitnessFunctionSvm, SvmTask, SvmKernel } from '../../../../types'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
@@ -26,15 +26,15 @@ export const SVMPanel = (props: SVMPanelProps) => {
                     name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
-                        onClick={() => handleChangeSvmOption('selection', SvmButtons.RANKING)}
-                        active={svm.selection === SvmButtons.RANKING}
+                        onClick={() => handleChangeSvmOption('selection', SvmTask.RANKING)}
+                        active={svm.selection === SvmTask.RANKING}
                     >
                         Ranking
                     </Button>
 
                     <Button
-                        onClick={() => handleChangeSvmOption('selection', SvmButtons.REGRESSION)}
-                        active={svm.selection === SvmButtons.REGRESSION}
+                        onClick={() => handleChangeSvmOption('selection', SvmTask.REGRESSION)}
+                        active={svm.selection === SvmTask.REGRESSION}
                     >
                         Regression
                     </Button>
@@ -45,9 +45,9 @@ export const SVMPanel = (props: SVMPanelProps) => {
                 placeholder='Kernel'
                 name='moleculeSelected'
                 options={[
-                    { key: SvmParameters.LINEAR, text: 'Linear', value: SvmParameters.LINEAR, disabled: false },
-                    { key: SvmParameters.POLYNOMIAL, text: 'Polynomial', value: SvmParameters.POLYNOMIAL, disabled: false },
-                    { key: SvmParameters.RBF, text: 'RBF', value: SvmParameters.RBF, disabled: false }
+                    { key: SvmKernel.LINEAR, text: 'Linear', value: SvmKernel.LINEAR, disabled: false },
+                    { key: SvmKernel.POLYNOMIAL, text: 'Polynomial', value: SvmKernel.POLYNOMIAL, disabled: false },
+                    { key: SvmKernel.RBF, text: 'RBF', value: SvmKernel.RBF, disabled: false }
                 ]}
                 value={svm.parameters}
                 onChange={(_, { value }) => handleChangeSvmOption('parameters', value as number)}

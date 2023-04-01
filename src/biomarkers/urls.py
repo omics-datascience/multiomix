@@ -11,5 +11,6 @@ urlpatterns = [
     path('mirna-codes', views.MiRNACodes.as_view(), name='mirna_codes'),
     path('mirna-codes-finder', views.MiRNACodesFinder.as_view(), name='mirna_codes_finder'),
     path('methylation-sites', views.MethylationSites.as_view(), name='methylation_sites'),
-    path('methylation-sites-finder', views.MethylationSitesFinder.as_view(), name='methylation_sites_finder')
+    path('methylation-sites-finder', views.MethylationSitesFinder.as_view(), name='methylation_sites_finder'),
+    path('feature-selection-submit', views.FeatureSelectionSubmit.as_view(), name='feature_selection_submit')
 ]

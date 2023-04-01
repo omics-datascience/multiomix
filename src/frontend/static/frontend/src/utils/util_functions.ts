@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileType, ExperimentStateInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData } from './interfaces'
+import { FileType, ExperimentStateInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix } from './interfaces'
 import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
@@ -589,6 +589,33 @@ const experimentSourceIsValid = (source: Source): boolean => {
 }
 
 /**
+ * Parse a Source considering its type to send specific parameters to the backend
+ * @param source Source to analyze
+ * @param formData FormData object to append request parameters
+ * @param prefix Prefix to make the different parameters' name
+ */
+const makeSourceAndAppend = (source: Source, formData: FormData, prefix: ExperimentRequestPrefix) => {
+    // In this function source.type is never null
+    const sourceType = source.type as SourceType
+    const sourceRef = source.newUploadedFileRef.current
+    const existingFilePk = sourceType === SourceType.UPLOADED_DATASETS && source.selectedExistingFile?.id
+        ? source.selectedExistingFile.id.toString()
+        : null
+
+    const CGDSStudyPk = sourceType === SourceType.CGDS && source.CGDSStudy?.id
+        ? source.CGDSStudy.id.toString()
+        : null
+
+    const file = sourceType === SourceType.NEW_DATASET && sourceRef && sourceRef.files.length > 0 ? sourceRef.files[0] : null
+
+    // Appends to the form data
+    formData.append(`${prefix}Type`, sourceType ? sourceType.toString() : 'null')
+    formData.append(`${prefix}ExistingFilePk`, existingFilePk ?? '')
+    formData.append(`${prefix}CGDSStudyPk`, CGDSStudyPk ?? '')
+    formData.append(`${prefix}File`, file)
+}
+
+/**
  * Converts bytes to Megabytes
  * @param fileSize File size in bytes to convert to Megabytes
  * @returns Fil size in Megabytes
@@ -699,6 +726,7 @@ export {
     getGeneAndGEMFromSelectedRow,
     generatesOrderingQueryMultiField,
     experimentSourceIsValid,
+    makeSourceAndAppend,
     getFileSizeInMB,
     getScoreClassData,
     generateBinData,

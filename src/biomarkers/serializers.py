@@ -53,19 +53,19 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:
         """Gets the number of genes in this Biomarker"""
-        return ins.mrnas.count()
+        return ins.number_of_mrnas
 
     @staticmethod
     def get_number_of_mirnas(ins: Biomarker) -> int:
         """Gets the number of miRNAs in this Biomarker"""
-        return ins.mirnas.count()
+        return ins.number_of_mirnas
 
     @staticmethod
     def get_number_of_cnas(ins: Biomarker) -> int:
         """Gets the number of CNAs in this Biomarker"""
-        return ins.cnas.count()
+        return ins.number_of_cnas
 
     @staticmethod
     def get_number_of_methylations(ins: Biomarker) -> int:
         """Gets the number of Methylations in this Biomarker"""
-        return ins.methylations.count()
+        return ins.number_of_methylations

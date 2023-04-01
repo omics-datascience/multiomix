@@ -205,15 +205,15 @@ interface FeatureSelectionPanelData {
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
-    SvmKernel as SvmParameters,
-    SvmTask as SvmButtons,
+    SvmKernel,
+    SvmTask,
     FitnessFunctionSvm,
     FitnessFunctionClustering,
     FitnessFunctionParameters,
     FitnessFunctions,
     FeatureSelectionAlgorithms,
-    ClusteringMetric as ClusteringButtons,
-    ClusteringAlgorithm as ClusteringParameters,
+    ClusteringMetric,
+    ClusteringAlgorithm,
     SourceStateBiomarker,
     FeatureSelectionPanelData,
     BiomarkerTypeSelected,

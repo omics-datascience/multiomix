@@ -14,6 +14,26 @@ class Biomarker(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def number_of_mrnas(self) -> int:
+        """Gets the number of mRNAs in this Biomarker"""
+        return self.mrnas.count()
+
+    @property
+    def number_of_mirnas(self) -> int:
+        """Gets the number of miRNAs in this Biomarker"""
+        return self.mirnas.count()
+
+    @property
+    def number_of_cnas(self) -> int:
+        """Gets the number of CNAs in this Biomarker"""
+        return self.cnas.count()
+
+    @property
+    def number_of_methylations(self) -> int:
+        """Gets the number of Methylations in this Biomarker"""
+        return self.methylations.count()
+
     def delete(self, *args, **kwargs):
         """Deletes the instance and sends a websockets message to update state in the frontend"""
         super().delete(*args, **kwargs)

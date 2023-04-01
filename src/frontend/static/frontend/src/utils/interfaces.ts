@@ -208,7 +208,7 @@ interface ExperimentInfo {
 }
 
 /** Prefix in param of a request to run a new Experiment */
-type ExperimentRequestPrefix = 'mRNA' | 'gem'
+type ExperimentRequestPrefix = 'mRNA' | 'gem' | 'miRNA' | 'cna' | 'methylation' | 'clinical'
 
 /** Common type of changes handling for inputs */
 type HandleChangesCallback = (name: string, value: string) => void
