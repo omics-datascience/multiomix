@@ -181,7 +181,7 @@ type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'met
 /**
  * State icon info
  */
-interface ExperimentStateInfo {
+interface StateIconInfo {
     iconName: SemanticICONS,
     color?: SemanticCOLORS,
     loading: boolean,
@@ -300,7 +300,7 @@ export {
     NameOfCGDSDataset,
     GeneralTableControl,
     ResponseRequestWithPagination,
-    ExperimentStateInfo,
+    StateIconInfo,
     GEMImageAndLabelInfo,
     ExperimentInfo,
     ExperimentResultTableControl,

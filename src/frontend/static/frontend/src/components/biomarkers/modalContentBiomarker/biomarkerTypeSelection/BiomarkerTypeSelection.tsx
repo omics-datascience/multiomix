@@ -1,10 +1,11 @@
 import React from 'react'
 import { Card, Grid, Header, Image } from 'semantic-ui-react'
-import { BiomarkerTypeSelected } from '../../types'
+import { BiomarkerOrigin } from '../../types'
 import './biomarkerTypeSelectionStyles.css'
 
+/** BiomarkerTypeSelection props. */
 interface BiomarkerTypeSelectionProps {
-    handleSelectModal: (type: BiomarkerTypeSelected) => void,
+    handleSelectModal: (type: BiomarkerOrigin) => void,
 }
 
 export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
@@ -12,13 +13,13 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
         {
             title: 'Emtpy',
             description: 'Create an empty Biomarker. You can later add molecules or features (genes, microRNAs, DNA methylation, CNAs) that will make up the biomarker',
-            action: () => props.handleSelectModal(BiomarkerTypeSelected.MANUAL),
+            action: () => props.handleSelectModal(BiomarkerOrigin.MANUAL),
             image: '/static/frontend/img/biomarkers/Empty.png'
         },
         {
             title: 'Feature Selection/ML',
             description: 'As a starting point, you can select a previously discovered Biomarker, a well-known Biomarker, or a superset of genes that you would like to test. This method will select the molecular subset that fits the better prediction',
-            action: () => props.handleSelectModal(BiomarkerTypeSelected.FEATURE_SELECTION),
+            action: () => props.handleSelectModal(BiomarkerOrigin.FEATURE_SELECTION),
             image: '/static/frontend/img/biomarkers/Fs3.png'
         }
     ]

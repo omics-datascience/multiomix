@@ -2,7 +2,7 @@ import React from 'react'
 import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
 import { AllExperimentsTableControl, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
-import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getStateObj } from '../../../utils/util_functions'
+import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { SourcePopup } from './SourcePopup'
@@ -114,7 +114,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                     urlToRetrieveData={urlUserExperiments}
                     mapFunction={(experiment: DjangoExperiment) => {
                         // Generates Experiment's state info
-                        const experimentState = getStateObj(experiment.state)
+                        const experimentState = getExperimentStateObj(experiment.state)
 
                         const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
                             experiment.state === ExperimentState.WAITING_FOR_QUEUE ||

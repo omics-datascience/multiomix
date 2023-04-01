@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileType, ExperimentStateInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix } from './interfaces'
+import { FileType, StateIconInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix } from './interfaces'
 import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
@@ -156,19 +156,19 @@ const copyObject = <T>(anObject: T): T => {
 }
 
 /**
- * Gets info about the state to display in the card
+ * Gets info about the state of a specific Experiment to display in the card
  * @param state Experiment state
  * @returns The corresponding info of the current experiment's state
  */
-const getStateObj = (state: ExperimentState): ExperimentStateInfo => {
-    let stateIcon: ExperimentStateInfo
+const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
+    let stateIcon: StateIconInfo
     switch (state) {
         case ExperimentState.COMPLETED:
             stateIcon = {
                 iconName: 'check',
                 color: 'green',
                 loading: false,
-                title: 'The experiment is complete'
+                title: 'The analysis is complete'
             }
             break
         case ExperimentState.FINISHED_WITH_ERROR:
@@ -184,7 +184,7 @@ const getStateObj = (state: ExperimentState): ExperimentStateInfo => {
                 iconName: 'wait',
                 color: 'yellow',
                 loading: false,
-                title: 'The process of this experiment will start soon'
+                title: 'The process of this analysis will start soon'
             }
             break
         case ExperimentState.NO_SAMPLES_IN_COMMON:
@@ -200,14 +200,14 @@ const getStateObj = (state: ExperimentState): ExperimentStateInfo => {
                 iconName: 'sync alternate',
                 color: 'yellow',
                 loading: true,
-                title: 'The experiment is being processed'
+                title: 'The analysis is being processed'
             }
             break
         case ExperimentState.STOPPING:
             stateIcon = {
                 iconName: 'stop',
                 loading: false,
-                title: 'The experiment is being stopped',
+                title: 'The analysis is being stopped',
                 className: 'experiment-stopping-icon'
             }
             break
@@ -702,7 +702,7 @@ export {
     getDefaultNewTag,
     parseValue,
     copyObject,
-    getStateObj,
+    getExperimentStateObj,
     getExperimentTypeObj,
     getDefaultExperimentTableControl,
     formatDateLocale,

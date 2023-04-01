@@ -4,9 +4,7 @@ import { DjangoTag } from '../../utils/django_interfaces'
 import { SemanticSIZES } from 'semantic-ui-react/dist/commonjs/generic'
 import { Nullable } from '../../utils/interfaces'
 
-/**
- * Component's props
- */
+/** TagLabel props. */
 interface TagLabelProps {
     tag: Nullable<DjangoTag>,
     id?: string,
@@ -16,9 +14,9 @@ interface TagLabelProps {
 }
 
 /**
- * Renders a Label with Tag information
- * @param props Component's props
- * @returns Component
+ * Renders a Label with Tag information.
+ * @param props Component's props.
+ * @returns Component.
  */
 export const TagLabel = (props: TagLabelProps) => (
     <Label

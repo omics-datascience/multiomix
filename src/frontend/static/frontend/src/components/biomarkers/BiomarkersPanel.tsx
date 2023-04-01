@@ -1,11 +1,11 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, RowHeader, TagType } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerTypeSelected, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SvmKernel, SvmTask, FitnessFunctionSvm, FitnessFunctionParameters } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, FitnessFunctionSvm, FitnessFunctionParameters, BiomarkerState } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -15,6 +15,8 @@ import './../../css/biomarkers.css'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
 import { Alert } from '../common/Alert'
+import { BiomarkerStateLabel } from './BiomarkerStateLabel'
+import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -41,7 +43,7 @@ interface BiomarkersPanelState {
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
-    biomarkerTypeSelected: BiomarkerTypeSelected,
+    biomarkerTypeSelected: BiomarkerOrigin,
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
     tags: DjangoTag[],
@@ -60,7 +62,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         this.state = {
             biomarkers: [],
-            biomarkerTypeSelected: BiomarkerTypeSelected.BASE,
+            biomarkerTypeSelected: BiomarkerOrigin.BASE,
             newBiomarker: this.getDefaultNewBiomarker(),
             showDeleteBiomarkerModal: false,
             selectedBiomarkerToDeleteOrSync: null,
@@ -122,8 +124,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultSvmParameters = (): FitnessFunctionSvm => {
         return {
-            parameters: SvmKernel.LINEAR,
-            selection: SvmTask.RANKING
+            parameters: SVMKernel.LINEAR,
+            selection: SVMTask.RANKING
         }
     }
 
@@ -359,7 +361,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Method that select how the user is going to create a Biomarker
      * @param type Select the way to create a Biomarker
      */
-    handleSelectModal = (type: BiomarkerTypeSelected) => {
+    handleSelectModal = (type: BiomarkerOrigin) => {
         this.setState(
             {
                 biomarkerTypeSelected: type
@@ -374,7 +376,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleOpenEditBiomarker = (biomarker: Biomarker) => {
         this.setState(
             {
-                biomarkerTypeSelected: BiomarkerTypeSelected.MANUAL,
+                biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
                 isOpenModal: true,
                 formBiomarker: {
                     id: biomarker.id,
@@ -704,7 +706,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         formBiomarker: this.getDefaultFormBiomarker(),
                         isOpenModal: false,
                         confirmModal: this.getDefaultConfirmModal(),
-                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                        biomarkerTypeSelected: BiomarkerOrigin.BASE
                     })
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
@@ -731,7 +733,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         formBiomarker: this.getDefaultFormBiomarker(),
                         isOpenModal: false,
                         confirmModal: this.getDefaultConfirmModal(),
-                        biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+                        biomarkerTypeSelected: BiomarkerOrigin.BASE
                     })
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
@@ -860,6 +862,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_mirnas: 0,
             number_of_cnas: 0,
             number_of_methylations: 0,
+            origin: BiomarkerOrigin.BASE,
+            state: BiomarkerState.CREATED,
             contains_nan_values: false,
             column_used_as_index: '',
             methylations: [],
@@ -1127,24 +1131,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     isFormEmpty = (): boolean => _.isEqual(this.state.formBiomarker, this.getDefaultFormBiomarker())
 
     /**
-     * Generates default table's headers
-     * @returns Default object for table's headers
-     */
-    getDefaultHeaders (): RowHeader<Biomarker>[] {
-        return [
-            { name: 'Name', serverCodeToSort: 'name', width: 3 },
-            { name: 'Description', serverCodeToSort: 'description', width: 4 },
-            { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
-            { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
-            { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
-            { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
-            { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
-            { name: 'Actions' }
-        ]
-    }
-
-    /**
      * Callback to mark a Biomarker as selected
      * @param biomarker Selected biomarker to mark
      */
@@ -1288,7 +1274,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             featureSelection: this.getDefaultFeatureSelectionProps(),
             isOpenModal: false,
             confirmModal: this.getDefaultConfirmModal(),
-            biomarkerTypeSelected: BiomarkerTypeSelected.BASE
+            biomarkerTypeSelected: BiomarkerOrigin.BASE
         })
     }
 
@@ -1303,7 +1289,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                 <PaginatedTable<Biomarker>
                     headerTitle='Biomarkers'
-                    headers={this.getDefaultHeaders()}
+                    headers={[
+                        { name: 'Name', serverCodeToSort: 'name', width: 3 },
+                        { name: 'Description', serverCodeToSort: 'description', width: 4 },
+                        { name: 'Tag', serverCodeToSort: 'tag' },
+                        { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
+                        { name: 'Origin', serverCodeToSort: 'origin', textAlign: 'center' },
+                        { name: 'Date', serverCodeToSort: 'upload_date' },
+                        { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
+                        { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
+                        { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
+                        { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                        { name: 'Actions' }
+                    ]}
                     customFilters={this.getDefaultFilters()}
                     showSearchInput
                     customElements={[
@@ -1321,7 +1319,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         <Table.Row key={biomarker.id as number}>
                             <TableCellWithTitle value={biomarker.name} />
                             <TableCellWithTitle value={biomarker.description} />
-                            <Table.Cell><TagLabel tag={biomarker.tag} /> </Table.Cell>
+                            <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
+                            <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
+                            <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
                             <Table.Cell>{biomarker.number_of_mrnas}</Table.Cell>
                             <Table.Cell>{biomarker.number_of_mirnas}</Table.Cell>
@@ -1357,15 +1357,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    style={this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%' }}
-                    onClose={() => this.state.biomarkerTypeSelected !== BiomarkerTypeSelected.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
+                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%' }}
+                    onClose={() => this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
                     open={this.state.isOpenModal}>
                     {
-                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.BASE &&
+                        this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
                         <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
                     }
                     {
-                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.MANUAL &&
+                        this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL &&
                         <ManualForm
                             handleChangeInputForm={this.handleChangeInputForm}
                             handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
@@ -1388,7 +1388,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         />
                     }
                     {
-                        this.state.biomarkerTypeSelected === BiomarkerTypeSelected.FEATURE_SELECTION &&
+                        this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION &&
                         <FeatureSelectionPanel
                             featureSelection={this.state.featureSelection}
                             getDefaultFilters={this.getDefaultFilters()}

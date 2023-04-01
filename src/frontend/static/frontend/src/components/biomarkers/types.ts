@@ -9,10 +9,21 @@ enum BiomarkerType {
     METHYLATION = 'Methylation',
 }
 
-enum BiomarkerTypeSelected {
-    BASE,
-    MANUAL,
-    FEATURE_SELECTION,
+/** All the possible ways to create a Biomarker. */
+enum BiomarkerOrigin {
+    /** Only used in frontend to show the modal to select the Biomarker type. */
+    BASE = 0,
+    MANUAL = 1,
+    INTERSECTION = 2,
+    FEATURE_SELECTION = 3,
+    DIFFERENTIAL_EXPRESSION = 4
+}
+
+/** All the possible states of a Biomarker. */
+enum BiomarkerState {
+    CREATED = 1,
+    FAILED = 2,
+    PROCESSING = 3
 }
 
 enum MoleculesTypeOfSelection {
@@ -20,7 +31,7 @@ enum MoleculesTypeOfSelection {
     AREA = 'area',
 }
 
-// TODO: attributes 'number_of_...' only are used in API GET service, not in the form, define and use
+// TODO: attributes 'number_of_...', 'state' and 'origin' only are used in API GET service, not in the form, define and use
 // TODO: two different interfaces
 /** Django Biomarker model. */
 interface Biomarker {
@@ -33,6 +44,8 @@ interface Biomarker {
     number_of_mirnas: number,
     number_of_cnas: number,
     number_of_methylations: number,
+    origin: BiomarkerOrigin,
+    state: BiomarkerState,
     contains_nan_values: boolean,
     column_used_as_index: string,
     mirnas: SaveMoleculeStructure[],
@@ -147,14 +160,14 @@ enum ClusteringMetric {
 }
 
 /** SVM's kernel */
-enum SvmKernel {
+enum SVMKernel {
     LINEAR = 1,
     POLYNOMIAL = 2,
     RBF = 3,
 }
 
 /** Task to execute with survival SVM. */
-enum SvmTask {
+enum SVMTask {
     RANKING = 1,
     REGRESSION = 2
 }
@@ -167,8 +180,8 @@ interface FitnessFunctionClustering{
 
 /** Settings for the SVM fitness function. */
 interface FitnessFunctionSvm{
-    parameters: SvmKernel
-    selection: SvmTask
+    parameters: SVMKernel
+    selection: SVMTask
 }
 
 /** All the different fitness functions' parameters. */
@@ -205,8 +218,8 @@ interface FeatureSelectionPanelData {
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
 export {
-    SvmKernel,
-    SvmTask,
+    SVMKernel,
+    SVMTask,
     FitnessFunctionSvm,
     FitnessFunctionClustering,
     FitnessFunctionParameters,
@@ -216,7 +229,8 @@ export {
     ClusteringAlgorithm,
     SourceStateBiomarker,
     FeatureSelectionPanelData,
-    BiomarkerTypeSelected,
+    BiomarkerOrigin,
+    BiomarkerState,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,
     Biomarker,

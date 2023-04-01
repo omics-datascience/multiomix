@@ -43,6 +43,8 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     mirnas = MiRNAIdentifierSerializer(many=True, required=False)
     cnas = CNAIdentifierSerializer(many=True, required=False)
     methylations = MethylationIdentifierSerializer(many=True, required=False)
+    origin = serializers.IntegerField(required=False)
+    state = serializers.IntegerField(required=False)
 
     tag = TagSerializer(required=False)
 

@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker
+from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
 from biomarkers.serializers import BiomarkerSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
@@ -26,7 +26,9 @@ class BiomarkerList(generics.ListCreateAPIView):
         return Biomarker.objects.filter(user=self.request.user)
 
     def perform_create(self, biomarker: Biomarker):
-        biomarker.save(user=self.request.user)
+        """Adds some fields on saving"""
+        # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
+        biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.CREATED, user=self.request.user)
 
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]

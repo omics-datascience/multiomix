@@ -3,12 +3,30 @@ from django.db import models
 from tags.models import Tag
 from api_service.websocket_functions import send_update_biomarkers_command
 
+
+class BiomarkerOrigin(models.IntegerChoices):
+    """All the possible ways to create a Biomarker."""
+    MANUAL = 1
+    INTERSECTION = 2
+    FEATURE_SELECTION = 3
+    DIFFERENTIAL_EXPRESSION = 4
+
+
+class BiomarkerState(models.IntegerChoices):
+    """All the possible states of a Biomarker."""
+    CREATED = 1
+    FAILED = 2
+    PROCESSING = 3
+
+
 class Biomarker(models.Model):
     """Represents a biomarker"""
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     upload_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
+    origin = models.IntegerField(choices=BiomarkerOrigin.choices)
+    state = models.IntegerField(choices=BiomarkerState.choices)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     def __str__(self):
