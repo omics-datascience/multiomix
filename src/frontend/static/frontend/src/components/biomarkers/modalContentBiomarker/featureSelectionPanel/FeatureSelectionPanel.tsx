@@ -7,6 +7,7 @@ import { Biomarker, FeatureSelectionAlgorithm, FeatureSelectionPanelData, Fitnes
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
+import './featureSelection.css'
 
 /** FeatureSelectionPanel props. */
 interface FeatureSelectionPanelProps {
@@ -86,7 +87,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
     }
 
     return (
-        <div>
+        <div className='selection-main-container'>
             <Step.Group widths={3}>
                 <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} disabled={props.featureSelection.step > 1}>
                     <Icon name='truck' />
@@ -107,7 +108,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     </Step.Content>
                 </Step>
             </Step.Group>
-            <Segment>
+            <Segment className='selection-steps-container'>
                 {handleSectionActive()}
             </Segment>
         </div>

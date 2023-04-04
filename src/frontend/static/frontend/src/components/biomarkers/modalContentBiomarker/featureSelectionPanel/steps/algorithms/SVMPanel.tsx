@@ -26,14 +26,14 @@ export const SVMPanel = (props: SVMPanelProps) => {
                     name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
-                        onClick={() => handleChangeSvmOption('selection', SVMTask.RANKING)}
+                        onClick={() => handleChangeSvmOption('task', SVMTask.RANKING)}
                         active={svm.task === SVMTask.RANKING}
                     >
                         Ranking
                     </Button>
 
                     <Button
-                        onClick={() => handleChangeSvmOption('selection', SVMTask.REGRESSION)}
+                        onClick={() => handleChangeSvmOption('task', SVMTask.REGRESSION)}
                         active={svm.task === SVMTask.REGRESSION}
                     >
                         Regression
@@ -50,7 +50,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
                     { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF, disabled: false }
                 ]}
                 value={svm.kernel}
-                onChange={(_, { value }) => handleChangeSvmOption('parameters', value as number)}
+                onChange={(_, { value }) => handleChangeSvmOption('kernel', value as number)}
             />
         </>
     )

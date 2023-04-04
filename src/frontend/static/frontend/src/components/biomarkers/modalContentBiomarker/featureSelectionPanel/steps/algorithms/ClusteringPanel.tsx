@@ -25,7 +25,7 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                     { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS, disabled: false }
                 ]}
                 value={settings.algorithm}
-                onChange={(_, { value }) => handleChangeClusterOption('parameters', value as number)}
+                onChange={(_, { value }) => handleChangeClusterOption('algorithm', value as number)}
             />
 
             <Container className='biomarkers--side--bar--box'>
@@ -34,14 +34,14 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                     name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
-                        onClick={() => handleChangeClusterOption('selection', ClusteringMetric.COX_REGRESSION)}
+                        onClick={() => handleChangeClusterOption('metric', ClusteringMetric.COX_REGRESSION)}
                         active={settings.metric === ClusteringMetric.COX_REGRESSION}
                     >
                         Cox Regression
                     </Button>
 
                     <Button
-                        onClick={() => handleChangeClusterOption('selection', ClusteringMetric.LOG_RANK_TEST)}
+                        onClick={() => handleChangeClusterOption('metric', ClusteringMetric.LOG_RANK_TEST)}
                         active={settings.metric === ClusteringMetric.LOG_RANK_TEST}
                     >
                         Log-Rank test

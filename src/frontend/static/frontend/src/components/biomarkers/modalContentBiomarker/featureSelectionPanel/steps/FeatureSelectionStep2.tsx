@@ -2,6 +2,7 @@ import React from 'react'
 import { Button } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../../utils/django_interfaces'
 import { FileType, SourceType } from '../../../../../utils/interfaces'
+import { experimentSourceIsValid } from '../../../../../utils/util_functions'
 import { SourceForm } from '../../../../pipeline/SourceForm'
 import { FeatureSelectionPanelData, SourceStateBiomarker } from '../../../types'
 import './../featureSelection.css'
@@ -27,9 +28,10 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
         handleCompleteStep2,
         handleGoBackStep1
     } = props
+    console.log(!experimentSourceIsValid(props.featureSelection.clinicalSource))
     return (
         <>
-            <div className='selections-grid-container'>
+            <div className='selections-grid-container selection-step-container'>
                 <SourceForm
                     source={featureSelection.clinicalSource}
                     headerTitle='clinical profile'
@@ -144,19 +146,21 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
                     }}
                 />
             </div>
-            <Button
-                color="red"
-                onClick={() => handleGoBackStep1()}
-            >
-                Go back
-            </Button>
-            <Button
-                color="green"
-                onClick={() => handleCompleteStep2()}
-                disabled={props.featureSelection.clinicalSource === null}
-            >
-                Confirm
-            </Button>
+            <div className='selections-buttons-container'>
+                <Button
+                    color="red"
+                    onClick={() => handleGoBackStep1()}
+                >
+                    Go back
+                </Button>
+                <Button
+                    color="green"
+                    onClick={() => handleCompleteStep2()}
+                    disabled={!experimentSourceIsValid(props.featureSelection.clinicalSource)}
+                >
+                    Confirm
+                </Button>
+            </div>
         </>
     )
 }

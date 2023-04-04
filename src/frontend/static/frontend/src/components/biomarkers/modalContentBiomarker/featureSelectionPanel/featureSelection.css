@@ -1,5 +1,37 @@
 .selections-grid-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
+}
+
+.selections-buttons-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.selection-main-container {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.selection-step-container{
+    flex: 1;
+}
+.selection-select{
+    margin: 2rem 0;
+}
+
+.selection-step-algorithm{
+    display: flex;
+    flex-direction: column;
+}
+
+.selection-steps-container {
+    flex:1;
+    display: flex;
+    flex-direction: column;
 }
