@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'tags',
     'user_files',
     'biomarkers',
+    'feature_selection',
     'statistical_properties',
     'django_generate_secret_key',
     'webpack_loader',
