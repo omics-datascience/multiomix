@@ -1302,6 +1302,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
                         { name: 'Actions' }
                     ]}
+                    defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                     customFilters={this.getDefaultFilters()}
                     showSearchInput
                     customElements={[
@@ -1315,41 +1316,45 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     searchPlaceholder='Search by name'
                     urlToRetrieveData={urlBiomarkersCRUD}
                     updateWSKey='update_biomarkers'
-                    mapFunction={(biomarker: Biomarker) => (
-                        <Table.Row key={biomarker.id as number}>
-                            <TableCellWithTitle value={biomarker.name} />
-                            <TableCellWithTitle value={biomarker.description} />
-                            <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
-                            <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
-                            <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
-                            <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
-                            <Table.Cell>{biomarker.number_of_mrnas}</Table.Cell>
-                            <Table.Cell>{biomarker.number_of_mirnas}</Table.Cell>
-                            <Table.Cell>{biomarker.number_of_cnas}</Table.Cell>
-                            <Table.Cell>{biomarker.number_of_methylations}</Table.Cell>
-                            <Table.Cell>
-                                {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
-                                <React.Fragment>
+                    mapFunction={(biomarker: Biomarker) => {
+                        const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
 
-                                    {/* Shows a delete button if specified */}
-                                    <Icon
-                                        name='pencil'
-                                        className='clickable margin-left-5'
-                                        color='yellow'
-                                        title='Edit biomarker'
-                                        onClick={() => this.handleOpenEditBiomarker(biomarker)}
-                                    />
-                                    <Icon
-                                        name='trash'
-                                        className='clickable margin-left-5'
-                                        color='red'
-                                        title='Delete biomarker'
-                                        onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                    />
-                                </React.Fragment>
-                            </Table.Cell>
-                        </Table.Row>
-                    )}
+                        return (
+                            <Table.Row key={biomarker.id as number}>
+                                <TableCellWithTitle value={biomarker.name} />
+                                <TableCellWithTitle value={biomarker.description} />
+                                <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
+                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
+                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
+                                <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
+                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
+                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
+                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
+                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                <Table.Cell>
+                                    {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
+                                    <React.Fragment>
+
+                                        {/* Shows a delete button if specified */}
+                                        <Icon
+                                            name='pencil'
+                                            className='clickable margin-left-5'
+                                            color='yellow'
+                                            title='Edit biomarker'
+                                            onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                        />
+                                        <Icon
+                                            name='trash'
+                                            className='clickable margin-left-5'
+                                            color='red'
+                                            title='Delete biomarker'
+                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                        />
+                                    </React.Fragment>
+                                </Table.Cell>
+                            </Table.Row>
+                        )
+                    }}
                 />
 
                 <Modal
