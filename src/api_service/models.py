@@ -9,7 +9,7 @@ from user_files.models import UserFile
 from user_files.models_choices import FileType
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
 from .websocket_functions import send_update_experiments_command
-from datasets_synchronization.models import CGDSDataset
+from datasets_synchronization.models import CGDSDataset, SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 import pandas as pd
 import numpy as np
 
@@ -93,8 +93,8 @@ class ExperimentSource(models.Model):
 
     def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
         """
-        Returns an Iterator of a DataFrame in divided in chunks from an experiment source
-        @return: A DataFrame Iterator with the data to work
+        Returns an Iterator of a DataFrame in divided in chunks from an experiment source.
+        @return: A DataFrame Iterator with the data to work.
         """
         return self.get_valid_source().get_df_in_chunks()
 
@@ -245,7 +245,7 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         return self.get_df()
 
-    def get_survival_columns(self) -> List[str]:
+    def get_survival_columns(self) -> List[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
         """
         Gets the related survival columns tuples to the UserFile or CGDSDataset
         @return:

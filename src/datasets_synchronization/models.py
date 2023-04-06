@@ -1,6 +1,5 @@
 import logging
 from typing import List, Iterable
-
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np

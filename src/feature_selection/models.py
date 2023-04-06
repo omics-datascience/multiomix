@@ -1,8 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.db import models
 from api_service.models import ExperimentSource, ExperimentClinicalSource
 from biomarkers.models import Biomarker
+from user_files.models_choices import FileType
 
 
 class FeatureSelectionAlgorithm(models.IntegerChoices):
@@ -90,4 +91,18 @@ class FSExperiment(models.Model):
             self.mirna_source,
             self.cna_source,
             self.methylation_source,
+        ]
+
+    def get_sources_and_molecules(self) -> List[Tuple[Optional[ExperimentSource], List[str], FileType]]:
+        """Returns a list with all the sources (except clinical), the selected molecules and type."""
+        biomarker = self.origin_biomarker
+        return [
+            (self.mrna_source, list(biomarker.mrnas.values_list('identifier', flat=True)), FileType.MRNA),
+            (self.mirna_source, list(biomarker.mirnas.values_list('identifier', flat=True)), FileType.MIRNA),
+            (self.cna_source, list(biomarker.cnas.values_list('identifier', flat=True)), FileType.CNA),
+            (
+                self.methylation_source,
+                list(biomarker.methylations.values_list('identifier', flat=True)),
+                FileType.METHYLATION
+            )
         ]

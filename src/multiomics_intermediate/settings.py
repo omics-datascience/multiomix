@@ -276,3 +276,12 @@ BIOAPI_SETTINGS = {
 
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
+
+
+# Feature Selection settings
+
+# Number of cores used to run the survival RF model
+N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', -1))
+
+# Number of cores used to compute CrossValidation
+N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', -1))

@@ -135,9 +135,9 @@ class UserFile(models.Model):
 
     def __get_reader_from_file(self, csv_file: TextIO) -> Iterable:
         """
-        Generate a reader inferring the delimiter of a CSV file
-        @param csv_file: CSV file to read
-        @return: Reader object
+        Generate a reader inferring the delimiter of a CSV file.
+        @param csv_file: CSV file to read.
+        @return: Reader object.
         """
         # We need an entire line as we had cases where reading some bytes wasn't sufficient
         dialect = self.__get_csv_reader_dialect(csv_file)
@@ -148,8 +148,8 @@ class UserFile(models.Model):
         chunk_size: Optional[int] = None
     ) -> Union[pd.DataFrame, Iterable[pd.DataFrame]]:
         """
-        Returns a DataFrame (entirely or in chunks)
-        @param chunk_size: Chunk size to split the DataFrame (optional)
+        Returns a DataFrame (entirely or in chunks).
+        @param chunk_size: Chunk size to split the DataFrame (optional).
         @return: DataFrame or Iterator of DataFrame's chunks in case chunk_size is specified
         """
         return pd.read_csv(
@@ -170,8 +170,8 @@ class UserFile(models.Model):
 
     def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
         """
-        Returns an Iterator of a DataFrame in divided in chunks from an UserFile
-        @return: A DataFrame Iterator with the data to work
+        Returns an Iterator of a DataFrame in divided in chunks from an UserFile.
+        @return: A DataFrame Iterator with the data to work.
         """
         return self.__get_dataframe(chunk_size=settings.EXPERIMENT_CHUNK_SIZE)
 

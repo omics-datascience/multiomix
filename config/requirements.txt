@@ -10,6 +10,7 @@ scipy==1.4.1
 channels==2.4.0
 channels-redis==3.1.0
 daphne==2.5.0
+scikit-survival==0.20.0
 django-generate-secret-key==1.0.2
 requests==2.23.0
 django-stubs==1.11.0

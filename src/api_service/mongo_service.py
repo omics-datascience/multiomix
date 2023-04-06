@@ -122,10 +122,10 @@ class MongoService(object):
         """
         Gets a MongoDB collection as a DataFrame.
         NOTE: uses this kind of pagination as cursor is closed after 30 minutes by Mongo raising
-        pymongo.errors.CursorNotFound exception, so we can't use built-in batch iterator with big experiments
-        @param collection_name: Collection's name
-        @param chunk_size: Chunk size in which the collection is retrieved
-        @return: DataFrame with the collection data
+        pymongo.errors.CursorNotFound exception, so we can't use built-in batch iterator with big experiments.
+        @param collection_name: Collection's name.
+        @param chunk_size: Chunk size in which the collection is retrieved.
+        @return: DataFrame with the collection data.
         """
         last_id = None
         while True:

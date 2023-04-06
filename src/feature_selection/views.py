@@ -74,10 +74,6 @@ class FeatureSelectionSubmit(APIView):
             raise ValidationError('Invalid miRNA source')
 
         # CNA source
-        # TODO: remove block
-        print(request.POST.get('cnaType'))
-        print(type(request.POST.get('cnaType')))
-
         cna_source_type = self.__get_source_pk(request.POST, 'cnaType')
         cna_source, _cna_clinical = get_experiment_source(cna_source_type, request, FileType.CNA, 'cna')
         if biomarker.number_of_cnas > 0 and cna_source is None:

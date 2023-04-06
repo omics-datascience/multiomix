@@ -1,8 +1,10 @@
+import os
+import tempfile
 import time
 import numpy as np
-from copy import deepcopy
 from threading import Event
-from typing import Dict, Tuple, cast, Optional
+from typing import Dict, Tuple, cast, Optional, Union
+import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
 from .models import FSExperiment
@@ -13,6 +15,9 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
+
+# Common event values
+COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
 
 class FSService(object):
@@ -54,7 +59,6 @@ class FSService(object):
         """
         Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
         @param experiment: Feature Selection experiment.
-        @param return_indices: Parameter of intersect1d to return indices of common elements
         @return: Sorted Numpy array with the samples in common
         """
         # NOTE: the intersection is already sorted by Numpy
@@ -75,12 +79,84 @@ class FSService(object):
 
         return cast(np.ndarray, last_intersection)
 
+    @staticmethod
+    def __replace_event_col_for_booleans(value: Union[int, str]) -> bool:
+        """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
+        return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
+
+
+    def __generate_df_molecules_and_clinical(self, experiment: FSExperiment,
+                                             samples_in_common: np.ndarray) -> Tuple[str, str]:
+        """
+        Generates two DataFrames: one with all the selected molecules, and other with the selected clinical data.
+        @param experiment: FSExperiment instance to extract molecules and clinical data from its sources.
+        @param samples_in_common: Samples in common to extract from the datasets.
+        @return: Both DataFrames paths.
+        """
+        # Generates clinical DataFrame
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+            clinical_temp_file_path = temp_file.name
+
+            clinical_source = experiment.clinical_source
+            clinical_df: pd.DataFrame = clinical_source.get_df()
+
+            # Keeps only the survival tuple and samples in common
+            survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
+            clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
+            clinical_df = clinical_df.loc[samples_in_common]
+
+            # Replaces str values of CGDS for
+            clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
+                self.__replace_event_col_for_booleans
+            )
+
+            # Saves in disk
+            clinical_df.to_csv(temp_file, sep='\t', decimal='.')
+
+        # Generates all the molecules DataFrame
+        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
+            molecules_temp_file_path = temp_file.name
+
+            for source, molecules, file_type in experiment.get_sources_and_molecules():
+                if source is None:
+                    continue
+
+                for chunk in source.get_df_in_chunks():
+                    # Keeps only the selected molecules for the samples in common
+                    chunk = chunk[samples_in_common]
+
+                    # Keeps only existing molecules in the current chunk
+                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
+                    chunk = chunk.loc[molecules_to_extract]
+
+                    # Saves in disk
+                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+
+        return molecules_temp_file_path, clinical_temp_file_path
+
+
     def __compute_experiment(self, experiment: FSExperiment, stop_event: Event):
+        """
+        Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
+        TODO: use stop_event
+        @param experiment: FSExperiment instance.
+        @param stop_event: Stop signal
+        """
+        # Get samples in common
         samples_in_common = self.__get_common_samples(experiment)
         if samples_in_common.size == 0:
             raise NoSamplesInCommon
 
-        # TODO: complete
+        # Generates needed DataFrames
+        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
+                                                                                                      samples_in_common)
+
+        # TODO: add here the FS algorithm
+
+        # Removes the temporary files
+        os.unlink(molecules_temp_file_path)
+        os.unlink(clinical_temp_file_path)
+
 
     def eval_feature_selection_experiment(self, experiment: FSExperiment, stop_event: Event) -> None:
         """
@@ -102,7 +178,6 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            # total_row_count, final_row_count, evaluated_combinations = self.__compute_experiment(experiment, stop_event)
             self.__compute_experiment(experiment, stop_event)
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
@@ -152,12 +227,14 @@ class FSService(object):
     @staticmethod
     def __create_target_biomarker(experiment: FSExperiment):
         """Creates a new Biomarker and assigns it to the FSExperiment instance."""
-        new_biomarker = deepcopy(experiment.origin_biomarker)
-        new_biomarker.pk = None  # This fires a new copy in the DB
-        new_biomarker.name = f'FS Biomarker {time.time()}'
-        new_biomarker.origin = BiomarkerOrigin.FEATURE_SELECTION
-        new_biomarker.state = BiomarkerState.IN_PROCESS
-        new_biomarker.save()
+        origin_biomarker = experiment.origin_biomarker
+        new_biomarker = Biomarker.objects.create(
+            name=f'{origin_biomarker.name} (FS optimized {time.time()})',
+            description=origin_biomarker.description,
+            origin=BiomarkerOrigin.FEATURE_SELECTION,
+            state=BiomarkerState.IN_PROCESS,
+            user=origin_biomarker.user
+        )
         experiment.created_biomarker = new_biomarker
         experiment.save()
 
