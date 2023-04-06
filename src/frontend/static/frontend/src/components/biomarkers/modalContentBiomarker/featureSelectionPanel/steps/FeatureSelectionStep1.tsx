@@ -35,6 +35,7 @@ export const FeatureSelectionStep1 = (props: Props) => {
                             onClick={() => props.markBiomarkerAsSelected(biomarker)}
                             onDoubleClick={() => props.handleCompleteStep1(biomarker)}
                             key={biomarker.id as number}
+                            className='clickable'
                         >
                             <TableCellWithTitle value={biomarker.name} />
                             <TableCellWithTitle value={biomarker.description} />

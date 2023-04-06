@@ -46,8 +46,10 @@ class CGDSStudyList(generics.ListCreateAPIView):
                     methylation_dataset__state=CGDSDatasetSynchronizationState.SUCCESS)
             elif file_type == FileType.CLINICAL.value:
                 cgds_studies = cgds_studies.filter(
-                    clinical_dataset__isnull=False,
-                    clinical_dataset__state=CGDSDatasetSynchronizationState.SUCCESS
+                    clinical_patient_dataset__isnull=False,
+                    clinical_patient_dataset__state=CGDSDatasetSynchronizationState.SUCCESS,
+                    clinical_sample_dataset__isnull=False,
+                    clinical_sample_dataset__state=CGDSDatasetSynchronizationState.SUCCESS
                 )
         else:
             cgds_studies = cgds_studies.all()

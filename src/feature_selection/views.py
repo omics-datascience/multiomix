@@ -103,8 +103,8 @@ class FeatureSelectionSubmit(APIView):
         
         fs_experiment = FSExperiment.objects.create(
             origin_biomarker=biomarker,
-            algorithm=algorithm,
-            fitness_function=fitness_function,
+            algorithm=int(algorithm),
+            fitness_function=int(fitness_function),
             clinical_source=clinical_source,
             mrna_source=mrna_source,
             mirna_source=mirna_source,

@@ -1,8 +1,5 @@
-from typing import Literal, Union
-import numpy as np
-import pandas as pd
+from typing import Literal
 from django.conf import settings
-from sklearn.model_selection import cross_val_score
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 
@@ -32,22 +29,3 @@ def get_survival_svm_model(is_svm_regression: bool, svm_kernel: SVMKernel, svm_o
     rank_ratio = 0.0 if is_svm_regression else 1.0
     return FastKernelSurvivalSVM(rank_ratio=rank_ratio, max_iter=max_iterations, tol=1e-5, kernel=svm_kernel,
                                  optimizer=svm_optimizer)
-
-
-def compute_cross_validation_sequential(classifier: Union[FastKernelSurvivalSVM, RandomSurvivalForest],
-                                        subset: pd.DataFrame, y: np.ndarray) -> float:
-    """
-    Computes CrossValidation to get the Concordance Index.
-    :param classifier: Classifier to train
-    :param subset: Subset of features to be used in the model evaluated in the CrossValidation
-    :param y: Classes
-    :return: Average of the C-Index obtained in each CrossValidation fold
-    """
-    res = cross_val_score(
-        classifier,
-        subset,
-        y,
-        cv=10,
-        n_jobs=settings.N_JOBS_CV
-    )
-    return res.mean()

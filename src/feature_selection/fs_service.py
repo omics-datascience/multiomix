@@ -7,7 +7,9 @@ from typing import Dict, Tuple, cast, Optional, Union
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .models import FSExperiment
+from .fs_algorithms import blind_search, compute_cross_validation_sequential
+from .fs_models import get_rf_model, get_survival_svm_model
+from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -134,8 +136,48 @@ class FSService(object):
 
         return molecules_temp_file_path, clinical_temp_file_path
 
+    @staticmethod
+    def __compute_experiment(experiment: FSExperiment, molecules_temp_file_path: str, clinical_temp_file_path: str,
+                             stop_event: Event):
+        """
+        Computes the Feature Selection experiment using the params defined by the user.
+        TODO: use stop_event
+        @param experiment: FSExperiment instance.
+        @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
+        @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
+        @param stop_event: Stop signal.
+        """
+        # Gets molecules and clinica DataFrames
+        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
-    def __compute_experiment(self, experiment: FSExperiment, stop_event: Event):
+        print(clinical_df.head())
+
+        # Formats clinical data to a Numpy structured array
+        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
+                                                   formats='bool, float')
+
+        # Gets model and fitness function
+        if experiment.fitness_function == FitnessFunction.SVM:
+            classifier = get_survival_svm_model(is_svm_regression=False, svm_kernel='linear', svm_optimizer='avltree')  # TODO: parametrize from frontend
+        elif experiment.fitness_function == FitnessFunction.RF:
+            classifier = get_rf_model()
+        else:
+            # TODO: implement
+            raise Exception('Fitness function not implemented')
+
+        # Gets FS algorithm
+        if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
+            best_features, best_score = blind_search(classifier, molecules_df, clinical_data)
+            print(best_features)
+            print(best_score)
+        else:
+            # TODO: implement
+            raise Exception('Algorithm not implemented')
+
+
+
+    def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
         TODO: use stop_event
@@ -151,11 +193,9 @@ class FSService(object):
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
                                                                                                       samples_in_common)
 
-        # TODO: add here the FS algorithm
+        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path, stop_event)
 
-        # Removes the temporary files
-        os.unlink(molecules_temp_file_path)
-        os.unlink(clinical_temp_file_path)
+        return molecules_temp_file_path, clinical_temp_file_path
 
 
     def eval_feature_selection_experiment(self, experiment: FSExperiment, stop_event: Event) -> None:
@@ -168,6 +208,8 @@ class FSService(object):
         biomarker: Biomarker = experiment.created_biomarker
 
         # Computes the experiment
+        molecules_temp_file_path: Optional[str] = None
+        clinical_temp_file_path: Optional[str] = None
         try:
             logging.warning(f'ID FS EXPERIMENT -> {biomarker.pk}')
             # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
@@ -178,7 +220,8 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            self.__compute_experiment(experiment, stop_event)
+            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(experiment,
+                                                                                                      stop_event)
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
 
@@ -214,6 +257,13 @@ class FSService(object):
             logging.exception(e)
             logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to biomarker {biomarker.pk}')
             biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
+        finally:
+            # Removes the temporary files
+            if molecules_temp_file_path is not None:
+                os.unlink(molecules_temp_file_path)
+
+            if clinical_temp_file_path is not None:
+                os.unlink(clinical_temp_file_path)
 
         # Saves changes in DB
         biomarker.save()
