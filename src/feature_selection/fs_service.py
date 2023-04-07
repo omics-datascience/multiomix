@@ -6,10 +6,11 @@ from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
+from common.utils import replace_cgds_suffix
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
 from .fs_algorithms import blind_search, compute_cross_validation_sequential
 from .fs_models import get_rf_model, get_survival_svm_model
-from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm
+from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -17,6 +18,7 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
+from .utils import get_svm_kernel
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -95,6 +97,9 @@ class FSService(object):
         @param samples_in_common: Samples in common to extract from the datasets.
         @return: Both DataFrames paths.
         """
+        # Removes CGDS suffix to prevent not found indexes
+        clean_samples_in_common = replace_cgds_suffix(samples_in_common)
+
         # Generates clinical DataFrame
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             clinical_temp_file_path = temp_file.name
@@ -105,7 +110,8 @@ class FSService(object):
             # Keeps only the survival tuple and samples in common
             survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
-            clinical_df = clinical_df.loc[samples_in_common]
+
+            clinical_df = clinical_df.loc[clean_samples_in_common]
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
@@ -151,15 +157,18 @@ class FSService(object):
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
-        print(clinical_df.head())
-
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
 
         # Gets model and fitness function
         if experiment.fitness_function == FitnessFunction.SVM:
-            classifier = get_survival_svm_model(is_svm_regression=False, svm_kernel='linear', svm_optimizer='avltree')  # TODO: parametrize from frontend
+            svm_parameters: SVMParameters = experiment.svm_parameters
+            classifier = get_survival_svm_model(
+                is_svm_regression=svm_parameters.task == SVMTask.REGRESSION,
+                svm_kernel=get_svm_kernel(svm_parameters.kernel),
+                svm_optimizer='avltree'  # In practice, this optimizer is usually the fastest
+            )
         elif experiment.fitness_function == FitnessFunction.RF:
             classifier = get_rf_model()
         else:
@@ -169,8 +178,6 @@ class FSService(object):
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
             best_features, best_score = blind_search(classifier, molecules_df, clinical_data)
-            print(best_features)
-            print(best_score)
         else:
             # TODO: implement
             raise Exception('Algorithm not implemented')
