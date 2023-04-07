@@ -6,7 +6,7 @@ from urllib.error import URLError
 import requests
 from pymongo.errors import InvalidName
 from requests.exceptions import ConnectionError
-from api_service.models import PATIENT_ID_COLUMN
+from common.constants import PATIENT_ID_COLUMN
 from common.functions import close_db_connection
 from .models import CGDSStudy, CGDSDataset, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
 from concurrent.futures import ThreadPoolExecutor

@@ -5,10 +5,10 @@ from sksurv.svm import FastKernelSurvivalSVM
 
 
 # Available options for the SVM kernel
-SVMKernel = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"]
+SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"]
 
 # Available options for the SVM optimizer
-SVMOptimizer = Literal["avltree", "rbtree"]
+SVMOptimizerOptions = Literal["avltree", "rbtree"]
 
 
 def get_rf_model(rf_n_estimators: int = 50) -> RandomSurvivalForest:
@@ -20,7 +20,7 @@ def get_rf_model(rf_n_estimators: int = 50) -> RandomSurvivalForest:
                                 max_features="sqrt", n_jobs=settings.N_JOBS_RF)
 
 
-def get_survival_svm_model(is_svm_regression: bool, svm_kernel: SVMKernel, svm_optimizer: SVMOptimizer,
+def get_survival_svm_model(is_svm_regression: bool, svm_kernel: SVMKernelOptions, svm_optimizer: SVMOptimizerOptions,
                            max_iterations: int = 1000) -> FastKernelSurvivalSVM:
     """
     Generates a FastKernelSurvivalSVM instance with some specific parameters.

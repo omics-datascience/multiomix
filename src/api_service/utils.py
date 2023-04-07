@@ -35,14 +35,14 @@ def get_experiment_source(
         prefix: Literal['mRNA', 'gem', 'miRNA', 'cna', 'methylation', 'clinical']
 ) -> Tuple[Optional[ExperimentSource], Optional[ExperimentClinicalSource]]:
     """
-    Generates a source object to run a pipeline. This method considers the source type
-    to create a new file, get an existing (previously uploaded) file or get a CGDS dataset
-    @param source_type: Type of the source: new dataset, existing file or a CGDS dataset
-    @param request: Request object to get the user and some parameters
-    @param file_type: File type to save the UserFile
-    @param prefix: Prefix of request param to get its values
+    Generates a Source object. This method considers the source type to create a new file, get an existing
+    (previously uploaded) file or get a CGDS dataset.
+    @param source_type: Type of the source: new dataset, existing file or a CGDS dataset.
+    @param request: Request object to get the user and some parameters.
+    @param file_type: File type to save the UserFile.
+    @param prefix: Prefix of request param to get its values.
     @return: Generated ExperimentSource Object to add to the Experiment and a Clinical source in case the sources has
-    that information
+    that information.
     """
     if source_type is None:
         return None, None
@@ -82,10 +82,14 @@ def get_experiment_source(
         cgds_study = CGDSStudy.objects.get(pk=cgds_study_pk)
 
         # Gets the corresponding Study's Dataset
-        cgds_dataset = get_cgds_dataset(cgds_study, file_type)
-
+        if is_clinical:
+            # If it's clinical, it needs both datasets, so return None as dataset
+            cgds_dataset = None
+        else:
+            cgds_dataset = get_cgds_dataset(cgds_study, file_type)
         source.cgds_dataset = cgds_dataset
 
+        # Gets ExperimentClinicalSource() as CGDSStudies has two clinical datasets (sample and patients)
         clinical_source = create_clinical_dataset_from_cgds_study(cgds_study)
     else:
         # Otherwise, uses an existing User's file

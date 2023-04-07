@@ -56,8 +56,13 @@ class FeatureSelectionSubmit(APIView):
 
         # Clinical source
         clinical_source_type = self.__get_source_pk(request.POST, 'clinicalType')
-        clinical_source, _clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
+        clinical_source, clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
                                                                'clinical')
+
+        # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
+        clinical_source = clinical_aux if clinical_aux is not None else clinical_source
+
+
         if clinical_source is None:
             raise ValidationError('Invalid clinical source')
 

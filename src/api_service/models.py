@@ -1,6 +1,8 @@
 from typing import Iterable, List, Optional, Union
 from django.db import models
 from django.contrib.auth import get_user_model
+from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE, \
+    TCGA_CONVENTION
 from common.methylation import get_methylation_platform_dataframe
 from genes.models import Gene
 from statistical_properties.models import SourceDataStatisticalProperties
@@ -12,13 +14,6 @@ from .websocket_functions import send_update_experiments_command
 from datasets_synchronization.models import CGDSDataset, SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 import pandas as pd
 import numpy as np
-
-# Names of the columns by convention in cBioPortal datasets
-PATIENT_ID_COLUMN = 'PATIENT_ID'
-SAMPLE_ID_COLUMN = 'SAMPLE_ID'
-SAMPLES_TYPE_COLUMN = 'SAMPLES_TYPE'
-PRIMARY_TYPE_VALUE = 'primary'
-TCGA_CONVENTION = '-(0(1|6)|11)$'
 
 
 def get_combination_class(experiment_type: ExperimentType):

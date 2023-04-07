@@ -47,8 +47,8 @@ def blind_search(classifier: Union[FastKernelSurvivalSVM, RandomSurvivalForest],
                  clinical_data: np.ndarray) -> Tuple[List[str], float]:
     """
 
-    @param fitness_function:
-    @param molecules_df:
+    @param classifier: Classifier to use in every blind search iteration.
+    @param molecules_df: DataFrame with all the molecules data.
     @param clinical_data: Numpy array with the time and event columns.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
