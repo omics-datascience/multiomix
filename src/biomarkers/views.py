@@ -8,13 +8,33 @@ from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
 from biomarkers.serializers import BiomarkerSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
+from django.db.models import Q, Count
 
 
 class BiomarkerList(generics.ListCreateAPIView):
     """REST endpoint: list and create for Biomarker model"""
 
     def get_queryset(self):
-        return Biomarker.objects.filter(user=self.request.user)
+        only_successful = self.request.GET.get('onlySuccessful') == 'true'
+        biomarkers = Biomarker.objects.filter(user=self.request.user)
+        if only_successful:
+            # In this case shows only Biomarkers that are valid (completed and have at least a molecule)
+            biomarkers = biomarkers.annotate(
+                count_number_of_mrnas=Count('mrnas'),
+                count_number_of_mirnas=Count('mirnas'),
+                count_number_of_cnas=Count('cnas'),
+                count_number_of_methylations=Count('methylations')
+            ).filter(
+                Q(state=BiomarkerState.COMPLETED) & (
+                        Q(count_number_of_mrnas__gt=0) |
+                        Q(count_number_of_mirnas__gt=0) |
+                        Q(count_number_of_cnas__gt=0) |
+                        Q(count_number_of_methylations__gt=0)
+                )
+            )
+
+
+        return biomarkers
 
     def perform_create(self, biomarker: Biomarker):
         """Adds some fields on saving"""

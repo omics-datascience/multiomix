@@ -24,6 +24,10 @@ export const FeatureSelectionStep1 = (props: Props) => {
                     headerTitle='Biomarkers'
                     headers={props.getDefaultHeaders()}
                     customFilters={props.getDefaultFilters}
+                    queryParams={{
+                        onlySuccessful: true // Only show Biomarkers in COMPLETED state
+                    }}
+                    defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                     showSearchInput
                     searchLabel='Name'
                     searchPlaceholder='Search by name'

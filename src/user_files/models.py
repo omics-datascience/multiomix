@@ -16,7 +16,7 @@ from django.conf import settings
 from api_service.websocket_functions import send_update_user_file_command
 
 
-def user_directory_path(instance, filename):
+def user_directory_path(instance, filename: str):
     """File will be uploaded to MEDIA_ROOT/uploads/user_<id>/<filename>"""
     return f'uploads/user_{instance.user.id}/{filename}'
 
