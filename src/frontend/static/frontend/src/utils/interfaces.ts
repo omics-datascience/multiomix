@@ -286,6 +286,11 @@ interface CustomAlert {
     duration: number,
 }
 
+/** Just a simple response from the server. */
+type OkResponse = {
+    ok: boolean
+}
+
 export {
     CustomAlertTypes,
     CustomAlert,
@@ -319,5 +324,6 @@ export {
     MirDIPScoreClass,
     ScoreClassData,
     BinData,
-    DataUICategoricalBinnedDatumShape
+    DataUICategoricalBinnedDatumShape,
+    OkResponse
 }

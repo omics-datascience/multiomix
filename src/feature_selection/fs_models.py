@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans, SpectralClustering
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 
+from feature_selection.models import ClusteringAlgorithm
 
 # Available options for the SVM kernel
 SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"]
@@ -11,16 +12,16 @@ SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precom
 # Available options for the SVM optimizer
 SVMOptimizerOptions = Literal["avltree", "rbtree"]
 
-# Available clustering algorithms
-ClusteringAlgorithm = Literal['k_means', 'spectral']
+# Available models for clustering
+ClusteringModels = Union[KMeans, SpectralClustering]
 
 
 def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
-                         number_of_clusters: int) -> Union[KMeans, SpectralClustering]:
+                         number_of_clusters: int) -> ClusteringModels:
     """Gets the specified clustering model to train"""
-    if clustering_algorithm == 'kmeans':
+    if clustering_algorithm == ClusteringAlgorithm.K_MEANS:
         return KMeans(n_clusters=number_of_clusters)
-    elif clustering_algorithm == 'spectral':
+    elif clustering_algorithm == ClusteringAlgorithm.SPECTRAL:
         return SpectralClustering(n_clusters=number_of_clusters)
 
     raise Exception(f'Invalid clustering_algorithm parameter: {clustering_algorithm}')

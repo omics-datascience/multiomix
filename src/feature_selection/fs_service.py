@@ -3,7 +3,7 @@ import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, Union
+from typing import Dict, Tuple, cast, Optional, Union, List
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
@@ -11,8 +11,9 @@ from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
 from .fs_algorithms import blind_search
-from .fs_models import get_rf_model, get_survival_svm_model
-from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask
+from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
+from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
+    ClusteringParameters, ClusteringScoringMethod
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -21,6 +22,8 @@ from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
 from .utils import get_svm_kernel
+from django.core.files.base import ContentFile
+import pickle
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -148,8 +151,27 @@ class FSService(object):
         return molecules_temp_file_path, clinical_temp_file_path
 
     @staticmethod
-    def __compute_experiment(experiment: FSExperiment, molecules_temp_file_path: str, clinical_temp_file_path: str,
-                             stop_event: Event):
+    def __save_molecule_identifiers(created_biomarker: Biomarker, best_features: List[str]):
+        """Saves all the molecules for the new created biomarker."""
+        for feature in best_features:
+            molecule_name, file_type = feature.rsplit('_', maxsplit=1)
+            file_type = int(file_type)
+            if file_type == FileType.MRNA:
+                identifier_class = MRNAIdentifier
+            elif file_type == FileType.MIRNA:
+                identifier_class = MiRNAIdentifier
+            elif file_type == FileType.CNA:
+                identifier_class = CNAIdentifier
+            elif file_type == FileType.METHYLATION:
+                identifier_class = MethylationIdentifier
+            else:
+                raise Exception(f'Molecule type invalid: {file_type}')
+
+            # Creates the identifier
+            identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
+
+    def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
+                             clinical_temp_file_path: str, stop_event: Event):
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
@@ -167,6 +189,8 @@ class FSService(object):
                                                    formats='bool, float')
 
         # Gets model and fitness function
+        is_clustering = False
+        clustering_scoring_method: Optional[ClusteringScoringMethod] = None
         if experiment.fitness_function == FitnessFunction.SVM:
             svm_parameters: SVMParameters = experiment.svm_parameters
             classifier = get_survival_svm_model(
@@ -177,38 +201,32 @@ class FSService(object):
         elif experiment.fitness_function == FitnessFunction.RF:
             classifier = get_rf_model()
         else:
-            # TODO: implement
-            raise Exception('Fitness function not implemented')
+            is_clustering = True
+            clustering_parameters: ClusteringParameters = experiment.clustering_parameters
+            clustering_scoring_method = clustering_parameters.scoring_method
+            classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
-            best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data)
+            best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data,
+                                                                 is_clustering, clustering_scoring_method)
         else:
-            # TODO: implement
+            # TODO: implement BBHA, PSO and GA
             raise Exception('Algorithm not implemented')
 
-        # Stores molecules in the target biomarker, the best model and its fitness value
-        # TODO: add new state of not best subset found. Check with Butti if considers all the features fitness
         if best_features is not None:
+            # Stores molecules in the target biomarker, the best model and its fitness value
             created_biomarker = experiment.created_biomarker
-            for feature in best_features:
-                molecule_name, file_type = feature.rsplit('_', maxsplit=1)
-                file_type = int(file_type)
-                if file_type == FileType.MRNA:
-                    identifier_class = MRNAIdentifier
-                elif file_type == FileType.MIRNA:
-                    identifier_class = MiRNAIdentifier
-                elif file_type == FileType.CNA:
-                    identifier_class = CNAIdentifier
-                elif file_type == FileType.METHYLATION:
-                    identifier_class = MethylationIdentifier
-                else:
-                    raise Exception(f'Molecule type invalid: {file_type}')
+            self.__save_molecule_identifiers(created_biomarker, best_features)
 
-                # Creates the identifier
-                identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
-
-                # TODO: creates the instance of TrainedModel with the best model and fitness
+            # Stores the trained model
+            trained_content = pickle.dumps(best_model)
+            TrainedModel.objects.create(
+                biomarker=created_biomarker,
+                fs_experiment=experiment,
+                model_dump=ContentFile(trained_content),
+                best_fitness_value=best_score,
+            )
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
         """

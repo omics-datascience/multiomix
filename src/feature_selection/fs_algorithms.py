@@ -1,19 +1,22 @@
 import itertools
+from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 import numpy as np
 import pandas as pd
-from typing import Iterable, List, Callable, Tuple, Union, Dict, Optional, cast
-from django.conf import settings
+from lifelines import CoxPHFitter
 from sklearn import clone
-from sklearn.model_selection import cross_val_score, cross_validate, StratifiedKFold
+from sklearn.cluster import KMeans, SpectralClustering
+from sklearn.model_selection import StratifiedKFold
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 
+from feature_selection.fs_models import ClusteringModels
+from feature_selection.models import ClusteringScoringMethod
 
 # Fitness function shape
 FitnessFunction = Callable[[pd.DataFrame, np.ndarray], float]
 
 # Available survival models to fit during Cross Validation
-SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest]
+SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest, KMeans, SpectralClustering]
 
 
 def all_combinations(any_list: List) -> Iterable[List]:
@@ -31,9 +34,9 @@ def compute_cross_validation_sequential(classifier: SurvModel,
     """
     Computes CrossValidation to get the Concordance Index (using StratifiedKFold to prevent "All samples are censored"
     error).
-    :param classifier: Classifier to train.
-    :param subset: Subset of features to be used in the model evaluated in the CrossValidation.
-    :param y: Classes.
+    @param classifier: Classifier to train.
+    @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
+    @param y: Classes.
     :return: Average of the C-Index obtained in each CV fold, best model during CV and its fitness score.
     """
     # Create StratifiedKFold object.
@@ -64,14 +67,53 @@ def compute_cross_validation_sequential(classifier: SurvModel,
     return fitness_value_mean, best_model, best_c_index
 
 
+def compute_clustering_sequential(classifier: ClusteringModels,
+                                  subset: pd.DataFrame,
+                                  y: np.ndarray,
+                                  score_method: ClusteringScoringMethod) -> Tuple[float, SurvModel, float]:
+    """
+    Computes a clustering algorithm and gets the C-Index or Log Likelihood.
+    @param classifier: Classifier to train.
+    @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
+    @param y: Classes.
+    @param score_method: Clustering scoring method to optimize.
+    :return: C-Index/Log-likelihood obtained in the clustering process, best model during CV and the fitness value again
+    (just for compatibility with the caller function).
+    """
+    clustering_result = classifier.fit(subset.values)
 
-def blind_search(classifier: Union[FastKernelSurvivalSVM, RandomSurvivalForest], molecules_df: pd.DataFrame,
-                 clinical_data: np.ndarray) -> Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]:
+    # Generates a DataFrame with a column for time, event and the group
+    labels = clustering_result.labels_
+    dfs: List[pd.DataFrame] = []
+    for cluster_id in range(classifier.n_clusters):
+        current_group_y = y[np.where(labels == cluster_id)]
+        dfs.append(
+            pd.DataFrame({'E': current_group_y['event'], 'T': current_group_y['time'], 'group': cluster_id})
+        )
+    df = pd.concat(dfs)
+
+    # Fits a Cox Regression model using the column group as the variable to consider
+    cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+
+    # This documentation recommends using log-likelihood to optimize:
+    # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
+    scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
+    fitness_value = cph.score(df, scoring_method=scoring_method)
+
+    return fitness_value, classifier, fitness_value
+
+def blind_search(classifier: SurvModel,
+                 molecules_df: pd.DataFrame,
+                 clinical_data: np.ndarray,
+                 is_clustering: bool,
+                 score_method: Optional[ClusteringScoringMethod]) -> Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]:
     """
     Runs a Blind Search running a specific classifier using the molecular and clinical data passed by params.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
+    @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
+    @param score_method: Clustering scoring method to optimize.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
     """
@@ -99,8 +141,19 @@ def blind_search(classifier: Union[FastKernelSurvivalSVM, RandomSurvivalForest],
         # Computes the fitness function and checks if this combination of features has a higher score
         # than the best found so far
         try:
-            score, current_best_model, current_best_c_index = compute_cross_validation_sequential(classifier, subset,
-                                                                                              clinical_data)
+            if is_clustering:
+                score, current_best_model, best_score = compute_clustering_sequential(
+                    classifier,
+                    subset,
+                    clinical_data,
+                    score_method=score_method
+                )
+            else:
+                score, current_best_model, best_score = compute_cross_validation_sequential(
+                    classifier,
+                    subset,
+                    clinical_data
+                )
         except ValueError:
             continue
 
@@ -108,6 +161,6 @@ def blind_search(classifier: Union[FastKernelSurvivalSVM, RandomSurvivalForest],
             best_mean_score = score
             best_features = combination
             best_model = current_best_model
-            best_score = current_best_c_index
+            best_score = best_score
 
     return best_features, best_model, best_score

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Container, Select } from 'semantic-ui-react'
-import { ClusteringMetric, ClusteringAlgorithm, FitnessFunctionClustering } from '../../../../types'
+import { ClusteringMetric, ClusteringAlgorithm, FitnessFunctionClustering, ClusteringScoringMethod } from '../../../../types'
 
 /** Clustering props. */
 interface ClusteringProps {
@@ -22,7 +22,8 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                 placeholder='Clustering Algorithm'
                 name='moleculeSelected'
                 options={[
-                    { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS, disabled: false }
+                    { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS },
+                    { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL }
                 ]}
                 value={settings.algorithm}
                 onChange={(_, { value }) => handleChangeClusterOption('algorithm', value as number)}
@@ -31,7 +32,6 @@ export const ClusteringPanel = (props: ClusteringProps) => {
             <Container className='biomarkers--side--bar--box'>
                 <Button.Group
                     compact
-                    name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
                         onClick={() => handleChangeClusterOption('metric', ClusteringMetric.COX_REGRESSION)}
@@ -43,8 +43,29 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                     <Button
                         onClick={() => handleChangeClusterOption('metric', ClusteringMetric.LOG_RANK_TEST)}
                         active={settings.metric === ClusteringMetric.LOG_RANK_TEST}
+                        disabled // TODO: implement in backend
                     >
                         Log-Rank test
+                    </Button>
+                </Button.Group>
+            </Container>
+
+            <Container className='biomarkers--side--bar--box'>
+                <Button.Group
+                    compact
+                    className='biomarkers--side--bar--buttons-group'>
+                    <Button
+                        onClick={() => handleChangeClusterOption('scoringMethod', ClusteringScoringMethod.C_INDEX)}
+                        active={settings.scoringMethod === ClusteringScoringMethod.C_INDEX}
+                    >
+                        C-Index
+                    </Button>
+
+                    <Button
+                        onClick={() => handleChangeClusterOption('scoringMethod', ClusteringScoringMethod.LOG_LIKELIHOOD)}
+                        active={settings.scoringMethod === ClusteringScoringMethod.LOG_LIKELIHOOD}
+                    >
+                        Log Likelihood
                     </Button>
                 </Button.Group>
             </Container>

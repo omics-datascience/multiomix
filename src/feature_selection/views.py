@@ -126,6 +126,7 @@ class FeatureSelectionSubmit(APIView):
                 ClusteringParameters.objects.create(
                     algorithm=parameters['algorithm'],
                     metric=parameters['metric'],
+                    scoring_method=parameters['scoringMethod'],
                     experiment=fs_experiment
                 )
             elif fit_fun_enum == FitnessFunction.SVM:

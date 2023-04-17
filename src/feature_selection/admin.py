@@ -1,7 +1,7 @@
 from django.contrib import admin
-from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters
-
+from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel
 
 admin.site.register(FSExperiment)
 admin.site.register(SVMParameters)
 admin.site.register(ClusteringParameters)
+admin.site.register(TrainedModel)

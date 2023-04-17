@@ -4,8 +4,8 @@ import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } 
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend } from '../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, FitnessFunctionSvm, FitnessFunctionParameters, BiomarkerState } from './types'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source, OkResponse } from '../../utils/interfaces'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, FitnessFunctionSvm, FitnessFunctionParameters, BiomarkerState, ClusteringScoringMethod } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -114,6 +114,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultClusteringParameters = (): FitnessFunctionClustering => {
         return {
             algorithm: ClusteringAlgorithm.K_MEANS,
+            scoringMethod: ClusteringScoringMethod.C_INDEX,
             metric: ClusteringMetric.COX_REGRESSION
         }
     }
@@ -687,32 +688,23 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             methylations: formBiomarker.moleculesSection.Methylation.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
             cnas: formBiomarker.moleculesSection.CNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
+
         const settings = {
             headers: getDjangoHeader(),
             json: biomarkerToSend
         }
         formBiomarker.validation.isLoading = false
         this.setState({ formBiomarker })
+
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCRUD, settings).then((response) => {
-                response.json().then((jsonResponse: Biomarker) => {
-                    console.log(jsonResponse)
-                    const alert = this.state.alert
-                    alert.isOpen = true
-                    alert.type = CustomAlertTypes.SUCCESS
-                    alert.message = 'Biomarker created sucessfully!'
-                    this.setState({
-                        alert,
-                        formBiomarker: this.getDefaultFormBiomarker(),
-                        isOpenModal: false,
-                        confirmModal: this.getDefaultConfirmModal(),
-                        biomarkerTypeSelected: BiomarkerOrigin.BASE
-                    })
+                response.json().then((_jsonResponse: Biomarker) => {
+                    this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                console.log('Error getting genes ->', err)
+                console.log('Error adding Biomarker ->', err)
                 const alert = this.state.alert
                 alert.isOpen = true
                 alert.type = CustomAlertTypes.ERROR
@@ -722,19 +714,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         } else {
             ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
-                response.json().then((jsonResponse: Biomarker) => {
-                    console.log(jsonResponse)
-                    const alert = this.state.alert
-                    alert.isOpen = true
-                    alert.type = CustomAlertTypes.SUCCESS
-                    alert.message = 'Biomarker edited sucessfully!'
-                    this.setState({
-                        alert,
-                        formBiomarker: this.getDefaultFormBiomarker(),
-                        isOpenModal: false,
-                        confirmModal: this.getDefaultConfirmModal(),
-                        biomarkerTypeSelected: BiomarkerOrigin.BASE
-                    })
+                response.json().then((_jsonResponse: Biomarker) => {
+                    this.closeModalWithSuccessMsg('Biomarker edited successfully')
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
                 })
@@ -1185,6 +1166,24 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Closes the modal and shows a successful Semantic-UI Alert message.
+     * @param msg Message to show.
+     */
+    closeModalWithSuccessMsg = (msg: string) => {
+        const alert = this.state.alert
+        alert.isOpen = true
+        alert.type = CustomAlertTypes.SUCCESS
+        alert.message = msg
+        this.setState({
+            alert,
+            formBiomarker: this.getDefaultFormBiomarker(),
+            isOpenModal: false,
+            confirmModal: this.getDefaultConfirmModal(),
+            biomarkerTypeSelected: BiomarkerOrigin.BASE
+        })
+    }
+
+    /**
      * Submits the Feature Selection experiment to backend
      */
     submitFeatureSelectionExperiment = () => {
@@ -1216,8 +1215,12 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             const headers = getDjangoHeader()
 
             ky.post(urlFeatureSelectionSubmit, { headers, body: formData }).then((response) => {
-                response.json().then((responseJSON /* TODO: type */) => {
-                    console.log('responseJSON: ', responseJSON) // TODO: remove
+                response.json().then((responseJSON: OkResponse) => {
+                    if (responseJSON.ok) {
+                        this.closeModalWithSuccessMsg('Experiment submitted!')
+                    } else {
+                        alertGeneralError()
+                    }
                 }).catch((err) => {
                     alertGeneralError()
                     console.log('Error parsing JSON ->', err)

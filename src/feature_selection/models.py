@@ -24,12 +24,19 @@ class FitnessFunction(models.IntegerChoices):
 class ClusteringAlgorithm(models.IntegerChoices):
     """Clustering algorithm."""
     K_MEANS = 1
+    SPECTRAL = 2  # TODO: implement in backend
 
 
 class ClusteringMetric(models.IntegerChoices):
     """Clustering metric to optimize."""
     COX_REGRESSION = 1,
     LOG_RANK_TEST = 2
+
+
+class ClusteringScoringMethod(models.IntegerChoices):
+    """Clustering scoring method."""
+    C_INDEX = 1,
+    LOG_LIKELIHOOD = 2
 
 
 class SVMKernel(models.IntegerChoices):
@@ -47,8 +54,10 @@ class SVMTask(models.IntegerChoices):
 
 class ClusteringParameters(models.Model):
     """Clustering fitness function parameters."""
-    algorithm = models.IntegerField(choices=ClusteringAlgorithm.choices)
-    metric = models.IntegerField(choices=ClusteringMetric.choices)
+    algorithm = models.IntegerField(choices=ClusteringAlgorithm.choices, default=ClusteringAlgorithm.K_MEANS)
+    metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
+    scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
+                                         default=ClusteringScoringMethod.C_INDEX)
     experiment = models.OneToOneField('FSExperiment', on_delete=models.CASCADE, null=True, blank=True,
                                       related_name='clustering_parameters')
 
@@ -106,3 +115,24 @@ class FSExperiment(models.Model):
                 FileType.METHYLATION
             )
         ]
+
+
+def user_directory_path_for_trained_models(instance, filename: str):
+    """File will be uploaded to MEDIA_ROOT/uploads/user_<id>/trained_models/<filename>"""
+    return f'uploads/user_{instance.biomarker.user.id}/trained_models/{filename}'
+
+
+class TrainedModel(models.Model):
+    """Represents a Model to validate or make inference with a Biomarker."""
+    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='trained_models')
+    fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
+                                         null=True, blank=True)
+    model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
+    best_fitness_value =  models.FloatField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Trained model for Biomarker "{self.biomarker.name}"'
+
+
+

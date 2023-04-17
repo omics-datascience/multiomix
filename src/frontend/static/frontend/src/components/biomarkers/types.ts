@@ -157,12 +157,19 @@ enum FitnessFunction {
 /** Clustering algorithm. */
 enum ClusteringAlgorithm {
     K_MEANS = 1,
+    SPECTRAL = 2
 }
 
 /** Clustering metric to optimize. */
 enum ClusteringMetric {
     COX_REGRESSION = 1,
     LOG_RANK_TEST = 2
+}
+
+/** Clustering scoring method. */
+enum ClusteringScoringMethod {
+    C_INDEX = 1,
+    LOG_LIKELIHOOD = 2
 }
 
 /** SVM's kernel */
@@ -180,7 +187,8 @@ enum SVMTask {
 
 /** Settings for the Clustering fitness function. */
 interface FitnessFunctionClustering{
-    algorithm: ClusteringAlgorithm
+    algorithm: ClusteringAlgorithm,
+    scoringMethod: ClusteringScoringMethod,
     metric: ClusteringMetric
 }
 
@@ -248,5 +256,6 @@ export {
     MoleculeSectionItem,
     ConfirmModal,
     MoleculeSymbol,
-    MoleculesSymbolFinder
+    MoleculesSymbolFinder,
+    ClusteringScoringMethod
 }
