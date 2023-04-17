@@ -1,5 +1,6 @@
-from typing import Literal
+from typing import Literal, Union
 from django.conf import settings
+from sklearn.cluster import KMeans, SpectralClustering
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 
@@ -9,6 +10,20 @@ SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precom
 
 # Available options for the SVM optimizer
 SVMOptimizerOptions = Literal["avltree", "rbtree"]
+
+# Available clustering algorithms
+ClusteringAlgorithm = Literal['k_means', 'spectral']
+
+
+def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
+                         number_of_clusters: int) -> Union[KMeans, SpectralClustering]:
+    """Gets the specified clustering model to train"""
+    if clustering_algorithm == 'kmeans':
+        return KMeans(n_clusters=number_of_clusters)
+    elif clustering_algorithm == 'spectral':
+        return SpectralClustering(n_clusters=number_of_clusters)
+
+    raise Exception(f'Invalid clustering_algorithm parameter: {clustering_algorithm}')
 
 
 def get_rf_model(rf_n_estimators: int = 50) -> RandomSurvivalForest:

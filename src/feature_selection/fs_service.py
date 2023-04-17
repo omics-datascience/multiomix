@@ -5,10 +5,12 @@ import numpy as np
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union
 import pandas as pd
-from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
+from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
+    CNAIdentifier, MethylationIdentifier
 from common.utils import replace_cgds_suffix
+from user_files.models_choices import FileType
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .fs_algorithms import blind_search, compute_cross_validation_sequential
+from .fs_algorithms import blind_search
 from .fs_models import get_rf_model, get_survival_svm_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -130,12 +132,15 @@ class FSService(object):
                     continue
 
                 for chunk in source.get_df_in_chunks():
-                    # Keeps only the selected molecules for the samples in common
+                    # Only keeps the samples in common
                     chunk = chunk[samples_in_common]
 
                     # Keeps only existing molecules in the current chunk
                     molecules_to_extract = np.intersect1d(chunk.index, molecules)
                     chunk = chunk.loc[molecules_to_extract]
+
+                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
+                    chunk.index = chunk.index + f'_{file_type}'
 
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
@@ -177,12 +182,33 @@ class FSService(object):
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
-            best_features, best_score = blind_search(classifier, molecules_df, clinical_data)
+            best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data)
         else:
             # TODO: implement
             raise Exception('Algorithm not implemented')
 
+        # Stores molecules in the target biomarker, the best model and its fitness value
+        # TODO: add new state of not best subset found. Check with Butti if considers all the features fitness
+        if best_features is not None:
+            created_biomarker = experiment.created_biomarker
+            for feature in best_features:
+                molecule_name, file_type = feature.rsplit('_', maxsplit=1)
+                file_type = int(file_type)
+                if file_type == FileType.MRNA:
+                    identifier_class = MRNAIdentifier
+                elif file_type == FileType.MIRNA:
+                    identifier_class = MiRNAIdentifier
+                elif file_type == FileType.CNA:
+                    identifier_class = CNAIdentifier
+                elif file_type == FileType.METHYLATION:
+                    identifier_class = MethylationIdentifier
+                else:
+                    raise Exception(f'Molecule type invalid: {file_type}')
 
+                # Creates the identifier
+                identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
+
+                # TODO: creates the instance of TrainedModel with the best model and fitness
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
         """
@@ -239,7 +265,6 @@ class FSService(object):
                 self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
                 # Saves some data about the result of the experiment
-                # TODO: add better fitness value (add field in model too)
                 experiment.execution_time = total_execution_time
                 biomarker.state = BiomarkerState.COMPLETED
         except NoSamplesInCommon:
