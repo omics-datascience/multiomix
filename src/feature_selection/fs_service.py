@@ -10,7 +10,7 @@ from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAId
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .fs_algorithms import blind_search
+from .fs_algorithms import blind_search, binary_black_hole_sequential
 from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
     ClusteringParameters, ClusteringScoringMethod
@@ -210,8 +210,18 @@ class FSService(object):
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
             best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data,
                                                                  is_clustering, clustering_scoring_method)
+        elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
+            best_features, best_model, best_score = binary_black_hole_sequential(
+                classifier,
+                molecules_df,
+                n_stars=25,  # TODO: parametrize in frontend
+                n_iterations=10,  # TODO: parametrize in frontend
+                clinical_data=clinical_data,
+                is_clustering=is_clustering,
+                clustering_score_method=clustering_scoring_method
+            )
         else:
-            # TODO: implement BBHA, PSO and GA
+            # TODO: implement PSO and GA
             raise Exception('Algorithm not implemented')
 
         if best_features is not None:
@@ -329,7 +339,7 @@ class FSService(object):
         """Creates a new Biomarker and assigns it to the FSExperiment instance."""
         origin_biomarker = experiment.origin_biomarker
         new_biomarker = Biomarker.objects.create(
-            name=f'{origin_biomarker.name} (FS optimized {time.time()})',
+            name=f'"{origin_biomarker.name}" (FS optimized {experiment.pk})',
             description=origin_biomarker.description,
             origin=BiomarkerOrigin.FEATURE_SELECTION,
             state=BiomarkerState.IN_PROCESS,

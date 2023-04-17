@@ -45,9 +45,9 @@ export const SVMPanel = (props: SVMPanelProps) => {
                 placeholder='Kernel'
                 name='moleculeSelected'
                 options={[
-                    { key: SVMKernel.LINEAR, text: 'Linear', value: SVMKernel.LINEAR, disabled: false },
-                    { key: SVMKernel.POLYNOMIAL, text: 'Polynomial', value: SVMKernel.POLYNOMIAL, disabled: false },
-                    { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF, disabled: false }
+                    { key: SVMKernel.LINEAR, text: 'Linear', value: SVMKernel.LINEAR },
+                    { key: SVMKernel.POLYNOMIAL, text: 'Polynomial', value: SVMKernel.POLYNOMIAL },
+                    { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF }
                 ]}
                 value={svm.kernel}
                 onChange={(_, { value }) => handleChangeSvmOption('kernel', value as number)}

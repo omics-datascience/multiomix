@@ -1,22 +1,30 @@
 import itertools
+import logging
+import random
+from math import tanh
 from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter
 from sklearn import clone
-from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.model_selection import StratifiedKFold
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
-
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import ClusteringScoringMethod
+from feature_selection.utils import get_random_subset_of_features_bbha, get_best_bbha
 
 # Fitness function shape
 FitnessFunction = Callable[[pd.DataFrame, np.ndarray], float]
 
 # Available survival models to fit during Cross Validation
-SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest, KMeans, SpectralClustering]
+SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest, ClusteringModels]
+
+# Result tuple with [0] -> fitness value, [1] -> execution time, [2] -> Partition ID, [3] -> Hostname,
+# [4] -> number of evaluated features, [5] -> time lapse description, [6] -> time by iteration and [7] -> avg test time
+# [8] -> mean of number of iterations of the model inside the CV, [9] -> train score. Number values are -1.0 if there
+# were some error.
+CrossValidationSparkResult = Tuple[float, float, int, str, int, str, float, float, float, float]
 
 
 def all_combinations(any_list: List) -> Iterable[List]:
@@ -37,7 +45,7 @@ def compute_cross_validation_sequential(classifier: SurvModel,
     @param classifier: Classifier to train.
     @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
     @param y: Classes.
-    :return: Average of the C-Index obtained in each CV fold, best model during CV and its fitness score.
+    @return: Average of the C-Index obtained in each CV fold, best model during CV and its fitness score.
     """
     # Create StratifiedKFold object.
     skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
@@ -77,7 +85,7 @@ def compute_clustering_sequential(classifier: ClusteringModels,
     @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
     @param y: Classes.
     @param score_method: Clustering scoring method to optimize.
-    :return: C-Index/Log-likelihood obtained in the clustering process, best model during CV and the fitness value again
+    @return: C-Index/Log-likelihood obtained in the clustering process, best model during CV and the fitness value again
     (just for compatibility with the caller function).
     """
     clustering_result = classifier.fit(subset.values)
@@ -102,18 +110,44 @@ def compute_clustering_sequential(classifier: ClusteringModels,
 
     return fitness_value, classifier, fitness_value
 
+
+def get_subset(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
+    """
+    Gets a specific subset of features from a Pandas DataFrame.
+    @param molecules_df: Pandas DataFrame with all the features.
+    @param combination: Combination of features to extract.
+    @return: A Pandas DataFrame with only the combinations of features.
+    """
+    # Get subset of features
+    if isinstance(combination, np.ndarray):
+        # In this case it's a Numpy array with int indexes (used in metaheuristics)
+        subset: pd.DataFrame = molecules_df.iloc[combination]
+    else:
+        # In this case it's a list of columns names (used in Blind Search)
+        molecules_to_extract = np.intersect1d(molecules_df.index, combination)
+        subset: pd.DataFrame = molecules_df.loc[molecules_to_extract]
+
+    # Discards NaN values
+    subset = subset[~pd.isnull(subset)]
+
+    # Makes the rows columns
+    subset = subset.transpose()
+    return subset
+
+
 def blind_search(classifier: SurvModel,
                  molecules_df: pd.DataFrame,
                  clinical_data: np.ndarray,
                  is_clustering: bool,
-                 score_method: Optional[ClusteringScoringMethod]) -> Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]:
+                 clustering_score_method: Optional[ClusteringScoringMethod]
+                 ) -> Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]:
     """
     Runs a Blind Search running a specific classifier using the molecular and clinical data passed by params.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
     @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
-    @param score_method: Clustering scoring method to optimize.
+    @param clustering_score_method: Clustering scoring method to optimize.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
     """
@@ -124,15 +158,7 @@ def blind_search(classifier: SurvModel,
     best_score: Optional[float] = None
 
     for combination in all_combinations(list_of_molecules):
-        # Get subset of features
-        molecules_to_extract = np.intersect1d(molecules_df.index, combination)
-        subset: pd.DataFrame = molecules_df.loc[molecules_to_extract]
-
-        # Discards NaN values
-        subset = subset[~pd.isnull(subset)]
-
-        # Makes the rows columns
-        subset = subset.transpose()
+        subset = get_subset(molecules_df, combination)
 
         # If no molecules are present in the subset due to NaNs values, just discards this combination
         if not subset.any().any():
@@ -146,7 +172,7 @@ def blind_search(classifier: SurvModel,
                     classifier,
                     subset,
                     clinical_data,
-                    score_method=score_method
+                    score_method=clustering_score_method
                 )
             else:
                 score, current_best_model, best_score = compute_cross_validation_sequential(
@@ -162,5 +188,125 @@ def blind_search(classifier: SurvModel,
             best_features = combination
             best_model = current_best_model
             best_score = best_score
+
+    return best_features, best_model, best_score
+
+
+def binary_black_hole_sequential(
+        classifier: SurvModel,
+        molecules_df: pd.DataFrame,
+        n_stars: int,
+        n_iterations: int,
+        clinical_data: np.ndarray,
+        is_clustering: bool,
+        clustering_score_method: Optional[ClusteringScoringMethod],
+        binary_threshold: Optional[float] = 0.6,
+        debug: bool = True,
+) -> Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]:
+    """
+    Computes the metaheuristic Binary Black Hole Algorithm. Taken from the paper
+    "Binary black hole algorithm for feature selection and classification on biological data"
+    Authors: Elnaz Pashaei, Nizamettin Aydin.
+    TODO: remove 'debug' parameter and logs. Refactor return type.
+    TODO: add 'is_clustering' parameter
+    @param classifier: Classifier to use in every blind search iteration.
+    @param molecules_df: DataFrame with all the molecules' data.
+    @param n_stars: Number of stars in the BBHA.
+    @param n_iterations: Number of iterations in the BBHA.
+    @param clinical_data: Numpy array with the time and event columns.
+    @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
+    @param clustering_score_method: Clustering scoring method to optimize.
+    @param binary_threshold: Binary threshold to set 1 or 0 the feature. If None it'll be computed randomly.
+    @param debug: If True logs everything is happening inside BBHA.
+    @return: The combination of features with the highest fitness score and the highest fitness score achieved by
+    any combination of features.
+    """
+    # Data structs setup
+    n_features = len(molecules_df.index)
+    stars_subsets = np.empty((n_stars, n_features), dtype=int)
+    stars_fitness_values = np.empty((n_stars,), dtype=float)
+
+    # Initializes the stars with their subsets and their fitness values
+    if debug:
+        print('Initializing stars...')
+
+    for i in range(n_stars):
+        random_features_to_select = get_random_subset_of_features_bbha(n_features)
+        stars_subsets[i] = random_features_to_select  # Initialize 'Population'
+        subset = get_subset(molecules_df, combination=stars_subsets[i])
+        score, _current_best_model, _best_score = compute_cross_validation_sequential(
+            classifier,
+            subset,
+            clinical_data
+        )
+        stars_fitness_values[i] = score
+
+    # The star with the best fitness is the Black Hole
+    best_model: Optional[SurvModel] = None
+    black_hole_idx, best_features, best_score = get_best_bbha(stars_subsets, stars_fitness_values)
+
+    if debug:
+        print(f'Black hole starting as star at index {black_hole_idx}')
+
+    # Iterations
+    for i in range(n_iterations):
+        if debug:
+            print(f'Iteration {i + 1}/{n_iterations}')
+        for a in range(n_stars):
+            # If it's the black hole, skips the computation
+            if a == black_hole_idx:
+                continue
+
+            # Computes the current star fitness
+            current_star_subset = get_subset(molecules_df, combination=stars_subsets[a])
+            current_score, current_best_model, _best_score = compute_cross_validation_sequential(
+                classifier,
+                current_star_subset,
+                clinical_data
+            )
+
+            # If it's the best fitness, swaps that star with the current black hole
+            if current_score > best_score:
+                if debug:
+                    print(f'Changing Black hole for star {a},'
+                                 f' BH fitness -> {best_score} | Star {a} fitness -> {current_score}')
+                black_hole_idx = a
+                best_features, current_star_subset = current_star_subset, best_features
+                best_score, current_score = current_score, best_score
+                best_model = current_best_model
+
+            # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
+            elif current_score == best_score and np.count_nonzero(current_star_subset) < np.count_nonzero(
+                    best_features):
+                if debug:
+                    print(f'Changing Black hole for star {a},'
+                                 f' BH fitness -> {best_score} | Star {a} fitness -> {current_score}')
+                black_hole_idx = a
+                best_features, current_star_subset = current_star_subset, best_features
+                best_score, current_score = current_score, best_score
+
+            # Computes the event horizon
+            event_horizon = best_score / np.sum(stars_fitness_values)
+
+            # Checks if the current star falls in the event horizon
+            dist_to_black_hole = np.linalg.norm(best_features - current_star_subset)  # Euclidean distance
+            if dist_to_black_hole < event_horizon:
+                if debug:
+                    print(f'Star {a} has fallen inside event horizon. '
+                                 f'Event horizon -> {event_horizon} | Star distance -> {dist_to_black_hole}')
+
+                stars_subsets[a] = get_random_subset_of_features_bbha(n_features)
+
+        # Updates the binary array of the used features
+        for a in range(n_stars):
+            # Skips the black hole
+            if black_hole_idx == a:
+                continue
+
+            for d in range(n_features):
+                x_old = stars_subsets[a][d]
+                threshold = binary_threshold if binary_threshold is not None else random.uniform(0, 1)
+                x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
+                stars_subsets[a][d] = 1 if abs(tanh(x_new)) > threshold else 0
 
     return best_features, best_model, best_score

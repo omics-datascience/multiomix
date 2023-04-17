@@ -50,9 +50,9 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     placeholder='Algorithm'
                     name='moleculeSelected'
                     options={[
-                        { key: FeatureSelectionAlgorithm.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithm.BLIND_SEARCH, disabled: false },
+                        { key: FeatureSelectionAlgorithm.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithm.BLIND_SEARCH },
+                        { key: FeatureSelectionAlgorithm.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithm.BBHA },
                         { key: FeatureSelectionAlgorithm.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithm.COX_REGRESSION, disabled: true },
-                        { key: FeatureSelectionAlgorithm.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithm.BBHA, disabled: true },
                         { key: FeatureSelectionAlgorithm.PSO, text: 'PSO', value: FeatureSelectionAlgorithm.PSO, disabled: true }
                     ]}
                     value={featureSelection.algorithm}
@@ -71,7 +71,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 <Button
                     color="green"
                     onClick={submitFeatureSelectionExperiment}
-                // disabled={props.featureSelection.clinicalSource === null}
+                    // disabled={props.featureSelection.clinicalSource === null} // TODO: implement
                 >
                     Confirm
                 </Button>
