@@ -132,12 +132,12 @@ def get_subset(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndar
     return subset
 
 
-def blind_search(classifier: SurvModel,
-                 molecules_df: pd.DataFrame,
-                 clinical_data: np.ndarray,
-                 is_clustering: bool,
-                 clustering_score_method: Optional[ClusteringScoringMethod]
-                 ) -> FSResult:
+def blind_search_sequential(classifier: SurvModel,
+                            molecules_df: pd.DataFrame,
+                            clinical_data: np.ndarray,
+                            is_clustering: bool,
+                            clustering_score_method: Optional[ClusteringScoringMethod]
+                            ) -> FSResult:
     """
     Runs a Blind Search running a specific classifier using the molecular and clinical data passed by params.
     @param classifier: Classifier to use in every blind search iteration.

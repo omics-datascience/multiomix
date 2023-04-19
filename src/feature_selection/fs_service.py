@@ -10,7 +10,7 @@ from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAId
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .fs_algorithms import blind_search, binary_black_hole_sequential
+from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential
 from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
     ClusteringParameters, ClusteringScoringMethod
@@ -208,8 +208,8 @@ class FSService(object):
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
-            best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data,
-                                                                 is_clustering, clustering_scoring_method)
+            best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
+                                                                            is_clustering, clustering_scoring_method)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
             best_features, best_model, best_score = binary_black_hole_sequential(
                 classifier,
