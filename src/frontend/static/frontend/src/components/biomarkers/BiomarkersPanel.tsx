@@ -17,6 +17,7 @@ import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionP
 import { Alert } from '../common/Alert'
 import { BiomarkerStateLabel } from './BiomarkerStateLabel'
 import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
+import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -47,7 +48,12 @@ interface BiomarkersPanelState {
     formBiomarker: FormBiomarkerData,
     confirmModal: ConfirmModal
     tags: DjangoTag[],
-    isOpenModal: boolean,
+    /** Indicates if the modal to create or edit a Biomarker is open. */
+    openCreateEditBiomarkerModal: boolean,
+    /** Indicates if the modal to get the details of a Biomarker is open. */
+    openDetailsModal: boolean,
+    /** Selected Biomarker instance to show its details. */
+    selectedBiomarker: Nullable<Biomarker>,
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
     submittingFSExperiment: boolean
@@ -71,7 +77,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formBiomarker: this.getDefaultFormBiomarker(),
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
-            isOpenModal: false,
+            openCreateEditBiomarkerModal: false,
+            openDetailsModal: false,
+            selectedBiomarker: null,
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
             submittingFSExperiment: false
@@ -363,11 +371,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param type Select the way to create a Biomarker
      */
     handleSelectModal = (type: BiomarkerOrigin) => {
-        this.setState(
-            {
-                biomarkerTypeSelected: type
-            }
-        )
+        this.setState({ biomarkerTypeSelected: type })
+    }
+
+    /**
+     * Opens the modal to show all the Biomarker details.
+     * @param selectedBiomarker Selected Biomarker instance.
+     */
+    openBiomarkerDetailsModal = (selectedBiomarker: Biomarker) => {
+        this.setState({
+            selectedBiomarker,
+            openDetailsModal: true
+        })
+    }
+
+    /** Closes the modal of Biomarker's details. */
+    closeBiomarkerDetailsModal = () => {
+        this.setState({
+            selectedBiomarker: null,
+            openDetailsModal: false
+        })
     }
 
     /**
@@ -378,7 +401,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState(
             {
                 biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
-                isOpenModal: true,
+                openCreateEditBiomarkerModal: true,
                 formBiomarker: {
                     id: biomarker.id,
                     biomarkerName: biomarker.name,
@@ -882,7 +905,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Cleans the new/edit biomarker form
      */
-    cleanForm = () => { this.setState({ isOpenModal: true, formBiomarker: this.getDefaultFormBiomarker(), confirmModal: this.getDefaultConfirmModal() }) }
+    cleanForm = () => { this.setState({ openCreateEditBiomarkerModal: true, formBiomarker: this.getDefaultFormBiomarker(), confirmModal: this.getDefaultConfirmModal() }) }
 
     /**
      * Does a request to add a new Biomarker
@@ -1177,7 +1200,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             alert,
             formBiomarker: this.getDefaultFormBiomarker(),
-            isOpenModal: false,
+            openCreateEditBiomarkerModal: false,
             confirmModal: this.getDefaultConfirmModal(),
             biomarkerTypeSelected: BiomarkerOrigin.BASE
         })
@@ -1275,7 +1298,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
-            isOpenModal: false,
+            openCreateEditBiomarkerModal: false,
             confirmModal: this.getDefaultConfirmModal(),
             biomarkerTypeSelected: BiomarkerOrigin.BASE
         })
@@ -1310,7 +1333,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     showSearchInput
                     customElements={[
                         <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
-                            <Button primary icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), isOpenModal: true })}>
+                            <Button primary icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}>
                                 <Icon name='add' />
                             </Button>
                         </Form.Field>
@@ -1334,11 +1357,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
-                                <Table.Cell>
+                                <Table.Cell width={1}>
                                     {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
                                     <React.Fragment>
+                                        {/* Details button */}
+                                        <Icon
+                                            name={'chart bar'}
+                                            className='clickable'
+                                            color='blue'
+                                            title='Details'
+                                            onClick={() => this.openBiomarkerDetailsModal(biomarker)}
+                                        />
 
-                                        {/* Shows a delete button if specified */}
+                                        {/* Edit button */}
                                         <Icon
                                             name='pencil'
                                             className='clickable margin-left-5'
@@ -1346,6 +1377,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             title='Edit biomarker'
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
+
+                                        {/* Delete button */}
                                         <Icon
                                             name='trash'
                                             className='clickable margin-left-5'
@@ -1360,14 +1393,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     }}
                 />
 
+                {/* Create/Edit modal. */}
                 <Modal
                     closeIcon={<Icon name='close' size='large' />}
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
                     style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%' }}
-                    onClose={() => this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal) : this.closeBiomarkerModal()}
-                    open={this.state.isOpenModal}>
+                    onClose={() => {
+                        this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
+                            ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)
+                            : this.closeBiomarkerModal()
+                    }}
+                    open={this.state.openCreateEditBiomarkerModal}
+                >
                     {
                         this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
                         <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
@@ -1419,6 +1458,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     }
                 </Modal>
 
+                {/* Biomarker details modal. */}
+                <Modal
+                    closeIcon={<Icon name='close' size='large' />}
+                    closeOnEscape={false}
+                    closeOnDimmerClick={false}
+                    closeOnDocumentClick={false}
+                    onClose={this.closeBiomarkerDetailsModal}
+                    open={this.state.openDetailsModal}
+                >
+                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker}/>
+                </Modal>
+
                 <Confirm
                     className='biomarkers--confirm--modal'
                     open={this.state.confirmModal.confirmModal}
@@ -1426,7 +1477,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     content={this.state.confirmModal.contentText}
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm()} />
+                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                />
 
                 <Alert
                     onClose={this.handleCloseAlert}

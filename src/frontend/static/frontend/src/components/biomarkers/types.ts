@@ -229,7 +229,18 @@ interface FeatureSelectionPanelData {
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters
 }
+
+/** Available types of Sources for a Biomarker. */
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
+
+/** Available options for the Menu in the Biomarker details modal */
+enum ActiveBiomarkerDetailItemMenu {
+    DETAILS,
+    FEATURE_SELECTION_SUMMARY,
+    MODELS,
+    STATISTICAL_VALIDATION,
+    PREDICT
+}
 
 export {
     SVMKernel,
@@ -257,5 +268,6 @@ export {
     ConfirmModal,
     MoleculeSymbol,
     MoleculesSymbolFinder,
-    ClusteringScoringMethod
+    ClusteringScoringMethod,
+    ActiveBiomarkerDetailItemMenu
 }
