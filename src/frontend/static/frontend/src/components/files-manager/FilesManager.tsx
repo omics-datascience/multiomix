@@ -448,7 +448,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      */
     uploadError = (error) => {
         error.response.json().then((errorBody: DjangoResponseUploadUserFileError) => {
-            console.log(errorBody)
+            console.error(errorBody)
             // NOTE: Parses int as Django Rest Framework returns as string
             // Related issue https://github.com/encode/django-rest-framework/issues/7532
             const internalCode = errorBody && errorBody.file_obj

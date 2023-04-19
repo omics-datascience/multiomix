@@ -1,18 +1,25 @@
-import itertools
 import random
-from math import tanh
-from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
+import warnings
+import itertools
 import numpy as np
 import pandas as pd
+from math import tanh
+
+from django.conf import settings
+from sklearn import clone
+from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 from lifelines import CoxPHFitter
 from scipy.special import factorial
-from sklearn import clone
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold, GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
+from sksurv.linear_model import CoxnetSurvivalAnalysis
 from sksurv.svm import FastKernelSurvivalSVM
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import ClusteringScoringMethod
 from feature_selection.utils import get_random_subset_of_features_bbha, get_best_bbha
+from sklearn.exceptions import FitFailedWarning
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 # Fitness function shape
 FitnessFunction = Callable[[pd.DataFrame, np.ndarray], float]
@@ -310,3 +317,57 @@ def binary_black_hole_sequential(
 
     best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()
     return best_features_str, best_model, best_score
+
+
+def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray, top_n: Optional[int]) -> FSResult:
+    """
+    Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
+    alpha parameter and the filters the best features sorting by coefficients.
+    Taken from https://scikit-survival.readthedocs.io/en/stable/user_guide/coxnet.html#Elastic-Net.
+    @param molecules_df: DataFrame with all the molecules' data.
+    @param clinical_data: Numpy array with the time and event columns.
+    @param top_n: Top N features to keep.
+    @return: The combination of features with the highest fitness score and the highest fitness score achieved by
+    any None as no fitness value is got from this CoxRegression process.
+    """
+    # NOTE: molecules have to be as columns
+    x = molecules_df.transpose()
+
+    cox_net_pipe = make_pipeline(
+        StandardScaler(),
+        CoxnetSurvivalAnalysis(l1_ratio=0.9, alpha_min_ratio=0.01, max_iter=100)
+    )
+
+    # Fits to get alphas (ignoring some GridSearch warnings)
+    warnings.simplefilter("ignore", UserWarning)
+    warnings.simplefilter("ignore", FitFailedWarning)
+    cox_net_pipe.fit(x, clinical_data)
+
+    estimated_alphas = cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
+    cv = KFold(n_splits=5, shuffle=True, random_state=0)
+    gcv = GridSearchCV(
+        make_pipeline(StandardScaler(), CoxnetSurvivalAnalysis(l1_ratio=0.9)),
+        param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
+        cv=cv,
+        error_score=0.5,
+        n_jobs=settings.COX_NET_GRID_SEARCH_N_JOBS
+    ).fit(x, clinical_data)
+
+    # Keeps best model from the GridSearch
+    best_model = gcv.best_estimator_.named_steps["coxnetsurvivalanalysis"]
+    best_coefficients = pd.DataFrame(
+        best_model.coef_,
+        index=x.columns,
+        columns=["coefficient"]
+    )
+
+    # Gets best features sorted by coefficient
+    non_zero_coefficients = best_coefficients.query("coefficient != 0")
+    coefficients_order = non_zero_coefficients.abs().sort_values("coefficient").index
+    res_df: pd.DataFrame = non_zero_coefficients.loc[coefficients_order]
+
+    best_features = res_df.index.tolist()
+    if top_n:
+        best_features = best_features[:top_n]
+
+    return best_features, None, None

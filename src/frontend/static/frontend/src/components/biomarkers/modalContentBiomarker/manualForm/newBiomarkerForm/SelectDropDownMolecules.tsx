@@ -50,6 +50,8 @@ export const SelectDropDownMolecules = ({ moleculesMultiple, handleChangeMolecul
         }
         handleChangeMoleculeSelected(name, moleculesDataSelected)
     }
+
+    // TODO: check this, remove if not used
     const handleSearchNewMolecules = useCallback((stringToSearch: string) => {
         console.log(stringToSearch)
     }, [])

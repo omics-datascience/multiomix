@@ -281,7 +281,10 @@ NON_DATA_VALUE: str = 'NA'
 # Feature Selection settings
 
 # Number of cores used to run the survival RF model
-N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', -1))
+N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', 1))
 
 # Number of cores used to compute CrossValidation
-N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', -1))
+N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
+
+# Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
+COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 1))

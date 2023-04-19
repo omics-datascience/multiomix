@@ -28,7 +28,7 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
         handleCompleteStep2,
         handleGoBackStep1
     } = props
-    console.log(!experimentSourceIsValid(props.featureSelection.clinicalSource))
+
     return (
         <>
             <div className='selections-grid-container selection-step-container'>

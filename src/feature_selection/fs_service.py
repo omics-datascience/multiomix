@@ -10,7 +10,7 @@ from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAId
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .fs_algorithms import blind_search, binary_black_hole_sequential
+from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
 from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
     ClusteringParameters, ClusteringScoringMethod
@@ -200,11 +200,15 @@ class FSService(object):
             )
         elif experiment.fitness_function == FitnessFunction.RF:
             classifier = get_rf_model()
-        else:
+        elif experiment.fitness_function == FitnessFunction.CLUSTERING:
+            # Clustering selected
             is_clustering = True
             clustering_parameters: ClusteringParameters = experiment.clustering_parameters
             clustering_scoring_method = clustering_parameters.scoring_method
             classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
+        else:
+            raise Exception(f'Parameter experiment.fitness_function invalid: {experiment.fitness_function} '
+                            f'({type(experiment.fitness_function)})')
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -220,6 +224,12 @@ class FSService(object):
                 is_clustering=is_clustering,
                 clustering_score_method=clustering_scoring_method
             )
+        elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
+            best_features, best_model, best_score = select_top_cox_regression(
+                molecules_df,
+                clinical_data,
+                top_n=None  # TODO: parametrize from frontend
+            )
         else:
             # TODO: implement PSO and GA
             raise Exception('Algorithm not implemented')
@@ -230,13 +240,14 @@ class FSService(object):
             self.__save_molecule_identifiers(created_biomarker, best_features)
 
             # Stores the trained model
-            trained_content = pickle.dumps(best_model)
-            TrainedModel.objects.create(
-                biomarker=created_biomarker,
-                fs_experiment=experiment,
-                model_dump=ContentFile(trained_content),
-                best_fitness_value=best_score,
-            )
+            if best_model is not None and best_score is not None:
+                trained_content = pickle.dumps(best_model)
+                TrainedModel.objects.create(
+                    biomarker=created_biomarker,
+                    fs_experiment=experiment,
+                    model_dump=ContentFile(trained_content),
+                    best_fitness_value=best_score,
+                )
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
         """
