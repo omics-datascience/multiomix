@@ -866,6 +866,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_mirnas: 0,
             number_of_cnas: 0,
             number_of_methylations: 0,
+            has_fs_experiment: false,
             origin: BiomarkerOrigin.BASE,
             state: BiomarkerState.COMPLETED,
             contains_nan_values: false,
@@ -1439,7 +1440,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         <FeatureSelectionPanel
                             featureSelection={this.state.featureSelection}
                             getDefaultFilters={this.getDefaultFilters()}
-                            urlBiomarkersCRUD={urlBiomarkersCRUD}
                             markBiomarkerAsSelected={this.markBiomarkerAsSelected}
                             handleCompleteStep1={this.handleCompleteStep1}
                             handleCompleteStep2={this.handleCompleteStep2}

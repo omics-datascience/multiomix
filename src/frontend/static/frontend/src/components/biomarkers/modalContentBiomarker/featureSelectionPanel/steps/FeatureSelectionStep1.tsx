@@ -8,22 +8,25 @@ import { TagLabel } from '../../../../common/TagLabel'
 import { Biomarker, FeatureSelectionPanelData } from '../../../types'
 import './../featureSelection.css'
 
-interface Props {
-    getDefaultHeaders: () => RowHeader<Biomarker>[],
-    getDefaultFilters: PaginationCustomFilter[],
-    urlBiomarkersCRUD: string,
-    featureSelection: FeatureSelectionPanelData,
+declare const urlBiomarkersCRUD: string
+
+interface FeatureSelectionStep1Props {
+    /** Filters to show in the table. */
+    customFilters: PaginationCustomFilter[],
+    /** Feature selection data. */
+    featureSelectionData: FeatureSelectionPanelData,
+    defaultHeaders: RowHeader<Biomarker>[],
     markBiomarkerAsSelected: (biomarker: Biomarker) => void,
     handleCompleteStep1: (selectedBiomarker: Biomarker) => void,
 }
-export const FeatureSelectionStep1 = (props: Props) => {
+export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
     return (
         <>
             <div className='selection-step-container'>
                 <PaginatedTable<Biomarker>
                     headerTitle='Biomarkers'
-                    headers={props.getDefaultHeaders()}
-                    customFilters={props.getDefaultFilters}
+                    headers={props.defaultHeaders}
+                    customFilters={props.customFilters}
                     queryParams={{
                         onlySuccessful: true // Only show Biomarkers in COMPLETED state
                     }}
@@ -31,11 +34,11 @@ export const FeatureSelectionStep1 = (props: Props) => {
                     showSearchInput
                     searchLabel='Name'
                     searchPlaceholder='Search by name'
-                    urlToRetrieveData={props.urlBiomarkersCRUD}
+                    urlToRetrieveData={urlBiomarkersCRUD}
                     updateWSKey='update_biomarkers'
                     mapFunction={(biomarker: Biomarker) => (
                         <Table.Row
-                            active={biomarker.id === props.featureSelection.selectedBiomarker?.id}
+                            active={biomarker.id === props.featureSelectionData.selectedBiomarker?.id}
                             onClick={() => props.markBiomarkerAsSelected(biomarker)}
                             onDoubleClick={() => props.handleCompleteStep1(biomarker)}
                             key={biomarker.id as number}
@@ -56,8 +59,8 @@ export const FeatureSelectionStep1 = (props: Props) => {
             <div className='selections-buttons-container'>
                 <Button
                     color="green"
-                    onClick={() => props.handleCompleteStep1(props.featureSelection.selectedBiomarker as Biomarker)}
-                    disabled={props.featureSelection.selectedBiomarker === null}
+                    onClick={() => props.handleCompleteStep1(props.featureSelectionData.selectedBiomarker as Biomarker)}
+                    disabled={props.featureSelectionData.selectedBiomarker === null}
                 >
                     Confirm
                 </Button>

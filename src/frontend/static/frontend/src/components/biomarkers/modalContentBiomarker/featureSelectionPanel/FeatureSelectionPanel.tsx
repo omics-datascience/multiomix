@@ -12,7 +12,6 @@ import './featureSelection.css'
 /** FeatureSelectionPanel props. */
 interface FeatureSelectionPanelProps {
     getDefaultFilters: PaginationCustomFilter[],
-    urlBiomarkersCRUD: string,
     featureSelection: FeatureSelectionPanelData,
     markBiomarkerAsSelected: (biomarker: Biomarker) => void,
     handleCompleteStep1: (selectedBiomarker: Biomarker) => void,
@@ -55,10 +54,9 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
         switch (props.featureSelection.step) {
             case 1:
                 return (<FeatureSelectionStep1
-                    getDefaultHeaders={getDefaultHeaders}
-                    getDefaultFilters={props.getDefaultFilters}
-                    urlBiomarkersCRUD={props.urlBiomarkersCRUD}
-                    featureSelection={props.featureSelection}
+                    defaultHeaders={getDefaultHeaders()}
+                    customFilters={props.getDefaultFilters}
+                    featureSelectionData={props.featureSelection}
                     markBiomarkerAsSelected={props.markBiomarkerAsSelected}
                     handleCompleteStep1={props.handleCompleteStep1}
                 />)

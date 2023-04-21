@@ -50,6 +50,7 @@ interface Biomarker {
     number_of_mirnas: number,
     number_of_cnas: number,
     number_of_methylations: number,
+    has_fs_experiment: boolean,
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
@@ -242,6 +243,50 @@ enum ActiveBiomarkerDetailItemMenu {
     PREDICT
 }
 
+/** Django TrainedModel model. */
+interface TrainedModel {
+    id: number,
+    created: string,
+    best_fitness_value: number
+}
+
+/** Types of statistical validations for a Biomarker. */
+enum StatisticalValidationType {
+    CLUSTERING = 1,
+    USE_TRAINED_MODEL = 2,
+    DIFFERENTIAL_EXPRESSION = 3,
+    TRAIN_NEW_MODEL = 4
+}
+
+/**
+ * Represents a connection between a source and a statistical validation result. Useful to show a result for
+ * every type of molecule in a Biomarker.
+ */
+interface StatisticalValidationSourceResult {
+    id: number,
+    c_index: Nullable<number>,
+    log_likelihood: Nullable<number>,
+    roc_auc: Nullable<number>,
+    source: Source
+}
+
+/** A statistical validation of a Biomarker. */
+interface StatisticalValidation {
+    id: number,
+    name: string,
+    description: Nullable<string>,
+    created: string,
+    type: StatisticalValidationType,
+    c_index: number,
+    log_likelihood: number,
+    roc_auc: number,
+    clinical_source: Nullable<StatisticalValidationSourceResult>,
+    mrna_source_result: Nullable<StatisticalValidationSourceResult>,
+    mirna_source_result: Nullable<StatisticalValidationSourceResult>,
+    cna_source_result: Nullable<StatisticalValidationSourceResult>,
+    methylation_source_result: Nullable<StatisticalValidationSourceResult>,
+}
+
 export {
     SVMKernel,
     SVMTask,
@@ -269,5 +314,8 @@ export {
     MoleculeSymbol,
     MoleculesSymbolFinder,
     ClusteringScoringMethod,
-    ActiveBiomarkerDetailItemMenu
+    ActiveBiomarkerDetailItemMenu,
+    TrainedModel,
+    StatisticalValidationType,
+    StatisticalValidation
 }

@@ -2,7 +2,6 @@ from typing import List, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.db import models
 from api_service.models import ExperimentSource, ExperimentClinicalSource
-from biomarkers.models import Biomarker
 from user_files.models_choices import FileType
 
 
@@ -72,11 +71,11 @@ class SVMParameters(models.Model):
 
 class FSExperiment(models.Model):
     """Represents a Feature Selection experiment."""
-    origin_biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='fs_experiments_as_origin')
+    origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     execution_time = models.PositiveIntegerField(default=0)  # Execution time in seconds
-    created_biomarker = models.OneToOneField(Biomarker, on_delete=models.SET_NULL, null=True, blank=True,
+    created_biomarker = models.OneToOneField('biomarkers.Biomarker', on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='fs_experiment')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
@@ -124,7 +123,7 @@ def user_directory_path_for_trained_models(instance, filename: str):
 
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
-    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='trained_models')
+    biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
