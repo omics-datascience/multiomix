@@ -18,5 +18,10 @@
 }
 
 .biomarker--section--icon {
-    padding: 0 1rem;
+    padding: 0 0.5rem;
+    cursor: pointer;
+}
+
+.biomarker--section--button {
+    cursor: default !important;
 }

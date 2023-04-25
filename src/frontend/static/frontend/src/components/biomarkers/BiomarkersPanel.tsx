@@ -520,7 +520,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 json = { gene_ids: molecules }
                 break
         }
-
         ky.post(urlToFind, { headers: getDjangoHeader(), json }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
