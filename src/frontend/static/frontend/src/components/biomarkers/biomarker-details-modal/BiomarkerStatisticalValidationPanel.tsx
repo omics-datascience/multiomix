@@ -31,12 +31,16 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
             <Modal
                 closeIcon={<Icon name='close' size='large' />}
                 closeOnEscape={false}
+                centered={false}
                 closeOnDimmerClick={false}
                 closeOnDocumentClick={false}
                 onClose={() => { setOpenModalNewStatValidation(false) }}
                 open={openModalNewStatValidation}
             >
-                <BiomarkerNewStatisticalValidationModal selectedBiomarker={props.selectedBiomarker}/>
+                <BiomarkerNewStatisticalValidationModal
+                    selectedBiomarker={props.selectedBiomarker}
+                    closeModal={() => { setOpenModalNewStatValidation(false) }}
+                />
             </Modal>
         )
     }

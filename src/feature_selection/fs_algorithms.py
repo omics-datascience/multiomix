@@ -324,6 +324,7 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
     alpha parameter and the filters the best features sorting by coefficients.
     Taken from https://scikit-survival.readthedocs.io/en/stable/user_guide/coxnet.html#Elastic-Net.
+    TODO: check if can make predictions with this model
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
     @param top_n: Top N features to keep.

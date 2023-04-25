@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.db import models
-from api_service.models import ExperimentSource, ExperimentClinicalSource
 from user_files.models_choices import FileType
 
 
@@ -71,7 +70,8 @@ class SVMParameters(models.Model):
 
 class FSExperiment(models.Model):
     """Represents a Feature Selection experiment."""
-    origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='fs_experiments_as_origin')
+    origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
+                                         related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     execution_time = models.PositiveIntegerField(default=0)  # Execution time in seconds
@@ -80,18 +80,18 @@ class FSExperiment(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     # Sources
-    clinical_source = models.ForeignKey(ExperimentClinicalSource, on_delete=models.CASCADE, null=True, blank=True,
-                                        related_name='fs_experiments_as_clinical')
-    mrna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
+                                        blank=True, related_name='fs_experiments_as_clinical')
+    mrna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='fs_experiments_as_mrna')
-    mirna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    mirna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                      related_name='fs_experiments_as_mirna')
-    cna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    cna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                    related_name='fs_experiments_as_cna')
-    methylation_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
-                                           related_name='fs_experiments_as_methylation')
+    methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
+                                           blank=True, related_name='fs_experiments_as_methylation')
 
-    def get_all_sources(self) -> List[Optional[ExperimentSource]]:
+    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
         """Returns a list with all the sources."""
         return [
             self.clinical_source,
@@ -101,7 +101,7 @@ class FSExperiment(models.Model):
             self.methylation_source,
         ]
 
-    def get_sources_and_molecules(self) -> List[Tuple[Optional[ExperimentSource], List[str], FileType]]:
+    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
         """Returns a list with all the sources (except clinical), the selected molecules and type."""
         biomarker = self.origin_biomarker
         return [

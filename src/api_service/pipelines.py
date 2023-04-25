@@ -53,7 +53,7 @@ def run_ggca(
 
 class PipelineManager(object):
     """
-    Process experiments in a Thread Pool as explained at https://docs.python.org/3.7/library/concurrent.futures.html
+    Process experiments in a Thread Pool as explained at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     def get_valid_data_from_sources(
         self,

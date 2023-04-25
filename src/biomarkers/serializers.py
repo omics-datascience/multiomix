@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
 from feature_selection.models import TrainedModel
-from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier, \
-    StatisticalValidationSourceResult, StatisticalValidation
+from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier
 from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
 
@@ -88,41 +86,3 @@ class TrainedModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainedModel
         fields = ['id', 'created', 'best_fitness_value']
-
-
-class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
-    """StatisticalValidationSourceResult serializer"""
-    source = ExperimentSourceSerializer()
-
-    class Meta:
-        model = StatisticalValidationSourceResult
-        fields = '__all__'
-
-
-class StatisticalValidationSerializer(serializers.ModelSerializer):
-    """StatisticalValidation serializer"""
-    clinical_source = ExperimentClinicalSourceSerializer()
-
-    # Sources
-    mrna_source_result = StatisticalValidationSourceResultSerializer()
-    mirna_source_result = StatisticalValidationSourceResultSerializer()
-    cna_source_result = StatisticalValidationSourceResultSerializer()
-    methylation_source_result = StatisticalValidationSourceResultSerializer()
-
-    class Meta:
-        model = StatisticalValidation
-        fields = [
-            'id',
-            'name',
-            'description',
-            'created',
-            'type',
-            'c_index',
-            'log_likelihood',
-            'roc_auc',
-            'clinical_source',
-            'mrna_source_result',
-            'mirna_source_result',
-            'cna_source_result',
-            'methylation_source_result'
-        ]

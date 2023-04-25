@@ -250,14 +250,6 @@ interface TrainedModel {
     best_fitness_value: number
 }
 
-/** Types of statistical validations for a Biomarker. */
-enum StatisticalValidationType {
-    CLUSTERING = 1,
-    USE_TRAINED_MODEL = 2,
-    DIFFERENTIAL_EXPRESSION = 3,
-    TRAIN_NEW_MODEL = 4
-}
-
 /**
  * Represents a connection between a source and a statistical validation result. Useful to show a result for
  * every type of molecule in a Biomarker.
@@ -276,7 +268,6 @@ interface StatisticalValidation {
     name: string,
     description: Nullable<string>,
     created: string,
-    type: StatisticalValidationType,
     c_index: number,
     log_likelihood: number,
     roc_auc: number,
@@ -316,6 +307,5 @@ export {
     ClusteringScoringMethod,
     ActiveBiomarkerDetailItemMenu,
     TrainedModel,
-    StatisticalValidationType,
     StatisticalValidation
 }

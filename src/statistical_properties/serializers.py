@@ -1,6 +1,8 @@
 from rest_framework import serializers
+from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
-    BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers
+    BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
+    StatisticalValidation
 
 
 class NormalityTestSerializer(serializers.ModelSerializer):
@@ -66,3 +68,40 @@ class SourceDataStatisticalPropertiesSerializer(serializers.ModelSerializer):
         data['gem_outliers'] = SourceDataOutliersSerializer(instance.gem_outliers, read_only=True, many=True).data
 
         return data
+
+
+class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
+    """StatisticalValidationSourceResult serializer"""
+    source = ExperimentSourceSerializer()
+
+    class Meta:
+        model = StatisticalValidationSourceResult
+        fields = '__all__'
+
+
+class StatisticalValidationSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer"""
+    clinical_source = ExperimentClinicalSourceSerializer()
+
+    # Sources
+    mrna_source_result = StatisticalValidationSourceResultSerializer()
+    mirna_source_result = StatisticalValidationSourceResultSerializer()
+    cna_source_result = StatisticalValidationSourceResultSerializer()
+    methylation_source_result = StatisticalValidationSourceResultSerializer()
+
+    class Meta:
+        model = StatisticalValidation
+        fields = [
+            'id',
+            'name',
+            'description',
+            'created',
+            'c_index',
+            'log_likelihood',
+            'roc_auc',
+            'clinical_source',
+            'mrna_source_result',
+            'mirna_source_result',
+            'cna_source_result',
+            'methylation_source_result'
+        ]

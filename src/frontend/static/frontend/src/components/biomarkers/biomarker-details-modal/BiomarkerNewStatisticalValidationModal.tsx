@@ -1,24 +1,28 @@
 
 import React, { useState } from 'react'
-import { Biomarker, SourceStateBiomarker, StatisticalValidationType, TrainedModel } from '../types'
-import { Nullable, Source, SourceType } from '../../../utils/interfaces'
-import { cleanRef, getDefaultSource, getFilenameFromSource } from '../../../utils/util_functions'
-import { Button, Icon, Segment, Step } from 'semantic-ui-react'
+import { Biomarker, SourceStateBiomarker, TrainedModel } from '../types'
+import { Nullable, OkResponse, Source, SourceType } from '../../../utils/interfaces'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../utils/util_functions'
+import { Button, Icon, Input, Segment, Step, TextArea } from 'semantic-ui-react'
 import { SourceSelectors } from '../../common/SourceSelectors'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../utils/django_interfaces'
 import { BiomarkerTrainedModelsTable } from './BiomarkerTrainedModelsTable'
+import ky from 'ky'
+
+declare const urlNewStatisticalValidation: string
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface BiomarkerNewStatisticalValidationModalProps {
     /** Selected Biomarker instance. */
-    selectedBiomarker: Biomarker
+    selectedBiomarker: Biomarker,
+    /** Callback to close the modal. */
+    closeModal: () => void
 }
 
 /** Data to handle in the form of a new StatisticalValidation. */
 type NewStatisticalValidationData = {
     name: string,
     description: Nullable<string>,
-    type: Nullable<StatisticalValidationType>,
     /** TrainedModel instance. */
     selectedTrainedModel: Nullable<TrainedModel>,
     /** Clinical source. */
@@ -40,7 +44,6 @@ type NewStatisticalValidationData = {
 const getDefaultNewStatisticalValidationData = (): NewStatisticalValidationData => ({
     name: '',
     description: null,
-    type: null,
     selectedTrainedModel: null,
     clinicalSource: getDefaultSource(),
     mRNASource: getDefaultSource(),
@@ -50,13 +53,14 @@ const getDefaultNewStatisticalValidationData = (): NewStatisticalValidationData 
 })
 
 /**
- * TODO: complete
+ * Renders a panel to submit a new StatisticalValidation for the selected Biomarker.
  * @param props Component's props
  * @returns Component
  */
 export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatisticalValidationModalProps) => {
     const [form, setForm] = useState<NewStatisticalValidationData>(getDefaultNewStatisticalValidationData())
     const [currentStep, setCurrentStep] = useState(1)
+    const [sendingData, setSendingData] = useState(false)
 
     /**
      * Handles file input changes to set data to show in form
@@ -190,6 +194,100 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
         return null
     }
 
+    /** Runs a new statistical analysis */
+    const runStatisticalAnalysis = () => {
+        if (!formIsValid()) {
+            return
+        }
+
+        setSendingData(true)
+
+        // Generates the FormData
+        const formData = new FormData()
+
+        // Appends StatisticalValidation fields
+        formData.append('name', form.name)
+        formData.append('description', form.description ?? 'null')
+        formData.append('selectedTrainedModelPk', (form.selectedTrainedModel?.id as number).toString())
+        formData.append('biomarkerPk', (props.selectedBiomarker.id as number).toString())
+
+        // Appends the source type, and the file content depending of it (pk if selecting
+        // an existing file, Blob content if uploading a new file, etc)
+        makeSourceAndAppend(form.mRNASource, formData, 'mRNA')
+        makeSourceAndAppend(form.mirnaSource, formData, 'miRNA')
+        makeSourceAndAppend(form.cnaSource, formData, 'cna')
+        makeSourceAndAppend(form.methylationSource, formData, 'methylation')
+        makeSourceAndAppend(form.clinicalSource, formData, 'clinical')
+
+        const headers = getDjangoHeader()
+
+        ky.post(urlNewStatisticalValidation, { headers, body: formData }).then((response) => {
+            response.json().then((jsonResponse: OkResponse) => {
+                if (jsonResponse.ok) {
+                    props.closeModal()
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error adding new StatisticalValidation ->', err)
+        }).finally(() => {
+            setSendingData(false)
+        })
+    }
+
+    /**
+     * Checks if the sources are valid for a StatisticalAnalysis. Clinical is mandatory, the rest are mandatory only
+     * if the Biomarker has that type of molecules.
+     * @returns True if all the sources are valid
+     */
+    const allSourcesAreValid = (): boolean => {
+        return experimentSourceIsValid(form.clinicalSource) &&
+            (
+                props.selectedBiomarker.number_of_mirnas === 0 ||
+                (props.selectedBiomarker.number_of_mirnas > 0 && experimentSourceIsValid(form.mirnaSource))
+            ) &&
+            (
+                props.selectedBiomarker.number_of_cnas === 0 ||
+                (props.selectedBiomarker.number_of_cnas > 0 && experimentSourceIsValid(form.cnaSource))
+            ) &&
+            (
+                props.selectedBiomarker.number_of_methylations === 0 ||
+                (props.selectedBiomarker.number_of_methylations > 0 && experimentSourceIsValid(form.methylationSource))
+            ) &&
+            (
+                props.selectedBiomarker.number_of_mrnas === 0 ||
+                (props.selectedBiomarker.number_of_mrnas > 0 && experimentSourceIsValid(form.mRNASource))
+            )
+    }
+
+    /**
+     * Checks if the form is valid to run a statistical validation.
+     * @returns True if user can submit the form.
+     */
+    const formIsValid = (): boolean => {
+        return !sendingData &&
+            form.name.trim().length > 0 &&
+            allSourcesAreValid() &&
+            form.selectedTrainedModel?.id !== undefined
+    }
+
+    /**
+     * Updates the component state from the user input
+     * @param e Change event
+     */
+    const handleInputChange = (e) => {
+        const newForm = { ...form }
+        newForm[e.target.name] = e.target.value
+        setForm(newForm)
+    }
+
+    const sourcesAreValid = allSourcesAreValid()
+
     return (
         <div className='selection-main-container'>
             {/* Steps */}
@@ -200,7 +298,17 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
                         <Step.Title>Step 1: Datasets</Step.Title>
                     </Step.Content>
                 </Step>
-                <Step active={currentStep === 2} completed={currentStep > 2} link onClick={() => { setCurrentStep(2) }}>
+                <Step
+                    active={currentStep === 2}
+                    completed={currentStep > 2}
+                    link
+                    disabled={!sourcesAreValid}
+                    onClick={() => {
+                        if (sourcesAreValid) {
+                            setCurrentStep(2)
+                        }
+                    }}
+                >
                     <Icon name='credit card' />
                     <Step.Content>
                         <Step.Title>Step 2: Trained model</Step.Title>
@@ -210,6 +318,22 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
 
             {/* Content */}
             <Segment className='selection-steps-container'>
+                <Input
+                    name='name'
+                    value={form.name}
+                    icon='asterisk'
+                    className='margin-bottom-2'
+                    placeholder='Name'
+                    onChange={handleInputChange}/>
+
+                <TextArea
+                    name='description'
+                    value={form.description ?? ''}
+                    className='margin-bottom-5'
+                    placeholder='Description (optional)'
+                    onChange={handleInputChange}/>
+
+                {/* Modal content */}
                 {handleSectionActive()}
             </Segment>
 
@@ -224,19 +348,33 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
                     </Button>
                 }
 
+                {/* Continue button */}
+                {currentStep === 1 &&
+                    <Button
+                        color="green"
+                        loading={sendingData}
+                        onClick={() => {
+                            setCurrentStep(currentStep + 1)
+                        }}
+                        disabled={!sourcesAreValid}
+                    >
+                        Continue
+                    </Button>
+                }
+
+                {/* Submit StatisticalAnalysis button */}
+                {currentStep === 2 &&
                 <Button
                     color="green"
+                    loading={sendingData}
                     onClick={() => {
-                        if (currentStep === 1) {
-                            setCurrentStep(currentStep + 1)
-                        } else {
-                            // runStatisticalAnalysis()
-                        }
+                        runStatisticalAnalysis()
                     }}
-                    // disabled={!experimentSourceIsValid(props.featureSelectionData.clinicalSource)}  // TODO: implement
+                    disabled={!formIsValid()}
                 >
-                    {currentStep === 1 ? 'Continue' : 'Confirm'}
+                    Confirm
                 </Button>
+                }
             </div>
         </div>
     )

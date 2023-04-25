@@ -1448,6 +1448,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
+                    centered={false}
                     onClose={this.closeBiomarkerDetailsModal}
                     open={this.state.openDetailsModal}
                 >

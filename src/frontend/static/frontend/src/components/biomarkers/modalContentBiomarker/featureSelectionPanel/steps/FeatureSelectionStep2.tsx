@@ -74,7 +74,7 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
                 <Button
                     color="green"
                     onClick={() => handleCompleteStep2()}
-                    disabled={!experimentSourceIsValid(props.featureSelectionData.clinicalSource)}
+                    disabled={!experimentSourceIsValid(props.featureSelectionData.clinicalSource)} // TODO: add all the other sources!!!
                 >
                     Confirm
                 </Button>

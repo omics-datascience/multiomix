@@ -1,5 +1,9 @@
-from typing import List
+from typing import List, Union, Tuple, Optional
 from django.db import models
+from biomarkers.models import Biomarker, BiomarkerState
+from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
+from feature_selection.models import TrainedModel
+from user_files.models_choices import FileType
 
 
 # Create your models here.
@@ -75,7 +79,7 @@ class SourceDataStatisticalProperties(models.Model):
 
 class SourceDataOutliers(models.Model):
     """
-    Represents an outlier sample in an ExperimentSource's data
+    Represents an outlier sample in an 'api_service.ExperimentSource''s data
     """
     sample_identifier = models.CharField(max_length=100, blank=False, null=False)
     expression = models.FloatField(blank=False, null=False)
@@ -85,3 +89,114 @@ class SourceDataOutliers(models.Model):
         related_name='outliers',
         on_delete=models.CASCADE
     )
+
+
+class StatisticalValidationSourceResult(models.Model):
+    """
+    Represents a connection between a source and a statistical validation result. Useful to show a result for
+    every type of molecule in a Biomarker.
+    """
+    mean_squared_error = models.FloatField(null=True, blank=True)  # MSE of the prediction
+    c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression
+    log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+    roc_auc = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+    source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
+                               related_name='statistical_validations_result')
+
+
+class StatisticalValidation(models.Model):
+    """A Biomarker statistical validation"""
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='statistical_validations')
+    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker
+    created = models.DateTimeField(auto_now_add=True)
+
+    # General results using all the molecules
+    mean_squared_error = models.FloatField()  # MSE after training
+    c_index = models.FloatField()  # C-Index from Cox Regression
+    log_likelihood = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
+    roc_auc = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
+
+    trained_model = models.ForeignKey(TrainedModel, on_delete=models.SET_NULL, related_name='statistical_validations',
+                                      null=True, blank=True)
+
+    # Clinical source
+    clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
+                                        blank=True, related_name='statistical_validations_as_clinical')
+    # Clinical source's survival tuple
+    survival_column_tuple_user_file = models.ForeignKey(SurvivalColumnsTupleUserFile, on_delete=models.SET_NULL,
+                                                        related_name='statistical_validations', null=True, blank=True)
+    survival_column_tuple_cgds = models.ForeignKey(SurvivalColumnsTupleCGDSDataset, on_delete=models.SET_NULL,
+                                                   related_name='statistical_validations', null=True, blank=True)
+
+    # Sources
+    mrna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+                                              blank=True, related_name='statistical_validations_as_mrna')
+    mirna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+                                              blank=True, related_name='statistical_validations_as_mirna')
+    cna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+                                             blank=True, related_name='statistical_validations_as_cna')
+    methylation_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE,
+                                                     null=True, blank=True,
+                                                     related_name='statistical_validations_as_methylation')
+
+    @property
+    def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:
+        """Gets valid SurvivalColumnTuple"""
+        if self.survival_column_tuple_user_file:
+            return self.survival_column_tuple_user_file
+
+        return self.survival_column_tuple_cgds
+
+
+    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
+        """Returns a list with all the sources."""
+        res = [self.clinical_source]
+        if self.mrna_source_result and self.mrna_source_result.source:
+            res.append(self.mrna_source_result.source)
+
+        if self.mirna_source_result and self.mirna_source_result.source:
+            res.append(self.mirna_source_result.source)
+
+        if self.cna_source_result and self.cna_source_result.source:
+            res.append(self.cna_source_result.source)
+
+        if self.methylation_source_result and self.methylation_source_result.source:
+            res.append(self.methylation_source_result.source)
+
+        return res
+
+    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
+        """Returns a list with all the sources (except clinical), the selected molecules and type."""
+        biomarker = self.biomarker
+        res = []
+        if self.mrna_source_result and self.mrna_source_result.source:
+            res.append((
+                self.mrna_source_result.source,
+                list(biomarker.mrnas.values_list('identifier', flat=True)),
+                FileType.MRNA
+            ))
+
+        if self.mirna_source_result and self.mirna_source_result.source:
+            res.append((
+                self.mirna_source_result.source,
+                list(biomarker.mirnas.values_list('identifier', flat=True)),
+                FileType.MIRNA
+            ))
+
+        if self.cna_source_result and self.cna_source_result.source:
+            res.append((
+                self.cna_source_result.source,
+                list(biomarker.cnas.values_list('identifier', flat=True)),
+                FileType.CNA
+            ))
+
+        if self.methylation_source_result and self.methylation_source_result.source:
+            res.append((
+                self.methylation_source_result.source,
+                list(biomarker.methylations.values_list('identifier', flat=True)),
+                FileType.METHYLATION
+            ))
+
+        return res

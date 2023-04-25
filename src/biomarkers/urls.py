@@ -1,5 +1,4 @@
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
@@ -12,10 +11,5 @@ urlpatterns = [
     path('mirna-codes-finder', views.MiRNACodesFinder.as_view(), name='mirna_codes_finder'),
     path('methylation-sites', views.MethylationSites.as_view(), name='methylation_sites'),
     path('methylation-sites-finder', views.MethylationSitesFinder.as_view(), name='methylation_sites_finder'),
-    path(
-        'biomarker-statistical-validations',
-        views.BiomarkerStatisticalValidations.as_view(),
-        name='biomarker_statistical_validations'
-    ),
     path('biomarker-trained-models', views.TrainedModelsOfBiomarker.as_view(), name='biomarker_trained_models'),
 ]

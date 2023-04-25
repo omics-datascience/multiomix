@@ -9,7 +9,7 @@ from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAId
     CNAIdentifier, MethylationIdentifier
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
-from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
 from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
@@ -32,7 +32,7 @@ COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 class FSService(object):
     """
     Process Feature Selection experiments in a Thread Pool as explained
-    at https://docs.python.org/3.7/library/concurrent.futures.html
+    at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     executor: ThreadPoolExecutor = None
     use_transaction: bool
@@ -299,7 +299,7 @@ class FSService(object):
 
             # If user cancel the experiment, discard changes
             if stop_event.is_set():
-                raise FSExperimentStopped
+                raise ExperimentStopped
             else:
                 self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
@@ -310,7 +310,7 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
             biomarker.state = BiomarkerState.NO_SAMPLES_IN_COMMON
-        except FSExperimentFailed:
+        except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error(f'FSExperiment {experiment.pk} has failed. Check logs for more info')
             biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
@@ -318,7 +318,7 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('MongoDB connection timeout!')
             biomarker.state = BiomarkerState.WAITING_FOR_QUEUE
-        except FSExperimentStopped:
+        except ExperimentStopped:
             # If user cancel the experiment, discard changes
             logging.warning(f'FSExperiment {experiment.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
@@ -397,9 +397,10 @@ class FSService(object):
         """
         Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
         if the TaskQueue is being created It couldn't be processing experiments. Some experiments
-        could be in that state due to unexpected errors in server
+        could be in that state due to unexpected errors in server.
+        TODO: call this in the apps.py
         """
-        logging.warning('Checking pending experiments')
+        logging.warning('Checking pending Feature Selection experiments')
         # Gets the experiment by submit date (ASC)
         experiments: QuerySet = FSExperiment.objects.filter(
             Q(state=BiomarkerState.WAITING_FOR_QUEUE)
