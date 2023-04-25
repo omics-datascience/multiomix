@@ -62,7 +62,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                 />)
             case 2:
                 return (<FeatureSelectionStep2
-                    featureSelection={props.featureSelection}
+                    featureSelectionData={props.featureSelection}
                     selectNewFile={props.selectNewFile}
                     selectStudy={props.selectStudy}
                     selectUploadedFile={props.selectUploadedFile}

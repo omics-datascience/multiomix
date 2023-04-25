@@ -101,7 +101,8 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                     queryParams={ { file_type: props.selectingFileType, with_survival_only: props.showOnlyClinicalDataWithSurvivalTuples } }
                     mapFunction={(userFile: DjangoUserFile) => {
                         return (
-                            <Table.Row key={userFile.id as number}
+                            <Table.Row
+                                key={userFile.id as number}
                                 className="clickable"
                                 active={userFile.id === props.selectedFile?.id}
                                 onClick={() => props.markFileAsSelected(userFile)}

@@ -134,9 +134,10 @@ class StatisticalValidation(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     # General results using all the molecules
+    mean_squared_error = models.FloatField()  # MSE after training
     c_index = models.FloatField()  # C-Index from Cox Regression
-    log_likelihood = models.FloatField()  # Log likelihood from Cox Regression
-    roc_auc = models.FloatField()  # Log likelihood from Cox Regression
+    log_likelihood = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
+    roc_auc = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
 
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.SET_NULL, related_name='statistical_validations',
                                       null=True, blank=True)

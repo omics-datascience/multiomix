@@ -149,7 +149,7 @@ class MethylationSites(APIView):
         return generate_json_response_or_404(data)
 
 
-class TrainedModelsOfBiomarker(generics.RetrieveAPIView):
+class TrainedModelsOfBiomarker(generics.ListAPIView):
     """Get all the trained models for a specific Biomarker."""
 
     def get_queryset(self):
