@@ -16,10 +16,10 @@ export const TextAreaMolecules = ({ handleGenesSymbols }: TextAreaMoleculesProps
 
     const handleInputAreaChange = useCallback((name: string, value: string) => {
         const textFiltered: string[] = []
-        const textSplitted = value.split(/,|[|]|;/)
+        const textSplitted = value.split(/,|[|]|;|\W/)
         textSplitted.forEach(item => {
             const itemNoSpace = item.trim()
-            return !textFiltered.includes(itemNoSpace) && textFiltered.push(itemNoSpace)
+            return !textFiltered.includes(itemNoSpace) && itemNoSpace && textFiltered.push(itemNoSpace)
         })
         handleGenesSymbols(textFiltered)
         setTextAreaString({ ...textAreaString, value: '' })

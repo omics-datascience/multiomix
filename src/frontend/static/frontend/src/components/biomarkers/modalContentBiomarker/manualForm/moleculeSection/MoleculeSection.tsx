@@ -56,7 +56,10 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                 {dataToShow.map((mol, index) => (
                     mol.isValid
                         ? <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                            <Button color='green' onClick={() => handleRemoveMolecule(title, mol)} compact className='biomarkers--molecules--container--item'>{mol.value}   <Icon link name='close' /></Button>
+                            <Button color='green' compact className='biomarkers--molecules--container--item biomarker--section--button'>
+                                {mol.value}
+                                <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon'/>
+                            </Button>
                         </div>
                         : Array.isArray(mol.value)
                             ? <Segment key={index + title + mol.value.length} className="biomarkers--molecules--container--item">
@@ -67,7 +70,10 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                                 ))}
                             </Segment>
                             : <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                                <Button color='red' compact onClick={() => handleRemoveMolecule(title, mol)}>{mol.value}     <Icon link name='close' /></Button>
+                                <Button color='red' compact className='biomarker--section--button'>
+                                    {mol.value}
+                                    <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
+                                </Button>
                             </div>
                 ))}
             </Segment>
