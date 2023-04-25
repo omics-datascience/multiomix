@@ -3,8 +3,8 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend } from '../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, Source, OkResponse } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, FitnessFunctionSvm, FitnessFunctionParameters, BiomarkerState, ClusteringScoringMethod } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
@@ -95,11 +95,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             step: 1,
             biomarker: null,
             selectedBiomarker: null,
-            clinicalSource: this.getDefaultSource(),
-            mRNASource: this.getDefaultSource(),
-            mirnaSource: this.getDefaultSource(),
-            methylationSource: this.getDefaultSource(),
-            cnaSource: this.getDefaultSource(),
+            clinicalSource: getDefaultSource(),
+            mRNASource: getDefaultSource(),
+            mirnaSource: getDefaultSource(),
+            methylationSource: getDefaultSource(),
+            cnaSource: getDefaultSource(),
             algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
             fitnessFunction: FitnessFunction.CLUSTERING,
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters()
@@ -135,21 +135,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         return {
             kernel: SVMKernel.LINEAR,
             task: SVMTask.RANKING
-        }
-    }
-
-    /**
-     * Generates a default Source
-     * @param msg Message to show as default filename
-     * @returns A source with all the field with default values
-     */
-    getDefaultSource = (msg: string = 'Choose File'): Source => {
-        return {
-            type: SourceType.NONE,
-            filename: msg,
-            newUploadedFileRef: React.createRef(),
-            selectedExistingFile: null,
-            CGDSStudy: null
         }
     }
 
@@ -1170,11 +1155,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleGoBackStep1 = () => {
         const featureSelection = this.state.featureSelection
-        featureSelection.clinicalSource = this.getDefaultSource()
-        featureSelection.mRNASource = this.getDefaultSource()
-        featureSelection.mirnaSource = this.getDefaultSource()
-        featureSelection.methylationSource = this.getDefaultSource()
-        featureSelection.cnaSource = this.getDefaultSource()
+        featureSelection.clinicalSource = getDefaultSource()
+        featureSelection.mRNASource = getDefaultSource()
+        featureSelection.mirnaSource = getDefaultSource()
+        featureSelection.methylationSource = getDefaultSource()
+        featureSelection.cnaSource = getDefaultSource()
         featureSelection.step = 1
         this.setState({ featureSelection })
     }

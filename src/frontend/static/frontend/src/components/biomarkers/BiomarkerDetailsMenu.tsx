@@ -5,12 +5,12 @@ import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPo
 
 /** BiomarkerDetailsMenu props. */
 interface BiomarkerDetailsMenuProps {
+    /** Selected Biomarker instance to show its details. */
+    selectedBiomarker: Biomarker,
     /** Getter of the active item in the menu. */
     activeItem: ActiveBiomarkerDetailItemMenu,
     /** Setter of the active item in the menu. */
     setActiveItem: (activeItem: ActiveBiomarkerDetailItemMenu) => void,
-    /** Selected Biomarker instance to show its details. */
-    selectedBiomarker: Biomarker,
 }
 
 /**

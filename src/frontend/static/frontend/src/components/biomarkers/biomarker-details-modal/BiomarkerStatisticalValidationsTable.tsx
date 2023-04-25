@@ -10,7 +10,9 @@ declare const urlBiomarkerStatisticalValidations: string
 /** BiomarkerStatisticalValidationsTable props. */
 interface BiomarkerStatisticalValidationsTableProps {
     /** Selected Biomarker instance to get its statistical validations. */
-    selectedBiomarker: Biomarker
+    selectedBiomarker: Biomarker,
+    /** Callback to open the modal to add a new statistical validation analysis. */
+    setOpenModalNewStatValidation: (openModalNewStatValidation: boolean) => void
 }
 
 /**
@@ -37,7 +39,7 @@ export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatistical
             urlToRetrieveData={urlBiomarkerStatisticalValidations}
             customElements={[
                 <Form.Field key={1} className='biomarkers--button--modal' title='New statistical validation'>
-                    <Button primary icon onClick={() => {}}>
+                    <Button primary icon onClick={() => { props.setOpenModalNewStatValidation(true) }}>
                         <Icon name='add' />
                     </Button>
                 </Form.Field>
