@@ -114,6 +114,12 @@ class MiRNACodes(APIView):
             is_paginated=False,
             method='post'
         )
+
+        # Standardizes the response to the same structure as mRNA and Methylation services (in case of null values
+        # this returns an empty array). This is implemented this way because the miRNA service returns a unique string
+        # or null instead of an array
+        data = {k: [v] if v is not None else [] for k, v in data.items()}
+
         return generate_json_response_or_404(data)
 
 
