@@ -1444,6 +1444,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                 {/* Biomarker details modal. */}
                 <Modal
+                    className='large-modal'
                     closeIcon={<Icon name='close' size='large' />}
                     closeOnEscape={false}
                     closeOnDimmerClick={false}

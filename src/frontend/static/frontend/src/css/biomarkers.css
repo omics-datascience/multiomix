@@ -29,3 +29,8 @@
 .biomarkers--modal--container {
     height: 100%;
 }
+
+.large-modal {
+    min-height: 60% !important;
+    width: 95% !important;
+}

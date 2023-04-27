@@ -29,6 +29,7 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
     if (openModalNewStatValidation) {
         return (
             <Modal
+                className='large-modal'
                 closeIcon={<Icon name='close' size='large' />}
                 closeOnEscape={false}
                 centered={false}
