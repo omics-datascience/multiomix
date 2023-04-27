@@ -15,7 +15,6 @@ interface BiomarkerDetailsMenuProps {
 
 /**
  * Renders the menu for the modal of Biomarker's details.
- * TODO: fix all the popups messages
  * @param props Component props.
  * @returns Component.
  */
@@ -29,7 +28,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 Details
 
                 <InfoPopup
-                    content={`Stats of the correlation and also of each value vector separately `}
+                    content='Details of the molecules that make up the Biomarker'
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -44,7 +43,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                     Feature Selection
 
                     <InfoPopup
-                        content={`Correlation graph between and also stats to measure the correlation`}
+                        content='Feature Selection process details'
                         onTop={false}
                         onEvent='hover'
                         extraClassName='margin-left-5'
@@ -59,7 +58,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 Trained models
 
                 <InfoPopup
-                    content={`Scores, given by external databases, that measures the association between`}
+                    content='Panel to list and train Machine Learning models from genomic and epigenomic information. These models will allow to statistically validate the prognostic/predictive power of the biomarker or to perform inference on new data'
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -73,7 +72,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 Statistical validations
 
                 <InfoPopup
-                    content={`Find target interactions with in miRNA external databases`}
+                    content='Perform statistical validations from previously trained Machine Learning models'
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -87,7 +86,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 Predict
 
                 <InfoPopup
-                    content={`Diseases associated with in miRNA external databases`}
+                    content='Perform inference on new genomic and epigenomic data from previously trained Machine Learning models'
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
