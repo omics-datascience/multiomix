@@ -12,4 +12,9 @@ urlpatterns = [
         views.BiomarkerNewStatisticalValidations.as_view(),
         name='biomarker_new_statistical_validation'
     ),
+    path(
+        'biomarker-statistical-validation-data',
+        views.BiomarkerStatisticalValidationData.as_view(),
+        name='biomarker_statistical_validation_data'
+    ),
 ]

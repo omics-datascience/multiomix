@@ -264,13 +264,22 @@ interface StatisticalValidationSourceResult {
     source: Source
 }
 
-/** A statistical validation of a Biomarker. */
-interface StatisticalValidation {
+/** A statistical validation of a Biomarker with few fields. */
+interface BasicStatisticalValidation {
     id: number,
     name: string,
     state: BiomarkerState,
     description: Nullable<string>,
     created: string,
+}
+
+/** A statistical validation. Retrieved as data for the BiomarkerStatisticalValidationsTable. */
+interface StatisticalValidationForTable extends BasicStatisticalValidation {
+    fitness_function: FitnessFunction
+}
+
+/** A statistical validation of a Biomarker. */
+interface StatisticalValidation extends BasicStatisticalValidation {
     c_index: Nullable<number>,
     cox_c_index: Nullable<number>,
     cox_log_likelihood: Nullable<number>,
@@ -311,5 +320,7 @@ export {
     ClusteringScoringMethod,
     ActiveBiomarkerDetailItemMenu,
     TrainedModel,
+    BasicStatisticalValidation,
+    StatisticalValidationForTable,
     StatisticalValidation
 }

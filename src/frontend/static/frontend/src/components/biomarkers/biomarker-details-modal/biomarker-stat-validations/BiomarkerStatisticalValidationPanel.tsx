@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { BiomarkerStatisticalValidationsTable } from './BiomarkerStatisticalValidationsTable'
-import { Biomarker } from '../types'
+import { Biomarker, StatisticalValidationForTable } from '../../types'
 import { Icon, Modal } from 'semantic-ui-react'
 import { BiomarkerNewStatisticalValidationModal } from './BiomarkerNewStatisticalValidationModal'
+import { Nullable } from '../../../../utils/interfaces'
+import { BiomarkerStatisticalValidationResultModal } from './BiomarkerStatisticalValidationResultModal'
 
 /** BiomarkerStatisticalValidationPanel props. */
 interface BiomarkerStatisticalValidationPanelProps {
@@ -17,6 +19,8 @@ interface BiomarkerStatisticalValidationPanelProps {
  */
 export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalValidationPanelProps) => {
     const [openModalNewStatValidation, setOpenModalNewStatValidation] = useState(false)
+    const [openModalResultStatValidation, setOpenModalResultStatValidation] = useState(false)
+    const [selectedStatisticalValidation, setSelectedTrainedModel] = useState<Nullable<StatisticalValidationForTable>>(null)
 
     // TODO: remove
     useEffect(() => {
@@ -24,6 +28,21 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
             setOpenModalNewStatValidation(true)
         }, 500)
     }, [])
+
+    /**
+     * Opens the modal with the results for a StatisticalValidation instance.
+     * @param statisticalValidation StatisticalValidationForTable instance
+     */
+    const openStatResult = (statisticalValidation: StatisticalValidationForTable) => {
+        setSelectedTrainedModel(statisticalValidation)
+        setOpenModalResultStatValidation(true)
+    }
+
+    /** Closes the modal with the results for a StatisticalValidation instance. */
+    const closeStatResult = () => {
+        setSelectedTrainedModel(null)
+        setOpenModalResultStatValidation(false)
+    }
 
     // Shows modal to add a new statistical validation analysis
     if (openModalNewStatValidation) {
@@ -46,10 +65,29 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
         )
     }
 
+    // Shows modal with the statistical validation results
+    if (openModalResultStatValidation && selectedStatisticalValidation) {
+        return (
+            <Modal
+                className='large-modal'
+                closeIcon={<Icon name='close' size='large' />}
+                closeOnEscape={false}
+                centered={false}
+                closeOnDimmerClick={false}
+                closeOnDocumentClick={false}
+                onClose={closeStatResult}
+                open={openModalResultStatValidation}
+            >
+                <BiomarkerStatisticalValidationResultModal selectedStatisticalValidation={selectedStatisticalValidation} />
+            </Modal>
+        )
+    }
+
     return (
         <BiomarkerStatisticalValidationsTable
             selectedBiomarker={props.selectedBiomarker}
             setOpenModalNewStatValidation={setOpenModalNewStatValidation}
+            openStatResult={openStatResult}
         />
     )
 }

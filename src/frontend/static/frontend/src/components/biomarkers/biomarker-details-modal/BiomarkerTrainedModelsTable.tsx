@@ -59,7 +59,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                             <React.Fragment>
                                 {/* Details button */}
                                 <Icon
-                                    name={'chart bar'}
+                                    name='chart bar'
                                     className='clickable'
                                     color='blue'
                                     title='Details'

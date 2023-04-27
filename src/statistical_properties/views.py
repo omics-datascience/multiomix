@@ -1,5 +1,4 @@
 from typing import Optional
-
 import numpy as np
 from django.db import transaction
 from django.http.response import Http404
@@ -22,7 +21,7 @@ from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, Sur
 from feature_selection.models import TrainedModel
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
-    StatisticalValidationSerializer
+    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
@@ -101,12 +100,24 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
         return biomarker.statistical_validations.all()
 
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = StatisticalValidationSerializer
+    serializer_class = StatisticalValidationSimpleSerializer
     pagination_class = StandardResultsSetPagination
-    filterset_fields = []
     search_fields = ['name', 'description']
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     ordering_fields = ['name', 'description', 'state', 'created']
+
+
+class BiomarkerStatisticalValidationData(generics.RetrieveAPIView):
+    """Get a specific statistical validation for a specific Biomarker."""
+
+    def get_queryset(self):
+        biomarker_pk = self.request.GET.get('biomarker_pk')
+        user = self.request.user
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
+        return biomarker.statistical_validations.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StatisticalValidationSerializer
 
 
 class BiomarkerNewStatisticalValidations(APIView):

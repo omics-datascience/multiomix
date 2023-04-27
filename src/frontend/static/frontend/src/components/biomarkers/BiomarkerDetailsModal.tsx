@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { ActiveBiomarkerDetailItemMenu, Biomarker } from './types'
 import { Nullable } from '../../utils/interfaces'
 import { BiomarkerDetailsMenu } from './BiomarkerDetailsMenu'
-import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/BiomarkerStatisticalValidationPanel'
+import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/biomarker-stat-validations/BiomarkerStatisticalValidationPanel'
 
 interface BiomarkerDetailsModalProps {
     /** Selected Biomarker instance to show its details. */

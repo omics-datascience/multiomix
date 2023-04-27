@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react'
-import { Biomarker, SourceStateBiomarker, TrainedModel } from '../types'
-import { Nullable, OkResponse, Source, SourceType } from '../../../utils/interfaces'
-import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../utils/util_functions'
+import { Biomarker, SourceStateBiomarker, TrainedModel } from '../../types'
+import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../../utils/util_functions'
 import { Button, Icon, Input, Segment, Step, TextArea } from 'semantic-ui-react'
-import { SourceSelectors } from '../../common/SourceSelectors'
-import { DjangoCGDSStudy, DjangoUserFile } from '../../../utils/django_interfaces'
-import { BiomarkerTrainedModelsTable } from './BiomarkerTrainedModelsTable'
+import { SourceSelectors } from '../../../common/SourceSelectors'
+import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
+import { BiomarkerTrainedModelsTable } from '../BiomarkerTrainedModelsTable'
 import ky from 'ky'
 
 declare const urlNewStatisticalValidation: string

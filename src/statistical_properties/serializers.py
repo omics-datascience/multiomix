@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
+from feature_selection.fs_algorithms import FitnessFunction
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
     BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
     StatisticalValidation
@@ -77,6 +78,20 @@ class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = StatisticalValidationSourceResult
         fields = '__all__'
+
+
+class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer with few fields"""
+    fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
+
+    class Meta:
+        model = StatisticalValidation
+        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function']
+
+    @staticmethod
+    def get_fitness_function(ins: StatisticalValidation) -> FitnessFunction:
+        """Gets the type of model used for training/testing (SVM/RF/Clustering)."""
+        return ins.trained_model.fitness_function
 
 
 class StatisticalValidationSerializer(serializers.ModelSerializer):

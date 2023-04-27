@@ -1347,7 +1347,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     <React.Fragment>
                                         {/* Details button */}
                                         <Icon
-                                            name={'chart bar'}
+                                            name='chart bar'
                                             className='clickable'
                                             color='blue'
                                             title='Details'
