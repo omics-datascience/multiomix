@@ -27,10 +27,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
     // TODO: parametrize the column of actions. It's not useful in the StatisticalValidations panel.
     return (
         <PaginatedTable<TrainedModel>
-            headerTitle='Biomarkers'
+            headerTitle='Trained models'
             headers={[
-                // { name: 'Name', serverCodeToSort: 'name', width: 3 }, // TODO: implement and uncomment below
-                // { name: 'Description', serverCodeToSort: 'description', width: 4 }, // TODO: implement and uncomment below
+                { name: 'Name', serverCodeToSort: 'name', width: 3 },
+                { name: 'Description', serverCodeToSort: 'description', width: 4 },
                 { name: 'Date', serverCodeToSort: 'created' },
                 { name: 'Best fitness', serverCodeToSort: 'best_fitness_value' },
                 { name: 'Actions' }
@@ -50,10 +50,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                         active={biomarkerTrainedModel.id === props.selectedTrainedModel?.id}
                         onClick={() => { props.selectTrainedModel(biomarkerTrainedModel) }}
                     >
-                        {/* <TableCellWithTitle value={biomarkerTrainedModel.name} /> */}
-                        {/* <TableCellWithTitle value={biomarkerTrainedModel.description} /> */}
+                        <TableCellWithTitle value={biomarkerTrainedModel.name} />
+                        <TableCellWithTitle value={biomarkerTrainedModel.description ?? ''} />
                         <TableCellWithTitle value={formatDateLocale(biomarkerTrainedModel.created as string, 'LLL')} />
-                        <Table.Cell value={biomarkerTrainedModel.best_fitness_value} />
+                        <Table.Cell>{biomarkerTrainedModel.best_fitness_value.toFixed(4)}</Table.Cell>
                         <Table.Cell width={1}>
                             {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
                             <React.Fragment>

@@ -1,6 +1,6 @@
 import React from 'react'
-import { Button, Container, Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm, SVMKernel, SVMTask } from '../../../../types'
+import { Select } from 'semantic-ui-react'
+import { FitnessFunctionSvm, SVMKernel } from '../../../../types'
 
 /** SVMPanel props. */
 interface SVMPanelProps {

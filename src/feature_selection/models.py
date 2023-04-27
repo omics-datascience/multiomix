@@ -1,5 +1,7 @@
+import os
 import pickle
 from typing import List, Optional, Tuple
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from user_files.models_choices import FileType
@@ -121,6 +123,8 @@ def user_directory_path_for_trained_models(instance, filename: str):
 
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
@@ -134,6 +138,7 @@ class TrainedModel(models.Model):
 
     def get_model_instance(self):
         """Deserializes the model dump and return the model instance"""
-        with open(self.model_dump, "rb") as fp:
+        model_path = os.path.join(settings.MEDIA_ROOT, self.model_dump.name)
+        with open(model_path, "rb") as fp:
             model = pickle.load(fp)
         return model

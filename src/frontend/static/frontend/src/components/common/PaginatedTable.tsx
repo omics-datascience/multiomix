@@ -308,7 +308,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                         width={3}
                                         icon='search' iconPosition='left'
                                         label={this.props.searchLabel ?? 'Name/Description'}
-                                        placeholder={this.props.searchPlaceholder ?? 'Search by name/description'}
+                                        title={this.props.searchPlaceholder}
+                                        placeholder={this.props.searchPlaceholder}
                                         name='textFilter'
                                         value={tableControl.textFilter}
                                         onChange={(_, { name, value }) => {

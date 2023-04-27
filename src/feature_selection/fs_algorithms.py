@@ -13,6 +13,7 @@ from sklearn.model_selection import StratifiedKFold, KFold, GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.linear_model import CoxnetSurvivalAnalysis
 from sksurv.svm import FastKernelSurvivalSVM
+from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import ClusteringScoringMethod
 from feature_selection.utils import get_random_subset_of_features_bbha, get_best_bbha
@@ -61,14 +62,18 @@ def compute_cross_validation_sequential(classifier: SurvModel,
         x_train_fold, x_test_fold = subset.iloc[train_index], subset.iloc[test_index]
         y_train_fold, y_test_fold = y[train_index], y[test_index]
 
+        # Creates a cloned instance of the model to store in the list. This HAVE TO be done after fit() because
+        # clone() method does not clone the fit_X_ attribute (needed to restore the model during statistical
+        # validations)
+        cloned = clone(classifier)
+        cloned = cast(SurvModel, cloned)
+
         # Train and stores fitness
-        classifier.fit(x_train_fold, y_train_fold)
-        score = classifier.score(x_test_fold, y_test_fold)
+        cloned.fit(x_train_fold, y_train_fold)
+        score = cloned.score(x_test_fold, y_test_fold)
         lst_score_stratified.append(score)
 
         # Stores trained model
-        cloned = clone(classifier)
-        cloned = cast(SurvModel, cloned)
         estimators.append(cloned)
 
     # Gets best fitness
@@ -116,30 +121,6 @@ def compute_clustering_sequential(classifier: ClusteringModels,
     return fitness_value, classifier, fitness_value
 
 
-def get_subset(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
-    """
-    Gets a specific subset of features from a Pandas DataFrame.
-    @param molecules_df: Pandas DataFrame with all the features.
-    @param combination: Combination of features to extract.
-    @return: A Pandas DataFrame with only the combinations of features.
-    """
-    # Get subset of features
-    if isinstance(combination, np.ndarray):
-        # In this case it's a Numpy array with int indexes (used in metaheuristics)
-        subset: pd.DataFrame = molecules_df.iloc[combination]
-    else:
-        # In this case it's a list of columns names (used in Blind Search)
-        molecules_to_extract = np.intersect1d(molecules_df.index, combination)
-        subset: pd.DataFrame = molecules_df.loc[molecules_to_extract]
-
-    # Discards NaN values
-    subset = subset[~pd.isnull(subset)]
-
-    # Makes the rows columns
-    subset = subset.transpose()
-    return subset
-
-
 def blind_search(classifier: SurvModel,
                  molecules_df: pd.DataFrame,
                  clinical_data: np.ndarray,
@@ -163,7 +144,7 @@ def blind_search(classifier: SurvModel,
     best_score: Optional[float] = None
 
     for combination in all_combinations(list_of_molecules):
-        subset = get_subset(molecules_df, combination)
+        subset = get_subset_of_features(molecules_df, combination)
 
         # If no molecules are present in the subset due to NaNs values, just discards this combination
         if not subset.any().any():
@@ -257,7 +238,7 @@ def binary_black_hole_sequential(
     for i in range(n_stars):
         random_features_to_select = get_random_subset_of_features_bbha(n_features)
         stars_subsets[i] = random_features_to_select  # Initialize 'Population'
-        subset_to_predict = get_subset(molecules_df, combination=stars_subsets[i])
+        subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
         score, _current_best_model = compute_bbha_fitness_function(classifier, subset_to_predict,
                                                                    clinical_data, is_clustering,
                                                                    clustering_score_method)
@@ -277,7 +258,7 @@ def binary_black_hole_sequential(
 
             # Computes the current star fitness
             current_star_combination = stars_subsets[a]
-            subset = get_subset(molecules_df, combination=current_star_combination)
+            subset = get_subset_of_features(molecules_df, combination=current_star_combination)
             current_score, current_best_model = compute_bbha_fitness_function(classifier, subset, clinical_data,
                                                                               is_clustering, clustering_score_method)
 

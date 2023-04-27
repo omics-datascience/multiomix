@@ -98,9 +98,11 @@ class StatisticalValidationSourceResult(models.Model):
     every type of molecule in a Biomarker.
     """
     mean_squared_error = models.FloatField(null=True, blank=True)  # MSE of the prediction
-    c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression
-    log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
-    roc_auc = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+    c_index = models.FloatField(null=True, blank=True)  # C-Index from regression models (SVM/RF)
+
+    cox_c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression (clustering)
+    cox_log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression (clustering)
+    r2_score = models.FloatField(null=True, blank=True)  # R2 from regression models (SVM/RF)
 
     # Source
     source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
@@ -117,9 +119,11 @@ class StatisticalValidation(models.Model):
 
     # General results using all the molecules
     mean_squared_error = models.FloatField(null=True, blank=True)  # MSE of the prediction
-    c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression
-    log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
-    roc_auc = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+    c_index = models.FloatField(null=True, blank=True)  # C-Index from regression models (SVM/RF)
+
+    cox_c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression (clustering)
+    cox_log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression (clustering)
+    r2_score = models.FloatField(null=True, blank=True)  # R2 from regression models (SVM/RF)
 
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.SET_NULL, related_name='statistical_validations',
                                       null=True, blank=True)

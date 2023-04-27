@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from django.db import transaction
 from django.http.response import Http404
@@ -9,18 +11,21 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from api_service.models import get_combination_class, GeneGEMCombination
+from api_service.models import get_combination_class, GeneGEMCombination, ExperimentSource
 from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker
+from biomarkers.models import Biomarker, BiomarkerState
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
+from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel
+from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
+from statistical_properties.stats_service import global_stat_validation_service
 from user_files.models_choices import FileType
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
@@ -101,12 +106,24 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
     filterset_fields = []
     search_fields = ['name', 'description']
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    ordering_fields = ['created']
+    ordering_fields = ['name', 'description', 'state', 'created']
 
 
 class BiomarkerNewStatisticalValidations(APIView):
     """Runs a new statistical validation for a specific Biomarker."""
     permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def __create_statistical_validation_source(
+            source: Optional[ExperimentSource]
+    ) -> Optional[StatisticalValidationSourceResult]:
+        """
+        Creates a StatisticalValidationSourceResult instance from a ExperimentSource instance. In case of None,
+        just ignores it.
+        """
+        if source is not None:
+            return StatisticalValidationSourceResult.objects.create(source=source)
+        return None
 
     def post(self, request: Request):
         with transaction.atomic():
@@ -138,18 +155,21 @@ class BiomarkerNewStatisticalValidations(APIView):
             mrna_source, _mrna_clinical = get_experiment_source(mrna_source_type, request, FileType.MRNA, 'mRNA')
             if biomarker.number_of_mrnas > 0 and mrna_source is None:
                 raise ValidationError('Invalid mRNA source')
+            stat_mrna_source = self.__create_statistical_validation_source(mrna_source)
 
             # miRNA source
             mirna_source_type = get_source_pk(request.POST, 'miRNAType')
             mirna_source, _mirna_clinical = get_experiment_source(mirna_source_type, request, FileType.MIRNA, 'miRNA')
             if biomarker.number_of_mirnas > 0 and mirna_source is None:
                 raise ValidationError('Invalid miRNA source')
+            stat_mirna_source = self.__create_statistical_validation_source(mirna_source)
 
             # CNA source
             cna_source_type = get_source_pk(request.POST, 'cnaType')
             cna_source, _cna_clinical = get_experiment_source(cna_source_type, request, FileType.CNA, 'cna')
             if biomarker.number_of_cnas > 0 and cna_source is None:
                 raise ValidationError('Invalid CNA source')
+            stat_cna_source = self.__create_statistical_validation_source(cna_source)
 
             # Methylation source
             methylation_source_type = get_source_pk(request.POST, 'methylationType')
@@ -157,7 +177,38 @@ class BiomarkerNewStatisticalValidations(APIView):
                                                                               FileType.METHYLATION, 'methylation')
             if biomarker.number_of_methylations > 0 and methylation_source is None:
                 raise ValidationError('Invalid Methylation source')
+            stat_methylation_source = self.__create_statistical_validation_source(methylation_source)
 
-            raise ValidationError('It worked!')
+            surv_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
+            if isinstance(surv_tuple, SurvivalColumnsTupleCGDSDataset):
+                survival_column_tuple_user_file = None
+                survival_column_tuple_cgds = surv_tuple
+            elif isinstance(surv_tuple, SurvivalColumnsTupleUserFile):
+                survival_column_tuple_user_file = surv_tuple
+                survival_column_tuple_cgds = None
+            else:
+                raise ValidationError('Invalid survival tuple')
+
+            # Creates the StatisticalValidation instance
+            description = request.POST.get('description', 'null')
+            description = description if description != 'null' else None
+
+            stat_validation = StatisticalValidation.objects.create(
+                name=request.POST.get('name'),
+                description=description,
+                biomarker=biomarker,
+                trained_model=trained_model,
+                state=BiomarkerState.IN_PROCESS,
+                clinical_source=clinical_source,
+                survival_column_tuple_user_file=survival_column_tuple_user_file,
+                survival_column_tuple_cgds=survival_column_tuple_cgds,
+                mrna_source_result=stat_mrna_source,
+                mirna_source_result=stat_mirna_source,
+                cna_source_result=stat_cna_source,
+                methylation_source_result=stat_methylation_source,
+            )
+
+            # Runs statistical validation in background
+            global_stat_validation_service.add_stat_validation(stat_validation)
 
         return Response({'ok': True})

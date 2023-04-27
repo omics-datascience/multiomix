@@ -4,6 +4,7 @@ import { Biomarker, StatisticalValidation } from '../types'
 import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../utils/util_functions'
+import { BiomarkerStateLabel } from '../BiomarkerStateLabel'
 
 declare const urlBiomarkerStatisticalValidations: string
 
@@ -27,6 +28,7 @@ export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatistical
             headers={[
                 { name: 'Name', serverCodeToSort: 'name', width: 3 },
                 { name: 'Description', serverCodeToSort: 'description', width: 4 },
+                { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
                 { name: 'Date', serverCodeToSort: 'created' },
                 { name: 'Actions' }
             ]}
@@ -48,7 +50,11 @@ export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatistical
                 return (
                     <Table.Row key={biomarkerTrainedModel.id as number}>
                         <TableCellWithTitle value={biomarkerTrainedModel.name} />
-                        <TableCellWithTitle value={biomarkerTrainedModel.description} />
+                        <TableCellWithTitle value={biomarkerTrainedModel.description ?? ''} />
+                        <Table.Cell textAlign='center'>
+                            {/* NOTE: trainedModel has the same states as Biomarker */}
+                            <BiomarkerStateLabel biomarkerState={biomarkerTrainedModel.state} />
+                        </Table.Cell>
                         <TableCellWithTitle value={formatDateLocale(biomarkerTrainedModel.created as string, 'LLL')} />
                         <Table.Cell width={1}>
                             <React.Fragment>

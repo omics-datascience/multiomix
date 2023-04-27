@@ -190,6 +190,7 @@ class FSService(object):
         """
         # Creates TrainedModel instance
         trained_model = TrainedModel.objects.create(
+            name=f'From FS for biomarker {experiment.created_biomarker.name}',
             biomarker=experiment.created_biomarker,
             fitness_function=fit_fun_enum,
             fs_experiment=experiment
@@ -282,8 +283,12 @@ class FSService(object):
             # Stores the trained model and best score
             if best_model is not None and best_score is not None:
                 trained_content = pickle.dumps(best_model)
-
-                trained_model.model_dump = ContentFile(trained_content)
+                trained_content_as_file = ContentFile(trained_content)
+                trained_model.model_dump.save(
+                    f'{trained_model.pk}_trained_model_dump.pkl',
+                    trained_content_as_file,
+                    save=False
+                )
                 trained_model.best_fitness_value = best_score
                 trained_model.save(update_fields=['model_dump', 'best_fitness_value'])
 
@@ -331,7 +336,7 @@ class FSService(object):
         molecules_temp_file_path: Optional[str] = None
         clinical_temp_file_path: Optional[str] = None
         try:
-            logging.warning(f'ID FS EXPERIMENT -> {biomarker.pk}')
+            logging.warning(f'ID FSExperiment -> {biomarker.pk}')
             # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
             # with exceptions thrown in subprocesses
             if self.use_transaction:

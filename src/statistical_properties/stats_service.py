@@ -5,9 +5,12 @@ import numpy as np
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List
 import pandas as pd
+from sklearn.metrics import mean_squared_error, r2_score
 from biomarkers.models import BiomarkerState, Biomarker, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.utils import replace_cgds_suffix
+from common.constants import TCGA_CONVENTION
+from common.utils import replace_cgds_suffix, get_subset_of_features
+from feature_selection.fs_algorithms import SurvModel
 from statistical_properties.models import StatisticalValidation
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
@@ -106,7 +109,7 @@ class StatisticalValidationService(object):
             clinical_df: pd.DataFrame = clinical_source.get_df()
 
             # Keeps only the survival tuple and samples in common
-            survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
+            survival_tuple = stat_validation.survival_column_tuple
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
 
             clinical_df = clinical_df.loc[clean_samples_in_common]
@@ -137,6 +140,9 @@ class StatisticalValidationService(object):
 
                     # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
                     chunk.index = chunk.index + f'_{file_type}'
+
+                    # Removes TCGA suffix
+                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
@@ -173,14 +179,48 @@ class StatisticalValidationService(object):
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param stop_event: Stop signal.
         """
+        model: SurvModel = stat_validation.trained_model.get_model_instance()
+        is_clustering = hasattr(model, 'clustering_parameters')
+        is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
+
+        # TODO: refactor this retrieval of data as it's repeated in the fs_service
         # Gets molecules and clinica DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+
+        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
+        if is_regression:
+            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
+            clinical_df = clinical_df[clinical_df[time_column] > 0]
+            valid_samples = clinical_df.index
+            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
 
+        # Gets all the molecules in the needed order
+        list_of_molecules: List[str] = molecules_df.index
+        molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
+
+        # Makes predictions
+        if not is_clustering:
+            predictions = model.predict(molecules_df)
+
+            # Gets all the metrics for the SVM or RF
+            y_true = clinical_data['time']
+            stat_validation.mean_squared_error = mean_squared_error(y_true, predictions)
+            stat_validation.c_index = model.score(molecules_df, clinical_data)
+            stat_validation.r2_score = r2_score(y_true, predictions)
+            # stat_validation.c_index = concordance_index_censored(
+            #     clinical_data['event'],
+            #     clinical_data['time'],
+            #     -predictions,  # flip sign to obtain risk scores
+            # )
+
+            # TODO: add here all the metrics for every Source type
+
+            stat_validation.save()
 
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
@@ -242,29 +282,29 @@ class StatisticalValidationService(object):
 
                 # Saves some data about the result of the stat_validation
                 stat_validation.execution_time = total_execution_time
-                biomarker.state = BiomarkerState.COMPLETED
+                stat_validation.state = BiomarkerState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
             logging.error('No samples in common')
-            biomarker.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+            stat_validation.state = BiomarkerState.NO_SAMPLES_IN_COMMON
         except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
             logging.error(f'StatisticalValidation {stat_validation.pk} has failed. Check logs for more info')
-            biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
+            stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
         except ServerSelectionTimeoutError:
             self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
             logging.error('MongoDB connection timeout!')
-            biomarker.state = BiomarkerState.WAITING_FOR_QUEUE
+            stat_validation.state = BiomarkerState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the stat_validation, discard changes
             logging.warning(f'StatisticalValidation {stat_validation.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
-            biomarker.state = BiomarkerState.STOPPED
+            stat_validation.state = BiomarkerState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
             logging.exception(e)
             logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to biomarker {biomarker.pk}')
-            biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
+            stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
         finally:
             # Removes the temporary files
             if molecules_temp_file_path is not None:

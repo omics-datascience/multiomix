@@ -1,7 +1,7 @@
 import re
 import numpy as np
 from typing import List, Union, Optional
-
+import pandas as pd
 from django.http import QueryDict
 
 from common.constants import TCGA_CONVENTION
@@ -29,3 +29,27 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
     if content is None or content == 'null':
         return None
     return int(content)
+
+
+def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
+    """
+    Gets a specific subset of features from a Pandas DataFrame.
+    @param molecules_df: Pandas DataFrame with all the features.
+    @param combination: Combination of features to extract.
+    @return: A Pandas DataFrame with only the combinations of features.
+    """
+    # Get subset of features
+    if isinstance(combination, np.ndarray):
+        # In this case it's a Numpy array with int indexes (used in metaheuristics)
+        subset: pd.DataFrame = molecules_df.iloc[combination]
+    else:
+        # In this case it's a list of columns names (used in Blind Search)
+        molecules_to_extract = np.intersect1d(molecules_df.index, combination)
+        subset: pd.DataFrame = molecules_df.loc[molecules_to_extract]
+
+    # Discards NaN values
+    subset = subset[~pd.isnull(subset)]
+
+    # Makes the rows columns
+    subset = subset.transpose()
+    return subset

@@ -246,6 +246,8 @@ enum ActiveBiomarkerDetailItemMenu {
 /** Django TrainedModel model. */
 interface TrainedModel {
     id: number,
+    name: string,
+    description: string,
     created: string,
     best_fitness_value: number
 }
@@ -266,11 +268,13 @@ interface StatisticalValidationSourceResult {
 interface StatisticalValidation {
     id: number,
     name: string,
+    state: BiomarkerState,
     description: Nullable<string>,
     created: string,
-    c_index: number,
-    log_likelihood: number,
-    roc_auc: number,
+    c_index: Nullable<number>,
+    cox_c_index: Nullable<number>,
+    cox_log_likelihood: Nullable<number>,
+    roc_auc: Nullable<number>,
     clinical_source: Nullable<StatisticalValidationSourceResult>,
     mrna_source_result: Nullable<StatisticalValidationSourceResult>,
     mirna_source_result: Nullable<StatisticalValidationSourceResult>,
