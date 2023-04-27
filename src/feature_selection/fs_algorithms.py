@@ -4,7 +4,6 @@ import itertools
 import numpy as np
 import pandas as pd
 from math import tanh
-
 from django.conf import settings
 from sklearn import clone
 from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
@@ -53,9 +52,10 @@ def compute_cross_validation_sequential(classifier: SurvModel,
     """
     # Create StratifiedKFold object.
     skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
-    lst_accu_stratified: List[float] = []
+    lst_score_stratified: List[float] = []
     estimators: List[SurvModel] = []
 
+    # TODO: PROBAR SI CON RANKING PASA LO MISMO
     for train_index, test_index in skf.split(subset, y):
         # Splits
         x_train_fold, x_test_fold = subset.iloc[train_index], subset.iloc[test_index]
@@ -63,7 +63,8 @@ def compute_cross_validation_sequential(classifier: SurvModel,
 
         # Train and stores fitness
         classifier.fit(x_train_fold, y_train_fold)
-        lst_accu_stratified.append(classifier.score(x_test_fold, y_test_fold))
+        score = classifier.score(x_test_fold, y_test_fold)
+        lst_score_stratified.append(score)
 
         # Stores trained model
         cloned = clone(classifier)
@@ -71,10 +72,10 @@ def compute_cross_validation_sequential(classifier: SurvModel,
         estimators.append(cloned)
 
     # Gets best fitness
-    best_model_idx = np.argmax(lst_accu_stratified)
+    best_model_idx = np.argmax(lst_score_stratified)
     best_model = estimators[best_model_idx]
-    best_c_index = lst_accu_stratified[best_model_idx]
-    fitness_value_mean = cast(float, np.mean(lst_accu_stratified))
+    best_c_index = lst_score_stratified[best_model_idx]
+    fitness_value_mean = cast(float, np.mean(lst_score_stratified))
 
     return fitness_value_mean, best_model, best_c_index
 
@@ -340,9 +341,10 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     )
 
     # Fits to get alphas (ignoring some GridSearch warnings)
-    warnings.simplefilter("ignore", UserWarning)
-    warnings.simplefilter("ignore", FitFailedWarning)
-    cox_net_pipe.fit(x, clinical_data)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        warnings.simplefilter("ignore", FitFailedWarning)
+        cox_net_pipe.fit(x, clinical_data)
 
     estimated_alphas = cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
     cv = KFold(n_splits=5, shuffle=True, random_state=0)

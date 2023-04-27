@@ -291,7 +291,7 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
     return (
         <div className='selection-main-container'>
             {/* Steps */}
-            <Step.Group widths={3}>
+            <Step.Group widths={3} className='margin-bottom-0'>
                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
                     <Icon name='truck' />
                     <Step.Content>
@@ -317,7 +317,7 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
             </Step.Group>
 
             {/* Content */}
-            <Segment className='selection-steps-container'>
+            <Segment className='selection-steps-container margin-top-0'>
                 <Input
                     name='name'
                     value={form.name}

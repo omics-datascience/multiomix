@@ -1,3 +1,4 @@
+import pickle
 from typing import List, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -13,10 +14,10 @@ class FeatureSelectionAlgorithm(models.IntegerChoices):
 
 
 class FitnessFunction(models.IntegerChoices):
-    """Available fitness functions."""
+    """Available models to execute as the fitness function."""
     CLUSTERING = 1,
     SVM = 2,
-    RF = 3
+    RF = 3  # TODO: implement in backend
 
 
 class ClusteringAlgorithm(models.IntegerChoices):
@@ -56,16 +57,14 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
-    experiment = models.OneToOneField('FSExperiment', on_delete=models.CASCADE, null=True, blank=True,
-                                      related_name='clustering_parameters')
+    trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
 
 
 class SVMParameters(models.Model):
     """SVM fitness function parameters."""
     kernel = models.IntegerField(choices=SVMKernel.choices)
     task = models.IntegerField(choices=SVMTask.choices)
-    experiment = models.OneToOneField('FSExperiment', on_delete=models.CASCADE, null=True, blank=True,
-                                      related_name='svm_parameters')
+    trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='svm_parameters')
 
 
 class FSExperiment(models.Model):
@@ -73,7 +72,6 @@ class FSExperiment(models.Model):
     origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
                                          related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
-    fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     execution_time = models.PositiveIntegerField(default=0)  # Execution time in seconds
     created_biomarker = models.OneToOneField('biomarkers.Biomarker', on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='fs_experiment')
@@ -126,12 +124,16 @@ class TrainedModel(models.Model):
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
+    fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
-    best_fitness_value =  models.FloatField()
+    best_fitness_value =  models.FloatField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'Trained model for Biomarker "{self.biomarker.name}"'
 
-
-
+    def get_model_instance(self):
+        """Deserializes the model dump and return the model instance"""
+        with open(self.model_dump, "rb") as fp:
+            model = pickle.load(fp)
+        return model

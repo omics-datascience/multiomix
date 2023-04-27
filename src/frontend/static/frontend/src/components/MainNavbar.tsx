@@ -82,7 +82,7 @@ const MainNavbar = (props: MainNavbarProps) => {
     )
 
     return (
-        <Menu id='main-navbar' inverted borderless>
+        <Menu className='margin-bottom-0' inverted borderless>
             {/* Logo */}
             <Menu.Item as='a' header href={urlIndex} title='Multiomix homepage'>
                 <Image size='tiny' src='/static/frontend/img/logo.png' />

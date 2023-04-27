@@ -58,3 +58,15 @@ def send_update_user_file_command(user_id: int):
         'command': 'update_user_files'
     }
     send_message(user_group_name, message)
+
+
+def send_update_stat_validations_command(user_id: int):
+    """
+    Sends a message indicating that an StatisticalValidation state update has occurred
+    @param user_id: StatisticalValidation's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_statistical_validations'
+    }
+    send_message(user_group_name, message)

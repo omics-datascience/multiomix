@@ -134,7 +134,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultSvmParameters = (): FitnessFunctionSvm => {
         return {
             kernel: SVMKernel.LINEAR,
-            task: SVMTask.RANKING
+            task: SVMTask.REGRESSION
         }
     }
 

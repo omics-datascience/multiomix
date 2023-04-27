@@ -21,7 +21,6 @@ interface BiomarkerStatisticalValidationsTableProps {
  * @returns Component.
  */
 export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatisticalValidationsTableProps) => {
-    // TODO: implement filter by type
     return (
         <PaginatedTable<StatisticalValidation>
             headerTitle='Statistical validations'
@@ -44,7 +43,7 @@ export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatistical
                     </Button>
                 </Form.Field>
             ]}
-            // updateWSKey='' // TODO: implement
+            updateWSKey='update_statistical_validations'
             mapFunction={(biomarkerTrainedModel: StatisticalValidation) => {
                 return (
                     <Table.Row key={biomarkerTrainedModel.id as number}>

@@ -3,10 +3,11 @@ import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, Union, List
+from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
+from common.constants import TCGA_CONVENTION
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
@@ -145,6 +146,9 @@ class FSService(object):
                     # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
                     chunk.index = chunk.index + f'_{file_type}'
 
+                    # Removes TCGA suffix
+                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
+
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
 
@@ -171,44 +175,81 @@ class FSService(object):
             identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
 
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
-                             clinical_temp_file_path: str, stop_event: Event):
+                             clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
+                             fitness_function_parameters: Dict[str, Any],
+                             stop_event: Event):
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
         @param experiment: FSExperiment instance.
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop signal.
         """
+        # Creates TrainedModel instance
+        trained_model = TrainedModel.objects.create(
+            biomarker=experiment.created_biomarker,
+            fitness_function=fit_fun_enum,
+            fs_experiment=experiment
+        )
+
+        # Gets model instance and stores its parameters
+        is_clustering = False
+        is_regression = False
+        clustering_scoring_method: Optional[ClusteringScoringMethod] = None
+        if trained_model.fitness_function == FitnessFunction.SVM:
+            # Creates SVMParameters instance
+            model_parameters = fitness_function_parameters['svmParameters']
+            task_as_int = int(model_parameters['task'])
+            is_regression = task_as_int == SVMTask.REGRESSION.value
+
+            svm_parameters: SVMParameters = SVMParameters.objects.create(
+                kernel=model_parameters['kernel'],
+                task=task_as_int,
+                trained_model=trained_model
+            )
+            classifier = get_survival_svm_model(
+                is_svm_regression=svm_parameters.task == SVMTask.REGRESSION.value,
+                svm_kernel=get_svm_kernel(svm_parameters.kernel),
+                svm_optimizer='avltree'  # In practice, this optimizer is usually the fastest
+            )
+        elif trained_model.fitness_function == FitnessFunction.RF:
+            is_regression = True  # RF only can make regression tasks
+            classifier = get_rf_model()
+        elif trained_model.fitness_function == FitnessFunction.CLUSTERING:
+            # Clustering selected
+            is_clustering = True
+
+            # Creates ClusteringParameters instance
+            model_parameters = fitness_function_parameters['clusteringParameters']
+            clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
+                algorithm=model_parameters['algorithm'],
+                metric=model_parameters['metric'],
+                scoring_method=model_parameters['scoringMethod'],
+                trained_model=trained_model
+            )
+
+            clustering_scoring_method = clustering_parameters.scoring_method
+            classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
+        else:
+            raise Exception(f'Parameter fitness_function invalid: {fit_fun_enum} ({type(fit_fun_enum)})')
+
         # Gets molecules and clinica DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
+        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
+        if is_regression:
+            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
+            clinical_df = clinical_df[clinical_df[time_column] > 0]
+            valid_samples = clinical_df.index
+            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
-
-        # Gets model and fitness function
-        is_clustering = False
-        clustering_scoring_method: Optional[ClusteringScoringMethod] = None
-        if experiment.fitness_function == FitnessFunction.SVM:
-            svm_parameters: SVMParameters = experiment.svm_parameters
-            classifier = get_survival_svm_model(
-                is_svm_regression=svm_parameters.task == SVMTask.REGRESSION,
-                svm_kernel=get_svm_kernel(svm_parameters.kernel),
-                svm_optimizer='avltree'  # In practice, this optimizer is usually the fastest
-            )
-        elif experiment.fitness_function == FitnessFunction.RF:
-            classifier = get_rf_model()
-        elif experiment.fitness_function == FitnessFunction.CLUSTERING:
-            # Clustering selected
-            is_clustering = True
-            clustering_parameters: ClusteringParameters = experiment.clustering_parameters
-            clustering_scoring_method = clustering_parameters.scoring_method
-            classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
-        else:
-            raise Exception(f'Parameter experiment.fitness_function invalid: {experiment.fitness_function} '
-                            f'({type(experiment.fitness_function)})')
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -236,25 +277,27 @@ class FSService(object):
 
         if best_features is not None:
             # Stores molecules in the target biomarker, the best model and its fitness value
-            created_biomarker = experiment.created_biomarker
-            self.__save_molecule_identifiers(created_biomarker, best_features)
+            self.__save_molecule_identifiers(experiment.created_biomarker, best_features)
 
-            # Stores the trained model
+            # Stores the trained model and best score
             if best_model is not None and best_score is not None:
                 trained_content = pickle.dumps(best_model)
-                TrainedModel.objects.create(
-                    biomarker=created_biomarker,
-                    fs_experiment=experiment,
-                    model_dump=ContentFile(trained_content),
-                    best_fitness_value=best_score,
-                )
 
-    def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
+                trained_model.model_dump = ContentFile(trained_content)
+                trained_model.best_fitness_value = best_score
+                trained_model.save(update_fields=['model_dump', 'best_fitness_value'])
+
+
+    def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                                         fitness_function_parameters: Dict[str, Any],
+                                         stop_event: Event) -> Tuple[str, str]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
-        TODO: use stop_event
         @param experiment: FSExperiment instance.
-        @param stop_event: Stop signal
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param stop_event: Stop signal.
+        @return Trained model instance if everything was ok. None if no best features were found.
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(experiment)
@@ -265,15 +308,20 @@ class FSService(object):
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
                                                                                                       samples_in_common)
 
-        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path, stop_event)
+        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
+                                                  fit_fun_enum, fitness_function_parameters, stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
 
-    def eval_feature_selection_experiment(self, experiment: FSExperiment, stop_event: Event) -> None:
+    def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                                          fitness_function_parameters: Dict[str, Any],
+                                          stop_event: Event):
         """
         Computes a Feature Selection experiment.
         @param experiment: FSExperiment to be processed.
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop event to cancel the experiment
         """
         # Resulting Biomarker instance from the FS experiment.
@@ -292,8 +340,9 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(experiment,
-                                                                                                      stop_event)
+            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(
+                experiment, fit_fun_enum, fitness_function_parameters, stop_event
+            )
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
 
@@ -359,10 +408,13 @@ class FSService(object):
         experiment.created_biomarker = new_biomarker
         experiment.save()
 
-    def add_experiment(self, experiment: FSExperiment):
+    def add_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                       fitness_function_parameters: Dict[str, Any]):
         """
         Adds a Feature Selection experiment to the ThreadPool to be processed
         @param experiment: FSExperiment to be processed
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
         """
         experiment_event = Event()
 
@@ -370,7 +422,8 @@ class FSService(object):
         self.__create_target_biomarker(experiment)
 
         # Submits
-        experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, experiment_event)
+        experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, fit_fun_enum,
+                                                 fitness_function_parameters, experiment_event)
         self.fs_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
 
     def stop_experiment(self, experiment: FSExperiment):
@@ -410,13 +463,47 @@ class FSService(object):
         for experiment in experiments:
             # If the experiment has already reached a limit of attempts, it's marked as error
             if experiment.attempt == 3:
+                logging.error(f'FSExperiment with PK: {experiment.pk} has reached attempts limit.')
                 experiment.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
+                experiment.save()
+            elif not hasattr(experiment, 'best_model'):
+                logging.error(f'FSExperiment with PK: {experiment.pk} has no trained model to recover.')
+                experiment.state = BiomarkerState.FINISHED_WITH_ERROR
                 experiment.save()
             else:
                 experiment.attempt += 1
                 experiment.save()
                 logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
-                self.add_experiment(experiment)
+                trained_model: TrainedModel = experiment.trained_model
+                fitness_function_enum = trained_model.fitness_function
+
+                fitness_function_parameters = None
+                if hasattr(trained_model, 'svm_parameters'):
+                    svm_parameters: SVMParameters = trained_model.svm_parameters
+                    fitness_function_parameters = {
+                        'svmParameters': {
+                            'kernel': svm_parameters.kernel,
+                            'task': svm_parameters.task
+                        }
+                    }
+                elif hasattr(trained_model, 'clustering_parameters'):
+                    clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+                    fitness_function_parameters = {
+                        'clusteringParameters': {
+                            'algorithm': clustering_parameters.algorithm,
+                            'metric': clustering_parameters.metric,
+                            'scoringMethod': clustering_parameters.scoring_method,
+                        }
+                    }
+                else:
+                    # TODO: implement the rest of types of parameters
+                    logging.error(f'Invalid fitness function parameters for FSExperiment with PK: {experiment.pk}')
+
+                if fitness_function_parameters is not None:
+                    self.add_experiment(experiment, fitness_function_enum, fitness_function_parameters)
+                else:
+                    experiment.state = BiomarkerState.FINISHED_WITH_ERROR
+                    experiment.save()
 
         close_db_connection()
 

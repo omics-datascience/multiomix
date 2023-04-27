@@ -3,8 +3,7 @@ from django.conf import settings
 from sklearn.cluster import KMeans, SpectralClustering
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
-
-from feature_selection.models import ClusteringAlgorithm
+from .models import ClusteringAlgorithm
 
 # Available options for the SVM kernel
 SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"]

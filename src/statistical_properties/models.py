@@ -1,5 +1,6 @@
 from typing import List, Union, Tuple, Optional
 from django.db import models
+from api_service.websocket_functions import send_update_stat_validations_command
 from biomarkers.models import Biomarker, BiomarkerState
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from feature_selection.models import TrainedModel
@@ -100,6 +101,8 @@ class StatisticalValidationSourceResult(models.Model):
     c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression
     log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
     roc_auc = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+
+    # Source
     source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='statistical_validations_result')
 
@@ -113,10 +116,10 @@ class StatisticalValidation(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     # General results using all the molecules
-    mean_squared_error = models.FloatField()  # MSE after training
-    c_index = models.FloatField()  # C-Index from Cox Regression
-    log_likelihood = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
-    roc_auc = models.FloatField()  # Log likelihood from Cox Regression  # TODO: check if it's nullable
+    mean_squared_error = models.FloatField(null=True, blank=True)  # MSE of the prediction
+    c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression
+    log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
+    roc_auc = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression
 
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.SET_NULL, related_name='statistical_validations',
                                       null=True, blank=True)
@@ -200,3 +203,18 @@ class StatisticalValidation(models.Model):
             ))
 
         return res
+
+    def delete(self, *args, **kwargs):
+        """Deletes the instance and sends a websockets message to update state in the frontend"""
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the StatisticalValidation state in the frontend
+        send_update_stat_validations_command(self.biomarker.user.id)
+
+    def save(self, *args, **kwargs):
+        """Every time the biomarker status changes, uses websocket to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websocket message to update the state in the frontend
+        send_update_stat_validations_command(self.biomarker.user.id)
+

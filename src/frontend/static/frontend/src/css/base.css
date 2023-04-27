@@ -23,6 +23,10 @@ body > div {
     margin-left: 30% !important;
 }
 
+.margin-top-0 {
+    margin-top: 0 !important;
+}
+
 .margin-top-2 {
     margin-top: 2% !important;
 }
@@ -33,6 +37,10 @@ body > div {
 
 .margin-top-10 {
     margin-top: 10% !important;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0 !important;
 }
 
 .margin-bottom-2 {
@@ -142,11 +150,6 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     font-size: .92857143em !important;
     font-weight: 700 !important;
     text-transform: none !important;
-}
-
-/* A little separator between the main navbar and the page content */
-#main-navbar {
-    margin-bottom: 0;
 }
 
 .table-bordered {

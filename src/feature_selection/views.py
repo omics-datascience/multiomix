@@ -97,7 +97,6 @@ class FeatureSelectionSubmit(APIView):
             fs_experiment = FSExperiment.objects.create(
                 origin_biomarker=biomarker,
                 algorithm=int(algorithm),
-                fitness_function=int(fitness_function),
                 clinical_source=clinical_source,
                 mrna_source=mrna_source,
                 mirna_source=mirna_source,
@@ -106,26 +105,7 @@ class FeatureSelectionSubmit(APIView):
                 user=request.user
             )
 
-            # Generates the correct fitness function parameters
-            if fit_fun_enum == FitnessFunction.CLUSTERING:
-                parameters = fitness_function_parameters['clusteringParameters']
-                ClusteringParameters.objects.create(
-                    algorithm=parameters['algorithm'],
-                    metric=parameters['metric'],
-                    scoring_method=parameters['scoringMethod'],
-                    experiment=fs_experiment
-                )
-            elif fit_fun_enum == FitnessFunction.SVM:
-                parameters = fitness_function_parameters['svmParameters']
-                SVMParameters.objects.create(
-                    kernel=parameters['kernel'],
-                    task=parameters['task'],
-                    experiment=fs_experiment
-                )
-            else:
-                raise ValidationError('RF is not implemented yet')
-
             # Adds Feature Selection experiment to the ThreadPool
-            global_fs_service.add_experiment(experiment=fs_experiment)
+            global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters)
 
         return Response({'ok': True})

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Container, Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm, SVMTask, SVMKernel } from '../../../../types'
+import { FitnessFunctionSvm, SVMKernel, SVMTask } from '../../../../types'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
@@ -20,7 +20,8 @@ export const SVMPanel = (props: SVMPanelProps) => {
     } = props
     return (
         <>
-            <Container className='biomarkers--side--bar--box'>
+            {/* TODO: uncomment when implemented StatisticalValidations for a ranking task. */}
+            {/* <Container className='biomarkers--side--bar--box'>
                 <Button.Group
                     compact
                     name="moleculesTypeOfSelection"
@@ -39,7 +40,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
                         Regression
                     </Button>
                 </Button.Group>
-            </Container>
+            </Container > */}
 
             <Select
                 placeholder='Kernel'

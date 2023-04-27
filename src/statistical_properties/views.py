@@ -91,7 +91,8 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
 
     def get_queryset(self):
         biomarker_pk = self.request.GET.get('biomarker_pk')
-        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        user = self.request.user
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
         return biomarker.statistical_validations.all()
 
     permission_classes = [permissions.IsAuthenticated]
@@ -111,7 +112,8 @@ class BiomarkerNewStatisticalValidations(APIView):
         with transaction.atomic():
             # Gets Biomarker instance
             biomarker_pk = request.POST.get('biomarkerPk')
-            biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+            user = request.user
+            biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
 
             # Gets the Biomarker's trained model instance
             trained_model_pk = request.POST.get('selectedTrainedModelPk')

@@ -338,12 +338,12 @@ def get_samples_list(
         user
 ) -> Tuple[Optional[List[str]], Optional[Dict]]:
     """
-    Gets a DataFrame from the file retrieve from DB or MongoDB with an id and SourceType
-    @param id_source: Id of the UserFile/CGDSDataset to retrieve
-    @param type_source: Source type to check if it's a UserFile or a CGDSDataset
-    @param file_type: FileType (mRNA, miRNA, etc) to get the corresponding CGDSDataset
-    @param user: Current logged user to retrieve only his datasets
-    @return: A DataFrame (if corresponds) and a Response dict (the dataset doesn't exist)
+    Gets a DataFrame from the file retrieve from DB or MongoDB with an id and SourceType.
+    @param id_source: ID of the UserFile/CGDSDataset to retrieve.
+    @param type_source: Source type to check if it's a UserFile or a CGDSDataset.
+    @param file_type: FileType (mRNA, miRNA, etc.) to get the corresponding CGDSDataset.
+    @param user: Current logged user to retrieve only his datasets.
+    @return: A DataFrame (if corresponds) and a Response dict (the dataset doesn't exist).
     """
     list_of_samples = None
     response = None
