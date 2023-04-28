@@ -156,6 +156,16 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
     function handleSectionActive () {
         if (currentStep === 1) {
             return (
+                <BiomarkerTrainedModelsTable
+                    selectedBiomarker={props.selectedBiomarker}
+                    selectedTrainedModel={form.selectedTrainedModel}
+                    selectTrainedModel={selectTrainedModel}
+                />
+            )
+        }
+
+        if (currentStep === 2) {
+            return (
                 <SourceSelectors
                     clinicalSource={{ source: form.clinicalSource }}
                     mRNASource={{
@@ -178,16 +188,6 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
                     selectNewFile={selectNewFile}
                     selectUploadedFile={selectUploadedFile}
                     selectStudy={selectStudy}
-                />
-            )
-        }
-
-        if (currentStep === 2) {
-            return (
-                <BiomarkerTrainedModelsTable
-                    selectedBiomarker={props.selectedBiomarker}
-                    selectedTrainedModel={form.selectedTrainedModel}
-                    selectTrainedModel={selectTrainedModel}
                 />
             )
         }
@@ -286,7 +286,7 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
         setForm(newForm)
     }
 
-    const sourcesAreValid = allSourcesAreValid()
+    const selectedTrainedModelIsValid = form.selectedTrainedModel?.id !== undefined
 
     return (
         <div className='selection-main-container'>
@@ -295,23 +295,23 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
                     <Icon name='truck' />
                     <Step.Content>
-                        <Step.Title>Step 1: Datasets</Step.Title>
+                        <Step.Title>Step 1: Trained model</Step.Title>
                     </Step.Content>
                 </Step>
                 <Step
                     active={currentStep === 2}
                     completed={currentStep > 2}
                     link
-                    disabled={!sourcesAreValid}
+                    disabled={!selectedTrainedModelIsValid}
                     onClick={() => {
-                        if (sourcesAreValid) {
+                        if (selectedTrainedModelIsValid) {
                             setCurrentStep(2)
                         }
                     }}
                 >
                     <Icon name='credit card' />
                     <Step.Content>
-                        <Step.Title>Step 2: Trained model</Step.Title>
+                        <Step.Title>Step 2: Validation datasets</Step.Title>
                     </Step.Content>
                 </Step>
             </Step.Group>
@@ -356,7 +356,7 @@ export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatis
                         onClick={() => {
                             setCurrentStep(currentStep + 1)
                         }}
-                        disabled={!sourcesAreValid}
+                        disabled={!selectedTrainedModelIsValid}
                     >
                         Continue
                     </Button>
