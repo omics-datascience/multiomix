@@ -55,11 +55,10 @@ def compute_cross_validation_sequential(classifier: SurvModel,
     @return: Average of the C-Index obtained in each CV fold, best model during CV and its fitness score.
     """
     # Create StratifiedKFold object.
-    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
+    skf = StratifiedKFold(n_splits=10, shuffle=True)
     lst_score_stratified: List[float] = []
     estimators: List[SurvModel] = []
 
-    # TODO: PROBAR SI CON RANKING PASA LO MISMO
     for train_index, test_index in skf.split(subset, y):
         # Splits
         x_train_fold, x_test_fold = subset.iloc[train_index], subset.iloc[test_index]
@@ -157,14 +156,14 @@ def blind_search(classifier: SurvModel,
         # than the best found so far
         try:
             if is_clustering:
-                score, current_best_model, best_score = compute_clustering_sequential(
+                current_mean_score, current_best_model, current_best_score = compute_clustering_sequential(
                     classifier,
                     subset,
                     clinical_data,
                     score_method=clustering_score_method
                 )
             else:
-                score, current_best_model, best_score = compute_cross_validation_sequential(
+                current_mean_score, current_best_model, current_best_score = compute_cross_validation_sequential(
                     classifier,
                     subset,
                     clinical_data
@@ -172,11 +171,11 @@ def blind_search(classifier: SurvModel,
         except ValueError:
             continue
 
-        if score > best_mean_score:
-            best_mean_score = score
+        if current_mean_score > best_mean_score:
+            best_mean_score = current_mean_score
             best_features = combination
             best_model = current_best_model
-            best_score = best_score
+            best_score = current_best_score
 
     return best_features, best_model, best_score
 
