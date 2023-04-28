@@ -30,6 +30,9 @@ SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest, ClusteringModels]
 # Result of Blind Search or metaheuristics
 FSResult = Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]
 
+# Result of Cox net analysis
+CoxNetAnalysisResult = Tuple[Optional[List[str]], Optional[SurvModel],List[float]]
+
 
 def all_combinations(any_list: List) -> Iterable[List]:
     """
@@ -301,7 +304,8 @@ def binary_black_hole_sequential(
     return best_features_str, best_model, best_score
 
 
-def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray, top_n: Optional[int]) -> FSResult:
+def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray,
+                              top_n: Optional[int] = None) -> CoxNetAnalysisResult:
     """
     Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
     alpha parameter and the filters the best features sorting by coefficients.
@@ -351,7 +355,9 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     res_df: pd.DataFrame = non_zero_coefficients.loc[coefficients_order]
 
     best_features = res_df.index.tolist()
+    best_features_coeff: List[float] = res_df['coefficient'].tolist()
     if top_n:
         best_features = best_features[:top_n]
+        best_features_coeff = best_features_coeff[:top_n]
 
-    return best_features, None, None
+    return best_features, None, best_features_coeff

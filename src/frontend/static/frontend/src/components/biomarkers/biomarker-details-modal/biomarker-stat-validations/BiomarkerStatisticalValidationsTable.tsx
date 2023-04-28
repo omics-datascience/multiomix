@@ -67,7 +67,7 @@ export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatistical
                             <React.Fragment>
                                 <Icon
                                     name='chart area'
-                                    onClick={() => {}}
+                                    onClick={() => { props.openStatResult(statisticalValidation) }}
                                     className='clickable'
                                     color='blue'
                                     title='See results'

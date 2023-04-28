@@ -4,7 +4,7 @@ from api_service.websocket_functions import send_update_stat_validations_command
 from biomarkers.models import Biomarker, BiomarkerState
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from feature_selection.models import TrainedModel
-from user_files.models_choices import FileType
+from user_files.models_choices import FileType, MoleculeType
 
 
 # Create your models here.
@@ -222,3 +222,11 @@ class StatisticalValidation(models.Model):
         # Sends a websocket message to update the state in the frontend
         send_update_stat_validations_command(self.biomarker.user.id)
 
+
+class MoleculeWithCoefficient(models.Model):
+    """Represents a molecule of a Biomarker with the coefficient taken from the CoxnetSurvivalAnalysis."""
+    identifier = models.CharField(max_length=50)
+    coeff = models.FloatField()
+    type = models.IntegerField(choices=MoleculeType.choices)
+    statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
+                                               related_name='molecules_with_coefficients')

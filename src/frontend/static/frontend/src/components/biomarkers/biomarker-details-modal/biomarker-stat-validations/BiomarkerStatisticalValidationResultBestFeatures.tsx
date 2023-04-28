@@ -1,28 +1,27 @@
 
 import React, { useEffect, useState } from 'react'
-import { StatisticalValidation, StatisticalValidationForTable } from '../../types'
+import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../types'
 import { Nullable } from '../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
-import { Card, Header, Placeholder, Statistic } from 'semantic-ui-react'
-import { FitnessFunctionLabel } from '../../FitnessFunctionLabel'
+import { Card, Placeholder } from 'semantic-ui-react'
 
-declare const urlStatisticalValidationMetrics: string
+declare const urlStatisticalValidationBestFeatures: string
 
-/** BiomarkerStatisticalValidationResultMetrics props. */
+/** BiomarkerStatisticalValidationResultBestFeatures props. */
 interface BiomarkerStatisticalValidationResultMetricsProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable,
 }
 
 /**
- * Renders a panel with all the resulting metrics for a StatisticalValidation.
+ * Renders a panel with all the best features with their coefficient for a StatisticalValidation.
  * @param props Component's props
  * @returns Component
  */
 export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStatisticalValidationResultMetricsProps) => {
     const [loading, setLoading] = useState(false)
-    const [statValidationData, setStatValidationData] = useState<Nullable<StatisticalValidation>>(null)
+    const [statValidationData, setStatValidationData] = useState<Nullable<MoleculeWithCoefficient[]>>(null)
 
     /**
      * Every time the StatisticalValidation changes retrieves
@@ -30,17 +29,16 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
      */
     useEffect(() => {
         if (props.selectedStatisticalValidation.id) {
-            getStatValidationData()
+            getStatValidationBestFeatures()
         }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
-    const getStatValidationData = () => {
+    const getStatValidationBestFeatures = () => {
         setLoading(true)
 
-        const url = `${urlStatisticalValidationMetrics}/${props.selectedStatisticalValidation.id}/`
-        ky.get(url).then((response) => {
-            response.json().then((statValidation: StatisticalValidation) => {
+        ky.get(urlStatisticalValidationBestFeatures).then((response) => {
+            response.json().then((statValidation: MoleculeWithCoefficient[]) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
                 alertGeneralError()
@@ -48,7 +46,7 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation data', err)
+            console.log('Error getting StatisticalValidation best features', err)
         }).finally(() => {
             setLoading(false)
         })
@@ -78,27 +76,8 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
 
             {(!loading && statValidationData !== null) &&
                 <React.Fragment>
-                    <Header textAlign='center' dividing as='h1'>
-                        "{props.selectedStatisticalValidation.name}" metrics
-
-                        <FitnessFunctionLabel fluid={false} fitnessFunction={props.selectedStatisticalValidation.fitness_function} />
-                    </Header>
-
-                    {/* TODO: add model parameters */}
-
                     <div className='align-center margin-top-5'>
-                        <Statistic size='tiny'>
-                            <Statistic.Value>{statValidationData.mean_squared_error ? statValidationData.mean_squared_error.toFixed(3) : '-'}</Statistic.Value>
-                            <Statistic.Label>MSE</Statistic.Label>
-                        </Statistic>
-                        <Statistic size='tiny'>
-                            <Statistic.Value>{statValidationData.c_index ? statValidationData.c_index.toFixed(3) : '-'}</Statistic.Value>
-                            <Statistic.Label>C-Index</Statistic.Label>
-                        </Statistic>
-                        <Statistic size='tiny'>
-                            <Statistic.Value>{statValidationData.r2_score ? statValidationData.r2_score.toFixed(3) : '-'}</Statistic.Value>
-                            <Statistic.Label>R2 score</Statistic.Label>
-                        </Statistic>
+                        {/* TODO: add ApexChart https://apexcharts.com/react-chart-demos/bar-charts/bar-with-negative-values/ */}
                     </div>
                 </React.Fragment>
             }

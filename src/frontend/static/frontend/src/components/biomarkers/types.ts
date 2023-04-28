@@ -1,5 +1,5 @@
 import { DjangoTag } from '../../utils/django_interfaces'
-import { Nullable, Source } from '../../utils/interfaces'
+import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
@@ -243,6 +243,13 @@ enum ActiveBiomarkerDetailItemMenu {
     PREDICT
 }
 
+/** Available options for the Menu in the StatisticalValidation details modal */
+enum ActiveStatValidationsItemMenu {
+    BEST_FEATURES,
+    KAPLAN_MEIER,
+    HEATMAP
+}
+
 /** Django TrainedModel model. */
 interface TrainedModel {
     id: number,
@@ -258,10 +265,11 @@ interface TrainedModel {
  */
 interface StatisticalValidationSourceResult {
     id: number,
+    mean_squared_error: Nullable<number>,
     c_index: Nullable<number>,
-    log_likelihood: Nullable<number>,
-    roc_auc: Nullable<number>,
-    source: Source
+    cox_c_index: Nullable<number>,
+    cox_log_likelihood: Nullable<number>,
+    r2_score: Nullable<number>,
 }
 
 /** A statistical validation of a Biomarker with few fields. */
@@ -280,15 +288,28 @@ interface StatisticalValidationForTable extends BasicStatisticalValidation {
 
 /** A statistical validation of a Biomarker. */
 interface StatisticalValidation extends BasicStatisticalValidation {
+    mean_squared_error: Nullable<number>,
     c_index: Nullable<number>,
     cox_c_index: Nullable<number>,
     cox_log_likelihood: Nullable<number>,
-    roc_auc: Nullable<number>,
+    r2_score: Nullable<number>,
+}
+
+/** A statistical validation of a Biomarker to submit to the backend. */
+interface StatisticalValidationForm extends StatisticalValidation {
     clinical_source: Nullable<StatisticalValidationSourceResult>,
     mrna_source_result: Nullable<StatisticalValidationSourceResult>,
     mirna_source_result: Nullable<StatisticalValidationSourceResult>,
     cna_source_result: Nullable<StatisticalValidationSourceResult>,
     methylation_source_result: Nullable<StatisticalValidationSourceResult>,
+}
+
+/** Django MoleculeWithCoefficient model. */
+interface MoleculeWithCoefficient {
+    id: number,
+    identifier: string,
+    coeff: number,
+    type: MoleculeType
 }
 
 export {
@@ -319,8 +340,11 @@ export {
     MoleculesSymbolFinder,
     ClusteringScoringMethod,
     ActiveBiomarkerDetailItemMenu,
+    ActiveStatValidationsItemMenu,
     TrainedModel,
     BasicStatisticalValidation,
     StatisticalValidationForTable,
-    StatisticalValidation
+    StatisticalValidation,
+    StatisticalValidationForm,
+    MoleculeWithCoefficient
 }

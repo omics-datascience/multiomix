@@ -3,7 +3,7 @@ from api_service.serializers import ExperimentSourceSerializer, ExperimentClinic
 from feature_selection.fs_algorithms import FitnessFunction
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
     BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
-    StatisticalValidation
+    StatisticalValidation, MoleculeWithCoefficient
 
 
 class NormalityTestSerializer(serializers.ModelSerializer):
@@ -95,7 +95,25 @@ class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
 
 
 class StatisticalValidationSerializer(serializers.ModelSerializer):
-    """StatisticalValidation serializer"""
+    """StatisticalValidation serializer with only the metrics."""
+
+    class Meta:
+        model = StatisticalValidation
+        fields = [
+            'id',
+            'name',
+            'description',
+            'state',
+            'created',
+            'mean_squared_error',
+            'c_index',
+            'cox_c_index',
+            'cox_log_likelihood',
+            'r2_score'
+        ]
+
+class StatisticalValidationCompleteSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer with all the sources. TODO: check if used"""
     clinical_source = ExperimentClinicalSourceSerializer()
 
     # Sources
@@ -112,6 +130,7 @@ class StatisticalValidationSerializer(serializers.ModelSerializer):
             'description',
             'state',
             'created',
+            'mean_squared_error',
             'c_index',
             'cox_c_index',
             'cox_log_likelihood',
@@ -122,3 +141,11 @@ class StatisticalValidationSerializer(serializers.ModelSerializer):
             'cna_source_result',
             'methylation_source_result'
         ]
+
+
+class MoleculeWithCoefficientSerializer(serializers.ModelSerializer):
+    """MoleculeWithCoefficient serializer."""
+
+    class Meta:
+        model = MoleculeWithCoefficient
+        exclude = ['statistical_validation']

@@ -1,26 +1,25 @@
+import logging
 import os
 import tempfile
 import time
-import numpy as np
+from concurrent.futures import ThreadPoolExecutor, Future
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List
+import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error, r2_score
-from biomarkers.models import BiomarkerState, Biomarker, MRNAIdentifier, MiRNAIdentifier, \
-    CNAIdentifier, MethylationIdentifier
-from common.constants import TCGA_CONVENTION
-from common.utils import replace_cgds_suffix, get_subset_of_features
-from feature_selection.fs_algorithms import SurvModel
-from statistical_properties.models import StatisticalValidation
-from user_files.models_choices import FileType
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
-from concurrent.futures import ThreadPoolExecutor, Future
-from pymongo.errors import ServerSelectionTimeoutError
-import logging
-from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
+from django.db.models import Q, QuerySet
+from pymongo.errors import ServerSelectionTimeoutError
+from sklearn.metrics import mean_squared_error, r2_score
+from biomarkers.models import BiomarkerState, Biomarker
+from common.constants import TCGA_CONVENTION
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
+from common.utils import replace_cgds_suffix, get_subset_of_features
+from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
+from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
+from user_files.models_choices import MoleculeType
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -44,7 +43,7 @@ class StatisticalValidationService(object):
         self.use_transaction = settings.USE_TRANSACTION_IN_EXPERIMENT
         self.statistical_validations_futures = {}
 
-    def __commit_or_rollback(self, is_commit: bool, stat_validation: StatisticalValidation):
+    def __commit_or_rollback(self, is_commit: bool):
         """
         Executes a COMMIT or ROLLBACK sentence in DB
         @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
@@ -53,12 +52,6 @@ class StatisticalValidationService(object):
             query = "COMMIT" if is_commit else "ROLLBACK"
             with connection.cursor() as cursor:
                 cursor.execute(query)
-        elif not is_commit:
-            # Simulates a rollback removing all associated combinations
-            logging.warning(f'Rolling back {stat_validation.pk} manually')
-            start = time.time()
-            # stat_validation.combinations.delete()  # TODO: implement when time data is stored
-            logging.warning(f'Manual rollback of stat_validation {stat_validation.pk} -> {time.time() - start} seconds')
 
     @staticmethod
     def __get_common_samples(stat_validation: StatisticalValidation) -> np.ndarray:
@@ -150,24 +143,25 @@ class StatisticalValidationService(object):
         return molecules_temp_file_path, clinical_temp_file_path
 
     @staticmethod
-    def __save_molecule_identifiers(created_biomarker: Biomarker, best_features: List[str]):
-        """Saves all the molecules for the new created biomarker."""
-        for feature in best_features:
-            molecule_name, file_type = feature.rsplit('_', maxsplit=1)
-            file_type = int(file_type)
-            if file_type == FileType.MRNA:
-                identifier_class = MRNAIdentifier
-            elif file_type == FileType.MIRNA:
-                identifier_class = MiRNAIdentifier
-            elif file_type == FileType.CNA:
-                identifier_class = CNAIdentifier
-            elif file_type == FileType.METHYLATION:
-                identifier_class = MethylationIdentifier
-            else:
-                raise Exception(f'Molecule type invalid: {file_type}')
+    def __save_molecule_identifiers(created_stat_validation: StatisticalValidation,
+                                    best_features: List[str], best_features_coeff: List[float]):
+        """
+        Saves all the molecules with the coefficients taken from the CoxnetSurvivalAnalysis for the new created
+        StatisticalValidation instance.
+        """
+        for feature, coeff in zip(best_features, best_features_coeff):
+            molecule_name, molecule_type = feature.rsplit('_', maxsplit=1)
+            molecule_type = int(molecule_type)
+            if molecule_type not in [MoleculeType.MRNA, MoleculeType.MIRNA, MoleculeType.CNA, MoleculeType.METHYLATION]:
+                raise Exception(f'Molecule type invalid: {molecule_type}')
 
             # Creates the identifier
-            identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
+            MoleculeWithCoefficient.objects.create(
+                identifier=molecule_name,
+                coeff=coeff,
+                type=molecule_type,
+                statistical_validation=created_stat_validation
+            )
 
     def __compute_stat_validation(self, stat_validation: StatisticalValidation, molecules_temp_file_path: str,
                                   clinical_temp_file_path: str, stop_event: Event):
@@ -199,6 +193,11 @@ class StatisticalValidationService(object):
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
 
+        # Get top features
+        best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data)
+        self.__save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
+
+        # Computes general metrics
         # Gets all the molecules in the needed order
         list_of_molecules: List[str] = molecules_df.index
         molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
@@ -278,32 +277,32 @@ class StatisticalValidationService(object):
             if stop_event.is_set():
                 raise ExperimentStopped
             else:
-                self.__commit_or_rollback(is_commit=True, stat_validation=stat_validation)
+                self.__commit_or_rollback(is_commit=True)
 
                 # Saves some data about the result of the stat_validation
                 stat_validation.execution_time = total_execution_time
                 stat_validation.state = BiomarkerState.COMPLETED
         except NoSamplesInCommon:
-            self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
+            self.__commit_or_rollback(is_commit=False)
             logging.error('No samples in common')
             stat_validation.state = BiomarkerState.NO_SAMPLES_IN_COMMON
         except ExperimentFailed:
-            self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
+            self.__commit_or_rollback(is_commit=False)
             logging.error(f'StatisticalValidation {stat_validation.pk} has failed. Check logs for more info')
             stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
         except ServerSelectionTimeoutError:
-            self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
+            self.__commit_or_rollback(is_commit=False)
             logging.error('MongoDB connection timeout!')
             stat_validation.state = BiomarkerState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the stat_validation, discard changes
             logging.warning(f'StatisticalValidation {stat_validation.pk} was stopped')
-            self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
+            self.__commit_or_rollback(is_commit=False)
             stat_validation.state = BiomarkerState.STOPPED
         except Exception as e:
-            self.__commit_or_rollback(is_commit=False, stat_validation=stat_validation)
+            self.__commit_or_rollback(is_commit=False)
             logging.exception(e)
-            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to biomarker {biomarker.pk}')
+            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to StatisticalValidation {biomarker.pk}')
             stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
         finally:
             # Removes the temporary files

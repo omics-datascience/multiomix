@@ -38,6 +38,17 @@ enum FileType {
 }
 
 /**
+ * Possible types of files
+ */
+enum MoleculeType {
+    ALL = 0,
+    MRNA = 1,
+    MIRNA = 2,
+    CNA = 3,
+    METHYLATION = 4,
+}
+
+/**
  * Enum to check if user want to select source from a file
  * that he uploaded, or from CGDS DB
  */
@@ -296,6 +307,7 @@ export {
     CustomAlert,
     Nullable,
     FileType,
+    MoleculeType,
     Command,
     WebsocketConfig,
     CorrelationType,

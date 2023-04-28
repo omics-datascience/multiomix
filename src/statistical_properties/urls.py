@@ -13,8 +13,14 @@ urlpatterns = [
         name='biomarker_new_statistical_validation'
     ),
     path(
-        'biomarker-statistical-validation-data',
-        views.BiomarkerStatisticalValidationData.as_view(),
-        name='biomarker_statistical_validation_data'
+        'statistical-validation-metrics',
+        views.StatisticalValidationMetrics.as_view(),
+        name='statistical_validation_metrics'
     ),
+    path('statistical-validation-metrics/<int:pk>/', views.StatisticalValidationMetrics.as_view()),
+    path(
+        'statistical-validation-best-features',
+        views.StatisticalValidationBestFeatures.as_view(),
+        name='statistical_validation_best_features'
+    )
 ]

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { BiomarkerStatisticalValidationsTable } from './BiomarkerStatisticalValidationsTable'
 import { Biomarker, StatisticalValidationForTable } from '../../types'
-import { Icon, Modal } from 'semantic-ui-react'
+import { Header, Icon, Modal } from 'semantic-ui-react'
 import { BiomarkerNewStatisticalValidationModal } from './BiomarkerNewStatisticalValidationModal'
 import { Nullable } from '../../../../utils/interfaces'
 import { BiomarkerStatisticalValidationResultModal } from './BiomarkerStatisticalValidationResultModal'
@@ -21,13 +21,6 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
     const [openModalNewStatValidation, setOpenModalNewStatValidation] = useState(false)
     const [openModalResultStatValidation, setOpenModalResultStatValidation] = useState(false)
     const [selectedStatisticalValidation, setSelectedTrainedModel] = useState<Nullable<StatisticalValidationForTable>>(null)
-
-    // TODO: remove
-    useEffect(() => {
-        setTimeout(() => {
-            setOpenModalNewStatValidation(true)
-        }, 500)
-    }, [])
 
     /**
      * Opens the modal with the results for a StatisticalValidation instance.
@@ -78,7 +71,11 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
                 onClose={closeStatResult}
                 open={openModalResultStatValidation}
             >
-                <BiomarkerStatisticalValidationResultModal selectedStatisticalValidation={selectedStatisticalValidation} />
+                <Header icon='area chart' content={selectedStatisticalValidation.name} />
+
+                <Modal.Content>
+                    <BiomarkerStatisticalValidationResultModal selectedStatisticalValidation={selectedStatisticalValidation} />
+                </Modal.Content>
             </Modal>
         )
     }

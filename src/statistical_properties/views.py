@@ -18,10 +18,11 @@ from biomarkers.models import Biomarker, BiomarkerState
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
+from feature_selection.fs_algorithms import select_top_cox_regression
 from feature_selection.models import TrainedModel
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
-    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer
+    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
@@ -107,17 +108,27 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
     ordering_fields = ['name', 'description', 'state', 'created']
 
 
-class BiomarkerStatisticalValidationData(generics.RetrieveAPIView):
-    """Get a specific statistical validation for a specific Biomarker."""
+class StatisticalValidationMetrics(generics.RetrieveAPIView):
+    """Gets a specific statistical validation information."""
 
     def get_queryset(self):
-        biomarker_pk = self.request.GET.get('biomarker_pk')
-        user = self.request.user
-        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
-        return biomarker.statistical_validations.all()
+        return StatisticalValidation.objects.filter(biomarker__user=self.request.user)
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = StatisticalValidationSerializer
+
+
+class StatisticalValidationBestFeatures(generics.ListAPIView):
+    """Gets a list of top features for the StatisticalValidation details modal."""
+
+    def get_queryset(self):
+        statistical_validation_pk = self.request.GET.get('statistical_validation_pk')
+        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
+                                            biomarker__user=self.request.user)
+        return stat_validation.molecules_with_coefficients.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MoleculeWithCoefficientSerializer
 
 
 class BiomarkerNewStatisticalValidations(APIView):
