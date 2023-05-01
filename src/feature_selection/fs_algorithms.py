@@ -64,7 +64,7 @@ def compute_cross_validation_sequential(classifier: SurvModel,
         x_train_fold, x_test_fold = subset.iloc[train_index], subset.iloc[test_index]
         y_train_fold, y_test_fold = y[train_index], y[test_index]
 
-        # Creates a cloned instance of the model to store in the list. This HAVE TO be done after fit() because
+        # Creates a cloned instance of the model to store in the list. This HAVE TO be done before fit() because
         # clone() method does not clone the fit_X_ attribute (needed to restore the model during statistical
         # validations)
         cloned = clone(classifier)
@@ -100,12 +100,19 @@ def compute_clustering_sequential(classifier: ClusteringModels,
     @return: C-Index/Log-likelihood obtained in the clustering process, best model during CV and the fitness value again
     (just for compatibility with the caller function).
     """
-    clustering_result = classifier.fit(subset.values)
+    # Creates a cloned instance of the model to train. This HAVE TO be done before fit() to prevent
+    # issues with the number of clusters during different iterations of Blind Search or metaheuristics (it kept the
+    # first configuration, raising the error "ValueError: X has N features, but KMeans is expecting M features
+    # as input.")
+    cloned = clone(classifier)
+    cloned = cast(ClusteringModels, cloned)
+
+    clustering_result = cloned.fit(subset.values)
 
     # Generates a DataFrame with a column for time, event and the group
     labels = clustering_result.labels_
     dfs: List[pd.DataFrame] = []
-    for cluster_id in range(classifier.n_clusters):
+    for cluster_id in range(cloned.n_clusters):
         current_group_y = y[np.where(labels == cluster_id)]
         dfs.append(
             pd.DataFrame({'E': current_group_y['event'], 'T': current_group_y['time'], 'group': cluster_id})
@@ -120,7 +127,7 @@ def compute_clustering_sequential(classifier: ClusteringModels,
     scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
     fitness_value = cph.score(df, scoring_method=scoring_method)
 
-    return fitness_value, classifier, fitness_value
+    return fitness_value, cloned, fitness_value
 
 
 def blind_search(classifier: SurvModel,
