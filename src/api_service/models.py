@@ -1,6 +1,7 @@
 from typing import Iterable, List, Optional, Union
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE, \
     TCGA_CONVENTION
 from common.methylation import get_methylation_platform_dataframe
@@ -182,11 +183,11 @@ class ExperimentClinicalSource(ExperimentSource):
         clinical_attribute: str
     ) -> np.ndarray:
         """
-        Gets specific samples and a attribute values from the source
-        @param samples: List of samples to retrieve
-        @param clinical_attribute: Index of column to filter
-        @raise KeyError if the row data is empty
-        @return: List of values
+        Gets specific samples and an attribute values from the source.
+        @param samples: List of samples to retrieve.
+        @param clinical_attribute: Index of column to filter.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
         """
         if self.user_file:
             row_data = self.user_file.get_df().loc[samples]
@@ -240,7 +241,7 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         return self.get_df()
 
-    def get_survival_columns(self) -> List[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
+    def get_survival_columns(self) -> QuerySet[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
         """
         Gets the related survival columns tuples to the UserFile or CGDSDataset
         @return:
@@ -305,10 +306,7 @@ class Experiment(models.Model):
         return model_class.objects.filter(experiment=self)
 
     def get_combination_class(self):
-        """
-        Gets the corresponding Combination class depending of the Experiment's type
-        @return:
-        """
+        """Gets the corresponding Combination class depending on the Experiment's type."""
         return get_combination_class(self.type)
 
     def get_clinical_columns(self) -> List[str]:

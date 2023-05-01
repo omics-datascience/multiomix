@@ -6,6 +6,7 @@ import { BiomarkerStatisticalValidationMenu } from './BiomarkerStatisticalValida
 import { BiomarkerStatisticalValidationResultMetrics } from './BiomarkerStatisticalValidationResultMetrics'
 import { Grid, Segment } from 'semantic-ui-react'
 import { BiomarkerStatisticalValidationResultBestFeatures } from './BiomarkerStatisticalValidationResultBestFeatures'
+import { BiomarkerStatisticalValidationResultHeatMap } from './BiomarkerStatisticalValidationResultHeatMap'
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface BiomarkerStatisticalValidationResultModalProps {
@@ -34,7 +35,9 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
             case ActiveStatValidationsItemMenu.BEST_FEATURES:
                 return <BiomarkerStatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.KAPLAN_MEIER:
+                return null // TODO: implement
             case ActiveStatValidationsItemMenu.HEATMAP:
+                return <BiomarkerStatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />
             default:
                 return null // TODO: remove this and change the function return type
         }

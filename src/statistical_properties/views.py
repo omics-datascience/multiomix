@@ -16,10 +16,10 @@ from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
+from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
-from feature_selection.fs_algorithms import select_top_cox_regression
 from feature_selection.models import TrainedModel
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
@@ -130,6 +130,32 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = MoleculeWithCoefficientSerializer
+
+
+class StatisticalValidationHeatMap(APIView):
+    """Gets the expressions of all the molecules of a Biomarker for all the samples."""
+
+    @staticmethod
+    def get(request: Request):
+        statistical_validation_pk = request.GET.get('statistical_validation_pk')
+        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
+                                            biomarker__user=request.user)
+        try:
+            molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+            return Response({
+                'data': molecules_df.to_dict('index'),
+                'min': molecules_df.min().min(),
+                'max': molecules_df.max().max()
+            })
+        except NoSamplesInCommon:
+            return Response({
+                'data': [],
+                'min': 0,
+                'max': 0
+            })
+
+
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class BiomarkerNewStatisticalValidations(APIView):

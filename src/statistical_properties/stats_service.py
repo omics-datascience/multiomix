@@ -83,6 +83,34 @@ class StatisticalValidationService(object):
         """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
         return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
 
+    @staticmethod
+    def __generate_molecules_file(stat_validation: StatisticalValidation, samples_in_common: np.ndarray) -> str:
+        """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
+        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
+            molecules_temp_file_path = temp_file.name
+
+            for source, molecules, file_type in stat_validation.get_sources_and_molecules():
+                if source is None:
+                    continue
+
+                for chunk in source.get_df_in_chunks():
+                    # Only keeps the samples in common
+                    chunk = chunk[samples_in_common]
+
+                    # Keeps only existing molecules in the current chunk
+                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
+                    chunk = chunk.loc[molecules_to_extract]
+
+                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
+                    chunk.index = chunk.index + f'_{file_type}'
+
+                    # Removes TCGA suffix
+                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
+
+                    # Saves in disk
+                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        return molecules_temp_file_path
+
     def __generate_df_molecules_and_clinical(self, stat_validation: StatisticalValidation,
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
         """
@@ -116,29 +144,7 @@ class StatisticalValidationService(object):
             clinical_df.to_csv(temp_file, sep='\t', decimal='.')
 
         # Generates all the molecules DataFrame
-        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
-            molecules_temp_file_path = temp_file.name
-
-            for source, molecules, file_type in stat_validation.get_sources_and_molecules():
-                if source is None:
-                    continue
-
-                for chunk in source.get_df_in_chunks():
-                    # Only keeps the samples in common
-                    chunk = chunk[samples_in_common]
-
-                    # Keeps only existing molecules in the current chunk
-                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
-                    chunk = chunk.loc[molecules_to_extract]
-
-                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-                    chunk.index = chunk.index + f'_{file_type}'
-
-                    # Removes TCGA suffix
-                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
-
-                    # Saves in disk
-                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
@@ -221,6 +227,22 @@ class StatisticalValidationService(object):
 
             stat_validation.save()
 
+    def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
+        """
+        Gets a molecules Pandas DataFrame to get all the molecules' expressions for all the samples.
+        @param stat_validation: StatisticalValidation instance.
+        @raise NoSamplesInCommon in case no samples in common are present for all the sources.
+        @return: Molecules DataFrame
+        """
+        # Get samples in common
+        samples_in_common = self.__get_common_samples(stat_validation)
+        if samples_in_common.size == 0:
+            raise NoSamplesInCommon
+
+        # Generates all the molecules DataFrame
+        molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
+
+        return pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
                                               stop_event: Event) -> Tuple[str, str]:

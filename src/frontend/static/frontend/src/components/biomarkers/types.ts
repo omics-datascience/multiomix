@@ -312,6 +312,18 @@ interface MoleculeWithCoefficient {
     type: MoleculeType
 }
 
+/** Dict from the backend with all the molecules expressions for all the samples. */
+interface MoleculesExpressions {
+    /** Object with the molecule's name as key. The value is an object with the sample as key, and the expression as value. */
+    data: {[moleculeName: string]: {
+        [sampleName: string]: number // This number is the expression
+    }[]},
+    /** Minimum expression value in the DataFrame. */
+    min: number,
+    /** Maximum expression value in the DataFrame. */
+    max: number
+}
+
 export {
     SVMKernel,
     SVMTask,
@@ -346,5 +358,6 @@ export {
     StatisticalValidationForTable,
     StatisticalValidation,
     StatisticalValidationForm,
-    MoleculeWithCoefficient
+    MoleculeWithCoefficient,
+    MoleculesExpressions
 }

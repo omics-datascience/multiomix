@@ -58,7 +58,7 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
     const coefficients = statValidationData ? statValidationData.map((elem) => elem.coeff) : []
     const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
 
-    const state = {
+    const chartSettings = {
         series: [{
             name: 'Expression',
             data: coefficients
@@ -140,7 +140,7 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
             {(!loading && statValidationData !== null) &&
                 <React.Fragment>
                     <div className='align-center margin-top-5'>
-                        <ReactApexChart options={state.options as any} series={state.series} type="bar" height={440} />
+                        <ReactApexChart options={chartSettings.options as any} series={chartSettings.series} type="bar" height={440} />
                     </div>
                 </React.Fragment>
             }

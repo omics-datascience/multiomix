@@ -22,5 +22,10 @@ urlpatterns = [
         'statistical-validation-best-features',
         views.StatisticalValidationBestFeatures.as_view(),
         name='statistical_validation_best_features'
+    ),
+    path(
+        'statistical-validation-heatmap',
+        views.StatisticalValidationHeatMap.as_view(),
+        name='statistical_validation_heatmap'
     )
 ]
