@@ -5,11 +5,12 @@ import { Nullable } from '../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
 import { Card, Placeholder } from 'semantic-ui-react'
+import ReactApexChart from 'react-apexcharts'
 
 declare const urlStatisticalValidationBestFeatures: string
 
 /** BiomarkerStatisticalValidationResultBestFeatures props. */
-interface BiomarkerStatisticalValidationResultMetricsProps {
+interface BiomarkerStatisticalValidationResultBestFeaturesProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable,
 }
@@ -19,7 +20,7 @@ interface BiomarkerStatisticalValidationResultMetricsProps {
  * @param props Component's props
  * @returns Component
  */
-export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStatisticalValidationResultMetricsProps) => {
+export const BiomarkerStatisticalValidationResultBestFeatures = (props: BiomarkerStatisticalValidationResultBestFeaturesProps) => {
     const [loading, setLoading] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<MoleculeWithCoefficient[]>>(null)
 
@@ -37,7 +38,8 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
     const getStatValidationBestFeatures = () => {
         setLoading(true)
 
-        ky.get(urlStatisticalValidationBestFeatures).then((response) => {
+        const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
+        ky.get(urlStatisticalValidationBestFeatures, { searchParams }).then((response) => {
             response.json().then((statValidation: MoleculeWithCoefficient[]) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
@@ -50,6 +52,67 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
         }).finally(() => {
             setLoading(false)
         })
+    }
+
+    // Generates the chart config
+    const coefficients = statValidationData ? statValidationData.map((elem) => elem.coeff) : []
+    const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
+
+    const state = {
+        series: [{
+            name: 'Expression',
+            data: coefficients
+        }],
+        options: {
+            chart: {
+                type: 'bar',
+                height: 440,
+                stacked: true
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    barHeight: '80%'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val: number) {
+                    return val.toFixed(4)
+                }
+            },
+            stroke: {
+                width: 1,
+                colors: ['#fff']
+            },
+
+            grid: {
+                xaxis: {
+                    lines: {
+                        show: false
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Molecule'
+                }
+            },
+            tooltip: {
+                shared: false,
+                y: {
+                    formatter: function (val: number) {
+                        return val.toFixed(4)
+                    }
+                }
+            },
+            xaxis: {
+                categories: moleculesNames,
+                title: {
+                    text: 'Coefficient'
+                }
+            }
+        }
     }
 
     return (
@@ -77,7 +140,7 @@ export const BiomarkerStatisticalValidationResultMetrics = (props: BiomarkerStat
             {(!loading && statValidationData !== null) &&
                 <React.Fragment>
                     <div className='align-center margin-top-5'>
-                        {/* TODO: add ApexChart https://apexcharts.com/react-chart-demos/bar-charts/bar-with-negative-values/ */}
+                        <ReactApexChart options={state.options as any} series={state.series} type="bar" height={440} />
                     </div>
                 </React.Fragment>
             }

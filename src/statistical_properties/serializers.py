@@ -148,4 +148,4 @@ class MoleculeWithCoefficientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MoleculeWithCoefficient
-        exclude = ['statistical_validation']
+        exclude = ['type', 'statistical_validation']

@@ -1,6 +1,7 @@
 from typing import Optional
 import numpy as np
 from django.db import transaction
+from django.db.models.functions import Abs
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -119,13 +120,13 @@ class StatisticalValidationMetrics(generics.RetrieveAPIView):
 
 
 class StatisticalValidationBestFeatures(generics.ListAPIView):
-    """Gets a list of top features for the StatisticalValidation details modal."""
+    """Gets a list of top features for the StatisticalValidation details modal sorted by ABS(coefficient)."""
 
     def get_queryset(self):
         statistical_validation_pk = self.request.GET.get('statistical_validation_pk')
         stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
                                             biomarker__user=self.request.user)
-        return stat_validation.molecules_with_coefficients.all()
+        return stat_validation.molecules_with_coefficients.annotate(coeff_abs=Abs('coeff')).order_by('-coeff_abs')
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = MoleculeWithCoefficientSerializer

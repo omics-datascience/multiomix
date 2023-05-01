@@ -5,6 +5,7 @@ import { Nullable } from '../../../../utils/interfaces'
 import { BiomarkerStatisticalValidationMenu } from './BiomarkerStatisticalValidationMenu'
 import { BiomarkerStatisticalValidationResultMetrics } from './BiomarkerStatisticalValidationResultMetrics'
 import { Grid, Segment } from 'semantic-ui-react'
+import { BiomarkerStatisticalValidationResultBestFeatures } from './BiomarkerStatisticalValidationResultBestFeatures'
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface BiomarkerStatisticalValidationResultModalProps {
@@ -30,6 +31,10 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
         }
 
         switch (activeItem) {
+            case ActiveStatValidationsItemMenu.BEST_FEATURES:
+                return <BiomarkerStatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
+            case ActiveStatValidationsItemMenu.KAPLAN_MEIER:
+            case ActiveStatValidationsItemMenu.HEATMAP:
             default:
                 return null // TODO: remove this and change the function return type
         }
