@@ -55,7 +55,7 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
     }
 
     /**
-     * Generates N bins within a range.
+     * Generates N bins within a range. Taken from https://stackoverflow.com/a/66766285/7058363.
      * @param min Min value.
      * @param max Max value.
      * @param binsNumber Number of bins to generate.
