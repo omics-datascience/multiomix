@@ -179,12 +179,17 @@ class StatisticalValidationKaplanMeier(APIView):
         molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
 
         classifier = stat_validation.trained_model.get_model_instance()
-        groups, concordance_index, log_likelihood = generate_survival_groups_by_clustering(classifier, molecules_df, clinical_df)
+        groups, concordance_index, log_likelihood, samples_and_clusters = generate_survival_groups_by_clustering(
+            classifier,
+            molecules_df,
+            clinical_df
+        )
 
         return Response({
             'groups': groups,
             'concordance_index': concordance_index,
-            'log_likelihood': log_likelihood
+            'log_likelihood': log_likelihood,
+            'samples_and_clusters': samples_and_clusters
         })
 
     permission_classes = [permissions.IsAuthenticated]
