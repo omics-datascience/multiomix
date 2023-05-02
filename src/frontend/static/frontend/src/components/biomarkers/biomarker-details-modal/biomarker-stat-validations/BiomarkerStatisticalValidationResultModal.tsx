@@ -21,8 +21,7 @@ interface BiomarkerStatisticalValidationResultModalProps {
  * @returns Component
  */
 export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatisticalValidationResultModalProps) => {
-    // const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES) // TODO: leave this
-    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.KAPLAN_MEIER)
+    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES)
 
     /**
      * Gets the selected component according to the active item.

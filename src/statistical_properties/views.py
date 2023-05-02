@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 from django.db import transaction
 from django.db.models.functions import Abs
+from django.http import HttpRequest
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,7 +21,7 @@ from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
-from feature_selection.models import TrainedModel
+from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer
@@ -29,9 +30,20 @@ from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compu
 from statistical_properties.stats_service import global_stat_validation_service
 from statistical_properties.survival_functions import generate_survival_groups_by_clustering
 from user_files.models_choices import FileType
-from user_files.serializers import SurvivalColumnsTupleUserFileSimpleSerializer
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
+
+
+def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> StatisticalValidation:
+    """
+    Gets a StatisticalValidation instance.
+    @param request: Request object to retrieve the 'statistical_validation_pk' value from GET.
+    @raise Http404 if the instance does not exist.
+    @return: StatisticalValidation instance.
+    """
+    statistical_validation_pk = request.GET.get('statistical_validation_pk')
+    return get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
+                                        biomarker__user=request.user)
 
 
 class CombinationSourceDataStatisticalPropertiesDetails(APIView):
@@ -125,9 +137,7 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
     """Gets a list of top features for the StatisticalValidation details modal sorted by ABS(coefficient)."""
 
     def get_queryset(self):
-        statistical_validation_pk = self.request.GET.get('statistical_validation_pk')
-        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                            biomarker__user=self.request.user)
+        stat_validation = get_stat_validation_instance(self.request)
         return stat_validation.molecules_with_coefficients.annotate(coeff_abs=Abs('coeff')).order_by('-coeff_abs')
 
     permission_classes = [permissions.IsAuthenticated]
@@ -139,9 +149,8 @@ class StatisticalValidationHeatMap(APIView):
 
     @staticmethod
     def get(request: Request):
-        statistical_validation_pk = request.GET.get('statistical_validation_pk')
-        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                            biomarker__user=request.user)
+        stat_validation = get_stat_validation_instance(request)
+
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
             return Response({
@@ -164,9 +173,7 @@ class StatisticalValidationKaplanMeier(APIView):
     """REST endpoint: StatisticalValidation survival data"""
     @staticmethod
     def get(request: Request):
-        statistical_validation_pk = request.GET.get('statistical_validation_pk')
-        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                            biomarker__user=request.user)
+        stat_validation = get_stat_validation_instance(request)
 
         # Gets Gene and GEM expression with time values
         molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
@@ -181,6 +188,39 @@ class StatisticalValidationKaplanMeier(APIView):
         })
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationModelDetails(APIView):
+    """Gets the details for the trained model of a StatisticalValidation instance."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        trained_model: TrainedModel = stat_validation.trained_model
+        fitness_function = trained_model.fitness_function
+
+        if fitness_function == FitnessFunction.CLUSTERING:
+            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+            response = {
+                'algorithm': clustering_parameters.algorithm,
+                'scoring_method': clustering_parameters.scoring_method,
+                'n_clusters': trained_model.get_model_instance().n_clusters
+            }
+        elif fitness_function == FitnessFunction.SVM:
+            clustering_parameters: SVMParameters = trained_model.svm_parameters
+            response = {
+                'task': clustering_parameters.task,
+                'kernel': clustering_parameters.kernel,
+            }
+        else:
+            # TODO: implement RF
+            raise ValidationError(f'Invalid trained model type: {fitness_function}')
+
+        response['best_fitness'] = trained_model.best_fitness_value
+        # TODO: add here mean_fitness_value if it's lately added
+
+        return Response(response)
 
 
 class BiomarkerNewStatisticalValidations(APIView):

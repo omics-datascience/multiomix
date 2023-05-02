@@ -5,7 +5,7 @@ import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../../utils/util_functions'
 import { BiomarkerStateLabel } from '../../BiomarkerStateLabel'
-import { FitnessFunctionLabel } from '../../FitnessFunctionLabel'
+import { FitnessFunctionLabel } from '../../labels/FitnessFunctionLabel'
 
 declare const urlBiomarkerStatisticalValidations: string
 

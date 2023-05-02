@@ -49,7 +49,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation best features', err)
+            console.log('Error getting StatisticalValidation KaplanMeier data', err)
         }).finally(() => {
             setLoading(false)
         })
@@ -81,7 +81,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 extraClassName='margin-left-5'
                             />
 
-                            <Header>Clustering metrics</Header>
+                            <Header as='h1'>Clustering metrics</Header>
 
                             {/* TODO: add InfoPopups for every metric and their interpretation. */}
                             <Statistic>

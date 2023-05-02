@@ -48,7 +48,7 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation best features', err)
+            console.log('Error getting StatisticalValidation heatmap', err)
         }).finally(() => {
             setLoading(false)
         })

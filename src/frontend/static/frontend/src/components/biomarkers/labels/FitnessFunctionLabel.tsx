@@ -1,13 +1,15 @@
 import React from 'react'
 import { Label, SemanticCOLORS } from 'semantic-ui-react'
-import { FitnessFunction } from './types'
+import { FitnessFunction } from '../types'
 
 /** FitnessFunctionLabel props. */
 interface FitnessFunctionLabelProps {
     /** FitnessFunction value. */
     fitnessFunction: FitnessFunction,
     /** `fluid` prop of the Label component. Default `true`. */
-    fluid?: boolean
+    fluid?: boolean,
+    /** className prop. */
+    className?: string
 }
 
 /**
@@ -45,7 +47,7 @@ export const FitnessFunctionLabel = (props: FitnessFunctionLabelProps) => {
     return (
         <Label
             color={color}
-            className={`${props.fluid !== false ? 'fluid' : ''} align-center`}
+            className={`${props.className ?? ''} ${props.fluid !== false ? 'fluid' : ''} align-center`}
             title={title}
         >
             {description}

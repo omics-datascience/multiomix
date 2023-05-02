@@ -32,5 +32,10 @@ urlpatterns = [
         'statistical-validation-kaplan-meier',
         views.StatisticalValidationKaplanMeier.as_view(),
         name='statistical_validation_kaplan_meier'
+    ),
+    path(
+        'statistical-validation-modal-details',
+        views.StatisticalValidationModelDetails.as_view(),
+        name='statistical_validation_modal_details'
     )
 ]

@@ -332,6 +332,24 @@ interface KaplanMeierResultData {
     log_likelihood: number
 }
 
+/** Data which is present in all the TrainedModels. */
+interface GeneralModelDetails {
+    best_fitness: number
+}
+
+/** Some details of Clustering models. */
+interface ClusteringModelDetails extends GeneralModelDetails {
+    algorithm: ClusteringAlgorithm,
+    scoring_method: ClusteringScoringMethod,
+    n_clusters: number
+}
+
+/** Some details of Clustering models. */
+interface SVMModelDetails extends GeneralModelDetails {
+    task: SVMTask,
+    kernel: SVMKernel,
+}
+
 export {
     SVMKernel,
     SVMTask,
@@ -368,5 +386,7 @@ export {
     StatisticalValidationForm,
     MoleculeWithCoefficient,
     MoleculesExpressions,
-    KaplanMeierResultData
+    KaplanMeierResultData,
+    ClusteringModelDetails,
+    SVMModelDetails
 }
