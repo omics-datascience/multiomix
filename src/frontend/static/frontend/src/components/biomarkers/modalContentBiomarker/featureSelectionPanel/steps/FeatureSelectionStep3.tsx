@@ -11,8 +11,8 @@ interface FeatureSelectionStep3Props {
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
     handleChangeSvmOption: (key: string, value: number) => void,
-    handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
+    cancelForm: () => void,
 }
 
 export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
@@ -22,8 +22,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleChangeAlgorithm,
         handleChangeFitnessFunction,
         handleChangeClusterOption,
-        handleChangeSvmOption,
-        handleGoBackStep2
+        handleChangeSvmOption
     } = props
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
@@ -63,15 +62,14 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
             <div className='selections-buttons-container'>
                 <Button
                     color="red"
-                    onClick={() => handleGoBackStep2()}
+                    onClick={props.cancelForm}
                 >
-                    Go back
+                    Cancel
                 </Button>
-
                 <Button
                     color="green"
                     onClick={submitFeatureSelectionExperiment}
-                    // disabled={props.featureSelection.clinicalSource === null} // TODO: implement
+                // disabled={props.featureSelection.clinicalSource === null} // TODO: implement
                 >
                     Confirm
                 </Button>

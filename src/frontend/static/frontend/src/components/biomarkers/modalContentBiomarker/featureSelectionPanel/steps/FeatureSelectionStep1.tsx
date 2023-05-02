@@ -18,6 +18,7 @@ interface FeatureSelectionStep1Props {
     defaultHeaders: RowHeader<Biomarker>[],
     markBiomarkerAsSelected: (biomarker: Biomarker) => void,
     handleCompleteStep1: (selectedBiomarker: Biomarker) => void,
+    cancelForm: () => void,
 }
 export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
     return (
@@ -57,6 +58,12 @@ export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
                 />
             </div>
             <div className='selections-buttons-container'>
+                <Button
+                    color="red"
+                    onClick={props.cancelForm}
+                >
+                    Cancel
+                </Button>
                 <Button
                     color="green"
                     onClick={() => props.handleCompleteStep1(props.featureSelectionData.selectedBiomarker as Biomarker)}

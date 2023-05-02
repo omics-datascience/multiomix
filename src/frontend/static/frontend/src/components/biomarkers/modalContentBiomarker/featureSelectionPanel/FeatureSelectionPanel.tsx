@@ -27,6 +27,7 @@ interface FeatureSelectionPanelProps {
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
+    cancelForm: () => void,
 }
 
 /**
@@ -59,6 +60,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     featureSelectionData={props.featureSelection}
                     markBiomarkerAsSelected={props.markBiomarkerAsSelected}
                     handleCompleteStep1={props.handleCompleteStep1}
+                    cancelForm={props.cancelForm}
                 />)
             case 2:
                 return (<FeatureSelectionStep2
@@ -68,7 +70,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     selectUploadedFile={props.selectUploadedFile}
                     handleChangeSourceType={props.handleChangeSourceType}
                     handleCompleteStep2={props.handleCompleteStep2}
-                    handleGoBackStep1={props.handleGoBackStep1}
+                    cancelForm={props.cancelForm}
                 />)
 
             default:
@@ -78,22 +80,28 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     handleChangeFitnessFunction={props.handleChangeFitnessFunction}
                     handleChangeClusterOption={props.handleChangeClusterOption}
                     handleChangeSvmOption={props.handleChangeSvmOption}
-                    handleGoBackStep2={props.handleGoBackStep2}
                     submitFeatureSelectionExperiment={props.submitFeatureSelectionExperiment}
+                    cancelForm={props.cancelForm}
                 />)
+        }
+    }
+
+    const handleGoBackPanel = (action: () => void, condition: boolean) => {
+        if (condition) {
+            action()
         }
     }
 
     return (
         <div className='selection-main-container'>
             <Step.Group widths={3}>
-                <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} disabled={props.featureSelection.step > 1}>
+                <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} onClick={() => handleGoBackPanel(props.handleGoBackStep1, props.featureSelection.step > 1)}>
                     <Icon name='truck' />
                     <Step.Content>
                         <Step.Title>Step 1: {props.featureSelection.biomarker?.id ? `Selected ${props.featureSelection.biomarker?.name}` : 'Select biomarker'}</Step.Title>
                     </Step.Content>
                 </Step>
-                <Step active={props.featureSelection.step === 2} completed={props.featureSelection.step > 2} disabled={props.featureSelection.step < 2}>
+                <Step active={props.featureSelection.step === 2} completed={props.featureSelection.step > 2} disabled={props.featureSelection.step === 1} onClick={() => handleGoBackPanel(props.handleGoBackStep2, props.featureSelection.step > 2)}>
                     <Icon name='credit card' />
                     <Step.Content>
                         <Step.Title>Step 2: Datasets</Step.Title>

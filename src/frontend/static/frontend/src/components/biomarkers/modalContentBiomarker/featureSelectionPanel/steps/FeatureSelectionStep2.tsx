@@ -17,7 +17,7 @@ interface FeatureSelectionStep2Props {
     selectUploadedFile: (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => void,
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
     handleCompleteStep2: () => void,
-    handleGoBackStep1: () => void,
+    cancelForm: () => void,
 }
 
 /**
@@ -32,8 +32,7 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
         selectNewFile,
         selectUploadedFile,
         selectStudy,
-        handleCompleteStep2,
-        handleGoBackStep1
+        handleCompleteStep2
     } = props
 
     return (
@@ -67,9 +66,9 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
             <div className='selections-buttons-container'>
                 <Button
                     color="red"
-                    onClick={() => handleGoBackStep1()}
+                    onClick={props.cancelForm}
                 >
-                    Go back
+                    Cancel
                 </Button>
                 <Button
                     color="green"
