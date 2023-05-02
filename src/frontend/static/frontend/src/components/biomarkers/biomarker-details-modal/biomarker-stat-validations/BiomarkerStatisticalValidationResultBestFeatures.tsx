@@ -4,8 +4,8 @@ import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../ty
 import { Nullable } from '../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
-import { Card, Placeholder } from 'semantic-ui-react'
 import ReactApexChart from 'react-apexcharts'
+import { ResultPlaceholder } from './result/ResultPlaceholder'
 
 /** Epsilon to add to the min/max value of coefficients. */
 const EPSILON = 1
@@ -128,23 +128,7 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
     return (
         <>
             {loading &&
-                <Card>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-
-                    <Card.Content>
-                        <Placeholder>
-                            <Placeholder.Header>
-                                <Placeholder.Line length='very short' />
-                                <Placeholder.Line length='medium' />
-                            </Placeholder.Header>
-                            <Placeholder.Paragraph>
-                                <Placeholder.Line length='short' />
-                            </Placeholder.Paragraph>
-                        </Placeholder>
-                    </Card.Content>
-                </Card>
+                <ResultPlaceholder />
             }
 
             {(!loading && statValidationData !== null) &&

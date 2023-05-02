@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import ky from 'ky'
-import { Card, Grid, Placeholder } from 'semantic-ui-react'
+import { Grid, Header, Statistic } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { StatisticalValidationForTable } from '../../../types'
-import { KaplanMeier, KaplanMeierData } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
+import { StatisticalValidationForTable, KaplanMeierResultData } from '../../../types'
+import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
+import { Nullable } from '../../../../../utils/interfaces'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { ResultPlaceholder } from './ResultPlaceholder'
 
 declare const urlStatisticalValidationKaplanMeier: string
 
@@ -20,7 +23,7 @@ interface StatisticalValidationResultKaplanMeierProps {
  */
 export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
     const [loading, setLoading] = useState(false)
-    const [kaplanMeierData, setKaplanMeierData] = useState<KaplanMeierData>(null)
+    const [kaplanMeierData, setKaplanMeierData] = useState<Nullable<KaplanMeierResultData>>(null)
 
     /**
      * Every time the StatisticalValidation changes retrieves
@@ -38,7 +41,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationKaplanMeier, { searchParams }).then((response) => {
-            response.json().then((statValidation: KaplanMeierData) => {
+            response.json().then((statValidation: KaplanMeierResultData) => {
                 setKaplanMeierData(statValidation)
             }).catch((err) => {
                 alertGeneralError()
@@ -54,25 +57,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
     return (
         <>
-            {/* TODO: refactor this Placeholder as is the same for HeatMap and BestFeatures */}
             {loading &&
-                <Card>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-
-                    <Card.Content>
-                        <Placeholder>
-                            <Placeholder.Header>
-                                <Placeholder.Line length='very short' />
-                                <Placeholder.Line length='medium' />
-                            </Placeholder.Header>
-                            <Placeholder.Paragraph>
-                                <Placeholder.Line length='short' />
-                            </Placeholder.Paragraph>
-                        </Placeholder>
-                    </Card.Content>
-                </Card>
+                <ResultPlaceholder />
             }
 
             {(!loading && kaplanMeierData !== null) &&
@@ -80,15 +66,32 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     <Grid.Row columns={2} divided textAlign='center'>
                         <Grid.Column>
                             <KaplanMeier
-                                data={kaplanMeierData}
+                                data={kaplanMeierData.groups}
                                 height={480}
                                 width={600}
                                 xAxisLabel='Time'
                                 yAxisLabel='Probability'
                             />
                         </Grid.Column>
-                        <Grid.Column>
-                            <h1>Metricas</h1>
+                        <Grid.Column textAlign='center'>
+                            <InfoPopup
+                                content='This metrics are computed using Cox-Regression'
+                                onTop
+                                onEvent='click'
+                                extraClassName='margin-left-5'
+                            />
+
+                            <Header>Clustering metrics</Header>
+
+                            {/* TODO: add InfoPopups for every metric and their interpretation. */}
+                            <Statistic>
+                                <Statistic.Value>{kaplanMeierData.concordance_index.toFixed(3)}</Statistic.Value>
+                                <Statistic.Label>C-Index</Statistic.Label>
+                            </Statistic>
+                            <Statistic>
+                                <Statistic.Value>{kaplanMeierData.log_likelihood.toFixed(3)}</Statistic.Value>
+                                <Statistic.Label>Partial Log-Likelihood</Statistic.Label>
+                            </Statistic>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

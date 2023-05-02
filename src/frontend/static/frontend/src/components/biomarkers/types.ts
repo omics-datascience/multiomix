@@ -1,5 +1,6 @@
 import { DjangoTag } from '../../utils/django_interfaces'
 import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
+import { KaplanMeierData } from '../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
@@ -324,6 +325,13 @@ interface MoleculesExpressions {
     max: number
 }
 
+/** Data to show in the StatisticalValidation KaplanMeier panel. */
+interface KaplanMeierResultData {
+    groups: KaplanMeierData,
+    concordance_index: number,
+    log_likelihood: number
+}
+
 export {
     SVMKernel,
     SVMTask,
@@ -359,5 +367,6 @@ export {
     StatisticalValidation,
     StatisticalValidationForm,
     MoleculeWithCoefficient,
-    MoleculesExpressions
+    MoleculesExpressions,
+    KaplanMeierResultData
 }

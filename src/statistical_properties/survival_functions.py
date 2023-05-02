@@ -1,7 +1,7 @@
 from typing import Tuple, Literal, List, Dict, cast, Union
 import numpy as np
 import pandas as pd
-from lifelines import KaplanMeierFitter
+from lifelines import KaplanMeierFitter, CoxPHFitter
 from lifelines.statistics import logrank_test
 from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
@@ -94,7 +94,7 @@ def generate_survival_groups_by_clustering(
     classifier: ClusteringModels,
     molecules_df: pd.DataFrame,
     clinical_df: pd.DataFrame
-) -> List[Dict[str, LabelOrKaplanMeierResult]]:
+) -> Tuple[List[Dict[str, LabelOrKaplanMeierResult]], float, float]:
     """
     Generates the survival function to plot in a KaplanMeier curve for every group taken from a Clustering model.
     @param classifier: Clustering classifier to infer the group from expressions.
@@ -119,7 +119,22 @@ def generate_survival_groups_by_clustering(
     data: List[Dict[str, LabelOrKaplanMeierResult]] = []
     for cluster_id in range(classifier.n_clusters):
         current_group = clinical_data[np.where(clustering_result == cluster_id)]
-        group_data = {'label': str(cluster_id), 'data': get_group_survival_function(current_group)}
+        group_data = {
+            'label': str(cluster_id),
+            'data': get_group_survival_function(current_group)
+        }
         data.append(group_data)
 
-    return data
+    # Fits a Cox Regression model using the column group as the variable to consider to get the C-Index and the
+    # partial Log-Likelihood for the group
+    df = pd.DataFrame({
+        'T': clinical_data['time'],
+        'E': clinical_data['event'],
+        'group': clustering_result
+    })
+
+    cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+    concordance_index = cph.score(df, scoring_method='concordance_index')
+    log_likelihood = cph.score(df, scoring_method='log_likelihood')
+
+    return data, concordance_index, log_likelihood
