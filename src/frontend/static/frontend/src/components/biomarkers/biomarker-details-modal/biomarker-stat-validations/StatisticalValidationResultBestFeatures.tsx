@@ -12,8 +12,8 @@ const EPSILON = 1
 
 declare const urlStatisticalValidationBestFeatures: string
 
-/** BiomarkerStatisticalValidationResultBestFeatures props. */
-interface BiomarkerStatisticalValidationResultBestFeaturesProps {
+/** StatisticalValidationResultBestFeatures props. */
+interface StatisticalValidationResultBestFeaturesProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable,
 }
@@ -23,7 +23,7 @@ interface BiomarkerStatisticalValidationResultBestFeaturesProps {
  * @param props Component's props
  * @returns Component
  */
-export const BiomarkerStatisticalValidationResultBestFeatures = (props: BiomarkerStatisticalValidationResultBestFeaturesProps) => {
+export const StatisticalValidationResultBestFeatures = (props: StatisticalValidationResultBestFeaturesProps) => {
     const [loading, setLoading] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<MoleculeWithCoefficient[]>>(null)
 

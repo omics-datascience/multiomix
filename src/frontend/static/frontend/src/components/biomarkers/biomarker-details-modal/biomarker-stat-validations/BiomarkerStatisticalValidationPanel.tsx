@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { BiomarkerStatisticalValidationsTable } from './BiomarkerStatisticalValidationsTable'
+import { StatisticalValidationsTable } from './StatisticalValidationsTable'
 import { Biomarker, StatisticalValidationForTable } from '../../types'
 import { Header, Icon, Modal } from 'semantic-ui-react'
-import { BiomarkerNewStatisticalValidationModal } from './BiomarkerNewStatisticalValidationModal'
+import { NewStatisticalValidationModal } from './NewStatisticalValidationModal'
 import { Nullable } from '../../../../utils/interfaces'
-import { BiomarkerStatisticalValidationResultModal } from './BiomarkerStatisticalValidationResultModal'
+import { StatisticalValidationResultModal } from './StatisticalValidationResultModal'
 
 /** BiomarkerStatisticalValidationPanel props. */
 interface BiomarkerStatisticalValidationPanelProps {
@@ -50,7 +50,7 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
                 onClose={() => { setOpenModalNewStatValidation(false) }}
                 open={openModalNewStatValidation}
             >
-                <BiomarkerNewStatisticalValidationModal
+                <NewStatisticalValidationModal
                     selectedBiomarker={props.selectedBiomarker}
                     closeModal={() => { setOpenModalNewStatValidation(false) }}
                 />
@@ -74,14 +74,14 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
                 <Header icon='area chart' content={selectedStatisticalValidation.name} />
 
                 <Modal.Content>
-                    <BiomarkerStatisticalValidationResultModal selectedStatisticalValidation={selectedStatisticalValidation} />
+                    <StatisticalValidationResultModal selectedStatisticalValidation={selectedStatisticalValidation} />
                 </Modal.Content>
             </Modal>
         )
     }
 
     return (
-        <BiomarkerStatisticalValidationsTable
+        <StatisticalValidationsTable
             selectedBiomarker={props.selectedBiomarker}
             setOpenModalNewStatValidation={setOpenModalNewStatValidation}
             openStatResult={openStatResult}

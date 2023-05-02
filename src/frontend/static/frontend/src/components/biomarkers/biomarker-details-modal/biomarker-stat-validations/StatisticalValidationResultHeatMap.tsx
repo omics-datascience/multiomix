@@ -9,8 +9,8 @@ import ReactApexChart from 'react-apexcharts'
 
 declare const urlStatisticalValidationHeatMap: string
 
-/** BiomarkerStatisticalValidationResultHeatMap props. */
-interface BiomarkerStatisticalValidationResultHeatMapProps {
+/** StatisticalValidationResultHeatMap props. */
+interface StatisticalValidationResultHeatMapProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable,
 }
@@ -20,7 +20,7 @@ interface BiomarkerStatisticalValidationResultHeatMapProps {
  * @param props Component's props
  * @returns Component
  */
-export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStatisticalValidationResultHeatMapProps) => {
+export const StatisticalValidationResultHeatMap = (props: StatisticalValidationResultHeatMapProps) => {
     const [loading, setLoading] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<MoleculesExpressions>>(null)
 

@@ -11,8 +11,8 @@ import ky from 'ky'
 
 declare const urlNewStatisticalValidation: string
 
-/** BiomarkerNewStatisticalValidationModal props. */
-interface BiomarkerNewStatisticalValidationModalProps {
+/** NewStatisticalValidationModal props. */
+interface NewStatisticalValidationModalProps {
     /** Selected Biomarker instance. */
     selectedBiomarker: Biomarker,
     /** Callback to close the modal. */
@@ -57,7 +57,7 @@ const getDefaultNewStatisticalValidationData = (): NewStatisticalValidationData 
  * @param props Component's props
  * @returns Component
  */
-export const BiomarkerNewStatisticalValidationModal = (props: BiomarkerNewStatisticalValidationModalProps) => {
+export const NewStatisticalValidationModal = (props: NewStatisticalValidationModalProps) => {
     const [form, setForm] = useState<NewStatisticalValidationData>(getDefaultNewStatisticalValidationData())
     const [currentStep, setCurrentStep] = useState(1)
     const [sendingData, setSendingData] = useState(false)

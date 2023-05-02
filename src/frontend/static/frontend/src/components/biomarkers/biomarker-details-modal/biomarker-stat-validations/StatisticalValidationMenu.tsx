@@ -3,8 +3,8 @@ import { Menu } from 'semantic-ui-react'
 import { StatisticalValidationForTable, ActiveStatValidationsItemMenu } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
-/** BiomarkerStatisticalValidationMenu props. */
-interface BiomarkerStatisticalValidationMenuProps {
+/** StatisticalValidationMenu props. */
+interface StatisticalValidationMenuProps {
     /** Selected StatisticalValidationForTable instance to show the options. */
     selectedStatisticalValidation: StatisticalValidationForTable,
     /** Getter of the active item in the menu. */
@@ -18,7 +18,7 @@ interface BiomarkerStatisticalValidationMenuProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerStatisticalValidationMenu = (props: BiomarkerStatisticalValidationMenuProps) => {
+export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps) => {
     return (
         <Menu className='menu-with-bolder-border margin-top-0'>
             <Menu.Item

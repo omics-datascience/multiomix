@@ -9,8 +9,8 @@ import { FitnessFunctionLabel } from '../../labels/FitnessFunctionLabel'
 
 declare const urlBiomarkerStatisticalValidations: string
 
-/** BiomarkerStatisticalValidationsTable props. */
-interface BiomarkerStatisticalValidationsTableProps {
+/** StatisticalValidationsTable props. */
+interface StatisticalValidationsTableProps {
     /** Selected Biomarker instance to get its statistical validations. */
     selectedBiomarker: Biomarker,
     /** Callback to open the modal to add a new statistical validation analysis. */
@@ -24,7 +24,7 @@ interface BiomarkerStatisticalValidationsTableProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerStatisticalValidationsTable = (props: BiomarkerStatisticalValidationsTableProps) => {
+export const StatisticalValidationsTable = (props: StatisticalValidationsTableProps) => {
     return (
         <PaginatedTable<StatisticalValidationForTable>
             headerTitle='Statistical validations'

@@ -282,7 +282,7 @@ interface BasicStatisticalValidation {
     created: string,
 }
 
-/** A statistical validation. Retrieved as data for the BiomarkerStatisticalValidationsTable. */
+/** A statistical validation. Retrieved as data for the StatisticalValidationsTable. */
 interface StatisticalValidationForTable extends BasicStatisticalValidation {
     fitness_function: FitnessFunction
 }
@@ -350,6 +350,9 @@ interface SVMModelDetails extends GeneralModelDetails {
     kernel: SVMKernel,
 }
 
+/** Types of models details. */
+type ModelDetails = ClusteringModelDetails | SVMModelDetails
+
 export {
     SVMKernel,
     SVMTask,
@@ -388,5 +391,6 @@ export {
     MoleculesExpressions,
     KaplanMeierResultData,
     ClusteringModelDetails,
-    SVMModelDetails
+    SVMModelDetails,
+    ModelDetails
 }

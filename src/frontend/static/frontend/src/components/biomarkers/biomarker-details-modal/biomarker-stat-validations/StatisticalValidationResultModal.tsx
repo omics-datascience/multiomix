@@ -2,15 +2,15 @@
 import React, { useState } from 'react'
 import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../types'
 import { Nullable } from '../../../../utils/interfaces'
-import { BiomarkerStatisticalValidationMenu } from './BiomarkerStatisticalValidationMenu'
-import { BiomarkerStatisticalValidationResultMetrics } from './BiomarkerStatisticalValidationResultMetrics'
+import { StatisticalValidationMenu } from './StatisticalValidationMenu'
+import { StatisticalValidationResultMetrics } from './StatisticalValidationResultMetrics'
 import { Grid, Segment } from 'semantic-ui-react'
-import { BiomarkerStatisticalValidationResultBestFeatures } from './BiomarkerStatisticalValidationResultBestFeatures'
-import { BiomarkerStatisticalValidationResultHeatMap } from './BiomarkerStatisticalValidationResultHeatMap'
+import { StatisticalValidationResultBestFeatures } from './StatisticalValidationResultBestFeatures'
+import { StatisticalValidationResultHeatMap } from './StatisticalValidationResultHeatMap'
 import { StatisticalValidationResultKaplanMeier } from './result/StatisticalValidationResultKaplanMeier'
 
 /** BiomarkerNewStatisticalValidationModal props. */
-interface BiomarkerStatisticalValidationResultModalProps {
+interface StatisticalValidationResultModalProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable
 }
@@ -20,7 +20,7 @@ interface BiomarkerStatisticalValidationResultModalProps {
  * @param props Component's props
  * @returns Component
  */
-export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatisticalValidationResultModalProps) => {
+export const StatisticalValidationResultModal = (props: StatisticalValidationResultModalProps) => {
     const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES)
 
     /**
@@ -34,11 +34,11 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
 
         switch (activeItem) {
             case ActiveStatValidationsItemMenu.BEST_FEATURES:
-                return <BiomarkerStatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                return <StatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.KAPLAN_MEIER:
                 return <StatisticalValidationResultKaplanMeier selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.HEATMAP:
-                return <BiomarkerStatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                return <StatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />
             default:
                 return null // TODO: remove this and change the function return type
         }
@@ -50,13 +50,13 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
                 <Grid.Row columns={2} stretched>
                     <Grid.Column width={4}>
                         <Segment>
-                            <BiomarkerStatisticalValidationResultMetrics selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                            <StatisticalValidationResultMetrics selectedStatisticalValidation={props.selectedStatisticalValidation} />
                         </Segment>
                     </Grid.Column>
                     <Grid.Column width={12} textAlign='center'>
                         <Segment>
                             {/* Menu */}
-                            <BiomarkerStatisticalValidationMenu
+                            <StatisticalValidationMenu
                                 activeItem={activeItem}
                                 setActiveItem={setActiveItem}
                                 selectedStatisticalValidation={props.selectedStatisticalValidation}
