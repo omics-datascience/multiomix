@@ -4,7 +4,7 @@ import { Biomarker, StatisticalValidationForTable } from '../../types'
 import { Header, Icon, Modal } from 'semantic-ui-react'
 import { NewStatisticalValidationModal } from './NewStatisticalValidationModal'
 import { Nullable } from '../../../../utils/interfaces'
-import { StatisticalValidationResultModal } from './StatisticalValidationResultModal'
+import { StatisticalValidationResultModal } from './result/StatisticalValidationResultModal'
 
 /** BiomarkerStatisticalValidationPanel props. */
 interface BiomarkerStatisticalValidationPanelProps {

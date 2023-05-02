@@ -22,7 +22,6 @@ LabelOrKaplanMeierResult = Union[str, KaplanMeierSampleResult]
 def get_group_survival_function(data: List[KaplanMeierSample]) -> List[Dict]:
     """
     Gets list of times and events and gets the survival function
-    TODO: put in a class in another file
     @param data: List of times and events
     @return: List of dicts with two fields: "time" and "probability" which are consumed in this way in frontend
     """
@@ -47,12 +46,12 @@ def generate_survival_groups_by_median_expression(
     fields_interest: List[str]
 ) -> Tuple[List[Dict], List[Dict], Dict[str, float]]:
     """
-    Generates low and high groups from expression data, time and event
-    @param clinical_time_values: Time values
-    @param clinical_event_values: Event values
-    @param expression_values: Expression values
-    @param fields_interest: Field of interest, every value which is not in this list is considered censores
-    @return: Low group, high group and logrank test
+    Generates low and high groups from expression data, time and event.
+    @param clinical_time_values: Time values.
+    @param clinical_event_values: Event values.
+    @param expression_values: Expression values.
+    @param fields_interest: Field of interest, every value which is not in this list is considered censored.
+    @return: Low group, high group and Log-Rank test.
     """
     median_value = np.median(expression_values)
 
@@ -69,8 +68,8 @@ def generate_survival_groups_by_median_expression(
         else:
             high_group.append(new_value)
 
-    # Generates logrank test from time values
-    logrank_res = logrank_test(
+    # Generates Log-Rank test from time values
+    log_rank_res = logrank_test(
         durations_A=list(map(lambda x: x[0], low_group)),
         durations_B=list(map(lambda x: x[0], high_group)),
         event_observed_A=list(map(lambda x: x[1], low_group)),
@@ -85,8 +84,8 @@ def generate_survival_groups_by_median_expression(
     high_group_survival_function = get_group_survival_function(high_group)
 
     return low_group_survival_function, high_group_survival_function, {
-        'test_statistic': logrank_res.test_statistic,
-        'p_value': logrank_res.p_value
+        'test_statistic': log_rank_res.test_statistic,
+        'p_value': log_rank_res.p_value
     }
 
 
@@ -94,13 +93,14 @@ def generate_survival_groups_by_clustering(
     classifier: ClusteringModels,
     molecules_df: pd.DataFrame,
     clinical_df: pd.DataFrame
-) -> Tuple[List[Dict[str, LabelOrKaplanMeierResult]], float, float]:
+) -> Tuple[List[Dict[str, LabelOrKaplanMeierResult]], float, float, np.ndarray]:
     """
     Generates the survival function to plot in a KaplanMeier curve for every group taken from a Clustering model.
     @param classifier: Clustering classifier to infer the group from expressions.
     @param molecules_df: Expression data.
     @param clinical_df: Clinical data.
-    @return: Low group, high group and logrank test
+    @return: A tuple with all the groups with their survival function, the C-Index from (Cox Regression), the Log
+    Likelihood from (Cox Regression), and a tuple with all the samples with their groups
     """
     # Formats clinical data to a Numpy structured array
     # TODO: refactor this! It's being used in a lot of places!
@@ -137,4 +137,8 @@ def generate_survival_groups_by_clustering(
     concordance_index = cph.score(df, scoring_method='concordance_index')
     log_likelihood = cph.score(df, scoring_method='log_likelihood')
 
-    return data, concordance_index, log_likelihood
+    # Drops columns and adds samples
+    df['sample'] = molecules_df.index.tolist()
+    samples_and_clusters = df[['sample', 'group']].values
+
+    return data, concordance_index, log_likelihood, samples_and_clusters

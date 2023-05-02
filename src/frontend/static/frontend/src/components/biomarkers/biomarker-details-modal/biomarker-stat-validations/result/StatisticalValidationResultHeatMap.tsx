@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from 'react'
-import { MoleculesExpressions, StatisticalValidationForTable } from '../../types'
-import { Nullable } from '../../../../utils/interfaces'
+import { MoleculesExpressions, StatisticalValidationForTable } from '../../../types'
+import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
-import { alertGeneralError } from '../../../../utils/util_functions'
+import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Card, Placeholder } from 'semantic-ui-react'
 import ReactApexChart from 'react-apexcharts'
 

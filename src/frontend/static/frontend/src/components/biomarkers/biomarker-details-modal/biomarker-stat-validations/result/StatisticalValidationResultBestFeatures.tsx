@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react'
-import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../types'
-import { Nullable } from '../../../../utils/interfaces'
+import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../../types'
+import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
-import { alertGeneralError } from '../../../../utils/util_functions'
+import { alertGeneralError } from '../../../../../utils/util_functions'
 import ReactApexChart from 'react-apexcharts'
-import { ResultPlaceholder } from './result/ResultPlaceholder'
+import { ResultPlaceholder } from '../result/ResultPlaceholder'
 
 /** Epsilon to add to the min/max value of coefficients. */
 const EPSILON = 1

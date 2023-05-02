@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react'
-import { ClusteringModelDetails, SVMModelDetails, FitnessFunction, StatisticalValidation, StatisticalValidationForTable, ModelDetails } from '../../types'
-import { Nullable } from '../../../../utils/interfaces'
+import { ClusteringModelDetails, SVMModelDetails, FitnessFunction, StatisticalValidation, StatisticalValidationForTable, ModelDetails } from '../../../types'
+import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
-import { alertGeneralError } from '../../../../utils/util_functions'
+import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Header, Placeholder, Segment, Statistic } from 'semantic-ui-react'
-import { ClusteringModelDetailsPanel, SVMModelDetailsPanel } from '../ModelDetailsPanels'
+import { ClusteringModelDetailsPanel, SVMModelDetailsPanel } from '../../ModelDetailsPanels'
 
 declare const urlStatisticalValidationMetrics: string
 declare const urlStatisticalValidationModalDetails: string

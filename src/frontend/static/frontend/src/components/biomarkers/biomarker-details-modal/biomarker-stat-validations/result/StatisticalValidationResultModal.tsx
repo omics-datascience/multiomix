@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react'
-import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../types'
-import { Nullable } from '../../../../utils/interfaces'
-import { StatisticalValidationMenu } from './StatisticalValidationMenu'
+import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../../types'
+import { Nullable } from '../../../../../utils/interfaces'
+import { StatisticalValidationMenu } from '../StatisticalValidationMenu'
 import { StatisticalValidationResultMetrics } from './StatisticalValidationResultMetrics'
 import { Grid, Segment } from 'semantic-ui-react'
 import { StatisticalValidationResultBestFeatures } from './StatisticalValidationResultBestFeatures'
 import { StatisticalValidationResultHeatMap } from './StatisticalValidationResultHeatMap'
-import { StatisticalValidationResultKaplanMeier } from './result/StatisticalValidationResultKaplanMeier'
+import { StatisticalValidationResultKaplanMeier } from '../result/StatisticalValidationResultKaplanMeier'
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface StatisticalValidationResultModalProps {

@@ -325,11 +325,17 @@ interface MoleculesExpressions {
     max: number
 }
 
+/** An array with two values: the sample identifier, and the cluster where it belongs. */
+type SampleAndCluster = [string, number]
+
 /** Data to show in the StatisticalValidation KaplanMeier panel. */
 interface KaplanMeierResultData {
+    /** Clusters of the clustering algorithm with the corresponding survival function. */
     groups: KaplanMeierData,
     concordance_index: number,
-    log_likelihood: number
+    log_likelihood: number,
+    /** Array of arrays with two values: the sample identifier, and the cluster where it belongs. */
+    samples_and_clusters: SampleAndCluster[]
 }
 
 /** Data which is present in all the TrainedModels. */
@@ -392,5 +398,6 @@ export {
     KaplanMeierResultData,
     ClusteringModelDetails,
     SVMModelDetails,
-    ModelDetails
+    ModelDetails,
+    SampleAndCluster
 }

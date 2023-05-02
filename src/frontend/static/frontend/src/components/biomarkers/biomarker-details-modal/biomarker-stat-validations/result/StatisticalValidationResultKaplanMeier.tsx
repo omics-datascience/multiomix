@@ -7,6 +7,7 @@ import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-det
 import { Nullable } from '../../../../../utils/interfaces'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ResultPlaceholder } from './ResultPlaceholder'
+import { SamplesAndGroupsTable } from './SamplesAndGroupsTable'
 
 declare const urlStatisticalValidationKaplanMeier: string
 
@@ -74,6 +75,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             />
                         </Grid.Column>
                         <Grid.Column textAlign='center'>
+                            {/* Clustering metrics. */}
                             <InfoPopup
                                 content='This metrics are computed using Cox-Regression'
                                 onTop
@@ -81,10 +83,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 extraClassName='margin-left-5'
                             />
 
-                            <Header as='h1'>Clustering metrics</Header>
+                            <Header as='h2' dividing>Clustering metrics</Header>
 
                             {/* TODO: add InfoPopups for every metric and their interpretation. */}
-                            <Statistic>
+                            <Statistic size='small'>
                                 <Statistic.Value>{kaplanMeierData.concordance_index.toFixed(3)}</Statistic.Value>
                                 <Statistic.Label>C-Index</Statistic.Label>
                             </Statistic>
@@ -92,6 +94,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 <Statistic.Value>{kaplanMeierData.log_likelihood.toFixed(3)}</Statistic.Value>
                                 <Statistic.Label>Partial Log-Likelihood</Statistic.Label>
                             </Statistic>
+
+                            <SamplesAndGroupsTable data={kaplanMeierData.samples_and_clusters} />
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
