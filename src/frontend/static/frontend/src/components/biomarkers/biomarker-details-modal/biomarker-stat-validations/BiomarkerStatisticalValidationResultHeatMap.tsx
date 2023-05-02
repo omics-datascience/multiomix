@@ -158,9 +158,7 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
             }
 
             {(!loading && statValidationData !== null) &&
-                <div className='align-center margin-top-5'>
-                    <ReactApexChart options={chartOptions} series={chartSeries} type="heatmap" height={440} />
-                </div>
+                <ReactApexChart options={chartOptions} series={chartSeries} type="heatmap" height={440} />
             }
         </>
     )

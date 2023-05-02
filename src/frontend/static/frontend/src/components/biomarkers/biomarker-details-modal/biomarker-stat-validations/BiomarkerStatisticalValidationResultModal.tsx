@@ -7,6 +7,7 @@ import { BiomarkerStatisticalValidationResultMetrics } from './BiomarkerStatisti
 import { Grid, Segment } from 'semantic-ui-react'
 import { BiomarkerStatisticalValidationResultBestFeatures } from './BiomarkerStatisticalValidationResultBestFeatures'
 import { BiomarkerStatisticalValidationResultHeatMap } from './BiomarkerStatisticalValidationResultHeatMap'
+import { StatisticalValidationResultKaplanMeier } from './result/StatisticalValidationResultKaplanMeier'
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface BiomarkerStatisticalValidationResultModalProps {
@@ -20,7 +21,8 @@ interface BiomarkerStatisticalValidationResultModalProps {
  * @returns Component
  */
 export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatisticalValidationResultModalProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES)
+    // const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES) // TODO: leave this
+    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.KAPLAN_MEIER)
 
     /**
      * Gets the selected component according to the active item.
@@ -35,7 +37,7 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
             case ActiveStatValidationsItemMenu.BEST_FEATURES:
                 return <BiomarkerStatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.KAPLAN_MEIER:
-                return null // TODO: implement
+                return <StatisticalValidationResultKaplanMeier selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.HEATMAP:
                 return <BiomarkerStatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />
             default:
@@ -52,7 +54,7 @@ export const BiomarkerStatisticalValidationResultModal = (props: BiomarkerStatis
                             <BiomarkerStatisticalValidationResultMetrics selectedStatisticalValidation={props.selectedStatisticalValidation} />
                         </Segment>
                     </Grid.Column>
-                    <Grid.Column width={8}>
+                    <Grid.Column width={12} textAlign='center'>
                         <Segment>
                             {/* Menu */}
                             <BiomarkerStatisticalValidationMenu

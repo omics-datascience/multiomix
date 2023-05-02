@@ -148,11 +148,7 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
             }
 
             {(!loading && statValidationData !== null) &&
-                <React.Fragment>
-                    <div className='align-center margin-top-5'>
-                        <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={440} />
-                    </div>
-                </React.Fragment>
+                <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={440} />
             }
         </>
     )

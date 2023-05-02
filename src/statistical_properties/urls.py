@@ -27,5 +27,10 @@ urlpatterns = [
         'statistical-validation-heatmap',
         views.StatisticalValidationHeatMap.as_view(),
         name='statistical_validation_heatmap'
+    ),
+    path(
+        'statistical-validation-kaplan-meier',
+        views.StatisticalValidationKaplanMeier.as_view(),
+        name='statistical_validation_kaplan_meier'
     )
 ]

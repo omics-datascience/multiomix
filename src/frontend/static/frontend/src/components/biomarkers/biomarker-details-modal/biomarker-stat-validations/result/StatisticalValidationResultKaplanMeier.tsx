@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import ky from 'ky'
-import { Card, Placeholder } from 'semantic-ui-react'
-import { Nullable } from '../../../../../utils/interfaces'
+import { Card, Grid, Placeholder } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { StatisticalValidationForTable, StatValidationKaplanMeier } from '../../../types'
+import { StatisticalValidationForTable } from '../../../types'
+import { KaplanMeier, KaplanMeierData } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
-declare const urlStatisticalValidationHeatMap: string
+declare const urlStatisticalValidationKaplanMeier: string
 
 /** StatisticalValidationResultKaplanMeier props. */
 interface StatisticalValidationResultKaplanMeierProps {
@@ -20,7 +20,7 @@ interface StatisticalValidationResultKaplanMeierProps {
  */
 export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
     const [loading, setLoading] = useState(false)
-    const [statValidationData, setStatValidationData] = useState<Nullable<StatValidationKaplanMeier>>(null)
+    const [kaplanMeierData, setKaplanMeierData] = useState<KaplanMeierData>(null)
 
     /**
      * Every time the StatisticalValidation changes retrieves
@@ -37,9 +37,9 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationHeatMap, { searchParams }).then((response) => {
-            response.json().then((statValidation: StatValidationKaplanMeier) => {
-                setStatValidationData(statValidation)
+        ky.get(urlStatisticalValidationKaplanMeier, { searchParams }).then((response) => {
+            response.json().then((statValidation: KaplanMeierData) => {
+                setKaplanMeierData(statValidation)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
@@ -75,10 +75,23 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 </Card>
             }
 
-            {/* TODO: If this align-center div is used in all the results panels, refactor! */}
-            {(!loading && statValidationData !== null) &&
-                <div className='align-center margin-top-5'>
-                </div>
+            {(!loading && kaplanMeierData !== null) &&
+                <Grid>
+                    <Grid.Row columns={2} divided textAlign='center'>
+                        <Grid.Column>
+                            <KaplanMeier
+                                data={kaplanMeierData}
+                                height={480}
+                                width={600}
+                                xAxisLabel='Time'
+                                yAxisLabel='Probability'
+                            />
+                        </Grid.Column>
+                        <Grid.Column>
+                            <h1>Metricas</h1>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
             }
         </>
     )

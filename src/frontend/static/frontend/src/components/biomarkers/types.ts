@@ -324,11 +324,6 @@ interface MoleculesExpressions {
     max: number
 }
 
-/** KaplanMeier data to show in the StatisticalValidation result modal. */
-interface StatValidationKaplanMeier {
-
-}
-
 export {
     SVMKernel,
     SVMTask,
@@ -364,6 +359,5 @@ export {
     StatisticalValidation,
     StatisticalValidationForm,
     MoleculeWithCoefficient,
-    MoleculesExpressions,
-    StatValidationKaplanMeier
+    MoleculesExpressions
 }

@@ -1,12 +1,22 @@
-from typing import Tuple, Literal, List, Dict, cast
+from typing import Tuple, Literal, List, Dict, cast, Union
 import numpy as np
+import pandas as pd
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
+from common.utils import get_subset_of_features
+from feature_selection.fs_models import ClusteringModels
+
 
 KaplanMeierSample = Tuple[
     int,
     Literal[0, 1]  # 1 = interest, 0 = censored
 ]
+
+# Result of time and probability from the survival function
+KaplanMeierSampleResult = List[Dict[str, Tuple[int, float]]]
+
+# A label (to know the group) or a KaplanMeierSampleResult
+LabelOrKaplanMeierResult = Union[str, KaplanMeierSampleResult]
 
 
 def get_group_survival_function(data: List[KaplanMeierSample]) -> List[Dict]:
@@ -37,7 +47,7 @@ def generate_survival_groups_by_median_expression(
     fields_interest: List[str]
 ) -> Tuple[List[Dict], List[Dict], Dict[str, float]]:
     """
-    Generate low and high groups from expression data, time and event
+    Generates low and high groups from expression data, time and event
     @param clinical_time_values: Time values
     @param clinical_event_values: Event values
     @param expression_values: Expression values
@@ -78,3 +88,38 @@ def generate_survival_groups_by_median_expression(
         'test_statistic': logrank_res.test_statistic,
         'p_value': logrank_res.p_value
     }
+
+
+def generate_survival_groups_by_clustering(
+    classifier: ClusteringModels,
+    molecules_df: pd.DataFrame,
+    clinical_df: pd.DataFrame
+) -> List[Dict[str, LabelOrKaplanMeierResult]]:
+    """
+    Generates the survival function to plot in a KaplanMeier curve for every group taken from a Clustering model.
+    @param classifier: Clustering classifier to infer the group from expressions.
+    @param molecules_df: Expression data.
+    @param clinical_df: Clinical data.
+    @return: Low group, high group and logrank test
+    """
+    # Formats clinical data to a Numpy structured array
+    # TODO: refactor this! It's being used in a lot of places!
+    clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
+                                               formats='bool, float')
+
+    # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+    # structure of data
+    list_of_molecules: List[str] = molecules_df.index
+    molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
+
+    # Gets the groups
+    clustering_result = classifier.predict(molecules_df.values)
+
+    # Retrieves the data for every group and stores the survival function
+    data: List[Dict[str, LabelOrKaplanMeierResult]] = []
+    for cluster_id in range(classifier.n_clusters):
+        current_group = clinical_data[np.where(clustering_result == cluster_id)]
+        group_data = {'label': str(cluster_id), 'data': get_group_survival_function(current_group)}
+        data.append(group_data)
+
+    return data

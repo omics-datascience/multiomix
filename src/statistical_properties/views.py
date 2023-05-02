@@ -27,7 +27,9 @@ from statistical_properties.serializers import SourceDataStatisticalPropertiesSe
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
+from statistical_properties.survival_functions import generate_survival_groups_by_clustering
 from user_files.models_choices import FileType
+from user_files.serializers import SurvivalColumnsTupleUserFileSimpleSerializer
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
 
@@ -158,6 +160,25 @@ class StatisticalValidationHeatMap(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class StatisticalValidationKaplanMeier(APIView):
+    """REST endpoint: StatisticalValidation survival data"""
+    @staticmethod
+    def get(request: Request):
+        statistical_validation_pk = request.GET.get('statistical_validation_pk')
+        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
+                                            biomarker__user=request.user)
+
+        # Gets Gene and GEM expression with time values
+        molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
+
+        classifier = stat_validation.trained_model.get_model_instance()
+        groups = generate_survival_groups_by_clustering(classifier, molecules_df, clinical_df)
+
+        return Response(groups)
+
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class BiomarkerNewStatisticalValidations(APIView):
     """Runs a new statistical validation for a specific Biomarker."""
     permission_classes = [permissions.IsAuthenticated]
@@ -228,7 +249,10 @@ class BiomarkerNewStatisticalValidations(APIView):
                 raise ValidationError('Invalid Methylation source')
             stat_methylation_source = self.__create_statistical_validation_source(methylation_source)
 
-            surv_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
+            # Gets survival tuple
+            # TODO: implement the selection of the survival tuple from the frontend. This model has the corresponding
+            # TODO: attribute!
+            surv_tuple = clinical_source.get_survival_columns().first()
             if isinstance(surv_tuple, SurvivalColumnsTupleCGDSDataset):
                 survival_column_tuple_user_file = None
                 survival_column_tuple_cgds = surv_tuple
