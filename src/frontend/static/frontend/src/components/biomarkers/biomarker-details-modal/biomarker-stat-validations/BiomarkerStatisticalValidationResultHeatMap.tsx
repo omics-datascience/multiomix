@@ -30,12 +30,12 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
      */
     useEffect(() => {
         if (props.selectedStatisticalValidation.id) {
-            getStatValidationBestFeatures()
+            getStatValidationHeatMap()
         }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
-    const getStatValidationBestFeatures = () => {
+    const getStatValidationHeatMap = () => {
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
@@ -62,17 +62,19 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
      * @returns Array of bins with the min and max values.
      */
     const generateBins = (min: number, max: number, binsNumber: number): { min: number, max: number}[] =>
-        Array.from({ length: binsNumber }).map((el, idx, arr, step = (max - min) / binsNumber) => (
+        Array.from({ length: binsNumber }).map((_elem, idx, _arr, step = (max - min) / binsNumber) => (
             {
                 min: min + idx * step,
                 max: min + (idx + 1) * step
-            })
-        )
+            }
+        ))
 
     // Generates the chart config
-    let chartSettings: Nullable<any> = null
+    let chartSeries: ApexAxisChartSeries | undefined
+    let chartOptions: ApexCharts.ApexOptions | undefined
+
     if (statValidationData) {
-        const series = Object.entries(statValidationData.data).map(([moleculeName, samples]) => {
+        chartSeries = Object.entries(statValidationData.data).map(([moleculeName, samples]) => {
             return {
                 name: moleculeName,
                 data: Object.entries(samples).map(([sampleName, expression]) => {
@@ -85,53 +87,50 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
         })
         const colors = generateBins(statValidationData.min, statValidationData.max, 4)
 
-        chartSettings = {
-            series,
-            options: {
-                chart: {
-                    height: 350,
-                    type: 'heatmap'
-                },
-                plotOptions: {
-                    heatmap: {
-                        shadeIntensity: 0.5,
-                        radius: 0,
-                        useFillColorAsStroke: true,
-                        colorScale: {
-                            ranges: [{
-                                from: colors[0].min,
-                                to: colors[0].max,
-                                name: 'low',
-                                color: '#00A100'
-                            },
-                            {
-                                from: colors[1].min,
-                                to: colors[1].max,
-                                name: 'medium',
-                                color: '#128FD9'
-                            },
-                            {
-                                from: colors[2].min,
-                                to: colors[2].max,
-                                name: 'high',
-                                color: '#FFB200'
-                            },
-                            {
-                                from: colors[3].min,
-                                to: colors[3].max,
-                                name: 'extreme',
-                                color: '#FF0000'
-                            }
-                            ]
+        chartOptions = {
+            chart: {
+                height: 350,
+                type: 'heatmap'
+            },
+            plotOptions: {
+                heatmap: {
+                    shadeIntensity: 0.5,
+                    radius: 0,
+                    useFillColorAsStroke: true,
+                    colorScale: {
+                        ranges: [{
+                            from: colors[0].min,
+                            to: colors[0].max,
+                            name: 'low',
+                            color: '#00A100'
+                        },
+                        {
+                            from: colors[1].min,
+                            to: colors[1].max,
+                            name: 'medium',
+                            color: '#128FD9'
+                        },
+                        {
+                            from: colors[2].min,
+                            to: colors[2].max,
+                            name: 'high',
+                            color: '#FFB200'
+                        },
+                        {
+                            from: colors[3].min,
+                            to: colors[3].max,
+                            name: 'extreme',
+                            color: '#FF0000'
                         }
+                        ]
                     }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    width: 1
                 }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                width: 1
             }
         }
     }
@@ -159,11 +158,9 @@ export const BiomarkerStatisticalValidationResultHeatMap = (props: BiomarkerStat
             }
 
             {(!loading && statValidationData !== null) &&
-                <React.Fragment>
-                    <div className='align-center margin-top-5'>
-                        <ReactApexChart options={chartSettings.options as any} series={chartSettings.series} type="heatmap" height={440} />
-                    </div>
-                </React.Fragment>
+                <div className='align-center margin-top-5'>
+                    <ReactApexChart options={chartOptions} series={chartSeries} type="heatmap" height={440} />
+                </div>
             }
         </>
     )

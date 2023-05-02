@@ -7,6 +7,9 @@ import { alertGeneralError } from '../../../../utils/util_functions'
 import { Card, Placeholder } from 'semantic-ui-react'
 import ReactApexChart from 'react-apexcharts'
 
+/** Epsilon to add to the min/max value of coefficients. */
+const EPSILON = 1
+
 declare const urlStatisticalValidationBestFeatures: string
 
 /** BiomarkerStatisticalValidationResultBestFeatures props. */
@@ -56,62 +59,69 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
 
     // Generates the chart config
     const coefficients = statValidationData ? statValidationData.map((elem) => elem.coeff) : []
+    // TODO: report this bug, when specified as {x: ..., y: ...} the min, max value does not work!
+    // const coefficients = statValidationData ? statValidationData.map((elem) => ({
+    //     x: elem.identifier,
+    //     y: elem.coeff,
+    //     fillColor: elem.coeff > 0 ? '#008FFB' : '#FF4560'
+    // })) : []
     const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
 
-    const chartSettings = {
-        series: [{
-            name: 'Expression',
-            data: coefficients
-        }],
-        options: {
-            chart: {
-                type: 'bar',
-                height: 440,
-                stacked: true
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: true,
-                    barHeight: '80%'
+    const chartSeries: ApexAxisChartSeries = [{
+        name: 'Expression',
+        data: coefficients
+    }]
+
+    const chartOptions: ApexCharts.ApexOptions = {
+        chart: {
+            type: 'bar',
+            height: 440,
+            stacked: false
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                barHeight: '80%'
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val: number) {
+                return val.toFixed(4)
+            }
+        },
+        stroke: {
+            width: 1,
+            colors: ['black']
+        },
+        grid: {
+            xaxis: {
+                lines: {
+                    show: false
                 }
-            },
-            dataLabels: {
-                enabled: true,
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Molecule'
+            }
+        },
+        tooltip: {
+            shared: false,
+            y: {
                 formatter: function (val: number) {
                     return val.toFixed(4)
                 }
-            },
-            stroke: {
-                width: 1,
-                colors: ['#fff']
-            },
-
-            grid: {
-                xaxis: {
-                    lines: {
-                        show: false
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Molecule'
-                }
-            },
-            tooltip: {
-                shared: false,
-                y: {
-                    formatter: function (val: number) {
-                        return val.toFixed(4)
-                    }
-                }
-            },
-            xaxis: {
-                categories: moleculesNames,
-                title: {
-                    text: 'Coefficient'
-                }
             }
+        },
+        xaxis: {
+            categories: moleculesNames,
+            title: {
+                text: 'Coefficient'
+            },
+            type: 'category',
+            min: Math.ceil(Math.min.apply(Math, coefficients) - EPSILON),
+            max: Math.ceil(Math.max.apply(Math, coefficients) + EPSILON)
         }
     }
 
@@ -140,7 +150,7 @@ export const BiomarkerStatisticalValidationResultBestFeatures = (props: Biomarke
             {(!loading && statValidationData !== null) &&
                 <React.Fragment>
                     <div className='align-center margin-top-5'>
-                        <ReactApexChart options={chartSettings.options as any} series={chartSettings.series} type="bar" height={440} />
+                        <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={440} />
                     </div>
                 </React.Fragment>
             }

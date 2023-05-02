@@ -270,6 +270,7 @@ class FSService(object):
             best_features, best_model, best_score = select_top_cox_regression(
                 molecules_df,
                 clinical_data,
+                filter_zero_coeff=True, # Keeps only != 0 coefficient
                 top_n=None  # TODO: parametrize from frontend
             )
         else:

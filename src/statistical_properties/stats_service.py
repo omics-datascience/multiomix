@@ -200,7 +200,8 @@ class StatisticalValidationService(object):
                                                    formats='bool, float')
 
         # Get top features
-        best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data)
+        best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data,
+                                                                          filter_zero_coeff=False)
         self.__save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
 
         # Computes general metrics
