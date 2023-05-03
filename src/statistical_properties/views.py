@@ -22,9 +22,10 @@ from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters
-from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
+from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
-    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer
+    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
+    SampleAndClusterSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
@@ -178,21 +179,50 @@ class StatisticalValidationKaplanMeier(APIView):
         # Gets Gene and GEM expression with time values
         molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
 
+        compute_samples_and_clusters = not stat_validation.samples_and_clusters.exists()
+
         classifier = stat_validation.trained_model.get_model_instance()
         groups, concordance_index, log_likelihood, samples_and_clusters = generate_survival_groups_by_clustering(
             classifier,
             molecules_df,
-            clinical_df
+            clinical_df,
+            compute_samples_and_clusters=compute_samples_and_clusters
         )
+
+        # Adds the samples and clusters to prevent computing them every time
+        if compute_samples_and_clusters:
+            SampleAndCluster.objects.bulk_create([
+                SampleAndCluster(
+                    sample=elem[0],
+                    cluster=elem[1],
+                    statistical_validation=stat_validation
+                )
+                for elem in samples_and_clusters
+            ])
 
         return Response({
             'groups': groups,
             'concordance_index': concordance_index,
-            'log_likelihood': log_likelihood,
-            'samples_and_clusters': samples_and_clusters
+            'log_likelihood': log_likelihood
         })
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationSamplesAndClusters(generics.ListAPIView):
+    """Gets all the pairs of samples and cluster for a specific statistical validation."""
+
+    def get_queryset(self):
+        stat_validation = get_stat_validation_instance(self.request)
+        return stat_validation.samples_and_clusters.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SampleAndClusterSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['cluster']
+    search_fields = ['sample']
+    ordering_fields = ['sample', 'cluster']
 
 
 class StatisticalValidationModelDetails(APIView):

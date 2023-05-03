@@ -30,8 +30,10 @@ type PaginationCustomFilter = {
     defaultValue: any,
     /** Placeholder for select */
     placeholder?: string
-    /** Form.Select options */
-    options: DropdownItemProps[],
+    /** `clearable` prop of the `Form.Select`. `true` by default. */
+    clearable?: boolean
+    /** Form.Select options. If undefined, get uniques values from the data using the field `keyForServer`. */
+    options?: DropdownItemProps[],
     /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
     disabledFunction?: (actualValues: {[key: string]: any}) => boolean
 }
@@ -56,6 +58,8 @@ interface PaginatedTableProps<T> {
     customFilters?: PaginationCustomFilter[],
     /** Field and order if needed to order by default by any field */
     defaultSortProp?: DefaultSortProp,
+    /** Default page size props. If not specified, uses `10` by default. */
+    defaultPageSize?: number,
     /** To show or not an input to fires a search against the backend */
     showSearchInput?: boolean,
     /** Search input's label */
@@ -102,15 +106,19 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Generates TableControl
         const generalTableControl = getDefaultGeneralTableControl()
-        if (props.defaultSortProp) {
+        if (props.defaultSortProp !== undefined) {
             generalTableControl.sortField = props.defaultSortProp.sortField
             generalTableControl.sortOrderAscendant = props.defaultSortProp.sortOrderAscendant
         }
 
+        if (props.defaultPageSize !== undefined) {
+            generalTableControl.pageSize = props.defaultPageSize
+        }
+
         // Generates custom filters
-        if (this.props.customFilters) {
+        if (props.customFilters) {
             generalTableControl.filters = {}
-            this.props.customFilters.forEach((filter) => {
+            props.customFilters.forEach((filter) => {
                 generalTableControl.filters[filter.keyForServer] = filter.defaultValue
             })
         }
@@ -231,20 +239,31 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     generateCustomFiltersForm (): JSX.Element[] {
         const customFiltersArray = this.props.customFilters ?? []
-        return customFiltersArray.map((filter) => (
-            <Form.Select
-                key={filter.keyForServer}
-                label={filter.label}
-                placeholder={filter.placeholder}
-                options={filter.options}
-                name={filter.keyForServer}
-                value={this.state.tableControl.filters[filter.keyForServer]}
-                disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
-                onChange={(_, { value }) => {
-                    this.handleTableControlChanges(filter.keyForServer, value, true, true)
-                }}
-            />
-        ))
+        return customFiltersArray.map((filter) => {
+            // If 'options' is undefined, gets the unique values from data
+            let options: DropdownItemProps[]
+            if (filter.options !== undefined) {
+                options = filter.options
+            } else {
+                const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))]
+                options = uniqueValues.map((value) => ({ key: value, text: value, value: value }))
+            }
+            return (
+                <Form.Select
+                    key={filter.keyForServer}
+                    label={filter.label}
+                    clearable={filter.clearable ?? true}
+                    placeholder={filter.placeholder}
+                    options={options}
+                    name={filter.keyForServer}
+                    value={this.state.tableControl.filters[filter.keyForServer]}
+                    disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
+                    onChange={(_, { value }) => {
+                        this.handleTableControlChanges(filter.keyForServer, value, true, true)
+                    }}
+                />
+            )
+        })
     }
 
     /**

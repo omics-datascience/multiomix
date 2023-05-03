@@ -4,8 +4,8 @@ import { MoleculesExpressions, StatisticalValidationForTable } from '../../../ty
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { Card, Placeholder } from 'semantic-ui-react'
 import ReactApexChart from 'react-apexcharts'
+import { ResultPlaceholder } from './ResultPlaceholder'
 
 declare const urlStatisticalValidationHeatMap: string
 
@@ -138,23 +138,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
     return (
         <>
             {loading &&
-                <Card>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-
-                    <Card.Content>
-                        <Placeholder>
-                            <Placeholder.Header>
-                                <Placeholder.Line length='very short' />
-                                <Placeholder.Line length='medium' />
-                            </Placeholder.Header>
-                            <Placeholder.Paragraph>
-                                <Placeholder.Line length='short' />
-                            </Placeholder.Paragraph>
-                        </Placeholder>
-                    </Card.Content>
-                </Card>
+                <ResultPlaceholder />
             }
 
             {(!loading && statValidationData !== null) &&

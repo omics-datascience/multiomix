@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import ky from 'ky'
-import { Grid, Header, Statistic } from 'semantic-ui-react'
+import { Button, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { StatisticalValidationForTable, KaplanMeierResultData } from '../../../types'
 import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
@@ -24,6 +24,7 @@ interface StatisticalValidationResultKaplanMeierProps {
  */
 export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
     const [loading, setLoading] = useState(false)
+    const [showSamplesAndClusters, setShowSamplesAndClusters] = useState(false)
     const [kaplanMeierData, setKaplanMeierData] = useState<Nullable<KaplanMeierResultData>>(null)
 
     /**
@@ -95,7 +96,22 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 <Statistic.Label>Partial Log-Likelihood</Statistic.Label>
                             </Statistic>
 
-                            <SamplesAndGroupsTable data={kaplanMeierData.samples_and_clusters} />
+                            {/* Samples and clusters modal. */}
+                            <Modal
+                                onClose={() => setShowSamplesAndClusters(false)}
+                                onOpen={() => setShowSamplesAndClusters(true)}
+                                closeIcon={<Icon name='close' size='large' />}
+                                open={showSamplesAndClusters}
+                                trigger={<Button primary fluid>See samples and clusters</Button>}
+                            >
+                                <Modal.Header>Samples and clusters</Modal.Header>
+                                <Modal.Content image>
+                                    <SamplesAndGroupsTable selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                                </Modal.Content>
+                                <Modal.Actions>
+                                    <Button onClick={() => setShowSamplesAndClusters(false)}>Close</Button>
+                                </Modal.Actions>
+                            </Modal>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

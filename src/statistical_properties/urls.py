@@ -37,5 +37,10 @@ urlpatterns = [
         'statistical-validation-modal-details',
         views.StatisticalValidationModelDetails.as_view(),
         name='statistical_validation_modal_details'
+    ),
+    path(
+        'statistical-validation-samples-and-clusters',
+        views.StatisticalValidationSamplesAndClusters.as_view(),
+        name='statistical_validation_samples_and_clusters'
     )
 ]

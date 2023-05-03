@@ -92,13 +92,15 @@ def generate_survival_groups_by_median_expression(
 def generate_survival_groups_by_clustering(
     classifier: ClusteringModels,
     molecules_df: pd.DataFrame,
-    clinical_df: pd.DataFrame
+    clinical_df: pd.DataFrame,
+    compute_samples_and_clusters: bool
 ) -> Tuple[List[Dict[str, LabelOrKaplanMeierResult]], float, float, np.ndarray]:
     """
     Generates the survival function to plot in a KaplanMeier curve for every group taken from a Clustering model.
     @param classifier: Clustering classifier to infer the group from expressions.
     @param molecules_df: Expression data.
     @param clinical_df: Clinical data.
+    @param compute_samples_and_clusters: If True, it computes the samples and their clusters.
     @return: A tuple with all the groups with their survival function, the C-Index from (Cox Regression), the Log
     Likelihood from (Cox Regression), and a tuple with all the samples with their groups
     """
@@ -137,8 +139,11 @@ def generate_survival_groups_by_clustering(
     concordance_index = cph.score(df, scoring_method='concordance_index')
     log_likelihood = cph.score(df, scoring_method='log_likelihood')
 
-    # Drops columns and adds samples
-    df['sample'] = molecules_df.index.tolist()
-    samples_and_clusters = df[['sample', 'group']].values
+    # If needed adds samples
+    if compute_samples_and_clusters:
+        df['sample'] = molecules_df.index.tolist()
+        samples_and_clusters = df[['sample', 'group']].values
+    else:
+        samples_and_clusters = []
 
     return data, concordance_index, log_likelihood, samples_and_clusters
