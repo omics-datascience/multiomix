@@ -36,6 +36,26 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         handleChangeSvmOption={handleChangeSvmOption}
                     />
                 )
+            case FeatureSelectionAlgorithm.BBHA:
+                return (
+                    <BlindSearchPanel
+                        fitnessFunction={featureSelection.fitnessFunction}
+                        fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
+                        handleChangeFitnessFunction={handleChangeFitnessFunction}
+                        handleChangeClusterOption={handleChangeClusterOption}
+                        handleChangeSvmOption={handleChangeSvmOption}
+                    />
+                )
+            case FeatureSelectionAlgorithm.PSO:
+                return (
+                    <BlindSearchPanel
+                        fitnessFunction={featureSelection.fitnessFunction}
+                        fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
+                        handleChangeFitnessFunction={handleChangeFitnessFunction}
+                        handleChangeClusterOption={handleChangeClusterOption}
+                        handleChangeSvmOption={handleChangeSvmOption}
+                    />
+                )
             default:
                 return null
         }

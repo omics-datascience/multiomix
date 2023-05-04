@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../../utils/django_interfaces'
-import { SourceType } from '../../../../../utils/interfaces'
+import { Source, SourceType } from '../../../../../utils/interfaces'
 import { experimentSourceIsValid } from '../../../../../utils/util_functions'
 import { FeatureSelectionPanelData, SourceStateBiomarker } from '../../../types'
 import { SourceSelectors } from '../../../../common/SourceSelectors'
@@ -35,6 +35,37 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
         handleCompleteStep2
     } = props
 
+    /**
+     * Validate if the source validation applies
+     * @param condition Condition to check
+     * @param source Source to validate
+     * @returns True if applies or if it not necessary to validate
+     */
+
+    const checkIfSourceApplies = (condition: number | undefined, source: Source) => {
+        if (!condition) {
+            return true
+        }
+        return experimentSourceIsValid(source)
+    }
+
+    /**
+     * Function to check if the source are validated
+     * @returns True if the clinical source is valid and experiments sources if each one applies
+     */
+
+    const allSourcesAreValid = () => {
+        const mirnaValidation = checkIfSourceApplies(featureSelection.biomarker?.number_of_mirnas, featureSelection.mirnaSource)
+        const cnaValidation = checkIfSourceApplies(featureSelection.biomarker?.number_of_cnas, featureSelection.cnaSource)
+        const methylationValidation = checkIfSourceApplies(featureSelection.biomarker?.number_of_methylations, featureSelection.methylationSource)
+        const mRNAValidation = checkIfSourceApplies(featureSelection.biomarker?.number_of_mrnas, featureSelection.mRNASource)
+
+        return experimentSourceIsValid(featureSelection.clinicalSource) &&
+            mirnaValidation &&
+            cnaValidation &&
+            methylationValidation &&
+            mRNAValidation
+    }
     return (
         <>
             {/* Sources */}
@@ -73,7 +104,7 @@ export const FeatureSelectionStep2 = (props: FeatureSelectionStep2Props) => {
                 <Button
                     color="green"
                     onClick={() => handleCompleteStep2()}
-                    disabled={!experimentSourceIsValid(props.featureSelectionData.clinicalSource)} // TODO: add all the other sources!!!
+                    disabled={!allSourcesAreValid()}
                 >
                     Confirm
                 </Button>
