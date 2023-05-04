@@ -1,5 +1,6 @@
 import { DjangoTag } from '../../utils/django_interfaces'
 import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
+import { KaplanMeierData } from '../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
@@ -256,6 +257,7 @@ interface TrainedModel {
     name: string,
     description: string,
     created: string,
+    fitness_function: FitnessFunction,
     best_fitness_value: number
 }
 
@@ -281,7 +283,7 @@ interface BasicStatisticalValidation {
     created: string,
 }
 
-/** A statistical validation. Retrieved as data for the BiomarkerStatisticalValidationsTable. */
+/** A statistical validation. Retrieved as data for the StatisticalValidationsTable. */
 interface StatisticalValidationForTable extends BasicStatisticalValidation {
     fitness_function: FitnessFunction
 }
@@ -324,6 +326,41 @@ interface MoleculesExpressions {
     max: number
 }
 
+/** An array with two values: the sample identifier, and the cluster where it belongs. */
+type SampleAndCluster = {
+    sample: string,
+    cluster: string
+}
+
+/** Data to show in the StatisticalValidation KaplanMeier panel. */
+interface KaplanMeierResultData {
+    /** Clusters of the clustering algorithm with the corresponding survival function. */
+    groups: KaplanMeierData,
+    concordance_index: number,
+    log_likelihood: number
+}
+
+/** Data which is present in all the TrainedModels. */
+interface GeneralModelDetails {
+    best_fitness: number
+}
+
+/** Some details of Clustering models. */
+interface ClusteringModelDetails extends GeneralModelDetails {
+    algorithm: ClusteringAlgorithm,
+    scoring_method: ClusteringScoringMethod,
+    n_clusters: number
+}
+
+/** Some details of Clustering models. */
+interface SVMModelDetails extends GeneralModelDetails {
+    task: SVMTask,
+    kernel: SVMKernel,
+}
+
+/** Types of models details. */
+type ModelDetails = ClusteringModelDetails | SVMModelDetails
+
 export {
     SVMKernel,
     SVMTask,
@@ -359,5 +396,10 @@ export {
     StatisticalValidation,
     StatisticalValidationForm,
     MoleculeWithCoefficient,
-    MoleculesExpressions
+    MoleculesExpressions,
+    KaplanMeierResultData,
+    ClusteringModelDetails,
+    SVMModelDetails,
+    ModelDetails,
+    SampleAndCluster
 }

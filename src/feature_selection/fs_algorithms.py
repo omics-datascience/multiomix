@@ -311,7 +311,7 @@ def binary_black_hole_sequential(
 
 
 def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray,
-                              top_n: Optional[int] = None) -> CoxNetAnalysisResult:
+                              filter_zero_coeff: bool, top_n: Optional[int] = None) -> CoxNetAnalysisResult:
     """
     Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
     alpha parameter and the filters the best features sorting by coefficients.
@@ -319,6 +319,7 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     TODO: check if can make predictions with this model
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
+    @param filter_zero_coeff: If True removes features with coefficient == 0.
     @param top_n: Top N features to keep.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any None as no fitness value is got from this CoxRegression process.
@@ -355,10 +356,14 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
         columns=["coefficient"]
     )
 
+    # If specified filter zero coefficients
+    if filter_zero_coeff:
+        best_coefficients = best_coefficients.query("coefficient != 0")
+
     # Gets best features sorted by coefficient
-    non_zero_coefficients = best_coefficients.query("coefficient != 0")
-    coefficients_order = non_zero_coefficients.abs().sort_values("coefficient").index
-    res_df: pd.DataFrame = non_zero_coefficients.loc[coefficients_order]
+    coefficients_order = best_coefficients.abs().sort_values("coefficient").index
+    res_df: pd.DataFrame = best_coefficients.loc[coefficients_order]
+
 
     best_features = res_df.index.tolist()
     best_features_coeff: List[float] = res_df['coefficient'].tolist()

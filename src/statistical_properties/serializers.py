@@ -3,7 +3,7 @@ from api_service.serializers import ExperimentSourceSerializer, ExperimentClinic
 from feature_selection.fs_algorithms import FitnessFunction
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
     BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
-    StatisticalValidation, MoleculeWithCoefficient
+    StatisticalValidation, MoleculeWithCoefficient, SampleAndCluster
 
 
 class NormalityTestSerializer(serializers.ModelSerializer):
@@ -149,3 +149,11 @@ class MoleculeWithCoefficientSerializer(serializers.ModelSerializer):
     class Meta:
         model = MoleculeWithCoefficient
         exclude = ['type', 'statistical_validation']
+
+
+class SampleAndClusterSerializer(serializers.ModelSerializer):
+    """SampleAndCluster serializer."""
+
+    class Meta:
+        model = SampleAndCluster
+        exclude = ['id']

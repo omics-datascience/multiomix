@@ -200,13 +200,14 @@ class StatisticalValidationService(object):
                                                    formats='bool, float')
 
         # Get top features
-        best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data)
+        best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data,
+                                                                          filter_zero_coeff=False)
         self.__save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
 
         # Computes general metrics
-        # Gets all the molecules in the needed order
-        list_of_molecules: List[str] = molecules_df.index
-        molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
+        # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+        # structure of data
+        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Makes predictions
         if not is_clustering:
@@ -217,11 +218,6 @@ class StatisticalValidationService(object):
             stat_validation.mean_squared_error = mean_squared_error(y_true, predictions)
             stat_validation.c_index = model.score(molecules_df, clinical_data)
             stat_validation.r2_score = r2_score(y_true, predictions)
-            # stat_validation.c_index = concordance_index_censored(
-            #     clinical_data['event'],
-            #     clinical_data['time'],
-            #     -predictions,  # flip sign to obtain risk scores
-            # )
 
             # TODO: add here all the metrics for every Source type
 
@@ -243,6 +239,25 @@ class StatisticalValidationService(object):
         molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
 
         return pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+
+    def get_molecules_and_clinical_df(self,
+                                      stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Gets samples in common, generates needed DataFrames and finally computes the Feature Selection stat_validation.
+        @param stat_validation: StatisticalValidation instance.
+        """
+        # Get samples in common
+        samples_in_common = self.__get_common_samples(stat_validation)
+        if samples_in_common.size == 0:
+            raise NoSamplesInCommon
+
+        # Generates needed DataFrames
+        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
+                                                                                                      samples_in_common)
+
+        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+        return molecules_df, clinical_df
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
                                               stop_event: Event) -> Tuple[str, str]:

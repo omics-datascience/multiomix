@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from api_service.websocket_functions import send_update_trained_models_command
 from user_files.models_choices import FileType
 
 
@@ -142,3 +143,17 @@ class TrainedModel(models.Model):
         with open(model_path, "rb") as fp:
             model = pickle.load(fp)
         return model
+
+    def save(self, *args, **kwargs):
+        """Every time the experiment status changes, uses websockets to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websockets message to update the experiment state in the frontend
+        send_update_trained_models_command(self.user.id)
+
+    def delete(self, *args, **kwargs):
+        """Deletes the instance and sends a websockets message to update state in the frontend"""
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the experiment state in the frontend
+        send_update_trained_models_command(self.user.id)

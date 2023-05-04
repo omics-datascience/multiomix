@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, Union, List, Dict
 import numpy as np
+import pandas as pd
 from django.db import transaction
 from django.db.models.functions import Abs
+from django.http import HttpRequest
 from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,25 +13,42 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from sklearn.preprocessing import OrdinalEncoder
 from api_service.models import get_combination_class, GeneGEMCombination, ExperimentSource
 from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
+from common.constants import TCGA_CONVENTION
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
-from common.utils import get_source_pk
+from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
-from feature_selection.models import TrainedModel
-from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult
+from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters
+from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
-    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer
+    StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
+    SampleAndClusterSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
+from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
+    get_group_survival_function, compute_c_index_and_log_likelihood
 from user_files.models_choices import FileType
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
+
+
+def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> StatisticalValidation:
+    """
+    Gets a StatisticalValidation instance.
+    @param request: Request object to retrieve the 'statistical_validation_pk' value from GET.
+    @raise Http404 if the instance does not exist.
+    @return: StatisticalValidation instance.
+    """
+    statistical_validation_pk = request.GET.get('statistical_validation_pk')
+    return get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
+                                        biomarker__user=request.user)
 
 
 class CombinationSourceDataStatisticalPropertiesDetails(APIView):
@@ -123,9 +142,7 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
     """Gets a list of top features for the StatisticalValidation details modal sorted by ABS(coefficient)."""
 
     def get_queryset(self):
-        statistical_validation_pk = self.request.GET.get('statistical_validation_pk')
-        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                            biomarker__user=self.request.user)
+        stat_validation = get_stat_validation_instance(self.request)
         return stat_validation.molecules_with_coefficients.annotate(coeff_abs=Abs('coeff')).order_by('-coeff_abs')
 
     permission_classes = [permissions.IsAuthenticated]
@@ -137,9 +154,8 @@ class StatisticalValidationHeatMap(APIView):
 
     @staticmethod
     def get(request: Request):
-        statistical_validation_pk = request.GET.get('statistical_validation_pk')
-        stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                            biomarker__user=request.user)
+        stat_validation = get_stat_validation_instance(request)
+
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
             return Response({
@@ -156,6 +172,191 @@ class StatisticalValidationHeatMap(APIView):
 
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationKaplanMeierClustering(APIView):
+    """
+    Gets survival KaplanMeier data using a clustering trained model from a specific
+    StatisticalValidation instance.
+    """
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+
+        # Gets Gene and GEM expression with time values
+        molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
+
+        compute_samples_and_clusters = not stat_validation.samples_and_clusters.exists()
+
+        classifier = stat_validation.trained_model.get_model_instance()
+        groups, concordance_index, log_likelihood, samples_and_clusters = generate_survival_groups_by_clustering(
+            classifier,
+            molecules_df,
+            clinical_df,
+            compute_samples_and_clusters=compute_samples_and_clusters
+        )
+
+        # Adds the samples and clusters to prevent computing them every time
+        if compute_samples_and_clusters:
+            SampleAndCluster.objects.bulk_create([
+                SampleAndCluster(
+                    sample=elem[0],
+                    cluster=elem[1],
+                    statistical_validation=stat_validation
+                )
+                for elem in samples_and_clusters
+            ])
+
+        return Response({
+            'groups': groups,
+            'concordance_index': concordance_index,
+            'log_likelihood': log_likelihood
+        })
+
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationClinicalAttributes(APIView):
+    """Gets all the clinical attributes from a clinical source of a specific StatisticalValidation instance."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        clinical_attrs = stat_validation.clinical_source.get_attributes()
+        return Response(clinical_attrs)
+
+
+class StatisticalValidationKaplanMeierRegression(APIView):
+    """
+    Gets survival KaplanMeier data using a regression trained model (SVM or RF) from a specific
+    StatisticalValidation instance.
+    """
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        clinical_attribute: str = request.GET.get('clinical_attribute', '')
+
+        if len(clinical_attribute.strip()) == 0:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Gets molecules DF
+        molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+
+        # Gets clinical with only the
+        try:
+            clinical_df = stat_validation.clinical_source.get_specific_samples_and_attribute_df(
+                samples=None,
+                clinical_attribute=clinical_attribute
+            )
+        except KeyError:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Transpose the molecules DF to make a join
+        # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+        # structure of data
+        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
+
+        # Removes TCGA suffix and joins with the clinical data
+        clinical_df.index = clinical_df.index.str.replace(TCGA_CONVENTION, '', regex=True)
+        joined = molecules_df.join(clinical_df, how='inner')
+
+        # Gets trained model
+        trained_model: TrainedModel = stat_validation.trained_model
+        model = trained_model.get_model_instance()
+
+        # Groups by the clinical attribute and computes the survival function for every group
+        groups: List[Dict[str, LabelOrKaplanMeierResult]] = []
+        dfs: List[pd.DataFrame] = []
+        for group_name, group in joined.groupby(clinical_attribute):
+            group_name = str(group_name)
+            # Drops the clinical attribute
+            group = group.drop(columns=[clinical_attribute])
+
+            # Generates KaplanMeierSamples list
+            predicted_times = model.predict(group.values)
+
+            # All predictions have the 1 as the event occurs
+            group_samples = [[1, prediction] for prediction in predicted_times]
+
+            groups.append({
+                'label': group_name,
+                'data': get_group_survival_function(group_samples)
+            })
+
+            # Stores to compute the
+            dfs.append(
+                pd.DataFrame({'E': 1, 'T': predicted_times, 'group': group_name})
+            )
+
+        # Fits a Cox Regression model using the column group as the variable to consider to get the C-Index and the
+        # partial Log-Likelihood for the group
+        df = pd.concat(dfs)
+
+        # Encodes groups just in case it's a string
+        enc = OrdinalEncoder()
+        enc.fit(df[['group']])
+        df[['group']] = enc.transform(df[['group']])
+
+        # Computes C-Index and partial Log-Likelihood
+        concordance_index, log_likelihood = compute_c_index_and_log_likelihood(df)
+
+        return Response({
+            'groups': groups,
+            'concordance_index': concordance_index,
+            'log_likelihood': log_likelihood,
+        })
+
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationSamplesAndClusters(generics.ListAPIView):
+    """Gets all the pairs of samples and cluster for a specific statistical validation."""
+
+    def get_queryset(self):
+        stat_validation = get_stat_validation_instance(self.request)
+        return stat_validation.samples_and_clusters.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SampleAndClusterSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['cluster']
+    search_fields = ['sample']
+    ordering_fields = ['sample', 'cluster']
+
+
+class StatisticalValidationModelDetails(APIView):
+    """Gets the details for the trained model of a StatisticalValidation instance."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        trained_model: TrainedModel = stat_validation.trained_model
+        fitness_function = trained_model.fitness_function
+
+        if fitness_function == FitnessFunction.CLUSTERING:
+            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+            response = {
+                'algorithm': clustering_parameters.algorithm,
+                'scoring_method': clustering_parameters.scoring_method,
+                'n_clusters': trained_model.get_model_instance().n_clusters
+            }
+        elif fitness_function == FitnessFunction.SVM:
+            clustering_parameters: SVMParameters = trained_model.svm_parameters
+            response = {
+                'task': clustering_parameters.task,
+                'kernel': clustering_parameters.kernel,
+            }
+        else:
+            # TODO: implement RF
+            raise ValidationError(f'Invalid trained model type: {fitness_function}')
+
+        response['best_fitness'] = trained_model.best_fitness_value
+        # TODO: add here mean_fitness_value if it's lately added
+
+        return Response(response)
 
 
 class BiomarkerNewStatisticalValidations(APIView):
@@ -228,7 +429,10 @@ class BiomarkerNewStatisticalValidations(APIView):
                 raise ValidationError('Invalid Methylation source')
             stat_methylation_source = self.__create_statistical_validation_source(methylation_source)
 
-            surv_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
+            # Gets survival tuple
+            # TODO: implement the selection of the survival tuple from the frontend. This model has the corresponding
+            # TODO: attribute!
+            surv_tuple = clinical_source.get_survival_columns().first()
             if isinstance(surv_tuple, SurvivalColumnsTupleCGDSDataset):
                 survival_column_tuple_user_file = None
                 survival_column_tuple_cgds = surv_tuple

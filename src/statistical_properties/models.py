@@ -230,3 +230,11 @@ class MoleculeWithCoefficient(models.Model):
     type = models.IntegerField(choices=MoleculeType.choices)
     statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
                                                related_name='molecules_with_coefficients')
+
+
+class SampleAndCluster(models.Model):
+    """Represents a sample with his assigned cluster inferred by a clustering algorithm."""
+    sample = models.CharField(max_length=100)
+    cluster = models.CharField(max_length=20)
+    statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
+                                               related_name='samples_and_clusters')

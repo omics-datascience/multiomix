@@ -3,6 +3,7 @@ import { Select } from 'semantic-ui-react'
 import { FitnessFunctionParameters, FitnessFunction } from '../../../types'
 import { ClusteringPanel } from './algorithms/ClusteringPanel'
 import { SVMPanel } from './algorithms/SVMPanel'
+import { fitnessFunctionsOptions } from '../../../utils'
 
 /** BlindSearch props. */
 interface BlindSearchProps {
@@ -53,11 +54,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
             <Select
                 placeholder='Fitness function'
                 className='selection-select'
-                options={[
-                    { key: FitnessFunction.CLUSTERING, text: 'Clustering', value: FitnessFunction.CLUSTERING },
-                    { key: FitnessFunction.SVM, text: 'SVM', value: FitnessFunction.SVM },
-                    { key: FitnessFunction.RF, text: 'RF', value: FitnessFunction.RF, disabled: true }
-                ]}
+                options={fitnessFunctionsOptions}
                 value={fitnessFunction ?? undefined}
                 onChange={(_, { value }) => handleChangeFitnessFunction(value as FitnessFunction)}
             />
