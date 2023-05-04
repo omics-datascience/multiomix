@@ -11,7 +11,7 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
-from feature_selection.models import FSExperiment, FitnessFunction, SVMParameters, ClusteringParameters
+from feature_selection.models import FSExperiment, FitnessFunction
 from user_files.models_choices import FileType
 
 

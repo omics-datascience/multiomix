@@ -25,7 +25,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 active={props.activeItem === ActiveBiomarkerDetailItemMenu.DETAILS}
                 onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.DETAILS)}
             >
-                Details
+                Molecules details
 
                 <InfoPopup
                     content='Details of the molecules that make up the Biomarker'
@@ -34,22 +34,6 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                     extraClassName='margin-left-5'
                 />
             </Menu.Item>
-
-            {props.selectedBiomarker.has_fs_experiment &&
-                <Menu.Item
-                    active={props.activeItem === ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY}
-                    onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY)}
-                >
-                    Feature Selection
-
-                    <InfoPopup
-                        content='Feature Selection process details'
-                        onTop={false}
-                        onEvent='hover'
-                        extraClassName='margin-left-5'
-                    />
-                </Menu.Item>
-            }
 
             <Menu.Item
                 active={props.activeItem === ActiveBiomarkerDetailItemMenu.MODELS}
@@ -92,6 +76,22 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                     extraClassName='margin-left-5'
                 />
             </Menu.Item>
+
+            {props.selectedBiomarker.has_fs_experiment &&
+                <Menu.Item
+                    active={props.activeItem === ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY}
+                    onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY)}
+                >
+                    Feature Selection summary
+
+                    <InfoPopup
+                        content='Feature Selection process details'
+                        onTop={false}
+                        onEvent='hover'
+                        extraClassName='margin-left-5'
+                    />
+                </Menu.Item>
+            }
         </Menu>
     )
 }

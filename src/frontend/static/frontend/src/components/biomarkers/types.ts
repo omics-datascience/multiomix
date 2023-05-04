@@ -257,6 +257,7 @@ interface TrainedModel {
     name: string,
     description: string,
     created: string,
+    fitness_function: FitnessFunction,
     best_fitness_value: number
 }
 

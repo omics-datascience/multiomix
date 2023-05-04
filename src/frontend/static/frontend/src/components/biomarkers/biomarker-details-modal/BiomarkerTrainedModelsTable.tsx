@@ -6,6 +6,8 @@ import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../utils/util_functions'
 import { Nullable } from '../../../utils/interfaces'
 import { NewTrainedModelForm } from './trained-models/NewTrainedModelForm'
+import { fitnessFunctionsOptions } from '../utils'
+import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 
 declare const urlBiomarkerTrainedModels: string
 
@@ -60,38 +62,46 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                     { name: 'Name', serverCodeToSort: 'name', width: 3 },
                     { name: 'Description', serverCodeToSort: 'description', width: 4 },
                     { name: 'Date', serverCodeToSort: 'created' },
+                    { name: 'Model', serverCodeToSort: 'fitness_function' },
                     { name: 'Best fitness', serverCodeToSort: 'best_fitness_value' }
                 ]}
                 defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
-                customElements={[
-                    <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
-                        <Button primary icon onClick={() => { setShowNewTrainedModelModal(true) }}>
-                            <Icon name='add' />
-                        </Button>
-                    </Form.Field>
+                customFilters={[
+                    { label: 'Model type', keyForServer: 'fitness_function', defaultValue: '', placeholder: 'Model type', options: fitnessFunctionsOptions }
                 ]}
+                customElements={
+                    props.allowFullManagement
+                        ? [
+                            <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
+                                <Button primary icon onClick={() => { setShowNewTrainedModelModal(true) }}>
+                                    <Icon name='add' />
+                                </Button>
+                            </Form.Field>
+                        ] : undefined
+                }
                 showSearchInput
                 searchLabel='Name'
-                searchPlaceholder='Search by name'
+                searchPlaceholder='Search by name or description'
                 urlToRetrieveData={urlBiomarkerTrainedModels}
                 updateWSKey='update_trained_models'
-                mapFunction={(biomarkerTrainedModel: TrainedModel) => {
+                mapFunction={(trainedModel: TrainedModel) => {
                     return (
                         <Table.Row
-                            key={biomarkerTrainedModel.id as number}
+                            key={trainedModel.id as number}
                             className={props.selectTrainedModel ? 'clickable' : undefined}
-                            active={biomarkerTrainedModel.id === props.selectedTrainedModel?.id}
+                            active={trainedModel.id === props.selectedTrainedModel?.id}
                             onClick={() => {
                                 if (props.selectTrainedModel) {
-                                    props.selectTrainedModel(biomarkerTrainedModel)
+                                    props.selectTrainedModel(trainedModel)
                                 }
                             }}
                         >
-                            <TableCellWithTitle value={biomarkerTrainedModel.name} />
-                            <TableCellWithTitle value={biomarkerTrainedModel.description ?? ''} />
-                            <TableCellWithTitle value={formatDateLocale(biomarkerTrainedModel.created as string, 'LLL')} />
-                            <Table.Cell>{biomarkerTrainedModel.best_fitness_value.toFixed(4)}</Table.Cell>
+                            <TableCellWithTitle value={trainedModel.name} />
+                            <TableCellWithTitle value={trainedModel.description ?? ''} />
+                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
+                            <Table.Cell>{trainedModel.best_fitness_value.toFixed(4)}</Table.Cell>
                         </Table.Row>
                     )
                 }}
