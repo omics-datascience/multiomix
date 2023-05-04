@@ -70,9 +70,8 @@ def blind_search_spark(
     #                                ...
     #                              ]    
     #    - @Response json object
-    #      ~ id: job id in EMR
-    #      ~ name: job name in EMR
-    #      ~ virtualClusterId: cluster id in EMR     
+    #      ~ id: job id
+
 
     # Recap
     # *****
@@ -83,7 +82,7 @@ def blind_search_spark(
     #     3.2 - Assign entrypoint_arguments to array created in step 2.
     #   4 - Create HTTP request.
     #     4.1 - Set Verb POST
-    #     4.2 - Set Host {AWS-EMR middleware microservice URL}/schedule
+    #     4.2 - Set Host {middleware microservice URL}/schedule
     #     4.3 - Set Headers
     #   5 - Send request.
     #   6 - Handle response.
@@ -125,8 +124,7 @@ def binary_black_hole_spark(
     #  - An environment variable that stores the microservice url. 
     #    By default "multiomix-aws-emr"
     #  - Communication with microservice endpoint. (Infrastructure side)
-    #  - Shared volumen with microservice. (Infrastructure side)
-    #  - An environment variable that stores the dataset path (shared volume).
+    #  - Shared "/data-spark" volumen with microservice. (Infrastructure side)
 
     # Dataset dump
     # ************
@@ -140,7 +138,7 @@ def binary_black_hole_spark(
     # AWS-EMR middleware microservice communication
     # *********************************************
     #   
-    #  Usage for blind_search_algorithm
+    #  Usage for binary_black_hole_spark
     #  ********************************
     #    - @Protocol HTTP
     #    - @Verb POST
@@ -151,7 +149,7 @@ def binary_black_hole_spark(
     #      ~ name: job name for emr (str,optional)
     #      ~ algorithm: 1 (int,optional, default 0)
     #      ~ entrypoint_arguments: array of json objects that will be pased 
-    #                              as args to the main python script in EMR.
+    #                              as args to the main python script in spark.
     #                              Structure of the obj should be { key:, value:}    
     #                              (array of json objects, default None)
     #                              Example:
@@ -167,9 +165,8 @@ def binary_black_hole_spark(
     #                                ...
     #                              ]
     #    - @Response json object
-    #      ~ id: job id in EMR
-    #      ~ name: job name in EMR
-    #      ~ virtualClusterId: cluster id in EMR     
+    #      ~ id: job id
+ 
 
     # Recap
     # *****
