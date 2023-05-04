@@ -178,7 +178,7 @@ export const StatisticalValidationResultKaplanMeierRegression = (props: Statisti
                         trigger={<Button primary fluid>See samples and clusters</Button>}
                     >
                         <Modal.Header>Samples and clusters</Modal.Header>
-                        <Modal.Content image>
+                        <Modal.Content>
                             {/* TODO: implement */}
                             {/* <SamplesAndGroupsTable selectedStatisticalValidation={props.selectedStatisticalValidation} /> */}
                         </Modal.Content>

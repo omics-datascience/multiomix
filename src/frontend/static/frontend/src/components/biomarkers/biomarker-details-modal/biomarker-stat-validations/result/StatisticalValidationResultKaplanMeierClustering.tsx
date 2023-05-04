@@ -106,7 +106,7 @@ export const StatisticalValidationResultKaplanMeierClustering = (props: Statisti
                                 trigger={<Button primary fluid>See samples and clusters</Button>}
                             >
                                 <Modal.Header>Samples and clusters</Modal.Header>
-                                <Modal.Content image>
+                                <Modal.Content>
                                     <SamplesAndGroupsTable selectedStatisticalValidation={props.selectedStatisticalValidation} />
                                 </Modal.Content>
                                 <Modal.Actions>
