@@ -9,20 +9,21 @@ import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-detai
 import { ResultPlaceholder } from './ResultPlaceholder'
 import { SamplesAndGroupsTable } from './SamplesAndGroupsTable'
 
-declare const urlStatisticalValidationKaplanMeier: string
+declare const urlStatisticalValidationKaplanMeierClustering: string
 
-/** StatisticalValidationResultKaplanMeier props. */
-interface StatisticalValidationResultKaplanMeierProps {
+/** StatisticalValidationResultKaplanMeierClustering props. */
+interface StatisticalValidationResultKaplanMeierClusteringProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
     selectedStatisticalValidation: StatisticalValidationForTable,
 }
 
 /**
  * Renders a panel with a HeatMap to visualize all the samples and their expressions for all the molecules of a Biomarker.
+ * This panel only is used when the trained model is for a clustering task (i.e. not regression).
  * @param props Component's props
  * @returns Component
  */
-export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
+export const StatisticalValidationResultKaplanMeierClustering = (props: StatisticalValidationResultKaplanMeierClusteringProps) => {
     const [loading, setLoading] = useState(false)
     const [showSamplesAndClusters, setShowSamplesAndClusters] = useState(false)
     const [kaplanMeierData, setKaplanMeierData] = useState<Nullable<KaplanMeierResultData>>(null)
@@ -33,16 +34,16 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
      */
     useEffect(() => {
         if (props.selectedStatisticalValidation.id) {
-            getStatValidationBestFeatures()
+            getStatValidationKaplanMeier()
         }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
-    const getStatValidationBestFeatures = () => {
+    const getStatValidationKaplanMeier = () => {
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationKaplanMeier, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams }).then((response) => {
             response.json().then((statValidation: KaplanMeierResultData) => {
                 setKaplanMeierData(statValidation)
             }).catch((err) => {
@@ -87,7 +88,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             <Header as='h2' dividing>Clustering metrics</Header>
 
                             {/* TODO: add InfoPopups for every metric and their interpretation. */}
-                            <Statistic size='small'>
+                            <Statistic>
                                 <Statistic.Value>{kaplanMeierData.concordance_index.toFixed(3)}</Statistic.Value>
                                 <Statistic.Label>C-Index</Statistic.Label>
                             </Statistic>

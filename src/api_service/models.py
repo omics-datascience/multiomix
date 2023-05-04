@@ -177,25 +177,34 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = row_data[:, columns_idx]
         return row_data
 
-    def get_specific_samples_and_attribute(
+    def __get_specific_samples_and_attribute(
         self,
-        samples: List[str],
+        samples: Optional[List[str]],
         clinical_attribute: str
     ) -> np.ndarray:
         """
         Gets specific samples and an attribute values from the source.
-        @param samples: List of samples to retrieve.
+        @param samples: List of samples to retrieve. If None, returns all the samples
         @param clinical_attribute: Index of column to filter.
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
         if self.user_file:
-            row_data = self.user_file.get_df().loc[samples]
+            df = self.user_file.get_df()
+            if samples is not None:
+                row_data = df.loc[samples]
+            else:
+                row_data = df.loc[:]
         else:
             # IMPORTANT: samples are in rows and attributes are in columns
             row_data = self.__get_cgds_datasets_joined_df()
             row_data[PATIENT_ID_COLUMN] = row_data.index  # Creates a column of Patient ID from the index
-            row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[samples]  # Sets Sample ID and index and get samples
+
+            # Sets Sample ID and index and get samples
+            if samples is not None:
+                row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[samples]
+            else:
+                row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[:]
 
             # If SAMPLES_TYPE_COLUMN exists as column keeps primary only, otherwise all the rows are considered
             # primary
@@ -205,11 +214,41 @@ class ExperimentClinicalSource(ExperimentSource):
                     raise KeyError
 
         if row_data.size == 0:
-            samples_error = ', '.join(samples)
-            raise KeyError(f'Samples "{samples_error}" were not found')
+            if samples is not None:
+                samples_error = ', '.join(samples)
+                raise KeyError(f'Samples "{samples_error}" were not found')
+            else:
+                raise KeyError('Tried to get all samples. But the row_data is empty')
 
-        row_data = row_data[clinical_attribute].to_numpy()
-        return row_data
+        return row_data[clinical_attribute]
+
+    def get_specific_samples_and_attribute(
+        self,
+        samples: Optional[List[str]],
+        clinical_attribute: str
+    ) -> np.ndarray:
+        """
+        Gets specific samples and an attribute values from the source as a numpy array.
+        @param samples: List of samples to retrieve. If None, returns all the samples
+        @param clinical_attribute: Index of column to filter.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
+        """
+        return self.__get_specific_samples_and_attribute(samples, clinical_attribute).to_numpy()
+
+    def get_specific_samples_and_attribute_df(
+        self,
+        samples: Optional[List[str]],
+        clinical_attribute: str
+    ) -> np.ndarray:
+        """
+        Gets specific samples and an attribute values from the source as a Pandas DataFrame.
+        @param samples: List of samples to retrieve. If None, returns all the samples
+        @param clinical_attribute: Index of column to filter.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
+        """
+        return self.__get_specific_samples_and_attribute(samples, clinical_attribute)
 
     def __get_cgds_datasets_joined_df(self) -> pd.DataFrame:
         """

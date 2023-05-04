@@ -1,34 +1,34 @@
 import React from 'react'
-import { Card, Placeholder } from 'semantic-ui-react'
+import { Card, Placeholder, SemanticWIDTHS } from 'semantic-ui-react'
+
+/** ResultPlaceholder props. */
+interface ResultPlaceholderProps {
+    numberOfCards?: SemanticWIDTHS,
+    fluid?: boolean,
+    rectangular?: boolean
+}
 
 /**
  * Renders a Placeholder for StatisticalValidation results
+ * @param props Component props.
  * @returns Component.
  */
-export const ResultPlaceholder = () => (
-    <>
-        <Card.Group itemsPerRow={3}>
-            <Card>
-                <Card.Content>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-                </Card.Content>
-            </Card>
-            <Card>
-                <Card.Content>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-                </Card.Content>
-            </Card>
-            <Card>
-                <Card.Content>
-                    <Placeholder>
-                        <Placeholder.Image square />
-                    </Placeholder>
-                </Card.Content>
-            </Card>
+export const ResultPlaceholder = (props: ResultPlaceholderProps) => {
+    const numberOfCards = props.numberOfCards ?? 3
+    const fluid = props.fluid ?? false
+    const isRectangular = props.rectangular ?? false
+
+    return (
+        <Card.Group itemsPerRow={numberOfCards}>
+            {Array.from(Array(numberOfCards)).map((_, idx) => (
+                <Card key={idx}>
+                    <Card.Content>
+                        <Placeholder fluid={fluid}>
+                            <Placeholder.Image square={!isRectangular} rectangular={isRectangular} />
+                        </Placeholder>
+                    </Card.Content>
+                </Card>
+            ))}
         </Card.Group>
-    </>
-)
+    )
+}

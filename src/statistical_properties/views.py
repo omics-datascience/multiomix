@@ -1,5 +1,6 @@
-from typing import Optional, Union
+from typing import Optional, Union, List, Dict
 import numpy as np
+import pandas as pd
 from django.db import transaction
 from django.db.models.functions import Abs
 from django.http import HttpRequest
@@ -12,14 +13,16 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from sklearn.preprocessing import OrdinalEncoder
 from api_service.models import get_combination_class, GeneGEMCombination, ExperimentSource
 from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
+from common.constants import TCGA_CONVENTION
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
-from common.utils import get_source_pk
+from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
@@ -29,7 +32,8 @@ from statistical_properties.serializers import SourceDataStatisticalPropertiesSe
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
-from statistical_properties.survival_functions import generate_survival_groups_by_clustering
+from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
+    get_group_survival_function, compute_c_index_and_log_likelihood
 from user_files.models_choices import FileType
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
@@ -170,8 +174,11 @@ class StatisticalValidationHeatMap(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class StatisticalValidationKaplanMeier(APIView):
-    """REST endpoint: StatisticalValidation survival data"""
+class StatisticalValidationKaplanMeierClustering(APIView):
+    """
+    Gets survival KaplanMeier data using a clustering trained model from a specific
+    StatisticalValidation instance.
+    """
     @staticmethod
     def get(request: Request):
         stat_validation = get_stat_validation_instance(request)
@@ -204,6 +211,100 @@ class StatisticalValidationKaplanMeier(APIView):
             'groups': groups,
             'concordance_index': concordance_index,
             'log_likelihood': log_likelihood
+        })
+
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class StatisticalValidationClinicalAttributes(APIView):
+    """Gets all the clinical attributes from a clinical source of a specific StatisticalValidation instance."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        clinical_attrs = stat_validation.clinical_source.get_attributes()
+        return Response(clinical_attrs)
+
+
+class StatisticalValidationKaplanMeierRegression(APIView):
+    """
+    Gets survival KaplanMeier data using a regression trained model (SVM or RF) from a specific
+    StatisticalValidation instance.
+    """
+    @staticmethod
+    def get(request: Request):
+        stat_validation = get_stat_validation_instance(request)
+        clinical_attribute: str = request.GET.get('clinical_attribute', '')
+
+        if len(clinical_attribute.strip()) == 0:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Gets molecules DF
+        molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+
+        # Gets clinical with only the
+        try:
+            clinical_df = stat_validation.clinical_source.get_specific_samples_and_attribute_df(
+                samples=None,
+                clinical_attribute=clinical_attribute
+            )
+        except KeyError:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Transpose the molecules DF to make a join
+        # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+        # structure of data
+        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
+
+        # Removes TCGA suffix and joins with the clinical data
+        clinical_df.index = clinical_df.index.str.replace(TCGA_CONVENTION, '', regex=True)
+        joined = molecules_df.join(clinical_df, how='inner')
+
+        # Gets trained model
+        trained_model: TrainedModel = stat_validation.trained_model
+        model = trained_model.get_model_instance()
+
+        # Groups by the clinical attribute and computes the survival function for every group
+        groups: List[Dict[str, LabelOrKaplanMeierResult]] = []
+        dfs: List[pd.DataFrame] = []
+        for group_name, group in joined.groupby(clinical_attribute):
+            group_name = str(group_name)
+            # Drops the clinical attribute
+            group = group.drop(columns=[clinical_attribute])
+
+            # Generates KaplanMeierSamples list
+            predicted_times = model.predict(group.values)
+
+            # All predictions have the 1 as the event occurs
+            group_samples = [[1, prediction] for prediction in predicted_times]
+
+            groups.append({
+                'label': group_name,
+                'data': get_group_survival_function(group_samples)
+            })
+
+            # Stores to compute the
+            dfs.append(
+                pd.DataFrame({'E': 1, 'T': predicted_times, 'group': group_name})
+            )
+
+        # Fits a Cox Regression model using the column group as the variable to consider to get the C-Index and the
+        # partial Log-Likelihood for the group
+        df = pd.concat(dfs)
+
+        # Encodes groups just in case it's a string
+        enc = OrdinalEncoder()
+        enc.fit(df[['group']])
+        df[['group']] = enc.transform(df[['group']])
+
+        # Computes C-Index and partial Log-Likelihood
+        concordance_index, log_likelihood = compute_c_index_and_log_likelihood(df)
+
+        return Response({
+            'groups': groups,
+            'concordance_index': concordance_index,
+            'log_likelihood': log_likelihood,
         })
 
     permission_classes = [permissions.IsAuthenticated]

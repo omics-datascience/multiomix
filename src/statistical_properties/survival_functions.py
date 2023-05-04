@@ -89,6 +89,19 @@ def generate_survival_groups_by_median_expression(
     }
 
 
+def compute_c_index_and_log_likelihood(df: pd.DataFrame) -> Tuple[float, float]:
+    """
+    Computes the C-Index and the partial Log-Likelihood from a DataFrame.
+    @param df: Pandas DataFrame. IMPORTANT: has to have 3 colunms: 'E' (event), 'T' (time), and 'group' (group in which
+    the sample is).
+    @return: A tuple with the C-Index and the partial Log-Likelihood.
+    """
+    cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+    concordance_index = cph.score(df, scoring_method='concordance_index')
+    log_likelihood = cph.score(df, scoring_method='log_likelihood')
+    return concordance_index, log_likelihood
+
+
 def generate_survival_groups_by_clustering(
     classifier: ClusteringModels,
     molecules_df: pd.DataFrame,
@@ -111,8 +124,7 @@ def generate_survival_groups_by_clustering(
 
     # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
     # structure of data
-    list_of_molecules: List[str] = molecules_df.index
-    molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
+    molecules_df = get_subset_of_features(molecules_df,  molecules_df.index)
 
     # Gets the groups
     clustering_result = classifier.predict(molecules_df.values)
@@ -135,9 +147,7 @@ def generate_survival_groups_by_clustering(
         'group': clustering_result
     })
 
-    cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
-    concordance_index = cph.score(df, scoring_method='concordance_index')
-    log_likelihood = cph.score(df, scoring_method='log_likelihood')
+    concordance_index, log_likelihood = compute_c_index_and_log_likelihood(df)
 
     # If needed adds samples
     if compute_samples_and_clusters:

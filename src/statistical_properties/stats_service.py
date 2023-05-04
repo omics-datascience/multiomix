@@ -207,8 +207,7 @@ class StatisticalValidationService(object):
         # Computes general metrics
         # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
         # structure of data
-        list_of_molecules: List[str] = molecules_df.index
-        molecules_df = get_subset_of_features(molecules_df, list_of_molecules)
+        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Makes predictions
         if not is_clustering:
