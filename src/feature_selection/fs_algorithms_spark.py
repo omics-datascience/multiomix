@@ -176,7 +176,7 @@ def binary_black_hole_spark(
     #   1 - Save dataset file in shared volumen.
     #   2 - Build entrypoint arguments array.
     #   3 - Create the request body.
-    #     3.1 - Set algorithm equals 0.
+    #     3.1 - Set algorithm equals 1.
     #     3.2 - Assign entrypoint_arguments to array created in step 2.
     #   4 - Create HTTP request.
     #     4.1 - Set Verb POST
