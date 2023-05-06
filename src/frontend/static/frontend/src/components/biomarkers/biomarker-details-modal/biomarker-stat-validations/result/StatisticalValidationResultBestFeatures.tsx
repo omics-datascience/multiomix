@@ -68,7 +68,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
     const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
 
     const chartSeries: ApexAxisChartSeries = [{
-        name: 'Expression',
+        name: 'Coefficient',
         data: coefficients
     }]
 

@@ -87,6 +87,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         })
         const colors = generateBins(statValidationData.min, statValidationData.max, 4)
 
+        // TODO: add labels for bins
         chartOptions = {
             chart: {
                 height: 350,
@@ -101,25 +102,25 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
                         ranges: [{
                             from: colors[0].min,
                             to: colors[0].max,
-                            name: 'low',
+                            name: 'Low',
                             color: '#00A100'
                         },
                         {
                             from: colors[1].min,
                             to: colors[1].max,
-                            name: 'medium',
+                            name: 'Medium',
                             color: '#128FD9'
                         },
                         {
                             from: colors[2].min,
                             to: colors[2].max,
-                            name: 'high',
+                            name: 'High',
                             color: '#FFB200'
                         },
                         {
                             from: colors[3].min,
                             to: colors[3].max,
-                            name: 'extreme',
+                            name: 'Extreme',
                             color: '#FF0000'
                         }
                         ]

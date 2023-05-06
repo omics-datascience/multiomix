@@ -149,11 +149,11 @@ class TrainedModel(models.Model):
         super().save(*args, **kwargs)
 
         # Sends a websockets message to update the experiment state in the frontend
-        send_update_trained_models_command(self.user.id)
+        send_update_trained_models_command(self.biomarker.user.id)
 
     def delete(self, *args, **kwargs):
         """Deletes the instance and sends a websockets message to update state in the frontend"""
         super().delete(*args, **kwargs)
 
         # Sends a websockets message to update the experiment state in the frontend
-        send_update_trained_models_command(self.user.id)
+        send_update_trained_models_command(self.biomarker.user.id)

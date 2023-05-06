@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { PaginatedTable } from '../../common/PaginatedTable'
 import { Biomarker, TrainedModel } from '../types'
-import { Button, Form, Icon, Modal, Table } from 'semantic-ui-react'
+import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../utils/util_functions'
 import { Nullable } from '../../../utils/interfaces'
-import { NewTrainedModelForm } from './trained-models/NewTrainedModelForm'
 import { fitnessFunctionsOptions } from '../utils'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
+import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
 
 declare const urlBiomarkerTrainedModels: string
 
@@ -31,29 +31,21 @@ interface BiomarkerTrainedModelsProps {
 export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) => {
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
 
+    // TODO: remove this block
+    useEffect(() => {
+        setTimeout(() => {
+            setShowNewTrainedModelModal(true)
+        }, 500)
+    }, [])
+
     return (
         <>
             {/* New TrainedModel modal */}
-            <Modal
-                onClose={() => setShowNewTrainedModelModal(false)}
-                onOpen={() => setShowNewTrainedModelModal(true)}
-                closeOnEscape={false}
-                closeOnDimmerClick={false}
-                closeOnDocumentClick={false}
-                closeIcon={<Icon name='close' size='large' />}
-                open={showNewTrainedModelModal}
-            >
-                <Modal.Header>
-                    <Icon name='code branch' />
-                    Create new trained model
-                </Modal.Header>
-                <Modal.Content>
-                    <NewTrainedModelForm selectedBiomarker={props.selectedBiomarker} />
-                </Modal.Content>
-                <Modal.Actions>
-                    <Button onClick={() => setShowNewTrainedModelModal(false)}>Cancel</Button>
-                </Modal.Actions>
-            </Modal>
+            <NewTrainedModelModal
+                showNewTrainedModelModal={showNewTrainedModelModal}
+                setShowNewTrainedModelModal={setShowNewTrainedModelModal}
+                selectedBiomarker={props.selectedBiomarker}
+            />
 
             {/* TrainedModels table. */}
             <PaginatedTable<TrainedModel>

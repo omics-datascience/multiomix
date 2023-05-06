@@ -365,16 +365,16 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
 
                 {/* Submit StatisticalAnalysis button */}
                 {currentStep === 2 &&
-                <Button
-                    color="green"
-                    loading={sendingData}
-                    onClick={() => {
-                        runStatisticalAnalysis()
-                    }}
-                    disabled={!formIsValid()}
-                >
-                    Confirm
-                </Button>
+                    <Button
+                        color="green"
+                        loading={sendingData}
+                        onClick={() => {
+                            runStatisticalAnalysis()
+                        }}
+                        disabled={!formIsValid()}
+                    >
+                        Confirm
+                    </Button>
                 }
             </div>
         </div>

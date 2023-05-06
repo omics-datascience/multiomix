@@ -465,3 +465,97 @@ class BiomarkerNewStatisticalValidations(APIView):
             global_stat_validation_service.add_stat_validation(stat_validation)
 
         return Response({'ok': True})
+
+
+class BiomarkerNewTrainedModel(APIView):
+    """Runs a new trained model for a specific Biomarker."""
+    # TODO: implement
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def post(self, request: Request):
+        with transaction.atomic():
+            # Gets Biomarker instance
+            biomarker_pk = request.POST.get('biomarkerPk')
+            user = request.user
+            biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
+
+            # Gets the Biomarker's trained model instance
+            trained_model_pk = request.POST.get('selectedTrainedModelPk')
+            try:
+                trained_model: TrainedModel = biomarker.trained_models.get(pk=trained_model_pk)
+            except TrainedModel.DoesNotExist:
+                return Http404('Trained model not found')
+
+            # Clinical source
+            clinical_source_type = get_source_pk(request.POST, 'clinicalType')
+            clinical_source, clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
+                                                                  'clinical')
+
+            # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
+            clinical_source = clinical_aux if clinical_aux is not None else clinical_source
+
+            if clinical_source is None:
+                raise ValidationError('Invalid clinical source')
+
+            # mRNA source
+            mrna_source_type = get_source_pk(request.POST, 'mRNAType')
+            mrna_source, _mrna_clinical = get_experiment_source(mrna_source_type, request, FileType.MRNA, 'mRNA')
+            if biomarker.number_of_mrnas > 0 and mrna_source is None:
+                raise ValidationError('Invalid mRNA source')
+
+            # miRNA source
+            mirna_source_type = get_source_pk(request.POST, 'miRNAType')
+            mirna_source, _mirna_clinical = get_experiment_source(mirna_source_type, request, FileType.MIRNA, 'miRNA')
+            if biomarker.number_of_mirnas > 0 and mirna_source is None:
+                raise ValidationError('Invalid miRNA source')
+
+            # CNA source
+            cna_source_type = get_source_pk(request.POST, 'cnaType')
+            cna_source, _cna_clinical = get_experiment_source(cna_source_type, request, FileType.CNA, 'cna')
+            if biomarker.number_of_cnas > 0 and cna_source is None:
+                raise ValidationError('Invalid CNA source')
+
+            # Methylation source
+            methylation_source_type = get_source_pk(request.POST, 'methylationType')
+            methylation_source, _methylation_clinical = get_experiment_source(methylation_source_type, request,
+                                                                              FileType.METHYLATION, 'methylation')
+            if biomarker.number_of_methylations > 0 and methylation_source is None:
+                raise ValidationError('Invalid Methylation source')
+
+            # Gets survival tuple
+            # TODO: implement the selection of the survival tuple from the frontend. This model has the corresponding
+            # TODO: attribute!
+            surv_tuple = clinical_source.get_survival_columns().first()
+            if isinstance(surv_tuple, SurvivalColumnsTupleCGDSDataset):
+                survival_column_tuple_user_file = None
+                survival_column_tuple_cgds = surv_tuple
+            elif isinstance(surv_tuple, SurvivalColumnsTupleUserFile):
+                survival_column_tuple_user_file = surv_tuple
+                survival_column_tuple_cgds = None
+            else:
+                raise ValidationError('Invalid survival tuple')
+
+            # Creates the StatisticalValidation instance
+            description = request.POST.get('description', 'null')
+            description = description if description != 'null' else None
+
+            stat_validation = StatisticalValidation.objects.create(
+                name=request.POST.get('name'),
+                description=description,
+                biomarker=biomarker,
+                trained_model=trained_model,
+                state=BiomarkerState.IN_PROCESS,
+                clinical_source=clinical_source,
+                survival_column_tuple_user_file=survival_column_tuple_user_file,
+                survival_column_tuple_cgds=survival_column_tuple_cgds,
+                mrna_source_result=stat_mrna_source,
+                mirna_source_result=stat_mirna_source,
+                cna_source_result=stat_cna_source,
+                methylation_source_result=stat_methylation_source,
+            )
+
+            # Runs statistical validation in background
+            global_stat_validation_service.add_stat_validation(stat_validation)
+
+        return Response({'ok': True})
