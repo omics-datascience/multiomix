@@ -12,7 +12,7 @@
 }
 
 .selection-main-container {
-    position: absolute;
+    position: absolute; 
     height: 100%;
     top: 0;
     width: 100%;
@@ -20,7 +20,7 @@
     flex-direction: column;
 }
 .selection-step-container{
-    flex: 1;
+    min-height: 600px;
 }
 .selection-select{
     margin: 2rem 0;

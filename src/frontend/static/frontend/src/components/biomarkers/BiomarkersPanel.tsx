@@ -1384,7 +1384,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%' }}
+                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%', display: 'flex' }}
                     onClose={() => {
                         this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
                             ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)
