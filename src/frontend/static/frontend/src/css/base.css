@@ -117,6 +117,10 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     padding-right: 10% !important;
 }
 
+.padding-top-0 {
+    padding-top: 0 !important;
+}
+
 .box-shadow:hover {
     box-shadow: 0 2px 8px #bbb !important;
 }

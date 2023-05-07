@@ -1,6 +1,7 @@
 import React from 'react'
 import { Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm, SVMKernel } from '../../../../types'
+import { FitnessFunctionSvm } from '../../../../types'
+import { SVMKernelOptions } from '../../../../utils'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
@@ -45,11 +46,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
             <Select
                 placeholder='Kernel'
                 name='moleculeSelected'
-                options={[
-                    { key: SVMKernel.LINEAR, text: 'Linear', value: SVMKernel.LINEAR },
-                    { key: SVMKernel.POLYNOMIAL, text: 'Polynomial', value: SVMKernel.POLYNOMIAL },
-                    { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF }
-                ]}
+                options={SVMKernelOptions}
                 value={svm.kernel}
                 onChange={(_, { value }) => handleChangeSvmOption('kernel', value as number)}
             />
