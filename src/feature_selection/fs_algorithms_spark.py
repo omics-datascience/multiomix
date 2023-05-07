@@ -47,7 +47,7 @@ def blind_search_spark(
     #  ********************************
     #    - @Protocol HTTP
     #    - @Verb POST
-    #    - @URI /schedule
+    #    - @URI /job
     #    - @Headers
     #      ~ Content-Type = application/json    
     #    - @Body json object
@@ -69,8 +69,11 @@ def blind_search_spark(
     #                                },
     #                                ...
     #                              ]    
-    #    - @Response json object
-    #      ~ id: job id
+    #    - @Response
+    #        @Headers
+    #          ~ Location: relative url for the new created job
+    #        @Body json object
+    #          ~ id: job id
 
 
     # Recap
@@ -82,7 +85,7 @@ def blind_search_spark(
     #     3.2 - Assign entrypoint_arguments to array created in step 2.
     #   4 - Create HTTP request.
     #     4.1 - Set Verb POST
-    #     4.2 - Set Host {middleware microservice URL}/schedule
+    #     4.2 - Set Host {middleware microservice URL}/job
     #     4.3 - Set Headers
     #   5 - Send request.
     #   6 - Handle response.
@@ -142,7 +145,7 @@ def binary_black_hole_spark(
     #  ********************************
     #    - @Protocol HTTP
     #    - @Verb POST
-    #    - @URI /schedule
+    #    - @URI /job
     #    - @Headers
     #      ~ Content-Type = application/json    
     #    - @Body json object
@@ -164,8 +167,11 @@ def binary_black_hole_spark(
     #                                },
     #                                ...
     #                              ]
-    #    - @Response json object
-    #      ~ id: job id
+    #    - @Response
+    #        @Headers
+    #          ~ Location: relative url for the new created job
+    #        @Body json object
+    #          ~ id: job id
  
 
     # Recap
@@ -177,7 +183,7 @@ def binary_black_hole_spark(
     #     3.2 - Assign entrypoint_arguments to array created in step 2.
     #   4 - Create HTTP request.
     #     4.1 - Set Verb POST
-    #     4.2 - Set Host {AWS-EMR middleware microservice URL}/schedule
+    #     4.2 - Set Host {AWS-EMR middleware microservice URL}/job
     #     4.3 - Set Headers
     #   5 - Send request.
     #   6 - Handle response.
