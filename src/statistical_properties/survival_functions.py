@@ -6,7 +6,6 @@ from lifelines.statistics import logrank_test
 from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
 
-
 KaplanMeierSample = Tuple[
     int,
     Literal[0, 1]  # 1 = interest, 0 = censored
@@ -17,6 +16,19 @@ KaplanMeierSampleResult = List[Dict[str, Tuple[int, float]]]
 
 # A label (to know the group) or a KaplanMeierSampleResult
 LabelOrKaplanMeierResult = Union[str, KaplanMeierSampleResult]
+
+
+def struct_array_to_kaplan_meier_samples(array: np.ndarray) -> List[KaplanMeierSample]:
+    """
+    Generates a list of KaplanMeierSamples (i.e. data ready to set as parameter of get_group_survival_function()).
+    NOTE: the array must have the 'event' column as the first one, and the 'time' column as the second one.
+    @param array: Array to parse.
+    @return: List of KaplanMeierSample
+    """
+    def f(x) -> KaplanMeierSample:
+        return cast(KaplanMeierSample, (x[1], 1 if x[0] else 0))
+
+    return list(map(f, array))
 
 
 def get_group_survival_function(data: List[KaplanMeierSample]) -> List[Dict]:
@@ -133,6 +145,8 @@ def generate_survival_groups_by_clustering(
     data: List[Dict[str, LabelOrKaplanMeierResult]] = []
     for cluster_id in range(classifier.n_clusters):
         current_group = clinical_data[np.where(clustering_result == cluster_id)]
+        current_group = struct_array_to_kaplan_meier_samples(current_group)
+
         group_data = {
             'label': str(cluster_id),
             'data': get_group_survival_function(current_group)

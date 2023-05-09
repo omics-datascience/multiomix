@@ -233,4 +233,3 @@ def compute_source_statistical_properties(
     compute_and_save_outliers(gem_data, gem_samples, False, source_stats_props)
 
     return source_stats_props
-
