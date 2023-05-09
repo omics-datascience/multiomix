@@ -108,6 +108,16 @@ interface MoleculesMultipleSelection {
     value: number;
 }
 
+/**
+ * Generic struct for the MRNAIdentifier, MiRNAIdentifier, CNAIdentifier,
+ * and MethylationIdentifier Django models.
+ */
+type BiomarkerMolecule = {
+    id: number,
+    identifier: string,
+    type: MoleculeType
+}
+
 /** Structure to create/update a molecule in a Biomarker. */
 type SaveMoleculeStructure = {
     id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
@@ -241,7 +251,7 @@ type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'm
 
 /** Available options for the Menu in the Biomarker details modal */
 enum ActiveBiomarkerDetailItemMenu {
-    DETAILS,
+    MOLECULES,
     FEATURE_SELECTION_SUMMARY,
     MODELS,
     STATISTICAL_VALIDATION,
@@ -380,6 +390,7 @@ export {
     FeatureSelectionPanelData,
     BiomarkerOrigin,
     BiomarkerState,
+    BiomarkerMolecule,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,
     Biomarker,

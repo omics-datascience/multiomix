@@ -20,8 +20,7 @@ interface StatisticalValidationResultModalProps {
  * @returns Component
  */
 export const StatisticalValidationResultModal = (props: StatisticalValidationResultModalProps) => {
-    // const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES) // TODO: leave this
-    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.KAPLAN_MEIER)
+    const [activeItem, setActiveItem] = useState<ActiveStatValidationsItemMenu>(ActiveStatValidationsItemMenu.BEST_FEATURES)
 
     /**
      * Gets the selected component according to the active item.

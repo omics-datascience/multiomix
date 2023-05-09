@@ -1,8 +1,30 @@
 from rest_framework import serializers
 from feature_selection.models import TrainedModel
-from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier
+from user_files.models_choices import MoleculeType
+from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier, MoleculeIdentifier
 from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
+
+
+class MoleculeIdentifierSerializer(serializers.Serializer):
+    """
+    Serializer for all the types of molecules (MRNAIdentifier, MiRNAIdentifier, CNAIdentifier, or
+    MethylationIdentifier). Gets their ID and identifier only.
+    """
+    id = serializers.IntegerField()
+    identifier = serializers.CharField()
+    type = serializers.SerializerMethodField(method_name='get_type')
+
+    @staticmethod
+    def get_type(instance: MoleculeIdentifier) -> MoleculeType:
+        if isinstance(instance, MRNAIdentifier):
+            return MoleculeType.MRNA
+        if isinstance(instance, MiRNAIdentifier):
+            return MoleculeType.MIRNA
+        if isinstance(instance, CNAIdentifier):
+            return MoleculeType.CNA
+        return MoleculeType.METHYLATION
+
 
 class MRNAIdentifierSerializer(serializers.ModelSerializer):
     """MRNAIdentifier serializer"""

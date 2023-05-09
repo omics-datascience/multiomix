@@ -22,8 +22,8 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
     return (
         <Menu className='menu-with-bolder-border margin-top-0'>
             <Menu.Item
-                active={props.activeItem === ActiveBiomarkerDetailItemMenu.DETAILS}
-                onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.DETAILS)}
+                active={props.activeItem === ActiveBiomarkerDetailItemMenu.MOLECULES}
+                onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.MOLECULES)}
             >
                 Molecules details
 

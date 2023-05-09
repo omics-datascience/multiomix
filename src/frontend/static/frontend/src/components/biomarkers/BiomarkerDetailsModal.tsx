@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { ActiveBiomarkerDetailItemMenu, Biomarker } from './types'
 import { Nullable } from '../../utils/interfaces'
 import { BiomarkerDetailsMenu } from './BiomarkerDetailsMenu'
-import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/biomarker-stat-validations/BiomarkerStatisticalValidationPanel'
+import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/stat-validations/BiomarkerStatisticalValidationPanel'
 import { BiomarkerTrainedModelsTable } from './biomarker-details-modal/BiomarkerTrainedModelsTable'
+import { BiomarkerMoleculesPanel } from './biomarker-details-modal/molecules/BiomarkerMoleculesPanel'
 
 interface BiomarkerDetailsModalProps {
     /** Selected Biomarker instance to show its details. */
@@ -17,7 +18,7 @@ interface BiomarkerDetailsModalProps {
  * @returns Component.
  */
 export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.DETAILS)
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.MOLECULES)
 
     if (!props.selectedBiomarker) {
         return null
@@ -33,6 +34,8 @@ export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
         }
 
         switch (activeItem) {
+            case ActiveBiomarkerDetailItemMenu.MOLECULES:
+                return <BiomarkerMoleculesPanel selectedBiomarker={props.selectedBiomarker}/>
             case ActiveBiomarkerDetailItemMenu.MODELS:
                 return <BiomarkerTrainedModelsTable selectedBiomarker={props.selectedBiomarker} allowFullManagement />
             case ActiveBiomarkerDetailItemMenu.STATISTICAL_VALIDATION:
