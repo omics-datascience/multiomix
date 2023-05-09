@@ -200,7 +200,7 @@ class FSService(object):
         classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
             trained_model, model_parameters)
 
-        # Gets molecules and clinica DataFrames
+        # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 

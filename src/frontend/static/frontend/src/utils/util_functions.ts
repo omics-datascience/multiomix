@@ -469,9 +469,9 @@ const getGemDescription = (GEMType: FileType | ExperimentType, enumClass: 'FileT
 }
 
 /**
- * Generates a file's rows description
- * @param fileType File type to analyse
- * @returns file's rows description
+ * Generates a file's rows description.
+ * @param fileType File type to analyze.
+ * @returns File's rows description.
  */
 const getFileRowDescriptionInPlural = (fileType: FileType): string => {
     let description: string

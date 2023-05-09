@@ -279,7 +279,7 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
     /**
      * Return `true` if the form is valid to submit
-     * @returns
+     * @returns True if the form is valid. False otherwise.
      */
     const formIsValid = (): boolean => {
         return !sendingData &&
@@ -464,13 +464,14 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
     return (
         <Modal
+            className='large-modal'
             onClose={() => props.setShowNewTrainedModelModal(false)}
             onOpen={() => props.setShowNewTrainedModelModal(true)}
             closeOnEscape={false}
+            centered={false}
             closeOnDimmerClick={false}
             closeOnDocumentClick={false}
             closeIcon={<Icon name='close' size='large' />}
-            className='large-modal'
             open={props.showNewTrainedModelModal}
         >
             <Modal.Header>
@@ -479,8 +480,10 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
             </Modal.Header>
             <Modal.Content>
                 <Grid>
-                    <Grid.Row columns={2} divided stretched>
+                    <Grid.Row columns={2} divided>
                         <Grid.Column width={4}>
+                            <Header dividing as='h2'>Basic data</Header>
+
                             <Form>
                                 <Form.Input
                                     icon='asterisk'
@@ -498,8 +501,12 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                     onChange={(_, { name, value }) => handleInputChanges(name, value as string | undefined)}
                                 />
                             </Form>
+
+                            <div className="margin-top-2">
+                                <Icon name='asterisk' /> Required field
+                            </div>
                         </Grid.Column>
-                        <Grid.Column width={12}>
+                        <Grid.Column id='column-new-trained-model' width={12}>
                             {/* Steps */}
                             <Step.Group widths={3}>
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
@@ -527,7 +534,7 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                             </Step.Group>
 
                             {/* Active panel */}
-                            <Segment className='selection-steps-container margin-top-0'>
+                            <Segment>
                                 {handleSectionActive()}
                             </Segment>
                         </Grid.Column>

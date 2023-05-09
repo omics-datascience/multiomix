@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Biomarker, SourceStateBiomarker, TrainedModel } from '../../types'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../../utils/util_functions'
-import { Button, Icon, Input, Segment, Step, TextArea } from 'semantic-ui-react'
+import { Button, Form, Grid, Header, Icon, Modal, Segment, Step } from 'semantic-ui-react'
 import { SourceSelectors } from '../../../common/SourceSelectors'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
 import { BiomarkerTrainedModelsTable } from '../BiomarkerTrainedModelsTable'
@@ -15,6 +15,8 @@ declare const urlNewStatisticalValidation: string
 interface NewStatisticalValidationModalProps {
     /** Selected Biomarker instance. */
     selectedBiomarker: Biomarker,
+    /** Flag to open the modal. */
+    openModalNewStatValidation: boolean,
     /** Callback to close the modal. */
     closeModal: () => void
 }
@@ -291,56 +293,89 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
     const selectedTrainedModelIsValid = form.selectedTrainedModel?.id !== undefined
 
     return (
-        <div className='selection-main-container'>
-            {/* Steps */}
-            <Step.Group widths={3} className='margin-bottom-0'>
-                <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
-                    <Icon name='truck' />
-                    <Step.Content>
-                        <Step.Title>Step 1: Trained model</Step.Title>
-                    </Step.Content>
-                </Step>
-                <Step
-                    active={currentStep === 2}
-                    completed={currentStep > 2}
-                    link
-                    disabled={!selectedTrainedModelIsValid}
-                    onClick={() => {
-                        if (selectedTrainedModelIsValid) {
-                            setCurrentStep(2)
-                        }
-                    }}
-                >
-                    <Icon name='credit card' />
-                    <Step.Content>
-                        <Step.Title>Step 2: Validation datasets</Step.Title>
-                    </Step.Content>
-                </Step>
-            </Step.Group>
+        <Modal
+            className='large-modal'
+            closeIcon={<Icon name='close' size='large' />}
+            closeOnEscape={false}
+            centered={false}
+            closeOnDimmerClick={false}
+            closeOnDocumentClick={false}
+            onClose={props.closeModal}
+            open={props.openModalNewStatValidation}
+        >
+            <Modal.Header>
+                <Icon name='chart bar' />
+                Create new statistical validation
+            </Modal.Header>
+            <Modal.Content>
+                <Grid>
+                    {/* Form */}
+                    <Grid.Row columns={2} divided>
+                        <Grid.Column width={4}>
+                            {/* Basic data */}
+                            <Segment>
+                                <Header dividing as='h2'>Basic data</Header>
 
-            {/* Content */}
-            <Segment className='selection-steps-container margin-top-0'>
-                <Input
-                    name='name'
-                    value={form.name}
-                    icon='asterisk'
-                    className='margin-bottom-2'
-                    placeholder='Name'
-                    onChange={handleInputChange}/>
+                                <Form>
+                                    <Form.Input
+                                        name='name'
+                                        value={form.name}
+                                        icon='asterisk'
+                                        placeholder='Name'
+                                        onChange={handleInputChange}
+                                    />
 
-                <TextArea
-                    name='description'
-                    value={form.description ?? ''}
-                    className='margin-bottom-5'
-                    placeholder='Description (optional)'
-                    onChange={handleInputChange}/>
+                                    <Form.TextArea
+                                        name='description'
+                                        value={form.description ?? ''}
+                                        placeholder='Description (optional)'
+                                        onChange={handleInputChange}
+                                    />
+                                </Form>
 
-                {/* Modal content */}
-                {handleSectionActive()}
-            </Segment>
+                                <div className="margin-top-2">
+                                    <Icon name='asterisk' /> Required field
+                                </div>
+                            </Segment>
+                        </Grid.Column>
+                        <Grid.Column width={12}>
+                            {/* Steps */}
+                            <Step.Group widths={3}>
+                                <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
+                                    <Icon name='truck' />
+                                    <Step.Content>
+                                        <Step.Title>Step 1: Trained model</Step.Title>
+                                    </Step.Content>
+                                </Step>
+                                <Step
+                                    active={currentStep === 2}
+                                    completed={currentStep > 2}
+                                    link
+                                    disabled={!selectedTrainedModelIsValid}
+                                    onClick={() => {
+                                        if (selectedTrainedModelIsValid) {
+                                            setCurrentStep(2)
+                                        }
+                                    }}
+                                >
+                                    <Icon name='credit card' />
+                                    <Step.Content>
+                                        <Step.Title>Step 2: Validation datasets</Step.Title>
+                                    </Step.Content>
+                                </Step>
+                            </Step.Group>
+
+                            {/* Active panel */}
+                            <Segment>
+                                {handleSectionActive()}
+                            </Segment>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            </Modal.Content>
 
             {/* Buttons */}
-            <div className='selections-buttons-container'>
+            <Modal.Actions>
                 {currentStep > 1 &&
                     <Button
                         color="red"
@@ -377,7 +412,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         Confirm
                     </Button>
                 }
-            </div>
-        </div>
+            </Modal.Actions>
+        </Modal>
     )
 }

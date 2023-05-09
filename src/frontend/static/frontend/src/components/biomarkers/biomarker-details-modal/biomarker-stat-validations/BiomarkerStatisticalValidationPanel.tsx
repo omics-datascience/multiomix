@@ -40,21 +40,11 @@ export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalV
     // Shows modal to add a new statistical validation analysis
     if (openModalNewStatValidation) {
         return (
-            <Modal
-                className='large-modal'
-                closeIcon={<Icon name='close' size='large' />}
-                closeOnEscape={false}
-                centered={false}
-                closeOnDimmerClick={false}
-                closeOnDocumentClick={false}
-                onClose={() => { setOpenModalNewStatValidation(false) }}
-                open={openModalNewStatValidation}
-            >
-                <NewStatisticalValidationModal
-                    selectedBiomarker={props.selectedBiomarker}
-                    closeModal={() => { setOpenModalNewStatValidation(false) }}
-                />
-            </Modal>
+            <NewStatisticalValidationModal
+                selectedBiomarker={props.selectedBiomarker}
+                openModalNewStatValidation={openModalNewStatValidation}
+                closeModal={() => { setOpenModalNewStatValidation(false) }}
+            />
         )
     }
 

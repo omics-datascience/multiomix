@@ -165,7 +165,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
 
     return (
         <>
-            <Modal.Content /* className='selection-main-container' */>
+            <Modal.Content>
                 <Grid verticalAlign='middle'>
                     <Grid.Row columns={1}>
                         <Grid.Column >
@@ -191,9 +191,11 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                             </Step.Group>
                         </Grid.Column>
                     </Grid.Row>
+
+                    {/* Active section */}
                     <Grid.Row columns={1}>
                         <Grid.Column>
-                            <Segment className='selection-steps-container'>
+                            <Segment>
                                 {handleSectionActive()}
                             </Segment>
                         </Grid.Column>
