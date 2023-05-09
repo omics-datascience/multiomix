@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
-import { Biomarker, FitnessFunction, SVMKernel, SVMParameters, SVMTask, SourceStateBiomarker } from '../../types'
+import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker } from '../../types'
 import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
-import { fitnessFunctionsOptions } from '../../utils'
+import { fitnessFunctionsOptions, getDefaultClusteringParameters, getDefaultSvmParameters } from '../../utils'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { NewSVMModelForm } from './NewSVMModelForm'
 import { SourceSelectors } from '../../../common/SourceSelectors'
 import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../../utils/util_functions'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
 import ky from 'ky'
+import { NewClusteringModelForm } from './NewClusteringModelForm'
 
 declare const urlNewTrainedModel: string
 
@@ -32,18 +33,13 @@ interface CrossValidationParameters {
 }
 
 /** TODO: complete */
-type NewTrainedModelClusteringParameters = {
-
-}
-
-/** TODO: complete */
 type NewTrainedModelRFParameters = {
 
 }
 
 type ModelParameters = {
     svmParameters: SVMParameters,
-    clusteringParameters: NewTrainedModelClusteringParameters,
+    clusteringParameters: ClusteringParameters,
     rfParameters: NewTrainedModelRFParameters
 }
 
@@ -68,13 +64,8 @@ type NewTrainedModelData = {
 }
 
 const getDefaultModelParameters = (): ModelParameters => ({
-    svmParameters: {
-        task: SVMTask.REGRESSION,
-        maxIterations: 1000,
-        kernel: SVMKernel.LINEAR,
-        randomState: null
-    },
-    clusteringParameters: {},
+    svmParameters: getDefaultSvmParameters(),
+    clusteringParameters: getDefaultClusteringParameters(),
     rfParameters: {}
 })
 
@@ -149,6 +140,8 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
     const getModelForm = (): Nullable<JSX.Element> => {
         switch (selectedFitnessFunction) {
+            case FitnessFunction.CLUSTERING:
+                return <NewClusteringModelForm parameters={form.modelParameters.clusteringParameters} handleChangeParams={handleChangeParamsSVM} />
             case FitnessFunction.SVM:
                 return <NewSVMModelForm parameters={form.modelParameters.svmParameters} handleChangeParams={handleChangeParamsSVM} />
             default:
@@ -271,8 +264,10 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                 const svmParameters = modelParameters.svmParameters
                 return svmParameters.maxIterations > 100 && svmParameters.maxIterations < 2000
             }
-            // TODO: implement all cases
+            case FitnessFunction.CLUSTERING:
+                return true
             default:
+                // TODO: implement RF
                 return false
         }
     }
@@ -566,7 +561,6 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 }
 
 export {
-    NewTrainedModelClusteringParameters,
     NewTrainedModelRFParameters,
     NewTrainedModelModal
 }

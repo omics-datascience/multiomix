@@ -187,14 +187,16 @@ enum SVMTask {
     REGRESSION = 2
 }
 
-/** Settings for the Clustering fitness function. */
-interface FitnessFunctionClustering {
+/** Parameters for a Clustering model. */
+interface ClusteringParameters {
     algorithm: ClusteringAlgorithm,
-    scoringMethod: ClusteringScoringMethod,
-    metric: ClusteringMetric
+    /** Metric to optimize during clustering. */
+    metric: ClusteringMetric,
+    /** Scoring method to use in case of metric === Cox-Regression. */
+    scoringMethod: ClusteringScoringMethod
 }
 
-/** Settings for the SVM fitness function. */
+/** Parameters for a SVM model. */
 interface SVMParameters {
     kernel: SVMKernel
     task: SVMTask,
@@ -204,7 +206,7 @@ interface SVMParameters {
 
 /** All the different fitness functions' parameters. */
 interface FitnessFunctionParameters {
-    clusteringParameters: FitnessFunctionClustering,
+    clusteringParameters: ClusteringParameters,
     svmParameters: SVMParameters
 }
 
@@ -368,7 +370,7 @@ export {
     SVMKernel,
     SVMTask,
     SVMParameters,
-    FitnessFunctionClustering,
+    ClusteringParameters,
     FitnessFunctionParameters,
     FitnessFunction,
     FeatureSelectionAlgorithm,

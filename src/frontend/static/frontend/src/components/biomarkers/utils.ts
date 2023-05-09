@@ -1,5 +1,5 @@
 import { DropdownItemProps } from 'semantic-ui-react'
-import { BiomarkerState, FitnessFunction, SVMKernel } from './types'
+import { BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, SVMKernel, SVMParameters, SVMTask } from './types'
 
 /** Available fitness functions models to use. */
 const fitnessFunctionsOptions: DropdownItemProps[] = [
@@ -15,6 +15,24 @@ const SVMKernelOptions: DropdownItemProps[] = [
     { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF }
 ]
 
+/** Available options for a Clustering algorithm. */
+const clusteringAlgorithmOptions: DropdownItemProps[] = [
+    { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS },
+    { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL }
+]
+
+/** Available options for a Clustering metric to optimize. */
+const clusteringMetricOptions: DropdownItemProps[] = [
+    { key: ClusteringMetric.COX_REGRESSION, text: 'Cox-Regression', value: ClusteringMetric.COX_REGRESSION },
+    { key: ClusteringMetric.LOG_RANK_TEST, text: 'Log-Rank test', value: ClusteringMetric.LOG_RANK_TEST, disabled: true } // TODO: implement in backend
+]
+
+/** Available options for a Clustering scoring method for Cox-Regression. */
+const clusteringScoringMethodOptions: DropdownItemProps[] = [
+    { key: ClusteringScoringMethod.C_INDEX, text: 'Cox-Regression', value: ClusteringScoringMethod.C_INDEX },
+    { key: ClusteringScoringMethod.LOG_LIKELIHOOD, text: 'Log-Rank test', value: ClusteringScoringMethod.LOG_LIKELIHOOD }
+]
+
 /** Available options for a Biomarker's state. */
 const biomarkerStateOptions: DropdownItemProps[] = [
     { key: BiomarkerState.COMPLETED, text: 'Completed', value: BiomarkerState.COMPLETED },
@@ -27,8 +45,38 @@ const biomarkerStateOptions: DropdownItemProps[] = [
     { key: BiomarkerState.REACHED_ATTEMPTS_LIMIT, text: 'Reached attempts limit', value: BiomarkerState.REACHED_ATTEMPTS_LIMIT }
 ]
 
+/**
+ * Generates default SVM parameters.
+ * @returns Default SVM structure
+ */
+const getDefaultSvmParameters = (): SVMParameters => {
+    return {
+        task: SVMTask.REGRESSION,
+        maxIterations: 1000,
+        kernel: SVMKernel.LINEAR,
+        randomState: null
+    }
+}
+
+/**
+ * Generates default clustering parameters.
+ * @returns Default Cluster structure
+ */
+const getDefaultClusteringParameters = (): ClusteringParameters => {
+    return {
+        algorithm: ClusteringAlgorithm.K_MEANS,
+        scoringMethod: ClusteringScoringMethod.C_INDEX,
+        metric: ClusteringMetric.COX_REGRESSION
+    }
+}
+
 export {
     fitnessFunctionsOptions,
     SVMKernelOptions,
-    biomarkerStateOptions
+    clusteringAlgorithmOptions,
+    clusteringMetricOptions,
+    clusteringScoringMethodOptions,
+    biomarkerStateOptions,
+    getDefaultSvmParameters,
+    getDefaultClusteringParameters
 }

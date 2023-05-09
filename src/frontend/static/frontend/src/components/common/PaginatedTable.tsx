@@ -246,7 +246,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             if (filter.options !== undefined) {
                 options = filter.options
             } else {
-                const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))]
+                const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
                 options = uniqueValues.map((value) => ({ key: value, text: value, value: value }))
             }
             return (

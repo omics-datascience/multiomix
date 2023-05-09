@@ -478,7 +478,9 @@ class BiomarkerNewTrainedModel(APIView):
         if fitness_function == FitnessFunction.SVM:
             svm_parameters = model_parameters['svmParameters']
             return 100 < svm_parameters['maxIterations'] < 2000
-        # TODO: implement all the other models
+        if fitness_function == FitnessFunction.CLUSTERING:
+            return True
+        # TODO: implement RF
         return False
 
     def post(self, request: Request):

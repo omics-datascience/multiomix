@@ -12,6 +12,7 @@ import pandas as pd
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q, QuerySet
+from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import ShuffleSplit, GridSearchCV, StratifiedKFold
@@ -22,7 +23,8 @@ from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFa
 from common.functions import close_db_connection
 from common.utils import replace_cgds_suffix, get_subset_of_features
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
-from feature_selection.models import TrainedModel
+from feature_selection.fs_models import ClusteringModels
+from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
 from user_files.models_choices import MoleculeType
@@ -262,10 +264,33 @@ class StatisticalValidationService(object):
         @param stop_event: Stop signal.
         """
 
-        def score_survival_model(model, x, y):
+        def score_svm_rf(model: SurvModel, x: pd.DataFrame, y: np.ndarray) -> float:
+            """Gets the C-Index for a SVM/RF regression prediction."""
             prediction = model.predict(x)
             result = concordance_index_censored(y['event'], y['time'], prediction)
             return result[0]
+
+        def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
+                             score_method: ClusteringScoringMethod) -> float:
+            clustering_result = model.fit(subset.values)
+
+            # Generates a DataFrame with a column for time, event and the group
+            labels = clustering_result.labels_
+            dfs: List[pd.DataFrame] = []
+            for cluster_id in range(model.n_clusters):
+                current_group_y = y[np.where(labels == cluster_id)]
+                dfs.append(
+                    pd.DataFrame({'E': current_group_y['event'], 'T': current_group_y['time'], 'group': cluster_id})
+                )
+            df = pd.concat(dfs)
+
+            # Fits a Cox Regression model using the column group as the variable to consider
+            cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+
+            # This documentation recommends using log-likelihood to optimize:
+            # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
+            scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
+            return cph.score(df, scoring_method=scoring_method)
 
         # Gets model instance and stores its parameters
         classifier, clustering_scoring_method, _is_clustering, is_regression = create_models_parameters_and_classifier(
@@ -292,18 +317,34 @@ class StatisticalValidationService(object):
         # structure of data
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
-        param_grid = {'alpha': 2. ** np.arange(-12, 13, 2)}
-        # cv = ShuffleSplit(n_splits=100, test_size=0.5, random_state=0)
+        # CV strategy
         cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
-        gcv = GridSearchCV(
-            classifier,
-            param_grid,
-            scoring=score_survival_model,
-            n_jobs=1,
-            refit=False,
-            cv=cv
-        )
 
+        # Generates GridSearchCV instance
+        if trained_model.fitness_function in [FitnessFunction.SVM, FitnessFunction.RF]:
+            param_grid = {'alpha': 2. ** np.arange(-12, 13, 2)}
+            gcv = GridSearchCV(
+                classifier,
+                param_grid,
+                scoring=score_svm_rf,
+                n_jobs=1,
+                refit=False,
+                cv=cv
+            )
+        else:
+            # Clustering
+            param_grid = {'n_clusters': range(2, 11)}
+            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+            gcv = GridSearchCV(
+                classifier,
+                param_grid,
+                scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method),
+                n_jobs=1,
+                refit=False,
+                cv=cv
+            )
+
+        # Trains the model
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
             gcv = gcv.fit(molecules_df, clinical_data)

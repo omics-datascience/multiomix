@@ -75,7 +75,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                 customElements={
                     props.allowFullManagement
                         ? [
-                            <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
+                            <Form.Field key={1} className='biomarkers--button--modal' title='New trained model'>
                                 <Button primary icon onClick={() => { setShowNewTrainedModelModal(true) }}>
                                     <Icon name='add' />
                                 </Button>
