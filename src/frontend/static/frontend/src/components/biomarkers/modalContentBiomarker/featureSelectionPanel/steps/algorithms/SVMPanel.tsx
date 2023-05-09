@@ -1,11 +1,11 @@
 import React from 'react'
 import { Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm } from '../../../../types'
+import { SVMParameters } from '../../../../types'
 import { SVMKernelOptions } from '../../../../utils'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
-    parameters: FitnessFunctionSvm,
+    parameters: SVMParameters,
     handleChangeSvmOption: (key: string, value: number) => void,
 }
 

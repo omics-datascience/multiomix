@@ -1,11 +1,11 @@
 import React from 'react'
 import { Form, InputOnChangeData } from 'semantic-ui-react'
-import { maxIterationName, randomStateName, svmKernelName } from './common-form-keys'
 import { SVMKernelOptions } from '../../utils'
+import { SVMParameters } from '../../types'
 
 interface NewSVMModelFormProps {
     /** Getter of the selected params to handle in the form. */
-    selectedParams: {[key: string]: any}
+    parameters: SVMParameters,
     /** Setter of the selected params to handle in the form. */
     handleChangeParams: (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void
 }
@@ -19,8 +19,8 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                 label='Kernel'
                 options={SVMKernelOptions}
                 placeholder='Select a kernel'
-                name={svmKernelName}
-                value={props.selectedParams[svmKernelName]}
+                name='kernel'
+                value={props.parameters.kernel}
                 onChange={props.handleChangeParams}
             />
 
@@ -29,8 +29,8 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                     fluid
                     label='Max iterations'
                     placeholder='100-2000'
-                    name={maxIterationName}
-                    value={props.selectedParams[maxIterationName]}
+                    name='maxIterations'
+                    value={props.parameters.maxIterations}
                     onChange={props.handleChangeParams}
                 />
 
@@ -41,8 +41,8 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                     type='number'
                     step={1}
                     min={0}
-                    name={randomStateName}
-                    value={props.selectedParams[randomStateName]}
+                    name='randomState'
+                    value={props.parameters.randomState}
                     onChange={props.handleChangeParams}
                 />
             </Form.Group>

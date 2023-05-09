@@ -34,7 +34,8 @@ class TaskQueue(object):
 
     def __commit_or_rollback(self, is_commit: bool, experiment: Experiment):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB.
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
         @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise.
         """
         if self.use_transaction:

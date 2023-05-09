@@ -2,7 +2,9 @@ import logging
 import os
 import tempfile
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor, Future
+from enum import Enum
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List
 import numpy as np
@@ -12,14 +14,25 @@ from django.db import connection
 from django.db.models import Q, QuerySet
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import ShuffleSplit, GridSearchCV, StratifiedKFold
+from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.constants import TCGA_CONVENTION
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
 from common.utils import replace_cgds_suffix, get_subset_of_features
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
+from feature_selection.models import TrainedModel
+from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
 from user_files.models_choices import MoleculeType
+
+
+class CrossValidationTypes(Enum):
+    """Available CrossValidation types."""
+    CROSS_VALIDATION = 1,
+    LEAVE_ONE_OUT = 2
+
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -33,6 +46,7 @@ class StatisticalValidationService(object):
     executor: ThreadPoolExecutor = None
     use_transaction: bool
     statistical_validations_futures: Dict[int, Tuple[Future, Event]] = {}
+    trained_model_futures: Dict[int, Tuple[Future, Event]] = {}
 
     def __init__(self):
         # Instantiates the executor
@@ -42,10 +56,12 @@ class StatisticalValidationService(object):
         self.executor = ThreadPoolExecutor(max_workers=settings.THREAD_POOL_SIZE)
         self.use_transaction = settings.USE_TRANSACTION_IN_EXPERIMENT
         self.statistical_validations_futures = {}
+        self.trained_model_futures = {}
 
     def __commit_or_rollback(self, is_commit: bool):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
         @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
         """
         if self.use_transaction:
@@ -54,11 +70,12 @@ class StatisticalValidationService(object):
                 cursor.execute(query)
 
     @staticmethod
-    def __get_common_samples(stat_validation: StatisticalValidation) -> np.ndarray:
+    def __get_common_samples(stat_validation: Union[StatisticalValidation, TrainedModel]) -> np.ndarray:
         """
         Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
-        @param stat_validation: Feature Selection stat_validation.
+        @param stat_validation: statistical validation.
         @return: Sorted Numpy array with the samples in common
+        @raise NoSamplesInCommon if no samples in common are present.
         """
         # NOTE: the intersection is already sorted by Numpy
         last_intersection: Optional[np.ndarray] = None
@@ -76,7 +93,12 @@ class StatisticalValidationService(object):
                 cur_intersection = source.get_samples()
             last_intersection = cast(np.ndarray, cur_intersection)
 
-        return cast(np.ndarray, last_intersection)
+        # Checks empty intersection
+        last_intersection = cast(np.ndarray, last_intersection)
+        if last_intersection.size == 0:
+            raise NoSamplesInCommon
+
+        return last_intersection
 
     @staticmethod
     def __replace_event_col_for_booleans(value: Union[int, str]) -> bool:
@@ -111,7 +133,7 @@ class StatisticalValidationService(object):
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
         return molecules_temp_file_path
 
-    def __generate_df_molecules_and_clinical(self, stat_validation: StatisticalValidation,
+    def __generate_df_molecules_and_clinical(self, stat_validation: Union[StatisticalValidation, TrainedModel],
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
         """
         Generates two DataFrames: one with all the selected molecules, and other with the selected clinical data.
@@ -172,7 +194,7 @@ class StatisticalValidationService(object):
     def __compute_stat_validation(self, stat_validation: StatisticalValidation, molecules_temp_file_path: str,
                                   clinical_temp_file_path: str, stop_event: Event):
         """
-        Computes the Feature Selection stat_validation using the params defined by the user.
+        Computes the statistical validation using the params defined by the user.
         TODO: use stop_event
         @param stat_validation: StatisticalValidation instance.
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
@@ -222,6 +244,76 @@ class StatisticalValidationService(object):
             # TODO: add here all the metrics for every Source type
 
             stat_validation.save()
+            
+    @staticmethod
+    def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
+                                clinical_temp_file_path: str, model_parameters: Dict,
+                                cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
+                                stop_event: Event):
+        """
+        Computes the statistical validation using the params defined by the user.
+        TODO: use stop_event
+        @param trained_model: StatisticalValidation instance.
+        @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
+        @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
+        @param model_parameters: A dict with all the model parameters.
+        @param cross_validation_type: TODO: complete and use!
+        @param cross_validation_folds: TODO: complete
+        @param stop_event: Stop signal.
+        """
+
+        def score_survival_model(model, x, y):
+            prediction = model.predict(x)
+            result = concordance_index_censored(y['event'], y['time'], prediction)
+            return result[0]
+
+        # Gets model instance and stores its parameters
+        classifier, clustering_scoring_method, _is_clustering, is_regression = create_models_parameters_and_classifier(
+            trained_model, model_parameters)
+
+        # TODO: refactor this retrieval of data as it's repeated in the fs_service
+        # Gets molecules and clinica DataFrames
+        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+
+        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
+        if is_regression:
+            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
+            clinical_df = clinical_df[clinical_df[time_column] > 0]
+            valid_samples = clinical_df.index
+            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Formats clinical data to a Numpy structured array
+        # TODO: refactor
+        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
+                                                   formats='bool, float')
+
+        # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+        # structure of data
+        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
+
+        param_grid = {'alpha': 2. ** np.arange(-12, 13, 2)}
+        # cv = ShuffleSplit(n_splits=100, test_size=0.5, random_state=0)
+        cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
+        gcv = GridSearchCV(
+            classifier,
+            param_grid,
+            scoring=score_survival_model,
+            n_jobs=1,
+            refit=False,
+            cv=cv
+        )
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+            gcv = gcv.fit(molecules_df, clinical_data)
+
+        # Saves model instance and best score
+        classifier.set_params(**gcv.best_params_)
+        classifier.fit(molecules_df, clinical_data)
+        best_model = classifier
+        best_score = gcv.best_score_
+        save_model_dump_and_best_score(trained_model, best_model, best_score)
 
     def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
         """
@@ -232,8 +324,6 @@ class StatisticalValidationService(object):
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(stat_validation)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
 
         # Generates all the molecules DataFrame
         molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
@@ -243,13 +333,11 @@ class StatisticalValidationService(object):
     def get_molecules_and_clinical_df(self,
                                       stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Gets samples in common, generates needed DataFrames and finally computes the Feature Selection stat_validation.
+        Gets samples in common, generates needed DataFrames and finally computes the statistical validation.
         @param stat_validation: StatisticalValidation instance.
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(stat_validation)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
@@ -262,15 +350,13 @@ class StatisticalValidationService(object):
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
                                               stop_event: Event) -> Tuple[str, str]:
         """
-        Gets samples in common, generates needed DataFrames and finally computes the Feature Selection stat_validation.
+        Gets samples in common, generates needed DataFrames and finally computes the statistical validation.
         TODO: use stop_event
         @param stat_validation: StatisticalValidation instance.
         @param stop_event: Stop signal
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(stat_validation)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
@@ -280,10 +366,33 @@ class StatisticalValidationService(object):
 
         return molecules_temp_file_path, clinical_temp_file_path
 
+    def __prepare_and_compute_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
+                                            cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
+                                            stop_event: Event) -> Tuple[str, str]:
+        """
+        Gets samples in common, generates needed DataFrames and finally computes the TrainedModel's training process.
+        TODO: use stop_event
+        @param trained_model: TrainedModel instance.
+        @param model_parameters: A dict with all the model parameters.
+        @param cross_validation_type: TODO: complete
+        @param cross_validation_folds: TODO: complete
+        @param stop_event: Stop signal
+        """
+        # Get samples in common
+        samples_in_common = self.__get_common_samples(trained_model)
+
+        # Generates needed DataFrames
+        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(trained_model,
+                                                                                                      samples_in_common)
+
+        self.__compute_trained_model(trained_model, molecules_temp_file_path, clinical_temp_file_path, model_parameters,
+                                     cross_validation_type, cross_validation_folds, stop_event)
+
+        return molecules_temp_file_path, clinical_temp_file_path
 
     def eval_statistical_validation(self, stat_validation: StatisticalValidation, stop_event: Event) -> None:
         """
-        Computes a Feature Selection stat_validation.
+        Computes a statistical validation.
         @param stat_validation: StatisticalValidation to be processed.
         @param stop_event: Stop event to cancel the stat_validation
         """
@@ -301,7 +410,7 @@ class StatisticalValidationService(object):
                 with connection.cursor() as cursor:
                     cursor.execute("BEGIN")
 
-            # Computes Feature Selection stat_validation
+            # Computes statistical validation
             start = time.time()
             molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_stat_validation(
                 stat_validation,
@@ -354,15 +463,95 @@ class StatisticalValidationService(object):
         stat_validation.save()
 
         # Removes key
-        self.__removes_stat_validation_future(biomarker.pk)
+        self.__removes_stat_validation_future(stat_validation.pk)
 
         close_db_connection()
 
+    def eval_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
+                           cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
+                           stop_event: Event) -> None:
+        """
+        Computes a training to get a good TrainedModel.
+        @param trained_model: TrainedModel to be processed.
+        @param model_parameters: A dict with all the model parameters.
+        @param cross_validation_type: TODO: complete
+        @param cross_validation_folds: TODO: complete
+        @param stop_event: Stop event to cancel the stat_validation
+        """
+        # Computes the TrainedModel
+        molecules_temp_file_path: Optional[str] = None
+        clinical_temp_file_path: Optional[str] = None
+        try:
+            logging.warning(f'ID TrainedModel -> {trained_model.pk}')
+            # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
+            # with exceptions thrown in subprocesses
+            if self.use_transaction:
+                with connection.cursor() as cursor:
+                    cursor.execute("BEGIN")
+
+            # Computes statistical validation
+            start = time.time()
+            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_trained_model(
+                trained_model,
+                model_parameters,
+                cross_validation_type,
+                cross_validation_folds,
+                stop_event
+            )
+            total_execution_time = time.time() - start
+            logging.warning(f'TrainedModel {trained_model.pk} total time -> {total_execution_time} seconds')
+
+            # If user cancel the stat_validation, discard changes
+            if stop_event.is_set():
+                raise ExperimentStopped
+            else:
+                self.__commit_or_rollback(is_commit=True)
+
+                # Saves some data about the result of the stat_validation
+                trained_model.execution_time = total_execution_time
+                trained_model.state = BiomarkerState.COMPLETED
+        except NoSamplesInCommon:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error('No samples in common')
+            trained_model.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+        except ExperimentFailed:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error(f'TrainedModel {trained_model.pk} has failed. Check logs for more info')
+            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+        except ServerSelectionTimeoutError:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error('MongoDB connection timeout!')
+            trained_model.state = BiomarkerState.WAITING_FOR_QUEUE
+        except ExperimentStopped:
+            # If user cancel the stat_validation, discard changes
+            logging.warning(f'TrainedModel {trained_model.pk} was stopped')
+            self.__commit_or_rollback(is_commit=False)
+            trained_model.state = BiomarkerState.STOPPED
+        except Exception as e:
+            self.__commit_or_rollback(is_commit=False)
+            logging.exception(e)
+            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to TrainedModel {trained_model.pk}')
+            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+        finally:
+            # Removes the temporary files
+            if molecules_temp_file_path is not None:
+                os.unlink(molecules_temp_file_path)
+
+            if clinical_temp_file_path is not None:
+                os.unlink(clinical_temp_file_path)
+
+        # Saves changes in DB
+        trained_model.save()
+
+        # Removes key
+        self.__removes_trained_model_future(trained_model.pk)
+
+        close_db_connection()
 
     def add_stat_validation(self, stat_validation: StatisticalValidation):
         """
-        Adds a Feature Selection stat_validation to the ThreadPool to be processed
-        @param stat_validation: StatisticalValidation to be processed
+        Adds a stat_validation to the ThreadPool to be processed.
+        @param stat_validation: StatisticalValidation to be processed.
         """
         stat_validation_event = Event()
 
@@ -370,6 +559,22 @@ class StatisticalValidationService(object):
         stat_validation_future = self.executor.submit(self.eval_statistical_validation, stat_validation,
                                                       stat_validation_event)
         self.statistical_validations_futures[stat_validation.pk] = (stat_validation_future, stat_validation_event)
+
+    def add_trained_model_training(self, trained_model: TrainedModel, model_parameters: Dict,
+                                   cross_validation_type: CrossValidationTypes, cross_validation_folds: int):
+        """
+        Adds a new TrainedModel training request to the ThreadPool to be processed.
+        @param trained_model: StatisticalValidation to be processed.
+        @param model_parameters: A dict with all the model parameters.
+        @param cross_validation_type: TODO: complete
+        @param cross_validation_folds: TODO: complete
+        """
+        trained_model_event = Event()
+
+        # Submits
+        trained_model_future = self.executor.submit(self.eval_trained_model, trained_model, model_parameters,
+                                                    cross_validation_type, cross_validation_folds, trained_model_event)
+        self.trained_model_futures[trained_model.pk] = (trained_model_future, trained_model_event)
 
     def stop_stat_validation(self, stat_validation: StatisticalValidation):
         """
@@ -424,6 +629,13 @@ class StatisticalValidationService(object):
         @param stat_validation_pk: PK to remove
         """
         del self.statistical_validations_futures[stat_validation_pk]
+
+    def __removes_trained_model_future(self, trained_model_pk: int):
+        """
+        Removes a specific key from self.trained_model_futures
+        @param trained_model_pk: PK to remove
+        """
+        del self.trained_model_futures[trained_model_pk]
 
 
 global_stat_validation_service = StatisticalValidationService()

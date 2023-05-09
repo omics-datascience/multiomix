@@ -56,7 +56,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                         <TableCellWithTitle value={statisticalValidation.name} />
                         <TableCellWithTitle value={statisticalValidation.description ?? ''} />
                         <Table.Cell textAlign='center'>
-                            {/* NOTE: trainedModel has the same states as Biomarker */}
+                            {/* NOTE: statistical validations have the same states as Biomarker */}
                             <BiomarkerStateLabel biomarkerState={statisticalValidation.state} />
                         </Table.Cell>
                         <Table.Cell textAlign='center'>

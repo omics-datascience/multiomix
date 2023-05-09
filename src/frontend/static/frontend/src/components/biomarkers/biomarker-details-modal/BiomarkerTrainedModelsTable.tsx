@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { PaginatedTable } from '../../common/PaginatedTable'
-import { Biomarker, TrainedModel } from '../types'
+import { Biomarker, BiomarkerState, TrainedModel } from '../types'
 import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../utils/util_functions'
 import { Nullable } from '../../../utils/interfaces'
-import { fitnessFunctionsOptions } from '../utils'
+import { biomarkerStateOptions, fitnessFunctionsOptions } from '../utils'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
+import { BiomarkerStateLabel } from '../BiomarkerStateLabel'
 
 declare const urlBiomarkerTrainedModels: string
 
@@ -15,6 +16,8 @@ declare const urlBiomarkerTrainedModels: string
 interface BiomarkerTrainedModelsProps {
     /** Selected Biomarker instance to retrieve its TrainedModel instances. */
     selectedBiomarker: Biomarker,
+    /** If `true`, shows only the TrainedModel with state = `BiomarkerState.COMPLETED`. */
+    showOnlyCompleted?: boolean,
     /** If `true`, shows a button to add a new TrainedModel. */
     allowFullManagement: boolean,
     /** Selected TrainedModel instance. */
@@ -31,12 +34,17 @@ interface BiomarkerTrainedModelsProps {
 export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) => {
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
 
-    // TODO: remove this block
-    useEffect(() => {
-        setTimeout(() => {
-            setShowNewTrainedModelModal(true)
-        }, 500)
-    }, [])
+    const showOnlyCompleted = props.showOnlyCompleted ?? false
+    let stateFilter
+    let extraQueryParams
+    if (showOnlyCompleted) {
+        // In case of only showing completed, avoids showing a filter by TrainedModel's state
+        stateFilter = []
+        extraQueryParams = { state: BiomarkerState.COMPLETED }
+    } else {
+        stateFilter = [{ label: 'State', keyForServer: 'state', defaultValue: '', placeholder: 'State', options: biomarkerStateOptions }]
+        extraQueryParams = {}
+    }
 
     return (
         <>
@@ -53,14 +61,16 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                 headers={[
                     { name: 'Name', serverCodeToSort: 'name', width: 3 },
                     { name: 'Description', serverCodeToSort: 'description', width: 4 },
+                    { name: 'State', serverCodeToSort: 'state', width: 1 },
+                    { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Model', serverCodeToSort: 'fitness_function' },
                     { name: 'Best fitness', serverCodeToSort: 'best_fitness_value' }
                 ]}
-                defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
-                queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
+                defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
+                queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
                 customFilters={[
-                    { label: 'Model type', keyForServer: 'fitness_function', defaultValue: '', placeholder: 'Model type', options: fitnessFunctionsOptions }
+                    { label: 'Model type', keyForServer: 'fitness_function', defaultValue: '', placeholder: 'Model type', options: fitnessFunctionsOptions },
+                    ...stateFilter
                 ]}
                 customElements={
                     props.allowFullManagement
@@ -91,9 +101,13 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                         >
                             <TableCellWithTitle value={trainedModel.name} />
                             <TableCellWithTitle value={trainedModel.description ?? ''} />
-                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <Table.Cell textAlign='center'>
+                                {/* NOTE: trained models have the same states as Biomarker */}
+                                <BiomarkerStateLabel biomarkerState={trainedModel.state} />
+                            </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
-                            <Table.Cell>{trainedModel.best_fitness_value.toFixed(4)}</Table.Cell>
+                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
                         </Table.Row>
                     )
                 }}

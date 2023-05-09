@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Union, List, Dict
 import numpy as np
 import pandas as pd
@@ -469,9 +470,16 @@ class BiomarkerNewStatisticalValidations(APIView):
 
 class BiomarkerNewTrainedModel(APIView):
     """Runs a new trained model for a specific Biomarker."""
-    # TODO: implement
     permission_classes = [permissions.IsAuthenticated]
 
+    @staticmethod
+    def __model_parameters_are_valid(fitness_function: int, model_parameters: Dict) -> bool:
+        """Checks if the selected model's parameters are valid."""
+        if fitness_function == FitnessFunction.SVM:
+            svm_parameters = model_parameters['svmParameters']
+            return 100 < svm_parameters['maxIterations'] < 2000
+        # TODO: implement all the other models
+        return False
 
     def post(self, request: Request):
         with transaction.atomic():
@@ -480,12 +488,31 @@ class BiomarkerNewTrainedModel(APIView):
             user = request.user
             biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
 
-            # Gets the Biomarker's trained model instance
-            trained_model_pk = request.POST.get('selectedTrainedModelPk')
-            try:
-                trained_model: TrainedModel = biomarker.trained_models.get(pk=trained_model_pk)
-            except TrainedModel.DoesNotExist:
-                return Http404('Trained model not found')
+            # Checks some parameters
+            fitness_function = request.POST.get('fitnessFunction')
+            model_parameters = request.POST.get('modelParameters')
+            if fitness_function is None or model_parameters is None:
+                raise ValidationError(
+                    f'Invalid parameters: fitness_function: {fitness_function} '
+                    f'| fitness_function_parameters: {model_parameters}')
+
+            fitness_function = int(fitness_function)
+            model_parameters = json.loads(model_parameters)
+
+            if not self.__model_parameters_are_valid(fitness_function, model_parameters):
+                raise ValidationError('Invalid model parameters')
+
+            # Gets and checks CrossValidation parameters
+            cross_validation_type = request.POST.get('crossValidationType')
+            cross_validation_folds = request.POST.get('crossValidationFolds')
+
+            if cross_validation_type is None or cross_validation_folds is None:
+                raise ValidationError(f'Invalid CV parameters: cross_validation_type: {cross_validation_type} | '
+                                      f'cross_validation_folds: {cross_validation_folds}')
+
+            # Cast to int
+            cross_validation_type = int(cross_validation_type)
+            cross_validation_folds = int(cross_validation_folds)
 
             # Clinical source
             clinical_source_type = get_source_pk(request.POST, 'clinicalType')
@@ -536,26 +563,27 @@ class BiomarkerNewTrainedModel(APIView):
             else:
                 raise ValidationError('Invalid survival tuple')
 
-            # Creates the StatisticalValidation instance
+            # Creates the TrainedModel instance
             description = request.POST.get('description', 'null')
             description = description if description != 'null' else None
 
-            stat_validation = StatisticalValidation.objects.create(
+            trained_model = TrainedModel.objects.create(
                 name=request.POST.get('name'),
                 description=description,
                 biomarker=biomarker,
-                trained_model=trained_model,
                 state=BiomarkerState.IN_PROCESS,
+                fitness_function=int(fitness_function),
                 clinical_source=clinical_source,
                 survival_column_tuple_user_file=survival_column_tuple_user_file,
                 survival_column_tuple_cgds=survival_column_tuple_cgds,
-                mrna_source_result=stat_mrna_source,
-                mirna_source_result=stat_mirna_source,
-                cna_source_result=stat_cna_source,
-                methylation_source_result=stat_methylation_source,
+                mrna_source=mrna_source,
+                mirna_source=mirna_source,
+                cna_source=cna_source,
+                methylation_source=methylation_source,
             )
 
             # Runs statistical validation in background
-            global_stat_validation_service.add_stat_validation(stat_validation)
+            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters,
+                                                                      cross_validation_type, cross_validation_folds)
 
         return Response({'ok': True})

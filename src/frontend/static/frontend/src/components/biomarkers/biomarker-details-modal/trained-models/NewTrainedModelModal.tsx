@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { Biomarker, FitnessFunction, SVMKernel, SourceStateBiomarker } from '../../types'
-import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Select, Step } from 'semantic-ui-react'
+import React, { useState } from 'react'
+import { Biomarker, FitnessFunction, SVMKernel, SVMParameters, SVMTask, SourceStateBiomarker } from '../../types'
+import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
 import { fitnessFunctionsOptions } from '../../utils'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { NewSVMModelForm } from './NewSVMModelForm'
-import { maxIterationName, randomStateName, svmKernelName } from './common-form-keys'
 import { SourceSelectors } from '../../../common/SourceSelectors'
 import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../../utils/util_functions'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
@@ -12,7 +11,7 @@ import ky from 'ky'
 
 declare const urlNewTrainedModel: string
 
-/** Available CV types. */
+/** Available CrossValidation types. */
 enum CrossValidationType {
     CROSS_VALIDATION = 1,
     LEAVE_ONE_OUT = 2
@@ -32,6 +31,22 @@ interface CrossValidationParameters {
     folds: number
 }
 
+/** TODO: complete */
+type NewTrainedModelClusteringParameters = {
+
+}
+
+/** TODO: complete */
+type NewTrainedModelRFParameters = {
+
+}
+
+type ModelParameters = {
+    svmParameters: SVMParameters,
+    clusteringParameters: NewTrainedModelClusteringParameters,
+    rfParameters: NewTrainedModelRFParameters
+}
+
 /** Data to handle in the form of a new StatisticalValidation. */
 type NewTrainedModelData = {
     name: string,
@@ -39,7 +54,7 @@ type NewTrainedModelData = {
     selectedFitnessFunction: Nullable<FitnessFunction>,
     crossValidationParameters: CrossValidationParameters,
     /** TrainedModel instance. */
-    modelParameters: { [key: string]: any },
+    modelParameters: ModelParameters,
     /** Clinical source. */
     clinicalSource: Source,
     /** mRNA source. */
@@ -51,6 +66,17 @@ type NewTrainedModelData = {
     /** methylation source. */
     methylationSource: Source,
 }
+
+const getDefaultModelParameters = (): ModelParameters => ({
+    svmParameters: {
+        task: SVMTask.REGRESSION,
+        maxIterations: 1000,
+        kernel: SVMKernel.LINEAR,
+        randomState: null
+    },
+    clusteringParameters: {},
+    rfParameters: {}
+})
 
 /**
  * Generates a NewTrainedModelData instance.
@@ -64,7 +90,7 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
         type: CrossValidationType.CROSS_VALIDATION,
         folds: 10
     },
-    modelParameters: {},
+    modelParameters: getDefaultModelParameters(),
     clinicalSource: getDefaultSource(),
     mRNASource: getDefaultSource(),
     mirnaSource: getDefaultSource(),
@@ -73,55 +99,49 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
 })
 
 /**
- * TODO: add docs
- * @param props
- * @returns
+ * Renders a panel to add a new TrainedModel instance.
+ * @param props Component props.
+ * @returns Component.
  */
-export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
+const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     const [form, setForm] = useState<NewTrainedModelData>(getDefaultNewTrainedModelData())
     const [currentStep, setCurrentStep] = useState<1 | 2>(1)
     const [sendingData, setSendingData] = useState(false)
 
     const selectedFitnessFunction = form.selectedFitnessFunction
 
-    /** Every time the selected option changes, sets the default values. */
-    useEffect(() => {
-        switch (selectedFitnessFunction) {
-            case FitnessFunction.CLUSTERING:
-                // TODO: implement
-                break
-            case FitnessFunction.SVM:
-                setForm({
-                    ...form,
-                    modelParameters: {
-                        [maxIterationName]: 1000,
-                        [svmKernelName]: SVMKernel.LINEAR,
-                        [randomStateName]: undefined
-                    }
-                })
-                break
-            case FitnessFunction.RF:
-                // TODO: implement
-                break
-            default:
-                break
-        }
-    }, [selectedFitnessFunction])
-
     /**
-     * Handles changes in the model parameters form.
-     * @param _event Event of change of the input element.
+     * Handles changes in any model's parameters form.
+     * @param model Model to edit
      * @param data Data with the name and current value of the input element.
      */
-    const handleChangeParams = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+    const handleChangeParamsGeneric = (model: keyof ModelParameters, data: InputOnChangeData) => {
         const { name, value } = data
-        const modelParameters = { ...form.modelParameters, [name]: value }
-        setForm({ ...form, modelParameters })
+        const newParameters = { ...form.modelParameters[model], [name]: value }
+        setForm({ ...form, modelParameters: { ...form.modelParameters, [model]: newParameters } })
     }
 
     /**
-     * TODO: add docs
-     * @param selectedFitnessFunction
+     * Handles changes in the SVM model's parameters form.
+     * @param _event Event of change of the input element.
+     * @param data Data with the name and current value of the input element.
+     */
+    const handleChangeParamsSVM = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+        handleChangeParamsGeneric('svmParameters', data)
+    }
+
+    /**
+     * Handles changes in the name/description inputs.
+     * @param name Name of
+     * @param value New value to set.
+     */
+    const handleInputChanges = (name: 'name' | 'description', value: string | undefined) => {
+        setForm({ ...form, [name]: value })
+    }
+
+    /**
+     * Handles changes in the FitnessFunction select.
+     * @param selectedFitnessFunction New FitnessFunction value.
      */
     const handleChangeFitnessValue = (selectedFitnessFunction: FitnessFunction) => {
         setForm({ ...form, selectedFitnessFunction })
@@ -130,7 +150,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     const getModelForm = (): Nullable<JSX.Element> => {
         switch (selectedFitnessFunction) {
             case FitnessFunction.SVM:
-                return <NewSVMModelForm selectedParams={form.modelParameters} handleChangeParams={handleChangeParams} />
+                return <NewSVMModelForm parameters={form.modelParameters.svmParameters} handleChangeParams={handleChangeParamsSVM} />
             default:
                 return null
         }
@@ -241,21 +261,24 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     }
 
     /**
-     * TODO: implement
-     * @returns
+     * Checks that all the parameters for the different types of models are valid.
+     * @returns True if parameters are valid, false otherwise
      */
     const modelParametersAreValid = (): boolean => {
-        // const modelParameters = form.modelParameters
-        // if (selectedFitnessFunction === FitnessFunction.SVM) {
-        //     const maxIterations = modelParameters[maxIterationName]
-        //     return (maxIterations < )
-        // }
-
-        return false
+        const modelParameters = form.modelParameters
+        switch (selectedFitnessFunction) {
+            case FitnessFunction.SVM: {
+                const svmParameters = modelParameters.svmParameters
+                return svmParameters.maxIterations > 100 && svmParameters.maxIterations < 2000
+            }
+            // TODO: implement all cases
+            default:
+                return false
+        }
     }
 
     /**
-     * TODO: docs
+     * Return `true` if the form is valid to submit
      * @returns
      */
     const formIsValid = (): boolean => {
@@ -279,10 +302,11 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         // Appends StatisticalValidation fields
         formData.append('name', form.name)
         formData.append('description', form.description ?? 'null')
-        formData.append('selectedFitnessFunction', (form.selectedFitnessFunction as FitnessFunction).toString())
+        formData.append('fitnessFunction', (form.selectedFitnessFunction as FitnessFunction).toString())
         formData.append('crossValidationType', form.crossValidationParameters.type.toString())
         formData.append('crossValidationFolds', form.crossValidationParameters.folds.toString())
         formData.append('biomarkerPk', (props.selectedBiomarker.id as number).toString())
+        formData.append('modelParameters', JSON.stringify(form.modelParameters))
 
         // Appends all the parameters for the model
         for (const [parameterName, parameterValue] of Object.entries(form.modelParameters)) {
@@ -319,112 +343,124 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     }
 
     /**
-     * TODO: docs
-     * @param name
-     * @param value
+     * Handles changes in the CrossValidation form.
+     * @param name Name of the input to change.
+     * @param value New value to assign.
      */
     const handleCVParametersChange = (name: keyof CrossValidationParameters, value: CrossValidationType | number) => {
         setForm({ ...form, crossValidationParameters: { ...form.crossValidationParameters, [name]: value } })
     }
 
+    /**
+     * Shows the corresponding section depending on the current selected step.
+     * @returns Corresponding component.
+     */
     const handleSectionActive = (): JSX.Element => {
         switch (currentStep) {
             case 1:
                 // Model parameters panel
                 return (
-                    <Grid.Row columns={2} divided>
-                        <Grid.Column width={5}>
-                            <Header as='h4'>Select a new model to train</Header>
+                    <Grid>
+                        <Grid.Row columns={3} divided>
+                            <Grid.Column width={5}>
+                                <Header as='h4'>Select a new model to train</Header>
 
-                            <Form>
-                                <Form.Field
-                                    control={Select}
-                                    options={fitnessFunctionsOptions}
-                                    value={selectedFitnessFunction}
-                                    onChange={(_, { value }) => { handleChangeFitnessValue(value) }}
-                                    placeholder='Select a model'
-                                />
-                            </Form>
-                        </Grid.Column>
+                                <Form>
+                                    <Form.Field
+                                        control={Select}
+                                        options={fitnessFunctionsOptions}
+                                        value={selectedFitnessFunction}
+                                        onChange={(_, { value }) => { handleChangeFitnessValue(value) }}
+                                        placeholder='Select a model'
+                                    />
+                                </Form>
+                            </Grid.Column>
 
-                        {/* Specific model params */}
-                        <Grid.Column width={6}>
-                            {selectedFitnessFunction !== null &&
-                                <Header as='h4'>Select model parameters</Header>
-                            }
+                            {/* Specific model params */}
+                            <Grid.Column width={6}>
+                                {selectedFitnessFunction !== null &&
+                                    <Header as='h4'>Select model parameters</Header>
+                                }
 
-                            <Form>
-                                {getModelForm()}
-                            </Form>
-                        </Grid.Column>
+                                <Form>
+                                    {getModelForm()}
+                                </Form>
+                            </Grid.Column>
 
-                        {/* Specific model params */}
-                        <Grid.Column width={5}>
-                            {selectedFitnessFunction !== null &&
+                            {/* Specific model params */}
+                            <Grid.Column width={5}>
                                 <Header as='h4'>Select optimization process</Header>
-                            }
 
-                            <Form.Select
-                                fluid
-                                label='Cross Validation method'
-                                options={[
-                                    { key: CrossValidationType.CROSS_VALIDATION, text: 'Normal', value: CrossValidationType.CROSS_VALIDATION },
-                                    { key: CrossValidationType.LEAVE_ONE_OUT, text: 'Leave One Out', value: CrossValidationType.LEAVE_ONE_OUT }
-                                ]}
-                                placeholder='Select a CV method'
-                                name='type'
-                                value={form.crossValidationParameters.type}
-                                onChange={(_, { name, value }) => { handleCVParametersChange(name, value as any) }}
-                            />
-
-                            {form.crossValidationParameters.type === CrossValidationType.CROSS_VALIDATION &&
-                                <Form.Input
+                                <Form.Select
                                     fluid
-                                    label='Number of folds'
-                                    placeholder='An integer number'
-                                    type='number'
-                                    step={1}
-                                    min={3}
-                                    max={10}
-                                    name='folds'
-                                    value={form.crossValidationParameters.folds}
+                                    label='Cross Validation method'
+                                    options={[
+                                        { key: CrossValidationType.CROSS_VALIDATION, text: 'Normal', value: CrossValidationType.CROSS_VALIDATION },
+                                        { key: CrossValidationType.LEAVE_ONE_OUT, text: 'Leave One Out', value: CrossValidationType.LEAVE_ONE_OUT }
+                                    ]}
+                                    placeholder='Select a CV method'
+                                    name='type'
+                                    value={form.crossValidationParameters.type}
                                     onChange={(_, { name, value }) => { handleCVParametersChange(name, value as any) }}
                                 />
-                            }
-                        </Grid.Column>
-                    </Grid.Row>
+
+                                {form.crossValidationParameters.type === CrossValidationType.CROSS_VALIDATION &&
+                                    <Form.Input
+                                        fluid
+                                        label='Number of folds'
+                                        placeholder='An integer number'
+                                        type='number'
+                                        step={1}
+                                        min={3}
+                                        max={10}
+                                        name='folds'
+                                        value={form.crossValidationParameters.folds}
+                                        onChange={(_, { name, value }) => { handleCVParametersChange(name, value as any) }}
+                                    />
+                                }
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
                 )
             case 2:
                 // Sources panel
                 return (
-                    <SourceSelectors
-                        clinicalSource={{ source: form.clinicalSource }}
-                        mRNASource={{
-                            source: form.mRNASource,
-                            disabled: !props.selectedBiomarker.number_of_mrnas
-                        }}
-                        mirnaSource={{
-                            source: form.mirnaSource,
-                            disabled: !props.selectedBiomarker.number_of_mirnas
-                        }}
-                        cnaSource={{
-                            source: form.cnaSource,
-                            disabled: !props.selectedBiomarker.number_of_cnas
-                        }}
-                        methylationSource={{
-                            source: form.methylationSource,
-                            disabled: !props.selectedBiomarker.number_of_methylations
-                        }}
-                        handleChangeSourceType={handleChangeSourceType}
-                        selectNewFile={selectNewFile}
-                        selectUploadedFile={selectUploadedFile}
-                        selectStudy={selectStudy}
-                    />
+                    <Grid>
+
+                        <Grid.Row columns={1}>
+                            <Grid.Column>
+                                <SourceSelectors
+                                    clinicalSource={{ source: form.clinicalSource }}
+                                    mRNASource={{
+                                        source: form.mRNASource,
+                                        disabled: !props.selectedBiomarker.number_of_mrnas
+                                    }}
+                                    mirnaSource={{
+                                        source: form.mirnaSource,
+                                        disabled: !props.selectedBiomarker.number_of_mirnas
+                                    }}
+                                    cnaSource={{
+                                        source: form.cnaSource,
+                                        disabled: !props.selectedBiomarker.number_of_cnas
+                                    }}
+                                    methylationSource={{
+                                        source: form.methylationSource,
+                                        disabled: !props.selectedBiomarker.number_of_methylations
+                                    }}
+                                    handleChangeSourceType={handleChangeSourceType}
+                                    selectNewFile={selectNewFile}
+                                    selectUploadedFile={selectUploadedFile}
+                                    selectStudy={selectStudy}
+                                />
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
                 )
         }
     }
 
     const modelIsValid = modelParametersAreValid()
+    const isLastStep = currentStep === 2
 
     return (
         <Modal
@@ -434,6 +470,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
             closeOnDimmerClick={false}
             closeOnDocumentClick={false}
             closeIcon={<Icon name='close' size='large' />}
+            className='large-modal'
             open={props.showNewTrainedModelModal}
         >
             <Modal.Header>
@@ -442,56 +479,87 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
             </Modal.Header>
             <Modal.Content>
                 <Grid>
-                    <Grid.Row columns={1} className='padding-top-0'>
-                        {/* Steps */}
-                        <Step.Group widths={3} className='margin-bottom-0'>
-                            <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
-                                <Icon name='truck' />
-                                <Step.Content>
-                                    <Step.Title>Step 1: Training parameters</Step.Title>
-                                </Step.Content>
-                            </Step>
-                            <Step
-                                active={currentStep === 2}
-                                completed={currentStep > 2}
-                                link
-                                disabled={!modelIsValid}
-                                onClick={() => {
-                                    if (modelIsValid) {
-                                        setCurrentStep(2)
-                                    }
-                                }}
-                            >
-                                <Icon name='credit card' />
-                                <Step.Content>
-                                    <Step.Title>Step 2: Training datasets</Step.Title>
-                                </Step.Content>
-                            </Step>
-                        </Step.Group>
-                    </Grid.Row>
+                    <Grid.Row columns={2} divided stretched>
+                        <Grid.Column width={4}>
+                            <Form>
+                                <Form.Input
+                                    icon='asterisk'
+                                    placeholder='Name'
+                                    name='name'
+                                    value={form.name}
+                                    onChange={(_, { name, value }) => handleInputChanges(name, value)}
+                                    maxLength={100}
+                                />
 
-                    {/* Active panel */}
-                    {handleSectionActive()}
+                                <Form.TextArea
+                                    placeholder='Description (optional)'
+                                    name='description'
+                                    value={form.description ?? undefined}
+                                    onChange={(_, { name, value }) => handleInputChanges(name, value as string | undefined)}
+                                />
+                            </Form>
+                        </Grid.Column>
+                        <Grid.Column width={12}>
+                            {/* Steps */}
+                            <Step.Group widths={3}>
+                                <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
+                                    <Icon name='truck' />
+                                    <Step.Content>
+                                        <Step.Title>Step 1: Training parameters</Step.Title>
+                                    </Step.Content>
+                                </Step>
+                                <Step
+                                    active={currentStep === 2}
+                                    completed={currentStep > 2}
+                                    link
+                                    disabled={!modelIsValid}
+                                    onClick={() => {
+                                        if (modelIsValid) {
+                                            setCurrentStep(2)
+                                        }
+                                    }}
+                                >
+                                    <Icon name='credit card' />
+                                    <Step.Content>
+                                        <Step.Title>Step 2: Training datasets</Step.Title>
+                                    </Step.Content>
+                                </Step>
+                            </Step.Group>
+
+                            {/* Active panel */}
+                            <Segment className='selection-steps-container margin-top-0'>
+                                {handleSectionActive()}
+                            </Segment>
+                        </Grid.Column>
+                    </Grid.Row>
                 </Grid>
             </Modal.Content>
             <Modal.Actions>
                 <Button onClick={() => props.setShowNewTrainedModelModal(false)}>Cancel</Button>
 
                 {/* Submit StatisticalAnalysis button */}
-                {currentStep === 2 &&
-                    <Button
-                        color="green"
-                        loading={sendingData}
-                        onClick={() => {
+                <Button
+                    color="green"
+                    loading={sendingData}
+                    onClick={() => {
+                        if (isLastStep) {
                             runNewTrainedModel()
-                        }}
-                        disabled={!formIsValid()}
-                    >
-                        Confirm
-                    </Button>
-                }
+                        } else {
+                            setCurrentStep(2)
+                        }
+                    }}
+                    disabled={isLastStep ? !formIsValid() : !modelIsValid}
+                >
+                    {isLastStep ? 'Confirm' : 'Continue'}
+                </Button>
             </Modal.Actions>
         </Modal>
 
     )
+}
+
+export {
+    NewTrainedModelClusteringParameters,
+    NewTrainedModelRFParameters,
+    NewTrainedModelModal
 }

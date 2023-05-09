@@ -158,6 +158,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
             return (
                 <BiomarkerTrainedModelsTable
                     selectedBiomarker={props.selectedBiomarker}
+                    showOnlyCompleted
                     allowFullManagement={false}
                     selectedTrainedModel={form.selectedTrainedModel}
                     selectTrainedModel={selectTrainedModel}

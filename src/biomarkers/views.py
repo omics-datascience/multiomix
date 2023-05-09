@@ -161,6 +161,6 @@ class TrainedModelsOfBiomarker(generics.ListAPIView):
     serializer_class = TrainedModelSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['fitness_function']
+    filterset_fields = ['state', 'fitness_function']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'created', 'fitness_function', 'best_fitness_value']

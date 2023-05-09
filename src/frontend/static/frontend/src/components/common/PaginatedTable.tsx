@@ -11,7 +11,8 @@ import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoData
 declare const currentUserId: string
 
 /**
- * Type of sorting settings
+ * Type of sorting settings.
+ * TODO: make this generics with keyof to prevent issues with unknown fields.
  */
 type DefaultSortProp = {
     sortField: string,

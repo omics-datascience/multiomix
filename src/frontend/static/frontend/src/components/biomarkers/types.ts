@@ -188,22 +188,24 @@ enum SVMTask {
 }
 
 /** Settings for the Clustering fitness function. */
-interface FitnessFunctionClustering{
+interface FitnessFunctionClustering {
     algorithm: ClusteringAlgorithm,
     scoringMethod: ClusteringScoringMethod,
     metric: ClusteringMetric
 }
 
 /** Settings for the SVM fitness function. */
-interface FitnessFunctionSvm{
+interface SVMParameters {
     kernel: SVMKernel
-    task: SVMTask
+    task: SVMTask,
+    maxIterations: number,
+    randomState: Nullable<number>
 }
 
 /** All the different fitness functions' parameters. */
 interface FitnessFunctionParameters {
     clusteringParameters: FitnessFunctionClustering,
-    svmParameters: FitnessFunctionSvm
+    svmParameters: SVMParameters
 }
 
 /** Structure for the Feature Selection panel. */
@@ -256,9 +258,10 @@ interface TrainedModel {
     id: number,
     name: string,
     description: string,
-    created: string,
+    state: BiomarkerState,
     fitness_function: FitnessFunction,
-    best_fitness_value: number
+    created: string,
+    best_fitness_value: Nullable<number>
 }
 
 /**
@@ -364,7 +367,7 @@ type ModelDetails = ClusteringModelDetails | SVMModelDetails
 export {
     SVMKernel,
     SVMTask,
-    FitnessFunctionSvm,
+    SVMParameters,
     FitnessFunctionClustering,
     FitnessFunctionParameters,
     FitnessFunction,

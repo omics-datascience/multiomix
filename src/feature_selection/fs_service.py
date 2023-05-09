@@ -5,13 +5,14 @@ import numpy as np
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
+from rest_framework.exceptions import ValidationError
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
 from common.constants import TCGA_CONVENTION
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
-from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
+from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression, SurvModel
 from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
     ClusteringParameters, ClusteringScoringMethod
@@ -22,9 +23,7 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
-from .utils import get_svm_kernel
-from django.core.files.base import ContentFile
-import pickle
+from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -50,7 +49,8 @@ class FSService(object):
 
     def __commit_or_rollback(self, is_commit: bool, experiment: FSExperiment):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
         @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
         """
         if self.use_transaction:
@@ -176,7 +176,7 @@ class FSService(object):
 
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
-                             fitness_function_parameters: Dict[str, Any],
+                             model_parameters: Dict[str, Any],
                              stop_event: Event):
         """
         Computes the Feature Selection experiment using the params defined by the user.
@@ -185,7 +185,7 @@ class FSService(object):
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param fit_fun_enum: Selected fitness function to compute.
-        @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param model_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop signal.
         """
         # Creates TrainedModel instance
@@ -197,45 +197,8 @@ class FSService(object):
         )
 
         # Gets model instance and stores its parameters
-        is_clustering = False
-        is_regression = False
-        clustering_scoring_method: Optional[ClusteringScoringMethod] = None
-        if trained_model.fitness_function == FitnessFunction.SVM:
-            # Creates SVMParameters instance
-            model_parameters = fitness_function_parameters['svmParameters']
-            task_as_int = int(model_parameters['task'])
-            is_regression = task_as_int == SVMTask.REGRESSION.value
-
-            svm_parameters: SVMParameters = SVMParameters.objects.create(
-                kernel=model_parameters['kernel'],
-                task=task_as_int,
-                trained_model=trained_model
-            )
-            classifier = get_survival_svm_model(
-                is_svm_regression=svm_parameters.task == SVMTask.REGRESSION.value,
-                svm_kernel=get_svm_kernel(svm_parameters.kernel),
-                svm_optimizer='avltree'  # In practice, this optimizer is usually the fastest
-            )
-        elif trained_model.fitness_function == FitnessFunction.RF:
-            is_regression = True  # RF only can make regression tasks
-            classifier = get_rf_model()
-        elif trained_model.fitness_function == FitnessFunction.CLUSTERING:
-            # Clustering selected
-            is_clustering = True
-
-            # Creates ClusteringParameters instance
-            model_parameters = fitness_function_parameters['clusteringParameters']
-            clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
-                algorithm=model_parameters['algorithm'],
-                metric=model_parameters['metric'],
-                scoring_method=model_parameters['scoringMethod'],
-                trained_model=trained_model
-            )
-
-            clustering_scoring_method = clustering_parameters.scoring_method
-            classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
-        else:
-            raise Exception(f'Parameter fitness_function invalid: {fit_fun_enum} ({type(fit_fun_enum)})')
+        classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
+            trained_model, model_parameters)
 
         # Gets molecules and clinica DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
@@ -283,15 +246,7 @@ class FSService(object):
 
             # Stores the trained model and best score
             if best_model is not None and best_score is not None:
-                trained_content = pickle.dumps(best_model)
-                trained_content_as_file = ContentFile(trained_content)
-                trained_model.model_dump.save(
-                    f'{trained_model.pk}_trained_model_dump.pkl',
-                    trained_content_as_file,
-                    save=False
-                )
-                trained_model.best_fitness_value = best_score
-                trained_model.save(update_fields=['model_dump', 'best_fitness_value'])
+                save_model_dump_and_best_score(trained_model, best_model, best_score)
 
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,

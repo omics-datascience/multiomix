@@ -19,9 +19,11 @@
     display: flex;
     flex-direction: column;
 }
+
 .selection-step-container{
     min-height: 600px;
 }
+
 .selection-select{
     margin: 2rem 0;
 }

@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, FitnessFunctionSvm, FitnessFunctionParameters, BiomarkerState, ClusteringScoringMethod } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, ClusteringAlgorithm, ClusteringMetric, FitnessFunctionClustering, SVMKernel, SVMTask, SVMParameters, FitnessFunctionParameters, BiomarkerState, ClusteringScoringMethod } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -131,10 +131,12 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default SVM parameters.
      * @returns Default SVM structure
      */
-    getDefaultSvmParameters = (): FitnessFunctionSvm => {
+    getDefaultSvmParameters = (): SVMParameters => {
         return {
             kernel: SVMKernel.LINEAR,
-            task: SVMTask.REGRESSION
+            task: SVMTask.REGRESSION,
+            maxIterations: 1000,
+            randomState: null
         }
     }
 

@@ -85,4 +85,4 @@ class TrainedModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TrainedModel
-        fields = ['id', 'name', 'fitness_function', 'description', 'created', 'best_fitness_value']
+        fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value']

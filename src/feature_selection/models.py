@@ -1,10 +1,12 @@
 import os
 import pickle
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from api_service.websocket_functions import send_update_trained_models_command
+from biomarkers.models import BiomarkerState
+from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from user_files.models_choices import FileType
 
 
@@ -67,6 +69,8 @@ class SVMParameters(models.Model):
     """SVM fitness function parameters."""
     kernel = models.IntegerField(choices=SVMKernel.choices)
     task = models.IntegerField(choices=SVMTask.choices)
+    max_iterations = models.SmallIntegerField(default=1000)
+    random_state =  models.SmallIntegerField(null=True, blank=True)
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='svm_parameters')
 
 
@@ -129,10 +133,90 @@ class TrainedModel(models.Model):
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
+    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
     best_fitness_value =  models.FloatField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
+
+    # Sources
+    clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
+                                        blank=True, related_name='trained_models_as_clinical')
+
+    # Clinical source's survival tuple
+    survival_column_tuple_user_file = models.ForeignKey(SurvivalColumnsTupleUserFile, on_delete=models.SET_NULL,
+                                                        related_name='trained_models', null=True, blank=True)
+    survival_column_tuple_cgds = models.ForeignKey(SurvivalColumnsTupleCGDSDataset, on_delete=models.SET_NULL,
+                                                   related_name='trained_models', null=True, blank=True)
+
+    # Sources
+    mrna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='trained_models_as_mrna')
+    mirna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
+                                     related_name='trained_models_as_mirna')
+    cna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
+                                   related_name='trained_models_as_cna')
+    methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
+                                           blank=True, related_name='trained_models_as_methylation')
+
+    @property
+    def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:
+        """Gets valid SurvivalColumnTuple"""
+        if self.survival_column_tuple_user_file:
+            return self.survival_column_tuple_user_file
+
+        return self.survival_column_tuple_cgds
+
+    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
+        """Returns a list with all the sources."""
+        res = [self.clinical_source]
+        if self.mrna_source:
+            res.append(self.mrna_source)
+
+        if self.mirna_source:
+            res.append(self.mirna_source)
+
+        if self.cna_source:
+            res.append(self.cna_source)
+
+        if self.methylation_source:
+            res.append(self.methylation_source)
+
+        return res
+
+    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
+        """Returns a list with all the sources (except clinical), the selected molecules and type."""
+        biomarker = self.biomarker
+        res = []
+        if self.mrna_source:
+            res.append((
+                self.mrna_source,
+                list(biomarker.mrnas.values_list('identifier', flat=True)),
+                FileType.MRNA
+            ))
+
+        if self.mirna_source:
+            res.append((
+                self.mirna_source,
+                list(biomarker.mirnas.values_list('identifier', flat=True)),
+                FileType.MIRNA
+            ))
+
+        if self.cna_source:
+            res.append((
+                self.cna_source,
+                list(biomarker.cnas.values_list('identifier', flat=True)),
+                FileType.CNA
+            ))
+
+        if self.methylation_source:
+            res.append((
+                self.methylation_source,
+                list(biomarker.methylations.values_list('identifier', flat=True)),
+                FileType.METHYLATION
+            ))
+
+        return res
 
     def __str__(self):
         return f'Trained model for Biomarker "{self.biomarker.name}"'

@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal, Union, Optional
 from django.conf import settings
 from sklearn.cluster import KMeans, SpectralClustering
 from sksurv.ensemble import RandomSurvivalForest
@@ -36,11 +36,11 @@ def get_rf_model(rf_n_estimators: int = 50) -> RandomSurvivalForest:
 
 
 def get_survival_svm_model(is_svm_regression: bool, svm_kernel: SVMKernelOptions, svm_optimizer: SVMOptimizerOptions,
-                           max_iterations: int = 1000) -> FastKernelSurvivalSVM:
+                           max_iterations: int, random_state: Optional[float]) -> FastKernelSurvivalSVM:
     """
     Generates a FastKernelSurvivalSVM instance with some specific parameters.
     @return: a FastKernelSurvivalSVM instance.
     """
     rank_ratio = 0.0 if is_svm_regression else 1.0
     return FastKernelSurvivalSVM(rank_ratio=rank_ratio, max_iter=max_iterations, tol=1e-5, kernel=svm_kernel,
-                                 optimizer=svm_optimizer)
+                                 optimizer=svm_optimizer, random_state=random_state)
