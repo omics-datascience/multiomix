@@ -177,15 +177,15 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = row_data[:, columns_idx]
         return row_data
 
-    def __get_specific_samples_and_attribute(
+    def __get_specific_samples_and_attributes(
         self,
         samples: Optional[List[str]],
-        clinical_attribute: str
+        clinical_attributes: List[str]
     ) -> np.ndarray:
         """
         Gets specific samples and an attribute values from the source.
         @param samples: List of samples to retrieve. If None, returns all the samples
-        @param clinical_attribute: Index of column to filter.
+        @param clinical_attributes: List of clinical attributes to retrieve.
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
@@ -220,35 +220,35 @@ class ExperimentClinicalSource(ExperimentSource):
             else:
                 raise KeyError('Tried to get all samples. But the row_data is empty')
 
-        return row_data[clinical_attribute]
+        return row_data[clinical_attributes]
 
-    def get_specific_samples_and_attribute(
+    def get_specific_samples_and_attributes(
         self,
         samples: Optional[List[str]],
-        clinical_attribute: str
+        clinical_attributes: List[str]
     ) -> np.ndarray:
         """
         Gets specific samples and an attribute values from the source as a numpy array.
         @param samples: List of samples to retrieve. If None, returns all the samples
-        @param clinical_attribute: Index of column to filter.
+        @param clinical_attributes: List of clinical attributes to retrieve.
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
-        return self.__get_specific_samples_and_attribute(samples, clinical_attribute).to_numpy()
+        return self.__get_specific_samples_and_attributes(samples, clinical_attributes).to_numpy()
 
-    def get_specific_samples_and_attribute_df(
+    def get_specific_samples_and_attributes_df(
         self,
         samples: Optional[List[str]],
-        clinical_attribute: str
+        clinical_attributes: List[str]
     ) -> np.ndarray:
         """
         Gets specific samples and an attribute values from the source as a Pandas DataFrame.
         @param samples: List of samples to retrieve. If None, returns all the samples
-        @param clinical_attribute: Index of column to filter.
+        @param clinical_attributes: List of clinical attributes to retrieve.
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
-        return self.__get_specific_samples_and_attribute(samples, clinical_attribute)
+        return self.__get_specific_samples_and_attributes(samples, clinical_attributes)
 
     def __get_cgds_datasets_joined_df(self) -> pd.DataFrame:
         """

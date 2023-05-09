@@ -20,20 +20,20 @@ interface BiomarkerStatisticalValidationPanelProps {
 export const BiomarkerStatisticalValidationPanel = (props: BiomarkerStatisticalValidationPanelProps) => {
     const [openModalNewStatValidation, setOpenModalNewStatValidation] = useState(false)
     const [openModalResultStatValidation, setOpenModalResultStatValidation] = useState(false)
-    const [selectedStatisticalValidation, setSelectedTrainedModel] = useState<Nullable<StatisticalValidationForTable>>(null)
+    const [selectedStatisticalValidation, setSelectedStatisticalValidation] = useState<Nullable<StatisticalValidationForTable>>(null)
 
     /**
      * Opens the modal with the results for a StatisticalValidation instance.
      * @param statisticalValidation StatisticalValidationForTable instance
      */
     const openStatResult = (statisticalValidation: StatisticalValidationForTable) => {
-        setSelectedTrainedModel(statisticalValidation)
+        setSelectedStatisticalValidation(statisticalValidation)
         setOpenModalResultStatValidation(true)
     }
 
     /** Closes the modal with the results for a StatisticalValidation instance. */
     const closeStatResult = () => {
-        setSelectedTrainedModel(null)
+        setSelectedStatisticalValidation(null)
         setOpenModalResultStatValidation(false)
     }
 

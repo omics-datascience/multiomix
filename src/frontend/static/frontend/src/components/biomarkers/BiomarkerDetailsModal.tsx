@@ -17,7 +17,7 @@ interface BiomarkerDetailsModalProps {
  * @returns Component.
  */
 export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.MODELS) // TODO: Change to DETAILS
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.DETAILS)
 
     if (!props.selectedBiomarker) {
         return null

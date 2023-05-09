@@ -751,9 +751,9 @@ class SurvivalDataDetails(APIView):
             )
 
             # Gets event values
-            clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attribute(
+            clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(
                 clinical_samples,
-                event_attribute
+                [event_attribute]
             )
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'

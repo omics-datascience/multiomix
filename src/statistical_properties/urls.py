@@ -34,9 +34,9 @@ urlpatterns = [
         name='statistical_validation_kaplan_meier_clustering'
     ),
     path(
-        'statistical-validation-kaplan-meier-regression',
-        views.StatisticalValidationKaplanMeierRegression.as_view(),
-        name='statistical_validation_kaplan_meier_regression'
+        'statistical-validation-kaplan-meier-by-attr',
+        views.StatisticalValidationKaplanMeierByAttribute.as_view(),
+        name='statistical_validation_kaplan_meier_by_attr'
     ),
     path(
         'statistical-validation-modal-details',

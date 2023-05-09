@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react'
-import { ActiveStatValidationsItemMenu, FitnessFunction, StatisticalValidationForTable } from '../../../types'
+import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../../types'
 import { StatisticalValidationMenu } from '../StatisticalValidationMenu'
 import { StatisticalValidationResultMetrics } from './StatisticalValidationResultMetrics'
 import { Grid, Segment } from 'semantic-ui-react'
 import { StatisticalValidationResultBestFeatures } from './StatisticalValidationResultBestFeatures'
 import { StatisticalValidationResultHeatMap } from './StatisticalValidationResultHeatMap'
-import { StatisticalValidationResultKaplanMeierClustering } from './StatisticalValidationResultKaplanMeierClustering'
-import { StatisticalValidationResultKaplanMeierRegression } from './StatisticalValidationResultKaplanMeierRegression'
+import { StatisticalValidationResultKaplanMeier } from './StatisticalValidationResultKaplanMeier'
 
 /** BiomarkerNewStatisticalValidationModal props. */
 interface StatisticalValidationResultModalProps {
@@ -33,10 +32,7 @@ export const StatisticalValidationResultModal = (props: StatisticalValidationRes
             case ActiveStatValidationsItemMenu.BEST_FEATURES:
                 return <StatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
             case ActiveStatValidationsItemMenu.KAPLAN_MEIER: {
-                if (props.selectedStatisticalValidation.fitness_function === FitnessFunction.CLUSTERING) {
-                    return <StatisticalValidationResultKaplanMeierClustering selectedStatisticalValidation={props.selectedStatisticalValidation} />
-                }
-                return <StatisticalValidationResultKaplanMeierRegression selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                return <StatisticalValidationResultKaplanMeier selectedStatisticalValidation={props.selectedStatisticalValidation} />
             }
             case ActiveStatValidationsItemMenu.HEATMAP:
                 return <StatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />

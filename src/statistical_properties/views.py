@@ -34,7 +34,7 @@ from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.stats_service import global_stat_validation_service
 from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
-    get_group_survival_function, compute_c_index_and_log_likelihood
+    get_group_survival_function, compute_c_index_and_log_likelihood, struct_array_to_kaplan_meier_samples
 from user_files.models_choices import FileType
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
@@ -228,10 +228,9 @@ class StatisticalValidationClinicalAttributes(APIView):
         return Response(clinical_attrs)
 
 
-class StatisticalValidationKaplanMeierRegression(APIView):
+class StatisticalValidationKaplanMeierByAttribute(APIView):
     """
-    Gets survival KaplanMeier data using a regression trained model (SVM or RF) from a specific
-    StatisticalValidation instance.
+    Gets survival KaplanMeier data grouping by a clinical attribute from a specific StatisticalValidation instance.
     """
     @staticmethod
     def get(request: Request):
@@ -244,11 +243,12 @@ class StatisticalValidationKaplanMeierRegression(APIView):
         # Gets molecules DF
         molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
 
-        # Gets clinical with only the
+        # Gets clinical with only the needed columns (survival event/time and grouping attribute)
+        survival_tuple = stat_validation.survival_column_tuple
         try:
-            clinical_df = stat_validation.clinical_source.get_specific_samples_and_attribute_df(
+            clinical_df = stat_validation.clinical_source.get_specific_samples_and_attributes_df(
                 samples=None,
-                clinical_attribute=clinical_attribute
+                clinical_attributes=[clinical_attribute, survival_tuple.event_column, survival_tuple.time_column]
             )
         except KeyError:
             raise ValidationError('Invalid clinical attribute')
@@ -262,32 +262,33 @@ class StatisticalValidationKaplanMeierRegression(APIView):
         clinical_df.index = clinical_df.index.str.replace(TCGA_CONVENTION, '', regex=True)
         joined = molecules_df.join(clinical_df, how='inner')
 
-        # Gets trained model
-        trained_model: TrainedModel = stat_validation.trained_model
-        model = trained_model.get_model_instance()
-
         # Groups by the clinical attribute and computes the survival function for every group
         groups: List[Dict[str, LabelOrKaplanMeierResult]] = []
         dfs: List[pd.DataFrame] = []
         for group_name, group in joined.groupby(clinical_attribute):
             group_name = str(group_name)
+
             # Drops the clinical attribute
             group = group.drop(columns=[clinical_attribute])
 
-            # Generates KaplanMeierSamples list
-            predicted_times = model.predict(group.values)
+            # Gets only clinical data
+            current_clinical_df = group[[survival_tuple.event_column, survival_tuple.time_column]]
+            # TODO: refactor
+            clinical_data_np = np.core.records.fromarrays(current_clinical_df.to_numpy().transpose(),
+                                                          names='event, time', formats='bool, float')
 
-            # All predictions have the 1 as the event occurs
-            group_samples = [[1, prediction] for prediction in predicted_times]
+            # Set as KaplanMeierSample
+            current_group = struct_array_to_kaplan_meier_samples(clinical_data_np)
 
+            # Appends group and survival function
             groups.append({
                 'label': group_name,
-                'data': get_group_survival_function(group_samples)
+                'data': get_group_survival_function(current_group)
             })
 
-            # Stores to compute the
+            # Stores to compute the C-Index and log_likelihood
             dfs.append(
-                pd.DataFrame({'E': 1, 'T': predicted_times, 'group': group_name})
+                pd.DataFrame({'E': clinical_data_np['event'], 'T': clinical_data_np['time'], 'group': group_name})
             )
 
         # Fits a Cox Regression model using the column group as the variable to consider to get the C-Index and the
