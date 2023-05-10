@@ -1,5 +1,5 @@
 import React from 'react'
-import { DropdownItemProps, Table } from 'semantic-ui-react'
+import { DropdownItemProps, Icon, Table } from 'semantic-ui-react'
 import { Biomarker, BiomarkerMolecule } from '../../types'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
@@ -12,13 +12,15 @@ declare const urlBiomarkerMolecules: string
 interface BiomarkerMoleculesTableProps {
     /** Selected Biomarker instance to retrieve all its molecules. */
     selectedBiomarker: Biomarker,
+    /** Callback to show all the molecules details. */
+    openMoleculeDetails: (molecule: BiomarkerMolecule) => void
 }
 
 const moleculesTypesOptions: DropdownItemProps[] = [
     { key: MoleculeType.MRNA, text: 'mRNA', value: MoleculeType.MRNA },
     { key: MoleculeType.MIRNA, text: 'miRNA', value: MoleculeType.MIRNA },
     { key: MoleculeType.CNA, text: 'CNA', value: MoleculeType.CNA },
-    { key: MoleculeType.METHYLATION, text: 'Methylation', value: MoleculeType.METHYLATION },
+    { key: MoleculeType.METHYLATION, text: 'Methylation', value: MoleculeType.METHYLATION }
 ]
 
 /**
@@ -49,10 +51,17 @@ export const BiomarkerMoleculesTable = (props: BiomarkerMoleculesTableProps) => 
                     <Table.Row key={molecule.identifier}>
                         <TableCellWithTitle className='align-center' value={molecule.identifier} />
                         <Table.Cell><MoleculeTypeLabel moleculeType={molecule.type} /></Table.Cell>
-                        <Table.Cell></Table.Cell>
-                        {/* TODO: add action column to show its details */}
                         {/* TODO: add dblClick to show its details too */}
-                        {/* <Table.Cell textAlign='center'>{molecule.cluster}</Table.Cell> */}
+                        <Table.Cell width={1}>
+                            {/* Details button */}
+                            <Icon
+                                name='chart bar'
+                                className='clickable'
+                                color='blue'
+                                title='Details'
+                                onClick={() => props.openMoleculeDetails(molecule)}
+                            />
+                        </Table.Cell>
                     </Table.Row>
                 )
             }}

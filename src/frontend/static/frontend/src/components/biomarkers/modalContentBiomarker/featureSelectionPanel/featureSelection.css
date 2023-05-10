@@ -17,6 +17,6 @@
     flex-direction: column;
 }
 
-#column-new-trained-model div.grid {
+.column-fixed-height div.grid {
     min-height: 50vh;
 }

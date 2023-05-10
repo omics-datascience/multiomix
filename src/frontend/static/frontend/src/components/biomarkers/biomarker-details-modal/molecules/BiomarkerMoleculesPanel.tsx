@@ -1,6 +1,9 @@
 import React from 'react'
-import { Biomarker } from '../../types'
+import { Biomarker, BiomarkerMolecule } from '../../types'
 import { BiomarkerMoleculesTable } from './BiomarkerMoleculesTable'
+import { Nullable } from '../../../../utils/interfaces'
+import { Grid } from 'semantic-ui-react'
+import { BiomarkerMoleculesDetails } from './BiomarkerMoleculesDetails'
 
 /** BiomarkerMoleculesPanel props. */
 interface BiomarkerMoleculesPanelProps {
@@ -14,8 +17,18 @@ interface BiomarkerMoleculesPanelProps {
  * @returns Component.
  */
 export const BiomarkerMoleculesPanel = (props: BiomarkerMoleculesPanelProps) => {
-    /* TODO: add a grid, in the left, the table, in the right the details */
+    const [selectedMolecule, setSelectedMolecule] = React.useState<Nullable<BiomarkerMolecule>>(null)
+
     return (
-        <BiomarkerMoleculesTable selectedBiomarker={props.selectedBiomarker} />
+        <Grid>
+            <Grid.Row columns={2} divided>
+                <Grid.Column width={5}>
+                    <BiomarkerMoleculesTable selectedBiomarker={props.selectedBiomarker} openMoleculeDetails={setSelectedMolecule} />
+                </Grid.Column>
+                <Grid.Column width={11} className='column-fixed-height'>
+                    <BiomarkerMoleculesDetails selectedMolecule={selectedMolecule} closeDetails={() => { setSelectedMolecule(null) }} />
+                </Grid.Column>
+            </Grid.Row>
+        </Grid>
     )
 }

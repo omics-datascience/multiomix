@@ -265,6 +265,13 @@ enum ActiveStatValidationsItemMenu {
     HEATMAP
 }
 
+/** Available options for the Menu in the BiomarkerMolecules details modal */
+enum ActiveBiomarkerMoleculeItemMenu {
+    DETAILS,
+    PATHWAYS,
+    GENE_ONTOLOGY
+}
+
 /** Django TrainedModel model. */
 interface TrainedModel {
     id: number,
@@ -406,6 +413,7 @@ export {
     ClusteringScoringMethod,
     ActiveBiomarkerDetailItemMenu,
     ActiveStatValidationsItemMenu,
+    ActiveBiomarkerMoleculeItemMenu,
     TrainedModel,
     BasicStatisticalValidation,
     StatisticalValidationForTable,

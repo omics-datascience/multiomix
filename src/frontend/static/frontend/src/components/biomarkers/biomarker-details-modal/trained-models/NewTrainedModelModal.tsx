@@ -501,7 +501,7 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 <Icon name='asterisk' /> Required field
                             </div>
                         </Grid.Column>
-                        <Grid.Column id='column-new-trained-model' width={12}>
+                        <Grid.Column className='column-fixed-height' width={12}>
                             {/* Steps */}
                             <Step.Group widths={3}>
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
