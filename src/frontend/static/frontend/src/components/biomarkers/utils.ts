@@ -1,11 +1,11 @@
 import { DropdownItemProps } from 'semantic-ui-react'
-import { BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, SVMKernel, SVMParameters, SVMTask } from './types'
+import { BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, RFParameters, SVMKernel, SVMParameters, SVMTask } from './types'
 
 /** Available fitness functions models to use. */
 const fitnessFunctionsOptions: DropdownItemProps[] = [
     { key: FitnessFunction.CLUSTERING, text: 'Clustering', value: FitnessFunction.CLUSTERING },
     { key: FitnessFunction.SVM, text: 'SVM', value: FitnessFunction.SVM },
-    { key: FitnessFunction.RF, text: 'RF', value: FitnessFunction.RF, disabled: true }
+    { key: FitnessFunction.RF, text: 'Random Forest', value: FitnessFunction.RF }
 ]
 
 /** Available options for a SVM kernel. */
@@ -42,7 +42,8 @@ const biomarkerStateOptions: DropdownItemProps[] = [
     { key: BiomarkerState.IN_PROCESS, text: 'In process', value: BiomarkerState.IN_PROCESS },
     { key: BiomarkerState.STOPPING, text: 'Stopping', value: BiomarkerState.STOPPING },
     { key: BiomarkerState.STOPPED, text: 'Stopped', value: BiomarkerState.STOPPED },
-    { key: BiomarkerState.REACHED_ATTEMPTS_LIMIT, text: 'Reached attempts limit', value: BiomarkerState.REACHED_ATTEMPTS_LIMIT }
+    { key: BiomarkerState.REACHED_ATTEMPTS_LIMIT, text: 'Reached attempts limit', value: BiomarkerState.REACHED_ATTEMPTS_LIMIT },
+    { key: BiomarkerState.NO_FEATURES_FOUND, text: 'No features found', value: BiomarkerState.NO_FEATURES_FOUND }
 ]
 
 /**
@@ -66,7 +67,21 @@ const getDefaultClusteringParameters = (): ClusteringParameters => {
     return {
         algorithm: ClusteringAlgorithm.K_MEANS,
         scoringMethod: ClusteringScoringMethod.C_INDEX,
-        metric: ClusteringMetric.COX_REGRESSION
+        metric: ClusteringMetric.COX_REGRESSION,
+        nClusters: 2,
+        randomState: null
+    }
+}
+
+/**
+ * Generates default clustering parameters.
+ * @returns Default Cluster structure
+ */
+const getDefaultRFParameters = (): RFParameters => {
+    return {
+        nEstimators: 100,
+        maxDepth: 10,
+        randomState: null
     }
 }
 
@@ -78,5 +93,6 @@ export {
     clusteringScoringMethodOptions,
     biomarkerStateOptions,
     getDefaultSvmParameters,
-    getDefaultClusteringParameters
+    getDefaultClusteringParameters,
+    getDefaultRFParameters
 }

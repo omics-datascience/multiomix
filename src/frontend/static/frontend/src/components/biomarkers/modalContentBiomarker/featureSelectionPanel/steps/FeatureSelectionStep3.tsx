@@ -10,7 +10,8 @@ interface FeatureSelectionStep3Props {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSvmOption: (key: string, value: number) => void,
+    handleChangeSVMOption: (key: string, value: number) => void,
+    handleChangeRFOption: (key: string, value: number) => void,
 }
 
 export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
@@ -19,7 +20,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleChangeAlgorithm,
         handleChangeFitnessFunction,
         handleChangeClusterOption,
-        handleChangeSvmOption
+        handleChangeSVMOption,
+        handleChangeRFOption
     } = props
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
@@ -30,7 +32,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSvmOption={handleChangeSvmOption}
+                        handleChangeSVMOption={handleChangeSVMOption}
+                        handleChangeRFOption={handleChangeRFOption}
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
@@ -40,7 +43,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSvmOption={handleChangeSvmOption}
+                        handleChangeSVMOption={handleChangeSVMOption}
+                        handleChangeRFOption={handleChangeRFOption}
                     />
                 )
             case FeatureSelectionAlgorithm.PSO:
@@ -50,7 +54,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSvmOption={handleChangeSvmOption}
+                        handleChangeSVMOption={handleChangeSVMOption}
+                        handleChangeRFOption={handleChangeRFOption}
                     />
                 )
             default:

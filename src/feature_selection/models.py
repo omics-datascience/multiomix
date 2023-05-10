@@ -3,6 +3,7 @@ import pickle
 from typing import List, Optional, Tuple, Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from api_service.websocket_functions import send_update_trained_models_command
 from biomarkers.models import BiomarkerState
@@ -62,6 +63,7 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
+    n_clusters = models.SmallIntegerField(default=2, validators=[MinValueValidator(2), MaxValueValidator(10)])
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
 
 
@@ -69,9 +71,18 @@ class SVMParameters(models.Model):
     """SVM fitness function parameters."""
     kernel = models.IntegerField(choices=SVMKernel.choices)
     task = models.IntegerField(choices=SVMTask.choices)
-    max_iterations = models.SmallIntegerField(default=1000)
+    max_iterations = models.SmallIntegerField(default=1000,
+                                              validators=[MinValueValidator(100), MaxValueValidator(2000)])
     random_state =  models.SmallIntegerField(null=True, blank=True)
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='svm_parameters')
+
+
+class RFParameters(models.Model):
+    """RF fitness function parameters."""
+    n_estimators = models.SmallIntegerField(default=10, validators=[MinValueValidator(10), MaxValueValidator(20)])
+    max_depth = models.SmallIntegerField(null=True, blank=True, validators=[MinValueValidator(3)])
+    random_state =  models.SmallIntegerField(null=True, blank=True)
+    trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='rf_parameters')
 
 
 class FSExperiment(models.Model):

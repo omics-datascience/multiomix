@@ -111,7 +111,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         setKaplanMeierData(null) // Resets some data in the right panel
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams, timeout: 60000 }).then((response) => {
             response.json().then((statValidation: KaplanMeierResultData) => {
                 setKaplanMeierData(statValidation)
             }).catch((err) => {
@@ -138,7 +138,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             statistical_validation_pk: props.selectedStatisticalValidation.id,
             clinical_attribute: clinicalAttribute
         }
-        ky.get(urlStatisticalValidationKaplanMeierByAttr, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationKaplanMeierByAttr, { searchParams, timeout: 60000 }).then((response) => {
             response.json().then((kaplanMeierResult: KaplanMeierResultData) => {
                 setKaplanMeierData(kaplanMeierResult)
             }).catch((err) => {
@@ -223,6 +223,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 fluid
                                 options={clinicalAttributesOptions}
                                 loading={loadingClinicalAttributes}
+                                search
                                 value={selectedClinicalAttribute}
                                 onChange={(_, { value }) => { setSelectedClinicalAttribute(value as string) }}
                                 placeholder='Clinical attribute to group by'

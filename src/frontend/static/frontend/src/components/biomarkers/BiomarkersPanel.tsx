@@ -18,7 +18,7 @@ import { Alert } from '../common/Alert'
 import { BiomarkerStateLabel } from './BiomarkerStateLabel'
 import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
-import { getDefaultClusteringParameters, getDefaultSvmParameters } from './utils'
+import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from './utils'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -113,7 +113,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getDefaultFitnessFunctionParameters = (): FitnessFunctionParameters => ({
         clusteringParameters: getDefaultClusteringParameters(),
-        svmParameters: getDefaultSvmParameters()
+        svmParameters: getDefaultSvmParameters(),
+        rfParameters: getDefaultRFParameters()
     })
 
     /**
@@ -200,13 +201,24 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Manage the change of the option in cluster option in any algorithm selected inside a clustering
+     * Manage the change of the option in SVM option.
      * @param key name of the key that have changed
      * @param value value selected
      */
-    handleChangeSvmOption = (key: string, value: number) => {
+    handleChangeSVMOption = (key: string, value: number) => {
         const featureSelection = this.state.featureSelection
         featureSelection.fitnessFunctionParameters.svmParameters[key] = value
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * Manage the change of the option in RF option.
+     * @param key name of the key that have changed
+     * @param value value selected
+     */
+    handleChangeRFOption = (key: string, value: number) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.fitnessFunctionParameters.rfParameters[key] = value
         this.setState({ featureSelection })
     }
 
@@ -1358,6 +1370,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                 {/* Create/Edit modal. */}
                 <Modal
+                    open={this.state.openCreateEditBiomarkerModal}
                     closeIcon={<Icon name='close' size='large' />}
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
@@ -1365,17 +1378,19 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%', display: 'flex' }}
                     onClose={() => {
                         this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
-                            ? this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)
-                            : this.closeBiomarkerModal()
+                            ? this.handleChangeConfirmModalState(
+                                true,
+                                'You are going to lose all the data inserted',
+                                'Are you sure?',
+                                this.closeBiomarkerModal
+                            ) : this.closeBiomarkerModal()
                     }}
-                    open={this.state.openCreateEditBiomarkerModal}
                 >
-                    {
-                        this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
+                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
                         <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
                     }
-                    {
-                        this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL &&
+
+                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL &&
                         <ManualForm
                             handleChangeInputForm={this.handleChangeInputForm}
                             handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
@@ -1397,8 +1412,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeCheckBox={this.handleChangeCheckBox}
                         />
                     }
-                    {
-                        this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION &&
+
+                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION &&
                         <FeatureSelectionPanel
                             featureSelection={this.state.featureSelection}
                             getDefaultFilters={this.getDefaultFilters()}
@@ -1412,7 +1427,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeAlgorithm={this.handleChangeAlgorithm}
                             handleChangeFitnessFunction={this.handleChangeFitnessFunction}
                             handleChangeClusterOption={this.handleChangeClusterOption}
-                            handleChangeSvmOption={this.handleChangeSvmOption}
+                            handleChangeSVMOption={this.handleChangeSVMOption}
+                            handleChangeRFOption={this.handleChangeRFOption}
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}

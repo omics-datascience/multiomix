@@ -4,9 +4,10 @@ from typing import Optional, Union, List, Tuple, Dict
 import numpy as np
 from django.core.files.base import ContentFile
 from rest_framework.exceptions import ValidationError
+from common.utils import limit_between_min_max
 from feature_selection.fs_models import SVMKernelOptions, get_survival_svm_model, get_rf_model, get_clustering_model
 from feature_selection.models import SVMKernel, TrainedModel, FitnessFunction, ClusteringScoringMethod, SVMParameters, \
-    SVMTask, ClusteringParameters
+    SVMTask, ClusteringParameters, RFParameters
 
 
 def get_svm_kernel(kernel: SVMKernel) -> SVMKernelOptions:
@@ -60,12 +61,15 @@ def create_models_parameters_and_classifier(
     is_regression = False
     clustering_scoring_method: Optional[ClusteringScoringMethod] = None
     fitness_function = trained_model.fitness_function
+
+    # TODO: refactor all the parameters retrieval
     if fitness_function == FitnessFunction.SVM:
         # Creates SVMParameters instance
         models_parameters = models_parameters['svmParameters']
         task = int(models_parameters['task'])
         kernel = int(models_parameters['kernel'])
         max_iterations = int(models_parameters['maxIterations']) if models_parameters['maxIterations'] else 1000
+        max_iterations = limit_between_min_max(max_iterations, min_value=100, max_value=2000)
         random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
         is_regression = task == SVMTask.REGRESSION
 
@@ -85,23 +89,40 @@ def create_models_parameters_and_classifier(
         )
     elif trained_model.fitness_function == FitnessFunction.RF:
         is_regression = True  # RF only can make regression tasks
-        classifier = get_rf_model()
+        models_parameters = models_parameters['rfParameters']
+        n_estimators = int(models_parameters['nEstimators'])
+        n_estimators = limit_between_min_max(n_estimators, min_value=10, max_value=20)
+        random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
+        max_depth = int(models_parameters['maxDepth']) if models_parameters['maxDepth'] else None
+
+        rm_parameters: RFParameters = RFParameters.objects.create(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            random_state=random_state,
+            trained_model=trained_model
+        )
+        classifier = get_rf_model(n_estimators=rm_parameters.n_estimators, max_depth=rm_parameters.max_depth,
+                                  random_state=rm_parameters.random_state)
     elif trained_model.fitness_function == FitnessFunction.CLUSTERING:
         # Clustering selected
         is_clustering = True
 
         # Creates ClusteringParameters instance
         models_parameters = models_parameters['clusteringParameters']
+        n_clusters = int(models_parameters['nClusters'])
+        n_clusters = limit_between_min_max(n_clusters, min_value=2, max_value=10)
+
         clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
-            algorithm=models_parameters['algorithm'],
-            metric=models_parameters['metric'],
-            scoring_method=models_parameters['scoringMethod'],
+            algorithm=int(models_parameters['algorithm']),
+            metric=int(models_parameters['metric']),
+            n_clusters=n_clusters,
+            scoring_method=int(models_parameters['scoringMethod']),
             trained_model=trained_model
         )
 
         clustering_scoring_method = clustering_parameters.scoring_method
         classifier = get_clustering_model(clustering_parameters.algorithm,
-                                          number_of_clusters=2)  # TODO: parametrize number of clusters
+                                          number_of_clusters=clustering_parameters.n_clusters)
     else:
         raise ValidationError(f'Parameter fitness_function invalid: {fitness_function} ({type(fitness_function)})')
 

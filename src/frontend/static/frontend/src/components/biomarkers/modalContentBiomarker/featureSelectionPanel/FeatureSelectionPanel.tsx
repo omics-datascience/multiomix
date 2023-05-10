@@ -24,7 +24,8 @@ interface FeatureSelectionPanelProps {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSvmOption: (key: string, value: number) => void,
+    handleChangeSVMOption: (key: string, value: number) => void,
+    handleChangeRFOption: (key: string, value: number) => void,
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
@@ -81,7 +82,8 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     handleChangeAlgorithm={props.handleChangeAlgorithm}
                     handleChangeFitnessFunction={props.handleChangeFitnessFunction}
                     handleChangeClusterOption={props.handleChangeClusterOption}
-                    handleChangeSvmOption={props.handleChangeSvmOption}
+                    handleChangeSVMOption={props.handleChangeSVMOption}
+                    handleChangeRFOption={props.handleChangeRFOption}
                 />)
         }
     }

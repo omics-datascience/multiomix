@@ -25,7 +25,7 @@ from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
-from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters
+from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
@@ -218,14 +218,17 @@ class StatisticalValidationKaplanMeierClustering(APIView):
 
 
 class StatisticalValidationClinicalAttributes(APIView):
-    """Gets all the clinical attributes from a clinical source of a specific StatisticalValidation instance."""
+    """
+    Gets all the clinical attributes from a clinical source of a specific StatisticalValidation instance.
+    Sorted by name ASC.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: Request):
         stat_validation = get_stat_validation_instance(request)
         clinical_attrs = stat_validation.clinical_source.get_attributes()
-        return Response(clinical_attrs)
+        return Response(sorted(clinical_attrs))
 
 
 class StatisticalValidationKaplanMeierByAttribute(APIView):
@@ -339,24 +342,30 @@ class StatisticalValidationModelDetails(APIView):
         fitness_function = trained_model.fitness_function
 
         if fitness_function == FitnessFunction.CLUSTERING:
-            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+            parameters: ClusteringParameters = trained_model.clustering_parameters
             response = {
-                'algorithm': clustering_parameters.algorithm,
-                'scoring_method': clustering_parameters.scoring_method,
-                'n_clusters': trained_model.get_model_instance().n_clusters
+                'algorithm': parameters.algorithm,
+                'scoring_method': parameters.scoring_method,
+                'n_clusters': parameters.n_clusters
             }
         elif fitness_function == FitnessFunction.SVM:
-            clustering_parameters: SVMParameters = trained_model.svm_parameters
+            parameters: SVMParameters = trained_model.svm_parameters
             response = {
-                'task': clustering_parameters.task,
-                'kernel': clustering_parameters.kernel,
+                'task': parameters.task,
+                'kernel': parameters.kernel,
+            }
+        elif fitness_function == FitnessFunction.RF:
+            parameters: RFParameters = trained_model.rf_parameters
+            response = {
+                'n_estimators': parameters.n_estimators,
+                'max_depth': parameters.max_depth,
             }
         else:
             # TODO: implement RF
             raise ValidationError(f'Invalid trained model type: {fitness_function}')
 
         response['best_fitness'] = trained_model.best_fitness_value
-        # TODO: add here mean_fitness_value if it's lately added
+        response['random_state'] = parameters.random_state
 
         return Response(response)
 

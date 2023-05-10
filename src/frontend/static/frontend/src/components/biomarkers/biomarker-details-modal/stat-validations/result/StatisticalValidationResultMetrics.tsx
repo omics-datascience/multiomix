@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react'
-import { ClusteringModelDetails, SVMModelDetails, FitnessFunction, StatisticalValidation, StatisticalValidationForTable, ModelDetails } from '../../../types'
+import { ClusteringModelDetails, SVMModelDetails, FitnessFunction, StatisticalValidation, StatisticalValidationForTable, ModelDetails, RFModelDetails } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Header, Placeholder, Segment, Statistic } from 'semantic-ui-react'
-import { ClusteringModelDetailsPanel, SVMModelDetailsPanel } from '../../ModelDetailsPanels'
+import { ClusteringModelDetailsPanel, RFModelDetailsPanel, SVMModelDetailsPanel } from '../../ModelDetailsPanels'
 
 declare const urlStatisticalValidationMetrics: string
 declare const urlStatisticalValidationModalDetails: string
@@ -122,8 +122,11 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
                     data={modelDetails as SVMModelDetails}
                     fitness_function={props.selectedStatisticalValidation.fitness_function}
                 />
-            default:
-                return null
+            case FitnessFunction.RF:
+                return <RFModelDetailsPanel
+                    data={modelDetails as RFModelDetails}
+                    fitness_function={props.selectedStatisticalValidation.fitness_function}
+                />
         }
     }
 

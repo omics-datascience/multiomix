@@ -189,10 +189,11 @@ class FSService(object):
         @param stop_event: Stop signal.
         """
         # Creates TrainedModel instance
-        trained_model = TrainedModel.objects.create(
+        trained_model: TrainedModel = TrainedModel.objects.create(
             name=f'From FS for biomarker {experiment.created_biomarker.name}',
             biomarker=experiment.created_biomarker,
             fitness_function=fit_fun_enum,
+            state=BiomarkerState.IN_PROCESS,
             fs_experiment=experiment
         )
 
@@ -244,10 +245,15 @@ class FSService(object):
             # Stores molecules in the target biomarker, the best model and its fitness value
             self.__save_molecule_identifiers(experiment.created_biomarker, best_features)
 
+            trained_model.state = BiomarkerState.COMPLETED
+
             # Stores the trained model and best score
             if best_model is not None and best_score is not None:
                 save_model_dump_and_best_score(trained_model, best_model, best_score)
+        else:
+            trained_model.state = BiomarkerState.NO_FEATURES_FOUND
 
+        trained_model.save(update_fields=['state'])
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                          fitness_function_parameters: Dict[str, Any],

@@ -33,8 +33,8 @@ export const FitnessFunctionLabel = (props: FitnessFunctionLabelProps) => {
             title = 'Survival SVM'
             break
         case FitnessFunction.RF:
-            color = 'blue'
-            description = 'RF'
+            color = 'orange'
+            description = 'Random Forest'
             title = 'Random Forest'
             break
         default:

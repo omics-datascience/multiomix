@@ -24,7 +24,8 @@ class BiomarkerState(models.IntegerChoices):
     NO_SAMPLES_IN_COMMON = 5
     STOPPING = 6
     STOPPED = 7
-    REACHED_ATTEMPTS_LIMIT = 8
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9
 
 
 class Biomarker(models.Model):

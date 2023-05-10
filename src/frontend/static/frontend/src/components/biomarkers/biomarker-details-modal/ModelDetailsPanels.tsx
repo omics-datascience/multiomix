@@ -5,7 +5,7 @@ import { ClusteringScoringMethodLabel } from '../labels/ClusteringScoringMethodL
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { SVMKernelLabel } from '../labels/SVMKernelLabel'
 import { SVMKernelTask } from '../labels/SVMKernelTask'
-import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails } from '../types'
+import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails, RFModelDetails } from '../types'
 
 /**
  * Renders some general items in common for all the models.
@@ -34,6 +34,14 @@ const GeneralMetrics = (props: { data: ModelDetails, fitness_function: FitnessFu
                 <List.Content>
                     <List.Header>
                         Best fitness value: {props.data.best_fitness.toFixed(4)}
+                    </List.Header>
+                </List.Content>
+            </List.Item>
+            <List.Item>
+                <List.Icon name='random' size='large' verticalAlign='middle' />
+                <List.Content>
+                    <List.Header>
+                        Random state: {props.data.random_state ?? '-'}
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -82,7 +90,7 @@ const ClusteringModelDetailsPanel = (props: { data: ClusteringModelDetails, fitn
 }
 
 /**
- * Renders a panel with all the data of a Clustering model.
+ * Renders a panel with all the data of a SVM model.
  * @param props Component props.
  * @returns Component.
  */
@@ -115,4 +123,30 @@ const SVMModelDetailsPanel = (props: { data: SVMModelDetails, fitness_function: 
     )
 }
 
-export { ClusteringModelDetailsPanel, SVMModelDetailsPanel }
+/**
+ * Renders a panel with all the data of a Random Forest model.
+ * @param props Component props.
+ * @returns Component.
+ */
+const RFModelDetailsPanel = (props: { data: RFModelDetails, fitness_function: FitnessFunction }) => {
+    return (
+        <List divided relaxed>
+            <GeneralMetrics {...props} />
+
+            <List.Item>
+                <List.Icon name='tree' size='large' verticalAlign='middle' />
+                <List.Content>
+                    <List.Header>Number of estimators: {props.data.n_estimators}</List.Header>
+                </List.Content>
+            </List.Item>
+            <List.Item>
+                <List.Icon name='angle double down' size='large' verticalAlign='middle' />
+                <List.Content>
+                    <List.Header>Max. depth: {props.data.max_depth ?? '-'}</List.Header>
+                </List.Content>
+            </List.Item>
+        </List>
+    )
+}
+
+export { ClusteringModelDetailsPanel, SVMModelDetailsPanel, RFModelDetailsPanel }

@@ -29,7 +29,8 @@ enum BiomarkerState {
     NO_SAMPLES_IN_COMMON = 5,
     STOPPING = 6,
     STOPPED = 7,
-    REACHED_ATTEMPTS_LIMIT = 8
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9
 
 }
 
@@ -197,27 +198,43 @@ enum SVMTask {
     REGRESSION = 2
 }
 
+/** Common fields in a model. */
+interface ModelParameters {
+    randomState: Nullable<number>
+}
+
 /** Parameters for a Clustering model. */
-interface ClusteringParameters {
+interface ClusteringParameters extends ModelParameters {
     algorithm: ClusteringAlgorithm,
     /** Metric to optimize during clustering. */
     metric: ClusteringMetric,
     /** Scoring method to use in case of metric === Cox-Regression. */
-    scoringMethod: ClusteringScoringMethod
+    scoringMethod: ClusteringScoringMethod,
+    /** Number of clusters. */
+    nClusters: number
 }
 
-/** Parameters for a SVM model. */
-interface SVMParameters {
+/** Parameters for a Survival SVM model. */
+interface SVMParameters extends ModelParameters {
     kernel: SVMKernel
     task: SVMTask,
     maxIterations: number,
-    randomState: Nullable<number>
+}
+
+/** Parameters for a Survival Random Forest model. */
+interface RFParameters extends ModelParameters {
+    /** Number of trees in the RF. */
+    nEstimators: number,
+    /** The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure or
+    until all leaves contain less than min_samples_split samples. */
+    maxDepth: number,
 }
 
 /** All the different fitness functions' parameters. */
 interface FitnessFunctionParameters {
     clusteringParameters: ClusteringParameters,
-    svmParameters: SVMParameters
+    svmParameters: SVMParameters,
+    rfParameters: RFParameters
 }
 
 /** Structure for the Feature Selection panel. */
@@ -364,7 +381,8 @@ interface KaplanMeierResultData {
 
 /** Data which is present in all the TrainedModels. */
 interface GeneralModelDetails {
-    best_fitness: number
+    best_fitness: number,
+    random_state: Nullable<number>
 }
 
 /** Some details of Clustering models. */
@@ -380,8 +398,14 @@ interface SVMModelDetails extends GeneralModelDetails {
     kernel: SVMKernel,
 }
 
+/** Some details of Clustering models. */
+interface RFModelDetails extends GeneralModelDetails {
+    n_estimators: number,
+    max_depth: Nullable<number>
+}
+
 /** Types of models details. */
-type ModelDetails = ClusteringModelDetails | SVMModelDetails
+type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
 
 export {
     SVMKernel,
@@ -424,6 +448,8 @@ export {
     KaplanMeierResultData,
     ClusteringModelDetails,
     SVMModelDetails,
+    RFModelDetails,
     ModelDetails,
-    SampleAndCluster
+    SampleAndCluster,
+    RFParameters
 }

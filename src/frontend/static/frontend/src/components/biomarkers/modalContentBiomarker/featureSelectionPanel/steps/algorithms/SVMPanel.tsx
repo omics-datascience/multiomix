@@ -6,7 +6,7 @@ import { SVMKernelOptions } from '../../../../utils'
 /** SVMPanel props. */
 interface SVMPanelProps {
     parameters: SVMParameters,
-    handleChangeSvmOption: (key: string, value: number) => void,
+    handleChangeSVMOption: (key: string, value: number) => void,
 }
 
 /**
@@ -17,7 +17,7 @@ interface SVMPanelProps {
 export const SVMPanel = (props: SVMPanelProps) => {
     const {
         parameters: svm,
-        handleChangeSvmOption
+        handleChangeSVMOption
     } = props
     return (
         <>
@@ -28,14 +28,14 @@ export const SVMPanel = (props: SVMPanelProps) => {
                     name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
-                        onClick={() => handleChangeSvmOption('task', SVMTask.RANKING)}
+                        onClick={() => handleChangeSVMOption('task', SVMTask.RANKING)}
                         active={svm.task === SVMTask.RANKING}
                     >
                         Ranking
                     </Button>
 
                     <Button
-                        onClick={() => handleChangeSvmOption('task', SVMTask.REGRESSION)}
+                        onClick={() => handleChangeSVMOption('task', SVMTask.REGRESSION)}
                         active={svm.task === SVMTask.REGRESSION}
                     >
                         Regression
@@ -48,7 +48,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
                 name='moleculeSelected'
                 options={SVMKernelOptions}
                 value={svm.kernel}
-                onChange={(_, { value }) => handleChangeSvmOption('kernel', value as number)}
+                onChange={(_, { value }) => handleChangeSVMOption('kernel', value as number)}
             />
         </>
     )
