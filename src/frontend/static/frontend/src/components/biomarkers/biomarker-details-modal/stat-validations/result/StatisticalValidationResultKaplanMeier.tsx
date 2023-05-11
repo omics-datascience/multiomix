@@ -53,20 +53,6 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         }
     }, [props.selectedStatisticalValidation.id])
 
-    // /**
-    //  * Every time the KaplanMeier strategy changes retrieves
-    //  * its data from the backend
-    //  */
-    // useEffect(() => {
-    //     if (kaplanMeierStrategy === 'clinical_attribute') {
-    //         if (selectedClinicalAttribute !== undefined) {
-    //             makeKaplanMeierRequestByAttrs(selectedClinicalAttribute)
-    //         }
-    //     } else {
-    //         getStatValidationKaplanMeierByClusteringModel()
-    //     }
-    // }, [kaplanMeierStrategy])
-
     /** Makes the query to get KaplanMeierData with delay. */
     const makeKaplanMeierRequestByAttrs = useCallback(
         debounce((selectedClinicalAttribute: string) => {
@@ -90,7 +76,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         setLoadingClinicalAttributes(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationClinicalAttrs, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationClinicalAttrs, { searchParams, timeout: 60000 }).then((response) => {
             response.json().then((clinicalAttributes: string[]) => {
                 setClinicalAttributes(clinicalAttributes)
             }).catch((err) => {
