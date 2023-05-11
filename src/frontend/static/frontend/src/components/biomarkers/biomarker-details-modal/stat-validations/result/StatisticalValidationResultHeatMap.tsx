@@ -39,7 +39,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationHeatMap, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationHeatMap, { searchParams, timeout: 60000 }).then((response) => {
             response.json().then((statValidation: MoleculesExpressions) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
@@ -53,21 +53,6 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
             setLoading(false)
         })
     }
-
-    /**
-     * Generates N bins within a range. Taken from https://stackoverflow.com/a/66766285/7058363.
-     * @param min Min value.
-     * @param max Max value.
-     * @param binsNumber Number of bins to generate.
-     * @returns Array of bins with the min and max values.
-     */
-    const generateBins = (min: number, max: number, binsNumber: number): { min: number, max: number}[] =>
-        Array.from({ length: binsNumber }).map((_elem, idx, _arr, step = (max - min) / binsNumber) => (
-            {
-                min: min + idx * step,
-                max: min + (idx + 1) * step
-            }
-        ))
 
     // Generates the chart config
     let chartSeries: ApexAxisChartSeries | undefined
@@ -85,9 +70,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
                 })
             }
         })
-        const colors = generateBins(statValidationData.min, statValidationData.max, 4)
 
-        // TODO: add labels for bins
         chartOptions = {
             chart: {
                 height: 350,
@@ -97,39 +80,13 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
                 heatmap: {
                     shadeIntensity: 0.5,
                     radius: 0,
-                    useFillColorAsStroke: true,
-                    colorScale: {
-                        ranges: [{
-                            from: colors[0].min,
-                            to: colors[0].max,
-                            name: 'Low',
-                            color: '#00A100'
-                        },
-                        {
-                            from: colors[1].min,
-                            to: colors[1].max,
-                            name: 'Medium',
-                            color: '#128FD9'
-                        },
-                        {
-                            from: colors[2].min,
-                            to: colors[2].max,
-                            name: 'High',
-                            color: '#FFB200'
-                        },
-                        {
-                            from: colors[3].min,
-                            to: colors[3].max,
-                            name: 'Extreme',
-                            color: '#FF0000'
-                        }
-                        ]
-                    }
+                    useFillColorAsStroke: true
                 }
             },
             dataLabels: {
                 enabled: false
             },
+            colors: ['#d00000'],
             stroke: {
                 width: 1
             }
