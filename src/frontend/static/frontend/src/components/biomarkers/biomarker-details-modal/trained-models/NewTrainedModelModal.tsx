@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker } from '../../types'
+import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker, RFParameters } from '../../types'
 import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
-import { fitnessFunctionsOptions, getDefaultClusteringParameters, getDefaultSvmParameters } from '../../utils'
+import { fitnessFunctionsOptions, getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../utils'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { NewSVMModelForm } from './NewSVMModelForm'
 import { SourceSelectors } from '../../../common/SourceSelectors'
@@ -9,6 +9,7 @@ import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource,
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
 import ky from 'ky'
 import { NewClusteringModelForm } from './NewClusteringModelForm'
+import { NewRFModelForm } from './NewRFModelForm'
 
 declare const urlNewTrainedModel: string
 
@@ -32,15 +33,11 @@ interface CrossValidationParameters {
     folds: number
 }
 
-/** TODO: complete */
-type NewTrainedModelRFParameters = {
-
-}
-
+/** All the models parameters */
 type ModelParameters = {
     svmParameters: SVMParameters,
     clusteringParameters: ClusteringParameters,
-    rfParameters: NewTrainedModelRFParameters
+    rfParameters: RFParameters
 }
 
 /** Data to handle in the form of a new StatisticalValidation. */
@@ -66,7 +63,7 @@ type NewTrainedModelData = {
 const getDefaultModelParameters = (): ModelParameters => ({
     svmParameters: getDefaultSvmParameters(),
     clusteringParameters: getDefaultClusteringParameters(),
-    rfParameters: {}
+    rfParameters: getDefaultRFParameters()
 })
 
 /**
@@ -94,7 +91,7 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
  * @param props Component props.
  * @returns Component.
  */
-const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
+export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     const [form, setForm] = useState<NewTrainedModelData>(getDefaultNewTrainedModelData())
     const [currentStep, setCurrentStep] = useState<1 | 2>(1)
     const [sendingData, setSendingData] = useState(false)
@@ -113,6 +110,15 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     }
 
     /**
+     * Handles changes in the Clustering model's parameters form.
+     * @param _event Event of change of the input element.
+     * @param data Data with the name and current value of the input element.
+     */
+    const handleChangeParamsClustering = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+        handleChangeParamsGeneric('clusteringParameters', data)
+    }
+
+    /**
      * Handles changes in the SVM model's parameters form.
      * @param _event Event of change of the input element.
      * @param data Data with the name and current value of the input element.
@@ -122,12 +128,12 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     }
 
     /**
-     * Handles changes in the Clustering model's parameters form.
+     * Handles changes in the Random Fores model's parameters form.
      * @param _event Event of change of the input element.
      * @param data Data with the name and current value of the input element.
      */
-    const handleChangeParamsClustering = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
-        handleChangeParamsGeneric('clusteringParameters', data)
+    const handleChangeParamsRF = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+        handleChangeParamsGeneric('rfParameters', data)
     }
 
     /**
@@ -156,6 +162,20 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         setForm({ ...form, modelParameters: { ...form.modelParameters, clusteringParameters: newParameters } })
     }
 
+    /**
+    /**
+     * Handles changes in the RFParameters' lookForOptimalNEstimators value.
+     * @param lookForOptimalNEstimators New value.
+     */
+    const handleChangeOptimalNEstimators = (lookForOptimalNEstimators: boolean) => {
+        const newParameters: RFParameters = { ...form.modelParameters.rfParameters, lookForOptimalNEstimators }
+        setForm({ ...form, modelParameters: { ...form.modelParameters, rfParameters: newParameters } })
+    }
+
+    /**
+     * Returns the corresponding type of Form to show depending on the selected FitnessFunction.
+     * @returns Corresponding Form.
+     */
     const getModelForm = (): Nullable<JSX.Element> => {
         switch (selectedFitnessFunction) {
             case FitnessFunction.CLUSTERING:
@@ -168,6 +188,14 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                 )
             case FitnessFunction.SVM:
                 return <NewSVMModelForm parameters={form.modelParameters.svmParameters} handleChangeParams={handleChangeParamsSVM} />
+            case FitnessFunction.RF:
+                return (
+                    <NewRFModelForm
+                        parameters={form.modelParameters.rfParameters}
+                        handleChangeParams={handleChangeParamsRF}
+                        handleChangeOptimalNEstimators={handleChangeOptimalNEstimators}
+                    />
+                )
             default:
                 return null
         }
@@ -286,12 +314,18 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         switch (selectedFitnessFunction) {
             case FitnessFunction.SVM: {
                 const svmParameters = modelParameters.svmParameters
-                return svmParameters.maxIterations > 100 && svmParameters.maxIterations < 2000
+                return svmParameters.maxIterations >= 100 && svmParameters.maxIterations <= 2000
             }
-            case FitnessFunction.CLUSTERING:
-                return true
+            case FitnessFunction.CLUSTERING: {
+                const clusteringParameters = modelParameters.clusteringParameters
+                return clusteringParameters.nClusters >= 2 && clusteringParameters.nClusters <= 10
+            }
+            case FitnessFunction.RF: {
+                const rfParameters = modelParameters.rfParameters
+                return (rfParameters.nEstimators >= 10 && rfParameters.nEstimators <= 20) &&
+                    (rfParameters.maxDepth === null || rfParameters.maxDepth >= 3)
+            }
             default:
-                // TODO: implement RF
                 return false
         }
     }
@@ -582,9 +616,4 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         </Modal>
 
     )
-}
-
-export {
-    NewTrainedModelRFParameters,
-    NewTrainedModelModal
 }

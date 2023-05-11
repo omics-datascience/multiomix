@@ -64,7 +64,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                     { name: 'State', serverCodeToSort: 'state', width: 1 },
                     { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Best fitness', serverCodeToSort: 'best_fitness_value' }
+                    { name: 'Best CV fitness', serverCodeToSort: 'best_fitness_value' }
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
@@ -80,7 +80,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                                     <Icon name='add' />
                                 </Button>
                             </Form.Field>
-                        ] : undefined
+                        ]
+                        : undefined
                 }
                 showSearchInput
                 searchLabel='Name'

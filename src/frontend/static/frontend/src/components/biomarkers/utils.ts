@@ -80,9 +80,10 @@ const getDefaultClusteringParameters = (): ClusteringParameters => {
  */
 const getDefaultRFParameters = (): RFParameters => {
     return {
-        nEstimators: 100,
-        maxDepth: 10,
-        randomState: null
+        nEstimators: 10,
+        maxDepth: null,
+        randomState: null,
+        lookForOptimalNEstimators: true
     }
 }
 

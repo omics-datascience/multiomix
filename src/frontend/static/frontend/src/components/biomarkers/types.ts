@@ -34,9 +34,16 @@ enum BiomarkerState {
 
 }
 
+/** Type of molecules input in the Biomarker creation form. */
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
     AREA = 'area',
+}
+
+/** Structure to create/update a molecule in a Biomarker. */
+type SaveMoleculeStructure = {
+    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
+    identifier: string
 }
 
 // TODO: attributes 'number_of_...', 'state' and 'origin' only are used in API GET service, not in the form, define and use
@@ -83,6 +90,13 @@ type MoleculesSymbolFinder = {
     data: MoleculeSymbol[]
 }
 
+interface ValidationSection {
+    haveAmbiguous: boolean,
+    haveInvalid: boolean,
+    isLoading: boolean,
+    checkBox: boolean,
+}
+
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     id: Nullable<number>,
@@ -94,13 +108,6 @@ interface FormBiomarkerData {
     moleculesSection: MoleculesSection,
     validation: ValidationSection
     moleculesSymbolsFinder: MoleculesSymbolFinder,
-}
-
-interface ValidationSection {
-    haveAmbiguous: boolean,
-    haveInvalid: boolean,
-    isLoading: boolean,
-    checkBox: boolean,
 }
 
 interface MoleculesMultipleSelection {
@@ -119,12 +126,6 @@ type BiomarkerMolecule = {
     type: MoleculeType
 }
 
-/** Structure to create/update a molecule in a Biomarker. */
-type SaveMoleculeStructure = {
-    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
-    identifier: string
-}
-
 /** Structure to make a request and create/update a Biomarker. */
 interface SaveBiomarkerStructure {
     name: string,
@@ -135,21 +136,24 @@ interface SaveBiomarkerStructure {
     cnas: SaveMoleculeStructure[],
 }
 
-type MoleculesSection = {
-    [BiomarkerType.CNA]: MoleculeSectionItem,
-    [BiomarkerType.MIRNA]: MoleculeSectionItem,
-    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
-    [BiomarkerType.MRNA]: MoleculeSectionItem,
+/** Represents a section in the form to create a Biomarker. */
+interface MoleculesSectionData {
+    isValid: boolean,
+    value: string | string[],
 }
 
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
 interface MoleculeSectionItem {
     isLoading: boolean,
     data: MoleculesSectionData[]
 }
 
-interface MoleculesSectionData {
-    isValid: boolean,
-    value: string | string[],
+/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
+type MoleculesSection = {
+    [BiomarkerType.CNA]: MoleculeSectionItem,
+    [BiomarkerType.MIRNA]: MoleculeSectionItem,
+    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
+    [BiomarkerType.MRNA]: MoleculeSectionItem,
 }
 
 /** Available Feature Selection algorithms. */
@@ -232,7 +236,12 @@ interface RFParameters extends ModelParameters {
     nEstimators: number,
     /** The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure or
     until all leaves contain less than min_samples_split samples. */
-    maxDepth: number,
+    maxDepth: Nullable<number>,
+    /**
+     * If true, the algorithm will look for the optimal number of trees during a new TrainedModel request.
+     * (Used only in the TrainedModel panel)
+     */
+    lookForOptimalNEstimators: boolean,
 }
 
 /** All the different fitness functions' parameters. */

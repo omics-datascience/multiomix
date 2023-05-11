@@ -15,7 +15,7 @@ from django.db.models import Q, QuerySet
 from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import ShuffleSplit, GridSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.constants import TCGA_CONVENTION
@@ -24,7 +24,8 @@ from common.functions import close_db_connection
 from common.utils import replace_cgds_suffix, get_subset_of_features
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
-from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction
+from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
+    RFParameters
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
 from user_files.models_choices import MoleculeType
@@ -322,8 +323,29 @@ class StatisticalValidationService(object):
 
         # Generates GridSearchCV instance
         clustering_parameters: Optional[ClusteringParameters] = None
-        if trained_model.fitness_function in [FitnessFunction.SVM, FitnessFunction.RF]:
+        if trained_model.fitness_function == FitnessFunction.SVM:
             param_grid = {'alpha': 2. ** np.arange(-12, 13, 2)}
+            gcv = GridSearchCV(
+                classifier,
+                param_grid,
+                scoring=score_svm_rf,
+                n_jobs=1,
+                refit=False,
+                cv=cv
+            )
+        elif trained_model.fitness_function == FitnessFunction.RF:
+            rf_parameters: RFParameters = trained_model.rf_parameters
+
+            # Checks if it needs to compute a range of n_clusters or a fixed value
+            look_optimal_n_estimators = is_clustering and \
+                                        model_parameters['rfParameters']['lookForOptimalNEstimators']
+
+            if look_optimal_n_estimators:
+                # Tries n_estimators from 10 to 20 jumping by 2
+                param_grid = {'n_estimators': range(10, 21, 2)}
+            else:
+                param_grid = {'n_estimators': [rf_parameters.n_estimators]}
+
             gcv = GridSearchCV(
                 classifier,
                 param_grid,
@@ -334,7 +356,7 @@ class StatisticalValidationService(object):
             )
         else:
             # Clustering
-            clustering_parameters = trained_model.clustering_parameters
+            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
 
             # Checks if it needs to compute a range of n_clusters or a fixed value
             look_optimal_n_clusters = is_clustering and \
