@@ -13,12 +13,6 @@ import { NewRFModelForm } from './NewRFModelForm'
 
 declare const urlNewTrainedModel: string
 
-/** Available CrossValidation types. */
-enum CrossValidationType {
-    CROSS_VALIDATION = 1,
-    LEAVE_ONE_OUT = 2
-}
-
 /** NewTrainedModelModal props. */
 interface NewTrainedModelModalProps {
     /** Selected Biomarker instance to retrieve its TrainedModel instances. */
@@ -29,7 +23,6 @@ interface NewTrainedModelModalProps {
 
 /** CV parameters. */
 interface CrossValidationParameters {
-    type: CrossValidationType,
     folds: number
 }
 
@@ -75,7 +68,6 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
     description: null,
     selectedFitnessFunction: null,
     crossValidationParameters: {
-        type: CrossValidationType.CROSS_VALIDATION,
         folds: 10
     },
     modelParameters: getDefaultModelParameters(),
@@ -356,7 +348,6 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         formData.append('name', form.name)
         formData.append('description', form.description ?? 'null')
         formData.append('fitnessFunction', (form.selectedFitnessFunction as FitnessFunction).toString())
-        formData.append('crossValidationType', form.crossValidationParameters.type.toString())
         formData.append('crossValidationFolds', form.crossValidationParameters.folds.toString())
         formData.append('biomarkerPk', (props.selectedBiomarker.id as number).toString())
         formData.append('modelParameters', JSON.stringify(form.modelParameters))
@@ -400,7 +391,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      * @param name Name of the input to change.
      * @param value New value to assign.
      */
-    const handleCVParametersChange = (name: keyof CrossValidationParameters, value: CrossValidationType | number) => {
+    const handleCVParametersChange = (name: keyof CrossValidationParameters, value: number) => {
         setForm({ ...form, crossValidationParameters: { ...form.crossValidationParameters, [name]: value } })
     }
 
@@ -442,35 +433,20 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                             {/* Specific model params */}
                             <Grid.Column width={5}>
-                                <Header as='h4'>Select optimization process</Header>
+                                <Header as='h4'>Select Cross Validation parameters</Header>
 
-                                <Form.Select
+                                <Form.Input
                                     fluid
-                                    label='Cross Validation method'
-                                    options={[
-                                        { key: CrossValidationType.CROSS_VALIDATION, text: 'Normal', value: CrossValidationType.CROSS_VALIDATION },
-                                        { key: CrossValidationType.LEAVE_ONE_OUT, text: 'Leave One Out', value: CrossValidationType.LEAVE_ONE_OUT }
-                                    ]}
-                                    placeholder='Select a CV method'
-                                    name='type'
-                                    value={form.crossValidationParameters.type}
+                                    label='Number of folds'
+                                    placeholder='An integer number'
+                                    type='number'
+                                    step={1}
+                                    min={3}
+                                    max={10}
+                                    name='folds'
+                                    value={form.crossValidationParameters.folds}
                                     onChange={(_, { name, value }) => { handleCVParametersChange(name, value as any) }}
                                 />
-
-                                {form.crossValidationParameters.type === CrossValidationType.CROSS_VALIDATION &&
-                                    <Form.Input
-                                        fluid
-                                        label='Number of folds'
-                                        placeholder='An integer number'
-                                        type='number'
-                                        step={1}
-                                        min={3}
-                                        max={10}
-                                        name='folds'
-                                        value={form.crossValidationParameters.folds}
-                                        onChange={(_, { name, value }) => { handleCVParametersChange(name, value as any) }}
-                                    />
-                                }
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>

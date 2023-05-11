@@ -521,15 +521,12 @@ class BiomarkerNewTrainedModel(APIView):
                 raise ValidationError('Invalid model parameters')
 
             # Gets and checks CrossValidation parameters
-            cross_validation_type = request.POST.get('crossValidationType')
             cross_validation_folds = request.POST.get('crossValidationFolds')
 
-            if cross_validation_type is None or cross_validation_folds is None:
-                raise ValidationError(f'Invalid CV parameters: cross_validation_type: {cross_validation_type} | '
-                                      f'cross_validation_folds: {cross_validation_folds}')
+            if cross_validation_folds is None:
+                raise ValidationError(f'Invalid CV parameters: cross_validation_folds: {cross_validation_folds}')
 
             # Cast to int
-            cross_validation_type = int(cross_validation_type)
             cross_validation_folds = int(cross_validation_folds)
 
             # Clinical source
@@ -602,6 +599,6 @@ class BiomarkerNewTrainedModel(APIView):
 
             # Runs statistical validation in background
             global_stat_validation_service.add_trained_model_training(trained_model, model_parameters,
-                                                                      cross_validation_type, cross_validation_folds)
+                                                                      cross_validation_folds)
 
         return Response({'ok': True})

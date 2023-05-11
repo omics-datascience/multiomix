@@ -1,3 +1,5 @@
+from math import isnan
+from typing import Optional
 from rest_framework import serializers
 from feature_selection.models import TrainedModel
 from user_files.models_choices import MoleculeType
@@ -104,7 +106,17 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
 
 class TrainedModelSerializer(serializers.ModelSerializer):
     """TrainedModel serializer"""
+    best_fitness_value = serializers.SerializerMethodField(method_name='get_best_fitness_value')
 
     class Meta:
         model = TrainedModel
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value']
+
+    @staticmethod
+    def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:
+        """Gets the best fitness value of the TrainedModel setting it to None if it's NaN"""
+        if instance.best_fitness_value is not None and not isnan(instance.best_fitness_value):
+            return instance.best_fitness_value
+        return None
+
+

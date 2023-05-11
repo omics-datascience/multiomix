@@ -15,7 +15,7 @@ from django.db.models import Q, QuerySet
 from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, LeaveOneOut
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.constants import TCGA_CONVENTION
@@ -29,12 +29,6 @@ from feature_selection.models import TrainedModel, ClusteringScoringMethod, Clus
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
 from user_files.models_choices import MoleculeType
-
-
-class CrossValidationTypes(Enum):
-    """Available CrossValidation types."""
-    CROSS_VALIDATION = 1,
-    LEAVE_ONE_OUT = 2
 
 
 # Common event values
@@ -177,7 +171,7 @@ class StatisticalValidationService(object):
     def __save_molecule_identifiers(created_stat_validation: StatisticalValidation,
                                     best_features: List[str], best_features_coeff: List[float]):
         """
-        Saves all the molecules with the coefficients taken from the CoxnetSurvivalAnalysis for the new created
+        Saves all the molecules with the coefficients taken from the CoxNetSurvivalAnalysis for the new created
         StatisticalValidation instance.
         """
         for feature, coeff in zip(best_features, best_features_coeff):
@@ -251,7 +245,7 @@ class StatisticalValidationService(object):
     @staticmethod
     def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
                                 clinical_temp_file_path: str, model_parameters: Dict,
-                                cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
+                                cross_validation_folds: int,
                                 stop_event: Event):
         """
         Computes the statistical validation using the params defined by the user.
@@ -260,15 +254,14 @@ class StatisticalValidationService(object):
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: Cross validation type.
         @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal.
         """
 
         def score_svm_rf(model: SurvModel, x: pd.DataFrame, y: np.ndarray) -> float:
-            """Gets the C-Index for a SVM/RF regression prediction."""
+            """Gets the C-Index for an SVM/RF regression prediction."""
             prediction = model.predict(x)
-            result = concordance_index_censored(y['event'], y['time'], prediction)
+            result = cast(List[float], concordance_index_censored(y['event'], y['time'], prediction))
             return result[0]
 
         def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
@@ -318,7 +311,7 @@ class StatisticalValidationService(object):
         # structure of data
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
-        # CV strategy
+        # Stratified CV
         cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
 
         # Generates GridSearchCV instance
@@ -446,14 +439,12 @@ class StatisticalValidationService(object):
         return molecules_temp_file_path, clinical_temp_file_path
 
     def __prepare_and_compute_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
-                                            cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
-                                            stop_event: Event) -> Tuple[str, str]:
+                                            cross_validation_folds: int, stop_event: Event) -> Tuple[str, str]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the TrainedModel's training process.
         TODO: use stop_event
         @param trained_model: TrainedModel instance.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: Cross validation type.
         @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal
         """
@@ -547,13 +538,11 @@ class StatisticalValidationService(object):
         close_db_connection()
 
     def eval_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
-                           cross_validation_type: CrossValidationTypes, cross_validation_folds: int,
-                           stop_event: Event) -> None:
+                           cross_validation_folds: int, stop_event: Event) -> None:
         """
         Computes a training to get a good TrainedModel.
         @param trained_model: TrainedModel to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: Cross validation type.
         @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop event to cancel the stat_validation
         """
@@ -640,19 +629,18 @@ class StatisticalValidationService(object):
         self.statistical_validations_futures[stat_validation.pk] = (stat_validation_future, stat_validation_event)
 
     def add_trained_model_training(self, trained_model: TrainedModel, model_parameters: Dict,
-                                   cross_validation_type: CrossValidationTypes, cross_validation_folds: int,):
+                                   cross_validation_folds: int,):
         """
         Adds a new TrainedModel training request to the ThreadPool to be processed.
         @param trained_model: StatisticalValidation to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: Cross validation type.
         @param cross_validation_folds: Number of folds for cross validation.
         """
         trained_model_event = Event()
 
         # Submits
         trained_model_future = self.executor.submit(self.eval_trained_model, trained_model, model_parameters,
-                                                    cross_validation_type, cross_validation_folds, trained_model_event)
+                                                    cross_validation_folds, trained_model_event)
         self.trained_model_futures[trained_model.pk] = (trained_model_future, trained_model_event)
 
     def stop_stat_validation(self, stat_validation: StatisticalValidation):
