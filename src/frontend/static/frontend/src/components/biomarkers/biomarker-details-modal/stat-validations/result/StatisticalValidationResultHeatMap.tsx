@@ -4,8 +4,8 @@ import { MoleculesExpressions, StatisticalValidationForTable } from '../../../ty
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import ReactApexChart from 'react-apexcharts'
 import { ResultPlaceholder } from './ResultPlaceholder'
+import { Heatmap } from '../heatmap/Heatmap'
 
 declare const urlStatisticalValidationHeatMap: string
 
@@ -54,44 +54,15 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         })
     }
 
-    // Generates the chart config
-    let chartSeries: ApexAxisChartSeries | undefined
-    let chartOptions: ApexCharts.ApexOptions | undefined
-
-    if (statValidationData) {
-        chartSeries = Object.entries(statValidationData.data).map(([moleculeName, samples]) => {
+    const data = statValidationData
+        ? Object.entries(statValidationData.data).flatMap(([moleculeName, samples]) => Object.entries(samples).map(([sampleName, expression]) => {
             return {
-                name: moleculeName,
-                data: Object.entries(samples).map(([sampleName, expression]) => {
-                    return {
-                        x: sampleName,
-                        y: expression
-                    }
-                })
+                x: sampleName,
+                y: moleculeName,
+                value: expression
             }
-        })
-
-        chartOptions = {
-            chart: {
-                height: 350,
-                type: 'heatmap'
-            },
-            plotOptions: {
-                heatmap: {
-                    shadeIntensity: 0.5,
-                    radius: 0,
-                    useFillColorAsStroke: true
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            colors: ['#d00000'],
-            stroke: {
-                width: 1
-            }
-        }
-    }
+        }))
+        : []
 
     return (
         <>
@@ -100,7 +71,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
             }
 
             {(!loading && statValidationData !== null) &&
-                <ReactApexChart options={chartOptions} series={chartSeries} type="heatmap" height={440} />
+                <Heatmap data={data} width={1000} height={550} />
             }
         </>
     )

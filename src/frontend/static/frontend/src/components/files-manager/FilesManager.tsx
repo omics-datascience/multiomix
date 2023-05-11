@@ -197,7 +197,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             type: TagType.FILE
         }
 
-        ky.get(urlTagsCRUD, { searchParams: searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
                 this.setState({ tags })
             }).catch((err) => {

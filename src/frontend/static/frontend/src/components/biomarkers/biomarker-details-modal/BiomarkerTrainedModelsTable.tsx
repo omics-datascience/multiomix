@@ -65,6 +65,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) 
                     { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
                     { name: 'Best CV fitness', serverCodeToSort: 'best_fitness_value' }
+                    // TODO: add actions column with an option to see the details of a trained model
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}

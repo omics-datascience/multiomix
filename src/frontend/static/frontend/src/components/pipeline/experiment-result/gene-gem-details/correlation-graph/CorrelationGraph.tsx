@@ -7,7 +7,7 @@ import { Nullable } from '../../../../../utils/interfaces'
 import { getGemDescription, getGeneAndGEMFromSelectedRow, listToDropdownOptions } from '../../../../../utils/util_functions'
 import { GeneGEMDataErrorMessage } from '../GeneGEMDataErrorMessage'
 import { CorrelationChartData, ApexChartJSSerie } from './../GeneGemDetailsModal'
-import d3 from 'd3'
+import * as d3 from 'd3'
 
 /**
  * Component's props
@@ -54,7 +54,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
     // Color generator
     const seriesIndexes = [...Array(seriesLength).keys()]
 
-    const colors = d3.scale.linear().range(
+    const colors = d3.scaleLinear().range(
         [
             // Tableau10 (taken from https://observablehq.com/@d3/color-schemes)
             '#4e79a7', '#f28e2c', '#e15759', '#76b7b2', '#59a14f', '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab',

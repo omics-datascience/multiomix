@@ -372,11 +372,7 @@ interface MoleculesExpressions {
     /** Object with the molecule's name as key. The value is an object with the sample as key, and the expression as value. */
     data: {[moleculeName: string]: {
         [sampleName: string]: number // This number is the expression
-    }[]},
-    /** Minimum expression value in the DataFrame. */
-    min: number,
-    /** Maximum expression value in the DataFrame. */
-    max: number
+    }}
 }
 
 /** An array with two values: the sample identifier, and the cluster where it belongs. */

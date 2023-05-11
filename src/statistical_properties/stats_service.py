@@ -4,7 +4,6 @@ import tempfile
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, Future
-from enum import Enum
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List
 import numpy as np
@@ -15,7 +14,7 @@ from django.db.models import Q, QuerySet
 from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, LeaveOneOut
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.constants import TCGA_CONVENTION
@@ -28,8 +27,7 @@ from feature_selection.models import TrainedModel, ClusteringScoringMethod, Clus
     RFParameters
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
-from user_files.models_choices import MoleculeType
-
+from user_files.models_choices import MoleculeType, FileType
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -103,8 +101,29 @@ class StatisticalValidationService(object):
         return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
 
     @staticmethod
-    def __generate_molecules_file(stat_validation: StatisticalValidation, samples_in_common: np.ndarray) -> str:
-        """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
+    def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
+                        samples_in_common: np.ndarray) -> pd.DataFrame:
+        """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
+        # Only keeps the samples in common
+        chunk = chunk[samples_in_common]
+
+        # Keeps only existing molecules in the current chunk
+        molecules_to_extract = np.intersect1d(chunk.index, molecules)
+        chunk = chunk.loc[molecules_to_extract]
+
+        # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
+        chunk.index = chunk.index + f'_{file_type}'
+
+        # Removes TCGA suffix
+        chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
+
+        return chunk
+
+    def __generate_molecules_file(self, stat_validation: StatisticalValidation, samples_in_common: np.ndarray) -> str:
+        """
+        Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common and saves
+        it in disk.
+        """
         with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
             molecules_temp_file_path = temp_file.name
 
@@ -113,22 +132,27 @@ class StatisticalValidationService(object):
                     continue
 
                 for chunk in source.get_df_in_chunks():
-                    # Only keeps the samples in common
-                    chunk = chunk[samples_in_common]
-
-                    # Keeps only existing molecules in the current chunk
-                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
-                    chunk = chunk.loc[molecules_to_extract]
-
-                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-                    chunk.index = chunk.index + f'_{file_type}'
-
-                    # Removes TCGA suffix
-                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
+                    chunk = self.__process_chunk(chunk, file_type, molecules, samples_in_common)
 
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
         return molecules_temp_file_path
+
+    def __generate_molecules_dataframe(self, stat_validation: StatisticalValidation,
+                                       samples_in_common: np.ndarray) -> pd.DataFrame:
+        """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
+        chunks: List[pd.DataFrame] = []
+        for source, molecules, file_type in stat_validation.get_sources_and_molecules():
+            if source is None:
+                continue
+
+            chunks.extend([
+                self.__process_chunk(chunk, file_type, molecules, samples_in_common)
+                for chunk in source.get_df_in_chunks()
+            ])
+
+        # Concatenates all the chunks for all the molecules
+        return pd.concat(chunks, axis=0, sort=False)
 
     def __generate_df_molecules_and_clinical(self, stat_validation: Union[StatisticalValidation, TrainedModel],
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
@@ -398,9 +422,7 @@ class StatisticalValidationService(object):
         samples_in_common = self.__get_common_samples(stat_validation)
 
         # Generates all the molecules DataFrame
-        molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
-
-        return pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+        return self.__generate_molecules_dataframe(stat_validation, samples_in_common)
 
     def get_molecules_and_clinical_df(self,
                                       stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -456,7 +478,7 @@ class StatisticalValidationService(object):
                                                                                                       samples_in_common)
 
         self.__compute_trained_model(trained_model, molecules_temp_file_path, clinical_temp_file_path, model_parameters,
-                                     cross_validation_type, cross_validation_folds, stop_event)
+                                     cross_validation_folds, stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
@@ -562,7 +584,6 @@ class StatisticalValidationService(object):
             molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_trained_model(
                 trained_model,
                 model_parameters,
-                cross_validation_type,
                 cross_validation_folds,
                 stop_event
             )

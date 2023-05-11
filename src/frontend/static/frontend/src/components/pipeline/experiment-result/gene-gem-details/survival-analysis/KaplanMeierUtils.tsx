@@ -1,5 +1,5 @@
 import React from 'react'
-import d3 from 'd3'
+import * as d3 from 'd3'
 import { Nullable } from '../../../../../utils/interfaces'
 
 /** Needed structure for KaplanMeier chart */
@@ -288,7 +288,7 @@ const d3Utils = {
     },
 
     createLinearScale: (range, domain) => {
-        return d3.scale.linear().range(range).domain(domain)
+        return d3.scaleLinear().range(range).domain(domain)
     },
 
     createAxisMarkup: (axis, width: number, height: number) => { // refactor, this is an insane hack
