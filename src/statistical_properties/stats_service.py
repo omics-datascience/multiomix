@@ -254,13 +254,13 @@ class StatisticalValidationService(object):
                                 stop_event: Event):
         """
         Computes the statistical validation using the params defined by the user.
-        TODO: use stop_event
+        TODO: use stop_event and cross_validation_type
         @param trained_model: StatisticalValidation instance.
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: TODO: complete and use!
-        @param cross_validation_folds: TODO: complete
+        @param cross_validation_type: Cross validation type.
+        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal.
         """
 
@@ -293,7 +293,7 @@ class StatisticalValidationService(object):
             return cph.score(df, scoring_method=scoring_method)
 
         # Gets model instance and stores its parameters
-        classifier, clustering_scoring_method, _is_clustering, is_regression = create_models_parameters_and_classifier(
+        classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
             trained_model, model_parameters)
 
         # TODO: refactor this retrieval of data as it's repeated in the fs_service
@@ -321,6 +321,7 @@ class StatisticalValidationService(object):
         cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
 
         # Generates GridSearchCV instance
+        clustering_parameters: Optional[ClusteringParameters] = None
         if trained_model.fitness_function in [FitnessFunction.SVM, FitnessFunction.RF]:
             param_grid = {'alpha': 2. ** np.arange(-12, 13, 2)}
             gcv = GridSearchCV(
@@ -333,8 +334,17 @@ class StatisticalValidationService(object):
             )
         else:
             # Clustering
-            param_grid = {'n_clusters': range(2, 11)}
-            clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+            clustering_parameters = trained_model.clustering_parameters
+
+            # Checks if it needs to compute a range of n_clusters or a fixed value
+            look_optimal_n_clusters = is_clustering and \
+                                      model_parameters['clusteringParameters']['lookForOptimalNClusters']
+
+            if look_optimal_n_clusters:
+                param_grid = {'n_clusters': range(2, 11)}
+            else:
+                param_grid = {'n_clusters': [clustering_parameters.n_clusters]}
+
             gcv = GridSearchCV(
                 classifier,
                 param_grid,
@@ -348,6 +358,12 @@ class StatisticalValidationService(object):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
             gcv = gcv.fit(molecules_df, clinical_data)
+
+
+        # Saves the n_clusters in the model
+        if is_clustering:
+            clustering_parameters.n_clusters = gcv.best_params_['n_clusters']
+            clustering_parameters.save(update_fields=['n_clusters'])
 
         # Saves model instance and best score
         classifier.set_params(**gcv.best_params_)
@@ -415,8 +431,8 @@ class StatisticalValidationService(object):
         TODO: use stop_event
         @param trained_model: TrainedModel instance.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: TODO: complete
-        @param cross_validation_folds: TODO: complete
+        @param cross_validation_type: Cross validation type.
+        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal
         """
         # Get samples in common
@@ -515,8 +531,8 @@ class StatisticalValidationService(object):
         Computes a training to get a good TrainedModel.
         @param trained_model: TrainedModel to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: TODO: complete
-        @param cross_validation_folds: TODO: complete
+        @param cross_validation_type: Cross validation type.
+        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop event to cancel the stat_validation
         """
         # Computes the TrainedModel
@@ -602,13 +618,13 @@ class StatisticalValidationService(object):
         self.statistical_validations_futures[stat_validation.pk] = (stat_validation_future, stat_validation_event)
 
     def add_trained_model_training(self, trained_model: TrainedModel, model_parameters: Dict,
-                                   cross_validation_type: CrossValidationTypes, cross_validation_folds: int):
+                                   cross_validation_type: CrossValidationTypes, cross_validation_folds: int,):
         """
         Adds a new TrainedModel training request to the ThreadPool to be processed.
         @param trained_model: StatisticalValidation to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_type: TODO: complete
-        @param cross_validation_folds: TODO: complete
+        @param cross_validation_type: Cross validation type.
+        @param cross_validation_folds: Number of folds for cross validation.
         """
         trained_model_event = Event()
 

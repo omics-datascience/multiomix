@@ -5,17 +5,15 @@ import numpy as np
 from threading import Event
 from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
-from rest_framework.exceptions import ValidationError
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
 from common.constants import TCGA_CONVENTION
 from common.utils import replace_cgds_suffix
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
-from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression, SurvModel
-from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
-from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
-    ClusteringParameters, ClusteringScoringMethod
+from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
+from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
+    ClusteringParameters
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging

@@ -487,11 +487,17 @@ class BiomarkerNewTrainedModel(APIView):
         """Checks if the selected model's parameters are valid."""
         if fitness_function == FitnessFunction.SVM:
             svm_parameters = model_parameters['svmParameters']
-            return 100 < svm_parameters['maxIterations'] < 2000
+            return 100 <= int(svm_parameters['maxIterations']) <= 2000
+
         if fitness_function == FitnessFunction.CLUSTERING:
-            return True
-        # TODO: implement RF
-        return False
+            clustering_parameters = model_parameters['clusteringParameters']
+            return 2 <= int(clustering_parameters['nClusters']) <= 10
+
+        if fitness_function == FitnessFunction.RF:
+            random_forest_parameters = model_parameters['rfParameters']
+            return 10 <= int(random_forest_parameters['nEstimators']) <= 20
+
+        raise ValidationError(f'Invalid fitness function: {fitness_function}')
 
     def post(self, request: Request):
         with transaction.atomic():

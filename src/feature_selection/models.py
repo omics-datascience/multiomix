@@ -63,6 +63,7 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
+    random_state = models.SmallIntegerField(null=True, blank=True)
     n_clusters = models.SmallIntegerField(default=2, validators=[MinValueValidator(2), MaxValueValidator(10)])
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
 

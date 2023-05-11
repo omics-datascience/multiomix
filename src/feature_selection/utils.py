@@ -111,18 +111,21 @@ def create_models_parameters_and_classifier(
         models_parameters = models_parameters['clusteringParameters']
         n_clusters = int(models_parameters['nClusters'])
         n_clusters = limit_between_min_max(n_clusters, min_value=2, max_value=10)
+        random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
 
         clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
             algorithm=int(models_parameters['algorithm']),
             metric=int(models_parameters['metric']),
             n_clusters=n_clusters,
             scoring_method=int(models_parameters['scoringMethod']),
+            random_state=random_state,
             trained_model=trained_model
         )
 
         clustering_scoring_method = clustering_parameters.scoring_method
         classifier = get_clustering_model(clustering_parameters.algorithm,
-                                          number_of_clusters=clustering_parameters.n_clusters)
+                                          number_of_clusters=clustering_parameters.n_clusters,
+                                          random_state=clustering_parameters.random_state)
     else:
         raise ValidationError(f'Parameter fitness_function invalid: {fitness_function} ({type(fitness_function)})')
 

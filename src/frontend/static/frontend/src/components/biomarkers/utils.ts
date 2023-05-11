@@ -69,7 +69,8 @@ const getDefaultClusteringParameters = (): ClusteringParameters => {
         scoringMethod: ClusteringScoringMethod.C_INDEX,
         metric: ClusteringMetric.COX_REGRESSION,
         nClusters: 2,
-        randomState: null
+        randomState: null,
+        lookForOptimalNClusters: true
     }
 }
 

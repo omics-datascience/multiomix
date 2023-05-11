@@ -211,7 +211,12 @@ interface ClusteringParameters extends ModelParameters {
     /** Scoring method to use in case of metric === Cox-Regression. */
     scoringMethod: ClusteringScoringMethod,
     /** Number of clusters. */
-    nClusters: number
+    nClusters: number,
+    /**
+     * If true, the algorithm will look for the optimal number of clusters during a new TrainedModel request.
+     * (Used only in the TrainedModel panel)
+     */
+    lookForOptimalNClusters: boolean,
 }
 
 /** Parameters for a Survival SVM model. */

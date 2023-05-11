@@ -122,6 +122,15 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
     }
 
     /**
+     * Handles changes in the Clustering model's parameters form.
+     * @param _event Event of change of the input element.
+     * @param data Data with the name and current value of the input element.
+     */
+    const handleChangeParamsClustering = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+        handleChangeParamsGeneric('clusteringParameters', data)
+    }
+
+    /**
      * Handles changes in the name/description inputs.
      * @param name Name of
      * @param value New value to set.
@@ -138,10 +147,25 @@ const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         setForm({ ...form, selectedFitnessFunction })
     }
 
+    /**
+     * Handles changes in the ClusteringParameters' lookForOptimalNClusters value.
+     * @param lookForOptimalNClusters New value.
+     */
+    const handleChangeOptimalNClusters = (lookForOptimalNClusters: boolean) => {
+        const newParameters: ClusteringParameters = { ...form.modelParameters.clusteringParameters, lookForOptimalNClusters }
+        setForm({ ...form, modelParameters: { ...form.modelParameters, clusteringParameters: newParameters } })
+    }
+
     const getModelForm = (): Nullable<JSX.Element> => {
         switch (selectedFitnessFunction) {
             case FitnessFunction.CLUSTERING:
-                return <NewClusteringModelForm parameters={form.modelParameters.clusteringParameters} handleChangeParams={handleChangeParamsSVM} />
+                return (
+                    <NewClusteringModelForm
+                        parameters={form.modelParameters.clusteringParameters}
+                        handleChangeParams={handleChangeParamsClustering}
+                        handleChangeOptimalNClusters={handleChangeOptimalNClusters}
+                    />
+                )
             case FitnessFunction.SVM:
                 return <NewSVMModelForm parameters={form.modelParameters.svmParameters} handleChangeParams={handleChangeParamsSVM} />
             default:
