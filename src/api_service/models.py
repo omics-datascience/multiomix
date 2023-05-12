@@ -200,7 +200,7 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = self.__get_cgds_datasets_joined_df()
             row_data[PATIENT_ID_COLUMN] = row_data.index  # Creates a column of Patient ID from the index
 
-            # Sets Sample ID and index and get samples
+            # Sets Sample ID and index, and get samples
             if samples is not None:
                 row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[samples]
             else:
@@ -234,7 +234,8 @@ class ExperimentClinicalSource(ExperimentSource):
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
-        return self.__get_specific_samples_and_attributes(samples, clinical_attributes).to_numpy()
+        res = self.__get_specific_samples_and_attributes(samples, clinical_attributes).to_numpy()
+        return res if len(clinical_attributes) > 1 else res[:, 0]  # If only one attribute, returns a 1D array
 
     def get_specific_samples_and_attributes_df(
         self,
