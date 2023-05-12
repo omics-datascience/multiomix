@@ -5,12 +5,16 @@ import * as d3 from 'd3'
 import { THRESHOLDS, COLORS, COLOR_LEGEND_HEIGHT } from './constants'
 import { Tooltip } from './Tooltip'
 
+/** Heatmap's props. */
 type HeatmapProps = {
     width: number;
     height: number;
-    data: { x: number | string; y: string; value: number | null }[];
+    min: number;
+    max: number;
+    data: { x: number | string; y: string; value: number }[];
 };
 
+/** Interaction data for the tooltip. */
 export type InteractionData = {
     xLabel: string;
     yLabel: string;
@@ -19,15 +23,16 @@ export type InteractionData = {
     value: number | null;
 };
 
-export const Heatmap = ({ width, height, data }: HeatmapProps) => {
+/**
+ * Renders a HeatMap chart. Taken from https://www.react-graph-gallery.com/heatmap.
+ * @param props Component props.
+ * @returns Heatmap component.
+ */
+export const Heatmap = (props: HeatmapProps) => {
+    const { width, height, data, min, max } = props
     const [hoveredCell, setHoveredCell] = useState<InteractionData | null>(null)
 
-    // Color scale is computed here bc it must be passed to both the renderer and the legend
-    const values = data
-        .map((d) => d.value)
-        .filter((d): d is number => d !== null)
-    const max = d3.max(values) || 0
-
+    // Computes color range
     const colorScale = d3
         .scaleLinear<string>()
         .domain(THRESHOLDS.map((t) => t * max))
@@ -53,6 +58,8 @@ export const Heatmap = ({ width, height, data }: HeatmapProps) => {
                     width={200}
                     colorScale={colorScale}
                     interactionData={hoveredCell}
+                    min={min}
+                    max={max}
                 />
             </div>
         </div>

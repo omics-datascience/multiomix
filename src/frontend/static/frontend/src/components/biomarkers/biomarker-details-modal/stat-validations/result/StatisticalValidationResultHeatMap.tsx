@@ -22,7 +22,7 @@ interface StatisticalValidationResultHeatMapProps {
  */
 export const StatisticalValidationResultHeatMap = (props: StatisticalValidationResultHeatMapProps) => {
     const [loading, setLoading] = useState(false)
-    const [statValidationData, setStatValidationData] = useState<Nullable<MoleculesExpressions>>(null)
+    const [heatMapData, setHeatMapData] = useState<Nullable<MoleculesExpressions>>(null)
 
     /**
      * Every time the StatisticalValidation changes retrieves
@@ -40,8 +40,8 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationHeatMap, { searchParams, timeout: 60000 }).then((response) => {
-            response.json().then((statValidation: MoleculesExpressions) => {
-                setStatValidationData(statValidation)
+            response.json().then((headMapData: MoleculesExpressions) => {
+                setHeatMapData(headMapData)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
@@ -54,8 +54,8 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         })
     }
 
-    const data = statValidationData
-        ? Object.entries(statValidationData.data).flatMap(([moleculeName, samples]) => Object.entries(samples).map(([sampleName, expression]) => {
+    const data = heatMapData
+        ? Object.entries(heatMapData.data).flatMap(([moleculeName, samples]) => Object.entries(samples).map(([sampleName, expression]) => {
             return {
                 x: sampleName,
                 y: moleculeName,
@@ -70,8 +70,8 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
                 <ResultPlaceholder />
             }
 
-            {(!loading && statValidationData !== null) &&
-                <Heatmap data={data} width={1000} height={550} />
+            {(!loading && heatMapData !== null) &&
+                <Heatmap data={data} width={1000} height={550} min={heatMapData.min} max={heatMapData.max} />
             }
         </>
     )

@@ -2,21 +2,32 @@ import React, { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { InteractionData } from './Heatmap'
 
+/** ColorLegend's props. */
 type ColorLegendProps = {
     height: number;
     width: number;
+    min: number;
+    max: number;
     colorScale: d3.ScaleLinear<string, string, never>;
     interactionData: InteractionData | null;
 };
 
 const COLOR_LEGEND_MARGIN = { top: 0, right: 0, bottom: 50, left: 0 }
 
-export const ColorLegend = ({
-    height,
-    colorScale,
-    width,
-    interactionData
-}: ColorLegendProps) => {
+/**
+ * Renders a color legend for the heatmap.
+ * @param props Component props.
+ * @returns ColorLegend component.
+ */
+export const ColorLegend = (props: ColorLegendProps) => {
+    const {
+        height,
+        colorScale,
+        width,
+        interactionData,
+        min,
+        max
+    } = props
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
     const boundsWidth =
@@ -24,9 +35,7 @@ export const ColorLegend = ({
     const boundsHeight =
         height - COLOR_LEGEND_MARGIN.top - COLOR_LEGEND_MARGIN.bottom
 
-    const domain = colorScale.domain()
-    const max = domain[domain.length - 1]
-    const xScale = d3.scaleLinear().range([0, boundsWidth]).domain([0, max])
+    const xScale = d3.scaleLinear().range([min, boundsWidth]).domain([min, max])
 
     const allTicks = xScale.ticks(4).map((tick) => {
         return (
@@ -44,7 +53,7 @@ export const ColorLegend = ({
                     fontSize={9}
                     textAnchor="middle"
                 >
-                    {tick / 1000 + 'k'}
+                    {tick}
                 </text>
             </>
         )
@@ -83,8 +92,7 @@ export const ColorLegend = ({
             <div
                 style={{
                     position: 'relative',
-                    transform: `translate(${COLOR_LEGEND_MARGIN.left}px,
-            ${COLOR_LEGEND_MARGIN.top}px`
+                    transform: `translate(${COLOR_LEGEND_MARGIN.left}px, ${COLOR_LEGEND_MARGIN.top}px`
                 }}
             >
                 <canvas ref={canvasRef} width={boundsWidth} height={boundsHeight} />

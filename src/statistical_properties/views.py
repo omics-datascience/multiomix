@@ -159,9 +159,13 @@ class StatisticalValidationHeatMap(APIView):
 
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
-            return Response({'data': molecules_df.to_dict('index')})
+            return Response({
+                'data': molecules_df.to_dict('index'),
+                'min': molecules_df.min().min(),
+                'max': molecules_df.max().max()
+            })
         except NoSamplesInCommon:
-            return Response({'data': []})
+            return Response({'data': [], 'min': 0.0, 'max': 0.0})
 
 
     permission_classes = [permissions.IsAuthenticated]

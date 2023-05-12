@@ -6,6 +6,7 @@ import './renderer.css'
 
 type Dataset = { x: number | string; y: string; value: number | null }[]
 
+/** Renderer's props. */
 type RendererProps = {
     width: number;
     height: number;
@@ -14,13 +15,20 @@ type RendererProps = {
     colorScale: d3.ScaleLinear<string, string, never>;
 };
 
-export const Renderer = ({
-    width,
-    height,
-    data,
-    setHoveredCell,
-    colorScale
-}: RendererProps) => {
+/**
+ * SVG renderer of the HeatMap.
+ * @param props Component props.
+ * @returns Renderer component.
+ */
+export const Renderer = (props: RendererProps) => {
+    const {
+        width,
+        height,
+        data,
+        setHoveredCell,
+        colorScale
+    } = props
+
     // bounds = area inside the axis
     const boundsWidth = width - MARGIN.right - MARGIN.left
     const boundsHeight = height - MARGIN.top - MARGIN.bottom
