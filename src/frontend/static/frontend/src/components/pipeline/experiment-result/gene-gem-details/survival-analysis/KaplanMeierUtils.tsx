@@ -335,7 +335,6 @@ interface KaplanMeierState {
 
 /**
  * Renders a Kaplan-Meier chart
- * TODO: refactor using visx (https://github.com/airbnb/visx). After that, remove d3 dependency
  */
 class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
     constructor (props) {
