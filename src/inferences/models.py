@@ -7,11 +7,11 @@ from user_files.models_choices import FileType
 
 
 class InferenceExperiment(models.Model):
-    """Represents a prediction experiment from test sources using a TrainedModel"""
+    """Represents a inference experiment from test sources using a TrainedModel"""
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='inference_experiments')
-    trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='predictions')
+    trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='inference_experiments')
     state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker. TODO: rename here and everywhere to GeneralExperimentState
     created = models.DateTimeField(auto_now_add=True)
 
@@ -98,4 +98,4 @@ class SampleAndClusterPrediction(models.Model):
     """Represents a sample with his assigned cluster inferred by a clustering algorithm."""
     sample = models.CharField(max_length=100)
     cluster = models.CharField(max_length=20)
-    prediction = models.ForeignKey(InferenceExperiment, on_delete=models.CASCADE, related_name='samples_and_clusters')
+    experiment = models.ForeignKey(InferenceExperiment, on_delete=models.CASCADE, related_name='samples_and_clusters')

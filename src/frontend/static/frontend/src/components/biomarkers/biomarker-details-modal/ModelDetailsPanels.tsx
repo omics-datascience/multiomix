@@ -1,18 +1,26 @@
-import React from 'react'
-import { List } from 'semantic-ui-react'
+import React, { useEffect, useState } from 'react'
+import { List, Placeholder, Segment } from 'semantic-ui-react'
 import { ClusteringAlgorithmLabel } from '../labels/ClusteringAlgorithmLabel'
 import { ClusteringScoringMethodLabel } from '../labels/ClusteringScoringMethodLabel'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { SVMKernelLabel } from '../labels/SVMKernelLabel'
 import { SVMKernelTask } from '../labels/SVMKernelTask'
 import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails, RFModelDetails } from '../types'
+import { Nullable } from '../../../utils/interfaces'
+import ky from 'ky'
+import { alertGeneralError } from '../../../utils/util_functions'
+
+declare const urlStatisticalValidationModalDetails: string
+
+/** GeneralMetrics props. */
+type GeneralMetricsProps = { data: ModelDetails, fitness_function: FitnessFunction }
 
 /**
  * Renders some general items in common for all the models.
  * @param props Component props.
  * @returns Component.
  */
-const GeneralMetrics = (props: { data: ModelDetails, fitness_function: FitnessFunction }) => {
+const GeneralMetrics = (props: GeneralMetricsProps) => {
     return (
         <>
             <List.Item>
@@ -49,12 +57,15 @@ const GeneralMetrics = (props: { data: ModelDetails, fitness_function: FitnessFu
     )
 }
 
+/** ClusteringModelDetailsPanel props. */
+type ClusteringModelDetailsPanelProps = { data: ClusteringModelDetails, fitness_function: FitnessFunction }
+
 /**
  * Renders a panel with all the data of a Clustering model.
  * @param props Component props.
  * @returns Component.
  */
-const ClusteringModelDetailsPanel = (props: { data: ClusteringModelDetails, fitness_function: FitnessFunction }) => {
+const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) => {
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -89,12 +100,15 @@ const ClusteringModelDetailsPanel = (props: { data: ClusteringModelDetails, fitn
     )
 }
 
+/** SVMModelDetailsPanel props. */
+type SVMModelDetailsPanelProps = { data: SVMModelDetails, fitness_function: FitnessFunction }
+
 /**
  * Renders a panel with all the data of a SVM model.
  * @param props Component props.
  * @returns Component.
  */
-const SVMModelDetailsPanel = (props: { data: SVMModelDetails, fitness_function: FitnessFunction }) => {
+const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -123,12 +137,15 @@ const SVMModelDetailsPanel = (props: { data: SVMModelDetails, fitness_function: 
     )
 }
 
+/** RFModelDetailsPanel props. */
+type RFModelDetailsPanelProps = { data: RFModelDetails, fitness_function: FitnessFunction }
+
 /**
  * Renders a panel with all the data of a Random Forest model.
  * @param props Component props.
  * @returns Component.
  */
-const RFModelDetailsPanel = (props: { data: RFModelDetails, fitness_function: FitnessFunction }) => {
+const RFModelDetailsPanel = (props: RFModelDetailsPanelProps) => {
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -149,4 +166,90 @@ const RFModelDetailsPanel = (props: { data: RFModelDetails, fitness_function: Fi
     )
 }
 
-export { ClusteringModelDetailsPanel, SVMModelDetailsPanel, RFModelDetailsPanel }
+/** ModelDetailsPanel props. */
+interface ModelDetailsModelDetailsPanelProps {
+    /** Selected TrainedModel's pk */
+    trainedModelPk: number,
+}
+
+/**
+ * Renders a panel with all the data of a Trained model.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => {
+    const [modelDetails, setModelDetails] = useState<Nullable<ModelDetails>>(null)
+    const [loadingModelDetails, setLoadingModelDetails] = useState(false)
+
+    useEffect(() => {
+        getModelDetails()
+    }, [props.trainedModelPk])
+
+    /** Retrieve all the details of the selected StatisticalValidation's Trained model. */
+    const getModelDetails = () => {
+        setLoadingModelDetails(true)
+
+        const searchParams = { trained_model_pk: props.trainedModelPk }
+        ky.get(urlStatisticalValidationModalDetails, { searchParams }).then((response) => {
+            response.json().then((modelDetails: ModelDetails) => {
+                setModelDetails(modelDetails)
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error getting model details data', err)
+        }).finally(() => {
+            setLoadingModelDetails(false)
+        })
+    }
+
+    /**
+     * Gets the corresponding component to show models details.
+     * @returns Corresponding component.
+     */
+    const getModelDetailsPanel = (): Nullable<JSX.Element> => {
+        if (loadingModelDetails) {
+            return (
+                <Segment>
+                    <Placeholder className='full-width'>
+                        <Placeholder.Header image>
+                            <Placeholder.Line />
+                            <Placeholder.Line />
+                        </Placeholder.Header>
+                        <Placeholder.Paragraph>
+                            <Placeholder.Line length='medium' />
+                            <Placeholder.Line length='short' />
+                        </Placeholder.Paragraph>
+                    </Placeholder>
+                </Segment>
+            )
+        }
+
+        if (modelDetails === null) {
+            return null
+        }
+
+        const { model } = modelDetails
+        switch (model) {
+            case FitnessFunction.CLUSTERING:
+                return <ClusteringModelDetailsPanel
+                    data={modelDetails as ClusteringModelDetails}
+                    fitness_function={model}
+                />
+            case FitnessFunction.SVM:
+                return <SVMModelDetailsPanel
+                    data={modelDetails as SVMModelDetails}
+                    fitness_function={model}
+                />
+            case FitnessFunction.RF:
+                return <RFModelDetailsPanel
+                    data={modelDetails as RFModelDetails}
+                    fitness_function={model}
+                />
+        }
+    }
+
+    return getModelDetailsPanel()
+}

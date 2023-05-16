@@ -338,7 +338,8 @@ interface BasicStatisticalValidation {
 
 /** A statistical validation. Retrieved as data for the StatisticalValidationsTable. */
 interface StatisticalValidationForTable extends BasicStatisticalValidation {
-    fitness_function: FitnessFunction
+    fitness_function: FitnessFunction,
+    trained_model: Nullable<number>,
 }
 
 /** A statistical validation of a Biomarker. */
@@ -366,6 +367,7 @@ interface InferenceExperimentForTable {
     state: BiomarkerState,
     model: FitnessFunction,
     description: Nullable<string>,
+    trained_model: Nullable<number>,
     created: string
 }
 
@@ -404,6 +406,7 @@ interface KaplanMeierResultData {
 /** Data which is present in all the TrainedModels. */
 interface GeneralModelDetails {
     best_fitness: number,
+    model: FitnessFunction
     random_state: Nullable<number>
 }
 

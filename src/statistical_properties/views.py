@@ -327,39 +327,39 @@ class StatisticalValidationSamplesAndClusters(generics.ListAPIView):
     ordering_fields = ['sample', 'cluster']
 
 
-class StatisticalValidationModelDetails(APIView):
-    """Gets the details for the trained model of a StatisticalValidation instance."""
+class ModelDetails(APIView):
+    """Gets the details for a TrainedModel instance."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: Request):
-        stat_validation = get_stat_validation_instance(request)
-        trained_model: TrainedModel = stat_validation.trained_model
-        fitness_function = trained_model.fitness_function
+        trained_model: TrainedModel = get_object_or_404(TrainedModel, pk=request.GET.get('trained_model_pk'),
+                                                        biomarker__user=request.user)
 
-        if fitness_function == FitnessFunction.CLUSTERING:
+        model_used = trained_model.fitness_function
+        if model_used == FitnessFunction.CLUSTERING:
             parameters: ClusteringParameters = trained_model.clustering_parameters
             response = {
                 'algorithm': parameters.algorithm,
                 'scoring_method': parameters.scoring_method,
                 'n_clusters': parameters.n_clusters
             }
-        elif fitness_function == FitnessFunction.SVM:
+        elif model_used == FitnessFunction.SVM:
             parameters: SVMParameters = trained_model.svm_parameters
             response = {
                 'task': parameters.task,
                 'kernel': parameters.kernel,
             }
-        elif fitness_function == FitnessFunction.RF:
+        elif model_used == FitnessFunction.RF:
             parameters: RFParameters = trained_model.rf_parameters
             response = {
                 'n_estimators': parameters.n_estimators,
                 'max_depth': parameters.max_depth,
             }
         else:
-            # TODO: implement RF
-            raise ValidationError(f'Invalid trained model type: {fitness_function}')
+            raise ValidationError(f'Invalid trained model type: {model_used}')
 
+        response['model'] = model_used
         response['best_fitness'] = trained_model.best_fitness_value
         response['random_state'] = parameters.random_state
 

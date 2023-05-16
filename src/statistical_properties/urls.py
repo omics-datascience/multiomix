@@ -40,7 +40,7 @@ urlpatterns = [
     ),
     path(
         'statistical-validation-modal-details',
-        views.StatisticalValidationModelDetails.as_view(),
+        views.ModelDetails.as_view(),
         name='statistical_validation_modal_details'
     ),
     path(

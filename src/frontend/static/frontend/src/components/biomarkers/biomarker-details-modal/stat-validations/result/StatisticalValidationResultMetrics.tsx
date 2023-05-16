@@ -1,14 +1,13 @@
 
 import React, { useEffect, useState } from 'react'
-import { ClusteringModelDetails, SVMModelDetails, FitnessFunction, StatisticalValidation, StatisticalValidationForTable, ModelDetails, RFModelDetails } from '../../../types'
+import { FitnessFunction, StatisticalValidation, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Header, Placeholder, Segment, Statistic } from 'semantic-ui-react'
-import { ClusteringModelDetailsPanel, RFModelDetailsPanel, SVMModelDetailsPanel } from '../../ModelDetailsPanels'
+import { ModelDetailsPanel } from '../../ModelDetailsPanels'
 
 declare const urlStatisticalValidationMetrics: string
-declare const urlStatisticalValidationModalDetails: string
 
 /** StatisticalValidationResultMetrics props. */
 interface StatisticalValidationResultMetricsProps {
@@ -24,8 +23,6 @@ interface StatisticalValidationResultMetricsProps {
 export const StatisticalValidationResultMetrics = (props: StatisticalValidationResultMetricsProps) => {
     const [loadingMetrics, setLoadingMetrics] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<StatisticalValidation>>(null)
-    const [loadingModelDetails, setLoadingModelDetails] = useState(false)
-    const [modelDetails, setModelDetails] = useState<Nullable<ModelDetails>>(null)
 
     const isClustering = props.selectedStatisticalValidation.fitness_function === FitnessFunction.CLUSTERING
 
@@ -36,7 +33,6 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
     useEffect(() => {
         if (props.selectedStatisticalValidation.id) {
             getStatValidationData()
-            getModelDetails()
         }
     }, [props.selectedStatisticalValidation.id])
 
@@ -65,71 +61,6 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
         })
     }
 
-    /** Retrieve all the details of the selected StatisticalValidation's Trained model. */
-    const getModelDetails = () => {
-        setLoadingModelDetails(true)
-
-        const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationModalDetails, { searchParams }).then((response) => {
-            response.json().then((modelDetails: ModelDetails) => {
-                setModelDetails(modelDetails)
-            }).catch((err) => {
-                alertGeneralError()
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            alertGeneralError()
-            console.log('Error getting model details data', err)
-        }).finally(() => {
-            setLoadingModelDetails(false)
-        })
-    }
-
-    /**
-     * Gets the corresponding component to show models details.
-     * @returns Corresponding component.
-     */
-    const getModelDetailsPanel = (): Nullable<JSX.Element> => {
-        if (loadingModelDetails) {
-            return (
-                <Segment>
-                    <Placeholder className='full-width'>
-                        <Placeholder.Header image>
-                            <Placeholder.Line />
-                            <Placeholder.Line />
-                        </Placeholder.Header>
-                        <Placeholder.Paragraph>
-                            <Placeholder.Line length='medium' />
-                            <Placeholder.Line length='short' />
-                        </Placeholder.Paragraph>
-                    </Placeholder>
-                </Segment>
-            )
-        }
-
-        if (modelDetails === null) {
-            return null
-        }
-
-        switch (props.selectedStatisticalValidation.fitness_function) {
-            case FitnessFunction.CLUSTERING:
-                return <ClusteringModelDetailsPanel
-                    data={modelDetails as ClusteringModelDetails}
-                    fitness_function={props.selectedStatisticalValidation.fitness_function}
-                />
-            case FitnessFunction.SVM:
-                return <SVMModelDetailsPanel
-                    data={modelDetails as SVMModelDetails}
-                    fitness_function={props.selectedStatisticalValidation.fitness_function}
-                />
-            case FitnessFunction.RF:
-                return <RFModelDetailsPanel
-                    data={modelDetails as RFModelDetails}
-                    fitness_function={props.selectedStatisticalValidation.fitness_function}
-                />
-        }
-    }
-
     return (
         <>
             <Header textAlign='center' dividing as='h1'>
@@ -140,7 +71,9 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
             <Segment>
                 <Header as='h2' dividing>Model details</Header>
 
-                {getModelDetailsPanel()}
+                {props.selectedStatisticalValidation.trained_model !== null &&
+                    <ModelDetailsPanel trainedModelPk={props.selectedStatisticalValidation.trained_model} />
+                }
             </Segment>
 
             {/* Result metrics data. */}

@@ -83,10 +83,11 @@ class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
 class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
     """StatisticalValidation serializer with few fields"""
     fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
+    trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = StatisticalValidation
-        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function']
+        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function', 'trained_model']
 
     @staticmethod
     def get_fitness_function(ins: StatisticalValidation) -> FitnessFunction:

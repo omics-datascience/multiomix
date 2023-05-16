@@ -4,6 +4,7 @@ import { Biomarker, InferenceExperimentForTable } from '../../types'
 import { Header, Icon, Modal } from 'semantic-ui-react'
 import { Nullable } from '../../../../utils/interfaces'
 import { NewInferenceExperimentModal } from './NewInferenceExperimentModal'
+import { InferenceExperimentResultModal } from './InferenceExperimentResultModal'
 
 /** BiomarkerInferenceExperimentsPanel props. */
 interface BiomarkerInferenceExperimentsPanelProps {
@@ -63,8 +64,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
                 <Header icon='area chart' content={selectedInferenceExperiment.name} />
 
                 <Modal.Content>
-                    {/* TODO: implement */}
-                    {/* <InferenceExperimentResultModal selectedInferenceExperiment={selectedInferenceExperiment} /> */}
+                    <InferenceExperimentResultModal selectedInferenceExperiment={selectedInferenceExperiment} />
                 </Modal.Content>
             </Modal>
         )

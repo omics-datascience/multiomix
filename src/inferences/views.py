@@ -6,7 +6,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.pagination import StandardResultsSetPagination
@@ -14,7 +13,7 @@ from common.utils import get_source_pk
 from feature_selection.models import TrainedModel
 from inferences.inference_service import global_inference_service
 from inferences.models import InferenceExperiment
-from inferences.serializers import InferenceExperimentSerializer
+from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer
 from user_files.models_choices import FileType
 
 
@@ -97,3 +96,20 @@ class PredictionExperimentSubmit(APIView):
             global_inference_service.add_inference_experiment(inference_experiment)
 
         return Response({'ok': True})
+
+
+class SampleAndClusterPredictionSamplesAndClusters(generics.ListAPIView):
+    """Gets all the pairs of samples and cluster for a specific inference experiment."""
+
+    def get_queryset(self):
+        inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
+        experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk, biomarker__user=self.request.user)
+        return experiment.samples_and_clusters.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SampleAndClusterPredictionSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['cluster']
+    search_fields = ['sample']
+    ordering_fields = ['sample', 'cluster']

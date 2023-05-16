@@ -4,12 +4,13 @@ from .models import InferenceExperiment, SampleAndClusterPrediction
 
 
 class InferenceExperimentSerializer(serializers.ModelSerializer):
-    """Serializer for InferenceExperiment model"""
+    """Serializer for InferenceExperiment model."""
     model = serializers.SerializerMethodField(method_name='get_model')
+    trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = InferenceExperiment
-        fields = ['id', 'name', 'description', 'created', 'model', 'state']
+        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model']
 
     @staticmethod
     def get_model(ins: InferenceExperiment) -> FitnessFunction:

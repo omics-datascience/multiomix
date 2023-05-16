@@ -164,9 +164,9 @@ class InferenceExperimentsService(object):
                 # Stores the prediction and the samples
                 SampleAndClusterPrediction.objects.bulk_create([
                     SampleAndClusterPrediction(
-                        sample=sample_id[0],
+                        sample=sample_id,
                         cluster=cluster_id,
-                        prediction=experiment
+                        experiment=experiment
                     )
                     for sample_id in current_samples
                 ])
