@@ -355,7 +355,7 @@ class FSService(object):
         experiment.save()
 
         # Removes key
-        self.__removes_experiment_future(biomarker.pk)
+        self.__removes_experiment_future(experiment.pk)
 
         close_db_connection()
 
@@ -436,7 +436,7 @@ class FSService(object):
                 experiment.state = BiomarkerState.FINISHED_WITH_ERROR
                 experiment.save()
             else:
-                experiment.attempt += 1
+                experiment.attempt += 1  # TODO: add this field to the model
                 experiment.save()
                 logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
                 trained_model: TrainedModel = experiment.trained_model
