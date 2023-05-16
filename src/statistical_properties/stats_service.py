@@ -222,7 +222,8 @@ class StatisticalValidationService(object):
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param stop_event: Stop signal.
         """
-        model: SurvModel = stat_validation.trained_model.get_model_instance()
+        trained_model: TrainedModel = stat_validation.trained_model
+        model: SurvModel = trained_model.get_model_instance()
         is_clustering = hasattr(model, 'clustering_parameters')
         is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
 
@@ -253,7 +254,7 @@ class StatisticalValidationService(object):
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Makes predictions
-        if not is_clustering:
+        if is_regression:
             predictions = model.predict(molecules_df)
 
             # Gets all the metrics for the SVM or RF
@@ -704,7 +705,7 @@ class StatisticalValidationService(object):
                 stat_validation.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
                 stat_validation.save()
             else:
-                stat_validation.attempt += 1
+                stat_validation.attempt += 1  # TODO: add this field to the model
                 stat_validation.save()
                 logging.warning(f'Running stat_validation "{stat_validation}". Current attempt: {stat_validation.attempt}')
                 self.add_stat_validation(stat_validation)

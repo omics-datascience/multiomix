@@ -5,6 +5,7 @@ import { BiomarkerDetailsMenu } from './BiomarkerDetailsMenu'
 import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/stat-validations/BiomarkerStatisticalValidationPanel'
 import { BiomarkerTrainedModelsTable } from './biomarker-details-modal/BiomarkerTrainedModelsTable'
 import { BiomarkerMoleculesPanel } from './biomarker-details-modal/molecules/BiomarkerMoleculesPanel'
+import { BiomarkerInferenceExperimentsPanel } from './biomarker-details-modal/inference/BiomarkerInferenceExperimentsPanel'
 
 interface BiomarkerDetailsModalProps {
     /** Selected Biomarker instance to show its details. */
@@ -18,7 +19,7 @@ interface BiomarkerDetailsModalProps {
  * @returns Component.
  */
 export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.MOLECULES)
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.INFERENCE)
 
     if (!props.selectedBiomarker) {
         return null
@@ -40,6 +41,8 @@ export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
                 return <BiomarkerTrainedModelsTable selectedBiomarker={props.selectedBiomarker} allowFullManagement />
             case ActiveBiomarkerDetailItemMenu.STATISTICAL_VALIDATION:
                 return <BiomarkerStatisticalValidationPanel selectedBiomarker={props.selectedBiomarker} />
+            case ActiveBiomarkerDetailItemMenu.INFERENCE:
+                return <BiomarkerInferenceExperimentsPanel selectedBiomarker={props.selectedBiomarker} />
             default:
                 return null // TODO: remove this and change the function return type
         }

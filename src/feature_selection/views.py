@@ -1,7 +1,10 @@
 import json
 from typing import Optional
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import User
 from django.db import transaction
-from rest_framework import permissions
+from django.db.models import QuerySet
+from rest_framework import permissions, generics
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
@@ -11,7 +14,8 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
-from feature_selection.models import FSExperiment, FitnessFunction
+from feature_selection.models import FSExperiment, FitnessFunction, TrainedModel, ClusterLabel
+from feature_selection.serializers import ClusterLabelSerializer
 from user_files.models_choices import FileType
 
 
@@ -109,3 +113,35 @@ class FeatureSelectionSubmit(APIView):
             global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters)
 
         return Response({'ok': True})
+
+
+def get_cluster_label_instances(trained_model_id: Optional[int],
+                                user: AbstractBaseUser) -> Optional[QuerySet[ClusterLabel]]:
+    if not trained_model_id:
+        raise ValidationError('Invalid trained model id')
+
+    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
+    return trained_model.cluster_labels.all()
+
+
+class ClusterLabelList(generics.ListCreateAPIView):
+    """REST endpoint: list and create for ClusterLabel model"""
+    # TODO: use this view and the below one for the CRUD of ClusterLabel
+
+    def get_queryset(self):
+        trained_model_id = self.request.query_params.get('trained_model_id', None)
+        return get_cluster_label_instances(trained_model_id, self.request.user)
+
+    serializer_class = ClusterLabelSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ClusterLabelDetail(generics.RetrieveUpdateDestroyAPIView):
+    """REST endpoint: get, modify or delete  for ClusterLabel model"""
+
+    def get_queryset(self):
+        trained_model_id = self.request.query_params.get('trained_model_id', None)
+        return get_cluster_label_instances(trained_model_id, self.request.user)
+
+    serializer_class = ClusterLabelSerializer
+    permission_classes = [permissions.IsAuthenticated]

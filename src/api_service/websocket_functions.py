@@ -82,3 +82,15 @@ def send_update_trained_models_command(user_id: int):
         'command': 'update_trained_models'
     }
     send_message(user_group_name, message)
+
+
+def send_update_prediction_experiment_command(user_id: int):
+    """
+    Sends a message indicating that a InferenceExperiment state update has occurred
+    @param user_id: InferenceExperiment's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_prediction_experiment'
+    }
+    send_message(user_group_name, message)

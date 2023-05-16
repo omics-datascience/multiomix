@@ -253,3 +253,14 @@ class TrainedModel(models.Model):
 
         # Sends a websockets message to update the experiment state in the frontend
         send_update_trained_models_command(self.biomarker.user.id)
+
+
+class ClusterLabel(models.Model):
+    """Represents a label for a cluster ID in a trained model."""
+    label = models.CharField(max_length=50)
+    color = models.CharField(max_length=7)
+    cluster_id = models.IntegerField()
+    trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='cluster_labels')
+
+    def __str__(self):
+        return f'Label "{self.label}" for cluster {self.cluster_id} in model "{self.trained_model.name}"'

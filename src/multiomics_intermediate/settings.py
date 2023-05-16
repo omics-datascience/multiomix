@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
@@ -53,6 +52,7 @@ INSTALLED_APPS = [
     'webpack_loader',
     'django_email_verification',
     'genes',
+    'inferences',
     'chunked_upload'
 ]
 
@@ -261,6 +261,14 @@ EMAIL_MAIL_SUBJECT = os.getenv('EMAIL_MAIL_SUBJECT', 'Confirm your email')
 EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
+
+
+EMAIL_SERVER = 'smtpout.secureserver.net'
+EMAIL_PORT: int = 587
+EMAIL_ADDRESS = 'info@omicsdatascience.org'
+EMAIL_FROM_ADDRESS = 'info@omicsdatascience.org'
+EMAIL_PASSWORD = 'P.SUz<8Wpm9>Y]Z'
+
 
 # Modulector settings
 MODULECTOR_SETTINGS = {

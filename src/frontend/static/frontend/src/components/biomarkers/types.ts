@@ -164,7 +164,7 @@ enum FeatureSelectionAlgorithm {
     PSO = 4
 }
 
-/** Available fitness functions. */
+/** Available fitness functions. TODO: rename to ModelUsed */
 enum FitnessFunction {
     CLUSTERING = 1,
     SVM = 2,
@@ -286,7 +286,7 @@ enum ActiveBiomarkerDetailItemMenu {
     FEATURE_SELECTION_SUMMARY,
     MODELS,
     STATISTICAL_VALIDATION,
-    PREDICT
+    INFERENCE
 }
 
 /** Available options for the Menu in the StatisticalValidation details modal */
@@ -357,6 +357,16 @@ interface StatisticalValidationForm extends StatisticalValidation {
     mirna_source_result: Nullable<StatisticalValidationSourceResult>,
     cna_source_result: Nullable<StatisticalValidationSourceResult>,
     methylation_source_result: Nullable<StatisticalValidationSourceResult>,
+}
+
+/** Django InferenceExperiment model. */
+interface InferenceExperimentForTable {
+    id: number,
+    name: string,
+    state: BiomarkerState,
+    model: FitnessFunction,
+    description: Nullable<string>,
+    created: string
 }
 
 /** Django MoleculeWithCoefficient model. */
@@ -455,6 +465,7 @@ export {
     StatisticalValidationForTable,
     StatisticalValidation,
     StatisticalValidationForm,
+    InferenceExperimentForTable,
     MoleculeWithCoefficient,
     MoleculesExpressions,
     KaplanMeierResultData,

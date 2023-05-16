@@ -18,7 +18,7 @@ type SourceFormData = {
 /** SourceSelectors props. */
 interface SourceSelectorsProps {
     /** Clinical source. */
-    clinicalSource: SourceFormData,
+    clinicalSource?: SourceFormData,
     /** mRNA source. If `undefined` the SourceForm is not shown. */
     mRNASource?: SourceFormData,
     /** mirna source. If `undefined` the SourceForm is not shown. */
@@ -53,27 +53,29 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
     return (
         <>
             <div className='selections-grid-container selection-step-container'>
-                <SourceForm
-                    source={props.clinicalSource.source}
-                    headerTitle='Clinical profile'
-                    headerIcon={{
-                        type: 'img',
-                        src: '/static/frontend/img/profiles/mRNA.svg'
-                    }}
-                    fileType={FileType.CLINICAL}
-                    disabled={props.clinicalSource.disabled}
-                    tagOptions={[]}
-                    handleChangeSourceType={(selectedSourceType) => {
-                        handleChangeSourceType(selectedSourceType, 'clinicalSource')
-                    }}
-                    selectNewFile={selectNewFile}
-                    selectUploadedFile={(selectedFile) => {
-                        selectUploadedFile(selectedFile, 'clinicalSource')
-                    }}
-                    selectStudy={(selectedStudy) => {
-                        selectStudy(selectedStudy, 'clinicalSource')
-                    }}
-                />
+                {props.clinicalSource !== undefined &&
+                    <SourceForm
+                        source={props.clinicalSource.source}
+                        headerTitle='Clinical profile'
+                        headerIcon={{
+                            type: 'img',
+                            src: '/static/frontend/img/profiles/mRNA.svg'
+                        }}
+                        fileType={FileType.CLINICAL}
+                        disabled={props.clinicalSource.disabled}
+                        tagOptions={[]}
+                        handleChangeSourceType={(selectedSourceType) => {
+                            handleChangeSourceType(selectedSourceType, 'clinicalSource')
+                        }}
+                        selectNewFile={selectNewFile}
+                        selectUploadedFile={(selectedFile) => {
+                            selectUploadedFile(selectedFile, 'clinicalSource')
+                        }}
+                        selectStudy={(selectedStudy) => {
+                            selectStudy(selectedStudy, 'clinicalSource')
+                        }}
+                    />
+                }
 
                 {/* mRNA */}
                 {props.mRNASource !== undefined &&

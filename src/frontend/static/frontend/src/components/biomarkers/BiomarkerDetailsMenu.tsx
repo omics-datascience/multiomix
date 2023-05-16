@@ -64,10 +64,10 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
             </Menu.Item>
 
             <Menu.Item
-                active={props.activeItem === ActiveBiomarkerDetailItemMenu.PREDICT}
-                onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.PREDICT)}
+                active={props.activeItem === ActiveBiomarkerDetailItemMenu.INFERENCE}
+                onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.INFERENCE)}
             >
-                Predict
+                Inference
 
                 <InfoPopup
                     content='Perform inference on new genomic and epigenomic data from previously trained Machine Learning models'
@@ -77,7 +77,8 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                 />
             </Menu.Item>
 
-            {props.selectedBiomarker.has_fs_experiment &&
+            {/* TODO: uncomment when confirmed this panel */}
+            {/* {props.selectedBiomarker.has_fs_experiment &&
                 <Menu.Item
                     active={props.activeItem === ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY}
                     onClick={() => props.setActiveItem(ActiveBiomarkerDetailItemMenu.FEATURE_SELECTION_SUMMARY)}
@@ -91,7 +92,7 @@ export const BiomarkerDetailsMenu = (props: BiomarkerDetailsMenuProps) => {
                         extraClassName='margin-left-5'
                     />
                 </Menu.Item>
-            }
+            } */}
         </Menu>
     )
 }
