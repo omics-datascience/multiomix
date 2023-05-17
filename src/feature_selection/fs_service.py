@@ -8,7 +8,7 @@ import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
 from common.constants import TCGA_CONVENTION
-from common.utils import replace_cgds_suffix
+from common.utils import replace_cgds_suffix, get_samples_intersection
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
@@ -76,14 +76,7 @@ class FSService(object):
             if source is None:
                 continue
 
-            if last_intersection is not None:
-                cur_intersection = np.intersect1d(
-                    last_intersection,
-                    source.get_samples()
-                )
-            else:
-                cur_intersection = source.get_samples()
-            last_intersection = cast(np.ndarray, cur_intersection)
+            last_intersection = get_samples_intersection(source, last_intersection)
 
         return cast(np.ndarray, last_intersection)
 
@@ -207,8 +200,10 @@ class FSService(object):
         if is_regression:
             time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
             clinical_df = clinical_df[clinical_df[time_column] > 0]
-            valid_samples = clinical_df.index
-            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Keeps only the samples in common
+        valid_samples = clinical_df.index
+        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',

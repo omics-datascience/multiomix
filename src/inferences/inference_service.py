@@ -7,7 +7,7 @@ from typing import Dict, Tuple, cast, Optional, List
 import pandas as pd
 from biomarkers.models import BiomarkerState
 from common.constants import TCGA_CONVENTION
-from common.utils import get_subset_of_features
+from common.utils import get_subset_of_features, get_samples_intersection
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction
@@ -72,14 +72,7 @@ class InferenceExperimentsService(object):
             if source is None:
                 continue
 
-            if last_intersection is not None:
-                cur_intersection = np.intersect1d(
-                    last_intersection,
-                    source.get_samples()
-                )
-            else:
-                cur_intersection = np.array(source.get_samples())
-            last_intersection = cast(np.ndarray, cur_intersection)
+            last_intersection = get_samples_intersection(source, last_intersection)
 
         return cast(np.ndarray, last_intersection)
 
