@@ -20,7 +20,6 @@ from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
-from common.constants import TCGA_CONVENTION
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
@@ -258,7 +257,6 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Removes TCGA suffix and joins with the clinical data
-        clinical_df.index = clinical_df.index.str.replace(TCGA_CONVENTION, '', regex=True)
         joined = molecules_df.join(clinical_df, how='inner')
 
         # Groups by the clinical attribute and computes the survival function for every group

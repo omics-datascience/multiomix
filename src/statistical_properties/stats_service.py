@@ -17,10 +17,9 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
-from common.constants import TCGA_CONVENTION
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
-from common.utils import replace_cgds_suffix, get_subset_of_features, get_samples_intersection
+from common.utils import get_subset_of_features, get_samples_intersection
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -107,9 +106,6 @@ class StatisticalValidationService(object):
         # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
         chunk.index = chunk.index + f'_{file_type}'
 
-        # Removes TCGA suffix
-        chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
-
         return chunk
 
     def __generate_molecules_file(self, stat_validation: StatisticalValidation, samples_in_common: np.ndarray) -> str:
@@ -165,12 +161,9 @@ class StatisticalValidationService(object):
             # Keeps only the survival tuple and samples in common
             survival_tuple = stat_validation.survival_column_tuple
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
+            clinical_df = clinical_df.loc[samples_in_common]
 
-            # Removes CGDS suffix to prevent not found indexes as clinical data has not CGDS suffix
-            clean_samples_in_common = replace_cgds_suffix(samples_in_common)
-            clinical_df = clinical_df.loc[clean_samples_in_common]
-
-            # Replaces str values of CGDS for
+            # Replaces str values of CGDS for boolean values
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
                 self.__replace_event_col_for_booleans
             )

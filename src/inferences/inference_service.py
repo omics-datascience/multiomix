@@ -6,7 +6,6 @@ from threading import Event
 from typing import Dict, Tuple, cast, Optional, List
 import pandas as pd
 from biomarkers.models import BiomarkerState
-from common.constants import TCGA_CONVENTION
 from common.utils import get_subset_of_features, get_samples_intersection
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
@@ -89,9 +88,6 @@ class InferenceExperimentsService(object):
 
         # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
         chunk.index = chunk.index + f'_{file_type}'
-
-        # Removes TCGA suffix
-        chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
         return chunk
 

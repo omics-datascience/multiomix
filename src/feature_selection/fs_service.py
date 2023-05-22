@@ -7,8 +7,7 @@ from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.constants import TCGA_CONVENTION
-from common.utils import replace_cgds_suffix, get_samples_intersection
+from common.utils import get_samples_intersection
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
@@ -94,9 +93,6 @@ class FSService(object):
         @param samples_in_common: Samples in common to extract from the datasets.
         @return: Both DataFrames paths.
         """
-        # Removes CGDS suffix to prevent not found indexes
-        clean_samples_in_common = replace_cgds_suffix(samples_in_common)
-
         # Generates clinical DataFrame
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             clinical_temp_file_path = temp_file.name
@@ -108,7 +104,7 @@ class FSService(object):
             survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
 
-            clinical_df = clinical_df.loc[clean_samples_in_common]
+            clinical_df = clinical_df.loc[samples_in_common]
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
@@ -136,9 +132,6 @@ class FSService(object):
 
                     # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
                     chunk.index = chunk.index + f'_{file_type}'
-
-                    # Removes TCGA suffix
-                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')

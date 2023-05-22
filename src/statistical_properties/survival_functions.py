@@ -33,7 +33,7 @@ def struct_array_to_kaplan_meier_samples(array: np.ndarray) -> List[KaplanMeierS
 
 def get_group_survival_function(data: List[KaplanMeierSample]) -> List[Dict]:
     """
-    Gets list of times and events and gets the survival function
+    Gets list of times and events and gets the survival function using KaplanMeierFitter.
     @param data: List of times and events
     @return: List of dicts with two fields: "time" and "probability" which are consumed in this way in frontend
     """
@@ -108,6 +108,10 @@ def compute_c_index_and_log_likelihood(df: pd.DataFrame) -> Tuple[float, float]:
     the sample is).
     @return: A tuple with the C-Index and the partial Log-Likelihood.
     """
+    # Checks if the number of unique values in the 'group' column is greater than 1
+    if len(df['group'].unique()) <= 1:
+        return 0.0, 0.0
+
     cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
     concordance_index = cph.score(df, scoring_method='concordance_index')
     log_likelihood = cph.score(df, scoring_method='log_likelihood')
