@@ -10,7 +10,7 @@ urlpatterns = [
     path('submit-inference-experiment', views.PredictionExperimentSubmit.as_view(), name='submit_inference_experiment'),
     path(
         'inference-experiment-samples-and-clusters',
-        views.SampleAndClusterPredictionSamplesAndClusters.as_view(),
+        views.SampleAndClusterPredictionSamples.as_view(),
         name='inference_experiment_samples_and_clusters'
     ),
 ]

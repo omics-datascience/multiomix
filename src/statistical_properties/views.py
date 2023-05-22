@@ -611,6 +611,21 @@ class ClusterLabelList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ClusterLabelListPaginated(generics.ListAPIView):
+    """REST endpoint: paginated list for ClusterLabel model"""
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_cluster_label_instances(trained_model_pk, self.request.user)
+
+    serializer_class = ClusterLabelSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    search_fields = ['name', 'description']
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['name', 'description']
+
+
 class ClusterLabelDetail(generics.RetrieveUpdateDestroyAPIView):
     """REST endpoint: get, modify or delete  for ClusterLabel model"""
 

@@ -392,7 +392,8 @@ interface MoleculesExpressions {
 /** An array with two values: the sample identifier, and the cluster where it belongs. */
 type SampleAndCluster = {
     sample: string,
-    cluster: string
+    cluster: string,
+    color: Nullable<string>
 }
 
 /** Data to show in the StatisticalValidation KaplanMeier panel. */
@@ -434,7 +435,7 @@ type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
 
 /** Django ClusterLabelsSet model. */
 interface ClusterLabelsSet {
-    id: number,
+    id?: number,
     name: string,
     description: string,
     trained_model: number // PK of the TrainedModel
@@ -443,7 +444,7 @@ interface ClusterLabelsSet {
 
 /** Django ClusterLabel model. */
 interface ClusterLabel {
-    id: number,
+    id?: number,
     label: string,
     color: string,
     cluster_id: number

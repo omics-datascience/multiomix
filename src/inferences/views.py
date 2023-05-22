@@ -98,7 +98,7 @@ class PredictionExperimentSubmit(APIView):
         return Response({'ok': True})
 
 
-class SampleAndClusterPredictionSamplesAndClusters(generics.ListAPIView):
+class SampleAndClusterPredictionSamples(generics.ListAPIView):
     """Gets all the pairs of samples and cluster for a specific inference experiment."""
 
     def get_queryset(self):

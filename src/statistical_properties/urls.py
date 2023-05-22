@@ -54,5 +54,6 @@ urlpatterns = [
         name='statistical_validation_clinical_attrs'
     ),
     path('biomarker-new-trained-model', views.BiomarkerNewTrainedModel.as_view(), name='biomarker_new_trained_model'),
-    path('cluster-labels', views.ClusterLabelList.as_view(), name='cluster_labels')
+    path('cluster-labels', views.ClusterLabelList.as_view(), name='cluster_labels'),
+    path('cluster-labels-paginated', views.ClusterLabelListPaginated.as_view(), name='cluster_labels_paginated')
 ]

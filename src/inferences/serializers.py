@@ -25,7 +25,7 @@ class SampleAndClusterPredictionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SampleAndClusterPrediction
-        exclude = ['id']
+        exclude = ['id', 'experiment']
 
     def to_representation(self, instance: SampleAndClusterPrediction):
         """Checks if a ClusterLabelsSet was requested to get all the cluster labels."""
