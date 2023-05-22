@@ -243,7 +243,6 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     Field of event of interest
                                 </label>
                                 <Select
-                                    // fluid
                                     label='Field of event of interest'
                                     options={survivalValuesOptions}
                                     search

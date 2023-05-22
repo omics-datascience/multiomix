@@ -96,8 +96,8 @@ interface PaginatedTableState<T> {
  * @returns Component
  */
 class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, PaginatedTableState<T>> {
-    private filterTimeout: number | undefined;
-    websocketClient: WebsocketClientCustom;
+    private filterTimeout: number | undefined
+    websocketClient: WebsocketClientCustom
 
     constructor (props: PaginatedTableProps<T>) {
         super(props)
@@ -136,6 +136,16 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     componentDidMount () {
         this.getData()
+    }
+
+    /**
+     * When changes the 'queryParams' prop refresh the table.
+     * @param prevProps Previous props.
+     */
+    componentDidUpdate (prevProps: PaginatedTableProps<T>) {
+        if (prevProps.queryParams !== this.props.queryParams) {
+            this.getData()
+        }
     }
 
     /**
@@ -196,7 +206,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         }
 
         this.setState({ gettingData: true }, () => {
-            ky.get(this.props.urlToRetrieveData, { searchParams: searchParams, timeout: 60000 }).then((response) => {
+            ky.get(this.props.urlToRetrieveData, { searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
                     tableControl.totalRowCount = jsonResponse.count
 
@@ -247,7 +257,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 options = filter.options
             } else {
                 const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
-                options = uniqueValues.map((value) => ({ key: value, text: value, value: value }))
+                options = uniqueValues.map((value) => ({ key: value, text: value, value }))
             }
             return (
                 <Form.Select
@@ -290,7 +300,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Applies map function
         const tableBody = this.state.elements.length > 0
-            ? this.state.elements.map(this.props.mapFunction) : <NoDataRow colspan={this.props.headers.length} />
+            ? this.state.elements.map(this.props.mapFunction)
+            : <NoDataRow colspan={this.props.headers.length} />
 
         // Computes some extra parameters
         const totalPages = Math.max(1, Math.ceil(tableControl.totalRowCount as number / tableControl.pageSize))

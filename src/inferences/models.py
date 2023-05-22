@@ -97,5 +97,5 @@ class InferenceExperiment(models.Model):
 class SampleAndClusterPrediction(models.Model):
     """Represents a sample with his assigned cluster inferred by a clustering algorithm."""
     sample = models.CharField(max_length=100)
-    cluster = models.CharField(max_length=20)
+    cluster = models.IntegerField()
     experiment = models.ForeignKey(InferenceExperiment, on_delete=models.CASCADE, related_name='samples_and_clusters')

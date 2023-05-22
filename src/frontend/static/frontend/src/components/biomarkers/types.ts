@@ -432,6 +432,23 @@ interface RFModelDetails extends GeneralModelDetails {
 /** Types of models details. */
 type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
 
+/** Django ClusterLabelsSet model. */
+interface ClusterLabelsSet {
+    id: number,
+    name: string,
+    description: string,
+    trained_model: number // PK of the TrainedModel
+    labels: ClusterLabel[]
+}
+
+/** Django ClusterLabel model. */
+interface ClusterLabel {
+    id: number,
+    label: string,
+    color: string,
+    cluster_id: number
+}
+
 export {
     SVMKernel,
     SVMTask,
@@ -477,5 +494,7 @@ export {
     RFModelDetails,
     ModelDetails,
     SampleAndCluster,
-    RFParameters
+    RFParameters,
+    ClusterLabelsSet,
+    ClusterLabel
 }

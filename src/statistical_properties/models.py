@@ -235,6 +235,6 @@ class MoleculeWithCoefficient(models.Model):
 class SampleAndCluster(models.Model):
     """Represents a sample with his assigned cluster inferred by a clustering algorithm."""
     sample = models.CharField(max_length=100)
-    cluster = models.CharField(max_length=20)
+    cluster = models.IntegerField()
     statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
                                                related_name='samples_and_clusters')

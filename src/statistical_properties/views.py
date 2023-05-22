@@ -25,6 +25,8 @@ from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters
+from feature_selection.serializers import ClusterLabelSerializer, ClusterLabelSetSerializer
+from feature_selection.views import get_cluster_label_instances
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
@@ -596,3 +598,25 @@ class BiomarkerNewTrainedModel(APIView):
                                                                       cross_validation_folds)
 
         return Response({'ok': True})
+
+
+class ClusterLabelList(generics.ListCreateAPIView):
+    """REST endpoint: list and create for ClusterLabel model"""
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_cluster_label_instances(trained_model_pk, self.request.user)
+
+    serializer_class = ClusterLabelSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ClusterLabelDetail(generics.RetrieveUpdateDestroyAPIView):
+    """REST endpoint: get, modify or delete  for ClusterLabel model"""
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_cluster_label_instances(trained_model_pk, self.request.user)
+
+    serializer_class = ClusterLabelSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
