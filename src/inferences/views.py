@@ -1,4 +1,6 @@
 from django.db import transaction
+from django.db.models import QuerySet, Exists, OuterRef
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
@@ -10,9 +12,9 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
-from feature_selection.models import TrainedModel
+from feature_selection.models import TrainedModel, ClusterLabelsSet, ClusterLabel
 from inferences.inference_service import global_inference_service
-from inferences.models import InferenceExperiment
+from inferences.models import InferenceExperiment, SampleAndClusterPrediction
 from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer
 from user_files.models_choices import FileType
 
@@ -100,16 +102,37 @@ class PredictionExperimentSubmit(APIView):
 
 class SampleAndClusterPredictionSamples(generics.ListAPIView):
     """Gets all the pairs of samples and cluster for a specific inference experiment."""
+    @staticmethod
+    def __filter_by_cluster(samples_and_clusters: QuerySet[SampleAndClusterPrediction], request: HttpRequest):
+        """
+        Filters the QuerySet by a cluster. If it's numeric, then it will filter by the cluster number, otherwise
+        it will filter by the associated cluster label
+        """
+        cluster: str = request.GET.get('cluster')
+
+        if cluster is None:
+            return samples_and_clusters
+        if cluster.isnumeric():
+            return samples_and_clusters.filter(cluster=cluster)
+
+        # Returns the samples and clusters for which exists at least one ClusterLabelsSet with the given cluster's label
+        cluster_labels_set_pk = request.GET.get('cluster_labels_set_pk')
+        return samples_and_clusters.filter(
+            Exists(ClusterLabel.objects.filter(cluster_label_set__pk=cluster_labels_set_pk,
+                                               cluster_id=OuterRef('cluster'),
+                                               label=cluster))
+        )
 
     def get_queryset(self):
         inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
-        experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk, biomarker__user=self.request.user)
-        return experiment.samples_and_clusters.all()
+        experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk,
+                                       biomarker__user=self.request.user)
+        samples_and_clusters = experiment.samples_and_clusters.all()
+        return self.__filter_by_cluster(samples_and_clusters, self.request)
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SampleAndClusterPredictionSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['cluster']
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     search_fields = ['sample']
     ordering_fields = ['sample', 'cluster']
