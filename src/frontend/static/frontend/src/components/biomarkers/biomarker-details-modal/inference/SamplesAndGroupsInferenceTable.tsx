@@ -8,6 +8,7 @@ import { NewClusterLabelsSetModal } from '../../../common/cluster-labels/NewClus
 
 declare const urlInferenceExperimentSamplesAndClusters: string
 
+/** SamplesAndGroupsInferenceTable props. */
 interface SamplesAndGroupsInferenceTableProps {
     /** Selected InferenceExperimentForTable instance to retrieve all its data. */
     selectedInferenceExperiment: InferenceExperimentForTable,
@@ -40,7 +41,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                             ...extraQueryParams
                         }}
                         customFilters={[
-                            { label: 'Cluster', keyForServer: 'cluster', defaultValue: '', placeholder: 'Filter by cluster' }
+                            { label: 'Cluster', keyForServer: 'cluster', defaultValue: '', placeholder: 'Filter by cluster', allowZero: true }
                         ]}
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput

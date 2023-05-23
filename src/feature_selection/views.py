@@ -1,8 +1,6 @@
 import json
 from typing import Optional
-from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import transaction
-from django.db.models import QuerySet
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -13,7 +11,7 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
-from feature_selection.models import FSExperiment, FitnessFunction, TrainedModel, ClusterLabel
+from feature_selection.models import FSExperiment, FitnessFunction
 from user_files.models_choices import FileType
 
 
@@ -111,13 +109,3 @@ class FeatureSelectionSubmit(APIView):
             global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters)
 
         return Response({'ok': True})
-
-
-def get_cluster_label_instances(trained_model_id: Optional[int],
-                                user: AbstractBaseUser) -> QuerySet[ClusterLabel]:
-    """Gets the ClusterLabel instances for the given TrainedModel id and user."""
-    if not trained_model_id:
-        raise ValidationError('Invalid trained model id')
-
-    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
-    return trained_model.cluster_labels.all()

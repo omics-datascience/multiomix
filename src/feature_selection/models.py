@@ -265,9 +265,30 @@ class ClusterLabelsSet(models.Model):
 class ClusterLabel(models.Model):
     """Represents a label for a cluster ID."""
     label = models.CharField(max_length=50)
-    color = models.CharField(max_length=9, null=True, blank=True)  # 8 digits for color + 1 for '#' # TODO: implement in frontend
+    color = models.CharField(max_length=9, null=True, blank=True)  # 8 digits for color + 1 for '#'
     cluster_id = models.IntegerField()
     cluster_label_set = models.ForeignKey(ClusterLabelsSet, on_delete=models.CASCADE, related_name='labels')
 
     def __str__(self):
         return f'Label "{self.label}" for cluster {self.cluster_id} in model "{self.cluster_label_set.name}"'
+
+
+class PredictionRangeLabelsSet(models.Model):
+    """Represents a set of labels for cluster IDs in a trained model."""
+    name = models.CharField(max_length=50)
+    description = models.TextField(null=True, blank=True)
+    trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='prediction_ranges_labels')
+
+
+class PredictionRangeLabel(models.Model):
+    """Represents a label for a prediction range."""
+    label = models.CharField(max_length=50)
+    color = models.CharField(max_length=9, null=True, blank=True)  # 8 digits for color + 1 for '#'
+    min_value = models.FloatField(validators=[MinValueValidator(0)])
+    max_value = models.FloatField()
+    prediction_range_label_set = models.ForeignKey(PredictionRangeLabelsSet, on_delete=models.CASCADE,
+                                                   related_name='labels')
+
+    def __str__(self):
+        return f'Label "{self.label}" for range {self.min_value}-{self.max_value} in model ' \
+               f'"{self.prediction_range_label_set.name}"'

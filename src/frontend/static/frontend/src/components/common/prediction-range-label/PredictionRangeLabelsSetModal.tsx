@@ -3,12 +3,12 @@ import { PaginatedTable } from '../../common/PaginatedTable'
 import { Button, Form, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { ClusterLabelsSet } from '../../biomarkers/types'
-import { NewClusterLabelsSetModal } from './NewClusterLabelsSetModal'
+import { NewPredictionRangeLabelsSetModal } from './NewPredictionRangeLabelsSetModal'
 
-declare const urlClusterLabelsSetsPaginated: string
+declare const urlPredictionRangeLabelsSetsPaginated: string
 
-/** ClusterLabelsSetsModal props. */
-interface ClusterLabelsSetsModalProps {
+/** PredictionRangeLabelsSetModal props. */
+interface PredictionRangeLabelsSetModalProps {
     /** TrainedModel primary key. */
     trainedModelPk: number,
     /** Modal's open prop. */
@@ -21,21 +21,21 @@ interface ClusterLabelsSetsModalProps {
  * @param props Component props.
  * @returns Component.
  */
-export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
-    const [showNewClusterLabelsSet, setShowNewClusterLabelsSet] = useState(false)
+export const PredictionRangeLabelsSetModal = (props: PredictionRangeLabelsSetModalProps) => {
+    const [showNewPredictionRangeLabelsSet, setShowNewPredictionRangeLabelsSet] = useState(false)
 
     // TODO: show this in the TrainedModels page
 
     return (
         <>
             {/* New ClusterLabelsSet modal */}
-            <NewClusterLabelsSetModal
-                showNewClusterLabelsSet={showNewClusterLabelsSet}
-                setShowNewClusterLabelsSet={setShowNewClusterLabelsSet}
+            <NewPredictionRangeLabelsSetModal
+                showNewPredictionRangeLabelsSet={showNewPredictionRangeLabelsSet}
+                setShowNewPredictionRangeLabelsSet={setShowNewPredictionRangeLabelsSet}
                 trainedModelPk={props.trainedModelPk}
             />
 
-            {/* ClusterLabelsSets table */}
+            {/* PredictionRangeLabelsSet table */}
             <Modal
                 className='large-modal'
                 closeIcon={<Icon name='close' size='large' />}
@@ -47,12 +47,12 @@ export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
                 open={props.isOpen}
             >
                 <Modal.Header>
-                    <Icon name='braille' />
-                    Cluster labels sets
+                    <Icon name='braille' /> {/* TODO: change the icon */}
+                    Prediction range labels sets
                 </Modal.Header>
                 <Modal.Content>
                     <PaginatedTable<ClusterLabelsSet>
-                        headerTitle='Cluster labels sets'
+                        headerTitle='Prediction range labels sets'
                         headers={[
                             { name: 'Name', serverCodeToSort: 'name', width: 3 },
                             { name: 'Description', serverCodeToSort: 'description', width: 4 },
@@ -61,7 +61,7 @@ export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
                         queryParams={{ trained_model_pk: props.trainedModelPk }}
                         customElements={[
                             <Form.Field key={1} className='biomarkers--button--modal' title='New Cluster model'>
-                                <Button primary icon onClick={() => { setShowNewClusterLabelsSet(true) }}>
+                                <Button primary icon onClick={() => { setShowNewPredictionRangeLabelsSet(true) }}>
                                     <Icon name='add' />
                                 </Button>
                             </Form.Field>
@@ -69,7 +69,7 @@ export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
                         showSearchInput
                         searchLabel='Name'
                         searchPlaceholder='Search by name or description'
-                        urlToRetrieveData={urlClusterLabelsSetsPaginated}
+                        urlToRetrieveData={urlPredictionRangeLabelsSetsPaginated}
                         // updateWSKey='update_trained_models' // TODO: implement
                         mapFunction={(clusterLabelsSet: ClusterLabelsSet) => {
                             return (

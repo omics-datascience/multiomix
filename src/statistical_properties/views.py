@@ -2,7 +2,9 @@ import json
 from typing import Optional, Union, List, Dict
 import numpy as np
 import pandas as pd
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import transaction
+from django.db.models import QuerySet
 from django.db.models.functions import Abs
 from django.http import HttpRequest
 from django.http.response import Http404
@@ -24,9 +26,9 @@ from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
-from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters
-from feature_selection.serializers import ClusterLabelSerializer, ClusterLabelSetSerializer
-from feature_selection.views import get_cluster_label_instances
+from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters, \
+    ClusterLabelsSet, PredictionRangeLabelsSet
+from feature_selection.serializers import ClusterLabelsSetSerializer, PredictionRangeLabelsSetSerializer
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
@@ -39,6 +41,27 @@ from statistical_properties.survival_functions import generate_survival_groups_b
 from user_files.models_choices import FileType
 
 NUMBER_OF_NEEDED_SAMPLES: int = 3
+
+
+def get_cluster_labels_set_instances(trained_model_id: Optional[int],
+                                user: AbstractBaseUser) -> QuerySet[ClusterLabelsSet]:
+    """Gets the ClusterLabelsSet instances for the given TrainedModel id and user."""
+    if not trained_model_id:
+        raise ValidationError('Invalid trained model id')
+
+    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
+    return trained_model.cluster_labels.all()
+
+
+def get_prediction_range_labels_set_instances(trained_model_id: Optional[int],
+                                     user: AbstractBaseUser) -> QuerySet[PredictionRangeLabelsSet]:
+    """Gets the PredictionRangeLabelsSet instances for the given TrainedModel id and user."""
+    if not trained_model_id:
+        raise ValidationError('Invalid trained model id')
+
+    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
+    return trained_model.prediction_ranges_labels.all()
+
 
 
 def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> StatisticalValidation:
@@ -600,25 +623,25 @@ class BiomarkerNewTrainedModel(APIView):
         return Response({'ok': True})
 
 
-class ClusterLabelList(generics.ListCreateAPIView):
-    """REST endpoint: list and create for ClusterLabel model"""
+class ClusterLabelsSetsList(generics.ListCreateAPIView):
+    """REST endpoint: list and create for ClusterLabelsSet model"""
 
     def get_queryset(self):
         trained_model_pk = self.request.query_params.get('trained_model_pk', None)
-        return get_cluster_label_instances(trained_model_pk, self.request.user)
+        return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
-    serializer_class = ClusterLabelSetSerializer
+    serializer_class = ClusterLabelsSetSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ClusterLabelListPaginated(generics.ListAPIView):
-    """REST endpoint: paginated list for ClusterLabel model"""
+class ClusterLabelsSetsListPaginated(generics.ListAPIView):
+    """REST endpoint: paginated list for ClusterLabelsSet model"""
 
     def get_queryset(self):
         trained_model_pk = self.request.query_params.get('trained_model_pk', None)
-        return get_cluster_label_instances(trained_model_pk, self.request.user)
+        return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
-    serializer_class = ClusterLabelSetSerializer
+    serializer_class = ClusterLabelsSetSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     search_fields = ['name', 'description']
@@ -626,12 +649,51 @@ class ClusterLabelListPaginated(generics.ListAPIView):
     ordering_fields = ['name', 'description']
 
 
-class ClusterLabelDetail(generics.RetrieveUpdateDestroyAPIView):
-    """REST endpoint: get, modify or delete  for ClusterLabel model"""
+class ClusterLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
+    """REST endpoint: get, modify or delete  for ClusterLabelsSet model"""
+    # TODO: use this from frontend!
 
     def get_queryset(self):
         trained_model_pk = self.request.query_params.get('trained_model_pk', None)
-        return get_cluster_label_instances(trained_model_pk, self.request.user)
+        return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
-    serializer_class = ClusterLabelSetSerializer
+    serializer_class = ClusterLabelsSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PredictionRangeLabelsSetsList(generics.ListCreateAPIView):
+    """REST endpoint: list and create for PredictionRangeLabelsSet model"""
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
+
+    serializer_class = PredictionRangeLabelsSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PredictionRangeLabelsSetsListPaginated(generics.ListAPIView):
+    """REST endpoint: paginated list for PredictionRangeLabelsSet model"""
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
+
+    serializer_class = PredictionRangeLabelsSetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    search_fields = ['name', 'description']
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['name', 'description']
+
+
+class PredictionRangeLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
+    """REST endpoint: get, modify or delete  for PredictionRangeLabelsSet model"""
+    # TODO: use this from frontend!
+
+    def get_queryset(self):
+        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
+
+    serializer_class = PredictionRangeLabelsSetSerializer
     permission_classes = [permissions.IsAuthenticated]

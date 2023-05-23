@@ -15,7 +15,8 @@ from common.utils import get_source_pk
 from feature_selection.models import TrainedModel, ClusterLabelsSet, ClusterLabel
 from inferences.inference_service import global_inference_service
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction
-from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer
+from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer, \
+    SampleAndTimePredictionSerializer
 from user_files.models_choices import FileType
 
 
@@ -101,7 +102,7 @@ class PredictionExperimentSubmit(APIView):
 
 
 class SampleAndClusterPredictionSamples(generics.ListAPIView):
-    """Gets all the pairs of samples and cluster for a specific inference experiment."""
+    """Gets all the pairs of samples and cluster for a specific inference experiment (that used a clustering model)."""
     @staticmethod
     def __filter_by_cluster(samples_and_clusters: QuerySet[SampleAndClusterPrediction], request: HttpRequest):
         """
@@ -136,3 +137,23 @@ class SampleAndClusterPredictionSamples(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     search_fields = ['sample']
     ordering_fields = ['sample', 'cluster']
+
+
+class SampleAndTimePredictionSamples(generics.ListAPIView):
+    """
+    Gets all the pairs of samples and predicted time for a specific inference experiment (that used a regression model
+    like SVM or RF).
+    """
+    def get_queryset(self):
+        inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
+        experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk,
+                                       biomarker__user=self.request.user)
+        samples_and_clusters = experiment.samples_and_time.all()
+        return samples_and_clusters
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SampleAndTimePredictionSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    search_fields = ['sample']
+    ordering_fields = ['sample', 'prediction']

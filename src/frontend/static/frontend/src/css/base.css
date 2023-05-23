@@ -125,11 +125,6 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     box-shadow: 0 2px 8px #bbb !important;
 }
 
-/* Fix modals floating to the left of the screen */
-.ui.fullscreen.modal.transition.visible.active {
-    right: 0;
-}
-
 /* Removes the border that adds Semantic UI to the buttons */
 .ui.basic.button.borderless-button,
 .ui.basic.button.borderless-button:hover,

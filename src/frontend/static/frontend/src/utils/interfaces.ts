@@ -104,7 +104,11 @@ interface GeneralTableControlWithoutSorting {
     // TODO: after big refactoring using only PaginatedTable.tsx, check if totalRowCount is optional
     totalRowCount?: number,
     // TODO: after big refactoring using only PaginatedTable.tsx, check if filters is optional
-    filters: { [key: string]: any },
+    filters: { [key: string]: {
+        value: any,
+        /** Indicates if 0 as filter value is accepted */
+        allowZero?: boolean
+    } },
 }
 
 /**

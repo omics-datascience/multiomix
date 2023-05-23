@@ -1,62 +1,62 @@
 import React, { useEffect, useState } from 'react'
 import { Select, DropdownItemProps } from 'semantic-ui-react'
-import { ClusterLabelsSet } from '../../biomarkers/types'
+import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
 
-declare const urlClusterLabelsSets: string
+declare const urlPredictionRangeLabelsSets: string
 
-/** ClusterLabelsSetSelect props. */
-interface ClusterLabelsSetSelectProps {
+/** PredictionRangeLabelsSetSelect props. */
+interface PredictionRangeLabelsSetSelectProps {
     /** TrainedModel primary key. */
     trainedModelPk: number,
-    /** Selected ClusterLabelsSet primary key. */
+    /** Selected PredictionRangeLabelsSet primary key. */
     selectedClusterSetPk: number | undefined,
-    /** Function to set the selected ClusterLabelsSet primary key. */
+    /** Function to set the selected PredictionRangeLabelsSet primary key. */
     setSelectedClusterSetPk: (newValue: number | undefined) => void
 }
 
 /**
- * Renders a Select for Cluster labels set (Django ClusterLabelsSet model)
+ * Renders a Select for Cluster labels set (Django PredictionRangeLabelsSet model)
  * @param props Component props.
  * @returns Component.
  */
-export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
-    const [clusterLabelsSets, setClusterLabelsSets] = useState<ClusterLabelsSet[]>([])
+export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSelectProps) => {
+    const [predictionRangeLabelsSets, setPredictionRangeLabelsSets] = useState<PredictionRangeLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         getData()
     }, [])
 
-    /** Retrieves all the ClusterLabelsSet instances for this user and the TrainedModel */
+    /** Retrieves all the PredictionRangeLabelsSet instances for this user and the TrainedModel */
     function getData () {
         setLoading(true)
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
-        ky.get(urlClusterLabelsSets, { searchParams }).then((response) => {
-            response.json().then((clusterLabelsSetsData: ClusterLabelsSet[]) => {
-                setClusterLabelsSets(clusterLabelsSetsData)
+        ky.get(urlPredictionRangeLabelsSets, { searchParams }).then((response) => {
+            response.json().then((predictionRangeLabelsSetData: PredictionRangeLabelsSet[]) => {
+                setPredictionRangeLabelsSets(predictionRangeLabelsSetData)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting model ClusterLabelsSets', err)
+            console.log('Error getting model PredictionRangeLabelsSets', err)
         }).finally(() => {
             setLoading(false)
         })
     }
 
-    const options: DropdownItemProps[] = clusterLabelsSets.map((clusterLabelsSet) => (
-        { key: clusterLabelsSet.id, text: clusterLabelsSet.name, value: clusterLabelsSet.id }
+    const options: DropdownItemProps[] = predictionRangeLabelsSets.map((predictionRangeLabelsSet) => (
+        { key: predictionRangeLabelsSet.id, text: predictionRangeLabelsSet.name, value: predictionRangeLabelsSet.id }
     ))
 
     return (
         <>
             <label>
-                <strong>Use a cluster label</strong>
+                <strong>Use a range label</strong>
             </label>
 
             <Select
@@ -67,7 +67,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
                 clearable
                 value={props.selectedClusterSetPk}
                 onChange={(_, { value }) => { props.setSelectedClusterSetPk(value as number | undefined) }}
-                placeholder='Use cluster labels'
+                placeholder='Use range labels'
                 className='margin-top-2'
                 disabled={options.length === 0}
             />

@@ -1,9 +1,10 @@
 
 import React from 'react'
 import { Grid, Segment } from 'semantic-ui-react'
-import { InferenceExperimentForTable } from '../../types'
+import { FitnessFunction, InferenceExperimentForTable } from '../../types'
 import { SamplesAndGroupsInferenceTable } from './SamplesAndGroupsInferenceTable'
 import { InferenceExperimentResultMetrics } from './InferenceExperimentResultMetrics'
+import { SamplesAndTimeInferenceTable } from './SamplesAndTimeInferenceTable'
 
 /** BiomarkerNewInferenceExperimentModal props. */
 interface InferenceExperimentResultModalProps {
@@ -27,7 +28,12 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                         </Segment>
                     </Grid.Column>
                     <Grid.Column width={12}>
-                        <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                        {/* Show the corresponding table */}
+                        {
+                            props.selectedInferenceExperiment.model === FitnessFunction.CLUSTERING
+                                ? <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                                : <SamplesAndTimeInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                        }
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

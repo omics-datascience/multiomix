@@ -99,3 +99,10 @@ class SampleAndClusterPrediction(models.Model):
     sample = models.CharField(max_length=100)
     cluster = models.IntegerField()
     experiment = models.ForeignKey(InferenceExperiment, on_delete=models.CASCADE, related_name='samples_and_clusters')
+
+
+class SampleAndTimePrediction(models.Model):
+    """Represents a sample with his predicted time inferred by a regression model (SVM/RF)."""
+    sample = models.CharField(max_length=100)
+    prediction = models.FloatField()
+    experiment = models.ForeignKey(InferenceExperiment, on_delete=models.CASCADE, related_name='samples_and_time')

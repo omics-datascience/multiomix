@@ -1,39 +1,39 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Divider, Form, Grid, Header, Icon, Modal, Segment } from 'semantic-ui-react'
-import { ClusterLabelsSet } from '../../biomarkers/types'
+import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import { HexAlphaColorPicker } from 'react-colorful'
 import { getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 
-declare const urlClusterLabelsSets: string
+declare const urlPredictionRangeLabelsSets: string
 
-/** NewClusterLabelsSetModal props. */
-interface NewClusterLabelsSetModalProps {
-    /** TrainedModel primary key to add a new ClusterLabelsSet to it. */
+/** NewPredictionRangeLabelsSetModal props. */
+interface NewPredictionRangeLabelsSetModalProps {
+    /** TrainedModel primary key to add a new PredictionRangeLabelsSet to it. */
     trainedModelPk: number,
     /** Modal's open prop. */
-    showNewClusterLabelsSet: boolean,
+    showNewPredictionRangeLabelsSet: boolean,
     /** Function to set the modal's open prop. */
-    setShowNewClusterLabelsSet: (newValue: boolean) => void
+    setShowNewPredictionRangeLabelsSet: (newValue: boolean) => void
 }
 
-const getDefaultClusterLabelsSet = (trainedModelPk: number): ClusterLabelsSet => ({
+const getDefaultPredictionRangeLabelsSet = (trainedModelPk: number): PredictionRangeLabelsSet => ({
     name: '',
     description: '',
     trained_model: trainedModelPk,
     labels: []
 })
 
-export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) => {
-    const [newClusterLabelsSet, setNewClusterLabelsSet] = useState<ClusterLabelsSet>(getDefaultClusterLabelsSet(props.trainedModelPk))
+export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabelsSetModalProps) => {
+    const [newPredictionRangeLabelsSet, setNewPredictionRangeLabelsSet] = useState<PredictionRangeLabelsSet>(getDefaultPredictionRangeLabelsSet(props.trainedModelPk))
     const [sendingData, setSendingData] = useState(false)
 
     /** Resets the form when closes the modal. */
     useEffect(() => {
-        if (!props.showNewClusterLabelsSet) {
-            setNewClusterLabelsSet(getDefaultClusterLabelsSet(props.trainedModelPk))
+        if (!props.showNewPredictionRangeLabelsSet) {
+            setNewPredictionRangeLabelsSet(getDefaultPredictionRangeLabelsSet(props.trainedModelPk))
         }
-    }, [props.showNewClusterLabelsSet])
+    }, [props.showNewPredictionRangeLabelsSet])
 
     /**
      * Handles changes in the form.
@@ -41,8 +41,8 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
      * @param value New value.
      */
     const handleChanges = (name: string, value: any) => {
-        setNewClusterLabelsSet({
-            ...newClusterLabelsSet,
+        setNewPredictionRangeLabelsSet({
+            ...newPredictionRangeLabelsSet,
             [name]: value
         })
     }
@@ -54,14 +54,14 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
      * @param value New value.
      */
     const handleChangesLabel = (idx: number, name: string, value: any) => {
-        const labels = [...newClusterLabelsSet.labels]
+        const labels = [...newPredictionRangeLabelsSet.labels]
         labels[idx] = {
             ...labels[idx],
             [name]: value
         }
 
-        setNewClusterLabelsSet({
-            ...newClusterLabelsSet,
+        setNewPredictionRangeLabelsSet({
+            ...newPredictionRangeLabelsSet,
             labels
         })
     }
@@ -71,26 +71,27 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
      * @param idx Index of the label to remove.
      */
     const removeLabel = (idx: number) => {
-        const labels = [...newClusterLabelsSet.labels]
+        const labels = [...newPredictionRangeLabelsSet.labels]
         labels.splice(idx, 1)
 
-        setNewClusterLabelsSet({
-            ...newClusterLabelsSet,
+        setNewPredictionRangeLabelsSet({
+            ...newPredictionRangeLabelsSet,
             labels
         })
     }
 
     /** Adds a new ClusterInstance instance */
     const addLabel = () => {
-        const labels = [...newClusterLabelsSet.labels]
+        const labels = [...newPredictionRangeLabelsSet.labels]
         labels.push({
-            cluster_id: labels.length,
+            min_value: 0, // TODO: mark as the max of all the labels
+            max_value: 0,
             label: '',
             color: ''
         })
 
-        setNewClusterLabelsSet({
-            ...newClusterLabelsSet,
+        setNewPredictionRangeLabelsSet({
+            ...newPredictionRangeLabelsSet,
             labels
         })
     }
@@ -100,17 +101,17 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
 
         const settings = {
             headers: getDjangoHeader(),
-            json: newClusterLabelsSet
+            json: newPredictionRangeLabelsSet
         }
 
-        ky.post(urlClusterLabelsSets, settings).then((response) => {
-            response.json().then((_jsonResponse: ClusterLabelsSet) => {
-                props.setShowNewClusterLabelsSet(false)
+        ky.post(urlPredictionRangeLabelsSets, settings).then((response) => {
+            response.json().then((_jsonResponse: PredictionRangeLabelsSet) => {
+                props.setShowNewPredictionRangeLabelsSet(false)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            console.log('Error adding ClusterLabelsSet ->', err)
+            console.log('Error adding PredictionRangeLabelsSet ->', err)
         }).finally(() => {
             setSendingData(false)
         })
@@ -121,9 +122,10 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
      * @returns True if the form is valid.
      */
     const formIsValid = (): boolean => {
-        return newClusterLabelsSet.name !== '' &&
-            newClusterLabelsSet.labels.length > 0 &&
-            !newClusterLabelsSet.labels.some((labelObj) => labelObj.label.trim() === '' || labelObj.cluster_id < 0 || labelObj.cluster_id.toString().trim() === '')
+        return newPredictionRangeLabelsSet.name !== '' &&
+            newPredictionRangeLabelsSet.labels.length > 0 // &&
+            // TODO: check if the labels min_value and max_value are valid
+            // !newPredictionRangeLabelsSet.labels.some((labelObj) => labelObj.label.trim() === '' || labelObj.cluster_id < 0 || labelObj.cluster_id.toString().trim() === '')
     }
 
     return (
@@ -134,8 +136,8 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
             closeOnDimmerClick={false}
             closeOnDocumentClick={false}
             size='tiny'
-            onClose={() => { props.setShowNewClusterLabelsSet(false) }}
-            open={props.showNewClusterLabelsSet}
+            onClose={() => { props.setShowNewPredictionRangeLabelsSet(false) }}
+            open={props.showNewPredictionRangeLabelsSet}
         >
             <Modal.Header>
                 <Icon name='add circle' />
@@ -145,7 +147,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                 <Grid>
                     <Grid.Row columns={1}>
                         <Grid.Column>
-                            <Header>New ClusterLabelsSet</Header>
+                            <Header>New PredictionRangeLabelsSet</Header>
 
                             <Form>
                                 <Form.Input
@@ -168,18 +170,27 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                 {/* List of labels */}
                                 <Header as='h2'>Labels</Header>
 
-                                {newClusterLabelsSet.labels.map((label, idx) => (
+                                {newPredictionRangeLabelsSet.labels.map((label, idx) => (
                                     <Segment key={idx}>
                                         <Grid>
                                             <Grid.Row columns={2}>
                                                 <Grid.Column width={8}>
                                                     <Form.Input
-                                                        label='Cluster ID'
-                                                        placeholder='Cluster ID'
-                                                        name='cluster_id'
+                                                        label='Min value'
+                                                        placeholder='Min value'
+                                                        name='min_value'
                                                         icon='asterisk'
                                                         min={0}
-                                                        value={label.cluster_id}
+                                                        value={label.min_value}
+                                                        onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
+                                                        type='number'
+                                                    />
+
+                                                    <Form.Input
+                                                        label='Max value'
+                                                        placeholder='Max value'
+                                                        name='max_value'
+                                                        value={label.max_value}
                                                         onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
                                                         type='number'
                                                     />
@@ -229,7 +240,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
             <Modal.Actions>
                 <Button
                     color="red"
-                    onClick={() => props.setShowNewClusterLabelsSet(false)}
+                    onClick={() => props.setShowNewPredictionRangeLabelsSet(false)}
                 >
                     Cancel
                 </Button>
