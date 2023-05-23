@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Button, Divider, Form, Grid, Header, Icon, Modal, Segment } from 'semantic-ui-react'
 import { ClusterLabelsSet } from '../../biomarkers/types'
 import { HexAlphaColorPicker } from 'react-colorful'
-import { getDjangoHeader } from '../../../utils/util_functions'
+import { alertGeneralError, getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 
 declare const urlClusterLabelsSets: string
@@ -107,9 +107,11 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
             response.json().then((_jsonResponse: ClusterLabelsSet) => {
                 props.setShowNewClusterLabelsSet(false)
             }).catch((err) => {
+                alertGeneralError()
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
+            alertGeneralError()
             console.log('Error adding ClusterLabelsSet ->', err)
         }).finally(() => {
             setSendingData(false)

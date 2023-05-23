@@ -285,10 +285,10 @@ class PredictionRangeLabel(models.Model):
     label = models.CharField(max_length=50)
     color = models.CharField(max_length=9, null=True, blank=True)  # 8 digits for color + 1 for '#'
     min_value = models.FloatField(validators=[MinValueValidator(0)])
-    max_value = models.FloatField()
-    prediction_range_label_set = models.ForeignKey(PredictionRangeLabelsSet, on_delete=models.CASCADE,
-                                                   related_name='labels')
+    max_value = models.FloatField(null=True, blank=True)
+    prediction_range_labels_set = models.ForeignKey(PredictionRangeLabelsSet, on_delete=models.CASCADE,
+                                                    related_name='labels')
 
     def __str__(self):
         return f'Label "{self.label}" for range {self.min_value}-{self.max_value} in model ' \
-               f'"{self.prediction_range_label_set.name}"'
+               f'"{self.prediction_range_labels_set.name}"'

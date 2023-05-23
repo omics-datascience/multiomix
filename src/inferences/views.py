@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import QuerySet, Exists, OuterRef
+from django.db.models import QuerySet, Exists, OuterRef, Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,11 +12,11 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk
-from feature_selection.models import TrainedModel, ClusterLabelsSet, ClusterLabel
+from feature_selection.models import TrainedModel, ClusterLabel, PredictionRangeLabel
 from inferences.inference_service import global_inference_service
-from inferences.models import InferenceExperiment, SampleAndClusterPrediction
+from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
 from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer, \
-    SampleAndTimePredictionSerializer
+    SampleAndTimePredictionSerializer, generate_prediction_condition
 from user_files.models_choices import FileType
 
 
@@ -144,12 +144,35 @@ class SampleAndTimePredictionSamples(generics.ListAPIView):
     Gets all the pairs of samples and predicted time for a specific inference experiment (that used a regression model
     like SVM or RF).
     """
+
+    @staticmethod
+    def __filter_by_range(samples_and_times: QuerySet[SampleAndTimePrediction], request: HttpRequest):
+        """Filters the QuerySet by a prediction range."""
+        prediction_label: str = request.GET.get('prediction')
+
+        if prediction_label is None:
+            return samples_and_times
+
+        # Returns the samples and predictions for which exists at least one PredictionRangeLabel with the given range's
+        # label
+        prediction_range_labels_set_pk = request.GET.get('prediction_range_labels_set_pk')
+
+        return samples_and_times.filter(
+            Exists(
+                PredictionRangeLabel.objects.filter(
+                    Q(prediction_range_labels_set__pk=prediction_range_labels_set_pk) &
+                    Q(label=prediction_label) &
+                    generate_prediction_condition(OuterRef('prediction'))
+                )
+            )
+        )
+
     def get_queryset(self):
         inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
         experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk,
                                        biomarker__user=self.request.user)
         samples_and_clusters = experiment.samples_and_time.all()
-        return samples_and_clusters
+        return self.__filter_by_range(samples_and_clusters, self.request)
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SampleAndTimePredictionSerializer

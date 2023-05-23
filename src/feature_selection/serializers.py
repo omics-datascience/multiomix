@@ -1,6 +1,6 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
-from .models import TrainedModel, ClusterLabel, ClusterLabelsSet, PredictionRangeLabelsSet
+from .models import TrainedModel, ClusterLabel, ClusterLabelsSet, PredictionRangeLabelsSet, PredictionRangeLabel
 
 
 class ClusterLabelSerializer(serializers.ModelSerializer):
@@ -25,8 +25,8 @@ class PredictionRangeLabelSerializer(serializers.ModelSerializer):
     """Serializer for PredictionRangeLabel model."""
 
     class Meta:
-        model = ClusterLabel
-        exclude = ['prediction_range_label_set']
+        model = PredictionRangeLabel
+        exclude = ['prediction_range_labels_set']
 
 
 class PredictionRangeLabelsSetSerializer(WritableNestedModelSerializer):

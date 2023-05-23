@@ -1,9 +1,17 @@
+from typing import Union
+from django.db.models import Q, OuterRef
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from feature_selection.fs_algorithms import FitnessFunction
 from feature_selection.models import ClusterLabelsSet, ClusterLabel, PredictionRangeLabelsSet, PredictionRangeLabel
 from .models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
 
+
+def generate_prediction_condition(predicted_time: Union[float, OuterRef]) -> Q:
+    """Generates a condition to filter the prediction range labels."""
+    return Q(min_value__lte=predicted_time) & (
+            Q(max_value__isnull=True) | (Q(max_value__isnull=False) & Q(max_value__gte=predicted_time))
+    )
 
 class InferenceExperimentSerializer(serializers.ModelSerializer):
     """Serializer for InferenceExperiment model."""
@@ -74,9 +82,10 @@ class SampleAndTimePredictionSerializer(serializers.ModelSerializer):
             prediction_range_labels_set = get_object_or_404(PredictionRangeLabelsSet, pk=prediction_range_labels_set_pk)
             predicted_time = data['prediction']
             try:
-                label_obj: PredictionRangeLabel = prediction_range_labels_set.labels.get(min_value__le=predicted_time,
-                                                                                         max_value__ge=predicted_time)
-                data['cluster'] = label_obj.label
+                label_obj: PredictionRangeLabel = prediction_range_labels_set.labels.get(
+                    generate_prediction_condition(predicted_time)
+                )
+                data['prediction'] = label_obj.label
                 data['color'] = label_obj.color
             except PredictionRangeLabel.DoesNotExist:
                 pass

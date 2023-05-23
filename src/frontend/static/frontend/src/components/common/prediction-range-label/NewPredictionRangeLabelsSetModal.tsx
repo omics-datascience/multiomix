@@ -2,10 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { Button, Divider, Form, Grid, Header, Icon, Modal, Segment } from 'semantic-ui-react'
 import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import { HexAlphaColorPicker } from 'react-colorful'
-import { getDjangoHeader } from '../../../utils/util_functions'
+import { alertGeneralError, getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
+import { Nullable } from '../../../utils/interfaces'
 
 declare const urlPredictionRangeLabelsSets: string
+
+/** Input where show the error message. */
+type Input = Nullable<'max_value' | 'label'>
+
+type ErrorMsg = {
+    msg: Nullable<string>,
+    input: Input
+}
 
 /** NewPredictionRangeLabelsSetModal props. */
 interface NewPredictionRangeLabelsSetModalProps {
@@ -85,7 +94,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
         const labels = [...newPredictionRangeLabelsSet.labels]
         labels.push({
             min_value: 0, // TODO: mark as the max of all the labels
-            max_value: 0,
+            max_value: null,
             label: '',
             color: ''
         })
@@ -108,14 +117,34 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
             response.json().then((_jsonResponse: PredictionRangeLabelsSet) => {
                 props.setShowNewPredictionRangeLabelsSet(false)
             }).catch((err) => {
+                alertGeneralError()
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
+            alertGeneralError()
             console.log('Error adding PredictionRangeLabelsSet ->', err)
         }).finally(() => {
             setSendingData(false)
         })
     }
+
+    // Gets the error messages for each label
+    const errorMessages: ErrorMsg[] = newPredictionRangeLabelsSet.labels.map((label) => {
+        let msg: Nullable<string> = null
+        let input: Input = null
+        if (label.max_value !== null && label.max_value <= label.min_value) {
+            msg = 'Max value must be greater than min value'
+            input = 'max_value'
+        } else {
+            const overlapIdx = newPredictionRangeLabelsSet.labels.findIndex((label2) => label2 !== label && (label.max_value === null || (label.max_value !== null && label2.min_value <= label.max_value && label2.max_value as number >= label.min_value)))
+            if (overlapIdx !== -1) {
+                const overlapObject = newPredictionRangeLabelsSet.labels[overlapIdx]
+                msg = `Ranges overlaps with label "${overlapObject.label}" (position ${overlapIdx + 1})`
+                input = 'label'
+            }
+        }
+        return { msg, input }
+    })
 
     /**
      * Handles the submit of the form.
@@ -123,9 +152,9 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
      */
     const formIsValid = (): boolean => {
         return newPredictionRangeLabelsSet.name !== '' &&
-            newPredictionRangeLabelsSet.labels.length > 0 // &&
-            // TODO: check if the labels min_value and max_value are valid
-            // !newPredictionRangeLabelsSet.labels.some((labelObj) => labelObj.label.trim() === '' || labelObj.cluster_id < 0 || labelObj.cluster_id.toString().trim() === '')
+            newPredictionRangeLabelsSet.labels.length > 0 &&
+            // Checks that there are no empty labels and no errors
+            !newPredictionRangeLabelsSet.labels.some((labelObj, idx) => labelObj.label.trim() === '' || errorMessages[idx].msg !== null)
     }
 
     return (
@@ -170,66 +199,72 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                 {/* List of labels */}
                                 <Header as='h2'>Labels</Header>
 
-                                {newPredictionRangeLabelsSet.labels.map((label, idx) => (
-                                    <Segment key={idx}>
-                                        <Grid>
-                                            <Grid.Row columns={2}>
-                                                <Grid.Column width={8}>
-                                                    <Form.Input
-                                                        label='Min value'
-                                                        placeholder='Min value'
-                                                        name='min_value'
-                                                        icon='asterisk'
-                                                        min={0}
-                                                        value={label.min_value}
-                                                        onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
-                                                        type='number'
-                                                    />
+                                {newPredictionRangeLabelsSet.labels.map((label, idx) => {
+                                    const errorMsg = errorMessages[idx]
+                                    return (
+                                        <Segment key={idx}>
+                                            <Grid>
+                                                <Grid.Row columns={2}>
+                                                    <Grid.Column width={8}>
+                                                        <Form.Input
+                                                            label='Min value'
+                                                            placeholder='Min value'
+                                                            name='min_value'
+                                                            icon='asterisk'
+                                                            min={0}
+                                                            value={label.min_value}
+                                                            onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
+                                                            type='number'
+                                                        />
 
-                                                    <Form.Input
-                                                        label='Max value'
-                                                        placeholder='Max value'
-                                                        name='max_value'
-                                                        value={label.max_value}
-                                                        onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
-                                                        type='number'
-                                                    />
+                                                        <Form.Input
+                                                            label='Max value'
+                                                            allow
+                                                            placeholder='Max value'
+                                                            error={errorMsg.msg && errorMsg.input === 'max_value' ? { content: errorMsg.msg } : undefined}
+                                                            name='max_value'
+                                                            value={label.max_value}
+                                                            onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
+                                                            type='number'
+                                                        />
 
-                                                    <Form.Input
-                                                        label='Label'
-                                                        placeholder='Label'
-                                                        icon='asterisk'
-                                                        name='label'
-                                                        value={label.label}
-                                                        onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
-                                                    />
+                                                        <Form.Input
+                                                            label='Label'
+                                                            placeholder='Label'
+                                                            error={errorMsg.msg && errorMsg.input === 'label' ? { content: errorMsg.msg } : undefined}
+                                                            icon='asterisk'
+                                                            name='label'
+                                                            value={label.label}
+                                                            onChange={(_, { name, value }) => handleChangesLabel(idx, name, value)}
+                                                        />
 
-                                                    <Form.Field>
-                                                        <Icon name='asterisk' /> Required field
-                                                    </Form.Field>
+                                                        <Form.Field>
+                                                            <Icon name='asterisk' /> Required field
+                                                        </Form.Field>
 
-                                                    <Form.Field>
-                                                        <Button
-                                                            name='ban'
-                                                            color='red'
-                                                            fluid
-                                                            onClick={() => { removeLabel(idx) }}
-                                                        >
+                                                        <Form.Field>
+                                                            <Button
+                                                                name='ban'
+                                                                color='red'
+                                                                fluid
+                                                                onClick={() => { removeLabel(idx) }}
+                                                            >
                                                             Delete label
-                                                        </Button>
-                                                    </Form.Field>
-                                                </Grid.Column>
-                                                {/* Color */}
-                                                <Grid.Column width={8}>
-                                                    <label>
-                                                        <strong>Color</strong>
-                                                    </label>
-                                                    <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) } } />
-                                                </Grid.Column>
-                                            </Grid.Row>
-                                        </Grid>
-                                    </Segment>
-                                ))}
+                                                            </Button>
+                                                        </Form.Field>
+                                                    </Grid.Column>
+                                                    {/* Color */}
+                                                    <Grid.Column width={8}>
+                                                        <label>
+                                                            <strong>Color</strong>
+                                                        </label>
+                                                        <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) } } />
+                                                    </Grid.Column>
+                                                </Grid.Row>
+                                            </Grid>
+                                        </Segment>
+                                    )
+                                })}
 
                                 <Button primary fluid onClick={addLabel}>Add label</Button>
                             </Form>

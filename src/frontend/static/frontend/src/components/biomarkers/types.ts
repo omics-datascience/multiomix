@@ -469,7 +469,7 @@ interface PredictionRangeLabel {
     label: string,
     color: string,
     min_value: number,
-    max_value: number
+    max_value: Nullable<number>
 }
 
 /** Django PredictionRangeLabelsSet model. */

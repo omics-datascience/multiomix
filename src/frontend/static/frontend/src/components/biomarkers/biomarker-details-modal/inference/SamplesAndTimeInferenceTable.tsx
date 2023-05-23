@@ -41,8 +41,13 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             ...extraQueryParams
                         }}
                         customFilters={[
-                            // TODO: implement filter by PredictionRangeLabel
-                            // { label: 'Cluster', keyForServer: 'range', defaultValue: '', placeholder: 'Filter by range' }
+                            {
+                                label: 'Range',
+                                keyForServer: 'prediction',
+                                defaultValue: '',
+                                placeholder: 'Filter by range',
+                                disabledFunction: () => selectedRangeSetPk === undefined
+                            }
                         ]}
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput
