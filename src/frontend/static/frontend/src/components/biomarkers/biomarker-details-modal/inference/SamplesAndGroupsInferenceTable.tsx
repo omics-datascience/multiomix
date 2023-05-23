@@ -33,8 +33,8 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                 <Grid.Column width={12}>
                     <PaginatedTable<SampleAndCluster>
                         headers={[
-                            { name: 'Sample', serverCodeToSort: 'sample', width: 3 },
-                            { name: 'Cluster', serverCodeToSort: 'cluster', width: 2 }
+                            { name: 'Sample', serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
+                            { name: 'Cluster', serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
                         ]}
                         queryParams={{
                             inference_experiment_pk: props.selectedInferenceExperiment.id,

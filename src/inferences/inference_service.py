@@ -9,7 +9,7 @@ from biomarkers.models import BiomarkerState
 from common.utils import get_subset_of_features, get_samples_intersection
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
-from inferences.models import InferenceExperiment, SampleAndClusterPrediction
+from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
@@ -123,11 +123,6 @@ class InferenceExperimentsService(object):
         trained_model: TrainedModel = experiment.trained_model
         classifier: SurvModel = trained_model.get_model_instance()
         is_clustering = hasattr(trained_model, 'clustering_parameters')
-        is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
-
-        if is_regression:
-            # TODO: implement regression
-            raise Exception("Regression is not implemented yet")
 
         # TODO: refactor this retrieval of data as it's repeated in the fs_service
         # Gets molecules and clinica DataFrames
@@ -159,6 +154,19 @@ class InferenceExperimentsService(object):
                     )
                     for sample_id in current_samples
                 ])
+        else:
+            # If it's not a clustering model, it's an SVM or RF
+            regression_result = np.round(classifier.predict(molecules_df.values), 4)
+
+            # Stores the prediction and the samples
+            SampleAndTimePrediction.objects.bulk_create([
+                SampleAndTimePrediction(
+                    sample=sample_id,
+                    prediction=predicted_time,
+                    experiment=experiment
+                )
+                for sample_id, predicted_time in zip(samples, regression_result)
+            ])
 
         experiment.save()
 
