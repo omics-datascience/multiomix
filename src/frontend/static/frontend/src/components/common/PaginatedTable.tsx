@@ -199,7 +199,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         // Appends filters to query
         if (tableControl.filters) {
             Object.entries(tableControl.filters).forEach(([key, value]) => {
-                if (value) {
+                if (value !== null && value !== undefined && value !== '') {
                     searchParams[key] = value
                 }
             })
