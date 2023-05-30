@@ -38,7 +38,8 @@ urlpatterns = [
         name='unlink_clinical_source_inference_experiment'
     ),
     path(
-        'clinical-source-unlink-inference-experiment/<int:pk>/',
-        views.UnlinkClinicalSourceInferenceExperiment.as_view()
+        'chart-data-by-attribute',
+        views.InferenceExperimentChartDataByAttribute.as_view(),
+        name='chart_data_by_attribute'
     ),
 ]

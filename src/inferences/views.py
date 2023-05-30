@@ -1,3 +1,4 @@
+import pandas as pd
 from django.db import transaction
 from django.db.models import QuerySet, Exists, OuterRef, Q
 from django.http import HttpRequest, HttpResponse
@@ -250,6 +251,53 @@ class AddEditClinicalSourceInferenceExperiment(APIView):
         # Serializes ExperimentClinicalSource instance and returns it
         data = ExperimentClinicalSourceSerializer().to_representation(clinical_source)
         return Response(data)
+
+
+class InferenceExperimentChartDataByAttribute(APIView):
+    """Gets samples and times grouped by a clinical attribute."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: HttpRequest):
+        experiment = get_inference_experiment(request)
+        clinical_attribute: str = request.GET.get('clinical_attribute', '')
+
+        if len(clinical_attribute.strip()) == 0:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Gets clinical with only the needed columns (survival event/time and grouping attribute)
+        try:
+            clinical_df = experiment.clinical_source.get_specific_samples_and_attributes_df(
+                samples=None,
+                clinical_attributes=[clinical_attribute]
+            )
+        except KeyError:
+            raise ValidationError('Invalid clinical attribute')
+
+        # Drops rows with missing values
+        clinical_df = clinical_df.dropna()
+
+        # Joins with samples and times
+        samples_and_times = experiment.samples_and_time.all()
+        samples_and_times_df = pd.DataFrame(samples_and_times.values('sample', 'prediction'))
+        samples_and_times_df = samples_and_times_df.rename(columns={'sample': 'sample_id', 'prediction': 'time'})
+        samples_and_times_df = samples_and_times_df.set_index('sample_id')
+        clinical_df = clinical_df.join(samples_and_times_df, how='inner')
+
+        # Groups by the clinical attribute generating a list of dicts with the group and the 'time' column. The 'time'
+        # column must be a list with the minimum value, the Q1 value, the median, the Q3 value, and the maximum value
+        # TODO: change the structure as this one was used by ApexCharts which was discarded.
+        response = []
+        for group, group_df in clinical_df.groupby(clinical_attribute):
+            group_df = group_df['time']
+            group_dict = {'group': group}
+            group_dict.update(group_df.describe().to_dict())
+            response.append({
+                'x': group_dict['group'],
+                'y': [group_dict['min'], group_dict['25%'], group_dict['50%'], group_dict['75%'], group_dict['max']],
+                'mean': round(group_dict['mean'], 4)
+            })
+
+        return Response(response)
 
 
 class UnlinkClinicalSourceInferenceExperiment(APIView):
