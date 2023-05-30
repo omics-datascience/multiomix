@@ -260,8 +260,6 @@ class UnlinkClinicalSourceInferenceExperiment(APIView):
     def patch(request, pk: int):
         # Gets experiment
         experiment = get_object_or_404(InferenceExperiment, pk=pk, biomarker__user=request.user)
-        print(experiment)
-        print(experiment.clinical_source)
         if experiment.clinical_source.user_file is None:
             # If this block is reached it means that is trying to unlink a CGDS experiment which should
             # not be possible
