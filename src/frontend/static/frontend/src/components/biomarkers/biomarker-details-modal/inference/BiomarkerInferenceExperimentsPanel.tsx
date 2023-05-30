@@ -5,6 +5,10 @@ import { Header, Icon, Modal } from 'semantic-ui-react'
 import { Nullable } from '../../../../utils/interfaces'
 import { NewInferenceExperimentModal } from './NewInferenceExperimentModal'
 import { InferenceExperimentResultModal } from './InferenceExperimentResultModal'
+import ky from 'ky'
+import { alertGeneralError } from '../../../../utils/util_functions'
+
+declare const urlBiomarkerInferenceExperiments: string
 
 /** BiomarkerInferenceExperimentsPanel props. */
 interface BiomarkerInferenceExperimentsPanelProps {
@@ -37,6 +41,29 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
         setOpenModalResultInferenceExperiment(false)
     }
 
+    /**
+     * Gets new experiment data from the backend to update a tab
+     */
+    const refreshExperimentInfo = () => {
+        if (!selectedInferenceExperiment) {
+            return
+        }
+
+        const url = `${urlBiomarkerInferenceExperiments}/${selectedInferenceExperiment.id}/`
+        const searchParams = { biomarker_pk: props.selectedBiomarker.id as number }
+        ky.get(url, { searchParams }).then((response) => {
+            response.json().then((experiment: InferenceExperimentForTable) => {
+                setSelectedInferenceExperiment(experiment)
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error getting experiment', err)
+        })
+    }
+
     // Shows modal to add a new inference experiment analysis
     if (openModalNewInferenceExperiment) {
         return (
@@ -61,10 +88,10 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
                 onClose={closeStatResult}
                 open={openModalResultInferenceExperiment}
             >
-                <Header icon='area chart' content={selectedInferenceExperiment.name} />
+                <Header icon='area chart' content={`Inference experiment "${selectedInferenceExperiment.name}"`} />
 
                 <Modal.Content>
-                    <InferenceExperimentResultModal selectedInferenceExperiment={selectedInferenceExperiment} />
+                    <InferenceExperimentResultModal selectedInferenceExperiment={selectedInferenceExperiment} refreshExperimentInfo={refreshExperimentInfo} />
                 </Modal.Content>
             </Modal>
         )

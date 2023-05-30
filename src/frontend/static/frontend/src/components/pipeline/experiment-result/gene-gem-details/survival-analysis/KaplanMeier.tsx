@@ -153,14 +153,14 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             const headers = getDjangoHeader()
 
             const jsonParams = {
-                gene: gene,
-                gem: gem,
+                gene,
+                gem,
                 experimentId: this.props.experimentId,
                 fieldsInterest: this.state.fieldsInterest,
                 survivalColumnId: this.state.selectedSurvivalColumnId
             }
 
-            ky.post(urlSurvivalData, { headers: headers, json: jsonParams, timeout: 60000 }).then((response) => {
+            ky.post(urlSurvivalData, { headers, json: jsonParams, timeout: 60000 }).then((response) => {
                 response.json().then((survivalData: SurvivalDataResponse) => {
                     this.setState({
                         geneData: this.generateKaplanMeierData(survivalData, 'gene_data'),

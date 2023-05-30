@@ -23,6 +23,8 @@ declare const urlCorrelationGraph: string
 declare const urlGetStatisticalProperties: string
 declare const thresholdToConsiderOrdinal: number
 declare const urlGetMiRNAData: string
+declare const urlClinicalSourceUserFileCRUD: string
+declare const urlUnlinkClinicalSourceUserFile: string
 
 /** For reduce function below */
 type MergedData = [number, number][]
@@ -173,7 +175,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             mirna: this.props.selectedRow?.gem as string
         }
 
-        ky.get(urlGetMiRNAData, { searchParams: searchParams }).then((response) => {
+        ky.get(urlGetMiRNAData, { searchParams }).then((response) => {
             response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
                 this.setState({ miRNAData: jsonResponse })
             }).catch((err) => {
@@ -249,10 +251,15 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 return <MiRNADrugsPanel miRNA={gem} miRNAData={this.state.miRNAData}/>
             case ActiveItemMenu.SURVIVAL_ANALYSIS:
                 if (!this.props.experiment.clinical_source_id) {
-                    return <NoClinicalData
-                        experiment={this.props.experiment}
-                        refreshExperimentInfo={this.props.refreshExperimentInfo}
-                    />
+                    return (
+                        <NoClinicalData
+                            experiment={this.props.experiment}
+                            experimentType='correlation'
+                            urlClinicalSourceAddOrEdit={urlClinicalSourceUserFileCRUD}
+                            urlUnlinkClinicalSource={urlUnlinkClinicalSourceUserFile}
+                            refreshExperimentInfo={this.props.refreshExperimentInfo}
+                        />
+                    )
                 }
 
                 return <KaplanMeierChart
@@ -344,7 +351,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         // Generates the new Chart's data which is an object of numerical key and values
         type MergedDataBoxplot = {[gemKey: number]: number[]}
         const zippedData: MergedDataBoxplot = {}
-        geneData.map((geneElem, idx) => {
+        geneData.forEach((geneElem, idx) => {
             const gemKey = gemData[idx] // Gets GEM data for same sample
             if (zippedData[gemKey] === undefined) {
                 zippedData[gemKey] = []
@@ -373,15 +380,15 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         this.setState({ gettingCorrelationData: true }, () => {
             const searchParams: KySearchParams = {
                 experimentId: this.props.experiment.id,
-                gene: gene,
-                gem: gem
+                gene,
+                gem
             }
 
             if (this.state.correlationGraphData?.selectedClinicalGroupBy) {
                 searchParams.selectedClinicalGroupBy = this.state.correlationGraphData?.selectedClinicalGroupBy
             }
 
-            ky.get(urlCorrelationGraph, { searchParams: searchParams, timeout: 60000 }).then((response) => {
+            ky.get(urlCorrelationGraph, { searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: DjangoResponseGetCorrelationGraph) => {
                     if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                         // For short...
@@ -405,7 +412,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                             )
                             correlationGraphDataFormatted = {
                                 data: boxplotData,
-                                isDataOk: isDataOk
+                                isDataOk
                             }
                         } else {
                             keyToUpdate = 'correlationGraphData'
@@ -419,7 +426,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                             correlationGraphDataFormatted = {
                                 series: correlationGraphData,
-                                isDataOk: isDataOk,
+                                isDataOk,
                                 clinicalColumns: jsonResponse.data.clinical_columns,
                                 clinicalValues: jsonResponse.data.clinical_values,
                                 selectedClinicalGroupBy: this.state.correlationGraphData?.selectedClinicalGroupBy ?? null
@@ -428,7 +435,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                         this.setState<never>({
                             [keyToUpdate]: correlationGraphDataFormatted,
-                            gemDataIsOrdinal: gemDataIsOrdinal,
+                            gemDataIsOrdinal,
                             gettingCorrelationData: false // Sets at the same time to prevent old chart being showed before new data
                         })
                     } else {
@@ -473,7 +480,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 experiment_type: this.props.experiment.type
             }
 
-            ky.get(url, { searchParams: searchParams, timeout: 60000 }).then((response) => {
+            ky.get(url, { searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((statisticalProperties: SourceDataStatisticalPropertiesResponse) => {
                     const gemDataIsOrdinal = statisticalProperties.is_data_ok
                         ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)

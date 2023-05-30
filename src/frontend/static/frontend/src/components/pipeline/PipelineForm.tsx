@@ -49,6 +49,7 @@ interface PipelineFormProps {
     /** Function callback to handle GEM FileType changes */
     selectGEMFileType: (fileType: FileType) => void
 }
+
 /**
  * Renders a form to submit an experiment/pipeline
  * @param props Component's props
@@ -111,7 +112,8 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                     indicating
                     label='Preparing analysis'
                 />
-            ) : (
+            )
+            : (
                 <Button
                     color='green'
                     content={isEditing ? 'Save changes' : 'Run analysis'}

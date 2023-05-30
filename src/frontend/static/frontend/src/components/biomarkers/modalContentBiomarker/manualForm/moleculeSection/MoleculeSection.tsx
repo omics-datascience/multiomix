@@ -25,7 +25,7 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
     const handleSearchData = (searchInput: string) => {
         const moleculeToSearch = searchInput.toUpperCase()
         const orderedData = orderData(biomarkerFormData.data)
-        const searchInputData = orderedData.map((item, index) => {
+        const searchInputData: MoleculesSectionData[] = orderedData.map((item, index) => {
             if (Array.isArray(item.value)) {
                 let dataOfArray
                 item.value.forEach(itemValue => {
@@ -38,6 +38,8 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
             if (item.value.startsWith(moleculeToSearch)) {
                 return orderedData[index]
             }
+
+            return undefined
         }).filter(item => item)
         setDataToShow(searchInputData)
     }

@@ -368,6 +368,7 @@ interface InferenceExperimentForTable {
     model: FitnessFunction,
     description: Nullable<string>,
     trained_model: Nullable<number>,
+    clinical_source_id: Nullable<number>
     created: string
 }
 

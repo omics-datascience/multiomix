@@ -10,6 +10,8 @@ import { SamplesAndTimeInferenceTable } from './SamplesAndTimeInferenceTable'
 interface InferenceExperimentResultModalProps {
     /** Selected InferenceExperimentForTable instance to retrieve all its data. */
     selectedInferenceExperiment: InferenceExperimentForTable,
+    /** Function to refresh the experiment info after addition or unlinking of clinical data. */
+    refreshExperimentInfo: () => void,
 }
 
 /**
@@ -32,7 +34,12 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                         {
                             props.selectedInferenceExperiment.model === FitnessFunction.CLUSTERING
                                 ? <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
-                                : <SamplesAndTimeInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                                : (
+                                    <SamplesAndTimeInferenceTable
+                                        selectedInferenceExperiment={props.selectedInferenceExperiment}
+                                        refreshExperimentInfo={props.refreshExperimentInfo}
+                                    />
+                                )
                         }
                     </Grid.Column>
                 </Grid.Row>

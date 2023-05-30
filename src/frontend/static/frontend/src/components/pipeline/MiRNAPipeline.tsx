@@ -151,7 +151,7 @@ interface MiRNAPipelineState {
  */
 class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineState> {
     websocketClient: WebsocketClientCustom
-    filterTimeout: number | undefined;
+    filterTimeout: number | undefined
 
     constructor (props: MiRNAPipelineProps) {
         super(props)
@@ -348,7 +348,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         }
 
         // Makes the request
-        ky.get(urlGetExperimentData, { searchParams: searchParams }).then((response) => {
+        ky.get(urlGetExperimentData, { searchParams }).then((response) => {
             response.json().then((experimentResult: ResponseRequestWithPagination<DjangoMRNAxGEMResultRow>) => {
                 const experimentTabs = this.state.experimentTabs
                 experimentTabs[experimentId].experimentInfo.rows = experimentResult.results
@@ -484,7 +484,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         const experimentTabs = this.state.experimentTabs
 
         const currentExperiment: ExperimentInfo = {
-            experiment: experiment,
+            experiment,
             rows: [],
             totalRowCount: 0
         }
@@ -662,7 +662,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         this.setState({ stoppingExperiment: true }, () => {
             ky.get(urlStopExperiment, {
                 headers: myHeaders,
-                searchParams: { experimentId: experimentId }
+                searchParams: { experimentId }
             }).then((response) => {
                 // If OK is returned refresh the experiments
                 if (response.ok) {

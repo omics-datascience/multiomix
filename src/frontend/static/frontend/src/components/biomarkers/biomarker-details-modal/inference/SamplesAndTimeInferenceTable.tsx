@@ -1,17 +1,25 @@
 import React, { useState } from 'react'
-import { Button, Grid, Table } from 'semantic-ui-react'
+import { Button, Grid, Menu, Segment, Table } from 'semantic-ui-react'
 import { InferenceExperimentForTable, SampleAndTime } from '../../types'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { PredictionRangeLabelsSetSelect } from '../../../common/prediction-range-label/PredictionRangeLabelsSetSelect'
 import { NewPredictionRangeLabelsSetModal } from '../../../common/prediction-range-label/NewPredictionRangeLabelsSetModal'
+import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { SamplesAndTimeInferenceCharts } from './SamplesAndTimeInferenceCharts'
+import { InferenceExperimentClinicalAttributeSelect } from './InferenceExperimentClinicalAttributeSelect'
+import { ClinicalSourcePopup } from '../../../pipeline/all-experiments-view/ClinicalSourcePopup'
 
 declare const urlInferenceExperimentSamplesAndTime: string
+declare const urlClinicalSourceAddOrEditInferenceExperiment: string
+declare const urlUnlinkClinicalSourceInferenceExperiment: string
 
 /** SamplesAndTimeInferenceTable props. */
 interface SamplesAndTimeInferenceTableProps {
     /** Selected InferenceExperimentForTable instance to retrieve all its data. */
     selectedInferenceExperiment: InferenceExperimentForTable,
+    /** Function to refresh the experiment info after addition or unlinking of clinical data. */
+    refreshExperimentInfo: () => void,
 }
 
 /**
@@ -20,17 +28,24 @@ interface SamplesAndTimeInferenceTableProps {
  * @returns Component.
  */
 export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTableProps) => {
+    const [activeMenuItem, setActiveMenuItem] = useState<'table' | 'charts'>('charts') // TODO: change to 'table'
     const [selectedRangeSetPk, setSelectedClusterSetPk] = useState<number | undefined>(undefined)
     const [openRangeLabelsSetModal, setOpenRangeLabelsSetModal] = useState(false)
+    const [selectedClinicalAttribute, setSelectedClinicalAttribute] = useState<string | undefined>(undefined)
+    const [showPopup, setShowPopup] = useState(false)
 
     const extraQueryParams = selectedRangeSetPk ? { prediction_range_labels_set_pk: selectedRangeSetPk } : {}
-
     const selectedTrainedModelPk = props.selectedInferenceExperiment.trained_model
 
-    return (
-        <Grid>
-            <Grid.Row columns={2} divided>
-                <Grid.Column width={12}>
+    /**
+     * Returns the active item in the menu.
+     * @returns Active item in the menu.
+     */
+    const getActiveItem = (): JSX.Element => {
+        switch (activeMenuItem) {
+            case 'table':
+                /* TODO: refactor in another file and rename this file */
+                return (
                     <PaginatedTable<SampleAndTime>
                         headers={[
                             { name: 'Sample', serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
@@ -64,7 +79,57 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             )
                         }}
                     />
+                )
+            case 'charts':
+                return (
+                    <SamplesAndTimeInferenceCharts
+                        inferenceExperiment={props.selectedInferenceExperiment}
+                        selectedClinicalAttribute={selectedClinicalAttribute}
+                        refreshExperimentInfo={props.refreshExperimentInfo}
+                    />
+                )
+        }
+    }
+
+    return (
+        <Grid>
+            <Grid.Row columns={2} divided>
+                <Grid.Column width={12}>
+                    <Menu className='menu-with-bolder-border margin-top-0'>
+                        <Menu.Item
+                            active={activeMenuItem === 'table'}
+                            onClick={() => setActiveMenuItem('table')}
+                        >
+                            Table
+
+                            <InfoPopup
+                                content='Table with all the samples and their predicted hazard/survival time'
+                                onTop={false}
+                                onEvent='hover'
+                                extraClassName='margin-left-5'
+                            />
+                        </Menu.Item>
+
+                        <Menu.Item
+                            active={activeMenuItem === 'charts'}
+                            onClick={() => setActiveMenuItem('charts')}
+                        >
+                            Charts
+
+                            <InfoPopup
+                                content='Shows some charts with the samples and their predicted hazard/survival time grouped by some condition'
+                                onTop={false}
+                                onEvent='hover'
+                                extraClassName='margin-left-5'
+                            />
+                        </Menu.Item>
+                    </Menu>
+
+                    <Segment>
+                        {getActiveItem()}
+                    </Segment>
                 </Grid.Column>
+
                 <Grid.Column width={4}>
                     {selectedTrainedModelPk !== null &&
                         <>
@@ -74,6 +139,33 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                 trainedModelPk={selectedTrainedModelPk}
                             />
 
+                            {/* Clinical attribute select */}
+                            {(activeMenuItem === 'charts' && props.selectedInferenceExperiment.clinical_source_id) &&
+                                <>
+                                    <ClinicalSourcePopup
+                                        experiment={props.selectedInferenceExperiment}
+                                        experimentType='inference'
+                                        // In survival analysis tabs is necessary to have survival tuples
+                                        showOnlyClinicalDataWithSurvivalTuples
+                                        showPopup={showPopup}
+                                        urlClinicalSourceAddOrEdit={urlClinicalSourceAddOrEditInferenceExperiment}
+                                        urlUnlinkClinicalSource={urlUnlinkClinicalSourceInferenceExperiment}
+                                        position='bottom center'
+                                        iconExtraClassNames='margin-top-5'
+                                        openPopup={() => setShowPopup(true)}
+                                        closePopup={() => setShowPopup(false)}
+                                        onSuccessCallback={props.refreshExperimentInfo}
+                                    />
+
+                                    <InferenceExperimentClinicalAttributeSelect
+                                        selectedInferenceExperiment={props.selectedInferenceExperiment}
+                                        selectedClinicalAttribute={selectedClinicalAttribute}
+                                        setSelectedClinicalAttribute={setSelectedClinicalAttribute}
+                                    />
+                                </>
+                            }
+
+                            {/* Range Select */}
                             <PredictionRangeLabelsSetSelect
                                 trainedModelPk={selectedTrainedModelPk}
                                 selectedClusterSetPk={selectedRangeSetPk}

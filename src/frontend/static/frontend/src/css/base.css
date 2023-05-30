@@ -220,3 +220,19 @@ h2.menu, .menu.transition.visible {
     position: absolute;
     bottom: 0;
 }
+
+/* Prevents the clinical source Popup to be over UserFiles modal */
+#select-gem-file-type {
+    z-index: 1000;
+}
+
+/* Prevents the Popup to be over some modals */
+#clinical-source-popup,
+.ui.dimmer {
+    z-index: 2000 !important;
+}
+
+/* Prevents modals to be over the popups */
+.popup {
+    z-index: 2500 !important;
+}

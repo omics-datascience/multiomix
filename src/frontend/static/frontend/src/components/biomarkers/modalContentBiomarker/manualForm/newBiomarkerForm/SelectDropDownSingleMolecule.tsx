@@ -46,7 +46,7 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
         if (value) {
             handleAddMoleculeToSection({
                 isValid: true,
-                value: value
+                value
             })
             setInputString({
                 query: '',

@@ -48,7 +48,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
      * @returns Default object for table's headers
      */
     function getDefaultHeaders (): RowHeader<DjangoUserFile>[] {
-        var headersList: RowHeader<DjangoUserFile>[] = [
+        let headersList: RowHeader<DjangoUserFile>[] = [
             { name: 'Name', serverCodeToSort: 'name', width: 4 },
             { name: 'Description', serverCodeToSort: 'description', width: 6 }
         ]

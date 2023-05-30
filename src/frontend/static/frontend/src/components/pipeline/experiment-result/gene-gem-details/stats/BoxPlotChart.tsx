@@ -29,9 +29,9 @@ export const BoxPlotChart = (props: BoxPlotChartProps) => {
         const meanValue = mean(dataArray)
 
         const data: BoxplotDatum = {
-            min: min,
-            max: max,
-            median: median,
+            min,
+            max,
+            median,
             mean: meanValue,
             firstQuartile: firstQuantile,
             thirdQuartile: thirdQuantile,

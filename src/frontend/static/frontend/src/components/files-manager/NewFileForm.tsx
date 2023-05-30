@@ -10,12 +10,17 @@ import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { NewFile } from './FilesManager'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
 
+/** UploadLabel props. */
+interface UploadLabelProps {
+    uploadState: Nullable<UploadState>
+}
+
 /**
  * Renders a label component with a help popup.
  * @param props Component props.
  * @returns Component
  */
-const UploadLabel = (props: { uploadState: Nullable<UploadState> }) => {
+const UploadLabel = (props: UploadLabelProps) => {
     const isUploading = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS
     const [header, description]: [string, string] = isUploading
         ? ['Uploading file', 'The file is being uploaded in chunks']

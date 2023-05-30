@@ -800,11 +800,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param molecule molecule to remove of the array
      */
     handleRemoveMolecule = (section: BiomarkerType, molecule: MoleculesSectionData) => {
-        const data = this.state.formBiomarker.moleculesSection[section].data.map((item: MoleculesSectionData) => {
-            if (item.value === molecule.value) {
-                return
-            }
-            return item
+        // keeps the molecules that are not the one that is going to be removed
+        const data = this.state.formBiomarker.moleculesSection[section].data.filter((item: MoleculesSectionData) => {
+            return item.value !== molecule.value
         })
 
         this.setState({
@@ -815,7 +813,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     ...this.state.formBiomarker.moleculesSection,
                     [section]: {
                         isLoading: false,
-                        data: data.filter((item) => item !== undefined)
+                        data
                     }
                 }
             }

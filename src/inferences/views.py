@@ -1,16 +1,20 @@
 from django.db import transaction
 from django.db.models import QuerySet, Exists, OuterRef, Q
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
 from rest_framework.exceptions import ValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from api_service.enums import SourceType
+from api_service.serializers import ExperimentClinicalSourceSerializer
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
+from common.enums import ResponseCode
+from common.functions import create_survival_columns_from_json
 from common.pagination import StandardResultsSetPagination
+from common.response import ResponseStatus
 from common.utils import get_source_pk
 from feature_selection.models import TrainedModel, ClusterLabel, PredictionRangeLabel
 from inferences.inference_service import global_inference_service
@@ -20,14 +24,25 @@ from inferences.serializers import InferenceExperimentSerializer, SampleAndClust
 from user_files.models_choices import FileType
 
 
+def get_inference_experiments_of_biomarker(request: HttpRequest) -> QuerySet[InferenceExperiment]:
+    """Gets all the inference experiments for a specific Biomarker getting data from current request."""
+    biomarker_pk = request.GET.get('biomarker_pk')
+    user = request.user
+    biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
+    return biomarker.inference_experiments.all()
+
+
+def get_inference_experiment(request: HttpRequest) -> InferenceExperiment:
+    """Gets a specific InferenceExperiment instance for a specific Biomarker getting data from current request."""
+    inference_experiment_pk = request.GET.get('inference_experiment_pk')
+    experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk, biomarker__user=request.user)
+    return experiment
+
 class BiomarkerStatisticalInferenceExperiments(generics.ListAPIView):
     """Get all the inference experiments for a specific Biomarker."""
 
     def get_queryset(self):
-        biomarker_pk = self.request.GET.get('biomarker_pk')
-        user = self.request.user
-        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
-        return biomarker.inference_experiments.all()
+        return get_inference_experiments_of_biomarker(self.request)
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = InferenceExperimentSerializer
@@ -38,12 +53,38 @@ class BiomarkerStatisticalInferenceExperiments(generics.ListAPIView):
     filterset_fields = ['state']
 
 
+class BiomarkerStatisticalInferenceExperimentsDetails(generics.RetrieveAPIView):
+    """Get specific InferenceExperiment instance for a specific Biomarker."""
+
+    def get_queryset(self):
+        return get_inference_experiments_of_biomarker(self.request)
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = InferenceExperimentSerializer
+
+
+class InferenceExperimentClinicalAttributes(APIView):
+    """
+    Gets all the clinical attributes from a clinical source of a specific StatisticalValidation instance.
+    Sorted by name ASC.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: HttpRequest):
+        experiment = get_inference_experiment(request)
+        if experiment.clinical_source:
+            clinical_attrs = experiment.clinical_source.get_attributes()
+        else:
+            clinical_attrs = []
+        return Response(sorted(clinical_attrs))
+
 class PredictionExperimentSubmit(APIView):
     """Endpoint to submit a InferenceExperiment."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def post(request: Request):
+    def post(request: HttpRequest):
         with transaction.atomic():
             # Gets Biomarker and TrainedModel instance
             biomarker_pk = request.POST.get('biomarkerPk')
@@ -125,11 +166,10 @@ class SampleAndClusterPredictionSamples(generics.ListAPIView):
         )
 
     def get_queryset(self):
-        inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
-        experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk,
-                                       biomarker__user=self.request.user)
+        experiment = get_inference_experiment(self.request)
         samples_and_clusters = experiment.samples_and_clusters.all()
         return self.__filter_by_cluster(samples_and_clusters, self.request)
+
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SampleAndClusterPredictionSerializer
@@ -180,3 +220,53 @@ class SampleAndTimePredictionSamples(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     search_fields = ['sample']
     ordering_fields = ['sample', 'prediction']
+
+
+class AddEditClinicalSourceInferenceExperiment(APIView):
+    """Adds an InferenceExperiment's clinical source"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def post(request):
+        # Gets experiment
+        experiment_id = request.POST.get('experimentPk')
+        experiment = get_object_or_404(InferenceExperiment, pk=experiment_id, biomarker__user=request.user)
+
+        with transaction.atomic():
+            # Creates and assign ExperimentClinicalSource instance to experiment
+            clinical_source_type = int(request.POST.get('clinicalType'))
+            if clinical_source_type == SourceType.CGDS:
+                return HttpResponse('Unauthorized', status=401)
+            clinical_source, _ = get_experiment_source(clinical_source_type, request, FileType.CLINICAL, 'clinical')
+
+            # Creates Survival Tuples for clinical source
+            survival_columns_str = request.POST.get('survival_columns', '[]')
+            create_survival_columns_from_json(survival_columns_str, clinical_source.user_file)
+
+            # Assigns to experiment and saves
+            experiment.clinical_source = clinical_source
+            experiment.save()
+
+        # Serializes ExperimentClinicalSource instance and returns it
+        data = ExperimentClinicalSourceSerializer().to_representation(clinical_source)
+        return Response(data)
+
+
+class UnlinkClinicalSourceInferenceExperiment(APIView):
+    """Unlink an InferenceExperiment's clinical source"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def patch(request, pk: int):
+        # Gets experiment
+        experiment = get_object_or_404(InferenceExperiment, pk=pk, biomarker__user=request.user)
+        print(experiment)
+        print(experiment.clinical_source)
+        if experiment.clinical_source.user_file is None:
+            # If this block is reached it means that is trying to unlink a CGDS experiment which should
+            # not be possible
+            return HttpResponse('Unauthorized', status=401)
+        experiment.clinical_source = None
+        experiment.save()
+
+        return Response({'status': ResponseStatus(ResponseCode.SUCCESS).to_json()})

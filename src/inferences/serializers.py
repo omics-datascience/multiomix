@@ -20,7 +20,7 @@ class InferenceExperimentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InferenceExperiment
-        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model']
+        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model', 'clinical_source_id']
 
     @staticmethod
     def get_model(ins: InferenceExperiment) -> FitnessFunction:

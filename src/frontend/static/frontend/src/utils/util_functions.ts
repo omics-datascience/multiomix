@@ -446,8 +446,8 @@ const cleanRef = (ref: React.RefObject<any>) => {
  * @returns Dropdown Options
  */
 const listToDropdownOptions = (listOfElements: string[]): DropdownItemProps[] => {
-    return listOfElements.map((columnName) => {
-        return { key: columnName, text: columnName, value: columnName }
+    return listOfElements.map((elem) => {
+        return { key: elem, text: elem, value: elem }
     })
 }
 
