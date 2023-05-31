@@ -4,8 +4,8 @@ import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
 
-/** BiomarkerMoleculesDetailsMenu props. */
-interface BiomarkerMoleculesDetailsMenuProps {
+/** MoleculesDetailsMenu props. */
+interface MoleculesDetailsMenuProps {
     /** Selected BiomarkerMolecule instance to show the options. */
     selectedMolecule: BiomarkerMolecule,
     /** Getter of the active item in the menu. */
@@ -19,7 +19,7 @@ interface BiomarkerMoleculesDetailsMenuProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerMoleculesDetailsMenu = (props: BiomarkerMoleculesDetailsMenuProps) => {
+export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     return (
         <Menu className='menu-with-bolder-border margin-top-0'>
             <Menu.Item

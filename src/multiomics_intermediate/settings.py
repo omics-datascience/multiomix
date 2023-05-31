@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django_email_verification',
     'genes',
     'inferences',
+    'molecules_details',
     'chunked_upload'
 ]
 

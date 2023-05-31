@@ -2,10 +2,11 @@ import React, { useState } from 'react'
 import { Grid, Header, Icon, Segment } from 'semantic-ui-react'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { Nullable } from '../../../../utils/interfaces'
-import { BiomarkerMoleculesDetailsMenu } from './BiomarkerMoleculesDetailsMenu'
+import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
+import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 
-/** BiomarkerMoleculesDetails props. */
-interface BiomarkerMoleculesDetailsProps {
+/** CurrentMoleculeDetails props. */
+interface CurrentMoleculeDetailsProps {
     /** Selected BiomarkerMolecule instance to show the options. */
     selectedMolecule: Nullable<BiomarkerMolecule>,
     /** Callback to "close" this panel. */
@@ -13,20 +14,22 @@ interface BiomarkerMoleculesDetailsProps {
 }
 
 /**
- * Renders a Table with the samples and the cluster where they belong.
+ * Renders a the panel with the tabs of all the different kind of data for a specific BiomarkerMolecule.
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerMoleculesDetails = (props: BiomarkerMoleculesDetailsProps) => {
+export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
 
     /**
      * Gets the selected component according to the active item.
+     * @param selectedMolecule Selected BiomarkerMolecule instance to show in the selected panel.
      * @returns The corresponding component
      */
-    function getSelectedComponent (): Nullable<JSX.Element> {
+    function getSelectedComponent (selectedMolecule: BiomarkerMolecule): Nullable<JSX.Element> {
         switch (activeItem) {
             case ActiveBiomarkerMoleculeItemMenu.DETAILS:
+                return <MoleculeGeneralInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return null
@@ -42,14 +45,14 @@ export const BiomarkerMoleculesDetails = (props: BiomarkerMoleculesDetailsProps)
             return (
                 <Segment>
                     {/* Menu */}
-                    <BiomarkerMoleculesDetailsMenu
+                    <MoleculesDetailsMenu
                         activeItem={activeItem}
                         setActiveItem={setActiveItem}
                         selectedMolecule={props.selectedMolecule}
                     />
 
                     {/* Selected menu option */}
-                    {getSelectedComponent()}
+                    {getSelectedComponent(props.selectedMolecule)}
                 </Segment>
             )
         }

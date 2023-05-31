@@ -4,7 +4,7 @@ import { Nullable } from '../../utils/interfaces'
 import { BiomarkerDetailsMenu } from './BiomarkerDetailsMenu'
 import { BiomarkerStatisticalValidationPanel } from './biomarker-details-modal/stat-validations/BiomarkerStatisticalValidationPanel'
 import { BiomarkerTrainedModelsTable } from './biomarker-details-modal/BiomarkerTrainedModelsTable'
-import { BiomarkerMoleculesPanel } from './biomarker-details-modal/molecules/BiomarkerMoleculesPanel'
+import { MoleculesPanel } from './biomarker-details-modal/molecules/MoleculesPanel'
 import { BiomarkerInferenceExperimentsPanel } from './biomarker-details-modal/inference/BiomarkerInferenceExperimentsPanel'
 
 interface BiomarkerDetailsModalProps {
@@ -19,7 +19,7 @@ interface BiomarkerDetailsModalProps {
  * @returns Component.
  */
 export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.INFERENCE)
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerDetailItemMenu>(ActiveBiomarkerDetailItemMenu.MOLECULES_DETAILS)
 
     if (!props.selectedBiomarker) {
         return null
@@ -35,8 +35,8 @@ export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
         }
 
         switch (activeItem) {
-            case ActiveBiomarkerDetailItemMenu.MOLECULES:
-                return <BiomarkerMoleculesPanel selectedBiomarker={props.selectedBiomarker}/>
+            case ActiveBiomarkerDetailItemMenu.MOLECULES_DETAILS:
+                return <MoleculesPanel selectedBiomarker={props.selectedBiomarker}/>
             case ActiveBiomarkerDetailItemMenu.MODELS:
                 return <BiomarkerTrainedModelsTable selectedBiomarker={props.selectedBiomarker} allowFullManagement />
             case ActiveBiomarkerDetailItemMenu.STATISTICAL_VALIDATION:

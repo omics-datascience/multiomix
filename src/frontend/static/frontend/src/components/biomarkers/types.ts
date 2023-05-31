@@ -282,7 +282,7 @@ type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'm
 
 /** Available options for the Menu in the Biomarker details modal */
 enum ActiveBiomarkerDetailItemMenu {
-    MOLECULES,
+    MOLECULES_DETAILS,
     FEATURE_SELECTION_SUMMARY,
     MODELS,
     STATISTICAL_VALIDATION,

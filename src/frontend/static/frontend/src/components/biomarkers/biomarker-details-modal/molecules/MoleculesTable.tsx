@@ -8,8 +8,8 @@ import { MoleculeType } from '../../../../utils/interfaces'
 
 declare const urlBiomarkerMolecules: string
 
-/** BiomarkerMoleculesTable props. */
-interface BiomarkerMoleculesTableProps {
+/** MoleculesTable props. */
+interface MoleculesTableProps {
     /** Selected Biomarker instance to retrieve all its molecules. */
     selectedBiomarker: Biomarker,
     /** Callback to show all the molecules details. */
@@ -28,7 +28,7 @@ const moleculesTypesOptions: DropdownItemProps[] = [
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerMoleculesTable = (props: BiomarkerMoleculesTableProps) => {
+export const MoleculesTable = (props: MoleculesTableProps) => {
     return (
         <PaginatedTable<BiomarkerMolecule>
             headers={[
