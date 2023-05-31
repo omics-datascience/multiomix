@@ -63,7 +63,7 @@ export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
             <Table.Cell width={2}>
                 {/* Details button */}
                 <Icon
-                    name={'chart bar'}
+                    name='chart bar'
                     className='clickable'
                     color='blue'
                     title='Details'

@@ -81,6 +81,14 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment has failed several times. Try changing some parameters and try again.'
             }
             break
+        case BiomarkerState.NO_FEATURES_FOUND:
+            stateIcon = {
+                iconName: 'times rectangle',
+                color: 'red',
+                loading: false,
+                title: 'No features were found. Try changing some parameters and try again.'
+            }
+            break
     }
 
     return (

@@ -58,3 +58,39 @@ def send_update_user_file_command(user_id: int):
         'command': 'update_user_files'
     }
     send_message(user_group_name, message)
+
+
+def send_update_stat_validations_command(user_id: int):
+    """
+    Sends a message indicating that an StatisticalValidation state update has occurred
+    @param user_id: StatisticalValidation's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_statistical_validations'
+    }
+    send_message(user_group_name, message)
+
+
+def send_update_trained_models_command(user_id: int):
+    """
+    Sends a message indicating that a TrainedModel state update has occurred
+    @param user_id: TrainedModel's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_trained_models'
+    }
+    send_message(user_group_name, message)
+
+
+def send_update_prediction_experiment_command(user_id: int):
+    """
+    Sends a message indicating that a InferenceExperiment state update has occurred
+    @param user_id: InferenceExperiment's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_prediction_experiment'
+    }
+    send_message(user_group_name, message)

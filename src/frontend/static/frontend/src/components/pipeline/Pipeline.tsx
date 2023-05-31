@@ -207,9 +207,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         if (mRNASourceId !== null && gemSourceId !== null) {
             const searchParams = {
-                mRNASourceId: mRNASourceId,
+                mRNASourceId,
                 mRNASourceType: mRNASource.type,
-                gemSourceId: gemSourceId,
+                gemSourceId,
                 gemSourceType: gemSource.type,
                 gemFileType: this.state.gemFileType
             }
@@ -289,9 +289,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
                 // Sends an array of headers to compare in server
                 const jsonData = {
-                    headersColumnsNames: headersColumnsNames,
-                    otherSourceId: otherSourceId,
-                    otherSourceType: otherSourceType
+                    headersColumnsNames,
+                    otherSourceId,
+                    otherSourceType
                 }
 
                 this.setState({ gettingCommonSamples: true }, () => {
@@ -854,7 +854,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             type: TagType.EXPERIMENT
         }
 
-        ky.get(urlTagsCRUD, { searchParams: searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
             response.json().then((experimentTags: DjangoTag[]) => {
                 this.setState({ tags: experimentTags }, functionToExecute)
             }).catch((err) => {

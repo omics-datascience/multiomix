@@ -133,6 +133,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                 <Form.Select
                     width={2}
                     fluid
+                    selectOnBlur={false}
                     label='Correlation type'
                     options={selectCorrelationTypeOptions}
                     name='correlationType'
@@ -144,6 +145,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                 <Form.Select
                     width={2}
                     fluid
+                    selectOnBlur={false}
                     label='Number of entries'
                     options={selectPageSizeOptions}
                     name='pageSize'

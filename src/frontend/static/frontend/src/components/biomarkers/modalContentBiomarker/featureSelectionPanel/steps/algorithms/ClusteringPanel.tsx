@@ -1,10 +1,11 @@
 import React from 'react'
 import { Button, Container, Select } from 'semantic-ui-react'
-import { ClusteringMetric, ClusteringAlgorithm, FitnessFunctionClustering, ClusteringScoringMethod } from '../../../../types'
+import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod } from '../../../../types'
+import { clusteringAlgorithmOptions } from '../../../../utils'
 
 /** Clustering props. */
 interface ClusteringProps {
-    settings: FitnessFunctionClustering,
+    settings: ClusteringParameters,
     handleChangeClusterOption: (key: string, value: number) => void,
 }
 
@@ -19,12 +20,10 @@ export const ClusteringPanel = (props: ClusteringProps) => {
     return (
         <>
             <Select
+                selectOnBlur={false}
                 placeholder='Clustering Algorithm'
                 name='moleculeSelected'
-                options={[
-                    { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS },
-                    { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL }
-                ]}
+                options={clusteringAlgorithmOptions}
                 value={settings.algorithm}
                 onChange={(_, { value }) => handleChangeClusterOption('algorithm', value as number)}
             />

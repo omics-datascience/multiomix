@@ -16,7 +16,8 @@ from common.functions import close_db_connection
 
 class TaskQueue(object):
     """
-    Process experiments in a Thread Pool as explained at https://docs.python.org/3.7/library/concurrent.futures.html
+    Process correlation analysis in a Thread Pool
+    as explained at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     executor: ThreadPoolExecutor = None
     use_transaction: bool
@@ -33,8 +34,9 @@ class TaskQueue(object):
 
     def __commit_or_rollback(self, is_commit: bool, experiment: Experiment):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB
-        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
+        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise.
         """
         if self.use_transaction:
             query = "COMMIT" if is_commit else "ROLLBACK"
@@ -49,9 +51,9 @@ class TaskQueue(object):
 
     def eval_mrna_gem_experiment(self, experiment: Experiment, stop_event: Event) -> None:
         """
-        Computes a mRNA x miRNA/CNA/Methylation experiment
-        @param experiment: Experiment to be processed
-        @param stop_event: Stop event to cancel the experiment
+        Computes a mRNA x miRNA/CNA/Methylation experiment.
+        @param experiment: Experiment to be processed.
+        @param stop_event: Stop event to cancel the experiment.
         """
         experiment.state = ExperimentState.IN_PROCESS
         experiment.save()
@@ -98,8 +100,8 @@ class TaskQueue(object):
             experiment.state = ExperimentState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
-            logging.warning(f'Experiment {experiment.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.warning(f'Experiment {experiment.pk} was stopped')
             experiment.state = ExperimentState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)

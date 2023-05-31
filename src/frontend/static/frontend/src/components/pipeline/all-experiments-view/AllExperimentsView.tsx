@@ -14,6 +14,10 @@ import { DeleteExperimentButton } from './DeleteExperimentButton'
 declare const urlUserExperiments: string
 declare const urlDownloadFullResult: string
 
+// Defined in gem.html
+declare const urlClinicalSourceUserFileCRUD: string
+declare const urlUnlinkClinicalSourceUserFile: string
+
 /**
  * Component's props
  */
@@ -154,8 +158,11 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                 <TableCell textAlign='center'>
                                     <ClinicalSourcePopup
                                         experiment={experiment}
+                                        experimentType='correlation'
                                         // It's not necessary to have survival tuples as user could want to link clinical data for CorrelationGraph
                                         showOnlyClinicalDataWithSurvivalTuples={false}
+                                        urlClinicalSourceAddOrEdit={urlClinicalSourceUserFileCRUD}
+                                        urlUnlinkClinicalSource={urlUnlinkClinicalSourceUserFile}
                                         showPopup={this.state.clinicalPopupOpenId === experiment.id}
                                         openPopup={this.openPopup}
                                         closePopup={this.closePopup}

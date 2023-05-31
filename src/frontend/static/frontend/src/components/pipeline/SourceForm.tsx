@@ -292,6 +292,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                     {/* Source selection */}
                     <Select
                         button
+                        selectOnBlur={false}
                         fluid
                         floating
                         disabled={this.props.disabled}

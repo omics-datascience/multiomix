@@ -38,6 +38,17 @@ enum FileType {
 }
 
 /**
+ * Possible types of files
+ */
+enum MoleculeType {
+    ALL = 0,
+    MRNA = 1,
+    MIRNA = 2,
+    CNA = 3,
+    METHYLATION = 4,
+}
+
+/**
  * Enum to check if user want to select source from a file
  * that he uploaded, or from CGDS DB
  */
@@ -93,7 +104,11 @@ interface GeneralTableControlWithoutSorting {
     // TODO: after big refactoring using only PaginatedTable.tsx, check if totalRowCount is optional
     totalRowCount?: number,
     // TODO: after big refactoring using only PaginatedTable.tsx, check if filters is optional
-    filters: { [key: string]: any },
+    filters: { [key: string]: {
+        value: any,
+        /** Indicates if 0 as filter value is accepted */
+        allowZero?: boolean
+    } },
 }
 
 /**
@@ -296,6 +311,7 @@ export {
     CustomAlert,
     Nullable,
     FileType,
+    MoleculeType,
     Command,
     WebsocketConfig,
     CorrelationType,

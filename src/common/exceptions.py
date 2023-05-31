@@ -1,4 +1,4 @@
-class FSExperimentFailed(Exception):
+class ExperimentFailed(Exception):
     """Raised when the experiment has failed for some reason"""
     pass
 
@@ -8,6 +8,6 @@ class NoSamplesInCommon(Exception):
     pass
 
 
-class FSExperimentStopped(Exception):
+class ExperimentStopped(Exception):
     """Raised when user stops the experiment"""
     pass

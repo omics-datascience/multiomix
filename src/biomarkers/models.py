@@ -1,7 +1,10 @@
+from typing import List, Optional
+from queryset_sequence import QuerySetSequence
 from django.contrib.auth import get_user_model
 from django.db import models
 from tags.models import Tag
 from api_service.websocket_functions import send_update_biomarkers_command
+from user_files.models_choices import MoleculeType
 
 
 class BiomarkerOrigin(models.IntegerChoices):
@@ -21,7 +24,8 @@ class BiomarkerState(models.IntegerChoices):
     NO_SAMPLES_IN_COMMON = 5
     STOPPING = 6
     STOPPED = 7
-    REACHED_ATTEMPTS_LIMIT = 8
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9
 
 
 class Biomarker(models.Model):
@@ -56,6 +60,31 @@ class Biomarker(models.Model):
     def number_of_methylations(self) -> int:
         """Gets the number of Methylations in this Biomarker"""
         return self.methylations.count()
+
+    def all_molecules(self, molecule_type: Optional[MoleculeType]) -> QuerySetSequence:
+        """TODO: complete docs"""
+        if molecule_type is None:
+            return QuerySetSequence(
+                self.mrnas.all(), self.mirnas.all(), self.cnas.all(), self.methylations.all()
+            )
+
+        # Filter by molecule type
+        molecule_type = int(molecule_type)
+        if molecule_type == MoleculeType.MRNA:
+            return self.mrnas.all()
+
+        if molecule_type == MoleculeType.MIRNA:
+            return self.mirnas.all()
+
+        if molecule_type == MoleculeType.CNA:
+            return self.cnas.all()
+
+        return self.methylations.all()
+
+    @property
+    def has_fs_experiment(self) -> bool:
+        """Returns True if this Biomarker was created from a Feature Selection experiment"""
+        return hasattr(self, 'fs_experiment')
 
     def delete(self, *args, **kwargs):
         """Deletes the instance and sends a websockets message to update state in the frontend"""

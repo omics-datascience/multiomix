@@ -1,8 +1,8 @@
 from typing import Iterable, List, Optional, Union
 from django.db import models
 from django.contrib.auth import get_user_model
-from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE, \
-    TCGA_CONVENTION
+from django.db.models import QuerySet
+from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
 from genes.models import Gene
 from statistical_properties.models import SourceDataStatisticalProperties
@@ -133,8 +133,9 @@ class ExperimentClinicalSource(ExperimentSource):
             return self.user_file.get_row_indexes()
 
         # Returns a distinct concatenation of both source columns
-        # IMPORTANT: samples are in rows and attributes are in columns
-        samples = self.__get_cgds_datasets_joined_df()[SAMPLE_ID_COLUMN]
+        # IMPORTANT: samples are in rows and attributes are in columns.
+        # NOTE: PATIENT_ID_COLUMN has the samples ids without the TCGA suffix, and it's as index
+        samples = self.__get_cgds_datasets_joined_df().index
         return list(set(samples))
 
     def get_attributes(self) -> List[str]:
@@ -167,7 +168,7 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = self.user_file.get_specific_row(row)
         else:
             # IMPORTANT: samples are in rows and attributes are in columns
-            row_data = self.__get_cgds_datasets_joined_df().set_index(SAMPLE_ID_COLUMN).loc[row].to_numpy()
+            row_data = self.__get_cgds_datasets_joined_df().set_index(PATIENT_ID_COLUMN).loc[row].to_numpy()
 
         if row_data.size == 0:
             raise KeyError
@@ -176,25 +177,35 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = row_data[:, columns_idx]
         return row_data
 
-    def get_specific_samples_and_attribute(
+    def __get_specific_samples_and_attributes(
         self,
-        samples: List[str],
-        clinical_attribute: str
+        samples: Optional[List[str]],
+        clinical_attributes: List[str]
     ) -> np.ndarray:
         """
-        Gets specific samples and a attribute values from the source
-        @param samples: List of samples to retrieve
-        @param clinical_attribute: Index of column to filter
-        @raise KeyError if the row data is empty
-        @return: List of values
+        Gets specific samples and an attribute values from the source.
+        @param samples: List of samples to retrieve. If None, returns all the samples
+        @param clinical_attributes: List of clinical attributes to retrieve.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
         """
+        row_data: pd.DataFrame
         if self.user_file:
-            row_data = self.user_file.get_df().loc[samples]
+            df = self.user_file.get_df()
+            if samples is not None:
+                row_data = df.loc[samples]
+            else:
+                row_data = df.loc[:]
         else:
             # IMPORTANT: samples are in rows and attributes are in columns
             row_data = self.__get_cgds_datasets_joined_df()
             row_data[PATIENT_ID_COLUMN] = row_data.index  # Creates a column of Patient ID from the index
-            row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[samples]  # Sets Sample ID and index and get samples
+
+            # Sets Sample ID and index, and get samples
+            if samples is not None:
+                row_data = row_data.set_index(PATIENT_ID_COLUMN).loc[samples]
+            else:
+                row_data = row_data.set_index(PATIENT_ID_COLUMN).loc[:]
 
             # If SAMPLES_TYPE_COLUMN exists as column keeps primary only, otherwise all the rows are considered
             # primary
@@ -204,11 +215,42 @@ class ExperimentClinicalSource(ExperimentSource):
                     raise KeyError
 
         if row_data.size == 0:
-            samples_error = ', '.join(samples)
-            raise KeyError(f'Samples "{samples_error}" were not found')
+            if samples is not None:
+                samples_error = ', '.join(samples)
+                raise KeyError(f'Samples "{samples_error}" were not found')
+            else:
+                raise KeyError('Tried to get all samples. But the row_data is empty')
 
-        row_data = row_data[clinical_attribute].to_numpy()
-        return row_data
+        return row_data[clinical_attributes]
+
+    def get_specific_samples_and_attributes(
+        self,
+        samples: Optional[List[str]],
+        clinical_attributes: List[str]
+    ) -> np.ndarray:
+        """
+        Gets specific samples and an attribute values from the source as a numpy array.
+        @param samples: List of samples to retrieve. If None, returns all the samples
+        @param clinical_attributes: List of clinical attributes to retrieve.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
+        """
+        res = self.__get_specific_samples_and_attributes(samples, clinical_attributes).to_numpy()
+        return res if len(clinical_attributes) > 1 else res[:, 0]  # If only one attribute, returns a 1D array
+
+    def get_specific_samples_and_attributes_df(
+        self,
+        samples: Optional[List[str]],
+        clinical_attributes: List[str]
+    ) -> np.ndarray:
+        """
+        Gets specific samples and an attribute values from the source as a Pandas DataFrame.
+        @param samples: List of samples to retrieve. If None, returns all the samples
+        @param clinical_attributes: List of clinical attributes to retrieve.
+        @raise KeyError if the row data is empty.
+        @return: List of values.
+        """
+        return self.__get_specific_samples_and_attributes(samples, clinical_attributes)
 
     def __get_cgds_datasets_joined_df(self) -> pd.DataFrame:
         """
@@ -218,8 +260,6 @@ class ExperimentClinicalSource(ExperimentSource):
         df1: pd.DataFrame = self.cgds_dataset.get_df(use_standard_column=False)  # The index is implicitly PATIENT_ID
         df2: pd.DataFrame = self.extra_cgds_dataset.get_df(use_standard_column=False)
         df2 = df2.reset_index(level=0)
-        # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) to avoid breaking df join
-        df2[PATIENT_ID_COLUMN] = df2[PATIENT_ID_COLUMN].str.replace(TCGA_CONVENTION, '', regex=True)
         df2 = df2.set_index(PATIENT_ID_COLUMN)
         return df1.join(df2)
 
@@ -240,7 +280,7 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         return self.get_df()
 
-    def get_survival_columns(self) -> List[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
+    def get_survival_columns(self) -> QuerySet[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
         """
         Gets the related survival columns tuples to the UserFile or CGDSDataset
         @return:
@@ -305,10 +345,7 @@ class Experiment(models.Model):
         return model_class.objects.filter(experiment=self)
 
     def get_combination_class(self):
-        """
-        Gets the corresponding Combination class depending of the Experiment's type
-        @return:
-        """
+        """Gets the corresponding Combination class depending on the Experiment's type."""
         return get_combination_class(self.type)
 
     def get_clinical_columns(self) -> List[str]:

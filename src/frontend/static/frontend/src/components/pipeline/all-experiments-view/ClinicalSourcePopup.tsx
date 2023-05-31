@@ -3,19 +3,21 @@ import React from 'react'
 import { Button, Grid, Icon, Label, Popup } from 'semantic-ui-react'
 import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
 import { FileType, Nullable, Source, SourceType } from '../../../utils/interfaces'
-import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource } from '../../../utils/util_functions'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../utils/util_functions'
 import { SurvivalTuplesForm } from '../../survival/SurvivalTuplesForm'
 import { SourceForm } from '../SourceForm'
+import { BiomarkerState, InferenceExperimentForTable } from '../../biomarkers/types'
 
 declare const urlClinicalSourceUserFileCRUD: string
-declare const urlUnlinkClinicalSourceUserFile: string
 
 /**
  * Component's props
  */
 interface PopupClinicalSourceProps {
-    /** Experiment object to send its id and show some info */
-    experiment: DjangoExperiment,
+    /** Experiment/InferenceExperiment instance to send its id and show some info */
+    experiment: DjangoExperiment | InferenceExperimentForTable,
+    /** To know if it's an experiment or an inference experiment and make some checks. */
+    experimentType: 'correlation' | 'inference',
     /** Flag to show or hide the Popup */
     showPopup: boolean,
     /** Popup position (optional, 'left center' by default) */
@@ -24,6 +26,10 @@ interface PopupClinicalSourceProps {
     iconExtraClassNames?: string,
     /** Flag to retrieve only clinical datasets with at least one survival tuple (if the file type is other than clinical, this parameter is ignores). By default false */
     showOnlyClinicalDataWithSurvivalTuples: boolean,
+    /** URL to add/edit a clinical dataset. */
+    urlClinicalSourceAddOrEdit: string,
+    /** URL to unlink the clinical dataset. */
+    urlUnlinkClinicalSource: string,
     /** Open popup callback */
     openPopup: (experimentId: number) => void,
     /** Close popup callback */
@@ -141,27 +147,6 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     }
 
     /**
-     * Parse a Source considering its type to send specific parameters to the backend
-     * @param formData FormData object to append request parameters
-     */
-    makeSourceAndAppend (formData: FormData) {
-        // In this function source.type is never null
-        const source = this.state.clinicalSource
-        const sourceType = source.type as SourceType
-        const sourceRef = source.newUploadedFileRef.current
-        const existingFilePk = sourceType === SourceType.UPLOADED_DATASETS && source.selectedExistingFile?.id
-            ? source.selectedExistingFile.id.toString()
-            : null
-
-        const file = sourceType === SourceType.NEW_DATASET && sourceRef && sourceRef.files.length > 0 ? sourceRef.files[0] : null
-
-        // Appends to the form data
-        formData.append('clinicalType', sourceType ? sourceType.toString() : 'null')
-        formData.append('clinicalExistingFilePk', existingFilePk ?? '')
-        formData.append('clinicalFile', file)
-    }
-
-    /**
      * Checks if the Source form is valid for submission
      * @returns True if form is valid to add/edit clinical source, false otherwise
      */
@@ -181,7 +166,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         this.setState({ unlinkingSource: true }, () => {
             const myHeaders = getDjangoHeader()
 
-            const url = `${urlUnlinkClinicalSourceUserFile}/${this.props.experiment.id}/`
+            // TODO: add type of experiment
+            const url = `${this.props.urlUnlinkClinicalSource}/${this.props.experiment.id}/`
             ky.patch(url, { headers: myHeaders }).then((response) => {
                 response.json().then((response: DjangoCommonResponse) => {
                     if (response.status.code === DjangoResponseCode.SUCCESS) {
@@ -203,7 +189,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     }
 
     /**
-     * Retrieves existing source data
+     * Retrieves existing source data.
      */
     getSourceData () {
         if (!this.props.experiment.clinical_source_id) {
@@ -275,10 +261,10 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         }
 
         // Appends Source data to FormData
-        this.makeSourceAndAppend(formData)
+        makeSourceAndAppend(this.state.clinicalSource, formData, 'clinical')
 
         this.setState({ addingOrEditingSource: true }, () => {
-            ky.post(urlClinicalSourceUserFileCRUD, { headers: myHeaders, body: formData }).then((response) => {
+            ky.post(this.props.urlClinicalSourceAddOrEdit, { headers: myHeaders, body: formData }).then((response) => {
                 response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
                     if (clinicalSource && clinicalSource.id) {
                         this.successfulRequest()
@@ -291,7 +277,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                 })
             }).catch((err) => {
                 alertGeneralError()
-                console.log('Error adding new Tag ->', err)
+                console.log('Error adding new ClinicalUserFile ->', err)
             }).finally(() => {
                 this.setState({ addingOrEditingSource: false })
             })
@@ -345,10 +331,19 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         const isAnUploadedDataset = this.state.clinicalSource.type === SourceType.UPLOADED_DATASETS
         const isaNewDataset = this.state.clinicalSource.type === SourceType.NEW_DATASET
         const showSurvivalTuplesForm = isAnUploadedDataset || isaNewDataset
-        const clinicalIsDisabled = experiment.state !== ExperimentState.COMPLETED || experiment.result_final_row_count === 0
+
+        let clinicalIsDisabled: boolean
+        if (this.props.experimentType === 'correlation') {
+            const correlationExperiment = this.props.experiment as DjangoExperiment
+            clinicalIsDisabled = correlationExperiment.result_final_row_count === 0 || correlationExperiment.state !== ExperimentState.COMPLETED
+        } else {
+            clinicalIsDisabled = experiment.state !== BiomarkerState.COMPLETED
+        }
+
+        const iconExtraClassNames = this.props.iconExtraClassNames ?? ''
         const clinicalButtonClassName = clinicalIsDisabled
-            ? ''
-            : 'clickable ' + this.props.iconExtraClassNames ?? ''
+            ? iconExtraClassNames
+            : 'clickable ' + iconExtraClassNames
 
         return (
             <Popup
@@ -371,58 +366,58 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             >
                 <React.Fragment>
                     {/* If it's a CGDSDataset as clinical source it can't be edited */}
-                    {this.state.cgdsStudyName ? (
-                        <Label color='green'>{this.state.cgdsStudyName}</Label>
-                    ) : (
-                        <Grid divided columns='equal'>
-                            <Grid.Column>
-                                <SourceForm
-                                    source={this.state.clinicalSource}
-                                    showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples}
-                                    headerTitle='Clinical Data'
-                                    headerIcon={{
-                                        type: 'icon',
-                                        src: 'file'
-                                    }}
-                                    disabled={isProcessing}
-                                    fileType={FileType.CLINICAL}
-                                    showCBioPortalOption={false}
-                                    tagOptions={[]}
-                                    handleChangeSourceType={this.handleChangeSourceType}
-                                    selectNewFile={this.selectNewFile}
-                                    selectUploadedFile={this.selectUploadedFile}
-                                    selectStudy={this.selectStudy}
-                                />
-
-                                <Button
-                                    color='green'
-                                    fluid
-                                    className='margin-top-2'
-                                    loading={this.state.addingOrEditingSource}
-                                    onClick={this.addOrEdit}
-                                    disabled={isProcessing || !this.canAddOrEdit()}
-                                >
-                                    Submit
-                                </Button>
-                            </Grid.Column>
-
-                            {/* If it's a New Dataset, we give the opportunity to add Survival columns too */}
-                            {showSurvivalTuplesForm &&
+                    {this.state.cgdsStudyName
+                        ? <Label color='green'>{this.state.cgdsStudyName}</Label>
+                        : (
+                            <Grid divided columns='equal'>
                                 <Grid.Column>
-                                    <SurvivalTuplesForm
-                                        survivalColumns={isaNewDataset
-                                            ? this.state.survivalColumns
-                                            : this.state.clinicalSource.selectedExistingFile?.survival_columns as DjangoSurvivalColumnsTupleSimple[]}
-                                        disabled={isAnUploadedDataset || this.state.addingOrEditingSource}
-                                        loading={this.state.addingOrEditingSource}
-                                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                        addSurvivalFormTuple={this.addSurvivalFormTuple}
-                                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                    <SourceForm
+                                        source={this.state.clinicalSource}
+                                        showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples}
+                                        headerTitle='Clinical Data'
+                                        headerIcon={{
+                                            type: 'icon',
+                                            src: 'file'
+                                        }}
+                                        disabled={isProcessing}
+                                        fileType={FileType.CLINICAL}
+                                        showCBioPortalOption={false}
+                                        tagOptions={[]}
+                                        handleChangeSourceType={this.handleChangeSourceType}
+                                        selectNewFile={this.selectNewFile}
+                                        selectUploadedFile={this.selectUploadedFile}
+                                        selectStudy={this.selectStudy}
                                     />
+
+                                    <Button
+                                        color='green'
+                                        fluid
+                                        className='margin-top-2'
+                                        loading={this.state.addingOrEditingSource}
+                                        onClick={this.addOrEdit}
+                                        disabled={isProcessing || !this.canAddOrEdit()}
+                                    >
+                                    Submit
+                                    </Button>
                                 </Grid.Column>
-                            }
-                        </Grid>
-                    )}
+
+                                {/* If it's a New Dataset, we give the opportunity to add Survival columns too */}
+                                {showSurvivalTuplesForm &&
+                                    <Grid.Column>
+                                        <SurvivalTuplesForm
+                                            survivalColumns={isaNewDataset
+                                                ? this.state.survivalColumns
+                                                : this.state.clinicalSource.selectedExistingFile?.survival_columns as DjangoSurvivalColumnsTupleSimple[]}
+                                            disabled={isAnUploadedDataset || this.state.addingOrEditingSource}
+                                            loading={this.state.addingOrEditingSource}
+                                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                            addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                        />
+                                    </Grid.Column>
+                                }
+                            </Grid>
+                        )}
 
                     <Button
                         color='red'

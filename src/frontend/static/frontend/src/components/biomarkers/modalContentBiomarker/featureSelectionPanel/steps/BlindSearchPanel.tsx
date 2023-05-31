@@ -3,6 +3,8 @@ import { Select } from 'semantic-ui-react'
 import { FitnessFunctionParameters, FitnessFunction } from '../../../types'
 import { ClusteringPanel } from './algorithms/ClusteringPanel'
 import { SVMPanel } from './algorithms/SVMPanel'
+import { fitnessFunctionsOptions } from '../../../utils'
+import { RFPanel } from './algorithms/RFPanel'
 
 /** BlindSearch props. */
 interface BlindSearchProps {
@@ -10,7 +12,8 @@ interface BlindSearchProps {
     fitnessFunctionParameters: FitnessFunctionParameters,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSvmOption: (key: string, value: number) => void,
+    handleChangeSVMOption: (key: string, value: number) => void,
+    handleChangeRFOption: (key: string, value: number) => void,
 }
 
 /**
@@ -24,10 +27,15 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
         fitnessFunctionParameters,
         handleChangeFitnessFunction,
         handleChangeClusterOption,
-        handleChangeSvmOption
+        handleChangeSVMOption,
+        handleChangeRFOption
     } = props
 
-    const getFitnessFunctionParametersPanel = () => {
+    /**
+     * Returns the panel with the options of the selected fitness function.
+     * @returns Component.
+     */
+    const getFitnessFunctionParametersPanel = (): JSX.Element => {
         switch (fitnessFunction) {
             case FitnessFunction.CLUSTERING:
                 return (
@@ -40,27 +48,29 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 return (
                     <SVMPanel
                         parameters={fitnessFunctionParameters.svmParameters}
-                        handleChangeSvmOption={handleChangeSvmOption}
+                        handleChangeSVMOption={handleChangeSVMOption}
                     />
                 )
-
-            default:
-                break
+            case FitnessFunction.RF:
+                return (
+                    <RFPanel
+                        parameters={fitnessFunctionParameters.rfParameters}
+                        handleChangeRFOption={handleChangeRFOption}
+                    />
+                )
         }
     }
     return (
         <>
             <Select
+                selectOnBlur={false}
                 placeholder='Fitness function'
                 className='selection-select'
-                options={[
-                    { key: FitnessFunction.CLUSTERING, text: 'Clustering', value: FitnessFunction.CLUSTERING },
-                    { key: FitnessFunction.SVM, text: 'SVM', value: FitnessFunction.SVM },
-                    { key: FitnessFunction.RF, text: 'RF', value: FitnessFunction.RF, disabled: true }
-                ]}
+                options={fitnessFunctionsOptions}
                 value={fitnessFunction ?? undefined}
                 onChange={(_, { value }) => handleChangeFitnessFunction(value as FitnessFunction)}
             />
+
             {getFitnessFunctionParametersPanel()}
         </>
     )

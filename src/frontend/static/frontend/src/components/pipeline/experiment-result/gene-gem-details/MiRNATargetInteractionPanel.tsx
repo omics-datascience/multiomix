@@ -60,7 +60,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
         }
 
         this.setState({ gettingData: true }, () => {
-            ky.get(urlMiRNAInteraction, { searchParams: searchParams, timeout: 60000 }).then((response) => {
+            ky.get(urlMiRNAInteraction, { searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((data: DjangoMiRNAGeneInteractionJSON) => {
                     this.setState({ data })
                 }).catch((err) => {

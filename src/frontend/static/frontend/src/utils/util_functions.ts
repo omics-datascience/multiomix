@@ -446,8 +446,8 @@ const cleanRef = (ref: React.RefObject<any>) => {
  * @returns Dropdown Options
  */
 const listToDropdownOptions = (listOfElements: string[]): DropdownItemProps[] => {
-    return listOfElements.map((columnName) => {
-        return { key: columnName, text: columnName, value: columnName }
+    return listOfElements.map((elem) => {
+        return { key: elem, text: elem, value: elem }
     })
 }
 
@@ -469,9 +469,9 @@ const getGemDescription = (GEMType: FileType | ExperimentType, enumClass: 'FileT
 }
 
 /**
- * Generates a file's rows description
- * @param fileType File type to analyse
- * @returns file's rows description
+ * Generates a file's rows description.
+ * @param fileType File type to analyze.
+ * @returns File's rows description.
  */
 const getFileRowDescriptionInPlural = (fileType: FileType): string => {
     let description: string

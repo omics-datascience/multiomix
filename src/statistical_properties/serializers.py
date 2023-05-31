@@ -1,6 +1,9 @@
 from rest_framework import serializers
+from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
+from feature_selection.fs_algorithms import FitnessFunction
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
-    BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers
+    BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
+    StatisticalValidation, MoleculeWithCoefficient, SampleAndCluster
 
 
 class NormalityTestSerializer(serializers.ModelSerializer):
@@ -66,3 +69,92 @@ class SourceDataStatisticalPropertiesSerializer(serializers.ModelSerializer):
         data['gem_outliers'] = SourceDataOutliersSerializer(instance.gem_outliers, read_only=True, many=True).data
 
         return data
+
+
+class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
+    """StatisticalValidationSourceResult serializer"""
+    source = ExperimentSourceSerializer()
+
+    class Meta:
+        model = StatisticalValidationSourceResult
+        fields = '__all__'
+
+
+class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer with few fields"""
+    fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
+    trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = StatisticalValidation
+        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function', 'trained_model']
+
+    @staticmethod
+    def get_fitness_function(ins: StatisticalValidation) -> FitnessFunction:
+        """Gets the type of model used for training/testing (SVM/RF/Clustering)."""
+        return ins.trained_model.fitness_function
+
+
+class StatisticalValidationSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer with only the metrics."""
+
+    class Meta:
+        model = StatisticalValidation
+        fields = [
+            'id',
+            'name',
+            'description',
+            'state',
+            'created',
+            'mean_squared_error',
+            'c_index',
+            'cox_c_index',
+            'cox_log_likelihood',
+            'r2_score'
+        ]
+
+class StatisticalValidationCompleteSerializer(serializers.ModelSerializer):
+    """StatisticalValidation serializer with all the sources. TODO: check if used"""
+    clinical_source = ExperimentClinicalSourceSerializer()
+
+    # Sources
+    mrna_source_result = StatisticalValidationSourceResultSerializer()
+    mirna_source_result = StatisticalValidationSourceResultSerializer()
+    cna_source_result = StatisticalValidationSourceResultSerializer()
+    methylation_source_result = StatisticalValidationSourceResultSerializer()
+
+    class Meta:
+        model = StatisticalValidation
+        fields = [
+            'id',
+            'name',
+            'description',
+            'state',
+            'created',
+            'mean_squared_error',
+            'c_index',
+            'cox_c_index',
+            'cox_log_likelihood',
+            'r2_score',
+            'clinical_source',
+            'mrna_source_result',
+            'mirna_source_result',
+            'cna_source_result',
+            'methylation_source_result'
+        ]
+
+
+class MoleculeWithCoefficientSerializer(serializers.ModelSerializer):
+    """MoleculeWithCoefficient serializer."""
+
+    class Meta:
+        model = MoleculeWithCoefficient
+        exclude = ['type', 'statistical_validation']
+
+
+class SampleAndClusterSerializer(serializers.ModelSerializer):
+    """SampleAndCluster serializer."""
+
+    class Meta:
+        model = SampleAndCluster
+        exclude = ['id']

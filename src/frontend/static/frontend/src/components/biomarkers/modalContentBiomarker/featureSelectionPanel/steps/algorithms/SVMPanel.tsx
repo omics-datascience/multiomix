@@ -1,11 +1,12 @@
 import React from 'react'
-import { Button, Container, Select } from 'semantic-ui-react'
-import { FitnessFunctionSvm, SVMTask, SVMKernel } from '../../../../types'
+import { Select } from 'semantic-ui-react'
+import { SVMParameters } from '../../../../types'
+import { SVMKernelOptions } from '../../../../utils'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
-    parameters: FitnessFunctionSvm,
-    handleChangeSvmOption: (key: string, value: number) => void,
+    parameters: SVMParameters,
+    handleChangeSVMOption: (key: string, value: number) => void,
 }
 
 /**
@@ -16,41 +17,39 @@ interface SVMPanelProps {
 export const SVMPanel = (props: SVMPanelProps) => {
     const {
         parameters: svm,
-        handleChangeSvmOption
+        handleChangeSVMOption
     } = props
     return (
         <>
-            <Container className='biomarkers--side--bar--box'>
+            {/* TODO: uncomment when implemented StatisticalValidations for a ranking task. */}
+            {/* <Container className='biomarkers--side--bar--box'>
                 <Button.Group
                     compact
                     name="moleculesTypeOfSelection"
                     className='biomarkers--side--bar--buttons-group'>
                     <Button
-                        onClick={() => handleChangeSvmOption('task', SVMTask.RANKING)}
+                        onClick={() => handleChangeSVMOption('task', SVMTask.RANKING)}
                         active={svm.task === SVMTask.RANKING}
                     >
                         Ranking
                     </Button>
 
                     <Button
-                        onClick={() => handleChangeSvmOption('task', SVMTask.REGRESSION)}
+                        onClick={() => handleChangeSVMOption('task', SVMTask.REGRESSION)}
                         active={svm.task === SVMTask.REGRESSION}
                     >
                         Regression
                     </Button>
                 </Button.Group>
-            </Container>
+            </Container > */}
 
             <Select
+                selectOnBlur={false}
                 placeholder='Kernel'
                 name='moleculeSelected'
-                options={[
-                    { key: SVMKernel.LINEAR, text: 'Linear', value: SVMKernel.LINEAR },
-                    { key: SVMKernel.POLYNOMIAL, text: 'Polynomial', value: SVMKernel.POLYNOMIAL },
-                    { key: SVMKernel.RBF, text: 'RBF', value: SVMKernel.RBF }
-                ]}
+                options={SVMKernelOptions}
                 value={svm.kernel}
-                onChange={(_, { value }) => handleChangeSvmOption('kernel', value as number)}
+                onChange={(_, { value }) => handleChangeSVMOption('kernel', value as number)}
             />
         </>
     )

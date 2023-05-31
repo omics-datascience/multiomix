@@ -53,7 +53,7 @@ def run_ggca(
 
 class PipelineManager(object):
     """
-    Process experiments in a Thread Pool as explained at https://docs.python.org/3.7/library/concurrent.futures.html
+    Process experiments in a Thread Pool as explained at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     def get_valid_data_from_sources(
         self,
@@ -136,9 +136,9 @@ class PipelineManager(object):
 
             # IMPORTANT: clinical data is transposed so row are samples, and columns attributes
             # Gets values for Gene/GEM/Clinical common samples
-            clinical_values: np.ndarray = clinical_source.get_specific_samples_and_attribute(
+            clinical_values: np.ndarray = clinical_source.get_specific_samples_and_attributes(
                 clinical_samples_common,
-                clinical_attribute
+                [clinical_attribute]
             )
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'

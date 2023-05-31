@@ -61,7 +61,8 @@
         "jsdoc/require-returns": 1,
         // Hooks plugin config
         "react-hooks/rules-of-hooks": "error",
-        "react-hooks/exhaustive-deps": 0
+        "react-hooks/exhaustive-deps": 0,
+        "no-use-before-define": 0
     },
     "settings": {
         "react": {

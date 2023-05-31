@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
@@ -53,6 +52,7 @@ INSTALLED_APPS = [
     'webpack_loader',
     'django_email_verification',
     'genes',
+    'inferences',
     'chunked_upload'
 ]
 
@@ -262,6 +262,14 @@ EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 
+
+EMAIL_SERVER = 'smtpout.secureserver.net'
+EMAIL_PORT: int = 587
+EMAIL_ADDRESS = 'info@omicsdatascience.org'
+EMAIL_FROM_ADDRESS = 'info@omicsdatascience.org'
+EMAIL_PASSWORD = 'P.SUz<8Wpm9>Y]Z'
+
+
 # Modulector settings
 MODULECTOR_SETTINGS = {
     'host': os.getenv('MODULECTOR_HOST', '127.0.0.1'),
@@ -281,7 +289,10 @@ NON_DATA_VALUE: str = 'NA'
 # Feature Selection settings
 
 # Number of cores used to run the survival RF model
-N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', -1))
+N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', 1))
 
 # Number of cores used to compute CrossValidation
-N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', -1))
+N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
+
+# Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
+COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 1))

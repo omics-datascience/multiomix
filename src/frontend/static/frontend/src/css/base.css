@@ -1,8 +1,3 @@
-/* All the main components must have 100% browser height */
-body > div {
-    height: 100% !important;
-    z-index: 10000 !important;
-}
 .wrapper {
   min-height: 100%;
 }
@@ -23,6 +18,10 @@ body > div {
     margin-left: 30% !important;
 }
 
+.margin-top-0 {
+    margin-top: 0 !important;
+}
+
 .margin-top-2 {
     margin-top: 2% !important;
 }
@@ -33,6 +32,10 @@ body > div {
 
 .margin-top-10 {
     margin-top: 10% !important;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0 !important;
 }
 
 .margin-bottom-2 {
@@ -109,13 +112,12 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     padding-right: 10% !important;
 }
 
-.box-shadow:hover {
-    box-shadow: 0 2px 8px #bbb !important;
+.padding-top-0 {
+    padding-top: 0 !important;
 }
 
-/* Fix modals floating to the left of the screen */
-.ui.fullscreen.modal.transition.visible.active {
-    right: 0;
+.box-shadow:hover {
+    box-shadow: 0 2px 8px #bbb !important;
 }
 
 /* Removes the border that adds Semantic UI to the buttons */
@@ -142,11 +144,6 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     font-size: .92857143em !important;
     font-weight: 700 !important;
     text-transform: none !important;
-}
-
-/* A little separator between the main navbar and the page content */
-#main-navbar {
-    margin-bottom: 0;
 }
 
 .table-bordered {
@@ -222,4 +219,20 @@ h2.menu, .menu.transition.visible {
 .pull-down {
     position: absolute;
     bottom: 0;
+}
+
+/* Prevents the clinical source Popup to be over UserFiles modal */
+#select-gem-file-type {
+    z-index: 1000;
+}
+
+/* Prevents the Popup to be over some modals */
+#clinical-source-popup,
+.ui.dimmer {
+    z-index: 2000 !important;
+}
+
+/* Prevents modals to be over the popups */
+.popup {
+    z-index: 2500 !important;
 }

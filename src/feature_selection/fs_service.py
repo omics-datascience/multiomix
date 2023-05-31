@@ -3,17 +3,16 @@ import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, Union, List
+from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.utils import replace_cgds_suffix
+from common.utils import get_samples_intersection
 from user_files.models_choices import FileType
-from .exceptions import FSExperimentStopped, NoSamplesInCommon, FSExperimentFailed
-from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential
-from .fs_models import get_rf_model, get_survival_svm_model, get_clustering_model
-from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, SVMTask, TrainedModel, \
-    ClusteringParameters, ClusteringScoringMethod
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
+from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
+    ClusteringParameters
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -21,9 +20,7 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
-from .utils import get_svm_kernel
-from django.core.files.base import ContentFile
-import pickle
+from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -32,7 +29,7 @@ COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 class FSService(object):
     """
     Process Feature Selection experiments in a Thread Pool as explained
-    at https://docs.python.org/3.7/library/concurrent.futures.html
+    at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     executor: ThreadPoolExecutor = None
     use_transaction: bool
@@ -49,7 +46,8 @@ class FSService(object):
 
     def __commit_or_rollback(self, is_commit: bool, experiment: FSExperiment):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
         @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
         """
         if self.use_transaction:
@@ -77,14 +75,7 @@ class FSService(object):
             if source is None:
                 continue
 
-            if last_intersection is not None:
-                cur_intersection = np.intersect1d(
-                    last_intersection,
-                    source.get_samples()
-                )
-            else:
-                cur_intersection = source.get_samples()
-            last_intersection = cast(np.ndarray, cur_intersection)
+            last_intersection = get_samples_intersection(source, last_intersection)
 
         return cast(np.ndarray, last_intersection)
 
@@ -102,9 +93,6 @@ class FSService(object):
         @param samples_in_common: Samples in common to extract from the datasets.
         @return: Both DataFrames paths.
         """
-        # Removes CGDS suffix to prevent not found indexes
-        clean_samples_in_common = replace_cgds_suffix(samples_in_common)
-
         # Generates clinical DataFrame
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             clinical_temp_file_path = temp_file.name
@@ -116,7 +104,7 @@ class FSService(object):
             survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
 
-            clinical_df = clinical_df.loc[clean_samples_in_common]
+            clinical_df = clinical_df.loc[samples_in_common]
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
@@ -171,40 +159,48 @@ class FSService(object):
             identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
 
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
-                             clinical_temp_file_path: str, stop_event: Event):
+                             clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
+                             model_parameters: Dict[str, Any],
+                             stop_event: Event):
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
         @param experiment: FSExperiment instance.
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param model_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop signal.
         """
-        # Gets molecules and clinica DataFrames
+        # Creates TrainedModel instance
+        trained_model: TrainedModel = TrainedModel.objects.create(
+            name=f'From FS for biomarker {experiment.created_biomarker.name}',
+            biomarker=experiment.created_biomarker,
+            fitness_function=fit_fun_enum,
+            state=BiomarkerState.IN_PROCESS,
+            fs_experiment=experiment
+        )
+
+        # Gets model instance and stores its parameters
+        classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
+            trained_model, model_parameters)
+
+        # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+
+        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
+        if is_regression:
+            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
+            clinical_df = clinical_df[clinical_df[time_column] > 0]
+
+        # Keeps only the samples in common
+        valid_samples = clinical_df.index
+        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
-
-        # Gets model and fitness function
-        is_clustering = False
-        clustering_scoring_method: Optional[ClusteringScoringMethod] = None
-        if experiment.fitness_function == FitnessFunction.SVM:
-            svm_parameters: SVMParameters = experiment.svm_parameters
-            classifier = get_survival_svm_model(
-                is_svm_regression=svm_parameters.task == SVMTask.REGRESSION,
-                svm_kernel=get_svm_kernel(svm_parameters.kernel),
-                svm_optimizer='avltree'  # In practice, this optimizer is usually the fastest
-            )
-        elif experiment.fitness_function == FitnessFunction.RF:
-            classifier = get_rf_model()
-        else:
-            is_clustering = True
-            clustering_parameters: ClusteringParameters = experiment.clustering_parameters
-            clustering_scoring_method = clustering_parameters.scoring_method
-            classifier = get_clustering_model(clustering_parameters.algorithm, number_of_clusters=2 )  # TODO: parametrize number of clusters
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -220,30 +216,41 @@ class FSService(object):
                 is_clustering=is_clustering,
                 clustering_score_method=clustering_scoring_method
             )
+        elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
+            best_features, best_model, best_score = select_top_cox_regression(
+                molecules_df,
+                clinical_data,
+                filter_zero_coeff=True, # Keeps only != 0 coefficient
+                top_n=None  # TODO: parametrize from frontend
+            )
         else:
             # TODO: implement PSO and GA
             raise Exception('Algorithm not implemented')
 
         if best_features is not None:
             # Stores molecules in the target biomarker, the best model and its fitness value
-            created_biomarker = experiment.created_biomarker
-            self.__save_molecule_identifiers(created_biomarker, best_features)
+            self.__save_molecule_identifiers(experiment.created_biomarker, best_features)
 
-            # Stores the trained model
-            trained_content = pickle.dumps(best_model)
-            TrainedModel.objects.create(
-                biomarker=created_biomarker,
-                fs_experiment=experiment,
-                model_dump=ContentFile(trained_content),
-                best_fitness_value=best_score,
-            )
+            trained_model.state = BiomarkerState.COMPLETED
 
-    def __prepare_and_compute_experiment(self, experiment: FSExperiment, stop_event: Event) -> Tuple[str, str]:
+            # Stores the trained model and best score
+            if best_model is not None and best_score is not None:
+                save_model_dump_and_best_score(trained_model, best_model, best_score)
+        else:
+            trained_model.state = BiomarkerState.NO_FEATURES_FOUND
+
+        trained_model.save(update_fields=['state'])
+
+    def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                                         fitness_function_parameters: Dict[str, Any],
+                                         stop_event: Event) -> Tuple[str, str]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
-        TODO: use stop_event
         @param experiment: FSExperiment instance.
-        @param stop_event: Stop signal
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param stop_event: Stop signal.
+        @return Trained model instance if everything was ok. None if no best features were found.
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(experiment)
@@ -254,15 +261,20 @@ class FSService(object):
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
                                                                                                       samples_in_common)
 
-        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path, stop_event)
+        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
+                                                  fit_fun_enum, fitness_function_parameters, stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
 
-    def eval_feature_selection_experiment(self, experiment: FSExperiment, stop_event: Event) -> None:
+    def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                                          fitness_function_parameters: Dict[str, Any],
+                                          stop_event: Event):
         """
         Computes a Feature Selection experiment.
         @param experiment: FSExperiment to be processed.
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop event to cancel the experiment
         """
         # Resulting Biomarker instance from the FS experiment.
@@ -272,7 +284,7 @@ class FSService(object):
         molecules_temp_file_path: Optional[str] = None
         clinical_temp_file_path: Optional[str] = None
         try:
-            logging.warning(f'ID FS EXPERIMENT -> {biomarker.pk}')
+            logging.warning(f'ID FSExperiment -> {biomarker.pk}')
             # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
             # with exceptions thrown in subprocesses
             if self.use_transaction:
@@ -281,14 +293,15 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(experiment,
-                                                                                                      stop_event)
+            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(
+                experiment, fit_fun_enum, fitness_function_parameters, stop_event
+            )
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
 
             # If user cancel the experiment, discard changes
             if stop_event.is_set():
-                raise FSExperimentStopped
+                raise ExperimentStopped
             else:
                 self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
@@ -299,7 +312,7 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
             biomarker.state = BiomarkerState.NO_SAMPLES_IN_COMMON
-        except FSExperimentFailed:
+        except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error(f'FSExperiment {experiment.pk} has failed. Check logs for more info')
             biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
@@ -307,7 +320,7 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('MongoDB connection timeout!')
             biomarker.state = BiomarkerState.WAITING_FOR_QUEUE
-        except FSExperimentStopped:
+        except ExperimentStopped:
             # If user cancel the experiment, discard changes
             logging.warning(f'FSExperiment {experiment.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
@@ -330,7 +343,7 @@ class FSService(object):
         experiment.save()
 
         # Removes key
-        self.__removes_experiment_future(biomarker.pk)
+        self.__removes_experiment_future(experiment.pk)
 
         close_db_connection()
 
@@ -348,10 +361,13 @@ class FSService(object):
         experiment.created_biomarker = new_biomarker
         experiment.save()
 
-    def add_experiment(self, experiment: FSExperiment):
+    def add_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                       fitness_function_parameters: Dict[str, Any]):
         """
         Adds a Feature Selection experiment to the ThreadPool to be processed
         @param experiment: FSExperiment to be processed
+        @param fit_fun_enum: Selected fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
         """
         experiment_event = Event()
 
@@ -359,7 +375,8 @@ class FSService(object):
         self.__create_target_biomarker(experiment)
 
         # Submits
-        experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, experiment_event)
+        experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, fit_fun_enum,
+                                                 fitness_function_parameters, experiment_event)
         self.fs_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
 
     def stop_experiment(self, experiment: FSExperiment):
@@ -386,9 +403,10 @@ class FSService(object):
         """
         Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
         if the TaskQueue is being created It couldn't be processing experiments. Some experiments
-        could be in that state due to unexpected errors in server
+        could be in that state due to unexpected errors in server.
+        TODO: call this in the apps.py
         """
-        logging.warning('Checking pending experiments')
+        logging.warning('Checking pending Feature Selection experiments')
         # Gets the experiment by submit date (ASC)
         experiments: QuerySet = FSExperiment.objects.filter(
             Q(state=BiomarkerState.WAITING_FOR_QUEUE)
@@ -398,13 +416,47 @@ class FSService(object):
         for experiment in experiments:
             # If the experiment has already reached a limit of attempts, it's marked as error
             if experiment.attempt == 3:
+                logging.error(f'FSExperiment with PK: {experiment.pk} has reached attempts limit.')
                 experiment.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
                 experiment.save()
+            elif not hasattr(experiment, 'best_model'):
+                logging.error(f'FSExperiment with PK: {experiment.pk} has no trained model to recover.')
+                experiment.state = BiomarkerState.FINISHED_WITH_ERROR
+                experiment.save()
             else:
-                experiment.attempt += 1
+                experiment.attempt += 1  # TODO: add this field to the model
                 experiment.save()
                 logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
-                self.add_experiment(experiment)
+                trained_model: TrainedModel = experiment.trained_model
+                fitness_function_enum = trained_model.fitness_function
+
+                fitness_function_parameters = None
+                if hasattr(trained_model, 'svm_parameters'):
+                    svm_parameters: SVMParameters = trained_model.svm_parameters
+                    fitness_function_parameters = {
+                        'svmParameters': {
+                            'kernel': svm_parameters.kernel,
+                            'task': svm_parameters.task
+                        }
+                    }
+                elif hasattr(trained_model, 'clustering_parameters'):
+                    clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
+                    fitness_function_parameters = {
+                        'clusteringParameters': {
+                            'algorithm': clustering_parameters.algorithm,
+                            'metric': clustering_parameters.metric,
+                            'scoringMethod': clustering_parameters.scoring_method,
+                        }
+                    }
+                else:
+                    # TODO: implement the rest of types of parameters
+                    logging.error(f'Invalid fitness function parameters for FSExperiment with PK: {experiment.pk}')
+
+                if fitness_function_parameters is not None:
+                    self.add_experiment(experiment, fitness_function_enum, fitness_function_parameters)
+                else:
+                    experiment.state = BiomarkerState.FINISHED_WITH_ERROR
+                    experiment.save()
 
         close_db_connection()
 

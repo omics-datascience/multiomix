@@ -11,7 +11,8 @@ import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoData
 declare const currentUserId: string
 
 /**
- * Type of sorting settings
+ * Type of sorting settings.
+ * TODO: make this generics with keyof to prevent issues with unknown fields.
  */
 type DefaultSortProp = {
     sortField: string,
@@ -29,9 +30,13 @@ type PaginationCustomFilter = {
     /** Default value for Select */
     defaultValue: any,
     /** Placeholder for select */
-    placeholder?: string
-    /** Form.Select options */
-    options: DropdownItemProps[],
+    placeholder?: string,
+    /** Indicates if 0 as filter value is accepted */
+    allowZero?: boolean,
+    /** `clearable` prop of the `Form.Select`. `true` by default. */
+    clearable?: boolean,
+    /** Form.Select options. If undefined, get uniques values from the data using the field `keyForServer`. */
+    options?: DropdownItemProps[],
     /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
     disabledFunction?: (actualValues: {[key: string]: any}) => boolean
 }
@@ -56,6 +61,8 @@ interface PaginatedTableProps<T> {
     customFilters?: PaginationCustomFilter[],
     /** Field and order if needed to order by default by any field */
     defaultSortProp?: DefaultSortProp,
+    /** Default page size props. If not specified, uses `10` by default. */
+    defaultPageSize?: number,
     /** To show or not an input to fires a search against the backend */
     showSearchInput?: boolean,
     /** Search input's label */
@@ -91,8 +98,8 @@ interface PaginatedTableState<T> {
  * @returns Component
  */
 class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, PaginatedTableState<T>> {
-    private filterTimeout: number | undefined;
-    websocketClient: WebsocketClientCustom;
+    private filterTimeout: number | undefined
+    websocketClient: WebsocketClientCustom
 
     constructor (props: PaginatedTableProps<T>) {
         super(props)
@@ -102,16 +109,23 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Generates TableControl
         const generalTableControl = getDefaultGeneralTableControl()
-        if (props.defaultSortProp) {
+        if (props.defaultSortProp !== undefined) {
             generalTableControl.sortField = props.defaultSortProp.sortField
             generalTableControl.sortOrderAscendant = props.defaultSortProp.sortOrderAscendant
         }
 
+        if (props.defaultPageSize !== undefined) {
+            generalTableControl.pageSize = props.defaultPageSize
+        }
+
         // Generates custom filters
-        if (this.props.customFilters) {
+        if (props.customFilters) {
             generalTableControl.filters = {}
-            this.props.customFilters.forEach((filter) => {
-                generalTableControl.filters[filter.keyForServer] = filter.defaultValue
+            props.customFilters.forEach((filter) => {
+                generalTableControl.filters[filter.keyForServer] = {
+                    allowZero: filter.allowZero ?? false,
+                    value: filter.defaultValue
+                }
             })
         }
 
@@ -130,6 +144,16 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     }
 
     /**
+     * When changes the 'queryParams' prop refresh the table.
+     * @param prevProps Previous props.
+     */
+    componentDidUpdate (prevProps: PaginatedTableProps<T>) {
+        if (prevProps.queryParams !== this.props.queryParams) {
+            this.getData()
+        }
+    }
+
+    /**
      * Handles the table's control filters, select, etc changes
      * @param name Name of the state field to modify
      * @param value Value to set to the state field
@@ -142,7 +166,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         if (!isFilter) {
             tableControl[name] = value
         } else {
-            tableControl.filters[name] = value
+            tableControl.filters[name].value = value
         }
 
         // If pagination reset is required...
@@ -179,15 +203,16 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Appends filters to query
         if (tableControl.filters) {
-            Object.entries(tableControl.filters).forEach(([key, value]) => {
-                if (value) {
+            Object.entries(tableControl.filters).forEach(([key, { allowZero, value }]) => {
+                if ((!allowZero && value) ||
+                    ((allowZero && value !== null && value !== undefined && value !== ''))) {
                     searchParams[key] = value
                 }
             })
         }
 
         this.setState({ gettingData: true }, () => {
-            ky.get(this.props.urlToRetrieveData, { searchParams: searchParams, timeout: 60000 }).then((response) => {
+            ky.get(this.props.urlToRetrieveData, { searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
                     tableControl.totalRowCount = jsonResponse.count
 
@@ -231,20 +256,32 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     generateCustomFiltersForm (): JSX.Element[] {
         const customFiltersArray = this.props.customFilters ?? []
-        return customFiltersArray.map((filter) => (
-            <Form.Select
-                key={filter.keyForServer}
-                label={filter.label}
-                placeholder={filter.placeholder}
-                options={filter.options}
-                name={filter.keyForServer}
-                value={this.state.tableControl.filters[filter.keyForServer]}
-                disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
-                onChange={(_, { value }) => {
-                    this.handleTableControlChanges(filter.keyForServer, value, true, true)
-                }}
-            />
-        ))
+        return customFiltersArray.map((filter) => {
+            // If 'options' is undefined, gets the unique values from data
+            let options: DropdownItemProps[]
+            if (filter.options !== undefined) {
+                options = filter.options
+            } else {
+                const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
+                options = uniqueValues.map((value) => ({ key: value, text: value, value }))
+            }
+            return (
+                <Form.Select
+                    key={filter.keyForServer}
+                    label={filter.label}
+                    selectOnBlur={false}
+                    clearable={filter.clearable ?? true}
+                    placeholder={filter.placeholder}
+                    options={options}
+                    name={filter.keyForServer}
+                    value={this.state.tableControl.filters[filter.keyForServer].value}
+                    disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
+                    onChange={(_, { value }) => {
+                        this.handleTableControlChanges(filter.keyForServer, value, true, true)
+                    }}
+                />
+            )
+        })
     }
 
     /**
@@ -270,7 +307,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Applies map function
         const tableBody = this.state.elements.length > 0
-            ? this.state.elements.map(this.props.mapFunction) : <NoDataRow colspan={this.props.headers.length} />
+            ? this.state.elements.map(this.props.mapFunction)
+            : <NoDataRow colspan={this.props.headers.length} />
 
         // Computes some extra parameters
         const totalPages = Math.max(1, Math.ceil(tableControl.totalRowCount as number / tableControl.pageSize))
@@ -308,7 +346,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                         width={3}
                                         icon='search' iconPosition='left'
                                         label={this.props.searchLabel ?? 'Name/Description'}
-                                        placeholder={this.props.searchPlaceholder ?? 'Search by name/description'}
+                                        title={this.props.searchPlaceholder}
+                                        placeholder={this.props.searchPlaceholder}
                                         name='textFilter'
                                         value={tableControl.textFilter}
                                         onChange={(_, { name, value }) => {
@@ -322,6 +361,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {/* Page size */}
                                 <Form.Select
                                     label='Entries'
+                                    selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'
                                     value={tableControl.pageSize}

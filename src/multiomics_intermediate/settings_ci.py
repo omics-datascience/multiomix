@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
@@ -47,12 +46,14 @@ INSTALLED_APPS = [
     'tags',
     'user_files',
     'biomarkers',
+    'feature_selection',
     'statistical_properties',
     'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
     'genes',
-    'chunked_upload',
+    'inferences',
+    'chunked_upload'
 ]
 
 MIDDLEWARE = [

@@ -2,10 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
+from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
-from biomarkers.serializers import BiomarkerSerializer
+from biomarkers.serializers import BiomarkerSerializer, TrainedModelSerializer, MoleculeIdentifierSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
 from django.db.models import Q, Count
@@ -113,6 +114,12 @@ class MiRNACodes(APIView):
             is_paginated=False,
             method='post'
         )
+
+        # Standardizes the response to the same structure as mRNA and Methylation services (in case of null values
+        # this returns an empty array). This is implemented this way because the miRNA service returns a unique string
+        # or null instead of an array
+        data = {k: [v] if v is not None else [] for k, v in data.items()}
+
         return generate_json_response_or_404(data)
 
 
@@ -140,3 +147,37 @@ class MethylationSites(APIView):
             method='post'
         )
         return generate_json_response_or_404(data)
+
+
+class TrainedModelsOfBiomarker(generics.ListAPIView):
+    """Get all the trained models for a specific Biomarker."""
+
+    def get_queryset(self):
+        biomarker_pk = self.request.GET.get('biomarker_pk')
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        return biomarker.trained_models.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TrainedModelSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['state', 'fitness_function']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'description', 'created', 'fitness_function', 'best_fitness_value']
+
+
+class BiomarkerMolecules(generics.ListAPIView):
+    """Get all the molecules for a specific Biomarker."""
+
+    def get_queryset(self):
+        biomarker_pk = self.request.GET.get('biomarker_pk')
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        molecule_type = self.request.GET.get('type')
+        return biomarker.all_molecules(molecule_type=molecule_type)
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MoleculeIdentifierSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['identifier']
+    ordering_fields = ['identifier']

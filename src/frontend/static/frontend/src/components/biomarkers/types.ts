@@ -1,5 +1,6 @@
 import { DjangoTag } from '../../utils/django_interfaces'
-import { Nullable, Source } from '../../utils/interfaces'
+import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
+import { KaplanMeierData } from '../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
 /** Possible types of a Biomarker. */
 enum BiomarkerType {
@@ -28,13 +29,21 @@ enum BiomarkerState {
     NO_SAMPLES_IN_COMMON = 5,
     STOPPING = 6,
     STOPPED = 7,
-    REACHED_ATTEMPTS_LIMIT = 8
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9
 
 }
 
+/** Type of molecules input in the Biomarker creation form. */
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
     AREA = 'area',
+}
+
+/** Structure to create/update a molecule in a Biomarker. */
+type SaveMoleculeStructure = {
+    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
+    identifier: string
 }
 
 // TODO: attributes 'number_of_...', 'state' and 'origin' only are used in API GET service, not in the form, define and use
@@ -50,6 +59,7 @@ interface Biomarker {
     number_of_mirnas: number,
     number_of_cnas: number,
     number_of_methylations: number,
+    has_fs_experiment: boolean,
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
@@ -80,6 +90,13 @@ type MoleculesSymbolFinder = {
     data: MoleculeSymbol[]
 }
 
+interface ValidationSection {
+    haveAmbiguous: boolean,
+    haveInvalid: boolean,
+    isLoading: boolean,
+    checkBox: boolean,
+}
+
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     id: Nullable<number>,
@@ -93,23 +110,20 @@ interface FormBiomarkerData {
     moleculesSymbolsFinder: MoleculesSymbolFinder,
 }
 
-interface ValidationSection {
-    haveAmbiguous: boolean,
-    haveInvalid: boolean,
-    isLoading: boolean,
-    checkBox: boolean,
-}
-
 interface MoleculesMultipleSelection {
     key: number;
     text: string;
     value: number;
 }
 
-/** Structure to create/update a molecule in a Biomarker. */
-type SaveMoleculeStructure = {
-    id?: number, // If undefined it means it's a new molecule. If present, then the molecule instance is updated
-    identifier: string
+/**
+ * Generic struct for the MRNAIdentifier, MiRNAIdentifier, CNAIdentifier,
+ * and MethylationIdentifier Django models.
+ */
+type BiomarkerMolecule = {
+    id: number,
+    identifier: string,
+    type: MoleculeType
 }
 
 /** Structure to make a request and create/update a Biomarker. */
@@ -122,21 +136,24 @@ interface SaveBiomarkerStructure {
     cnas: SaveMoleculeStructure[],
 }
 
-type MoleculesSection = {
-    [BiomarkerType.CNA]: MoleculeSectionItem,
-    [BiomarkerType.MIRNA]: MoleculeSectionItem,
-    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
-    [BiomarkerType.MRNA]: MoleculeSectionItem,
+/** Represents a section in the form to create a Biomarker. */
+interface MoleculesSectionData {
+    isValid: boolean,
+    value: string | string[],
 }
 
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
 interface MoleculeSectionItem {
     isLoading: boolean,
     data: MoleculesSectionData[]
 }
 
-interface MoleculesSectionData {
-    isValid: boolean,
-    value: string | string[],
+/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
+type MoleculesSection = {
+    [BiomarkerType.CNA]: MoleculeSectionItem,
+    [BiomarkerType.MIRNA]: MoleculeSectionItem,
+    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
+    [BiomarkerType.MRNA]: MoleculeSectionItem,
 }
 
 /** Available Feature Selection algorithms. */
@@ -147,7 +164,7 @@ enum FeatureSelectionAlgorithm {
     PSO = 4
 }
 
-/** Available fitness functions. */
+/** Available fitness functions. TODO: rename to ModelUsed */
 enum FitnessFunction {
     CLUSTERING = 1,
     SVM = 2,
@@ -185,23 +202,53 @@ enum SVMTask {
     REGRESSION = 2
 }
 
-/** Settings for the Clustering fitness function. */
-interface FitnessFunctionClustering{
-    algorithm: ClusteringAlgorithm,
-    scoringMethod: ClusteringScoringMethod,
-    metric: ClusteringMetric
+/** Common fields in a model. */
+interface ModelParameters {
+    randomState: Nullable<number>
 }
 
-/** Settings for the SVM fitness function. */
-interface FitnessFunctionSvm{
+/** Parameters for a Clustering model. */
+interface ClusteringParameters extends ModelParameters {
+    algorithm: ClusteringAlgorithm,
+    /** Metric to optimize during clustering. */
+    metric: ClusteringMetric,
+    /** Scoring method to use in case of metric === Cox-Regression. */
+    scoringMethod: ClusteringScoringMethod,
+    /** Number of clusters. */
+    nClusters: number,
+    /**
+     * If true, the algorithm will look for the optimal number of clusters during a new TrainedModel request.
+     * (Used only in the TrainedModel panel)
+     */
+    lookForOptimalNClusters: boolean,
+}
+
+/** Parameters for a Survival SVM model. */
+interface SVMParameters extends ModelParameters {
     kernel: SVMKernel
-    task: SVMTask
+    task: SVMTask,
+    maxIterations: number,
+}
+
+/** Parameters for a Survival Random Forest model. */
+interface RFParameters extends ModelParameters {
+    /** Number of trees in the RF. */
+    nEstimators: number,
+    /** The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure or
+    until all leaves contain less than min_samples_split samples. */
+    maxDepth: Nullable<number>,
+    /**
+     * If true, the algorithm will look for the optimal number of trees during a new TrainedModel request.
+     * (Used only in the TrainedModel panel)
+     */
+    lookForOptimalNEstimators: boolean,
 }
 
 /** All the different fitness functions' parameters. */
 interface FitnessFunctionParameters {
-    clusteringParameters: FitnessFunctionClustering,
-    svmParameters: FitnessFunctionSvm
+    clusteringParameters: ClusteringParameters,
+    svmParameters: SVMParameters,
+    rfParameters: RFParameters
 }
 
 /** Structure for the Feature Selection panel. */
@@ -229,13 +276,217 @@ interface FeatureSelectionPanelData {
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters
 }
+
+/** Available types of Sources for a Biomarker. */
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
+
+/** Available options for the Menu in the Biomarker details modal */
+enum ActiveBiomarkerDetailItemMenu {
+    MOLECULES,
+    FEATURE_SELECTION_SUMMARY,
+    MODELS,
+    STATISTICAL_VALIDATION,
+    INFERENCE
+}
+
+/** Available options for the Menu in the StatisticalValidation details modal */
+enum ActiveStatValidationsItemMenu {
+    BEST_FEATURES,
+    KAPLAN_MEIER,
+    HEATMAP
+}
+
+/** Available options for the Menu in the BiomarkerMolecules details modal */
+enum ActiveBiomarkerMoleculeItemMenu {
+    DETAILS,
+    PATHWAYS,
+    GENE_ONTOLOGY
+}
+
+/** Django TrainedModel model. */
+interface TrainedModel {
+    id: number,
+    name: string,
+    description: string,
+    state: BiomarkerState,
+    fitness_function: FitnessFunction,
+    created: string,
+    best_fitness_value: Nullable<number>
+}
+
+/**
+ * Represents a connection between a source and a statistical validation result. Useful to show a result for
+ * every type of molecule in a Biomarker.
+ */
+interface StatisticalValidationSourceResult {
+    id: number,
+    mean_squared_error: Nullable<number>,
+    c_index: Nullable<number>,
+    cox_c_index: Nullable<number>,
+    cox_log_likelihood: Nullable<number>,
+    r2_score: Nullable<number>,
+}
+
+/** A statistical validation of a Biomarker with few fields. */
+interface BasicStatisticalValidation {
+    id: number,
+    name: string,
+    state: BiomarkerState,
+    description: Nullable<string>,
+    created: string,
+}
+
+/** A statistical validation. Retrieved as data for the StatisticalValidationsTable. */
+interface StatisticalValidationForTable extends BasicStatisticalValidation {
+    fitness_function: FitnessFunction,
+    trained_model: Nullable<number>,
+}
+
+/** A statistical validation of a Biomarker. */
+interface StatisticalValidation extends BasicStatisticalValidation {
+    mean_squared_error: Nullable<number>,
+    c_index: Nullable<number>,
+    cox_c_index: Nullable<number>,
+    cox_log_likelihood: Nullable<number>,
+    r2_score: Nullable<number>,
+}
+
+/** A statistical validation of a Biomarker to submit to the backend. */
+interface StatisticalValidationForm extends StatisticalValidation {
+    clinical_source: Nullable<StatisticalValidationSourceResult>,
+    mrna_source_result: Nullable<StatisticalValidationSourceResult>,
+    mirna_source_result: Nullable<StatisticalValidationSourceResult>,
+    cna_source_result: Nullable<StatisticalValidationSourceResult>,
+    methylation_source_result: Nullable<StatisticalValidationSourceResult>,
+}
+
+/** Django InferenceExperiment model. */
+interface InferenceExperimentForTable {
+    id: number,
+    name: string,
+    state: BiomarkerState,
+    model: FitnessFunction,
+    description: Nullable<string>,
+    trained_model: Nullable<number>,
+    clinical_source_id: Nullable<number>
+    created: string
+}
+
+/** Django MoleculeWithCoefficient model. */
+interface MoleculeWithCoefficient {
+    id: number,
+    identifier: string,
+    coeff: number,
+    type: MoleculeType
+}
+
+/** Dict from the backend with all the molecules expressions for all the samples. */
+interface MoleculesExpressions {
+    /** Object with the molecule's name as key. The value is an object with the sample as key, and the expression as value. */
+    data: {[moleculeName: string]: {
+        [sampleName: string]: number // This number is the expression
+    }},
+    min: number,
+    max: number
+}
+
+/** Common struct for `SampleAndCluster` and `SampleAndTime`. */
+interface SampleLabel {
+    /** Sample identifier. */
+    sample: string,
+    /** Color to show in the samples table. */
+    color: Nullable<string>
+}
+
+/** The sample identifier, and the cluster where it belongs. */
+interface SampleAndCluster extends SampleLabel {
+    /** Cluster in which the sample was classified. */
+    cluster: string
+}
+
+/** The sample identifier, and the predicted hazard/survival time. */
+interface SampleAndTime extends SampleLabel {
+    /** Predicted hazard/survival time. */
+    prediction: number
+}
+
+/** Data to show in the StatisticalValidation KaplanMeier panel. */
+interface KaplanMeierResultData {
+    /** Clusters of the clustering algorithm with the corresponding survival function. */
+    groups: KaplanMeierData,
+    concordance_index: number,
+    log_likelihood: number
+}
+
+/** Data which is present in all the TrainedModels. */
+interface GeneralModelDetails {
+    best_fitness: number,
+    model: FitnessFunction
+    random_state: Nullable<number>
+}
+
+/** Some details of Clustering models. */
+interface ClusteringModelDetails extends GeneralModelDetails {
+    algorithm: ClusteringAlgorithm,
+    scoring_method: ClusteringScoringMethod,
+    n_clusters: number
+}
+
+/** Some details of Clustering models. */
+interface SVMModelDetails extends GeneralModelDetails {
+    task: SVMTask,
+    kernel: SVMKernel,
+}
+
+/** Some details of Clustering models. */
+interface RFModelDetails extends GeneralModelDetails {
+    n_estimators: number,
+    max_depth: Nullable<number>
+}
+
+/** Types of models details. */
+type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
+
+/** Django ClusterLabel model. */
+interface ClusterLabel {
+    id?: number,
+    label: string,
+    color: string,
+    cluster_id: number
+}
+
+/** Django ClusterLabelsSet model. */
+interface ClusterLabelsSet {
+    id?: number,
+    name: string,
+    description: string,
+    trained_model: number // PK of the TrainedModel
+    labels: ClusterLabel[]
+}
+
+/** Django ClusterLabel model. */
+interface PredictionRangeLabel {
+    id?: number,
+    label: string,
+    color: string,
+    min_value: number,
+    max_value: Nullable<number>
+}
+
+/** Django PredictionRangeLabelsSet model. */
+interface PredictionRangeLabelsSet {
+    id?: number,
+    name: string,
+    description: string,
+    trained_model: number // PK of the TrainedModel
+    labels: PredictionRangeLabel[]
+}
 
 export {
     SVMKernel,
     SVMTask,
-    FitnessFunctionSvm,
-    FitnessFunctionClustering,
+    SVMParameters,
+    ClusteringParameters,
     FitnessFunctionParameters,
     FitnessFunction,
     FeatureSelectionAlgorithm,
@@ -245,6 +496,7 @@ export {
     FeatureSelectionPanelData,
     BiomarkerOrigin,
     BiomarkerState,
+    BiomarkerMolecule,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,
     Biomarker,
@@ -257,5 +509,28 @@ export {
     ConfirmModal,
     MoleculeSymbol,
     MoleculesSymbolFinder,
-    ClusteringScoringMethod
+    ClusteringScoringMethod,
+    ActiveBiomarkerDetailItemMenu,
+    ActiveStatValidationsItemMenu,
+    ActiveBiomarkerMoleculeItemMenu,
+    TrainedModel,
+    BasicStatisticalValidation,
+    StatisticalValidationForTable,
+    StatisticalValidation,
+    StatisticalValidationForm,
+    InferenceExperimentForTable,
+    MoleculeWithCoefficient,
+    MoleculesExpressions,
+    KaplanMeierResultData,
+    ClusteringModelDetails,
+    SVMModelDetails,
+    RFModelDetails,
+    ModelDetails,
+    SampleAndCluster,
+    SampleAndTime,
+    RFParameters,
+    ClusterLabel,
+    ClusterLabelsSet,
+    PredictionRangeLabel,
+    PredictionRangeLabelsSet
 }
