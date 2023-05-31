@@ -136,6 +136,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                 <div>
                     <Select id='select-gem-file-type'
                         button
+                        selectOnBlur={false}
                         fluid
                         floating
                         className="margin-bottom-2"

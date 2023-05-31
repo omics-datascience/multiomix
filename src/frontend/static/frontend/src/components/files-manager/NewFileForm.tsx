@@ -164,6 +164,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             {/* File type */}
                             <Form.Select
                                 fluid
+                                selectOnBlur={false}
                                 options={props.fileTypeOptions}
                                 name='newFileType'
                                 value={props.newFile.newFileType}
@@ -178,6 +179,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             <Grid.Row>
                                 <Form.Select
                                     fluid
+                                    selectOnBlur={false}
                                     options={[
                                         { key: 'gene', value: false, text: 'Gene ID' },
                                         { key: 'cg', value: true, text: 'CpG site ID' }
@@ -194,6 +196,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             {props.newFile.isCpGSiteId && <Grid.Row>
                                 <Form.Select
                                     fluid
+                                    selectOnBlur={false}
                                     options={[
                                         { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 450' },
                                         /* TODO: implement platform 27 when dictionary is available */

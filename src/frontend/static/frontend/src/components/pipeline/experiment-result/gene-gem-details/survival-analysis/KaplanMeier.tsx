@@ -230,6 +230,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                         <Form.Group>
                             <Form.Select
                                 width={5}
+                                selectOnBlur={false}
                                 label='Survival columns tuples'
                                 options={survivalColumnsTupleOptions}
                                 value={this.state.selectedSurvivalColumnId as number}
@@ -243,6 +244,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     Field of event of interest
                                 </label>
                                 <Select
+                                    selectOnBlur={false}
                                     label='Field of event of interest'
                                     options={survivalValuesOptions}
                                     search

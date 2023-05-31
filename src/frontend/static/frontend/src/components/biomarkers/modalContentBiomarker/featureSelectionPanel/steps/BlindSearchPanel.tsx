@@ -63,6 +63,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
     return (
         <>
             <Select
+                selectOnBlur={false}
                 placeholder='Fitness function'
                 className='selection-select'
                 options={fitnessFunctionsOptions}

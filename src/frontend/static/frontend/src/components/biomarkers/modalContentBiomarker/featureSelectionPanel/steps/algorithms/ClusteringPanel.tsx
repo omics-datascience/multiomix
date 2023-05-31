@@ -20,6 +20,7 @@ export const ClusteringPanel = (props: ClusteringProps) => {
     return (
         <>
             <Select
+                selectOnBlur={false}
                 placeholder='Clustering Algorithm'
                 name='moleculeSelected'
                 options={clusteringAlgorithmOptions}

@@ -125,6 +125,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
 
                         <Select
                             fluid
+                            selectOnBlur={false}
                             className="margin-top-5"
                             options={selectCorrelationMethodsOptions}
                             name='correlationMethod'
@@ -213,6 +214,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
 
                         <Select
                             fluid
+                            selectOnBlur={false}
                             className="margin-top-5"
                             options={selectAdjustmentMethodsOptions}
                             name='adjustmentMethod'

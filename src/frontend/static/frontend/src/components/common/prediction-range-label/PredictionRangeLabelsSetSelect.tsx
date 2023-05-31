@@ -61,6 +61,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
 
             <Select
                 fluid
+                selectOnBlur={false}
                 options={options}
                 loading={loading}
                 search

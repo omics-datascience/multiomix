@@ -69,6 +69,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
                 loading={loadingClinicalAttributes}
                 className='margin-bottom-2'
                 search
+                selectOnBlur={false}
                 clearable
                 value={props.selectedClinicalAttribute}
                 onChange={(_, { value }) => { props.setSelectedClinicalAttribute(value as string) }}

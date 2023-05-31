@@ -207,6 +207,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                         {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') &&
                             <Form.Select
                                 fluid
+                                selectOnBlur={false}
                                 options={clinicalAttributesOptions}
                                 loading={loadingClinicalAttributes}
                                 search

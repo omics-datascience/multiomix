@@ -269,6 +269,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 <Form.Select
                     key={filter.keyForServer}
                     label={filter.label}
+                    selectOnBlur={false}
                     clearable={filter.clearable ?? true}
                     placeholder={filter.placeholder}
                     options={options}
@@ -360,6 +361,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {/* Page size */}
                                 <Form.Select
                                     label='Entries'
+                                    selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'
                                     value={tableControl.pageSize}

@@ -66,6 +66,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
     return (
         <div className='selection-step-container selection-step-algorithm'>
             <Select
+                selectOnBlur={false}
                 className='selection-select'
                 placeholder='Algorithm'
                 name='moleculeSelected'

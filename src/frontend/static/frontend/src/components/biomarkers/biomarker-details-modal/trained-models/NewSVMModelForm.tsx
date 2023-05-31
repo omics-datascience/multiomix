@@ -16,6 +16,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
         <>
             <Form.Select
                 fluid
+                selectOnBlur={false}
                 label='Kernel'
                 options={SVMKernelOptions}
                 placeholder='Select a kernel'

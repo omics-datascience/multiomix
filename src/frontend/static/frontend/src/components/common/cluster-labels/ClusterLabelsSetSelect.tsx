@@ -61,6 +61,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
 
             <Select
                 fluid
+                selectOnBlur={false}
                 options={options}
                 loading={loading}
                 search

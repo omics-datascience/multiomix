@@ -58,6 +58,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                 <Select
                     button
                     fluid
+                    selectOnBlur={false}
                     floating
                     name='separator'
                     className="margin-top-2"
