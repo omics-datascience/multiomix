@@ -271,10 +271,33 @@ interface FeatureSelectionPanelData {
     methylationSource: Source,
     /** Algorithm to make Feature Selection. */
     algorithm: FeatureSelectionAlgorithm,
+    /** Advance algorithm to make Feature Selection */
+    advanceAlgorithm: AdvanceAlgorithm,
     /** Fitness function to optimize in the algorithm. */
     fitnessFunction: FitnessFunction,
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters
+}
+/** Advance algorithm types to make Feature selection */
+interface AdvanceAlgorithm{
+    isActive: boolean,
+    BBHA: AdvanceBBHA,
+    coxRegression: AdvanceCoxRegression
+}
+/** advance cox regression properties */
+interface AdvanceCoxRegression{
+    topN: number
+}
+/** advance BBHA properties */
+interface AdvanceBBHA{
+    numberOfStars: number;
+    numberOfIterations: number;
+    BBHAVersion: BBHAVersion;
+}
+/** Black hole version */
+enum BBHAVersion{
+    ORIGINAL = 1,
+    V2 = 2,
 }
 
 /** Available types of Sources for a Biomarker. */
@@ -433,6 +456,10 @@ interface RFModelDetails extends GeneralModelDetails {
 type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
 
 export {
+    AdvanceCoxRegression,
+    AdvanceBBHA,
+    BBHAVersion,
+    AdvanceAlgorithm,
     SVMKernel,
     SVMTask,
     SVMParameters,
