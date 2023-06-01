@@ -45,7 +45,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                         Pathways
 
                         <InfoPopup
-                            content='' // TODO: complete with Butti
+                            content='It shows all the biological pathways that include each of the genes of this biomarker'
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -59,7 +59,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                         Gene Ontology
 
                         <InfoPopup
-                            content='' // TODO: complete with Butti
+                            content='It shows information from gene ontology related with the genes of this biomarker'
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
