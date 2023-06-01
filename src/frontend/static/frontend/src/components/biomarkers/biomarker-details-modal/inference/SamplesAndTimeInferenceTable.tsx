@@ -95,7 +95,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
         <Grid>
             <Grid.Row columns={2} divided>
                 <Grid.Column width={12}>
-                    <Menu className='menu-with-bolder-border margin-top-0'>
+                    <Menu className='margin-top-0'>
                         <Menu.Item
                             active={activeMenuItem === 'table'}
                             onClick={() => setActiveMenuItem('table')}

@@ -34,3 +34,7 @@
     min-height: 80% !important;
     width: 95% !important;
 }
+
+.min-height-50vh {
+    min-height: 50vh;
+}

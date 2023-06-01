@@ -21,7 +21,7 @@ interface MoleculesDetailsMenuProps {
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     return (
-        <Menu className='menu-with-bolder-border margin-top-0'>
+        <Menu className='margin-top-0'>
             <Menu.Item
                 active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS}
                 onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)}

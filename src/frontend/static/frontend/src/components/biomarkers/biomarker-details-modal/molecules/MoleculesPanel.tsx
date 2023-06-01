@@ -8,7 +8,7 @@ import { CurrentMoleculeDetails } from './CurrentMoleculeDetails'
 /** MoleculesPanel props. */
 interface MoleculesPanelProps {
     /** Selected Biomarker instance to get its statistical validations. */
-    selectedBiomarker: Biomarker
+    selectedBiomarker: Biomarker,
 }
 
 /**
@@ -23,9 +23,9 @@ export const MoleculesPanel = (props: MoleculesPanelProps) => {
         <Grid>
             <Grid.Row columns={2} divided>
                 <Grid.Column width={5}>
-                    <MoleculesTable selectedBiomarker={props.selectedBiomarker} openMoleculeDetails={setSelectedMolecule} />
+                    <MoleculesTable selectedBiomarker={props.selectedBiomarker} selectedMolecule={selectedMolecule} openMoleculeDetails={setSelectedMolecule} />
                 </Grid.Column>
-                <Grid.Column width={11} className='column-fixed-height'>
+                <Grid.Column width={11}>
                     <CurrentMoleculeDetails selectedMolecule={selectedMolecule} closeDetails={() => { setSelectedMolecule(null) }} />
                 </Grid.Column>
             </Grid.Row>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Grid, Header, Icon, Segment } from 'semantic-ui-react'
+import { Grid, Header, Icon } from 'semantic-ui-react'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { Nullable } from '../../../../utils/interfaces'
 import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
@@ -43,7 +43,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const getPanel = (): JSX.Element => {
         if (props.selectedMolecule !== null) {
             return (
-                <Segment>
+                <>
                     {/* Menu */}
                     <MoleculesDetailsMenu
                         activeItem={activeItem}
@@ -53,7 +53,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
 
                     {/* Selected menu option */}
                     {getSelectedComponent(props.selectedMolecule)}
-                </Segment>
+                </>
             )
         }
 
@@ -70,10 +70,12 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
         )
     }
 
+    const moleculeIsNull = props.selectedMolecule === null
+
     return (
         <Grid>
-            <Grid.Row columns={1} verticalAlign='middle'>
-                <Grid.Column textAlign='center'>
+            <Grid.Row className='min-height-50vh' columns={1} verticalAlign={moleculeIsNull ? 'middle' : undefined}>
+                <Grid.Column textAlign={moleculeIsNull ? 'center' : undefined}>
                     {getPanel()}
                 </Grid.Column>
             </Grid.Row>

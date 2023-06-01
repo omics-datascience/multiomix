@@ -20,7 +20,7 @@ interface StatisticalValidationMenuProps {
  */
 export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps) => {
     return (
-        <Menu className='menu-with-bolder-border margin-top-0'>
+        <Menu className='margin-top-0'>
             <Menu.Item
                 active={props.activeItem === ActiveStatValidationsItemMenu.BEST_FEATURES}
                 onClick={() => props.setActiveItem(ActiveStatValidationsItemMenu.BEST_FEATURES)}

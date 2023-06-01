@@ -4,7 +4,7 @@ import { Biomarker, BiomarkerMolecule } from '../../types'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { MoleculeTypeLabel } from '../../labels/MoleculeTypeLabel'
-import { MoleculeType } from '../../../../utils/interfaces'
+import { MoleculeType, Nullable } from '../../../../utils/interfaces'
 
 declare const urlBiomarkerMolecules: string
 
@@ -12,6 +12,8 @@ declare const urlBiomarkerMolecules: string
 interface MoleculesTableProps {
     /** Selected Biomarker instance to retrieve all its molecules. */
     selectedBiomarker: Biomarker,
+    /** Selected BiomarkerMolecule instance to show the row as active. */
+    selectedMolecule: Nullable<BiomarkerMolecule>,
     /** Callback to show all the molecules details. */
     openMoleculeDetails: (molecule: BiomarkerMolecule) => void
 }
@@ -48,7 +50,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             urlToRetrieveData={urlBiomarkerMolecules}
             mapFunction={(molecule: BiomarkerMolecule) => {
                 return (
-                    <Table.Row key={molecule.identifier}>
+                    <Table.Row key={molecule.identifier} active={props.selectedMolecule?.id === molecule.id}>
                         <TableCellWithTitle className='align-center' value={molecule.identifier} />
                         <Table.Cell><MoleculeTypeLabel moleculeType={molecule.type} /></Table.Cell>
                         {/* TODO: add dblClick to show its details too */}

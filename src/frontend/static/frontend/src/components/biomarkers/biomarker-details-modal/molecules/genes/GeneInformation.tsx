@@ -3,6 +3,9 @@ import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from '../../stat-validations/result/ResultPlaceholder'
+import { Nullable } from '../../../../../utils/interfaces'
+import { GeneData } from './types'
+import { Card, Divider, Grid, Message } from 'semantic-ui-react'
 
 declare const urlGeneInformation: string
 
@@ -18,7 +21,7 @@ interface GeneInformationProps {
  * @returns Component.
  */
 export const GeneInformation = (props: GeneInformationProps) => {
-    const [geneData, setGeneData] = useState(null) // TODO: type
+    const [geneData, setGeneData] = useState<Nullable<GeneData>>(null)
     const [loadingData, setLoadingData] = useState(false)
 
     /** Every time the selected molecule changes, retrieves its data from the backend. */
@@ -31,8 +34,8 @@ export const GeneInformation = (props: GeneInformationProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlGeneInformation, { searchParams }).then((response) => {
-            response.json().then((geneInformation/* TODO: type */) => {
-                setGeneData(geneInformation)
+            response.json().then((geneResponse: { data: GeneData }) => {
+                setGeneData(geneResponse.data)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
@@ -49,5 +52,45 @@ export const GeneInformation = (props: GeneInformationProps) => {
         return <ResultPlaceholder numberOfCards={1} fluid rectangular />
     }
 
-    return null
+    if (!geneData) {
+        return null
+    }
+
+    return (
+        <Grid>
+            {/* Basic data */}
+            <Grid.Row columns={2} divided stretched>
+                <Grid.Column width={4}>
+                    <Card
+                        header={geneData.name}
+                        meta={geneData.alias_symbol}
+                        description={geneData.ensembl_gene_id}
+                        extra={
+                            <Grid textAlign='center'>
+                                <Grid.Row columns={2} divided>
+                                    <Grid.Column><strong>Start</strong>: {geneData.start_position}</Grid.Column>
+                                    <Grid.Column><strong>End</strong>: {geneData.end_position}</Grid.Column>
+                                </Grid.Row>
+                            </Grid>
+                        }
+                        color='violet'
+                    />
+                </Grid.Column>
+                <Grid.Column width={12}>
+                    <Message
+                        header='Summary'
+                        content={geneData.refseq_summary}
+                    />
+                </Grid.Column>
+            </Grid.Row>
+            <Grid.Row columns={2} divided stretched>
+                <Grid.Column width={4}>
+
+                </Grid.Column>
+                <Grid.Column width={12}>
+
+                </Grid.Column>
+            </Grid.Row>
+        </Grid>
+    )
 }

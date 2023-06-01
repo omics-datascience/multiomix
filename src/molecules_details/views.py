@@ -6,14 +6,14 @@ from api_service.mrna_service import global_mrna_service
 
 
 class GeneInformation(APIView):
-    """Retrieves general data of a gene from BioAPI."""
+    """Retrieves general data of a gene from BioAPI 'information-of-genes' service."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene')
         data = global_mrna_service.get_bioapi_service_content(
-            'methylation-sites',
+            'information-of-genes',
             request_params={
                 'gene_ids': [gene]
             },
@@ -21,7 +21,6 @@ class GeneInformation(APIView):
             method='post'
         )
 
-        if data:
-            return Response(data)
-
-        return Response({})
+        return Response(response = {
+            'data': data[gene] if data and gene in data else None
+        })
