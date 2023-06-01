@@ -21,6 +21,6 @@ class GeneInformation(APIView):
             method='post'
         )
 
-        return Response(response = {
+        return Response({
             'data': data[gene] if data and gene in data else None
         })
