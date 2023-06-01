@@ -6,4 +6,4 @@ class BiomarkerAdmin(admin.ModelAdmin):
     list_filter = ('tag', 'upload_date')
     search_fields = ('name', 'description')
 
-admin.site.register(Biomarker)
+admin.site.register(Biomarker, BiomarkerAdmin)
