@@ -17,6 +17,7 @@ interface SamplesAndGroupsTableProps {
  * @returns Component.
  */
 export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
+    /* TODO: implement here the colors for background too */
     return (
         <PaginatedTable<SampleAndCluster>
             headers={[

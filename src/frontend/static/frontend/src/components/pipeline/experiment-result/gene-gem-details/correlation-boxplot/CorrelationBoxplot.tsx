@@ -75,66 +75,70 @@ export const CorrelationBoxplot = (props: CorrelationBoxplotProps) => {
     const onlyGEMValues = sortedData.map((dataObj) => dataObj.x)
     const isCBioPortalCNAData = isEqual(onlyGEMValues, ['-2', '-1', '0', '1', '2'])
 
-    const boxPlots = !showBoxPlots ? null : sortedData.map((dataObj) => {
-        const dataArray = dataObj.data
+    const boxPlots = !showBoxPlots
+        ? null
+        : sortedData.map((dataObj) => {
+            const dataArray = dataObj.data
 
-        // Data
-        const min = Math.min.apply(Math, dataArray)
-        const max = Math.max.apply(Math, dataArray)
-        const firstQuantile = quantile(dataArray, 0.25)
-        const thirdQuantile = quantile(dataArray, 0.75)
-        const median = quantile(dataArray, 0.50)
-        const meanValue = mean(dataArray)
+            // Data
+            const min = Math.min.apply(Math, dataArray)
+            const max = Math.max.apply(Math, dataArray)
+            const firstQuantile = quantile(dataArray, 0.25)
+            const thirdQuantile = quantile(dataArray, 0.75)
+            const median = quantile(dataArray, 0.50)
+            const meanValue = mean(dataArray)
 
-        const data: BoxplotDatum = {
-            x: dataObj.x,
-            min: min,
-            max: max,
-            median: median,
-            mean: meanValue,
-            firstQuartile: firstQuantile,
-            thirdQuartile: thirdQuantile,
-            // outliers: dataObj.outliers.map((outlier) => outlier.expression),
-            outliers: [],
-            // outliersObjects: dataObj.outliers.sort((a, b) => a.expression - b.expression)
-            outliersObjects: []
-        }
+            const data: BoxplotDatum = {
+                x: dataObj.x,
+                min,
+                max,
+                median,
+                mean: meanValue,
+                firstQuartile: firstQuantile,
+                thirdQuartile: thirdQuantile,
+                // outliers: dataObj.outliers.map((outlier) => outlier.expression),
+                outliers: [],
+                // outliersObjects: dataObj.outliers.sort((a, b) => a.expression - b.expression)
+                outliersObjects: []
+            }
 
-        if (isCBioPortalCNAData) {
-            data.cnaDescription = getCNADescription(dataObj.x as string)
-        }
+            if (isCBioPortalCNAData) {
+                data.cnaDescription = getCNADescription(dataObj.x as string)
+            }
 
-        return (
-            <BoxPlotSeries
-                key={`boxplot-${dataObj.x}`}
-                data={[data]}
-                fill="url(#boxplot_lines_pattern)"
-                stroke={dataObj.strokeColor}
-                strokeWidth={2}
-                widthRatio={1}
-                horizontal={false}
-            />
-        )
-    })
+            return (
+                <BoxPlotSeries
+                    key={`boxplot-${dataObj.x}`}
+                    data={[data]}
+                    fill="url(#boxplot_lines_pattern)"
+                    stroke={dataObj.strokeColor}
+                    strokeWidth={2}
+                    widthRatio={1}
+                    horizontal={false}
+                />
+            )
+        })
 
-    const violinPlots = !showViolinPlots ? null : sortedData.map((dataObj) => {
+    const violinPlots = !showViolinPlots
+        ? null
+        : sortedData.map((dataObj) => {
         // Formats data for Violin plot: it needs the frequency data for expression values.
-        const binData = generateBinData(dataObj.data)
-        const violinData = { x: dataObj.x, binData: binData }
+            const binData = generateBinData(dataObj.data)
+            const violinData = { x: dataObj.x, binData }
 
-        return (
-            <ViolinPlotSeries
-                key={`violin-${dataObj.x}`}
-                data={[violinData]}
-                fill="url(#box_violin_lines_pattern)"
-                stroke="#22b8cf"
-                strokeWidth={2}
-                widthRatio={1}
-                horizontal={false}
-                disableMouseEvents
-            />
-        )
-    })
+            return (
+                <ViolinPlotSeries
+                    key={`violin-${dataObj.x}`}
+                    data={[violinData]}
+                    fill="url(#box_violin_lines_pattern)"
+                    stroke="#22b8cf"
+                    strokeWidth={2}
+                    widthRatio={1}
+                    horizontal={false}
+                    disableMouseEvents
+                />
+            )
+        })
 
     // Computes some attributes
     const allBoxPlotExpressions = props.boxplotData.data.flatMap(dataObj => dataObj.data)

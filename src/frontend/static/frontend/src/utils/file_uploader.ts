@@ -86,8 +86,8 @@ class ChunkFileUploader {
 
             /** Reads next chunk of file. */
             const loadNext = () => {
-                var start = currentChunk * this.chunkSize
-                var end = ((start + this.chunkSize) >= this.file.size) ? this.file.size : start + this.chunkSize
+                const start = currentChunk * this.chunkSize
+                const end = ((start + this.chunkSize) >= this.file.size) ? this.file.size : start + this.chunkSize
 
                 fileReader.readAsArrayBuffer(this.file.slice(start, end))
             }

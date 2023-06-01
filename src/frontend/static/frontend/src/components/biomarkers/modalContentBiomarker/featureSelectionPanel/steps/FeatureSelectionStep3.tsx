@@ -106,6 +106,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         <div className='selection-step-container selection-step-algorithm'>
             <div className='selection-step-container-selection-confg'>
                 <Select
+                    selectOnBlur={false}
                     className='selection-select selection-all-space'
                     placeholder='Algorithm'
                     name='moleculeSelected'

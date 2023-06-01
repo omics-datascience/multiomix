@@ -3,12 +3,10 @@ import { Button, Grid, Header, Icon } from 'semantic-ui-react'
 import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import { Nullable } from '../../../../utils/interfaces'
 
-/**
- * Component's props
- */
-interface MiRNAExtraDataProps {
-    miRNA: string,
-    miRNAData: Nullable<DjangoMiRNADataJSON>
+/** LinkOrPlainText props. */
+interface LinkOrPlainTextProps {
+    url: string | undefined,
+    text: string
 }
 
 /**
@@ -16,7 +14,7 @@ interface MiRNAExtraDataProps {
  * @param props Component's props
  * @returns Component
  */
-const LinkOrPlainText = (props: {url: string | undefined, text: string}) => {
+const LinkOrPlainText = (props: LinkOrPlainTextProps) => {
     if (props.url) {
         return (
             <a href={props.url} target='_blank' rel='noopener noreferrer'>
@@ -26,6 +24,14 @@ const LinkOrPlainText = (props: {url: string | undefined, text: string}) => {
     }
 
     return <span>{props.text}</span>
+}
+
+/**
+ * Component's props
+ */
+interface MiRNAExtraDataProps {
+    miRNA: string,
+    miRNAData: Nullable<DjangoMiRNADataJSON>
 }
 
 /**

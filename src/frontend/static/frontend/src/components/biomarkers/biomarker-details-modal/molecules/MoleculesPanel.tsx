@@ -1,14 +1,14 @@
 import React from 'react'
 import { Biomarker, BiomarkerMolecule } from '../../types'
-import { BiomarkerMoleculesTable } from './BiomarkerMoleculesTable'
+import { MoleculesTable } from './MoleculesTable'
 import { Nullable } from '../../../../utils/interfaces'
 import { Grid } from 'semantic-ui-react'
-import { BiomarkerMoleculesDetails } from './BiomarkerMoleculesDetails'
+import { CurrentMoleculeDetails } from './CurrentMoleculeDetails'
 
-/** BiomarkerMoleculesPanel props. */
-interface BiomarkerMoleculesPanelProps {
+/** MoleculesPanel props. */
+interface MoleculesPanelProps {
     /** Selected Biomarker instance to get its statistical validations. */
-    selectedBiomarker: Biomarker
+    selectedBiomarker: Biomarker,
 }
 
 /**
@@ -16,17 +16,17 @@ interface BiomarkerMoleculesPanelProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerMoleculesPanel = (props: BiomarkerMoleculesPanelProps) => {
+export const MoleculesPanel = (props: MoleculesPanelProps) => {
     const [selectedMolecule, setSelectedMolecule] = React.useState<Nullable<BiomarkerMolecule>>(null)
 
     return (
         <Grid>
             <Grid.Row columns={2} divided>
                 <Grid.Column width={5}>
-                    <BiomarkerMoleculesTable selectedBiomarker={props.selectedBiomarker} openMoleculeDetails={setSelectedMolecule} />
+                    <MoleculesTable selectedBiomarker={props.selectedBiomarker} selectedMolecule={selectedMolecule} openMoleculeDetails={setSelectedMolecule} />
                 </Grid.Column>
-                <Grid.Column width={11} className='column-fixed-height'>
-                    <BiomarkerMoleculesDetails selectedMolecule={selectedMolecule} closeDetails={() => { setSelectedMolecule(null) }} />
+                <Grid.Column width={11}>
+                    <CurrentMoleculeDetails selectedMolecule={selectedMolecule} closeDetails={() => { setSelectedMolecule(null) }} />
                 </Grid.Column>
             </Grid.Row>
         </Grid>

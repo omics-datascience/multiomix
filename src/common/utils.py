@@ -1,21 +1,8 @@
-import re
 import numpy as np
-from typing import List, Union, Optional
+from typing import List, Union, Optional, cast
 import pandas as pd
 from django.http import QueryDict
-
-from common.constants import TCGA_CONVENTION
-
-
-def replace_cgds_suffix(list_of_ids: Union[List[str], np.ndarray]) -> List[str]:
-    """
-    Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) to avoid issues.
-    NOTE: this function has to be here due to circular imports.
-    @param list_of_ids: List of IDs to modify.
-    @return: List with all the IDs without the suffix.
-    """
-    regex_strip = re.compile(TCGA_CONVENTION)
-    return [re.sub(regex_strip, "", name) for name in list_of_ids]
+from api_service.models import ExperimentSource
 
 
 def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
@@ -58,3 +45,24 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
 def limit_between_min_max(number: int, min_value: int, max_value: int) -> int:
     """Limits a number between a min and max values."""
     return max(min(number, max_value), min_value)
+
+
+def get_samples_intersection(source: ExperimentSource, last_intersection: np.ndarray) -> np.ndarray:
+    """
+    Gets the intersection of the samples of the current source with the last intersection.
+    @param source: Source to get the samples from.
+    @param last_intersection: Last intersection of samples.
+    @return: Intersection of the samples of the current source with the last intersection.
+    """
+    # Clean all the samples name to prevent issues with CGDS suffix
+    current_samples = source.get_samples()
+
+    if last_intersection is not None:
+        cur_intersection = np.intersect1d(
+            last_intersection,
+            current_samples
+        )
+    else:
+        cur_intersection = np.array(current_samples)
+    last_intersection = cast(np.ndarray, cur_intersection)
+    return last_intersection

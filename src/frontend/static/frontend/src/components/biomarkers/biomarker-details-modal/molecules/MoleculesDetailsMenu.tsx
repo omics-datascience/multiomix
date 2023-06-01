@@ -4,8 +4,8 @@ import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
 
-/** BiomarkerMoleculesDetailsMenu props. */
-interface BiomarkerMoleculesDetailsMenuProps {
+/** MoleculesDetailsMenu props. */
+interface MoleculesDetailsMenuProps {
     /** Selected BiomarkerMolecule instance to show the options. */
     selectedMolecule: BiomarkerMolecule,
     /** Getter of the active item in the menu. */
@@ -19,9 +19,9 @@ interface BiomarkerMoleculesDetailsMenuProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerMoleculesDetailsMenu = (props: BiomarkerMoleculesDetailsMenuProps) => {
+export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     return (
-        <Menu className='menu-with-bolder-border margin-top-0'>
+        <Menu className='margin-top-0'>
             <Menu.Item
                 active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS}
                 onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)}
@@ -45,7 +45,7 @@ export const BiomarkerMoleculesDetailsMenu = (props: BiomarkerMoleculesDetailsMe
                         Pathways
 
                         <InfoPopup
-                            content='' // TODO: complete with Butti
+                            content='It shows all the biological pathways that include each of the genes of this biomarker'
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -59,7 +59,7 @@ export const BiomarkerMoleculesDetailsMenu = (props: BiomarkerMoleculesDetailsMe
                         Gene Ontology
 
                         <InfoPopup
-                            content='' // TODO: complete with Butti
+                            content='It shows information from gene ontology related with the genes of this biomarker'
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'

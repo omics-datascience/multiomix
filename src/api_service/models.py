@@ -2,8 +2,7 @@ from typing import Iterable, List, Optional, Union
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
-from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE, \
-    TCGA_CONVENTION
+from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
 from genes.models import Gene
 from statistical_properties.models import SourceDataStatisticalProperties
@@ -134,8 +133,9 @@ class ExperimentClinicalSource(ExperimentSource):
             return self.user_file.get_row_indexes()
 
         # Returns a distinct concatenation of both source columns
-        # IMPORTANT: samples are in rows and attributes are in columns
-        samples = self.__get_cgds_datasets_joined_df()[SAMPLE_ID_COLUMN]
+        # IMPORTANT: samples are in rows and attributes are in columns.
+        # NOTE: PATIENT_ID_COLUMN has the samples ids without the TCGA suffix, and it's as index
+        samples = self.__get_cgds_datasets_joined_df().index
         return list(set(samples))
 
     def get_attributes(self) -> List[str]:
@@ -168,7 +168,7 @@ class ExperimentClinicalSource(ExperimentSource):
             row_data = self.user_file.get_specific_row(row)
         else:
             # IMPORTANT: samples are in rows and attributes are in columns
-            row_data = self.__get_cgds_datasets_joined_df().set_index(SAMPLE_ID_COLUMN).loc[row].to_numpy()
+            row_data = self.__get_cgds_datasets_joined_df().set_index(PATIENT_ID_COLUMN).loc[row].to_numpy()
 
         if row_data.size == 0:
             raise KeyError
@@ -189,6 +189,7 @@ class ExperimentClinicalSource(ExperimentSource):
         @raise KeyError if the row data is empty.
         @return: List of values.
         """
+        row_data: pd.DataFrame
         if self.user_file:
             df = self.user_file.get_df()
             if samples is not None:
@@ -202,9 +203,9 @@ class ExperimentClinicalSource(ExperimentSource):
 
             # Sets Sample ID and index, and get samples
             if samples is not None:
-                row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[samples]
+                row_data = row_data.set_index(PATIENT_ID_COLUMN).loc[samples]
             else:
-                row_data = row_data.set_index(SAMPLE_ID_COLUMN).loc[:]
+                row_data = row_data.set_index(PATIENT_ID_COLUMN).loc[:]
 
             # If SAMPLES_TYPE_COLUMN exists as column keeps primary only, otherwise all the rows are considered
             # primary
@@ -259,8 +260,6 @@ class ExperimentClinicalSource(ExperimentSource):
         df1: pd.DataFrame = self.cgds_dataset.get_df(use_standard_column=False)  # The index is implicitly PATIENT_ID
         df2: pd.DataFrame = self.extra_cgds_dataset.get_df(use_standard_column=False)
         df2 = df2.reset_index(level=0)
-        # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) to avoid breaking df join
-        df2[PATIENT_ID_COLUMN] = df2[PATIENT_ID_COLUMN].str.replace(TCGA_CONVENTION, '', regex=True)
         df2 = df2.set_index(PATIENT_ID_COLUMN)
         return df1.join(df2)
 

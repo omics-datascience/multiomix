@@ -17,10 +17,9 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
-from common.constants import TCGA_CONVENTION
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
-from common.utils import replace_cgds_suffix, get_subset_of_features
+from common.utils import get_subset_of_features, get_samples_intersection
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -79,14 +78,7 @@ class StatisticalValidationService(object):
             if source is None:
                 continue
 
-            if last_intersection is not None:
-                cur_intersection = np.intersect1d(
-                    last_intersection,
-                    source.get_samples()
-                )
-            else:
-                cur_intersection = source.get_samples()
-            last_intersection = cast(np.ndarray, cur_intersection)
+            last_intersection = get_samples_intersection(source, last_intersection)
 
         # Checks empty intersection
         last_intersection = cast(np.ndarray, last_intersection)
@@ -113,9 +105,6 @@ class StatisticalValidationService(object):
 
         # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
         chunk.index = chunk.index + f'_{file_type}'
-
-        # Removes TCGA suffix
-        chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
         return chunk
 
@@ -162,9 +151,6 @@ class StatisticalValidationService(object):
         @param samples_in_common: Samples in common to extract from the datasets.
         @return: Both DataFrames paths.
         """
-        # Removes CGDS suffix to prevent not found indexes
-        clean_samples_in_common = replace_cgds_suffix(samples_in_common)
-
         # Generates clinical DataFrame
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             clinical_temp_file_path = temp_file.name
@@ -175,10 +161,9 @@ class StatisticalValidationService(object):
             # Keeps only the survival tuple and samples in common
             survival_tuple = stat_validation.survival_column_tuple
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
+            clinical_df = clinical_df.loc[samples_in_common]
 
-            clinical_df = clinical_df.loc[clean_samples_in_common]
-
-            # Replaces str values of CGDS for
+            # Replaces str values of CGDS for boolean values
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
                 self.__replace_event_col_for_booleans
             )
@@ -236,8 +221,9 @@ class StatisticalValidationService(object):
         if is_regression:
             time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
             clinical_df = clinical_df[clinical_df[time_column] > 0]
-            valid_samples = clinical_df.index
-            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        valid_samples = clinical_df.index
+        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
@@ -282,7 +268,6 @@ class StatisticalValidationService(object):
         @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal.
         """
-
         def score_svm_rf(model: SurvModel, x: pd.DataFrame, y: np.ndarray) -> float:
             """Gets the C-Index for an SVM/RF regression prediction."""
             prediction = model.predict(x)
@@ -324,8 +309,10 @@ class StatisticalValidationService(object):
         if is_regression:
             time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
             clinical_df = clinical_df[clinical_df[time_column] > 0]
-            valid_samples = clinical_df.index
-            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Keeps only the samples that are in both DataFrames
+        valid_samples = clinical_df.index
+        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         # TODO: refactor
@@ -440,6 +427,7 @@ class StatisticalValidationService(object):
 
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+
         return molecules_df, clinical_df
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,

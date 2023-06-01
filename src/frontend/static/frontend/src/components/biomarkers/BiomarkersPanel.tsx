@@ -166,9 +166,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleCloseAlert = () => {
         const alert = this.state.alert
         alert.isOpen = false
-        this.setState({
-            alert: alert
-        })
+        this.setState({ alert })
     }
 
     /**
@@ -486,7 +484,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     value: gen
                 }))
                 this.setState({
-                    formBiomarker: formBiomarker
+                    formBiomarker
                 })
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
@@ -507,9 +505,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleRemoveInvalidGenes = (sector: BiomarkerType): void => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker.moleculesSection[sector].data = this.state.formBiomarker.moleculesSection[sector].data.filter(gen => !(!gen.isValid && !Array.isArray(gen.value)))
-        this.setState({
-            formBiomarker: formBiomarker
-        })
+        this.setState({ formBiomarker })
     }
 
     /**
@@ -598,7 +594,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 this.setState({
                     formBiomarker: {
                         ...this.state.formBiomarker,
-                        moleculesSection: moleculesSection
+                        moleculesSection
                     }
                 })
             }).catch((err) => {
@@ -691,8 +687,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
 
         return {
-            haveAmbiguous: haveAmbiguous,
-            haveInvalid: haveInvalid
+            haveAmbiguous,
+            haveInvalid
         }
     }
 
@@ -774,9 +770,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker[name] = value
-        this.setState({
-            formBiomarker: formBiomarker
-        })
+        this.setState({ formBiomarker })
     }
 
     /**
@@ -833,7 +827,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             formBiomarker: {
                 ...this.state.formBiomarker,
-                moleculesSection: moleculesSection
+                moleculesSection
             }
         })
     }
@@ -844,9 +838,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param molecule molecule to remove of the array
      */
     handleRemoveMolecule = (section: BiomarkerType, molecule: MoleculesSectionData) => {
-        const data = this.state.formBiomarker.moleculesSection[section].data.map((item: MoleculesSectionData) => {
-            if (item.value === molecule.value) return
-            return item
+        // keeps the molecules that are not the one that is going to be removed
+        const data = this.state.formBiomarker.moleculesSection[section].data.filter((item: MoleculesSectionData) => {
+            return item.value !== molecule.value
         })
 
         this.setState({
@@ -857,7 +851,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     ...this.state.formBiomarker.moleculesSection,
                     [section]: {
                         isLoading: false,
-                        data: data.filter((item) => item !== undefined)
+                        data
                     }
                 }
             }
@@ -1039,7 +1033,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleFormChanges = (name: string, value) => {
         const newBiomarker = this.state.newBiomarker
         newBiomarker[name] = value
-        this.setState({ newBiomarker: newBiomarker })
+        this.setState({ newBiomarker })
     }
 
     /**
@@ -1054,7 +1048,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const dataset = newBiomarker[datasetName]
         if (dataset !== null) {
             dataset[name] = value
-            this.setState({ newBiomarker: newBiomarker })
+            this.setState({ newBiomarker })
         }
     }
 
@@ -1073,7 +1067,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 dataset.survival_columns = []
             }
             dataset.survival_columns.push(newElement)
-            this.setState({ newBiomarker: newBiomarker })
+            this.setState({ newBiomarker })
         }
     }
 
@@ -1088,7 +1082,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const dataset = newBiomarker[datasetName]
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker: newBiomarker })
+            this.setState({ newBiomarker })
         }
     }
 
@@ -1110,7 +1104,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const dataset = newBiomarker[datasetName]
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns[idxSurvivalTuple][name] = value
-            this.setState({ newBiomarker: newBiomarker })
+            this.setState({ newBiomarker })
         }
     }
 
@@ -1296,7 +1290,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             type: TagType.FILE
         }
 
-        ky.get(urlTagsCRUD, { searchParams: searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
                 this.setState({ tags })
             }).catch((err) => {
@@ -1421,7 +1415,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 'You are going to lose all the data inserted',
                                 'Are you sure?',
                                 this.closeBiomarkerModal
-                            ) : this.closeBiomarkerModal()
+                            )
+                            : this.closeBiomarkerModal()
                     }}
                 >
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&

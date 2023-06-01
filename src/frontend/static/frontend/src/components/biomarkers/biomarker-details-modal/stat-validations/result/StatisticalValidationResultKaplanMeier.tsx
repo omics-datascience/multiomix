@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import ky from 'ky'
-import { Button, DropdownItemProps, Form, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
-import { alertGeneralError } from '../../../../../utils/util_functions'
+import { Button, Form, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
+import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
 import { StatisticalValidationForTable, KaplanMeierResultData, FitnessFunction } from '../../../types'
 import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 import { Nullable } from '../../../../../utils/interfaces'
@@ -85,7 +85,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation KaplanMeier data', err)
+            console.log('Error getting StatisticalValidation clinical attributes data', err)
         }).finally(() => {
             setLoadingClinicalAttributes(false)
         })
@@ -106,7 +106,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation KaplanMeier data', err)
+            console.log('Error getting StatisticalValidation KaplanMeier by clustering model', err)
         }).finally(() => {
             setLoadingKaplanMeier(false)
         })
@@ -133,7 +133,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             })
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error getting StatisticalValidation KaplanMeier data', err)
+            console.log('Error getting StatisticalValidation KaplanMeier by clinical attribute', err)
         }).finally(() => {
             setLoadingKaplanMeier(false)
         })
@@ -161,7 +161,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         return null
     }
 
-    const clinicalAttributesOptions: DropdownItemProps[] = clinicalAttributes.map((elem) => ({ key: elem, value: elem, text: elem }))
+    const clinicalAttributesOptions = listToDropdownOptions(clinicalAttributes)
 
     return (
         <Grid>
@@ -207,6 +207,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                         {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') &&
                             <Form.Select
                                 fluid
+                                selectOnBlur={false}
                                 options={clinicalAttributesOptions}
                                 loading={loadingClinicalAttributes}
                                 search

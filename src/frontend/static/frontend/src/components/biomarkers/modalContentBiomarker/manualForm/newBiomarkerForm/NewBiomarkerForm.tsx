@@ -83,6 +83,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             />
 
             <Select
+                selectOnBlur={false}
                 className='biomarkers--side--bar--input--selection'
                 placeholder='Select molecule'
                 name='moleculeSelected'

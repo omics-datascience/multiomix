@@ -147,7 +147,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
             sourceType: this.state.survivalSource.type as SourceType
         }
 
-        ky.get(urlDatasetColumnName, { searchParams: searchParams }).then((response) => {
+        ky.get(urlDatasetColumnName, { searchParams }).then((response) => {
             response.json()
                 .then(this.setColumnNamesAsOptions)
                 .catch((err) => {

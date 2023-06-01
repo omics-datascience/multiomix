@@ -1,14 +1,17 @@
 
 import React from 'react'
 import { Grid, Segment } from 'semantic-ui-react'
-import { InferenceExperimentForTable } from '../../types'
+import { FitnessFunction, InferenceExperimentForTable } from '../../types'
 import { SamplesAndGroupsInferenceTable } from './SamplesAndGroupsInferenceTable'
 import { InferenceExperimentResultMetrics } from './InferenceExperimentResultMetrics'
+import { SamplesAndTimeInferenceTable } from './SamplesAndTimeInferenceTable'
 
 /** BiomarkerNewInferenceExperimentModal props. */
 interface InferenceExperimentResultModalProps {
     /** Selected InferenceExperimentForTable instance to retrieve all its data. */
     selectedInferenceExperiment: InferenceExperimentForTable,
+    /** Function to refresh the experiment info after addition or unlinking of clinical data. */
+    refreshExperimentInfo: () => void,
 }
 
 /**
@@ -27,7 +30,17 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                         </Segment>
                     </Grid.Column>
                     <Grid.Column width={12}>
-                        <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                        {/* Show the corresponding table */}
+                        {
+                            props.selectedInferenceExperiment.model === FitnessFunction.CLUSTERING
+                                ? <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                                : (
+                                    <SamplesAndTimeInferenceTable
+                                        selectedInferenceExperiment={props.selectedInferenceExperiment}
+                                        refreshExperimentInfo={props.refreshExperimentInfo}
+                                    />
+                                )
+                        }
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

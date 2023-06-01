@@ -643,7 +643,7 @@ def download_result_with_filters(request):
 
 
 def add_clinical_source(request):
-    """Adds an Experiment's clinical source"""
+    """Adds an Experiment clinical source"""
 
     # Gets experiment
     experiment_id = request.POST.get('experimentPk')
@@ -670,7 +670,7 @@ def add_clinical_source(request):
 
 
 class ExperimentClinicalSourceDetail(generics.RetrieveAPIView):
-    """REST endpoint: retrieve for Experiment's clinical source"""
+    """REST endpoint: retrieve for ExperimentClinicalSource model."""
 
     def get_queryset(self):
         # User can only retrieve its UserFile (or public ones), not CGDSDatasets nor other users' datasets instances

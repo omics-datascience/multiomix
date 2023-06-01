@@ -11,7 +11,7 @@ import csv
 import numpy as np
 import pandas as pd
 from user_files.models_choices import FileType, FileDecimalSeparator
-from user_files.utils import get_decimal_separator
+from user_files.utils import get_decimal_separator_and_numerical_data
 from django.conf import settings
 from api_service.websocket_functions import send_update_user_file_command
 
@@ -80,7 +80,7 @@ class UserFile(models.Model):
     def __compute_decimal_separator(self):
         """Computes the UserFile decimal_separator field"""
         # This shouldn't fail as it was checked on upload
-        decimal_separator = get_decimal_separator(self.file_obj.file.name, seek_beginning=False, all_rows=False)
+        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file.name, seek_beginning=False, all_rows=False)
         self.decimal_separator = decimal_separator if decimal_separator is not None else FileDecimalSeparator.DOT
 
     def compute_post_saved_field(self):

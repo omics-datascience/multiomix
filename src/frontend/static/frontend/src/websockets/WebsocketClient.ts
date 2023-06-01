@@ -10,7 +10,8 @@ type WebsocketMessage = { command: string }
  * Handles websocket connections
  */
 class WebsocketClientCustom {
-    private websocket: WebSocket;
+    private websocket: WebSocket
+
     constructor (config: WebsocketConfig) {
         const protocol = usingHTTPS ? 'wss' : 'ws'
         const url = `${protocol}://${window.location.host}${config.channelUrl}`

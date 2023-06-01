@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django_email_verification',
     'genes',
     'inferences',
+    'molecules_details',
     'chunked_upload'
 ]
 
@@ -262,14 +263,6 @@ EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 
-
-EMAIL_SERVER = 'smtpout.secureserver.net'
-EMAIL_PORT: int = 587
-EMAIL_ADDRESS = 'info@omicsdatascience.org'
-EMAIL_FROM_ADDRESS = 'info@omicsdatascience.org'
-EMAIL_PASSWORD = 'P.SUz<8Wpm9>Y]Z'
-
-
 # Modulector settings
 MODULECTOR_SETTINGS = {
     'host': os.getenv('MODULECTOR_HOST', '127.0.0.1'),
@@ -280,6 +273,12 @@ MODULECTOR_SETTINGS = {
 BIOAPI_SETTINGS = {
     'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
     'port': os.getenv('BIOAPI_PORT', '8002')
+}
+
+# Multiomix-aws-emr
+AWS_EMR_SETTINGS = {
+    'host': os.getenv('AWS_EMR_HOST', '127.0.0.1'),
+    'port': os.getenv('AWS_EMR_PORT', '8003')
 }
 
 # Value used to indicate tha data is not present in a dataset

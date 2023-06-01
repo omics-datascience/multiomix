@@ -13,7 +13,7 @@ import { BiomarkerStateLabel } from '../BiomarkerStateLabel'
 declare const urlBiomarkerTrainedModels: string
 
 /** BiomarkerTrainedModelsTable props. */
-interface BiomarkerTrainedModelsProps {
+interface BiomarkerTrainedModelsPanelProps {
     /** Selected Biomarker instance to retrieve its TrainedModel instances. */
     selectedBiomarker: Biomarker,
     /** If `true`, shows only the TrainedModel with state = `BiomarkerState.COMPLETED`. */
@@ -31,7 +31,7 @@ interface BiomarkerTrainedModelsProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsProps) => {
+export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelProps) => {
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
 
     const showOnlyCompleted = props.showOnlyCompleted ?? false

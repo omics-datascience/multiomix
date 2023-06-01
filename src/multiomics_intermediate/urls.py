@@ -33,6 +33,7 @@ urlpatterns = [
     path('statistical-props/', include('statistical_properties.urls')),
     path('feature-selection/', include('feature_selection.urls')),
     path('inference/', include('inferences.urls')),
+    path('molecules/', include('molecules_details.urls')),
     path('admin/', admin.site.urls),
     path('email/', include(mail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

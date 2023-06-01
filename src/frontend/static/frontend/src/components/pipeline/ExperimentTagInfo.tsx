@@ -40,38 +40,44 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
     // To enable/disable some functions
     const isTagSelected = props.experiment.tag.id && props.experiment.tag.id
 
-    const dropdownTags = props.isSelectingTag ? (
-        <Dropdown
-            fluid
-            search
-            selection
-            className="margin-top-2"
-            options={props.tagOptions}
-            clearable
-            onChange={(_e, { value }) => props.selectTagForNewExperiment(value)}
-            placeholder='Select an existing Tag'
-        />
-    ) : null
+    const dropdownTags = props.isSelectingTag
+        ? (
+            <Dropdown
+                fluid
+                search
+                selection
+                className="margin-top-2"
+                options={props.tagOptions}
+                clearable
+                onChange={(_e, { value }) => props.selectTagForNewExperiment(value)}
+                placeholder='Select an existing Tag'
+            />
+        )
+        : null
 
-    const tagForm = props.isSelectingTag ? (
-        <TagForm
-            tag={props.newTag}
-            disableInputs={props.addingTag}
-            loading={props.addingTag}
-            handleAddTagInputsChange={props.handleAddTagInputsChange}
-            handleKeyDown={props.handleKeyDown}
-        />
-    ) : null
+    const tagForm = props.isSelectingTag
+        ? (
+            <TagForm
+                tag={props.newTag}
+                disableInputs={props.addingTag}
+                loading={props.addingTag}
+                handleAddTagInputsChange={props.handleAddTagInputsChange}
+                handleKeyDown={props.handleKeyDown}
+            />
+        )
+        : null
 
-    const buttonRemoveTag = isTagSelected ? (
-        <Icon
-            className="clickable margin-left-2"
-            name='trash'
-            color='red'
-            title='Remove Tag'
-            onClick={() => props.selectTagForNewExperiment(null)}
-        />
-    ) : null
+    const buttonRemoveTag = isTagSelected
+        ? (
+            <Icon
+                className="clickable margin-left-2"
+                name='trash'
+                color='red'
+                title='Remove Tag'
+                onClick={() => props.selectTagForNewExperiment(null)}
+            />
+        )
+        : null
 
     return (
         <Card.Meta className="margin-top-10 align-left">

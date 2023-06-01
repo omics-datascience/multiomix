@@ -17,18 +17,6 @@ declare const urlCGDSStudiesCRUD: string
 declare const urlSyncCGDSStudy: string
 
 /**
- * Request search params to get the CGDSStudies' datasets
- */
-type CGDSStudiesSearchParams = {
-    /** Page Number */
-    page: number,
-    /** Page Size */
-    page_size: number,
-    /** Field to sort */
-    ordering: string
-}
-
-/**
  * Component's state
  */
 interface CGDSPanelState {
@@ -809,7 +797,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                             cleanForm={this.cleanForm}
                                             isFormEmpty={this.isFormEmpty}
                                         />
-                                    </Grid.Column> : null
+                                    </Grid.Column>
+                                    : null
                                 }
                                 {/* List of CGDS Studies */}
                                 <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>

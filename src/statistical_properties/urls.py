@@ -53,5 +53,21 @@ urlpatterns = [
         views.StatisticalValidationClinicalAttributes.as_view(),
         name='statistical_validation_clinical_attrs'
     ),
-    path('biomarker-new-trained-model', views.BiomarkerNewTrainedModel.as_view(), name='biomarker_new_trained_model')
+    path('biomarker-new-trained-model', views.BiomarkerNewTrainedModel.as_view(), name='biomarker_new_trained_model'),
+    path('cluster-labels-sets', views.ClusterLabelsSetsList.as_view(), name='cluster_labels_sets'),
+    path(
+        'cluster-labels-sets-paginated',
+        views.ClusterLabelsSetsListPaginated.as_view(),
+        name='cluster_labels_sets_paginated'
+    ),
+    path(
+        'prediction-range-labels-sets',
+        views.PredictionRangeLabelsSetsList.as_view(),
+        name='prediction_range_labels_sets'
+    ),
+    path(
+        'prediction-range-labels-paginated-sets',
+        views.PredictionRangeLabelsSetsListPaginated.as_view(),
+        name='prediction_range_labels_sets_paginated'
+    )
 ]

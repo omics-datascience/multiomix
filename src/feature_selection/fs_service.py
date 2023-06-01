@@ -7,11 +7,10 @@ from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.constants import TCGA_CONVENTION
-from common.utils import replace_cgds_suffix
+from common.utils import get_samples_intersection
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
-from .fs_algorithms import blind_search, binary_black_hole_sequential, select_top_cox_regression
+from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
     ClusteringParameters
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -76,14 +75,7 @@ class FSService(object):
             if source is None:
                 continue
 
-            if last_intersection is not None:
-                cur_intersection = np.intersect1d(
-                    last_intersection,
-                    source.get_samples()
-                )
-            else:
-                cur_intersection = source.get_samples()
-            last_intersection = cast(np.ndarray, cur_intersection)
+            last_intersection = get_samples_intersection(source, last_intersection)
 
         return cast(np.ndarray, last_intersection)
 
@@ -101,9 +93,6 @@ class FSService(object):
         @param samples_in_common: Samples in common to extract from the datasets.
         @return: Both DataFrames paths.
         """
-        # Removes CGDS suffix to prevent not found indexes
-        clean_samples_in_common = replace_cgds_suffix(samples_in_common)
-
         # Generates clinical DataFrame
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             clinical_temp_file_path = temp_file.name
@@ -115,7 +104,7 @@ class FSService(object):
             survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
             clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
 
-            clinical_df = clinical_df.loc[clean_samples_in_common]
+            clinical_df = clinical_df.loc[samples_in_common]
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
@@ -143,9 +132,6 @@ class FSService(object):
 
                     # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
                     chunk.index = chunk.index + f'_{file_type}'
-
-                    # Removes TCGA suffix
-                    chunk.columns = chunk.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
                     # Saves in disk
                     chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
@@ -207,8 +193,10 @@ class FSService(object):
         if is_regression:
             time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
             clinical_df = clinical_df[clinical_df[time_column] > 0]
-            valid_samples = clinical_df.index
-            molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Keeps only the samples in common
+        valid_samples = clinical_df.index
+        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
@@ -216,8 +204,8 @@ class FSService(object):
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
-            best_features, best_model, best_score = blind_search(classifier, molecules_df, clinical_data,
-                                                                 is_clustering, clustering_scoring_method)
+            best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
+                                                                            is_clustering, clustering_scoring_method)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
             best_features, best_model, best_score = binary_black_hole_sequential(
                 classifier,

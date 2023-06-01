@@ -21,6 +21,7 @@ export const ClusteringPanel = (props: ClusteringProps) => {
         <>
             <Select
                 className='selection-select'
+                selectOnBlur={false}
                 placeholder='Clustering Algorithm'
                 name='moleculeSelected'
                 options={clusteringAlgorithmOptions}

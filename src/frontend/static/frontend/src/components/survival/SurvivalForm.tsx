@@ -40,6 +40,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
 
                         <Select
                             fluid
+                            selectOnBlur={false}
                             value={props.expressionFileType}
                             options={fileTypeOptions}
                             name="fileType"
@@ -104,6 +105,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                     <Select
                         button
                         fluid
+                        selectOnBlur={false}
                         floating
                         className="margin-bottom-5"
                         disabled={optionsArrayIsEmpty}
@@ -120,6 +122,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                     <Select
                         button
                         fluid
+                        selectOnBlur={false}
                         floating
                         disabled={optionsArrayIsEmpty}
                         name='columnEventStatus'

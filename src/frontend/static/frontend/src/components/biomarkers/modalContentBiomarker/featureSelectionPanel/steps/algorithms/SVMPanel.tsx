@@ -44,6 +44,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
             </Container > */}
 
             <Select
+                selectOnBlur={false}
                 placeholder='Kernel'
                 name='moleculeSelected'
                 options={SVMKernelOptions}

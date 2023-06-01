@@ -100,8 +100,8 @@ class TaskQueue(object):
             experiment.state = ExperimentState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
-            logging.warning(f'Experiment {experiment.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.warning(f'Experiment {experiment.pk} was stopped')
             experiment.state = ExperimentState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)

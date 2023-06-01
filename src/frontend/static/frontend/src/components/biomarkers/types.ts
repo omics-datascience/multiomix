@@ -305,7 +305,7 @@ type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'm
 
 /** Available options for the Menu in the Biomarker details modal */
 enum ActiveBiomarkerDetailItemMenu {
-    MOLECULES,
+    MOLECULES_DETAILS,
     FEATURE_SELECTION_SUMMARY,
     MODELS,
     STATISTICAL_VALIDATION,
@@ -391,6 +391,7 @@ interface InferenceExperimentForTable {
     model: FitnessFunction,
     description: Nullable<string>,
     trained_model: Nullable<number>,
+    clinical_source_id: Nullable<number>
     created: string
 }
 
@@ -412,10 +413,24 @@ interface MoleculesExpressions {
     max: number
 }
 
-/** An array with two values: the sample identifier, and the cluster where it belongs. */
-type SampleAndCluster = {
+/** Common struct for `SampleAndCluster` and `SampleAndTime`. */
+interface SampleLabel {
+    /** Sample identifier. */
     sample: string,
+    /** Color to show in the samples table. */
+    color: Nullable<string>
+}
+
+/** The sample identifier, and the cluster where it belongs. */
+interface SampleAndCluster extends SampleLabel {
+    /** Cluster in which the sample was classified. */
     cluster: string
+}
+
+/** The sample identifier, and the predicted hazard/survival time. */
+interface SampleAndTime extends SampleLabel {
+    /** Predicted hazard/survival time. */
+    prediction: number
 }
 
 /** Data to show in the StatisticalValidation KaplanMeier panel. */
@@ -454,6 +469,41 @@ interface RFModelDetails extends GeneralModelDetails {
 
 /** Types of models details. */
 type ModelDetails = ClusteringModelDetails | SVMModelDetails | RFModelDetails
+
+/** Django ClusterLabel model. */
+interface ClusterLabel {
+    id?: number,
+    label: string,
+    color: string,
+    cluster_id: number
+}
+
+/** Django ClusterLabelsSet model. */
+interface ClusterLabelsSet {
+    id?: number,
+    name: string,
+    description: string,
+    trained_model: number // PK of the TrainedModel
+    labels: ClusterLabel[]
+}
+
+/** Django ClusterLabel model. */
+interface PredictionRangeLabel {
+    id?: number,
+    label: string,
+    color: string,
+    min_value: number,
+    max_value: Nullable<number>
+}
+
+/** Django PredictionRangeLabelsSet model. */
+interface PredictionRangeLabelsSet {
+    id?: number,
+    name: string,
+    description: string,
+    trained_model: number // PK of the TrainedModel
+    labels: PredictionRangeLabel[]
+}
 
 export {
     AdvanceCoxRegression,
@@ -504,5 +554,10 @@ export {
     RFModelDetails,
     ModelDetails,
     SampleAndCluster,
-    RFParameters
+    SampleAndTime,
+    RFParameters,
+    ClusterLabel,
+    ClusterLabelsSet,
+    PredictionRangeLabel,
+    PredictionRangeLabelsSet
 }

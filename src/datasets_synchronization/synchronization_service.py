@@ -6,8 +6,9 @@ from urllib.error import URLError
 import requests
 from pymongo.errors import InvalidName
 from requests.exceptions import ConnectionError
-from common.constants import PATIENT_ID_COLUMN
+from common.constants import PATIENT_ID_COLUMN, TCGA_CONVENTION, SAMPLE_ID_COLUMN
 from common.functions import close_db_connection
+from user_files.models_choices import FileType
 from .models import CGDSStudy, CGDSDataset, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
 from concurrent.futures import ThreadPoolExecutor
 import tarfile
@@ -21,7 +22,7 @@ from django.conf import settings
 
 
 class SkipRowsIsIncorrect(Exception):
-    """Raised when the Pandas skiprows parameter is incorrect"""
+    """Raised when the Pandas "skiprows" parameter is incorrect"""
     pass
 
 
@@ -39,9 +40,9 @@ class SynchronizationService:
     @staticmethod
     def __get_files_of_directory(dir_path: str) -> List[str]:
         """
-        Gets a list of files (excludes directories) of a specific directory path
-        @param dir_path: Directory path to check
-        @return: List of file names in the directory
+        Gets a list of files (excludes directories) of a specific directory path.
+        @param dir_path: Directory path to check.
+        @return: List of file names in the directory.
         """
         return [filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))]
 
@@ -71,6 +72,21 @@ class SynchronizationService:
 
                 # Replaces '.' with '_dot_' to prevent MongoDB errors
                 dataset_content.columns = dataset_content.columns.str.replace(".", "_dot_")
+
+                # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal)
+                # to avoid breaking df join
+                if dataset.file_type == FileType.CLINICAL:
+                    # Clinical data has a PATIENT_ID or SAMPLE_ID column. In the samples file (data_clinical_sample.txt)
+                    # there is a SAMPLE_ID column that has the TCGA suffix. In the patients file
+                    # (data_clinical_patient.txt) there's not, so we have to check if it's that file and replaces the
+                    # suffix in the PATIENT_ID column
+                    if SAMPLE_ID_COLUMN in dataset_content.columns and PATIENT_ID_COLUMN in dataset_content.columns:
+                        dataset_content[PATIENT_ID_COLUMN] = dataset_content[PATIENT_ID_COLUMN].str.replace(
+                            TCGA_CONVENTION, '', regex=True
+                        )
+                else:
+                    # Samples in molecules datasets are in the header (as columns)
+                    dataset_content.columns = dataset_content.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
                 global_mongo_service.drop_collection(dataset.mongo_collection_name)
                 inserted_successfully = global_mongo_service.insert_cgds_dataset(

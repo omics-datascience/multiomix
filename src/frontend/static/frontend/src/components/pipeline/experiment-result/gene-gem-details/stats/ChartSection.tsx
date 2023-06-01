@@ -7,12 +7,18 @@ import { InfoPopup } from '../InfoPopup'
 import { BoxPlotChart } from './BoxPlotChart'
 import { DensityChart } from './DensityChart'
 
+/** MeanAndStdStats props. */
+interface MeanAndStdStatsProps {
+    mean: number;
+    standardDeviation: number;
+}
+
 /**
  * Renders some Stats
  * @param props Component's props
  * @returns Component
  */
-const MeanAndStdStats = (props: { mean: number; standardDeviation: number; }) => {
+const MeanAndStdStats = (props: MeanAndStdStatsProps) => {
     const log2 = Math.log2(props.mean)
     const log2Display = isNaN(log2) ? '-' : log2.toFixed(3)
 

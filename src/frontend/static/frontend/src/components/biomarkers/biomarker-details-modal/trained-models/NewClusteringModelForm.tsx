@@ -18,6 +18,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
         <>
             <Form.Select
                 fluid
+                selectOnBlur={false}
                 label='Algorithm'
                 options={clusteringAlgorithmOptions}
                 placeholder='Select an algorithm'
@@ -47,6 +48,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
 
             <Form.Select
                 fluid
+                selectOnBlur={false}
                 label='Metric'
                 options={clusteringMetricOptions}
                 placeholder='Select a metric'
@@ -59,6 +61,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             {props.parameters.metric === ClusteringMetric.COX_REGRESSION &&
                 <Form.Select
                     fluid
+                    selectOnBlur={false}
                     label='Scoring method'
                     options={clusteringScoringMethodOptions}
                     placeholder='Select a method'
