@@ -65,7 +65,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
             <Select
                 selectOnBlur={false}
                 placeholder='Fitness function'
-                className='selection-select'
+                className='selection-select-m selection-select'
                 options={fitnessFunctionsOptions}
                 value={fitnessFunction ?? undefined}
                 onChange={(_, { value }) => handleChangeFitnessFunction(value as FitnessFunction)}

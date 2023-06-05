@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvanceAlgorithm, BBHAVersion } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -103,9 +103,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             cnaSource: getDefaultSource(),
             algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
             fitnessFunction: FitnessFunction.CLUSTERING,
-            fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters()
+            fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters(),
+            advanceAlgorithm: this.getDefaultAdvanceAlgorithm()
         }
     }
+
+    /**
+     * Generates default settings for advance Algorithm data.
+     * @returns Default structure of all advance algorithms.
+     */
+    getDefaultAdvanceAlgorithm = (): AdvanceAlgorithm => ({
+        isActive: false,
+        BBHA: {
+            numberOfStars: 25,
+            numberOfIterations: 10,
+            BBHAVersion: BBHAVersion.ORIGINAL
+        },
+        coxRegression: {
+            topN: 5
+        }
+    })
 
     /**
      * Generates default settings for all the fitness functions.
@@ -159,6 +176,27 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({
             confirmModal: this.getDefaultConfirmModal()
         })
+    }
+
+    /**
+     * Toggle if advance is active or not
+     */
+    handleSwitchAdvanceAlgorithm = () => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.advanceAlgorithm.isActive = !featureSelection.advanceAlgorithm.isActive
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * Change the value of the advance algorithm and prop selected
+     * @param advanceAlgorithm Advance algorithm selected
+     * @param name name of prop to change
+     * @param value value to set
+     */
+    handleChangeAdvanceAlgorithm = (advanceAlgorithm:string, name:string, value:any) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.advanceAlgorithm[advanceAlgorithm][name] = value
+        this.setState({ featureSelection })
     }
 
     /**
@@ -1427,6 +1465,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}
+                            handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
+                            handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
                             cancelForm= {() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
                         />
                     }

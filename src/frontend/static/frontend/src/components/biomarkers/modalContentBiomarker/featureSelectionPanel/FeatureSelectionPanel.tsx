@@ -30,6 +30,8 @@ interface FeatureSelectionPanelProps {
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
     cancelForm: () => void,
+    handleChangeAdvanceAlgorithm: (advanceAlgorithm:string, name:string, value:any) => void,
+    handleSwitchAdvanceAlgorithm: () => void,
 }
 
 /**
@@ -78,12 +80,14 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
 
             default:
                 return (<FeatureSelectionStep3
+                    handleChangeAdvanceAlgorithm={props.handleChangeAdvanceAlgorithm}
                     featureSelection={props.featureSelection}
                     handleChangeAlgorithm={props.handleChangeAlgorithm}
                     handleChangeFitnessFunction={props.handleChangeFitnessFunction}
                     handleChangeClusterOption={props.handleChangeClusterOption}
                     handleChangeSVMOption={props.handleChangeSVMOption}
                     handleChangeRFOption={props.handleChangeRFOption}
+                    handleSwitchAdvanceAlgorithm={props.handleSwitchAdvanceAlgorithm}
                 />)
         }
     }

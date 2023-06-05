@@ -1,5 +1,11 @@
 import { DropdownItemProps } from 'semantic-ui-react'
-import { BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, RFParameters, SVMKernel, SVMParameters, SVMTask } from './types'
+import { BBHAVersion, BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, RFParameters, SVMKernel, SVMParameters, SVMTask } from './types'
+
+/** Available options for BBHA versions */
+const advanceBBHAOptions: DropdownItemProps[] = [
+    { key: BBHAVersion.ORIGINAL, text: 'Original', value: BBHAVersion.ORIGINAL },
+    { key: BBHAVersion.V2, text: 'Version 2', value: BBHAVersion.V2, disabled: true } // TODO: implement in backend
+]
 
 /** Available fitness functions models to use. */
 const fitnessFunctionsOptions: DropdownItemProps[] = [
@@ -88,6 +94,7 @@ const getDefaultRFParameters = (): RFParameters => {
 }
 
 export {
+    advanceBBHAOptions,
     fitnessFunctionsOptions,
     SVMKernelOptions,
     clusteringAlgorithmOptions,
