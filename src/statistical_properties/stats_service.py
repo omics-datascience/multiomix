@@ -213,7 +213,7 @@ class StatisticalValidationService(object):
         is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
 
         # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinica DataFrames
+        # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
@@ -301,7 +301,7 @@ class StatisticalValidationService(object):
             trained_model, model_parameters)
 
         # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinica DataFrames
+        # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
         clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 

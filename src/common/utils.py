@@ -18,9 +18,25 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
     return int(content)
 
 
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Removes NaN and Inf values.
+    :param df: DataFrame to clean.
+    :return: Cleaned DataFrame.
+    """
+    assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
+    df = df.dropna(axis='columns')
+    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any('columns')
+    return df[indices_to_keep].astype(np.float64)
+
+
 def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
     """
     Gets a specific subset of features from a Pandas DataFrame.
+    TODO: refactor to make the transpose on CSV creation to avoid repeating that option everytime (for example
+    TODO: blind_search_sequential() call this method on every iteration). Call the transpose method
+    TODO: and use the clean_dataset() from above to remove NaN and Inf values, both operations on CSV creation and in
+    TODO: that order: transpose() -> clean_dataset() as in the multiomix-emr-integration project.
     @param molecules_df: Pandas DataFrame with all the features.
     @param combination: Combination of features to extract.
     @return: A Pandas DataFrame with only the combinations of features.

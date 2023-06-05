@@ -125,7 +125,7 @@ class InferenceExperimentsService(object):
         is_clustering = hasattr(trained_model, 'clustering_parameters')
 
         # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinica DataFrames
+        # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
 
         # Computes general metrics
