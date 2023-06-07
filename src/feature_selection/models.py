@@ -107,6 +107,7 @@ class FSExperiment(models.Model):
                                    related_name='fs_experiments_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
+    emr_job_id = models.CharField(max_length=100, null=True, blank=True)
 
     def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
         """Returns a list with all the sources."""

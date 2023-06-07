@@ -11,6 +11,7 @@ from common.utils import get_samples_intersection
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
+from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
     ClusteringParameters
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -207,15 +208,37 @@ class FSService(object):
             best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
                                                                             is_clustering, clustering_scoring_method)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
-            best_features, best_model, best_score = binary_black_hole_sequential(
-                classifier,
-                molecules_df,
-                n_stars=25,  # TODO: parametrize in frontend
-                n_iterations=10,  # TODO: parametrize in frontend
-                clinical_data=clinical_data,
-                is_clustering=is_clustering,
-                clustering_score_method=clustering_scoring_method
-            )
+            # TODO: add here a min_number_of_features parameter to prevent sending a little experiment to AWS
+            if settings.ENABLE_AWS_EMR_INTEGRATION:
+                job_id = binary_black_hole_spark(
+                    job_name=f'Job for FSExperiment: {experiment.pk}',
+                    classifier=classifier,
+                    molecules_df=molecules_df,
+                    n_stars=25,  # TODO: parametrize in frontend
+                    n_iterations=10,  # TODO: parametrize in frontend
+                    clinical_df=clinical_df,
+                    is_clustering=is_clustering,
+                    clustering_score_method=clustering_scoring_method,
+                    binary_threshold=None  # TODO: parametrize in frontend
+                )
+
+                # Saves the job id in the experiment
+                experiment.emr_job_id = job_id
+                experiment.save(update_fields=['emr_job_id'])
+
+                # It doesn't need to wait anything because the job is running in the AWS cluster right now
+                return
+            else:
+                # Runs sequential version
+                best_features, best_model, best_score = binary_black_hole_sequential(
+                    classifier,
+                    molecules_df,
+                    n_stars=25,  # TODO: parametrize in frontend
+                    n_iterations=10,  # TODO: parametrize in frontend
+                    clinical_data=clinical_data,
+                    is_clustering=is_clustering,
+                    clustering_score_method=clustering_scoring_method
+                )
         elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
             best_features, best_model, best_score = select_top_cox_regression(
                 molecules_df,
@@ -250,7 +273,7 @@ class FSService(object):
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop signal.
-        @return Trained model instance if everything was ok. None if no best features were found.
+        @return Both molecules and clinical files paths.
         """
         # Get samples in common
         samples_in_common = self.__get_common_samples(experiment)
