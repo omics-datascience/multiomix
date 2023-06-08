@@ -3,6 +3,7 @@ import { Select, DropdownItemProps } from 'semantic-ui-react'
 import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
+import { InputLabel } from '../InputLabel'
 
 declare const urlPredictionRangeLabelsSets: string
 
@@ -55,9 +56,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
 
     return (
         <>
-            <label>
-                <strong>Use a range label</strong>
-            </label>
+            <InputLabel label='Use a range label' />
 
             <Select
                 fluid

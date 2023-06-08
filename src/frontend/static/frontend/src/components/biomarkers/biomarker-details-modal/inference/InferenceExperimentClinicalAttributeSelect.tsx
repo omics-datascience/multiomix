@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Form } from 'semantic-ui-react'
 import { alertGeneralError, listToDropdownOptions } from '../../../../utils/util_functions'
 import { InferenceExperimentForTable } from '../../types'
+import { InputLabel } from '../../../common/InputLabel'
 
 declare const urlInferenceExperimentClinicalAttrs: string
 
@@ -59,9 +60,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
 
     return (
         <>
-            <label>
-                <strong>Group by clinical attribute</strong>
-            </label>
+            <InputLabel label='Group by clinical attribute' />
 
             <Form.Select
                 fluid

@@ -4,6 +4,7 @@ import { ClusterLabelsSet } from '../../biomarkers/types'
 import { HexAlphaColorPicker } from 'react-colorful'
 import { alertGeneralError, getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
+import { InputLabel } from '../InputLabel'
 
 declare const urlClusterLabelsSets: string
 
@@ -212,9 +213,8 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                                 </Grid.Column>
                                                 {/* Color */}
                                                 <Grid.Column width={8}>
-                                                    <label>
-                                                        <strong>Color</strong>
-                                                    </label>
+                                                    <InputLabel label='Color' />
+
                                                     <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) } } />
                                                 </Grid.Column>
                                             </Grid.Row>

@@ -8,6 +8,7 @@ import { getGemDescription, getGeneAndGEMFromSelectedRow, listToDropdownOptions 
 import { GeneGEMDataErrorMessage } from '../GeneGEMDataErrorMessage'
 import { CorrelationChartData, ApexChartJSSerie } from './../GeneGemDetailsModal'
 import * as d3 from 'd3'
+import { InputLabel } from '../../../../common/InputLabel'
 
 /**
  * Component's props
@@ -148,9 +149,8 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
         <Grid>
             <Grid.Row>
                 <Grid.Column width={5}>
-                    <label>
-                        <strong>Group by factor</strong>
-                    </label>
+                    <InputLabel label='Group by factor' />
+
                     <Dropdown
                         placeholder='Group by'
                         fluid

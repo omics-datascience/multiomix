@@ -4,6 +4,7 @@ import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { Nullable } from '../../../../utils/interfaces'
 import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
 import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
+import { PathwaysInformation } from './genes/PathwaysInformation'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -31,6 +32,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             case ActiveBiomarkerMoleculeItemMenu.DETAILS:
                 return <MoleculeGeneralInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
+                return <PathwaysInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return null
         }
@@ -73,7 +75,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const moleculeIsNull = props.selectedMolecule === null
 
     return (
-        <Grid>
+        <Grid padded>
             <Grid.Row className='min-height-50vh' columns={1} verticalAlign={moleculeIsNull ? 'middle' : undefined}>
                 <Grid.Column textAlign={moleculeIsNull ? 'center' : undefined}>
                     {getPanel()}

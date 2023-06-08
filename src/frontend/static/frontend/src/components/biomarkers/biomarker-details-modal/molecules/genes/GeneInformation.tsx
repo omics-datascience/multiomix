@@ -5,7 +5,7 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from '../../stat-validations/result/ResultPlaceholder'
 import { Nullable } from '../../../../../utils/interfaces'
 import { GeneData } from './types'
-import { Card, Divider, Grid, Message } from 'semantic-ui-react'
+import { Card, Grid, Message } from 'semantic-ui-react'
 
 declare const urlGeneInformation: string
 
@@ -34,8 +34,8 @@ export const GeneInformation = (props: GeneInformationProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlGeneInformation, { searchParams }).then((response) => {
-            response.json().then((geneResponse: { data: GeneData }) => {
-                setGeneData(geneResponse.data)
+            response.json().then((jsonResponse: { data: GeneData }) => {
+                setGeneData(jsonResponse.data)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)

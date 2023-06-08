@@ -31,15 +31,14 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                     </Grid.Column>
                     <Grid.Column width={12}>
                         {/* Show the corresponding table */}
-                        {
-                            props.selectedInferenceExperiment.model === FitnessFunction.CLUSTERING
-                                ? <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
-                                : (
-                                    <SamplesAndTimeInferenceTable
-                                        selectedInferenceExperiment={props.selectedInferenceExperiment}
-                                        refreshExperimentInfo={props.refreshExperimentInfo}
-                                    />
-                                )
+                        {props.selectedInferenceExperiment.model === FitnessFunction.CLUSTERING
+                            ? <SamplesAndGroupsInferenceTable selectedInferenceExperiment={props.selectedInferenceExperiment} />
+                            : (
+                                <SamplesAndTimeInferenceTable
+                                    selectedInferenceExperiment={props.selectedInferenceExperiment}
+                                    refreshExperimentInfo={props.refreshExperimentInfo}
+                                />
+                            )
                         }
                     </Grid.Column>
                 </Grid.Row>
