@@ -8,7 +8,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker
+from biomarkers.models import Biomarker, BiomarkerState
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction
@@ -108,4 +108,15 @@ class FeatureSelectionSubmit(APIView):
             # Adds Feature Selection experiment to the ThreadPool
             global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters)
 
+        return Response({'ok': True})
+
+
+class FeatureSelectionExperimentAWSNotification(APIView):
+    """This endpoint receives the AWS notification and updates the Feature Selection experiment's state."""
+
+    @staticmethod
+    def get(job_id: str):
+        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id)
+        fs_experiment.state = BiomarkerState.COMPLETED
+        fs_experiment.save(update_fields=['state'])
         return Response({'ok': True})

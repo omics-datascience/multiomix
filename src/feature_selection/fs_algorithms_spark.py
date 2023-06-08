@@ -1,6 +1,5 @@
-import os
 from enum import Enum
-from typing import Optional, Any, Dict
+from typing import Optional
 import numpy as np
 import pandas as pd
 import requests
@@ -120,7 +119,7 @@ def binary_black_hole_spark(
     "Binary black hole algorithm for feature selection and classification on biological data"
     Authors: Elnaz Pashaei, Nizamettin Aydin. This is the same as binary_black_hole_sequential but this runs on an AWS
     Spark Cluster.
-    TODO: use all the params
+    TODO: use all the params and remove the comments.
     @param job_name: Name of the job.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
@@ -131,6 +130,7 @@ def binary_black_hole_spark(
     @param clustering_score_method: Clustering scoring method to optimize.
     @param binary_threshold: Binary threshold to set 1 or 0 the feature. If None it'll be computed randomly.
     @return: Job id in the EMR Spark cluster.
+    @raise Exception: If the request raised an exception.
     """
 
     # Pre-requirements
@@ -191,10 +191,10 @@ def binary_black_hole_spark(
     #        @Body json object
     #          ~ id: job id
     # Makes a request to the EMR microservice to run the binary black hole algorithm.
-    url = f'{emr_settings["host"]}:{emr_settings["port"]}/job'
+    url = f'http://{emr_settings["host"]}:{emr_settings["port"]}/job'
     response = requests.post(url, json={
         'name': job_name,
-        'algorithm': EMRAlgorithms.BBHA,
+        'algorithm': EMRAlgorithms.BBHA.value,
         'entrypoint_arguments': [
             {
                 'name': 'svm-kernel',
@@ -211,7 +211,10 @@ def binary_black_hole_spark(
         ]
     })
 
-    # Gets the job id from the response
+    # If it's a 500 error, raise an exception
+    response.raise_for_status()
+
+    # Otherwise, gets the job id from the response
     job_id = response.json()['id']
 
     # Recap
