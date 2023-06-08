@@ -162,7 +162,7 @@ class FSService(object):
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
                              model_parameters: Dict[str, Any],
-                             stop_event: Event):
+                             stop_event: Event) -> bool:
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
@@ -172,6 +172,7 @@ class FSService(object):
         @param fit_fun_enum: Selected fitness function to compute.
         @param model_parameters: Parameters of the fitness function to compute.
         @param stop_event: Stop signal.
+        @return A flag to indicate whether the experiment is running in spark
         """
         # Creates TrainedModel instance
         trained_model: TrainedModel = TrainedModel.objects.create(
@@ -227,7 +228,7 @@ class FSService(object):
                 experiment.save(update_fields=['emr_job_id'])
 
                 # It doesn't need to wait anything because the job is running in the AWS cluster right now
-                return
+                return True  # Indicates that the experiment is running in AWS
             else:
                 # Runs sequential version
                 best_features, best_model, best_score = binary_black_hole_sequential(
@@ -264,9 +265,11 @@ class FSService(object):
 
         trained_model.save(update_fields=['state'])
 
+        return False  # It is not running in spark
+
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                          fitness_function_parameters: Dict[str, Any],
-                                         stop_event: Event) -> Tuple[str, str]:
+                                         stop_event: Event) -> Tuple[str, str, bool]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
         @param experiment: FSExperiment instance.
@@ -281,13 +284,15 @@ class FSService(object):
             raise NoSamplesInCommon
 
         # Generates needed DataFrames
-        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
-                                                                                                      samples_in_common)
+        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(
+            experiment,
+            samples_in_common
+        )
 
-        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
-                                                  fit_fun_enum, fitness_function_parameters, stop_event)
+        running_in_spark = self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
+                                                     fit_fun_enum, fitness_function_parameters, stop_event)
 
-        return molecules_temp_file_path, clinical_temp_file_path
+        return molecules_temp_file_path, clinical_temp_file_path, running_in_spark
 
 
     def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
@@ -316,7 +321,7 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(
+            molecules_temp_file_path, clinical_temp_file_path, running_in_spark = self.__prepare_and_compute_experiment(
                 experiment, fit_fun_enum, fitness_function_parameters, stop_event
             )
             total_execution_time = time.time() - start
@@ -329,8 +334,11 @@ class FSService(object):
                 self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
                 # Saves some data about the result of the experiment
-                experiment.execution_time = total_execution_time
-                biomarker.state = BiomarkerState.COMPLETED
+                # If it's running in Spark, the execution time is not saved here because it's not known yet and
+                # the state is set from the /aws-notification endpoint asynchronously
+                if not running_in_spark:
+                    experiment.execution_time = total_execution_time
+                    biomarker.state = BiomarkerState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
