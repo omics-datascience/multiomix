@@ -7,7 +7,7 @@ from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.utils import get_samples_intersection
+from common.utils import get_samples_intersection, clean_dataset
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
@@ -199,6 +199,9 @@ class FSService(object):
         # Keeps only the samples in common
         valid_samples = clinical_df.index
         molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Removes molecules with NaN values
+        molecules_df = clean_dataset(molecules_df, axis='rows')
 
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',

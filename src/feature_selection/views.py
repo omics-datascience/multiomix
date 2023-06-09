@@ -116,7 +116,16 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
     @staticmethod
     def get(job_id: str):
+        # Sets new state and execution time
         fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id)
         fs_experiment.state = BiomarkerState.COMPLETED
         fs_experiment.save(update_fields=['state'])
+        # TODO: save execution time
+
+        # Removes the molecules and clinical datasets from the shared folder
+        # TODO: implement
+
+        # If everything went well, gets results, saves the corresponding data and returns ok
+        # TODO: implement
+
         return Response({'ok': True})

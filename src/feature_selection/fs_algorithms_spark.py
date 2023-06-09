@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from typing import Optional
 import numpy as np
@@ -142,7 +143,7 @@ def binary_black_hole_spark(
     emr_settings = settings.AWS_EMR_SETTINGS
 
     # Saves molecules_df and clinical_df in the shared volume with the microservice
-    shared_folder = emr_settings['shared_folder']
+    data_folder = emr_settings['shared_folder_data']
 
     # Dataset dump
     # ************
@@ -153,8 +154,8 @@ def binary_black_hole_spark(
     #    the path should be relative from the mount point.
 
     # TODO: uncomment when implemented
-    # molecules_df.to_csv(os.path.join(shared_folder, 'molecules_df.csv'), sep=',', decimal='.')
-    # clinical_df.to_csv(os.path.join(shared_folder, 'clinical_df.csv'), sep=',', decimal='.')
+    # molecules_df.to_csv(os.path.join(data_folder, 'molecules_df.csv'), sep=',', decimal='.')
+    # clinical_df.to_csv(os.path.join(data_folder, 'clinical_df.csv'), sep=',', decimal='.')
 
     # AWS-EMR middleware microservice communication
     # *********************************************
@@ -207,7 +208,16 @@ def binary_black_hole_spark(
             {
                 'name': 'clinical-dataset',
                 'value': 'clinical.csv',
+            },
+            {
+                'name': 'n-stars',
+                'value': n_stars,
+            },
+            {
+                'name': 'bbha-iterations',
+                'value': n_iterations,
             }
+            # TODO: add independent-runs parameter hera and in the frontend
         ]
     })
 

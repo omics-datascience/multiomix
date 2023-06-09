@@ -107,7 +107,11 @@ class FSExperiment(models.Model):
                                    related_name='fs_experiments_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
-    emr_job_id = models.CharField(max_length=100, null=True, blank=True)
+
+    # AWS-EMR fields
+    emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
+    molecules_path = models.CharField(max_length=200, null=True, blank=True)  # Path to the molecules shared folder
+    clinical_path = models.CharField(max_length=200, null=True, blank=True)  # Path to the molecules shared folder
 
     def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
         """Returns a list with all the sources."""

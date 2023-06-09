@@ -16,7 +16,7 @@ class BiomarkerOrigin(models.IntegerChoices):
 
 
 class BiomarkerState(models.IntegerChoices):
-    """All the possible states of a Biomarker."""
+    """All the possible states of a Biomarker/FSExperiment/etc."""
     COMPLETED = 1
     FINISHED_WITH_ERROR = 2
     IN_PROCESS = 3

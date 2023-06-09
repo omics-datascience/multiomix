@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union, Optional, cast
+from typing import List, Union, Optional, cast, Literal
 import pandas as pd
 from django.http import QueryDict
 from api_service.models import ExperimentSource
@@ -18,16 +18,20 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
     return int(content)
 
 
-def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+def clean_dataset(df: pd.DataFrame, axis: Literal['rows', 'columns']) -> pd.DataFrame:
     """
     Removes NaN and Inf values.
     :param df: DataFrame to clean.
+    :param axis: Axis to remove the Nans values.
     :return: Cleaned DataFrame.
     """
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
-    df = df.dropna(axis='columns')
-    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any('columns')
-    return df[indices_to_keep].astype(np.float64)
+
+    # Taken from https://stackoverflow.com/a/45746209/7058363
+    with pd.option_context('mode.use_inf_as_na', True):
+        df = df.dropna(axis=axis, how='all')
+
+    return df
 
 
 def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:

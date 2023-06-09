@@ -19,7 +19,7 @@ from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
-from common.utils import get_subset_of_features, get_samples_intersection
+from common.utils import get_subset_of_features, get_samples_intersection, clean_dataset
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -225,6 +225,9 @@ class StatisticalValidationService(object):
         valid_samples = clinical_df.index
         molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
+        # Removes molecules with NaN values
+        molecules_df = clean_dataset(molecules_df, axis='rows')
+
         # Formats clinical data to a Numpy structured array
         clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
                                                    formats='bool, float')
@@ -313,6 +316,9 @@ class StatisticalValidationService(object):
         # Keeps only the samples that are in both DataFrames
         valid_samples = clinical_df.index
         molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
+
+        # Removes molecules with NaN values
+        molecules_df = clean_dataset(molecules_df, axis='rows')
 
         # Formats clinical data to a Numpy structured array
         # TODO: refactor
