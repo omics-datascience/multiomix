@@ -2,7 +2,7 @@ import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
-import ky from 'ky'
+import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvanceAlgorithm, BBHAVersion } from './types'
@@ -30,6 +30,8 @@ declare const urlMiRNACodesFinder: string
 declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
+
+const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {
@@ -350,31 +352,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * TODO: document
-     * @param molecule TODO: document
-     * @param section TODO: document
-     * @param itemSelected TODO: document
+     * Disambiguate the selected molecule for the yellow buttons.
+     * @param moleculeToDisambiguate Molecule to disambiguate.
+     * @param section Molecule section.
+     * @param selectedOption Selected option.
      */
-    handleSelectOptionMolecule = (molecule: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => {
-        const indexChosen = this.state.formBiomarker.moleculesSection[section].data.findIndex((item) => item.value === itemSelected)
-        const newFormBiomarkerByMoleculesSection: FormBiomarkerData = {
-            ...this.state.formBiomarker
-        }
-        if (indexChosen !== -1) {
-            newFormBiomarkerByMoleculesSection.moleculesSection[section].data = [...newFormBiomarkerByMoleculesSection.moleculesSection[section].data].filter(
-                (item) => _.isEqual(item.value, molecule.value)
-            )
+    handleSelectOptionMolecule = (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => {
+        const formBiomarker: FormBiomarkerData = { ...this.state.formBiomarker }
+        const indexToSelect = formBiomarker.moleculesSection[section].data.findIndex((item) => _.isEqual(item.value, moleculeToDisambiguate.value))
+
+        // Checks if the molecule is already a valid one
+        const exists = formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
+        if (!exists) {
+            formBiomarker.moleculesSection[section].data[indexToSelect].isValid = true
+            formBiomarker.moleculesSection[section].data[indexToSelect].value = selectedOption
         } else {
-            const indexToSelect = this.state.formBiomarker.moleculesSection[section].data.findIndex(
-                (item) => _.isEqual(item.value, molecule.value)
-            )
-            const sectionModified = [...this.state.formBiomarker.moleculesSection[section].data]
-            sectionModified[indexToSelect].isValid = true
-            sectionModified[indexToSelect].value = itemSelected
-            newFormBiomarkerByMoleculesSection.moleculesSection[section].data = sectionModified
+            // If exists a valid molecule with the same name than the selected option, removes the molecule from the list
+            formBiomarker.moleculesSection[section].data.splice(indexToSelect, 1)
         }
 
-        this.setState({ formBiomarker: newFormBiomarkerByMoleculesSection })
+        this.setState({ formBiomarker })
     }
 
     /**
@@ -472,10 +469,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
-        this.setState({
-            formBiomarker: formBiomarkerPreLoad
-        })
-        ky.get(urlToFind, { searchParams: { query, limit: 5 } }).then((response) => {
+
+        this.setState({ formBiomarker: formBiomarkerPreLoad })
+
+        ky.get(urlToFind, { searchParams: { query, limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: string[]) => {
                 const formBiomarker = this.state.formBiomarker
                 formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(gen => ({
@@ -483,9 +480,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     text: gen,
                     value: gen
                 }))
-                this.setState({
-                    formBiomarker
-                })
+                this.setState({ formBiomarker })
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
@@ -504,8 +499,23 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleRemoveInvalidGenes = (sector: BiomarkerType): void => {
         const formBiomarker = this.state.formBiomarker
-        formBiomarker.moleculesSection[sector].data = this.state.formBiomarker.moleculesSection[sector].data.filter(gen => !(!gen.isValid && !Array.isArray(gen.value)))
+        formBiomarker.moleculesSection[sector].data = formBiomarker.moleculesSection[sector].data.filter(gen => gen.isValid || Array.isArray(gen.value))
         this.setState({ formBiomarker })
+    }
+
+    /**
+     * Order data to show in the section.
+     * @param data Data to order.
+     * @returns Ordered data.
+     */
+    orderData = (data: MoleculesSectionData[]): MoleculesSectionData[] => {
+        return data.sort((a, b) => {
+            const cond = Number(a.isValid) - Number(b.isValid)
+            if (cond !== 0) {
+                return cond
+            }
+            return Array.isArray(a.value) ? 1 : -1
+        })
     }
 
     /**
@@ -544,7 +554,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 json = { gene_ids: molecules }
                 break
         }
-        ky.post(urlToFind, { headers: getDjangoHeader(), json }).then((response) => {
+
+        ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
                 const genesArray: MoleculesSectionData[] = []
@@ -588,7 +599,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     ...this.state.formBiomarker.moleculesSection,
                     [this.state.formBiomarker.moleculeSelected]: {
                         isLoading: false,
-                        data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray)
+                        data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
                     }
                 }
                 this.setState({
@@ -720,12 +731,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             cnas: formBiomarker.moleculesSection.CNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
         }
 
-        const settings = {
+        const settings: Options = {
             headers: getDjangoHeader(),
-            json: biomarkerToSend
+            json: biomarkerToSend,
+            timeout: REQUEST_TIMEOUT
         }
-        formBiomarker.validation.isLoading = false
-        this.setState({ formBiomarker })
 
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCRUD, settings).then((response) => {
@@ -740,8 +750,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 alert.isOpen = true
                 alert.type = CustomAlertTypes.ERROR
                 alert.message = 'Error creating biomarker!'
+                this.setState({ alert })
+            }).finally(() => {
                 formBiomarker.validation.isLoading = false
-                this.setState({ alert, formBiomarker })
+                this.setState({ formBiomarker })
             })
         } else {
             ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
@@ -756,8 +768,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 alert.isOpen = true
                 alert.type = CustomAlertTypes.ERROR
                 alert.message = 'Error editing biomarker!'
+                this.setState({ alert })
+            }).finally(() => {
                 formBiomarker.validation.isLoading = false
-                this.setState({ alert, formBiomarker })
+                this.setState({ formBiomarker })
             })
         }
     }

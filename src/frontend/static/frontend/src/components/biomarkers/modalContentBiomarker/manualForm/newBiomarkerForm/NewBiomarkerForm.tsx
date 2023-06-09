@@ -54,12 +54,10 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             text: BiomarkerType.METHYLATION
         }
     ]
-    const handleSendForm = () => {
-        return props.handleSendForm()
-    }
+
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
-            <Header textAlign="center">
+            <Header textAlign="center" className='margin-top-0'>
                 <Icon name='th' />
                 <Header.Content>New Biomarker</Header.Content>
             </Header>
@@ -137,7 +135,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         color='green'
                         content={props.biomarkerForm.id ? 'Save changes' : 'Send Form'}
                         fluid
-                        onClick={handleSendForm}
+                        onClick={props.handleSendForm}
                         loading={props.biomarkerForm.validation.isLoading}
                         disabled={props.biomarkerForm.validation.isLoading || (haveAmbiguous || haveInvalid) || !props.biomarkerForm.biomarkerName}
                     />
