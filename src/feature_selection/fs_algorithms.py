@@ -305,7 +305,7 @@ def binary_black_hole_sequential(
                 x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
                 stars_subsets[a][d] = 1 if abs(tanh(x_new)) > threshold else 0
 
-
+    best_features = best_features.astype(bool)  # Pandas needs a boolean array to select the rows
     best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()
     return best_features_str, best_model, best_score
 
