@@ -257,7 +257,7 @@ interface FeatureSelectionPanelData {
     step: number;
     /** Biomarker instance to optimize with Feature Selection. */
     biomarker: Nullable<Biomarker>;
-    /** Selected Biomarker instance in the Biomarkers table. */
+    /** Selected Biomarker instance in the Biomarkers table to show as active. */
     selectedBiomarker: Nullable<Biomarker>;
     /** Clinical source. */
     clinicalSource: Source,
@@ -272,32 +272,36 @@ interface FeatureSelectionPanelData {
     /** Algorithm to make Feature Selection. */
     algorithm: FeatureSelectionAlgorithm,
     /** Advance algorithm to make Feature Selection */
-    advanceAlgorithm: AdvanceAlgorithm,
+    advancedAlgorithmParameters: AdvancedAlgorithm,
     /** Fitness function to optimize in the algorithm. */
     fitnessFunction: FitnessFunction,
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters
 }
-/** Advance algorithm types to make Feature selection */
-interface AdvanceAlgorithm{
+
+/** Advanced algorithm parameters to make Feature selection */
+interface AdvancedAlgorithm{
     isActive: boolean,
-    BBHA: AdvanceBBHA,
-    coxRegression: AdvanceCoxRegression
+    BBHA: AdvancedBBHA,
+    coxRegression: AdvancedCoxRegression
 }
-/** advance cox regression properties */
-interface AdvanceCoxRegression{
+
+/** Advanced Cox Regression properties */
+interface AdvancedCoxRegression{
     topN: number
 }
-/** advance BBHA properties */
-interface AdvanceBBHA{
+
+/** Advanced BBHA properties */
+interface AdvancedBBHA{
     numberOfStars: number;
     numberOfIterations: number;
     BBHAVersion: BBHAVersion;
 }
-/** Black hole version */
+
+/** Binary Black Hole Algorithm version */
 enum BBHAVersion{
     ORIGINAL = 1,
-    V2 = 2,
+    IMPROVED = 2
 }
 
 /** Available types of Sources for a Biomarker. */
@@ -506,10 +510,10 @@ interface PredictionRangeLabelsSet {
 }
 
 export {
-    AdvanceCoxRegression,
-    AdvanceBBHA,
+    AdvancedCoxRegression,
+    AdvancedBBHA,
     BBHAVersion,
-    AdvanceAlgorithm,
+    AdvancedAlgorithm,
     SVMKernel,
     SVMTask,
     SVMParameters,

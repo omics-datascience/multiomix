@@ -1,5 +1,6 @@
 import React from 'react'
 import { Header, List } from 'semantic-ui-react'
+import { ExternalLink } from '../common/ExternalLink'
 
 declare const urlDatasets: string
 
@@ -19,7 +20,7 @@ export const PipelineSourcePopupContent = () => (
                 <List.Content>
                     <List.Header>From multiomix</List.Header>
                     <List.Description>
-                        Uploaded datasets from <a href={urlDatasets} target='_blank' rel='noopener noreferrer'>Datasets/Multiomix</a> menu
+                        Uploaded datasets from <ExternalLink href={urlDatasets}>Datasets/Multiomix</ExternalLink> menu
                     </List.Description>
                 </List.Content>
             </List.Item>
@@ -28,7 +29,7 @@ export const PipelineSourcePopupContent = () => (
                 <List.Content>
                     <List.Header>From cBioPortal</List.Header>
                     <List.Description>
-                        Datasets synchronized from <a href='https://www.cbioportal.org/datasets' target='_blank' rel='noopener noreferrer'>cBioPortal</a> ready to use!
+                        Datasets synchronized from <ExternalLink href='https://www.cbioportal.org/datasets'>cBioPortal</ExternalLink> ready to use!
                     </List.Description>
                 </List.Content>
             </List.Item>
@@ -37,7 +38,7 @@ export const PipelineSourcePopupContent = () => (
                 <List.Content>
                     <List.Header>Upload dataset</List.Header>
                     <List.Description>
-                        You can upload a dataset from your computer. It will be stored and appear in <a href={urlDatasets} target='_blank' rel='noopener noreferrer'>Datasets/Multiomix</a> menu. <strong>It will be private and only accessible for you (you can share it from <a href={urlDatasets} target='_blank' rel='noopener noreferrer'>Datasets/Multiomix</a> menu)</strong>
+                        You can upload a dataset from your computer. It will be stored and appear in <ExternalLink href={urlDatasets}>Datasets/Multiomix</ExternalLink> menu. <strong>It will be private and only accessible for you (you can share it from <ExternalLink href={urlDatasets}>Datasets/Multiomix</ExternalLink> menu)</strong>
                     </List.Description>
                 </List.Content>
             </List.Item>

@@ -7,13 +7,13 @@ from typing import Dict, Tuple, cast, Optional, Union, List, Any
 import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
     CNAIdentifier, MethylationIdentifier
-from common.utils import get_samples_intersection, clean_dataset
+from common.utils import get_samples_intersection, clean_dataset, limit_between_min_max
 from user_files.models_choices import FileType
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
-    ClusteringParameters
+    ClusteringParameters, BBHAParameters, CoxRegressionParameters
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -161,7 +161,8 @@ class FSService(object):
 
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
-                             model_parameters: Dict[str, Any],
+                             fitness_function_parameters: Dict[str, Any],
+                             algorithm_parameters: Dict[str, Any],
                              stop_event: Event) -> bool:
         """
         Computes the Feature Selection experiment using the params defined by the user.
@@ -170,7 +171,8 @@ class FSService(object):
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param fit_fun_enum: Selected fitness function to compute.
-        @param model_parameters: Parameters of the fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop signal.
         @return A flag to indicate whether the experiment is running in spark
         """
@@ -185,7 +187,8 @@ class FSService(object):
 
         # Gets model instance and stores its parameters
         classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
-            trained_model, model_parameters)
+            trained_model, fitness_function_parameters
+        )
 
         # Gets molecules and clinical DataFrames
         molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
@@ -212,14 +215,27 @@ class FSService(object):
             best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
                                                                             is_clustering, clustering_scoring_method)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
+            bbha_parameters = algorithm_parameters['BBHA']
+            n_stars = int(bbha_parameters['numberOfStars'])
+            n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
+            bbha_version = int(bbha_parameters['BBHAVersion'])
+
+            # Creates an instance of BBHAParameters
+            BBHAParameters.objects.create(
+                fs_experiment=experiment,
+                n_stars=n_stars,
+                n_iterations=n_bbha_iterations,
+                version_used=bbha_version
+            )
+
             # TODO: add here a min_number_of_features parameter to prevent sending a little experiment to AWS
             if settings.ENABLE_AWS_EMR_INTEGRATION:
                 job_id = binary_black_hole_spark(
                     job_name=f'Job for FSExperiment: {experiment.pk}',
                     classifier=classifier,
                     molecules_df=molecules_df,
-                    n_stars=25,  # TODO: parametrize in frontend
-                    n_iterations=10,  # TODO: parametrize in frontend
+                    n_stars=n_stars,
+                    n_iterations=n_bbha_iterations,
                     clinical_df=clinical_df,
                     is_clustering=is_clustering,
                     clustering_score_method=clustering_scoring_method,
@@ -237,18 +253,31 @@ class FSService(object):
                 best_features, best_model, best_score = binary_black_hole_sequential(
                     classifier,
                     molecules_df,
-                    n_stars=25,  # TODO: parametrize in frontend
-                    n_iterations=10,  # TODO: parametrize in frontend
+                    n_stars=n_stars,
+                    n_iterations=n_bbha_iterations,
                     clinical_data=clinical_data,
                     is_clustering=is_clustering,
                     clustering_score_method=clustering_scoring_method
                 )
         elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
+            cox_regression_parameters = algorithm_parameters['coxRegression']
+            if cox_regression_parameters['topN']:
+                top_n = int(cox_regression_parameters['topN'])
+                top_n = limit_between_min_max(top_n, 1, len(molecules_df.columns))
+            else:
+                top_n = None
+
+            # Creates an instance of CoxRegressionParameters
+            CoxRegressionParameters.objects.create(
+                fs_experiment=experiment,
+                top_n=top_n
+            )
+
             best_features, best_model, best_score = select_top_cox_regression(
                 molecules_df,
                 clinical_data,
                 filter_zero_coeff=True, # Keeps only != 0 coefficient
-                top_n=None  # TODO: parametrize from frontend
+                top_n=top_n
             )
         else:
             # TODO: implement PSO and GA
@@ -272,12 +301,14 @@ class FSService(object):
 
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                          fitness_function_parameters: Dict[str, Any],
+                                         algorithm_parameters: Dict[str, Any],
                                          stop_event: Event) -> Tuple[str, str, bool]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
         @param experiment: FSExperiment instance.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop signal.
         @return Both molecules and clinical files paths.
         """
@@ -293,19 +324,22 @@ class FSService(object):
         )
 
         running_in_spark = self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
-                                                     fit_fun_enum, fitness_function_parameters, stop_event)
+                                                     fit_fun_enum, fitness_function_parameters,
+                                                     algorithm_parameters, stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path, running_in_spark
 
 
     def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                           fitness_function_parameters: Dict[str, Any],
+                                          algorithm_parameters: Dict[str, Any],
                                           stop_event: Event):
         """
         Computes a Feature Selection experiment.
         @param experiment: FSExperiment to be processed.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop event to cancel the experiment
         """
         # Resulting Biomarker instance from the FS experiment.
@@ -325,7 +359,7 @@ class FSService(object):
             # Computes Feature Selection experiment
             start = time.time()
             molecules_temp_file_path, clinical_temp_file_path, running_in_spark = self.__prepare_and_compute_experiment(
-                experiment, fit_fun_enum, fitness_function_parameters, stop_event
+                experiment, fit_fun_enum, fitness_function_parameters, algorithm_parameters, stop_event
             )
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
@@ -396,12 +430,13 @@ class FSService(object):
         experiment.save()
 
     def add_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
-                       fitness_function_parameters: Dict[str, Any]):
+                       fitness_function_parameters: Dict[str, Any], algorithm_parameters: Dict[str, Any]):
         """
         Adds a Feature Selection experiment to the ThreadPool to be processed
         @param experiment: FSExperiment to be processed
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         """
         experiment_event = Event()
 
@@ -410,7 +445,7 @@ class FSService(object):
 
         # Submits
         experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, fit_fun_enum,
-                                                 fitness_function_parameters, experiment_event)
+                                                 fitness_function_parameters, algorithm_parameters, experiment_event)
         self.fs_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
 
     def stop_experiment(self, experiment: FSExperiment):

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
@@ -64,7 +65,14 @@ class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
 @login_required
 def biomarkers_action(request):
     """Biomarkers Panel view"""
-    return render(request, "frontend/biomarkers.html")
+    return render(request, "frontend/biomarkers.html", context={
+        'min_iterations_bbha': settings.MIN_ITERATIONS_BBHA,
+        'max_iterations_bbha': settings.MAX_ITERATIONS_BBHA,
+        'min_stars_bbha': settings.MIN_STARS_BBHA,
+        'max_stars_bbha': settings.MAX_STARS_BBHA,
+        'max_features_cox_regression': settings.MAX_FEATURES_COX_REGRESSION,
+        'max_features_blind_search': settings.MAX_FEATURES_BLIND_SEARCH
+    })
 
 
 class GeneSymbolsFinder(APIView):

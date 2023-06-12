@@ -14,6 +14,13 @@
 
 {% block js %}
         <script>
+                const minIterationsBBHA = {{ min_iterations_bbha }}
+                const maxIterationsBBHA = {{ max_iterations_bbha }}
+                const minStarsBBHA = {{ min_stars_bbha }}
+                const maxStarsBBHA = {{ max_stars_bbha }}
+                const maxFeaturesCoxRegression = {{ max_features_cox_regression }}
+                const maxFeaturesBlindSearch = {{ max_features_blind_search }}
+
                 const urlBiomarkersCRUD = "{% url 'biomarkers_api' %}"
                 const urlGeneSymbols = "{% url 'gene_symbols' %}"
                 const urlGeneSymbolsFinder = "{% url 'gene_symbols_finder' %}"

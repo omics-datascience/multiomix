@@ -3,8 +3,11 @@ import { Button, Grid, Segment, Select } from 'semantic-ui-react'
 import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction } from '../../../types'
 import { BlindSearchPanel } from './BlindSearchPanel'
 import './../featureSelection.css'
-import { BbhaAdvance } from './advanceMode/BbhaAdvance'
-import { CoxRegressionAdvance } from './advanceMode/CoxRegressionAdvance'
+import { BBHAAdvanced } from './advancedMode/BBHAAdvanced'
+import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
+import { getNumberOfMoleculesOfBiomarker } from '../../../utils'
+
+declare const maxFeaturesBlindSearch: number
 
 /** FeatureSelectionStep3 props. */
 interface FeatureSelectionStep3Props {
@@ -29,6 +32,9 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleChangeAdvanceAlgorithm,
         handleSwitchAdvanceAlgorithm
     } = props
+
+    const blindSearchIsDisabled = getNumberOfMoleculesOfBiomarker(props.featureSelection.selectedBiomarker) > maxFeaturesBlindSearch
+
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
             case FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -80,15 +86,15 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 )
             case FeatureSelectionAlgorithm.BBHA:
                 return (
-                    <BbhaAdvance
-                        advanceData={featureSelection.advanceAlgorithm.BBHA}
+                    <BBHAAdvanced
+                        advancedData={featureSelection.advancedAlgorithmParameters.BBHA}
                         handleChangeAdvanceAlgorithm={handleChangeAdvanceAlgorithm}
                     />
                 )
             case FeatureSelectionAlgorithm.COX_REGRESSION:
                 return (
-                    <CoxRegressionAdvance
-                        advanceData={featureSelection.advanceAlgorithm.coxRegression}
+                    <CoxRegressionAdvanced
+                        advanceData={featureSelection.advancedAlgorithmParameters.coxRegression}
                         handleChangeAdvanceAlgorithm={handleChangeAdvanceAlgorithm}
 
                     />
@@ -111,7 +117,12 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     placeholder='Algorithm'
                     name='moleculeSelected'
                     options={[
-                        { key: FeatureSelectionAlgorithm.BLIND_SEARCH, text: 'Blind Search', value: FeatureSelectionAlgorithm.BLIND_SEARCH },
+                        {
+                            key: FeatureSelectionAlgorithm.BLIND_SEARCH,
+                            text: 'Blind Search',
+                            value: FeatureSelectionAlgorithm.BLIND_SEARCH,
+                            disabled: blindSearchIsDisabled
+                        },
                         { key: FeatureSelectionAlgorithm.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithm.BBHA },
                         { key: FeatureSelectionAlgorithm.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithm.COX_REGRESSION },
                         { key: FeatureSelectionAlgorithm.PSO, text: 'PSO', value: FeatureSelectionAlgorithm.PSO, disabled: true }
@@ -121,7 +132,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 />
                 <Button
                     toggle
-                    active={featureSelection.advanceAlgorithm.isActive}
+                    active={featureSelection.advancedAlgorithmParameters.isActive}
                     onClick={() => handleSwitchAdvanceAlgorithm()}
                     className='selection-step-button-advance-mode'
                 >
@@ -131,11 +142,11 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
             <Segment>
                 <Grid>
                     <Grid.Row columns={2} divided>
-                        <Grid.Column width={featureSelection.advanceAlgorithm.isActive ? 10 : 16}>
+                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 10 : 16}>
                             {algorithmSelection()}
                         </Grid.Column>
-                        <Grid.Column width={featureSelection.advanceAlgorithm.isActive ? 6 : undefined}>
-                            {featureSelection.advanceAlgorithm.isActive ? advanceMode() : <></>}
+                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 6 : undefined}>
+                            {featureSelection.advancedAlgorithmParameters.isActive ? advanceMode() : <></>}
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>

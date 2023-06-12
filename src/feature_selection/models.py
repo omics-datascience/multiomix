@@ -57,6 +57,12 @@ class SVMTask(models.IntegerChoices):
     REGRESSION = 2
 
 
+class BBHAVersion(models.IntegerChoices):
+    """Version of the BBHA algorithm used."""
+    ORIGINAL = 1,
+    IMPROVED = 2
+
+
 class ClusteringParameters(models.Model):
     """Clustering fitness function parameters."""
     algorithm = models.IntegerField(choices=ClusteringAlgorithm.choices, default=ClusteringAlgorithm.K_MEANS)
@@ -136,6 +142,26 @@ class FSExperiment(models.Model):
                 FileType.METHYLATION
             )
         ]
+
+
+class AlgorithmParameters(models.Model):
+    """Common fields for FS algorithms (Blind Search, BBHA, PSO, etc) parameters."""
+    fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
+
+class BBHAParameters(AlgorithmParameters):
+    """Parameters for the Binary Black Hole Algorithm."""
+    n_stars = models.PositiveSmallIntegerField()
+    n_iterations = models.PositiveSmallIntegerField()
+    version_used = models.IntegerField(choices=BBHAVersion.choices)
+
+
+class CoxRegressionParameters(AlgorithmParameters):
+    """Parameters for the CoxRegression FS algorithm."""
+    top_n = models.PositiveSmallIntegerField()
 
 
 def user_directory_path_for_trained_models(instance, filename: str):

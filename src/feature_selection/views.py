@@ -81,12 +81,17 @@ class FeatureSelectionSubmit(APIView):
 
             # Gets all the FS settings
             algorithm = request.POST.get('algorithm')
+            algorithm_parameters = request.POST.get('algorithmParameters')
             fitness_function = request.POST.get('fitnessFunction')
             fitness_function_parameters = request.POST.get('fitnessFunctionParameters')
-            if algorithm is None or fitness_function is None or fitness_function_parameters is None:
-                raise ValidationError(f'Invalid parameters: algorithm: {algorithm} | fitness_function: {fitness_function} '
-                                       f'| fitness_function_parameters: {fitness_function_parameters}')
+            if algorithm is None or fitness_function is None or fitness_function_parameters is None or \
+                    algorithm_parameters is None:
+                raise ValidationError(f'Invalid parameters: algorithm: {algorithm}'
+                                      f'| algorithm_parameters: {algorithm_parameters} '
+                                      f'| fitness_function: {fitness_function} '
+                                      f'| fitness_function_parameters: {fitness_function_parameters}')
 
+            algorithm_parameters = json.loads(algorithm_parameters)
             fitness_function_parameters = json.loads(fitness_function_parameters)
 
             # Creates FSExperiment instance
@@ -106,7 +111,8 @@ class FeatureSelectionSubmit(APIView):
             )
 
             # Adds Feature Selection experiment to the ThreadPool
-            global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters)
+            global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters,
+                                             algorithm_parameters)
 
         return Response({'ok': True})
 

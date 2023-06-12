@@ -1,10 +1,11 @@
 import { DropdownItemProps } from 'semantic-ui-react'
-import { BBHAVersion, BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, RFParameters, SVMKernel, SVMParameters, SVMTask } from './types'
+import { BBHAVersion, Biomarker, BiomarkerState, ClusteringAlgorithm, ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunction, RFParameters, SVMKernel, SVMParameters, SVMTask } from './types'
+import { Nullable } from '../../utils/interfaces'
 
 /** Available options for BBHA versions */
 const advanceBBHAOptions: DropdownItemProps[] = [
     { key: BBHAVersion.ORIGINAL, text: 'Original', value: BBHAVersion.ORIGINAL },
-    { key: BBHAVersion.V2, text: 'Version 2', value: BBHAVersion.V2, disabled: true } // TODO: implement in backend
+    { key: BBHAVersion.IMPROVED, text: 'Version 2', value: BBHAVersion.IMPROVED, disabled: true } // TODO: implement in backend
 ]
 
 /** Available fitness functions models to use. */
@@ -93,6 +94,19 @@ const getDefaultRFParameters = (): RFParameters => {
     }
 }
 
+/**
+ * Returns the number of molecules of a biomarker.
+ * @param biomarker Biomarker to get the number of molecules from.
+ * @returns Number of molecules of the biomarker.
+ */
+const getNumberOfMoleculesOfBiomarker = (biomarker: Nullable<Biomarker>): number => {
+    const mrnas = biomarker?.number_of_mrnas ?? 0
+    const mirnas = biomarker?.number_of_mirnas ?? 0
+    const cnas = biomarker?.number_of_cnas ?? 0
+    const methylations = biomarker?.number_of_methylations ?? 0
+    return mrnas + mirnas + cnas + methylations
+}
+
 export {
     advanceBBHAOptions,
     fitnessFunctionsOptions,
@@ -103,5 +117,6 @@ export {
     biomarkerStateOptions,
     getDefaultSvmParameters,
     getDefaultClusteringParameters,
-    getDefaultRFParameters
+    getDefaultRFParameters,
+    getNumberOfMoleculesOfBiomarker
 }

@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvanceAlgorithm, BBHAVersion } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -18,7 +18,7 @@ import { Alert } from '../common/Alert'
 import { BiomarkerStateLabel } from './BiomarkerStateLabel'
 import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
-import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from './utils'
+import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters, getNumberOfMoleculesOfBiomarker } from './utils'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -30,6 +30,7 @@ declare const urlMiRNACodesFinder: string
 declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
+declare const maxFeaturesBlindSearch: number
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
@@ -106,7 +107,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
             fitnessFunction: FitnessFunction.CLUSTERING,
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters(),
-            advanceAlgorithm: this.getDefaultAdvanceAlgorithm()
+            advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters()
         }
     }
 
@@ -114,7 +115,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Generates default settings for advance Algorithm data.
      * @returns Default structure of all advance algorithms.
      */
-    getDefaultAdvanceAlgorithm = (): AdvanceAlgorithm => ({
+    getDefaultAdvancedAlgorithmParameters = (): AdvancedAlgorithmParameters => ({
         isActive: false,
         BBHA: {
             numberOfStars: 25,
@@ -175,9 +176,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Reset the confirm modal, to be used again
      */
     handleCancelConfirmModalState () {
-        this.setState({
-            confirmModal: this.getDefaultConfirmModal()
-        })
+        this.setState({ confirmModal: this.getDefaultConfirmModal() })
     }
 
     /**
@@ -185,7 +184,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleSwitchAdvanceAlgorithm = () => {
         const featureSelection = this.state.featureSelection
-        featureSelection.advanceAlgorithm.isActive = !featureSelection.advanceAlgorithm.isActive
+        featureSelection.advancedAlgorithmParameters.isActive = !featureSelection.advancedAlgorithmParameters.isActive
         this.setState({ featureSelection })
     }
 
@@ -197,7 +196,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleChangeAdvanceAlgorithm = (advanceAlgorithm:string, name:string, value:any) => {
         const featureSelection = this.state.featureSelection
-        featureSelection.advanceAlgorithm[advanceAlgorithm][name] = value
+        featureSelection.advancedAlgorithmParameters[advanceAlgorithm][name] = value
         this.setState({ featureSelection })
     }
 
@@ -1166,13 +1165,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Function to complete step 1
+     * Function to complete step 1 (selects a Biomarker instance)
      * @param selectedBiomarker Biomarker selected to continue process
      */
     handleCompleteStep1 = (selectedBiomarker: Biomarker) => {
         const featureSelection = this.state.featureSelection
         featureSelection.biomarker = selectedBiomarker
         featureSelection.step = 2
+
+        // In case of a high number of features, prevents the user from using Blind Search
+        const numberOfMolecules = getNumberOfMoleculesOfBiomarker(selectedBiomarker)
+        if (numberOfMolecules > maxFeaturesBlindSearch) {
+            featureSelection.algorithm = FeatureSelectionAlgorithm.BBHA
+        }
+
         this.setState({ featureSelection })
     }
 
@@ -1244,6 +1250,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             // Appends Biomarker's pk and FS settings
             formData.append('biomarkerPk', (fsSettings.biomarker?.id as number).toString())
             formData.append('algorithm', fsSettings.algorithm.toString())
+            formData.append('algorithmParameters', JSON.stringify(fsSettings.advancedAlgorithmParameters))
             formData.append('fitnessFunction', fsSettings.fitnessFunction.toString())
             formData.append('fitnessFunctionParameters', JSON.stringify(fsSettings.fitnessFunctionParameters))
 
