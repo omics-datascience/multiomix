@@ -4,10 +4,12 @@ from typing import Optional, Union, List, Tuple, Dict
 import numpy as np
 from django.core.files.base import ContentFile
 from rest_framework.exceptions import ValidationError
+from biomarkers.models import Biomarker, MRNAIdentifier, MiRNAIdentifier, CNAIdentifier, MethylationIdentifier
 from common.utils import limit_between_min_max
 from feature_selection.fs_models import SVMKernelOptions, get_survival_svm_model, get_rf_model, get_clustering_model
 from feature_selection.models import SVMKernel, TrainedModel, FitnessFunction, ClusteringScoringMethod, SVMParameters, \
     SVMTask, ClusteringParameters, RFParameters
+from user_files.models_choices import FileType
 
 
 def get_svm_kernel(kernel: SVMKernel) -> SVMKernelOptions:
@@ -143,3 +145,23 @@ def save_model_dump_and_best_score(trained_model: TrainedModel, best_model: 'Sur
     )
     trained_model.best_fitness_value = best_score
     trained_model.save(update_fields=['model_dump', 'best_fitness_value'])
+
+
+def save_molecule_identifiers(created_biomarker: Biomarker, best_features: List[str]):
+    """Saves all the molecules for the new created biomarker."""
+    for feature in best_features:
+        molecule_name, file_type = feature.rsplit('_', maxsplit=1)
+        file_type = int(file_type)
+        if file_type == FileType.MRNA:
+            identifier_class = MRNAIdentifier
+        elif file_type == FileType.MIRNA:
+            identifier_class = MiRNAIdentifier
+        elif file_type == FileType.CNA:
+            identifier_class = CNAIdentifier
+        elif file_type == FileType.METHYLATION:
+            identifier_class = MethylationIdentifier
+        else:
+            raise Exception(f'Molecule type invalid: {file_type}')
+
+        # Creates the identifier
+        identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)

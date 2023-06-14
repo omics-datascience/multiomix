@@ -21,7 +21,7 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
-from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier
+from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier, save_molecule_identifiers
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -139,25 +139,7 @@ class FSService(object):
 
         return molecules_temp_file_path, clinical_temp_file_path
 
-    @staticmethod
-    def __save_molecule_identifiers(created_biomarker: Biomarker, best_features: List[str]):
-        """Saves all the molecules for the new created biomarker."""
-        for feature in best_features:
-            molecule_name, file_type = feature.rsplit('_', maxsplit=1)
-            file_type = int(file_type)
-            if file_type == FileType.MRNA:
-                identifier_class = MRNAIdentifier
-            elif file_type == FileType.MIRNA:
-                identifier_class = MiRNAIdentifier
-            elif file_type == FileType.CNA:
-                identifier_class = CNAIdentifier
-            elif file_type == FileType.METHYLATION:
-                identifier_class = MethylationIdentifier
-            else:
-                raise Exception(f'Molecule type invalid: {file_type}')
 
-            # Creates the identifier
-            identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
 
     def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
@@ -232,6 +214,7 @@ class FSService(object):
             if settings.ENABLE_AWS_EMR_INTEGRATION:
                 job_id = binary_black_hole_spark(
                     job_name=f'Job for FSExperiment: {experiment.pk}',
+                    experiment_pk=experiment.pk,
                     classifier=classifier,
                     molecules_df=molecules_df,
                     n_stars=n_stars,
@@ -285,7 +268,7 @@ class FSService(object):
 
         if best_features is not None:
             # Stores molecules in the target biomarker, the best model and its fitness value
-            self.__save_molecule_identifiers(experiment.created_biomarker, best_features)
+            save_molecule_identifiers(experiment.created_biomarker, best_features)
 
             trained_model.state = BiomarkerState.COMPLETED
 

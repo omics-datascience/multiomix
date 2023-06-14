@@ -115,6 +115,7 @@ class FSExperiment(models.Model):
                                            blank=True, related_name='fs_experiments_as_methylation')
 
     # AWS-EMR fields
+    app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results
     emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
     molecules_path = models.CharField(max_length=200, null=True, blank=True)  # Path to the molecules shared folder
     clinical_path = models.CharField(max_length=200, null=True, blank=True)  # Path to the molecules shared folder
@@ -323,3 +324,41 @@ class PredictionRangeLabel(models.Model):
     def __str__(self):
         return f'Label "{self.label}" for range {self.min_value}-{self.max_value} in model ' \
                f'"{self.prediction_range_labels_set.name}"'
+
+
+class SVMOptimizer(models.TextChoices):
+    AVL_TREE = "avltree"
+    RB_TREE = "rbtree"
+
+
+class TimesRecord(models.Model):
+    """Represents some metrics to train a Spark load-balancer ML model."""
+    number_of_features = models.PositiveIntegerField()
+    number_of_samples = models.PositiveIntegerField()
+    execution_time = models.PositiveIntegerField()  # Execution time in seconds
+    test_time = models.PositiveIntegerField()  # Testing time in seconds
+    fitness = models.FloatField(null=True, blank=True)
+    train_score = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class SVMTimesRecord(TimesRecord):
+    """Time records during Feature Selection using an SVM as classifier."""
+    fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='svm_times_records')
+    number_of_iterations = models.PositiveIntegerField()
+    time_by_iteration = models.PositiveIntegerField()  # Testing time in seconds
+    max_iterations = models.PositiveIntegerField()
+    optimizer = models.CharField(max_length=10, choices=SVMOptimizer.choices)
+    kernel = models.IntegerField(choices=SVMKernel.choices)
+
+
+class RFTimesRecord(TimesRecord):
+    """Time records during Feature Selection using a Random Forest as classifier."""
+    fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='rf_times_records')
+
+
+class ClusteringTimesRecord(TimesRecord):
+    """Time records during Feature Selection using a Clustering model as classifier."""
+    fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='clustering_times_records')

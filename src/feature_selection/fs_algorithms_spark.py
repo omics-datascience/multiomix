@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import requests
+from common.utils import remove_non_alphanumeric_chars
 from feature_selection.fs_algorithms import FSResult
 from feature_selection.models import ClusteringScoringMethod, FitnessFunction
 from multiomics_intermediate import settings
@@ -106,6 +107,7 @@ def blind_search_spark(
 
 def binary_black_hole_spark(
         job_name: str,
+        experiment_pk: int,
         classifier: FitnessFunction,
         molecules_df: pd.DataFrame,
         n_stars: int,
@@ -122,6 +124,7 @@ def binary_black_hole_spark(
     Spark Cluster.
     TODO: use all the params and remove the comments.
     @param job_name: Name of the job.
+    @param experiment_pk: PK of the FSExperiment to generate the app_name (where the Spark results are stored).
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param n_stars: Number of stars in the BBHA.
@@ -191,12 +194,21 @@ def binary_black_hole_spark(
     #          ~ Location: relative url for the new created job
     #        @Body json object
     #          ~ id: job id
+
+    # Prepares some parameters
+    job_name = remove_non_alphanumeric_chars(job_name)
+    app_name = f'BBHA_{experiment_pk}'
+
     # Makes a request to the EMR microservice to run the binary black hole algorithm.
     url = f'http://{emr_settings["host"]}:{emr_settings["port"]}/job'
     response = requests.post(url, json={
         'name': job_name,
         'algorithm': EMRAlgorithms.BBHA.value,
         'entrypoint_arguments': [
+            {
+                'name': 'app-name',
+                'value': app_name,
+            },
             {
                 'name': 'svm-kernel',
                 'value': 'poly',

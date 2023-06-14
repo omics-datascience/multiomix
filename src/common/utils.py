@@ -20,6 +20,7 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
 
 def clean_dataset(df: pd.DataFrame, axis: Literal['rows', 'columns']) -> pd.DataFrame:
     """
+    TODO: move to datasets_utils.py when implemented
     Removes NaN and Inf values.
     :param df: DataFrame to clean.
     :param axis: Axis to remove the Nans values.
@@ -86,3 +87,8 @@ def get_samples_intersection(source: ExperimentSource, last_intersection: np.nda
         cur_intersection = np.array(current_samples)
     last_intersection = cast(np.ndarray, cur_intersection)
     return last_intersection
+
+
+def remove_non_alphanumeric_chars(string: str) -> str:
+    """Replaces all the non-alphanumeric chars from the job name to respect the [\.\-_/#A-Za-z0-9]+ regex"""
+    return ''.join(e for e in string if e.isalnum() or e in ['.', '-', '_', '/', '#'])
