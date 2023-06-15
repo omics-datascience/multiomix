@@ -1,12 +1,12 @@
 import os
-import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, List
+from typing import Dict, Tuple, Optional
 import pandas as pd
 from biomarkers.models import BiomarkerState
-from common.utils import get_subset_of_features, get_samples_intersection
+from common.utils import get_subset_of_features
+from common.datasets_utils import get_common_samples, generate_molecules_file
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
@@ -18,7 +18,6 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
-from user_files.models_choices import FileType
 
 
 class InferenceExperimentsService(object):
@@ -57,61 +56,7 @@ class InferenceExperimentsService(object):
             logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
 
     @staticmethod
-    def __get_common_samples(experiment: InferenceExperiment) -> np.ndarray:
-        """
-        Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
-        TODO: refactor to a common function
-        @param experiment: Feature Selection experiment.
-        @return: Sorted Numpy array with the samples in common
-        """
-        # NOTE: the intersection is already sorted by Numpy
-        last_intersection: Optional[np.ndarray] = None
-
-        for source in experiment.get_all_sources():
-            if source is None:
-                continue
-
-            last_intersection = get_samples_intersection(source, last_intersection)
-
-        return cast(np.ndarray, last_intersection)
-
-    @staticmethod
-    def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
-                        samples_in_common: np.ndarray) -> pd.DataFrame:
-        """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
-        # Only keeps the samples in common
-        chunk = chunk[samples_in_common]
-
-        # Keeps only existing molecules in the current chunk
-        molecules_to_extract = np.intersect1d(chunk.index, molecules)
-        chunk = chunk.loc[molecules_to_extract]
-
-        # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-        chunk.index = chunk.index + f'_{file_type}'
-
-        return chunk
-
-    def __generate_molecules_file(self, stat_validation: InferenceExperiment, samples_in_common: np.ndarray) -> str:
-        """
-        Generates the molecules DataFrame for a specific InferenceExperiment with the samples in common and saves
-        it in disk.
-        """
-        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
-            molecules_temp_file_path = temp_file.name
-
-            for source, molecules, file_type in stat_validation.get_sources_and_molecules():
-                if source is None:
-                    continue
-
-                for chunk in source.get_df_in_chunks():
-                    chunk = self.__process_chunk(chunk, file_type, molecules, samples_in_common)
-
-                    # Saves in disk
-                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
-
-        return molecules_temp_file_path
-
-    def __compute_inference_experiment(self, experiment: InferenceExperiment, molecules_temp_file_path: str,
+    def __compute_inference_experiment(experiment: InferenceExperiment, molecules_temp_file_path: str,
                                        stop_event: Event):
         """
         Computes the Feature Selection experiment using the params defined by the user.
@@ -178,17 +123,14 @@ class InferenceExperimentsService(object):
         @return Trained model instance if everything was ok. None if no best features were found.
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(experiment)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
+        samples_in_common = get_common_samples(experiment)
 
         # Generates needed DataFrames
-        molecules_temp_file_path = self.__generate_molecules_file(experiment, samples_in_common)
+        molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
 
         self.__compute_inference_experiment(experiment, molecules_temp_file_path, stop_event)
 
         return molecules_temp_file_path
-
 
     def eval_inference_experiment(self, experiment: InferenceExperiment, stop_event: Event):
         """

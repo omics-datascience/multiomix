@@ -147,8 +147,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         """Removes the datasets from the shared folder."""
         # Gets paths of both molecules_df and clinical_df in the shared volume with the microservice
         data_folder = emr_settings['shared_folder_data']
-        molecular_df_path = os.path.join(data_folder, fs_experiment.molecules_path)
-        clinical_df_path = os.path.join(data_folder, fs_experiment.clinical_path)
+        molecular_df_path = os.path.join(data_folder, fs_experiment.app_name, 'molecules.csv')
+        clinical_df_path = os.path.join(data_folder, fs_experiment.app_name, 'clinical.csv')
 
         # Removes files in both paths
         if os.path.exists(molecular_df_path):

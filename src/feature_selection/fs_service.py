@@ -3,12 +3,12 @@ import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, Union, List, Any
+from typing import Dict, Tuple, Optional, Any
 import pandas as pd
-from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
-    CNAIdentifier, MethylationIdentifier
-from common.utils import get_samples_intersection, clean_dataset, limit_between_min_max
-from user_files.models_choices import FileType
+from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
+from common.utils import limit_between_min_max
+from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset, format_data, \
+    replace_event_col_for_booleans
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .fs_algorithms_spark import binary_black_hole_spark
@@ -63,27 +63,6 @@ class FSService(object):
             logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
 
     @staticmethod
-    def __get_common_samples(experiment: FSExperiment) -> np.ndarray:
-        """
-        Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
-        @param experiment: Feature Selection experiment.
-        @return: Sorted Numpy array with the samples in common
-        """
-        # NOTE: the intersection is already sorted by Numpy
-        last_intersection: Optional[np.ndarray] = None
-
-        for source in experiment.get_all_sources():
-            if source is None:
-                continue
-
-            last_intersection = get_samples_intersection(source, last_intersection)
-
-        return cast(np.ndarray, last_intersection)
-
-    @staticmethod
-    def __replace_event_col_for_booleans(value: Union[int, str]) -> bool:
-        """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
-        return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
 
 
     def __generate_df_molecules_and_clinical(self, experiment: FSExperiment,
@@ -109,39 +88,19 @@ class FSService(object):
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                self.__replace_event_col_for_booleans
+                replace_event_col_for_booleans
             )
 
             # Saves in disk
             clinical_df.to_csv(temp_file, sep='\t', decimal='.')
 
-        # Generates all the molecules DataFrame
-        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
-            molecules_temp_file_path = temp_file.name
-
-            for source, molecules, file_type in experiment.get_sources_and_molecules():
-                if source is None:
-                    continue
-
-                for chunk in source.get_df_in_chunks():
-                    # Only keeps the samples in common
-                    chunk = chunk[samples_in_common]
-
-                    # Keeps only existing molecules in the current chunk
-                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
-                    chunk = chunk.loc[molecules_to_extract]
-
-                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-                    chunk.index = chunk.index + f'_{file_type}'
-
-                    # Saves in disk
-                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        # Generates needed DataFrames
+        molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
-
-
-    def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
+    @staticmethod
+    def __compute_experiment(experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
                              fitness_function_parameters: Dict[str, Any],
                              algorithm_parameters: Dict[str, Any],
@@ -172,25 +131,9 @@ class FSService(object):
             trained_model, fitness_function_parameters
         )
 
-        # Gets molecules and clinical DataFrames
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
-
-        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
-        if is_regression:
-            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
-            clinical_df = clinical_df[clinical_df[time_column] > 0]
-
-        # Keeps only the samples in common
-        valid_samples = clinical_df.index
-        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
-
-        # Removes molecules with NaN values
-        molecules_df = clean_dataset(molecules_df, axis='rows')
-
-        # Formats clinical data to a Numpy structured array
-        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                                   formats='bool, float')
+        # Gets data in the correct format
+        molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                               is_regression)
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -212,9 +155,11 @@ class FSService(object):
 
             # TODO: add here a min_number_of_features parameter to prevent sending a little experiment to AWS
             if settings.ENABLE_AWS_EMR_INTEGRATION:
+                app_name = f'BBHA_{experiment.pk}'
+
                 job_id = binary_black_hole_spark(
                     job_name=f'Job for FSExperiment: {experiment.pk}',
-                    experiment_pk=experiment.pk,
+                    app_name=app_name,
                     classifier=classifier,
                     molecules_df=molecules_df,
                     n_stars=n_stars,
@@ -226,8 +171,9 @@ class FSService(object):
                 )
 
                 # Saves the job id in the experiment
+                experiment.app_name = app_name
                 experiment.emr_job_id = job_id
-                experiment.save(update_fields=['emr_job_id'])
+                experiment.save(update_fields=['app_name', 'emr_job_id'])
 
                 # It doesn't need to wait anything because the job is running in the AWS cluster right now
                 return True  # Indicates that the experiment is running in AWS
@@ -296,9 +242,7 @@ class FSService(object):
         @return Both molecules and clinical files paths.
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(experiment)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
+        samples_in_common = get_common_samples(experiment)
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(

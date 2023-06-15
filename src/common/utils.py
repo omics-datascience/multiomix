@@ -1,8 +1,7 @@
 import numpy as np
-from typing import List, Union, Optional, cast, Literal
+from typing import List, Union, Optional
 import pandas as pd
 from django.http import QueryDict
-from api_service.models import ExperimentSource
 
 
 def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
@@ -16,23 +15,6 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
     if content is None or content == 'null':
         return None
     return int(content)
-
-
-def clean_dataset(df: pd.DataFrame, axis: Literal['rows', 'columns']) -> pd.DataFrame:
-    """
-    TODO: move to datasets_utils.py when implemented
-    Removes NaN and Inf values.
-    :param df: DataFrame to clean.
-    :param axis: Axis to remove the Nans values.
-    :return: Cleaned DataFrame.
-    """
-    assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
-
-    # Taken from https://stackoverflow.com/a/45746209/7058363
-    with pd.option_context('mode.use_inf_as_na', True):
-        df = df.dropna(axis=axis, how='all')
-
-    return df
 
 
 def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
@@ -66,27 +48,6 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
 def limit_between_min_max(number: int, min_value: int, max_value: int) -> int:
     """Limits a number between a min and max values."""
     return max(min(number, max_value), min_value)
-
-
-def get_samples_intersection(source: ExperimentSource, last_intersection: np.ndarray) -> np.ndarray:
-    """
-    Gets the intersection of the samples of the current source with the last intersection.
-    @param source: Source to get the samples from.
-    @param last_intersection: Last intersection of samples.
-    @return: Intersection of the samples of the current source with the last intersection.
-    """
-    # Clean all the samples name to prevent issues with CGDS suffix
-    current_samples = source.get_samples()
-
-    if last_intersection is not None:
-        cur_intersection = np.intersect1d(
-            last_intersection,
-            current_samples
-        )
-    else:
-        cur_intersection = np.array(current_samples)
-    last_intersection = cast(np.ndarray, cur_intersection)
-    return last_intersection
 
 
 def remove_non_alphanumeric_chars(string: str) -> str:

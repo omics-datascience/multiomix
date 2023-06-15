@@ -107,7 +107,7 @@ def blind_search_spark(
 
 def binary_black_hole_spark(
         job_name: str,
-        experiment_pk: int,
+        app_name: str,
         classifier: FitnessFunction,
         molecules_df: pd.DataFrame,
         n_stars: int,
@@ -124,7 +124,7 @@ def binary_black_hole_spark(
     Spark Cluster.
     TODO: use all the params and remove the comments.
     @param job_name: Name of the job.
-    @param experiment_pk: PK of the FSExperiment to generate the app_name (where the Spark results are stored).
+    @param app_name: Name of the app. In a folder with the same name the results will be stored.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param n_stars: Number of stars in the BBHA.
@@ -145,9 +145,6 @@ def binary_black_hole_spark(
     #  - Shared "/data-spark" volume with microservice. (Infrastructure side)
     emr_settings = settings.AWS_EMR_SETTINGS
 
-    # Saves molecules_df and clinical_df in the shared volume with the microservice
-    data_folder = emr_settings['shared_folder_data']
-
     # Dataset dump
     # ************
     #  - Save clinical_data dataset inside the shared volume, the path for that
@@ -157,8 +154,12 @@ def binary_black_hole_spark(
     #    the path should be relative from the mount point.
 
     # TODO: uncomment when implemented
-    # molecules_df.to_csv(os.path.join(data_folder, 'molecules_df.csv'), sep=',', decimal='.')
-    # clinical_df.to_csv(os.path.join(data_folder, 'clinical_df.csv'), sep=',', decimal='.')
+    # Saves molecules_df and clinical_df in the shared volume with the microservice
+    # data_folder = emr_settings['shared_folder_data']
+    # molecules_path = os.path.join(data_folder, app_name, 'molecules.csv')
+    # molecules_df.to_csv(molecules_path, sep=',', decimal='.')
+    # clinical_path = os.path.join(data_folder, app_name, 'clinical.csv')
+    # clinical_df.to_csv(clinical_path, sep=',', decimal='.')
 
     # AWS-EMR middleware microservice communication
     # *********************************************
