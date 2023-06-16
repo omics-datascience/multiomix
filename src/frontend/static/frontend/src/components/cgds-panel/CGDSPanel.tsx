@@ -546,16 +546,16 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     getDefaultHeaders (isSuperuser: boolean | undefined): RowHeader<DjangoCGDSStudy>[] {
         const headersOptions: RowHeader<DjangoCGDSStudy>[] = [
-            { name: 'Name', serverCodeToSort: 'name', width: 2 },
+            { name: 'Name', serverCodeToSort: 'name', width: 1 },
             { name: 'Description', serverCodeToSort: 'description', width: 2 },
-            { name: 'Version', serverCodeToSort: 'version', textAlign: 'center' },
-            { name: 'Sync. Date', serverCodeToSort: 'date_last_synchronization', width: 1, textAlign: 'center' },
+            { name: 'Version', serverCodeToSort: 'version', width: 1, textAlign: 'center' },
+            { name: 'Sync', title: 'Sync. Date', serverCodeToSort: 'date_last_synchronization', width: 1, textAlign: 'center' },
             { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1, textAlign: 'center' },
             { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1, textAlign: 'center' },
             { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1, textAlign: 'center' },
-            { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1, textAlign: 'center' },
-            { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1, textAlign: 'center' },
-            { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1, textAlign: 'center' },
+            { name: 'Methy.', title: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1, textAlign: 'center' },
+            { name: 'Clinical P.', title: 'Clinical Patients', serverCodeToSort: 'clinical_patient_dataset', width: 1, textAlign: 'center' },
+            { name: 'Clinical S.', title: 'Clinical Samples', serverCodeToSort: 'clinical_sample_dataset', width: 1, textAlign: 'center' },
             { name: 'State', width: 1, textAlign: 'center' }
         ]
 
@@ -784,8 +784,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                         return (
                             <Grid columns={2} padded stackable textAlign='center' divided>
                                 {/* New CGDS Study Panel */}
-                                {userIsAdmin
-                                    ? <Grid.Column width={3} textAlign='left'>
+                                {userIsAdmin &&
+                                    <Grid.Column width={3} textAlign='left'>
                                         <NewCGDSStudyForm
                                             newCGDSStudy={this.state.newCGDSStudy}
                                             handleFormChanges={this.handleFormChanges}
@@ -803,7 +803,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                             isFormEmpty={this.isFormEmpty}
                                         />
                                     </Grid.Column>
-                                    : null
                                 }
                                 {/* List of CGDS Studies */}
                                 <Grid.Column width={userIsAdmin ? 13 : 16} textAlign='center'>

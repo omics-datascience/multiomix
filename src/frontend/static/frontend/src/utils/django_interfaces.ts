@@ -204,6 +204,8 @@ interface RowHeader<T> {
     serverCodeToSort?: keyof T,
     /** Width of the column. */
     width?: SemanticWIDTHS,
+    /** Title to show on hover the header. */
+    title?: string,
     /** Text align of the column. */
     textAlign?: StrictTableCellProps['textAlign'],
     /** If it's defined, an InfoPopup is shown with this content. */
