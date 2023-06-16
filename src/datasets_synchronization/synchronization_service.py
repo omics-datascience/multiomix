@@ -46,7 +46,7 @@ class SynchronizationService:
         """
         return [filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))]
 
-    def sync_dataset(self, dataset: CGDSDataset, extract_path: str, check_patient_column: bool):
+    def __sync_dataset(self, dataset: CGDSDataset, extract_path: str, check_patient_column: bool):
         """
         Synchronizes a CGDS Dataset from a compressed file downloaded in 'sync_study' method
         @param dataset:  Dataset to synchronize
@@ -58,6 +58,7 @@ class SynchronizationService:
             dataset_file_path = os.path.join(extract_path, dataset.file_path)
             skip_rows = dataset.header_row_index if dataset.header_row_index else 0
 
+            dataset_content: Optional[pd.DataFrame] = None
             compute_post_saved_fields = False
             try:
                 dataset_content = pd.read_csv(
@@ -103,9 +104,10 @@ class SynchronizationService:
                 else:
                     dataset.state = CGDSDatasetSynchronizationState.COULD_NOT_SAVE_IN_MONGO
             except SkipRowsIsIncorrect:
+                columns = dataset_content.columns.tolist() if dataset_content else []
                 logging.error(f"The dataset '{dataset}' seems to have an invalid skiprows parameter as it does not "
                               f"contains '{PATIENT_ID_COLUMN}' column. Columns with current skiprows "
-                              f"value ({dataset.header_row_index}) are: {dataset_content.columns.tolist()}")
+                              f"value ({dataset.header_row_index}) are: {columns}")
                 dataset.state = CGDSDatasetSynchronizationState.NO_PATIENT_ID_COLUMN_FOUND
             except InvalidName:
                 logging.error(f"The dataset '{dataset}' has an invalid MongoDB collection's name")
@@ -117,7 +119,7 @@ class SynchronizationService:
                 dataset.state = CGDSDatasetSynchronizationState.FILE_DOES_NOT_EXIST
             except Exception as e:
                 logging.error(
-                    f"The CGDS dataset '{dataset}' has a sync problem: {e}"
+                    f"The CGDS dataset '{dataset}' had a sync problem: {e}"
                 )
                 logging.exception(e)
                 dataset.state = CGDSDatasetSynchronizationState.FINISHED_WITH_ERROR
@@ -153,6 +155,43 @@ class SynchronizationService:
             return directory
         return None
 
+    @staticmethod
+    def __copy_dataset(dataset: CGDSDataset, new_version: int) -> CGDSDataset:
+        """
+        Generates a copy of a CGDSDataset with a new collection name.
+        @param dataset: CGDSDataset instance to copy.
+        @param new_version: New version to concatenate to the collection name.
+        @return: A copy of the CGDSDataset instance.
+        """
+        dataset_copy = dataset
+        dataset_copy.pk = None
+        mongo_collection, _old_version_number = dataset_copy.mongo_collection_name.rsplit('_', maxsplit=1)
+        dataset_copy.mongo_collection_name = f"{mongo_collection}_{new_version}"
+        dataset_copy.state = CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED
+        dataset_copy.save()
+        return dataset_copy
+
+    def __generate_study_new_version(self, study: CGDSStudy) -> CGDSStudy:
+        """Generates a copy of a CGDSStudy and all its CGDSDatasets with a new version number."""
+        # Creates a copy of study
+        study_copy = study
+        study_copy.pk = None
+        new_version = study.version + 1
+        study_copy.version = new_version
+
+        # Creates a copy of its datasets and edits the collection name to prevent conflicts
+        study_copy.mrna_dataset = self.__copy_dataset(study.mrna_dataset, new_version)
+        study_copy.mirna_dataset = self.__copy_dataset(study.mirna_dataset, new_version)
+        study_copy.cna_dataset = self.__copy_dataset(study.cna_dataset, new_version)
+        study_copy.methylation_dataset = self.__copy_dataset(study.methylation_dataset, new_version)
+        study_copy.clinical_patient_dataset = self.__copy_dataset(study.clinical_patient_dataset, new_version)
+        study_copy.clinical_sample_dataset = self.__copy_dataset(study.clinical_sample_dataset, new_version)
+
+        # Saves changes
+        study_copy.save()
+
+        return study_copy
+
     def extract_file_and_sync_datasets(self, cgds_study: CGDSStudy, tar_file_path: str):
         """
         Extracts the recently downloaded tar file of a CGDSStudy and syncs its CGDSDataset which
@@ -177,12 +216,12 @@ class SynchronizationService:
                 extract_path = os.path.join(extract_path, sub_folder_name)
 
             # Syncs CGDS study's datasets
-            self.sync_dataset(cgds_study.mrna_dataset, extract_path, check_patient_column=False)
-            self.sync_dataset(cgds_study.mirna_dataset, extract_path, check_patient_column=False)
-            self.sync_dataset(cgds_study.cna_dataset, extract_path, check_patient_column=False)
-            self.sync_dataset(cgds_study.methylation_dataset, extract_path, check_patient_column=False)
-            self.sync_dataset(cgds_study.clinical_patient_dataset, extract_path, check_patient_column=True)
-            self.sync_dataset(cgds_study.clinical_sample_dataset, extract_path, check_patient_column=True)
+            self.__sync_dataset(cgds_study.mrna_dataset, extract_path, check_patient_column=False)
+            self.__sync_dataset(cgds_study.mirna_dataset, extract_path, check_patient_column=False)
+            self.__sync_dataset(cgds_study.cna_dataset, extract_path, check_patient_column=False)
+            self.__sync_dataset(cgds_study.methylation_dataset, extract_path, check_patient_column=False)
+            self.__sync_dataset(cgds_study.clinical_patient_dataset, extract_path, check_patient_column=True)
+            self.__sync_dataset(cgds_study.clinical_sample_dataset, extract_path, check_patient_column=True)
 
     @staticmethod
     def __all_dataset_finished_correctly(cgds_study: CGDSStudy) -> bool:
@@ -204,9 +243,8 @@ class SynchronizationService:
         @param cgds_study: CGDS Study to synchronize
         """
         # Updates the CGDS Study state
-        cgds_study.date_last_synchronization = timezone.now()
         cgds_study.state = CGDSStudySynchronizationState.IN_PROCESS
-        cgds_study.save()
+        cgds_study.save(update_fields=['state'])
 
         # Gets the tar.gz file
         try:
@@ -240,6 +278,7 @@ class SynchronizationService:
             # Saves new state of the CGDSStudy
             if self.__all_dataset_finished_correctly(cgds_study):
                 cgds_study.state = CGDSStudySynchronizationState.COMPLETED
+                cgds_study.date_last_synchronization = timezone.now()
             else:
                 cgds_study.state = CGDSStudySynchronizationState.FINISHED_WITH_ERROR
         except (ConnectionError, URLError, ValueError) as e:
@@ -272,6 +311,14 @@ class SynchronizationService:
         """
         Adds an CGDS Study to the ThreadPool to be processed
         """
+        # First of all checks if exists at least one CGDS dataset with a success state
+        if cgds_study.has_at_least_one_dataset_synchronized():
+            cgds_study = self.__generate_study_new_version(cgds_study)
+
+        # Updates the state
+        cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
+        cgds_study.save(update_fields=['state'])
+
         self.executor.submit(self.sync_study, cgds_study)
 
 

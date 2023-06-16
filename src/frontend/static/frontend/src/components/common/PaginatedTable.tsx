@@ -1,12 +1,13 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { DropdownItemProps, Form, Grid, Header, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
+import { Checkbox, DropdownItemProps, Form, Grid, Header, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
-import { GeneralTableControl, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
+import { GeneralTableControl, Nullable, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
+import { InputLabel } from './InputLabel'
 
 declare const currentUserId: string
 
@@ -31,9 +32,11 @@ type PaginationCustomFilter = {
     defaultValue: any,
     /** Placeholder for select */
     placeholder?: string,
+    /** Type of the filter. By default is 'select' */
+    type?: 'select' | 'checkbox',
     /** Indicates if 0 as filter value is accepted */
     allowZero?: boolean,
-    /** `clearable` prop of the `Form.Select`. `true` by default. */
+    /** `clearable` prop of the `Form.Select`. `true` by default. Only used if type === 'select'. */
     clearable?: boolean,
     /** Form.Select options. If undefined, get uniques values from the data using the field `keyForServer`. */
     options?: DropdownItemProps[],
@@ -254,33 +257,57 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      * Generates Form's inputs from the custom filters passed by props
      * @returns Array with input components
      */
-    generateCustomFiltersForm (): JSX.Element[] {
+    generateCustomFiltersForm (): Nullable<JSX.Element>[] {
         const customFiltersArray = this.props.customFilters ?? []
         return customFiltersArray.map((filter) => {
-            // If 'options' is undefined, gets the unique values from data
-            let options: DropdownItemProps[]
-            if (filter.options !== undefined) {
-                options = filter.options
+            if (filter.type === 'select') {
+                // If 'options' is undefined, gets the unique values from data
+                let options: DropdownItemProps[]
+                if (filter.options !== undefined) {
+                    options = filter.options
+                } else {
+                    const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
+                    options = uniqueValues.map((value) => ({ key: value, text: value, value }))
+                }
+                return (
+                    <Form.Select
+                        key={filter.keyForServer}
+                        label={filter.label}
+                        selectOnBlur={false}
+                        clearable={filter.clearable ?? true}
+                        placeholder={filter.placeholder}
+                        options={options}
+                        name={filter.keyForServer}
+                        value={this.state.tableControl.filters[filter.keyForServer].value}
+                        disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
+                        onChange={(_, { value }) => {
+                            this.handleTableControlChanges(filter.keyForServer, value, true, true)
+                        }}
+                    />
+                )
             } else {
-                const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
-                options = uniqueValues.map((value) => ({ key: value, text: value, value }))
+                // Checkbox needs special structure to prevent displaying all the label and the checkbox in the same line
+                return (
+                    <Form.Group key={filter.keyForServer} style={{ display: 'block' }}>
+                        <Form.Field>
+                            <InputLabel label={filter.label} />
+                        </Form.Field>
+
+                        <Form.Field className='align-center margin-top-10'>
+                            <Checkbox
+                                toggle
+                                fitted
+                                name={filter.keyForServer}
+                                checked={this.state.tableControl.filters[filter.keyForServer].value}
+                                disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
+                                onChange={(_, { checked }) => {
+                                    this.handleTableControlChanges(filter.keyForServer, checked, true, true)
+                                }}
+                            />
+                        </Form.Field>
+                    </Form.Group>
+                )
             }
-            return (
-                <Form.Select
-                    key={filter.keyForServer}
-                    label={filter.label}
-                    selectOnBlur={false}
-                    clearable={filter.clearable ?? true}
-                    placeholder={filter.placeholder}
-                    options={options}
-                    name={filter.keyForServer}
-                    value={this.state.tableControl.filters[filter.keyForServer].value}
-                    disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
-                    onChange={(_, { value }) => {
-                        this.handleTableControlChanges(filter.keyForServer, value, true, true)
-                    }}
-                />
-            )
         })
     }
 
@@ -361,6 +388,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {/* Page size */}
                                 <Form.Select
                                     label='Entries'
+                                    className='entries-select-table'
                                     selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'

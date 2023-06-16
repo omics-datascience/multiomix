@@ -1,3 +1,4 @@
+from django.db.models import Max, OuterRef, Exists, F, Subquery
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from common.pagination import StandardResultsSetPagination
@@ -23,6 +24,8 @@ class CGDSStudyList(generics.ListCreateAPIView):
     def get_queryset(self):
         cgds_studies = CGDSStudy.objects
         file_type = self.request.GET.get('file_type')
+        only_last_version = self.request.GET.get('only_last_version', 'false') == 'true'
+
         if file_type is not None:
             file_type = int(file_type)
             if file_type == FileType.MRNA.value:
@@ -53,6 +56,20 @@ class CGDSStudyList(generics.ListCreateAPIView):
                 )
         else:
             cgds_studies = cgds_studies.all()
+
+        if only_last_version:
+            # Filters by max version and sorts by name
+            cgds_studies = cgds_studies.alias(
+                max_version=Subquery(
+                    CGDSStudy.objects.filter(url=OuterRef('url'))
+                    .order_by('-version')
+                    .values('version')[:1]
+                )
+            ).filter(version=F('max_version')).order_by('name')
+        else:
+            # Otherwise sorts by name and version
+            cgds_studies = cgds_studies.order_by('name', '-version')
+
         return cgds_studies
 
     serializer_class = CGDSStudySerializer
@@ -88,10 +105,6 @@ def synchronize_cgds_study_action(request):
     try:
         cgds_study_id = int(cgds_study_id)
         cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
-
-        # Updates the state
-        cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
-        cgds_study.save()
 
         # Gets SynchronizationService and adds the study
         global_synchronization_service.add_cgds_study(cgds_study)

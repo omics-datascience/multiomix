@@ -70,6 +70,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             description: '',
             url: '',
             url_study_info: '',
+            version: null,
             mrna_dataset: null,
             mirna_dataset: null,
             cna_dataset: null,
@@ -547,14 +548,15 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         const headersOptions: RowHeader<DjangoCGDSStudy>[] = [
             { name: 'Name', serverCodeToSort: 'name', width: 2 },
             { name: 'Description', serverCodeToSort: 'description', width: 2 },
-            { name: 'Sync Date', serverCodeToSort: 'date_last_synchronization', width: 2 },
-            { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1 },
-            { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1 },
-            { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1 },
-            { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1 },
-            { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1 },
-            { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1 },
-            { name: 'State', width: 1 }
+            { name: 'Version', serverCodeToSort: 'version', textAlign: 'center' },
+            { name: 'Sync. Date', serverCodeToSort: 'date_last_synchronization', width: 1, textAlign: 'center' },
+            { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1, textAlign: 'center' },
+            { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1, textAlign: 'center' },
+            { name: 'CNA', serverCodeToSort: 'cna_dataset', width: 1, textAlign: 'center' },
+            { name: 'Methylation', serverCodeToSort: 'methylation_dataset', width: 1, textAlign: 'center' },
+            { name: 'Clinical patients', serverCodeToSort: 'clinical_patient_dataset', width: 1, textAlign: 'center' },
+            { name: 'Clinical samples', serverCodeToSort: 'clinical_sample_dataset', width: 1, textAlign: 'center' },
+            { name: 'State', width: 1, textAlign: 'center' }
         ]
 
         if (isSuperuser) {
@@ -774,12 +776,15 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
                 {/* CGDS Study synchronization modal */}
                 {cgdsStudySyncConfirmModal}
+
                 <CurrentUserContext.Consumer>
-                    { currentUser =>
-                        (
+                    {currentUser => {
+                        const userIsAdmin = currentUser?.is_superuser
+
+                        return (
                             <Grid columns={2} padded stackable textAlign='center' divided>
                                 {/* New CGDS Study Panel */}
-                                {currentUser?.is_superuser
+                                {userIsAdmin
                                     ? <Grid.Column width={3} textAlign='left'>
                                         <NewCGDSStudyForm
                                             newCGDSStudy={this.state.newCGDSStudy}
@@ -801,30 +806,35 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                     : null
                                 }
                                 {/* List of CGDS Studies */}
-                                <Grid.Column width={currentUser?.is_superuser ? 13 : 16} textAlign='center'>
+                                <Grid.Column width={userIsAdmin ? 13 : 16} textAlign='center'>
                                     <PaginatedTable<DjangoCGDSStudy>
                                         headerTitle='cBioPortal'
                                         wsChannelUrl='/ws/admins/'
                                         updateWSKey='update_cgds_studies'
-                                        headers={this.getDefaultHeaders(currentUser?.is_superuser)}
+                                        headers={this.getDefaultHeaders(userIsAdmin)}
                                         urlToRetrieveData={urlCGDSStudiesCRUD}
+                                        showSearchInput
+                                        customFilters={[
+                                            { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: false, type: 'checkbox' }
+                                        ]}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'
                                         mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => (
                                             <Table.Row key={CGDSStudyFileRow.id as number}>
                                                 <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
                                                 <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
+                                                <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
                                                 <Table.Cell>{CGDSStudyFileRow.date_last_synchronization
                                                     ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
                                                     : '-'}
                                                 </Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.mrna_dataset)}</Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.mirna_dataset)}</Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.cna_dataset)}</Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.methylation_dataset)}</Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.clinical_patient_dataset, true)}</Table.Cell>
-                                                <Table.Cell>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
-                                                <Table.Cell>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
-                                                {currentUser?.is_superuser &&
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mrna_dataset)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mirna_dataset)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.cna_dataset)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.methylation_dataset)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_patient_dataset, true)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
+                                                <Table.Cell textAlign='center'>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
+                                                {userIsAdmin &&
                                                     <Table.Cell>
                                                         {/* Sync button */}
                                                         <Icon
@@ -854,7 +864,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                 </Grid.Column>
                             </Grid>
                         )
-                    }
+                    }}
                 </CurrentUserContext.Consumer>
             </Base>
         )

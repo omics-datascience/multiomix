@@ -52,6 +52,7 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     methylation_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     clinical_patient_dataset = CGDSDatasetWithSurvivalDataSerializer(required=False, allow_null=True)
     clinical_sample_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
+    version = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = CGDSStudy
@@ -314,6 +315,8 @@ class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
         study = instance.study
         data['name'] = study.name
         data['description'] = study.description
+        data['version'] = study.version
+        data['date_last_synchronization'] = instance.date_last_synchronization
         data['file_type'] = instance.file_type
         data['file_obj'] = None
 

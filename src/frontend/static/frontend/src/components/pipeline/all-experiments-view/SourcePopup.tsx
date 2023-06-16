@@ -1,6 +1,6 @@
 import React from 'react'
 import { Popup, Button, Icon, Header, List } from 'semantic-ui-react'
-import { DjangoExperimentSource } from '../../../utils/django_interfaces'
+import { DjangoExperimentSource, SourceSimpleCGDSDataset } from '../../../utils/django_interfaces'
 import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
 import { getFileRowDescriptionInPlural } from '../../../utils/util_functions'
 
@@ -71,7 +71,11 @@ export const SourcePopup = (props: SourcePopupProps) => {
                                         <hr/>
                                         <List.Item>
                                             <List.Icon name='database' color='blue' />
-                                            <List.Content>cBioPortal dataset</List.Content>
+                                            <List.Content>cBioPortal dataset (version {(datasetObj as SourceSimpleCGDSDataset).version})</List.Content>
+                                        </List.Item>
+                                        <List.Item>
+                                            <List.Icon name='clock' color='blue' />
+                                            <List.Content>Sync. Date {(datasetObj as SourceSimpleCGDSDataset).date_last_synchronization}</List.Content>
                                         </List.Item>
                                     </React.Fragment>
                                 }

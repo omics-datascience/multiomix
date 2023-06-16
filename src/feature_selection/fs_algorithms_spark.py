@@ -198,7 +198,6 @@ def binary_black_hole_spark(
 
     # Prepares some parameters
     job_name = remove_non_alphanumeric_chars(job_name)
-    app_name = f'BBHA_{experiment_pk}'
 
     # Makes a request to the EMR microservice to run the binary black hole algorithm.
     url = f'http://{emr_settings["host"]}:{emr_settings["port"]}/job'

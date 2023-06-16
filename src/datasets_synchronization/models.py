@@ -208,6 +208,7 @@ class CGDSStudy(models.Model):
     description = models.TextField(blank=True, null=True)
     date_last_synchronization = models.DateTimeField(blank=True, null=True)  # General last sync date
     url = models.CharField(max_length=300)
+    version = models.PositiveSmallIntegerField(default=1)
     url_study_info = models.CharField(max_length=300, blank=True, null=True)  # Link to the paper of the study/site/etc
     state = models.IntegerField(
         choices=CGDSStudySynchronizationState.choices,
@@ -259,6 +260,13 @@ class CGDSStudy(models.Model):
     def __str__(self):
         return self.name
 
+    def has_at_least_one_dataset_synchronized(self) -> bool:
+        """Checks if at least one dataset is synchronized"""
+        for dataset in self.get_all_datasets():
+            if dataset.state == CGDSDatasetSynchronizationState.SUCCESS:
+                return True
+        return False
+
     def get_all_datasets(self) -> List[CGDSDataset]:
         """Returns a list of all the associated CGDSDataset"""
         return [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
@@ -273,7 +281,13 @@ class CGDSStudy(models.Model):
 
     def delete(self, *args, **kwargs):
         """Deletes the instance and its related MongoDB result (if exists)"""
-        super().delete(*args, **kwargs)
+        with transaction.atomic():
+            super().delete(*args, **kwargs)
 
-        # Sends a websocket message to update the state in the frontend
-        send_update_cgds_studies_command()
+            # On delete removes all the datasets
+            for dataset in self.get_all_datasets():
+                if dataset is not None:
+                    dataset.delete()
+
+            # Sends a websocket message to update the state in the frontend
+            send_update_cgds_studies_command()
