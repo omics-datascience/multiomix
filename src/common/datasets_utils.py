@@ -96,7 +96,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
     return molecules_temp_file_path
 
 
-def clean_dataset(df: pd.DataFrame, axis: Literal['rows', 'columns']) -> pd.DataFrame:
+def clean_dataset(df: pd.DataFrame, axis: Literal['index', 'columns']) -> pd.DataFrame:
     """
     Removes NaN and Inf values.
     :param df: DataFrame to clean.
@@ -107,7 +107,7 @@ def clean_dataset(df: pd.DataFrame, axis: Literal['rows', 'columns']) -> pd.Data
 
     # Taken from https://stackoverflow.com/a/45746209/7058363
     with pd.option_context('mode.use_inf_as_na', True):
-        df = df.dropna(axis=axis, how='all')
+        df = df.dropna(axis=axis, how='any')
 
     return df
 
@@ -146,7 +146,7 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 
     # Removes molecules with NaN values
-    molecules_df = clean_dataset(molecules_df, axis='rows')
+    molecules_df = clean_dataset(molecules_df, axis='index')
 
     # Formats clinical data to a Numpy structured array
     clinical_data = clinical_df_to_struct_array(clinical_df)

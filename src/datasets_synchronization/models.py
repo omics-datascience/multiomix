@@ -56,7 +56,7 @@ class CGDSDataset(models.Model):
     )
     number_of_rows = models.PositiveIntegerField(blank=True, null=False, default=0)
     number_of_samples = models.PositiveIntegerField(blank=True, null=False, default=0)
-    mongo_collection_name = models.CharField(max_length=50, blank=True, null=True)  # Collection where will be saved
+    mongo_collection_name = models.CharField(max_length=100, blank=True, null=True)  # Collection where will be saved
 
     # TODO: move both fields to a general structure in the future in Methylation type entity
     # TODO: Don't forget to set the corresponding nullity in the new schema
