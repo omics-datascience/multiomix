@@ -1,6 +1,7 @@
 from typing import List, Optional
 from os import listdir
 from os.path import isfile
+from django.db.models import Max
 from django.utils import timezone
 from urllib.error import URLError
 import requests
@@ -19,6 +20,10 @@ import logging
 from urllib.parse import urlparse
 import os.path
 from django.conf import settings
+
+
+# Prefix to concatenate to MongoDB collection names
+VERSION_PREFIX = 'version_'
 
 
 class SkipRowsIsIncorrect(Exception):
@@ -156,35 +161,82 @@ class SynchronizationService:
         return None
 
     @staticmethod
-    def __copy_dataset(dataset: CGDSDataset, new_version: int) -> CGDSDataset:
+    def __copy_dataset(dataset: Optional[CGDSDataset], new_version: int,
+                       copy_survival_tuples: bool = False) -> Optional[CGDSDataset]:
         """
         Generates a copy of a CGDSDataset with a new collection name.
         @param dataset: CGDSDataset instance to copy.
         @param new_version: New version to concatenate to the collection name.
+        @param copy_survival_tuples: If True, copies the SurvivalTuple instances related to the dataset (useful for
+        cBioPortal Clinical Patients dataset).
         @return: A copy of the CGDSDataset instance.
         """
+        if dataset is None:
+            return None
+
+        # NOTE: persists as list to prevent lazy evaluation returning 0 elements when copy the instance
+        survival_columns = list(dataset.survival_columns.all()) if copy_survival_tuples else None
         dataset_copy = dataset
         dataset_copy.pk = None
-        mongo_collection, _old_version_number = dataset_copy.mongo_collection_name.rsplit('_', maxsplit=1)
-        dataset_copy.mongo_collection_name = f"{mongo_collection}_{new_version}"
+
+        # Generates a new MongoDB collection name
+        original_mongo_collection: str = dataset_copy.mongo_collection_name
+        split_res = original_mongo_collection.rsplit('_', maxsplit=1)
+
+        # If no version tag is present in the collection name, adds the new version
+        if len(split_res) < 2:
+            mongo_collection_name = f"{original_mongo_collection}_{VERSION_PREFIX}{new_version}"
+        else:
+            # If there's a split result, checks that it corresponds to the version tag
+            mongo_collection_without_version, old_version_tag = split_res
+
+            # If there's an old version tag in the collection name, replaces it with the new version
+            if old_version_tag.startswith(VERSION_PREFIX):
+                 mongo_collection_name = f"{mongo_collection_without_version}_{VERSION_PREFIX}{new_version}"
+            else:
+                # Otherwise, adds the new version to the original name
+                mongo_collection_name = f"{original_mongo_collection}_{VERSION_PREFIX}{new_version}"
+
+        dataset_copy.mongo_collection_name = mongo_collection_name
         dataset_copy.state = CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED
+
+        # Saves the copy to add survival columns (if needed)
         dataset_copy.save()
+
+        # Copies the survival tuples if needed
+        if survival_columns is not None:
+            for survival_tuple in survival_columns:
+                survival_tuple.pk = None
+                survival_tuple.clinical_dataset = dataset_copy
+                survival_tuple.save()
+
         return dataset_copy
 
-    def __generate_study_new_version(self, study: CGDSStudy) -> CGDSStudy:
+    @staticmethod
+    def __get_max_version(study: CGDSStudy) -> int:
+        """Gets the maximum version of the study with the same URL."""
+        return CGDSStudy.objects.filter(url=study.url).aggregate(Max('version'))['version__max'] + 1
+
+    def generate_study_new_version(self, study: CGDSStudy) -> CGDSStudy:
         """Generates a copy of a CGDSStudy and all its CGDSDatasets with a new version number."""
         # Creates a copy of study
         study_copy = study
         study_copy.pk = None
-        new_version = study.version + 1
+
+        # Updates version
+        new_version = self.__get_max_version(study)
         study_copy.version = new_version
+
+        # Removes also the date of last synchronization
+        study_copy.date_last_synchronization = None
 
         # Creates a copy of its datasets and edits the collection name to prevent conflicts
         study_copy.mrna_dataset = self.__copy_dataset(study.mrna_dataset, new_version)
         study_copy.mirna_dataset = self.__copy_dataset(study.mirna_dataset, new_version)
         study_copy.cna_dataset = self.__copy_dataset(study.cna_dataset, new_version)
         study_copy.methylation_dataset = self.__copy_dataset(study.methylation_dataset, new_version)
-        study_copy.clinical_patient_dataset = self.__copy_dataset(study.clinical_patient_dataset, new_version)
+        study_copy.clinical_patient_dataset = self.__copy_dataset(study.clinical_patient_dataset, new_version,
+                                                                  copy_survival_tuples=True)
         study_copy.clinical_sample_dataset = self.__copy_dataset(study.clinical_sample_dataset, new_version)
 
         # Saves changes
@@ -313,7 +365,9 @@ class SynchronizationService:
         """
         # First of all checks if exists at least one CGDS dataset with a success state
         if cgds_study.has_at_least_one_dataset_synchronized():
-            cgds_study = self.__generate_study_new_version(cgds_study)
+            logging.info(f'CGDS Study {cgds_study.name} has at least one dataset synchronized. '
+                         f'Generating a new version...')
+            cgds_study = self.generate_study_new_version(cgds_study)
 
         # Updates the state
         cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
