@@ -969,7 +969,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Makes a request to delete a Tag
+     * Makes a request to delete a Biomarker
      */
     deleteBiomarker = () => {
         // Sets the Request's Headers
@@ -991,7 +991,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }).catch((err) => {
                 this.setState({ deletingBiomarker: false })
                 alertGeneralError()
-                console.log('Error deleting Tag ->', err)
+                console.log('Error deleting Biomarker ->', err)
             })
         })
     }
