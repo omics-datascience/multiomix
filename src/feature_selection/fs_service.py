@@ -63,9 +63,7 @@ class FSService(object):
             logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
 
     @staticmethod
-
-
-    def __generate_df_molecules_and_clinical(self, experiment: FSExperiment,
+    def __generate_df_molecules_and_clinical(experiment: FSExperiment,
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
         """
         Generates two DataFrames: one with all the selected molecules, and other with the selected clinical data.
