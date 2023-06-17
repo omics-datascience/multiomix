@@ -48,8 +48,8 @@ type SaveMoleculeStructure = {
 
 // TODO: attributes 'number_of_...', 'state' and 'origin' only are used in API GET service, not in the form, define and use
 // TODO: two different interfaces
-/** Django Biomarker model. */
-interface Biomarker {
+/** Common fields of different Biomarker structures (from different endpoints). */
+interface BiomarkerSimple {
     id: Nullable<number>,
     name: string,
     description: string,
@@ -63,7 +63,11 @@ interface Biomarker {
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
-    column_used_as_index: string,
+    column_used_as_index: string
+}
+
+/** Django Biomarker model. */
+interface Biomarker extends BiomarkerSimple {
     mirnas: SaveMoleculeStructure[],
     methylations: SaveMoleculeStructure[],
     cnas: SaveMoleculeStructure[],
@@ -530,6 +534,7 @@ export {
     BiomarkerMolecule,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,
+    BiomarkerSimple,
     Biomarker,
     BiomarkerType,
     FormBiomarkerData,

@@ -21,7 +21,7 @@ class BiomarkerList(generics.ListCreateAPIView):
         biomarkers = Biomarker.objects.filter(user=self.request.user)
         if only_successful:
             # In this case shows only Biomarkers that are valid (completed and have at least a molecule)
-            biomarkers = biomarkers.annotate(
+            biomarkers = biomarkers.alias(
                 count_number_of_mrnas=Count('mrnas'),
                 count_number_of_mirnas=Count('mirnas'),
                 count_number_of_cnas=Count('cnas'),
@@ -43,6 +43,7 @@ class BiomarkerList(generics.ListCreateAPIView):
         # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
         biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
 
+    # serializer_class = BiomarkerSimpleSerializer  # TODO: uncomment when implemented in frontend
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
