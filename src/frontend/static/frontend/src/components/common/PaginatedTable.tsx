@@ -260,7 +260,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     generateCustomFiltersForm (): Nullable<JSX.Element>[] {
         const customFiltersArray = this.props.customFilters ?? []
         return customFiltersArray.map((filter) => {
-            if (filter.type === 'select') {
+            const filterType = filter.type ?? 'select'
+            if (filterType === 'select') {
                 // If 'options' is undefined, gets the unique values from data
                 let options: DropdownItemProps[]
                 if (filter.options !== undefined) {
