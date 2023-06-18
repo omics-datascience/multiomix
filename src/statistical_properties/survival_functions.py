@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from lifelines import KaplanMeierFitter, CoxPHFitter
 from lifelines.statistics import logrank_test
+from common.datasets_utils import clinical_df_to_struct_array
 from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
 
@@ -134,9 +135,7 @@ def generate_survival_groups_by_clustering(
     Likelihood from (Cox Regression), and a tuple with all the samples with their groups
     """
     # Formats clinical data to a Numpy structured array
-    # TODO: refactor this! It's being used in a lot of places!
-    clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                               formats='bool, float')
+    clinical_data = clinical_df_to_struct_array(clinical_df)
 
     # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
     # structure of data

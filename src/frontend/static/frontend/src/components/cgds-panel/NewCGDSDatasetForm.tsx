@@ -114,7 +114,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     disabled={props.addingOrEditingCGDSStudy}
                     placeholder="Mongo Collection's name"
                     pattern="^[a-zA-Z]([a-zA-Z0-9]|_)*" // Starts with a letter, the letters, numbers or '_' only
-                    maxLength={50}
+                    maxLength={100}
                 />
 
                 {props.showSurvivalTuplesForm &&

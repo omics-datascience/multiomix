@@ -57,6 +57,11 @@ The following are the steps to perform a deployment in production. In case you w
     - BioAPI:
         - `BIOAPI_HOST`: BioAPI connection host. Default `127.0.0.1`.
         - `BIOAPI_PORT`: BioAPI connection port. Default `8002`.
+    - [Multiomix AWS EMR integration][aws-emr-integration]:
+        - `ENABLE_AWS_EMR_INTEGRATION`: set the string `true` to enable the AWS-EMR integration service. Default `false`.
+        - `AWS_EMR_HOST`: AWS-EMR integration service connection host. Default `127.0.0.1`.
+        - `AWS_EMR_PORT`: AWS-EMR integration service connection port. Default `8003`.
+        - `AWS_EMR_SHARED_FOLDER`: Share folder with the AWS-EMR integration service to move the datasets and retrieve the results. Default `8002`.
     - Experiment result table:
         - `TABLE_PAGE_SIZE`: number per rows to display in the table by default. Default `10`.
     - Feature Selection:
@@ -166,6 +171,21 @@ To integrate with [Modulector][modulector] and/or [BioAPI][bioapi] using `docker
 5. Redo the deployment with Docker.
 
 
+## Multiomix AWS EMR integration (Spark cluster)
+
+Multiomix provides functions to make available metaheuristics and other algorithms that can take a long time to execute. In order to shorten these times, it distributes the processing across an Apache Spark cluster.
+
+Integration with that cluster (whether it is mounted on an in-house server or a cloud provider like AWS) is done through a microservice called _multiomix-aws-emr_.
+
+In order to activate the integration, it is necessary to follow the deployment steps found in the official [multiomix-aws-emr repository][aws-emr-integration].
+
+Then the following environment variables must be configured:
+   - `ENABLE_AWS_EMR_INTEGRATION` to `"true"`
+   - `AWS_EMR_HOST`
+   - `AWS_EMR_PORT`
+   - `AWS_EMR_SHARED_FOLDER`
+
+
 ## Creating Dumps and Restoring from Dumps
 
 
@@ -214,3 +234,4 @@ That command will restore the database using a compressed dump as source. You ca
 [modulector]: https://github.com/omics-datascience/modulector
 [bioapi]: https://github.com/omics-datascience/BioAPI
 [cox-net-surv-analysis]: https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.linear_model.CoxnetSurvivalAnalysis.html
+[aws-emr-integration]: https://github.com/omics-datascience/multiomix-aws-emr

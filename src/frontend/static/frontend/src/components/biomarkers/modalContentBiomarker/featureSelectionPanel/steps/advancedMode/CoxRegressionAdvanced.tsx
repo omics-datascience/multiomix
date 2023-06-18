@@ -2,13 +2,22 @@ import React from 'react'
 import { Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import './../../featureSelection.css'
-import { AdvanceCoxRegression } from '../../../../types'
+import { AdvancedCoxRegression } from '../../../../types'
 
-interface Props {
-    advanceData: AdvanceCoxRegression,
+declare const maxFeaturesCoxRegression: number
+
+/** CoxRegressionAdvanced props. */
+interface CoxRegressionAdvancedProps {
+    advanceData: AdvancedCoxRegression,
     handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
 }
-export const CoxRegressionAdvance = (props: Props) => {
+
+/**
+ * Renders a form to set some advanced parameters for the CoxRegression algorithm.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const CoxRegressionAdvanced = (props: CoxRegressionAdvancedProps) => {
     const {
         advanceData,
         handleChangeAdvanceAlgorithm
@@ -24,18 +33,15 @@ export const CoxRegressionAdvance = (props: Props) => {
                         type='number'
                         step={1}
                         min={1}
-                        max={60}
+                        max={maxFeaturesCoxRegression}
                         name='topN'
                         value={advanceData.topN}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
-                            if (numVal < 1) {
-                                handleChangeAdvanceAlgorithm('coxRegression', name, 1)
-                            } else if (numVal > 60) {
-                                handleChangeAdvanceAlgorithm('coxRegression', name, 60)
-                            } else {
-                                handleChangeAdvanceAlgorithm('coxRegression', name, numVal)
+                            if (numVal < 1 || isNaN(numVal) || numVal > maxFeaturesCoxRegression) {
+                                return
                             }
+                            handleChangeAdvanceAlgorithm('coxRegression', name, numVal)
                         }}
                     />
                 </Grid.Column>

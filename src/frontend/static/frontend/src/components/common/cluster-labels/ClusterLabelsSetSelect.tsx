@@ -3,6 +3,7 @@ import { Select, DropdownItemProps } from 'semantic-ui-react'
 import { ClusterLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
+import { InputLabel } from '../InputLabel'
 
 declare const urlClusterLabelsSets: string
 
@@ -55,9 +56,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
 
     return (
         <>
-            <label>
-                <strong>Use a cluster label</strong>
-            </label>
+            <InputLabel label='Cluster label' />
 
             <Select
                 fluid

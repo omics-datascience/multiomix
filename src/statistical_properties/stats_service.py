@@ -19,7 +19,9 @@ from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from common.functions import close_db_connection
-from common.utils import get_subset_of_features, get_samples_intersection
+from common.utils import get_subset_of_features
+from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
+    replace_event_col_for_booleans
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -27,9 +29,6 @@ from feature_selection.models import TrainedModel, ClusteringScoringMethod, Clus
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
 from user_files.models_choices import MoleculeType, FileType
-
-# Common event values
-COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
 
 class StatisticalValidationService(object):
@@ -64,35 +63,6 @@ class StatisticalValidationService(object):
                 cursor.execute(query)
 
     @staticmethod
-    def __get_common_samples(stat_validation: Union[StatisticalValidation, TrainedModel]) -> np.ndarray:
-        """
-        Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
-        @param stat_validation: statistical validation.
-        @return: Sorted Numpy array with the samples in common
-        @raise NoSamplesInCommon if no samples in common are present.
-        """
-        # NOTE: the intersection is already sorted by Numpy
-        last_intersection: Optional[np.ndarray] = None
-
-        for source in stat_validation.get_all_sources():
-            if source is None:
-                continue
-
-            last_intersection = get_samples_intersection(source, last_intersection)
-
-        # Checks empty intersection
-        last_intersection = cast(np.ndarray, last_intersection)
-        if last_intersection.size == 0:
-            raise NoSamplesInCommon
-
-        return last_intersection
-
-    @staticmethod
-    def __replace_event_col_for_booleans(value: Union[int, str]) -> bool:
-        """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
-        return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
-
-    @staticmethod
     def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
                         samples_in_common: np.ndarray) -> pd.DataFrame:
         """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
@@ -108,26 +78,8 @@ class StatisticalValidationService(object):
 
         return chunk
 
-    def __generate_molecules_file(self, stat_validation: StatisticalValidation, samples_in_common: np.ndarray) -> str:
-        """
-        Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common and saves
-        it in disk.
-        """
-        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
-            molecules_temp_file_path = temp_file.name
-
-            for source, molecules, file_type in stat_validation.get_sources_and_molecules():
-                if source is None:
-                    continue
-
-                for chunk in source.get_df_in_chunks():
-                    chunk = self.__process_chunk(chunk, file_type, molecules, samples_in_common)
-
-                    # Saves in disk
-                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
-        return molecules_temp_file_path
-
-    def __generate_molecules_dataframe(self, stat_validation: StatisticalValidation,
+    @staticmethod
+    def __generate_molecules_dataframe(stat_validation: StatisticalValidation,
                                        samples_in_common: np.ndarray) -> pd.DataFrame:
         """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
         chunks: List[pd.DataFrame] = []
@@ -136,14 +88,15 @@ class StatisticalValidationService(object):
                 continue
 
             chunks.extend([
-                self.__process_chunk(chunk, file_type, molecules, samples_in_common)
+                process_chunk(chunk, file_type, molecules, samples_in_common)
                 for chunk in source.get_df_in_chunks()
             ])
 
         # Concatenates all the chunks for all the molecules
         return pd.concat(chunks, axis=0, sort=False)
 
-    def __generate_df_molecules_and_clinical(self, stat_validation: Union[StatisticalValidation, TrainedModel],
+    @staticmethod
+    def __generate_df_molecules_and_clinical(stat_validation: Union[StatisticalValidation, TrainedModel],
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
         """
         Generates two DataFrames: one with all the selected molecules, and other with the selected clinical data.
@@ -165,14 +118,14 @@ class StatisticalValidationService(object):
 
             # Replaces str values of CGDS for boolean values
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                self.__replace_event_col_for_booleans
+                replace_event_col_for_booleans
             )
 
             # Saves in disk
             clinical_df.to_csv(temp_file, sep='\t', decimal='.')
 
         # Generates all the molecules DataFrame
-        molecules_temp_file_path = self.__generate_molecules_file(stat_validation, samples_in_common)
+        molecules_temp_file_path = generate_molecules_file(stat_validation, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
@@ -212,22 +165,9 @@ class StatisticalValidationService(object):
         is_clustering = hasattr(model, 'clustering_parameters')
         is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
 
-        # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinical DataFrames
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
-
-        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
-        if is_regression:
-            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
-            clinical_df = clinical_df[clinical_df[time_column] > 0]
-
-        valid_samples = clinical_df.index
-        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
-
-        # Formats clinical data to a Numpy structured array
-        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                                   formats='bool, float')
+        # Gets data in the correct format
+        molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                               is_regression)
 
         # Get top features
         best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data,
@@ -300,24 +240,9 @@ class StatisticalValidationService(object):
         classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
             trained_model, model_parameters)
 
-        # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinical DataFrames
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
-
-        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
-        if is_regression:
-            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
-            clinical_df = clinical_df[clinical_df[time_column] > 0]
-
-        # Keeps only the samples that are in both DataFrames
-        valid_samples = clinical_df.index
-        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
-
-        # Formats clinical data to a Numpy structured array
-        # TODO: refactor
-        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                                   formats='bool, float')
+        # Gets data in the correct format
+        molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                               is_regression)
 
         # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
         # structure of data
@@ -407,7 +332,7 @@ class StatisticalValidationService(object):
         @return: Molecules DataFrame
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(stat_validation)
+        samples_in_common = get_common_samples(stat_validation)
 
         # Generates all the molecules DataFrame
         return self.__generate_molecules_dataframe(stat_validation, samples_in_common)
@@ -419,7 +344,7 @@ class StatisticalValidationService(object):
         @param stat_validation: StatisticalValidation instance.
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(stat_validation)
+        samples_in_common = get_common_samples(stat_validation)
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
@@ -439,7 +364,7 @@ class StatisticalValidationService(object):
         @param stop_event: Stop signal
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(stat_validation)
+        samples_in_common = get_common_samples(stat_validation)
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
@@ -460,7 +385,7 @@ class StatisticalValidationService(object):
         @param stop_event: Stop signal
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(trained_model)
+        samples_in_common = get_common_samples(trained_model)
 
         # Generates needed DataFrames
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(trained_model,

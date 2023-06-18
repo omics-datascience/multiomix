@@ -68,6 +68,8 @@ interface SourceSimpleCGDSDataset {
     name: string,
     description: string,
     file_type: FileType,
+    version: number,
+    date_last_synchronization: Nullable<string>,
     file_obj: string
 }
 
@@ -202,6 +204,8 @@ interface RowHeader<T> {
     serverCodeToSort?: keyof T,
     /** Width of the column. */
     width?: SemanticWIDTHS,
+    /** Title to show on hover the header. */
+    title?: string,
     /** Text align of the column. */
     textAlign?: StrictTableCellProps['textAlign'],
     /** If it's defined, an InfoPopup is shown with this content. */
@@ -373,6 +377,7 @@ interface DjangoCGDSStudy {
     date_last_synchronization?: string,
     url: string,
     url_study_info: string,
+    version: Nullable<number>,
     state?: CGDSStudySynchronizationState,
     mrna_dataset: Nullable<DjangoCGDSDataset>,
     mirna_dataset: Nullable<DjangoCGDSDataset>,

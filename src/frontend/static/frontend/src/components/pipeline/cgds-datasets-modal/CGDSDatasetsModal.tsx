@@ -43,6 +43,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
         const headersList: RowHeader<DjangoCGDSStudy>[] = [
             { name: 'Name', serverCodeToSort: 'name' },
             { name: 'Description', serverCodeToSort: 'description' },
+            { name: 'Version', serverCodeToSort: 'version' },
             { name: 'Sync. Date', serverCodeToSort: 'date_last_synchronization' },
             { name: 'Study info' }
         ]
@@ -58,7 +59,10 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                     headers={getDefaultHeaders()}
                     showSearchInput
                     urlToRetrieveData={urlCGDSStudiesCRUD}
-                    queryParams={ { file_type: props.selectingFileType } }
+                    customFilters={[
+                        { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
+                    ]}
+                    queryParams={{ file_type: props.selectingFileType } }
                     mapFunction={(CGDSStudy: DjangoCGDSStudy) => {
                         return (
                             <Table.Row key={CGDSStudy.id as number}
@@ -69,6 +73,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                             >
                                 <Table.Cell>{CGDSStudy.name}</Table.Cell>
                                 <Table.Cell>{CGDSStudy.description}</Table.Cell>
+                                <Table.Cell>{CGDSStudy.version}</Table.Cell>
                                 <Table.Cell collapsing>{CGDSStudy.date_last_synchronization
                                     ? formatDateLocale(CGDSStudy.date_last_synchronization)
                                     : '-'}</Table.Cell>

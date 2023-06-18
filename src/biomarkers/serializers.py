@@ -57,8 +57,51 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
         exclude = ['biomarker']
 
 
+class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
+    """Biomarker model serializer without the molecules."""
+    number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
+    number_of_mirnas = serializers.SerializerMethodField(method_name='get_number_of_mirnas')
+    number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
+    number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
+    has_fs_experiment = serializers.SerializerMethodField(method_name='get_has_fs_experiment')
+
+    origin = serializers.IntegerField(required=False)
+    state = serializers.IntegerField(required=False)
+
+    tag = TagSerializer(required=False)
+
+    class Meta:
+        model = Biomarker
+        exclude = ['user']
+
+    @staticmethod
+    def get_number_of_mrnas(ins: Biomarker) -> int:
+        """Gets the number of genes in this Biomarker"""
+        return ins.number_of_mrnas
+
+    @staticmethod
+    def get_number_of_mirnas(ins: Biomarker) -> int:
+        """Gets the number of miRNAs in this Biomarker"""
+        return ins.number_of_mirnas
+
+    @staticmethod
+    def get_number_of_cnas(ins: Biomarker) -> int:
+        """Gets the number of CNAs in this Biomarker"""
+        return ins.number_of_cnas
+
+    @staticmethod
+    def get_number_of_methylations(ins: Biomarker) -> int:
+        """Gets the number of Methylations in this Biomarker"""
+        return ins.number_of_methylations
+
+    @staticmethod
+    def get_has_fs_experiment(ins: Biomarker) -> bool:
+        """Gets if the current Biomarker was created from a Feature Selection experiment"""
+        return ins.has_fs_experiment
+
+
 class BiomarkerSerializer(WritableNestedModelSerializer):
-    """Biomarker model serializer"""
+    """Biomarker model serializer."""
     number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
     number_of_mirnas = serializers.SerializerMethodField(method_name='get_number_of_mirnas')
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')

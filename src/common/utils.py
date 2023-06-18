@@ -1,8 +1,7 @@
 import numpy as np
-from typing import List, Union, Optional, cast
+from typing import List, Union, Optional
 import pandas as pd
 from django.http import QueryDict
-from api_service.models import ExperimentSource
 
 
 def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
@@ -16,18 +15,6 @@ def get_source_pk(post_request: QueryDict, key: str) -> Optional[int]:
     if content is None or content == 'null':
         return None
     return int(content)
-
-
-def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Removes NaN and Inf values.
-    :param df: DataFrame to clean.
-    :return: Cleaned DataFrame.
-    """
-    assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
-    df = df.dropna(axis='columns')
-    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any('columns')
-    return df[indices_to_keep].astype(np.float64)
 
 
 def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[str], np.ndarray]) -> pd.DataFrame:
@@ -63,22 +50,6 @@ def limit_between_min_max(number: int, min_value: int, max_value: int) -> int:
     return max(min(number, max_value), min_value)
 
 
-def get_samples_intersection(source: ExperimentSource, last_intersection: np.ndarray) -> np.ndarray:
-    """
-    Gets the intersection of the samples of the current source with the last intersection.
-    @param source: Source to get the samples from.
-    @param last_intersection: Last intersection of samples.
-    @return: Intersection of the samples of the current source with the last intersection.
-    """
-    # Clean all the samples name to prevent issues with CGDS suffix
-    current_samples = source.get_samples()
-
-    if last_intersection is not None:
-        cur_intersection = np.intersect1d(
-            last_intersection,
-            current_samples
-        )
-    else:
-        cur_intersection = np.array(current_samples)
-    last_intersection = cast(np.ndarray, cur_intersection)
-    return last_intersection
+def remove_non_alphanumeric_chars(string: str) -> str:
+    """Replaces all the non-alphanumeric chars from the job name to respect the [\.\-_/#A-Za-z0-9]+ regex"""
+    return ''.join(e for e in string if e.isalnum() or e in ['.', '-', '_', '/', '#'])

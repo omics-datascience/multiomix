@@ -119,8 +119,8 @@ class ExperimentClinicalSource(ExperimentSource):
 
     def get_methylation_platform_df(self) -> Optional[pd.DataFrame]:
         """
-        Clinical source doesn't have Methylation Platform
-        @return: List with the samples
+        Clinical source doesn't have Methylation Platform.
+        @return: None.
         """
         return None
 
@@ -257,10 +257,13 @@ class ExperimentClinicalSource(ExperimentSource):
         Generates a join Pandas DataFrame for both CGDSDatasets of clinical data (cBioPortal has two clinical files)
         @return: Pandas DataFrame
         """
-        df1: pd.DataFrame = self.cgds_dataset.get_df(use_standard_column=False)  # The index is implicitly PATIENT_ID
+        df1: pd.DataFrame = self.cgds_dataset.get_df(use_standard_column=False)
         df2: pd.DataFrame = self.extra_cgds_dataset.get_df(use_standard_column=False)
-        df2 = df2.reset_index(level=0)
-        df2 = df2.set_index(PATIENT_ID_COLUMN)
+
+        # Sets the index to the patient ID column and joins both DataFrames
+        # NOTE: df1 has already the index set to the patient ID column
+        df2 = df2.set_index([PATIENT_ID_COLUMN])
+
         return df1.join(df2)
 
     def get_df(self) -> pd.DataFrame:

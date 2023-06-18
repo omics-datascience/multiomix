@@ -3,16 +3,17 @@ import tempfile
 import time
 import numpy as np
 from threading import Event
-from typing import Dict, Tuple, cast, Optional, Union, List, Any
+from typing import Dict, Tuple, Optional, Any
 import pandas as pd
-from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, MRNAIdentifier, MiRNAIdentifier, \
-    CNAIdentifier, MethylationIdentifier
-from common.utils import get_samples_intersection
-from user_files.models_choices import FileType
+from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
+from common.utils import limit_between_min_max
+from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset, format_data, \
+    replace_event_col_for_booleans
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
+from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
-    ClusteringParameters
+    ClusteringParameters, BBHAParameters, CoxRegressionParameters
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -20,7 +21,7 @@ from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
 from common.functions import close_db_connection
-from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier
+from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier, save_molecule_identifiers
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -62,30 +63,7 @@ class FSService(object):
             logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
 
     @staticmethod
-    def __get_common_samples(experiment: FSExperiment) -> np.ndarray:
-        """
-        Gets a sorted Numpy array with the samples ID in common between both ExperimentSources.
-        @param experiment: Feature Selection experiment.
-        @return: Sorted Numpy array with the samples in common
-        """
-        # NOTE: the intersection is already sorted by Numpy
-        last_intersection: Optional[np.ndarray] = None
-
-        for source in experiment.get_all_sources():
-            if source is None:
-                continue
-
-            last_intersection = get_samples_intersection(source, last_intersection)
-
-        return cast(np.ndarray, last_intersection)
-
-    @staticmethod
-    def __replace_event_col_for_booleans(value: Union[int, str]) -> bool:
-        """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
-        return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
-
-
-    def __generate_df_molecules_and_clinical(self, experiment: FSExperiment,
+    def __generate_df_molecules_and_clinical(experiment: FSExperiment,
                                              samples_in_common: np.ndarray) -> Tuple[str, str]:
         """
         Generates two DataFrames: one with all the selected molecules, and other with the selected clinical data.
@@ -108,60 +86,23 @@ class FSService(object):
 
             # Replaces str values of CGDS for
             clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                self.__replace_event_col_for_booleans
+                replace_event_col_for_booleans
             )
 
             # Saves in disk
             clinical_df.to_csv(temp_file, sep='\t', decimal='.')
 
-        # Generates all the molecules DataFrame
-        with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
-            molecules_temp_file_path = temp_file.name
-
-            for source, molecules, file_type in experiment.get_sources_and_molecules():
-                if source is None:
-                    continue
-
-                for chunk in source.get_df_in_chunks():
-                    # Only keeps the samples in common
-                    chunk = chunk[samples_in_common]
-
-                    # Keeps only existing molecules in the current chunk
-                    molecules_to_extract = np.intersect1d(chunk.index, molecules)
-                    chunk = chunk.loc[molecules_to_extract]
-
-                    # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-                    chunk.index = chunk.index + f'_{file_type}'
-
-                    # Saves in disk
-                    chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        # Generates needed DataFrames
+        molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
     @staticmethod
-    def __save_molecule_identifiers(created_biomarker: Biomarker, best_features: List[str]):
-        """Saves all the molecules for the new created biomarker."""
-        for feature in best_features:
-            molecule_name, file_type = feature.rsplit('_', maxsplit=1)
-            file_type = int(file_type)
-            if file_type == FileType.MRNA:
-                identifier_class = MRNAIdentifier
-            elif file_type == FileType.MIRNA:
-                identifier_class = MiRNAIdentifier
-            elif file_type == FileType.CNA:
-                identifier_class = CNAIdentifier
-            elif file_type == FileType.METHYLATION:
-                identifier_class = MethylationIdentifier
-            else:
-                raise Exception(f'Molecule type invalid: {file_type}')
-
-            # Creates the identifier
-            identifier_class.objects.create(identifier=molecule_name, biomarker=created_biomarker)
-
-    def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
+    def __compute_experiment(experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
-                             model_parameters: Dict[str, Any],
-                             stop_event: Event):
+                             fitness_function_parameters: Dict[str, Any],
+                             algorithm_parameters: Dict[str, Any],
+                             stop_event: Event) -> bool:
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
@@ -169,8 +110,10 @@ class FSService(object):
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param fit_fun_enum: Selected fitness function to compute.
-        @param model_parameters: Parameters of the fitness function to compute.
+        @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop signal.
+        @return A flag to indicate whether the experiment is running in spark
         """
         # Creates TrainedModel instance
         trained_model: TrainedModel = TrainedModel.objects.create(
@@ -183,45 +126,85 @@ class FSService(object):
 
         # Gets model instance and stores its parameters
         classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
-            trained_model, model_parameters)
+            trained_model, fitness_function_parameters
+        )
 
-        # Gets molecules and clinical DataFrames
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
-
-        # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
-        if is_regression:
-            time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
-            clinical_df = clinical_df[clinical_df[time_column] > 0]
-
-        # Keeps only the samples in common
-        valid_samples = clinical_df.index
-        molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
-
-        # Formats clinical data to a Numpy structured array
-        clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                                   formats='bool, float')
+        # Gets data in the correct format
+        molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                               is_regression)
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
             best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
                                                                             is_clustering, clustering_scoring_method)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
-            best_features, best_model, best_score = binary_black_hole_sequential(
-                classifier,
-                molecules_df,
-                n_stars=25,  # TODO: parametrize in frontend
-                n_iterations=10,  # TODO: parametrize in frontend
-                clinical_data=clinical_data,
-                is_clustering=is_clustering,
-                clustering_score_method=clustering_scoring_method
+            bbha_parameters = algorithm_parameters['BBHA']
+            n_stars = int(bbha_parameters['numberOfStars'])
+            n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
+            bbha_version = int(bbha_parameters['BBHAVersion'])
+
+            # Creates an instance of BBHAParameters
+            BBHAParameters.objects.create(
+                fs_experiment=experiment,
+                n_stars=n_stars,
+                n_iterations=n_bbha_iterations,
+                version_used=bbha_version
             )
+
+            # TODO: add here a min_number_of_features parameter to prevent sending a little experiment to AWS
+            if settings.ENABLE_AWS_EMR_INTEGRATION:
+                app_name = f'BBHA_{experiment.pk}'
+
+                job_id = binary_black_hole_spark(
+                    job_name=f'Job for FSExperiment: {experiment.pk}',
+                    app_name=app_name,
+                    classifier=classifier,
+                    molecules_df=molecules_df,
+                    n_stars=n_stars,
+                    n_iterations=n_bbha_iterations,
+                    clinical_df=clinical_df,
+                    is_clustering=is_clustering,
+                    clustering_score_method=clustering_scoring_method,
+                    binary_threshold=None  # TODO: parametrize in frontend
+                )
+
+                # Saves the job id in the experiment
+                experiment.app_name = app_name
+                experiment.emr_job_id = job_id
+                experiment.save(update_fields=['app_name', 'emr_job_id'])
+
+                # It doesn't need to wait anything because the job is running in the AWS cluster right now
+                return True  # Indicates that the experiment is running in AWS
+            else:
+                # Runs sequential version
+                best_features, best_model, best_score = binary_black_hole_sequential(
+                    classifier,
+                    molecules_df,
+                    n_stars=n_stars,
+                    n_iterations=n_bbha_iterations,
+                    clinical_data=clinical_data,
+                    is_clustering=is_clustering,
+                    clustering_score_method=clustering_scoring_method
+                )
         elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
+            cox_regression_parameters = algorithm_parameters['coxRegression']
+            if cox_regression_parameters['topN']:
+                top_n = int(cox_regression_parameters['topN'])
+                top_n = limit_between_min_max(top_n, 1, len(molecules_df.columns))
+            else:
+                top_n = None
+
+            # Creates an instance of CoxRegressionParameters
+            CoxRegressionParameters.objects.create(
+                fs_experiment=experiment,
+                top_n=top_n
+            )
+
             best_features, best_model, best_score = select_top_cox_regression(
                 molecules_df,
                 clinical_data,
                 filter_zero_coeff=True, # Keeps only != 0 coefficient
-                top_n=None  # TODO: parametrize from frontend
+                top_n=top_n
             )
         else:
             # TODO: implement PSO and GA
@@ -229,7 +212,7 @@ class FSService(object):
 
         if best_features is not None:
             # Stores molecules in the target biomarker, the best model and its fitness value
-            self.__save_molecule_identifiers(experiment.created_biomarker, best_features)
+            save_molecule_identifiers(experiment.created_biomarker, best_features)
 
             trained_model.state = BiomarkerState.COMPLETED
 
@@ -241,40 +224,47 @@ class FSService(object):
 
         trained_model.save(update_fields=['state'])
 
+        return False  # It is not running in spark
+
     def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                          fitness_function_parameters: Dict[str, Any],
-                                         stop_event: Event) -> Tuple[str, str]:
+                                         algorithm_parameters: Dict[str, Any],
+                                         stop_event: Event) -> Tuple[str, str, bool]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
         @param experiment: FSExperiment instance.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop signal.
-        @return Trained model instance if everything was ok. None if no best features were found.
+        @return Both molecules and clinical files paths.
         """
         # Get samples in common
-        samples_in_common = self.__get_common_samples(experiment)
-        if samples_in_common.size == 0:
-            raise NoSamplesInCommon
+        samples_in_common = get_common_samples(experiment)
 
         # Generates needed DataFrames
-        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(experiment,
-                                                                                                      samples_in_common)
+        molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(
+            experiment,
+            samples_in_common
+        )
 
-        self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
-                                                  fit_fun_enum, fitness_function_parameters, stop_event)
+        running_in_spark = self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
+                                                     fit_fun_enum, fitness_function_parameters,
+                                                     algorithm_parameters, stop_event)
 
-        return molecules_temp_file_path, clinical_temp_file_path
+        return molecules_temp_file_path, clinical_temp_file_path, running_in_spark
 
 
     def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                           fitness_function_parameters: Dict[str, Any],
+                                          algorithm_parameters: Dict[str, Any],
                                           stop_event: Event):
         """
         Computes a Feature Selection experiment.
         @param experiment: FSExperiment to be processed.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         @param stop_event: Stop event to cancel the experiment
         """
         # Resulting Biomarker instance from the FS experiment.
@@ -293,8 +283,8 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_experiment(
-                experiment, fit_fun_enum, fitness_function_parameters, stop_event
+            molecules_temp_file_path, clinical_temp_file_path, running_in_spark = self.__prepare_and_compute_experiment(
+                experiment, fit_fun_enum, fitness_function_parameters, algorithm_parameters, stop_event
             )
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
@@ -306,8 +296,11 @@ class FSService(object):
                 self.__commit_or_rollback(is_commit=True, experiment=experiment)
 
                 # Saves some data about the result of the experiment
-                experiment.execution_time = total_execution_time
-                biomarker.state = BiomarkerState.COMPLETED
+                # If it's running in Spark, the execution time is not saved here because it's not known yet and
+                # the state is set from the /aws-notification endpoint asynchronously
+                if not running_in_spark:
+                    experiment.execution_time = total_execution_time
+                    biomarker.state = BiomarkerState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
@@ -362,12 +355,13 @@ class FSService(object):
         experiment.save()
 
     def add_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
-                       fitness_function_parameters: Dict[str, Any]):
+                       fitness_function_parameters: Dict[str, Any], algorithm_parameters: Dict[str, Any]):
         """
         Adds a Feature Selection experiment to the ThreadPool to be processed
         @param experiment: FSExperiment to be processed
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         """
         experiment_event = Event()
 
@@ -376,7 +370,7 @@ class FSService(object):
 
         # Submits
         experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, fit_fun_enum,
-                                                 fitness_function_parameters, experiment_event)
+                                                 fitness_function_parameters, algorithm_parameters, experiment_event)
         self.fs_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
 
     def stop_experiment(self, experiment: FSExperiment):

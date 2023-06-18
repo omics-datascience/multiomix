@@ -243,6 +243,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                 <label>
                                     Field of event of interest
                                 </label>
+
                                 <Select
                                     selectOnBlur={false}
                                     label='Field of event of interest'

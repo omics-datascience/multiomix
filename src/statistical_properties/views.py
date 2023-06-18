@@ -22,6 +22,7 @@ from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
+from common.datasets_utils import clinical_df_to_struct_array
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
@@ -295,9 +296,7 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
 
             # Gets only clinical data
             current_clinical_df = group[[survival_tuple.event_column, survival_tuple.time_column]]
-            # TODO: refactor
-            clinical_data_np = np.core.records.fromarrays(current_clinical_df.to_numpy().transpose(),
-                                                          names='event, time', formats='bool, float')
+            clinical_data_np = clinical_df_to_struct_array(current_clinical_df)
 
             # Set as KaplanMeierSample
             current_group = struct_array_to_kaplan_meier_samples(clinical_data_np)
@@ -627,7 +626,7 @@ class ClusterLabelsSetsList(generics.ListCreateAPIView):
     """REST endpoint: list and create for ClusterLabelsSet model"""
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk')
         return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = ClusterLabelsSetSerializer
@@ -638,7 +637,7 @@ class ClusterLabelsSetsListPaginated(generics.ListAPIView):
     """REST endpoint: paginated list for ClusterLabelsSet model"""
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk')
         return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = ClusterLabelsSetSerializer
@@ -654,7 +653,7 @@ class ClusterLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
     # TODO: use this from frontend!
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk')
         return get_cluster_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = ClusterLabelsSetSerializer
@@ -665,7 +664,7 @@ class PredictionRangeLabelsSetsList(generics.ListCreateAPIView):
     """REST endpoint: list and create for PredictionRangeLabelsSet model"""
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk')
         return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = PredictionRangeLabelsSetSerializer
@@ -676,7 +675,7 @@ class PredictionRangeLabelsSetsListPaginated(generics.ListAPIView):
     """REST endpoint: paginated list for PredictionRangeLabelsSet model"""
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk')
         return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = PredictionRangeLabelsSetSerializer
@@ -692,7 +691,7 @@ class PredictionRangeLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
     # TODO: use this from frontend!
 
     def get_queryset(self):
-        trained_model_pk = self.request.query_params.get('trained_model_pk', None)
+        trained_model_pk = self.request.GET.get('trained_model_pk', None)
         return get_prediction_range_labels_set_instances(trained_model_pk, self.request.user)
 
     serializer_class = PredictionRangeLabelsSetSerializer
