@@ -1,5 +1,5 @@
 import React from 'react'
-import { Select } from 'semantic-ui-react'
+import { Form } from 'semantic-ui-react'
 import { FitnessFunctionParameters, FitnessFunction } from '../../../types'
 import { ClusteringPanel } from './algorithms/ClusteringPanel'
 import { SVMPanel } from './algorithms/SVMPanel'
@@ -11,9 +11,8 @@ interface BlindSearchProps {
     fitnessFunction: FitnessFunction,
     fitnessFunctionParameters: FitnessFunctionParameters,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
-    handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSVMOption: (key: string, value: number) => void,
-    handleChangeRFOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    isExpertOn: boolean,
 }
 
 /**
@@ -26,9 +25,8 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
         fitnessFunction,
         fitnessFunctionParameters,
         handleChangeFitnessFunction,
-        handleChangeClusterOption,
-        handleChangeSVMOption,
-        handleChangeRFOption
+        handleChangeFitnessFunctionOption,
+        isExpertOn
     } = props
 
     /**
@@ -39,30 +37,90 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
         switch (fitnessFunction) {
             case FitnessFunction.CLUSTERING:
                 return (
-                    <ClusteringPanel
-                        settings={fitnessFunctionParameters?.clusteringParameters ?? null}
-                        handleChangeClusterOption={handleChangeClusterOption}
-                    />
+                    <>
+                        <ClusteringPanel
+                            settings={fitnessFunctionParameters?.clusteringParameters ?? null}
+                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        />
+                        <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
+                            <Form.Checkbox
+                                checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
+                                onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
+                                label='Search for the optimal number of clusters'
+                            />
+                            <Form.Input
+                                type='number'
+                                label='Number of clusters'
+                                name='nClusters'
+                                min={2}
+                                max={10}
+                                value={fitnessFunctionParameters.clusteringParameters.nClusters}
+                                onChange={(_, { name, value }) => {
+                                    const numVal = Number(value)
+                                    if (numVal < 2) {
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
+                                    } else if (numVal > 10) {
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
+                                    } else {
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
+                                    }
+                                }}
+                            />
+                        </Form.Group>
+                    </>
                 )
             case FitnessFunction.SVM:
                 return (
-                    <SVMPanel
-                        parameters={fitnessFunctionParameters.svmParameters}
-                        handleChangeSVMOption={handleChangeSVMOption}
-                    />
+                    <>
+                        <SVMPanel
+                            parameters={fitnessFunctionParameters.svmParameters}
+                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        />
+                        <Form.Group widths='equal' style={{ display: isExpertOn ? 'inherit' : 'none' }}>
+                            <Form.Input
+                                fluid
+                                label='Max iterations'
+                                placeholder='100-2000'
+                                name='maxIterations'
+                                value={fitnessFunctionParameters.svmParameters.maxIterations}
+                                onChange={(_, { name, value }) => handleChangeFitnessFunctionOption('svmParameters', name, value)}
+                            />
+
+                            <Form.Input
+                                fluid
+                                label='Random state'
+                                placeholder='An integer number'
+                                type='number'
+                                step={1}
+                                min={0}
+                                name='randomState'
+                                value={fitnessFunctionParameters.svmParameters.randomState}
+                                onChange={(_, { name, value }) => {
+                                    const numVal = Number(value)
+                                    if (numVal < 0) {
+                                        handleChangeFitnessFunctionOption('svmParameters', name, 0)
+                                    } else {
+                                        handleChangeFitnessFunctionOption('svmParameters', name, numVal)
+                                    }
+                                }} />
+                        </Form.Group>
+                    </>
                 )
             case FitnessFunction.RF:
                 return (
-                    <RFPanel
-                        parameters={fitnessFunctionParameters.rfParameters}
-                        handleChangeRFOption={handleChangeRFOption}
-                    />
+                    <>
+                        <RFPanel
+                            parameters={fitnessFunctionParameters.rfParameters}
+                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        />
+                    </>
                 )
         }
     }
     return (
         <>
-            <Select
+            <Form.Select
+                label='Fitness function'
                 selectOnBlur={false}
                 placeholder='Fitness function'
                 className='selection-select-m selection-select'

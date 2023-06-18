@@ -1,6 +1,6 @@
 import React from 'react'
-import { Button, Grid, Segment, Select } from 'semantic-ui-react'
-import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction } from '../../../types'
+import { Form, Grid, Segment } from 'semantic-ui-react'
+import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters } from '../../../types'
 import { BlindSearchPanel } from './BlindSearchPanel'
 import './../featureSelection.css'
 import { BbhaAdvance } from './advanceMode/BbhaAdvance'
@@ -11,9 +11,7 @@ interface FeatureSelectionStep3Props {
     featureSelection: FeatureSelectionPanelData,
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
-    handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSVMOption: (key: string, value: number) => void,
-    handleChangeRFOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
     handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
@@ -23,9 +21,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         featureSelection,
         handleChangeAlgorithm,
         handleChangeFitnessFunction,
-        handleChangeClusterOption,
-        handleChangeSVMOption,
-        handleChangeRFOption,
+        handleChangeFitnessFunctionOption,
         handleChangeAdvanceAlgorithm,
         handleSwitchAdvanceAlgorithm
     } = props
@@ -37,9 +33,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
-                        handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSVMOption={handleChangeSVMOption}
-                        handleChangeRFOption={handleChangeRFOption}
+                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
@@ -48,9 +43,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
-                        handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSVMOption={handleChangeSVMOption}
-                        handleChangeRFOption={handleChangeRFOption}
+                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.COX_REGRESSION:
@@ -63,9 +57,8 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
-                        handleChangeClusterOption={handleChangeClusterOption}
-                        handleChangeSVMOption={handleChangeSVMOption}
-                        handleChangeRFOption={handleChangeRFOption}
+                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
                     />
                 )
             default:
@@ -103,9 +96,10 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
     }
 
     return (
-        <div className='selection-step-container selection-step-algorithm'>
+        <Form className='selection-step-container selection-step-algorithm'>
             <div className='selection-step-container-selection-confg'>
-                <Select
+                <Form.Select
+                    label='Algorithm'
                     selectOnBlur={false}
                     className='selection-select selection-all-space'
                     placeholder='Algorithm'
@@ -119,14 +113,14 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     value={featureSelection.algorithm}
                     onChange={(_, { value }) => handleChangeAlgorithm(value as FeatureSelectionAlgorithm)}
                 />
-                <Button
+                <Form.Button
                     toggle
                     active={featureSelection.advanceAlgorithm.isActive}
                     onClick={() => handleSwitchAdvanceAlgorithm()}
                     className='selection-step-button-advance-mode'
                 >
                     Expert mode
-                </Button>
+                </Form.Button>
             </div>
             <Segment>
                 <Grid>
@@ -140,6 +134,6 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     </Grid.Row>
                 </Grid>
             </Segment>
-        </div>
+        </Form>
     )
 }

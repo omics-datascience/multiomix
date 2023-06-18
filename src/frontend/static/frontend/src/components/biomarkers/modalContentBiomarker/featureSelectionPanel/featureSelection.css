@@ -43,3 +43,12 @@
 .selection-select {
     width: 100%;
 }
+.form-group-button{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.form-gruop-button-segment{
+    margin: 0 !important;
+}

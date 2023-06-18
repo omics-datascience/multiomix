@@ -86,6 +86,7 @@ export const BbhaAdvance = (props: Props) => {
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
                     <Select
+                        label='BBHAVersion'
                         className='selection-select'
                         placeholder='Fitness function'
                         options={advanceBBHAOptions}
