@@ -242,21 +242,23 @@ def binary_black_hole_sequential(
 
     stars_subsets = np.empty((n_stars, n_features), dtype=int)
     stars_fitness_values = np.empty((n_stars,), dtype=float)
+    stars_model = np.empty((n_stars,), dtype=object)
 
     # Initializes the stars with their subsets and their fitness values
     for i in range(n_stars):
         random_features_to_select = get_random_subset_of_features_bbha(n_features)
         stars_subsets[i] = random_features_to_select  # Initialize 'Population'
         subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
-        score, _current_best_model = compute_bbha_fitness_function(classifier, subset_to_predict,
-                                                                   clinical_data, is_clustering,
-                                                                   clustering_score_method)
+        score, initial_best_model = compute_bbha_fitness_function(classifier, subset_to_predict,
+                                                                  clinical_data, is_clustering,
+                                                                  clustering_score_method)
 
         stars_fitness_values[i] = score
+        stars_model[i] = initial_best_model
 
     # The star with the best fitness is the Black Hole
-    best_model: Optional[SurvModel] = None
     black_hole_idx, best_features, best_score = get_best_bbha(stars_subsets, stars_fitness_values)
+    best_model: SurvModel = stars_model[black_hole_idx]
 
     # Iterations
     for i in range(n_iterations):
