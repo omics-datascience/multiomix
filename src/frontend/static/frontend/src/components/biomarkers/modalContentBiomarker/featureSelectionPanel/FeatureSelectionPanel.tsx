@@ -3,7 +3,7 @@ import { Button, Grid, Icon, Modal, Segment, Step } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
 import { Source, SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
-import { Biomarker, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, SourceStateBiomarker } from '../../types'
+import { Biomarker, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters, SourceStateBiomarker } from '../../types'
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
@@ -23,9 +23,7 @@ interface FeatureSelectionPanelProps {
     handleChangeSourceType: (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => void,
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
-    handleChangeClusterOption: (key: string, value: number) => void,
-    handleChangeSVMOption: (key: string, value: number) => void,
-    handleChangeRFOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
@@ -84,9 +82,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     featureSelection={props.featureSelection}
                     handleChangeAlgorithm={props.handleChangeAlgorithm}
                     handleChangeFitnessFunction={props.handleChangeFitnessFunction}
-                    handleChangeClusterOption={props.handleChangeClusterOption}
-                    handleChangeSVMOption={props.handleChangeSVMOption}
-                    handleChangeRFOption={props.handleChangeRFOption}
+                    handleChangeFitnessFunctionOption={props.handleChangeFitnessFunctionOption}
                     handleSwitchAdvanceAlgorithm={props.handleSwitchAdvanceAlgorithm}
                 />)
         }

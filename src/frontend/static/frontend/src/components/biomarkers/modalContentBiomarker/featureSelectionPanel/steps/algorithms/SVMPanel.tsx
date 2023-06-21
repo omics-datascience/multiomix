@@ -1,12 +1,12 @@
 import React from 'react'
-import { Select } from 'semantic-ui-react'
-import { SVMParameters } from '../../../../types'
+import { Form } from 'semantic-ui-react'
+import { FitnessFunctionParameters, SVMParameters } from '../../../../types'
 import { SVMKernelOptions } from '../../../../utils'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
     parameters: SVMParameters,
-    handleChangeSVMOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
 }
 
 /**
@@ -17,7 +17,7 @@ interface SVMPanelProps {
 export const SVMPanel = (props: SVMPanelProps) => {
     const {
         parameters: svm,
-        handleChangeSVMOption
+        handleChangeFitnessFunctionOption
     } = props
     return (
         <>
@@ -43,13 +43,14 @@ export const SVMPanel = (props: SVMPanelProps) => {
                 </Button.Group>
             </Container > */}
 
-            <Select
+            <Form.Select
                 selectOnBlur={false}
                 placeholder='Kernel'
+                label='Kernel'
                 name='moleculeSelected'
                 options={SVMKernelOptions}
                 value={svm.kernel}
-                onChange={(_, { value }) => handleChangeSVMOption('kernel', value as number)}
+                onChange={(_, { value }) => handleChangeFitnessFunctionOption('svmParameters', 'kernel', value as number)}
             />
         </>
     )

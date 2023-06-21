@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Input } from 'semantic-ui-react'
+import { Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import './../../featureSelection.css'
 import { AdvancedCoxRegression } from '../../../../types'
@@ -26,7 +26,7 @@ export const CoxRegressionAdvanced = (props: CoxRegressionAdvancedProps) => {
         <Grid>
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
-                    <Input
+                    <Form.Input
                         fluid
                         label='Keep top N'
                         placeholder='An integer number'

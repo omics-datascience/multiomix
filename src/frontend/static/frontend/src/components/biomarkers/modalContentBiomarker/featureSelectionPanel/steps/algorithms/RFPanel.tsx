@@ -1,11 +1,11 @@
 import React from 'react'
-import { Input } from 'semantic-ui-react'
-import { RFParameters } from '../../../../types'
+import { Form } from 'semantic-ui-react'
+import { FitnessFunctionParameters, RFParameters } from '../../../../types'
 
 /** RFPanel props. */
 interface RFPanelProps {
     parameters: RFParameters,
-    handleChangeRFOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
 }
 
 /**
@@ -16,28 +16,28 @@ interface RFPanelProps {
 export const RFPanel = (props: RFPanelProps) => {
     const {
         parameters,
-        handleChangeRFOption
+        handleChangeFitnessFunctionOption
     } = props
 
     return (
         <>
-            <Input
+            <Form.Input
                 type='number'
                 label='Number of estimators'
                 name='nEstimators'
                 min={10}
                 max={20}
                 value={parameters.nEstimators}
-                onChange={(_event, data) => handleChangeRFOption(data.name, Number(data.value))}
+                onChange={(_event, data) => handleChangeFitnessFunctionOption('rfParameters', data.name, Number(data.value))}
             />
 
-            <Input
+            <Form.Input
                 type='number'
                 label='Maximum depth'
                 name='maxDepth'
                 min={3}
                 value={parameters.maxDepth}
-                onChange={(_event, data) => handleChangeRFOption(data.name, Number(data.value))}
+                onChange={(_event, { name, value }) => handleChangeFitnessFunctionOption('rfParameters', name, Number(value))}
             />
         </>
     )

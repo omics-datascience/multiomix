@@ -228,34 +228,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     /**
      * Manage the change of the option in cluster option in any algorithm selected inside a clustering
-     * @param key name of the key that have changed
-     * @param value value selected
+     * @param fitnessFunction name of fitness function to change
+     * @param key name of the fitnessfunction object that have changed
+     * @param value value selected typed depends of what fitness function and key is beeing changing
      */
-    handleChangeClusterOption = (key: string, value: number) => {
+    handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
         const featureSelection = this.state.featureSelection
-        featureSelection.fitnessFunctionParameters.clusteringParameters[key] = value
-        this.setState({ featureSelection })
-    }
-
-    /**
-     * Manage the change of the option in SVM option.
-     * @param key name of the key that have changed
-     * @param value value selected
-     */
-    handleChangeSVMOption = (key: string, value: number) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.fitnessFunctionParameters.svmParameters[key] = value
-        this.setState({ featureSelection })
-    }
-
-    /**
-     * Manage the change of the option in RF option.
-     * @param key name of the key that have changed
-     * @param value value selected
-     */
-    handleChangeRFOption = (key: string, value: number) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.fitnessFunctionParameters.rfParameters[key] = value
+        featureSelection.fitnessFunctionParameters[fitnessFunction][key] = value
         this.setState({ featureSelection })
     }
 
@@ -1480,9 +1459,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeSourceType={this.handleChangeSourceType}
                             handleChangeAlgorithm={this.handleChangeAlgorithm}
                             handleChangeFitnessFunction={this.handleChangeFitnessFunction}
-                            handleChangeClusterOption={this.handleChangeClusterOption}
-                            handleChangeSVMOption={this.handleChangeSVMOption}
-                            handleChangeRFOption={this.handleChangeRFOption}
+                            handleChangeFitnessFunctionOption={this.handleChangeFitnessFunctionOption}
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}

@@ -1,12 +1,13 @@
 import React from 'react'
-import { Button, Container, Select } from 'semantic-ui-react'
-import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod } from '../../../../types'
+import { Button, Form, Label, Segment } from 'semantic-ui-react'
+import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunctionParameters } from '../../../../types'
 import { clusteringAlgorithmOptions } from '../../../../utils'
+import './../../featureSelection.css'
 
 /** Clustering props. */
 interface ClusteringProps {
     settings: ClusteringParameters,
-    handleChangeClusterOption: (key: string, value: number) => void,
+    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
 }
 
 /**
@@ -15,60 +16,68 @@ interface ClusteringProps {
  * @returns Component.
  */
 export const ClusteringPanel = (props: ClusteringProps) => {
-    const { settings, handleChangeClusterOption } = props
+    const { settings, handleChangeFitnessFunctionOption } = props
 
     return (
         <>
-            <Select
-                className='selection-select'
+            <Form.Select
+                label='Algorithm'
                 selectOnBlur={false}
                 placeholder='Clustering Algorithm'
                 name='moleculeSelected'
                 options={clusteringAlgorithmOptions}
                 value={settings.algorithm}
-                onChange={(_, { value }) => handleChangeClusterOption('algorithm', value as number)}
+                onChange={(_, { value }) => handleChangeFitnessFunctionOption('clusteringParameters', 'algorithm', value as number)}
             />
-
-            <Container className='biomarkers--side--bar--box'>
-                <Button.Group
-                    compact
-                    className='biomarkers--side--bar--buttons-group'>
-                    <Button
-                        onClick={() => handleChangeClusterOption('metric', ClusteringMetric.COX_REGRESSION)}
-                        active={settings.metric === ClusteringMetric.COX_REGRESSION}
+            <Form.Group className='form-group-button'>
+                <Segment className='form-gruop-button-segment'>
+                    <Label attached='top'>
+                        Metric
+                    </Label>
+                    <Button.Group
+                        compact
                     >
-                        Cox Regression
-                    </Button>
+                        <Button
+                            onClick={() => handleChangeFitnessFunctionOption('clusteringParameters', 'metric', ClusteringMetric.COX_REGRESSION)}
+                            active={settings.metric === ClusteringMetric.COX_REGRESSION}
+                        >
+                            Cox Regression
+                        </Button>
 
-                    <Button
-                        onClick={() => handleChangeClusterOption('metric', ClusteringMetric.LOG_RANK_TEST)}
-                        active={settings.metric === ClusteringMetric.LOG_RANK_TEST}
-                        disabled // TODO: implement in backend
-                    >
-                        Log-Rank test
-                    </Button>
-                </Button.Group>
-            </Container>
+                        <Button
+                            onClick={() => handleChangeFitnessFunctionOption('clusteringParameters', 'metric', ClusteringMetric.LOG_RANK_TEST)}
+                            active={settings.metric === ClusteringMetric.LOG_RANK_TEST}
+                            disabled // TODO: implement in backend
+                        >
+                            Log-Rank test
+                        </Button>
+                    </Button.Group>
+                </Segment >
 
-            <Container className='biomarkers--side--bar--box'>
-                <Button.Group
-                    compact
-                    className='biomarkers--side--bar--buttons-group'>
-                    <Button
-                        onClick={() => handleChangeClusterOption('scoringMethod', ClusteringScoringMethod.C_INDEX)}
-                        active={settings.scoringMethod === ClusteringScoringMethod.C_INDEX}
+                <Segment className='form-gruop-button-segment'>
+                    <Label attached='top'>
+                        Scoring method
+                    </Label>
+                    <Button.Group
+                        compact
                     >
-                        C-Index
-                    </Button>
+                        <Button
+                            onClick={() => handleChangeFitnessFunctionOption('clusteringParameters', 'scoringMethod', ClusteringScoringMethod.C_INDEX)}
+                            active={settings.scoringMethod === ClusteringScoringMethod.C_INDEX}
+                        >
+                            C-Index
+                        </Button>
 
-                    <Button
-                        onClick={() => handleChangeClusterOption('scoringMethod', ClusteringScoringMethod.LOG_LIKELIHOOD)}
-                        active={settings.scoringMethod === ClusteringScoringMethod.LOG_LIKELIHOOD}
-                    >
-                        Log Likelihood
-                    </Button>
-                </Button.Group>
-            </Container>
+                        <Button
+                            onClick={() => handleChangeFitnessFunctionOption('clusteringParameters', 'scoringMethod', ClusteringScoringMethod.LOG_LIKELIHOOD)}
+                            active={settings.scoringMethod === ClusteringScoringMethod.LOG_LIKELIHOOD}
+                        >
+                            Log Likelihood
+                        </Button>
+                    </Button.Group>
+                </Segment>
+            </Form.Group>
+
         </>
     )
 }
