@@ -30,6 +30,10 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
     """
     # Get subset of features
     if isinstance(combination, np.ndarray):
+        # NOTE: all the elements in combination must be booleans. Otherwise, Pandas returns all the rows
+        if not np.issubdtype(combination.dtype, np.bool_):
+            combination = combination.astype(bool)
+
         # In this case it's a Numpy array with int indexes (used in metaheuristics)
         subset: pd.DataFrame = molecules_df.iloc[combination]
     else:

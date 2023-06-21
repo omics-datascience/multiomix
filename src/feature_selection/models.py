@@ -1,6 +1,6 @@
 import os
 import pickle
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Any
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -263,8 +263,12 @@ class TrainedModel(models.Model):
     def __str__(self):
         return f'Trained model ({self.pk}) for Biomarker "{self.biomarker.name}"'
 
-    def get_model_instance(self):
-        """Deserializes the model dump and return the model instance"""
+    def get_model_instance(self) -> Optional[Any]:
+        """Deserializes the model dump and return the model instance (SurvModel)."""
+        # Prevents OS error for non-existing file
+        if not self.model_dump:
+            return None
+
         model_path = os.path.join(settings.MEDIA_ROOT, self.model_dump.name)
         with open(model_path, "rb") as fp:
             model = pickle.load(fp)
