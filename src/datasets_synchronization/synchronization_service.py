@@ -23,7 +23,7 @@ from django.conf import settings
 
 
 # Prefix to concatenate to MongoDB collection names
-VERSION_PREFIX = 'version_'
+VERSION_PREFIX = '_version_'
 
 
 class SkipRowsIsIncorrect(Exception):
@@ -181,21 +181,21 @@ class SynchronizationService:
 
         # Generates a new MongoDB collection name
         original_mongo_collection: str = dataset_copy.mongo_collection_name
-        split_res = original_mongo_collection.rsplit('_', maxsplit=1)
+        split_res = original_mongo_collection.rsplit(VERSION_PREFIX, maxsplit=1)
 
         # If no version tag is present in the collection name, adds the new version
         if len(split_res) < 2:
-            mongo_collection_name = f"{original_mongo_collection}_{VERSION_PREFIX}{new_version}"
+            mongo_collection_name = f"{original_mongo_collection}{VERSION_PREFIX}{new_version}"
         else:
             # If there's a split result, checks that it corresponds to the version tag
             mongo_collection_without_version, old_version_tag = split_res
 
             # If there's an old version tag in the collection name, replaces it with the new version
-            if old_version_tag.startswith(VERSION_PREFIX):
-                 mongo_collection_name = f"{mongo_collection_without_version}_{VERSION_PREFIX}{new_version}"
+            if old_version_tag.isnumeric():
+                 mongo_collection_name = f"{mongo_collection_without_version}{VERSION_PREFIX}{new_version}"
             else:
                 # Otherwise, adds the new version to the original name
-                mongo_collection_name = f"{original_mongo_collection}_{VERSION_PREFIX}{new_version}"
+                mongo_collection_name = f"{original_mongo_collection}{VERSION_PREFIX}{new_version}"
 
         dataset_copy.mongo_collection_name = mongo_collection_name
         dataset_copy.state = CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED
