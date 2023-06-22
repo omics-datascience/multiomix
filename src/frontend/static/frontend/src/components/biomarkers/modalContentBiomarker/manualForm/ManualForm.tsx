@@ -48,20 +48,48 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleChangeCheckBox={props.handleChangeCheckBox}
                 />
             </Grid.Column>
-            <Grid.Column width={12}>
-                <Grid columns={2} stackable className='biomarkers--modal--container'>
-                    {Object.values(BiomarkerType).map(item => (
-                        <MoleculeSection
-                            key={item}
-                            title={item}
-                            biomarkerFormData={props.biomarkerForm.moleculesSection[item]}
-                            handleRemoveMolecule={props.handleRemoveMolecule}
-                            handleSelectOptionMolecule={props.handleSelectOptionMolecule}
-                            handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
-                        />
-                    ))}
-                </Grid>
-            </Grid.Column>
+            <Asd
+                biomarkerForm={props.biomarkerForm}
+                handleRemoveMolecule={props.handleRemoveMolecule}
+                handleSelectOptionMolecule={props.handleSelectOptionMolecule}
+                handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
+            />
         </Grid >
     )
 }
+
+interface Props {
+    biomarkerForm: FormBiomarkerData,
+    handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
+    handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
+    handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
+
+}
+// eslint-disable-next-line react/display-name
+const Asd = React.memo(({
+    biomarkerForm,
+    handleRemoveMolecule,
+    handleSelectOptionMolecule,
+    handleRemoveInvalidGenes
+}: Props) => {
+    console.log('sssa')
+    return (
+        <Grid.Column width={12}>
+            <Grid columns={2} stackable className='biomarkers--modal--container'>
+                {Object.values(BiomarkerType).map(item => {
+                    console.log('rend')
+                    return (
+                        <MoleculeSection
+                            key={item}
+                            title={item}
+                            biomarkerFormData={biomarkerForm.moleculesSection[item]}
+                            handleRemoveMolecule={handleRemoveMolecule}
+                            handleSelectOptionMolecule={handleSelectOptionMolecule}
+                            handleRemoveInvalidGenes={handleRemoveInvalidGenes}
+                        />
+                    )
+                })}
+            </Grid>
+        </Grid.Column>
+    )
+})

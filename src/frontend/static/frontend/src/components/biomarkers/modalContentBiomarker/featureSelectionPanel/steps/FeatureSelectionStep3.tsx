@@ -40,7 +40,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
@@ -50,7 +50,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.COX_REGRESSION:
@@ -64,7 +64,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             default:
