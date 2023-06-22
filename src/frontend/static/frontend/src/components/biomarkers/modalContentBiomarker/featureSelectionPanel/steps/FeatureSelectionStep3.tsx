@@ -15,7 +15,7 @@ interface FeatureSelectionStep3Props {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
-    handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
+    handleChangeAdvanceAlgorithm: (advancedAlgorithmParameters: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
 
@@ -40,7 +40,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
@@ -50,7 +50,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.COX_REGRESSION:
@@ -64,7 +64,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        isExpertOn={featureSelection.advanceAlgorithm.isActive}
+                        isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             default:

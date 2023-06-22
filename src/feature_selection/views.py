@@ -226,8 +226,6 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         job_data = json.loads(request.body)
 
         with transaction.atomic():
-            fs_experiment.state = BiomarkerState.COMPLETED
-
             # Checks state
             if job_data['state'] == 'COMPLETED':
                 fs_experiment.state = BiomarkerState.COMPLETED
