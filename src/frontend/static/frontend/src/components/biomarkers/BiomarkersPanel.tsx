@@ -698,7 +698,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     })
 
     /**
-     * Generates a valid structure to send the molecules to backend and create the Biomarker checking if the 
+     * Generates a valid structure to send the molecules to backend and create the Biomarker checking if the
      * "Ignore errors" checkbox is checked or not.
      * @param molecules Molecules to send.
      * @returns Correct structure to send.
