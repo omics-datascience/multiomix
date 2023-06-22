@@ -682,14 +682,34 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Checks if it's a valid structure to send the molecule to backend and create the Biomarker.
+     * @param item Molecule to send.
+     * @returns True if it's valid, false if not.
+     */
+    moleculeIdentifierIsValid = (item: MoleculesSectionData): boolean => !Array.isArray(item.value) && item.isValid
+
+    /**
      * Generates a valid structure to send the molecule to backend and create the Biomarker
      * @param item Molecule to send
      * @returns Correct structure to send
      */
-    getValidMoleculeIdentifier = (item: MoleculesSectionData): SaveMoleculeStructure => {
-        return (!Array.isArray(item.value) && item.isValid
-            ? { identifier: item.value }
-            : { identifier: '' })
+    moleculeIdentified = (item: MoleculesSectionData): SaveMoleculeStructure => ({
+        identifier: item.value as string
+    })
+
+    /**
+     * Generates a valid structure to send the molecules to backend and create the Biomarker checking if the 
+     * "Ignore errors" checkbox is checked or not.
+     * @param molecules Molecules to send.
+     * @returns Correct structure to send.
+     */
+    getMoleculesData = (molecules: MoleculesSectionData[]): SaveMoleculeStructure[] => {
+        const ignoreErrors = this.state.formBiomarker.validation.checkBox
+        if (ignoreErrors) {
+            return molecules.map(this.moleculeIdentified)
+        } else {
+            return molecules.filter(this.moleculeIdentifierIsValid).map(this.moleculeIdentified)
+        }
     }
 
     /**
@@ -703,10 +723,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const biomarkerToSend: SaveBiomarkerStructure = {
             name: formBiomarker.biomarkerName,
             description: formBiomarker.biomarkerDescription,
-            mrnas: formBiomarker.moleculesSection.mRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            mirnas: formBiomarker.moleculesSection.miRNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            methylations: formBiomarker.moleculesSection.Methylation.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0),
-            cnas: formBiomarker.moleculesSection.CNA.data.map(this.getValidMoleculeIdentifier).filter(item => item.identifier.length > 0)
+            mrnas: this.getMoleculesData(formBiomarker.moleculesSection.mRNA.data),
+            mirnas: this.getMoleculesData(formBiomarker.moleculesSection.miRNA.data),
+            cnas: this.getMoleculesData(formBiomarker.moleculesSection.CNA.data),
+            methylations: this.getMoleculesData(formBiomarker.moleculesSection.Methylation.data)
         }
 
         const settings: Options = {
