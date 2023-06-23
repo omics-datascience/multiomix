@@ -71,6 +71,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             url: '',
             url_study_info: '',
             version: null,
+            is_last_version: false,
             mrna_dataset: null,
             mirna_dataset: null,
             cna_dataset: null,
@@ -836,15 +837,18 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                 {userIsAdmin &&
                                                     <Table.Cell>
                                                         {/* Sync button */}
-                                                        <Icon
-                                                            name='sync alternate'
-                                                            color='blue'
-                                                            className='clickable'
-                                                            title='Sync study'
-                                                            loading={this.getStateObj(CGDSStudyFileRow.state).loading}
-                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
-                                                            onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
-                                                        />
+                                                        {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
+                                                        {CGDSStudyFileRow.is_last_version &&
+                                                            <Icon
+                                                                name='sync alternate'
+                                                                color='blue'
+                                                                className='clickable'
+                                                                title='Sync study'
+                                                                loading={this.getStateObj(CGDSStudyFileRow.state).loading}
+                                                                disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                                onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
+                                                            />
+                                                        }
 
                                                         {/* Edit button */}
                                                         <Icon

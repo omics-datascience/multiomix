@@ -226,11 +226,6 @@ class SynchronizationService:
 
         return dataset_copy
 
-    @staticmethod
-    def __get_max_version(study: CGDSStudy) -> int:
-        """Gets the maximum version of the study with the same URL."""
-        return CGDSStudy.objects.filter(url=study.url).aggregate(Max('version'))['version__max'] + 1
-
     def generate_study_new_version(self, study: CGDSStudy) -> CGDSStudy:
         """Generates a copy of a CGDSStudy and all its CGDSDatasets with a new version number."""
         # Creates a copy of study
@@ -238,7 +233,7 @@ class SynchronizationService:
         study_copy.pk = None
 
         # Updates version
-        new_version = self.__get_max_version(study)
+        new_version = study.get_last_version() + 1
         study_copy.version = new_version
 
         # Removes also the date of last synchronization

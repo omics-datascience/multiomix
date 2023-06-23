@@ -3,6 +3,7 @@ from typing import List, Iterable
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np
+from django.db.models import Max
 from api_service.exceptions import CouldNotDeleteInMongo
 from api_service.mongo_service import global_mongo_service
 from api_service.websocket_functions import send_update_cgds_studies_command
@@ -276,6 +277,10 @@ class CGDSStudy(models.Model):
         """Returns a list of all the associated CGDSDataset"""
         return [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
                 self.clinical_sample_dataset, self.clinical_patient_dataset]
+
+    def get_last_version(self) -> int:
+        """Gets the maximum version of this CGDSStudy with the same URL."""
+        return CGDSStudy.objects.filter(url=self.url).aggregate(Max('version'))['version__max']
 
     def save(self, *args, **kwargs):
         """Everytime the CGDSStudy status changes, uses websocket to update state in the frontend"""

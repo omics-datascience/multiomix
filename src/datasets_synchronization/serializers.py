@@ -53,10 +53,15 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     clinical_patient_dataset = CGDSDatasetWithSurvivalDataSerializer(required=False, allow_null=True)
     clinical_sample_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     version = serializers.IntegerField(read_only=True)
+    is_last_version = serializers.SerializerMethodField(method_name='get_is_last_version')
 
     class Meta:
         model = CGDSStudy
         fields = '__all__'
+
+    @staticmethod
+    def get_is_last_version(study: CGDSStudy) -> bool:
+        return study.version == study.get_last_version()
 
     def __create_cgds_dataset(self, validated_data_pop: OrderedDict) -> Optional[CGDSDataset]:
         """

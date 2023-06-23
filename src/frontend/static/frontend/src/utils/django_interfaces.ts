@@ -378,6 +378,7 @@ interface DjangoCGDSStudy {
     url: string,
     url_study_info: string,
     version: Nullable<number>,
+    is_last_version: boolean,
     state?: CGDSStudySynchronizationState,
     mrna_dataset: Nullable<DjangoCGDSDataset>,
     mirna_dataset: Nullable<DjangoCGDSDataset>,
