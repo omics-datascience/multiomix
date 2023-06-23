@@ -94,7 +94,21 @@ class SynchronizationService:
                     # Samples in molecules datasets are in the header (as columns)
                     dataset_content.columns = dataset_content.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
+                    # Removes the duplicated molecules (if any). This is necessary because some datasets have
+                    # duplicated due to discontinued molecules identifiers.
+                    # First, generates a column with all the values of the MOLECULE_SYMBOL column as upper case as
+                    # cBioPortal contains some duplicated identifiers in different cases (upper and lower)
+                    upper_col = f'{MOLECULE_SYMBOL}_upper'
+                    dataset_content[upper_col] = dataset_content[MOLECULE_SYMBOL].str.upper()
+
+                    # Removes duplicated molecules and the generated column
+                    dataset_content = dataset_content.drop_duplicates(subset=[upper_col], keep=False)
+                    dataset_content = dataset_content.drop(columns=[upper_col])
+
+                # Removes the collection
                 global_mongo_service.drop_collection(dataset.mongo_collection_name)
+
+                # Inserts the documents in the collection
                 inserted_successfully = global_mongo_service.insert_cgds_dataset(
                     dataset_content,
                     dataset.mongo_collection_name,
