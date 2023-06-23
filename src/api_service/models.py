@@ -78,20 +78,23 @@ class ExperimentSource(models.Model):
             row_data = row_data[columns_idx]
         return row_data
 
-    def get_df(self) -> pd.DataFrame:
+    def get_df(self, only_matching: bool = False) -> pd.DataFrame:
         """
-        TODO: check if it's needed, it's only used in tests...
         Generates a DataFrame from an experiment source
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL (only used for CGDSDatasets).
         @return: A DataFrame with the data to work
         """
-        return self.get_valid_source().get_df()
+        return self.get_valid_source().get_df(only_matching)
 
-    def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
+    def get_df_in_chunks(self, only_matching: bool = False) -> Iterable[pd.DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from an experiment source.
+        @param only_matching: @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL (only used for CGDSDatasets).
         @return: A DataFrame Iterator with the data to work.
         """
-        return self.get_valid_source().get_df_in_chunks()
+        return self.get_valid_source().get_df_in_chunks(only_matching)
 
     @property
     def number_of_rows(self) -> int:
@@ -266,9 +269,10 @@ class ExperimentClinicalSource(ExperimentSource):
 
         return df1.join(df2)
 
-    def get_df(self) -> pd.DataFrame:
+    def get_df(self, _only_matching: bool = False) -> pd.DataFrame:
         """
         Generates a DataFrame from an experiment source
+        @param _only_matching: If True, returns only the matching samples. Not used for clinical sources.
         @return: A DataFrame with the data to work
         """
         if self.user_file:
@@ -276,9 +280,10 @@ class ExperimentClinicalSource(ExperimentSource):
 
         return self.__get_cgds_datasets_joined_df()
 
-    def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
+    def get_df_in_chunks(self, _only_matching: bool = False) -> Iterable[pd.DataFrame]:
         """
         It nos necessary to get the clinical data in chunks as it's little
+        @param _only_matching: If True, returns only the matching samples. Not used for clinical sources.
         @return: A DataFrame Iterator with the data to work
         """
         return self.get_df()

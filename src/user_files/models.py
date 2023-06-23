@@ -161,16 +161,20 @@ class UserFile(models.Model):
             chunksize=chunk_size
         )
 
-    def get_df(self) -> pd.DataFrame:
+    def get_df(self, _only_matching: bool = False) -> pd.DataFrame:
         """
         Generates a DataFrame from the UserFile
+        @param _only_matching: If True, returns only the matching samples. Not used for UserFiles sources (only
+        for CGDSDatasets).
         @return: A DataFrame with the data to work
         """
         return self.__get_dataframe()
 
-    def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
+    def get_df_in_chunks(self, _only_matching: bool = False) -> Iterable[pd.DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from an UserFile.
+        @param _only_matching: If True, returns only the matching samples. Not used for UserFiles sources (only
+        for CGDSDatasets).
         @return: A DataFrame Iterator with the data to work.
         """
         return self.__get_dataframe(chunk_size=settings.EXPERIMENT_CHUNK_SIZE)

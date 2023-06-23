@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import tarfile
 import tempfile
 import pandas as pd
-from api_service.mongo_service import global_mongo_service
+from api_service.mongo_service import global_mongo_service, MOLECULE_SYMBOL
 import logging
 from urllib.parse import urlparse
 import os.path

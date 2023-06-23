@@ -84,10 +84,12 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
         molecules_temp_file_path = temp_file.name
 
         for source, molecules, file_type in experiment.get_sources_and_molecules():
+            source = cast(Optional[ExperimentSource], source)
             if source is None:
                 continue
 
-            for chunk in source.get_df_in_chunks():
+            only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
+            for chunk in source.get_df_in_chunks(only_matching=only_matching):
                 chunk = process_chunk(chunk, file_type, molecules, samples_in_common)
 
                 # Saves in disk

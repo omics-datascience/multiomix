@@ -105,23 +105,28 @@ class CGDSDataset(models.Model):
         self.number_of_rows = self.__get_row_count()
         self.number_of_samples = len(self.get_column_names())
 
-    def get_df(self, use_standard_column: bool = True) -> DataFrame:
+    def get_df(self, use_standard_column: bool = True, only_matching: bool = False) -> DataFrame:
         """
         Generates a DataFrame from a CGDSDataset's MongoDB collection
         @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
         column (useful for clinical datasets).
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame with the data to work
         """
-        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column)
+        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column, only_matching)
 
-    def get_df_in_chunks(self) -> Iterable[DataFrame]:
+    def get_df_in_chunks(self, only_matching: bool = False) -> Iterable[DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from a CGDSDataset's MongoDB collection
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame Iterator with the data to work
         """
         return global_mongo_service.get_collection_as_df_in_chunks(
             self.mongo_collection_name,
-            chunk_size=settings.EXPERIMENT_CHUNK_SIZE
+            chunk_size=settings.EXPERIMENT_CHUNK_SIZE,
+            only_matching=only_matching
         )
 
     def get_row_indexes(self) -> List[str]:
