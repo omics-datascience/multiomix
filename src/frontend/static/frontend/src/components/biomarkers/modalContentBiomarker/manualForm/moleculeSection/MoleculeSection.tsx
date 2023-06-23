@@ -77,7 +77,7 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                     // Molecule with error
                     return (
                         <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                            <Button color='red' compact className='biomarker--section--button'>
+                            <Button color='orange' compact className='biomarker--section--button'>
                                 {mol.value}
                                 <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
                             </Button>

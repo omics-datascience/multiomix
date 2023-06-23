@@ -5,6 +5,7 @@ import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOf
 import './newBiomarkerFormStyles.css'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 /**
  * Component's props
@@ -109,11 +110,12 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             <Container className='biomarkers--side--bar--buttons--box'>
                 {haveInvalid &&
                     <div className='biomarkers--side--bar--validation--items'>
-                        <Label color='red' className='biomarkers--side--bar--validation--labels'>
-                            Remove the invalid molecules (in red) from the molecule panels
+                        <Label color='orange' className='biomarkers--side--bar--validation--labels'>
+                            Some molecules (in orange) from the molecule panels where not found in our database.
                         </Label>
                     </div>
                 }
+
                 {haveAmbiguous &&
                     <div className='biomarkers--side--bar--validation--items'>
                         <Label color='yellow' className='biomarkers--side--bar--validation--labels'>
@@ -124,7 +126,18 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
 
                 <Checkbox
                     className='biomarkers--side--bar--validation--items'
-                    label='Ignore molecules with errors'
+                    label={
+                        <label>
+                            Ignore molecules with warnings
+
+                            <InfoPopup
+                                content='This message does not indicate that there is an error in your data, but that these molecules were not found during our validation process. This may be due to outdated data or the use of different nomenclatures or standards. In case you are sure that there are no corrections to be made and you wish to continue with the Biomarker saving, check the following Checkbox to enable the form submission'
+                                onTop={false}
+                                onEvent='hover'
+                                extraClassName='margin-left-5'
+                            />
+                        </label>
+                    }
                     checked={props.biomarkerForm.validation.checkBox}
                     onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
                 />
