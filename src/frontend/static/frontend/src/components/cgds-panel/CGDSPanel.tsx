@@ -816,7 +816,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                         customFilters={[
                                             { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: false, type: 'checkbox' }
                                         ]}
-                                        infoPopupContent='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'
+                                        infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
                                         mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => (
                                             <Table.Row key={CGDSStudyFileRow.id as number}>
                                                 <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
