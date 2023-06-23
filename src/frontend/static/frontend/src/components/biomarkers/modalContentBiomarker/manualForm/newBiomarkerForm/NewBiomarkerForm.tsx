@@ -12,6 +12,10 @@ import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-detai
  */
 interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
+    /** Value for Checkbox. */
+    checkedIgnoreProposedAlias: boolean,
+    /** Handle change for Checkbox. */
+    handleChangeIgnoreProposedAlias: (value: boolean) => void,
     isFormEmpty: () => boolean,
     cleanForm: () => void,
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
@@ -98,6 +102,8 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
 
             {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT &&
                 <SelectDropDownSingleMolecule
+                    checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
+                    handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
                     handleAddMoleculeToSection={props.handleAddMoleculeToSection}
                     handleSearchNewData={props.handleGenesSymbolsFinder}
                     options={props.biomarkerForm.moleculesSymbolsFinder} />

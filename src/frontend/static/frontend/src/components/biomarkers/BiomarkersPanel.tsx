@@ -48,6 +48,7 @@ interface BiomarkersPanelState {
     biomarkers: Biomarker[],
     newBiomarker: Biomarker,
     selectedBiomarkerToDeleteOrSync: Nullable<Biomarker>,
+    checkedIgnoreProposedAlias: boolean,
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
     addingOrEditingBiomarker: boolean,
@@ -76,6 +77,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.state = {
             biomarkers: [],
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
+            checkedIgnoreProposedAlias: false,
             newBiomarker: this.getDefaultNewBiomarker(),
             showDeleteBiomarkerModal: false,
             selectedBiomarkerToDeleteOrSync: null,
@@ -112,6 +114,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters(),
             advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters()
         }
+    }
+
+    /**
+     * Handle changes in the checkedIgnoreProposedAlias value.
+     * @param checkedIgnoreProposedAlias New checkedIgnoreProposedAlias value.
+     */
+    handleChangeIgnoreProposedAlias = (checkedIgnoreProposedAlias: boolean) => {
+        // Clear all the proposed molecules as they are not valid anymore (they are computed on search only)
+        const formBiomarker = this.state.formBiomarker
+        formBiomarker.moleculesSymbolsFinder.data = []
+
+        this.setState({ checkedIgnoreProposedAlias, formBiomarker })
     }
 
     /**
@@ -456,12 +470,17 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
                 const formBiomarker = this.state.formBiomarker
+                const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
+
                 formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(molecule => {
-                    const text = molecule.molecule === molecule.standard ? molecule.molecule : `${molecule.molecule} (${molecule.standard})`
+                    const text = checkedIgnoreProposedAlias || molecule.molecule === molecule.standard
+                        ? molecule.molecule
+                        : `${molecule.molecule} (${molecule.standard})`
+
                     return {
                         key: molecule.molecule,
                         text,
-                        value: molecule.standard
+                        value: checkedIgnoreProposedAlias ? molecule.molecule : molecule.standard
                     }
                 })
                 this.setState({ formBiomarker })
@@ -1455,6 +1474,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
                             handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
                             biomarkerForm={this.state.formBiomarker}
+                            checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
+                            handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                             handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                             cleanForm={this.cleanForm}
