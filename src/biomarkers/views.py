@@ -1,9 +1,11 @@
+from typing import List, Optional, Dict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from rest_framework.generics import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
@@ -76,85 +78,103 @@ def biomarkers_action(request):
     })
 
 
-class GeneSymbolsFinder(APIView):
-    """Generates a query to search genes through BioAPI"""
-    permission_classes = [permissions.IsAuthenticated]
-
-    @staticmethod
-    def get(request):
-        data = global_mrna_service.get_bioapi_service_content('gene-symbols-finder', request.GET, is_paginated=False)
-        return generate_json_response_or_404(data)
-
-
 class GeneSymbols(APIView):
-    """Get the aliases for a list of genes from BioAPI"""
+    """Genes finder and genes symbols validator services."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def post(request):
-        data = global_mrna_service.get_bioapi_service_content(
+    def __get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
+        """Get the aliases for a list of genes from BioAPI"""
+        return global_mrna_service.get_bioapi_service_content(
             'gene-symbols',
-            request_params=request.data,
+            request_params={'gene_ids': genes_ids},
             is_paginated=False,
             method='post'
         )
+
+    def get(self, request: Request):
+        """Generates a query to search genes through BioAPI"""
+        genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
+                                                                     request.GET, is_paginated=False)
+
+        # Generates the structure for the frontend
+        aliases = self.__get_gene_aliases(genes_found)
+        data = [{'molecule': gene, 'standard': aliases.get(gene, [None])[0]} for gene in genes_found]
+
         return generate_json_response_or_404(data)
 
-
-class MiRNACodesFinder(APIView):
-    """Generates a query to search miRNAs through Modulector"""
-    permission_classes = [permissions.IsAuthenticated]
-
-    @staticmethod
-    def get(request):
-        data = global_mrna_service.get_modulector_service_content('mirna-codes-finder', request.GET, is_paginated=False)
+    def post(self, request: Request):
+        """Get the aliases for a list of genes from BioAPI"""
+        data = self.__get_gene_aliases(request.data.get('gene_ids'))
         return generate_json_response_or_404(data)
 
 
 class MiRNACodes(APIView):
-    """Get the aliases for a list of miRNAs"""
+    """miRNA symbols finder and miRNA symbols validator services."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def post(request):
-        data = global_mrna_service.get_modulector_service_content(
+    def __get_mirna_aliases(mirna_codes: List[str]) -> Optional[Dict]:
+        """Get the aliases for a list of miRNAs through Modulector"""
+        return global_mrna_service.get_modulector_service_content(
             'mirna-codes',
-            request_params=request.data,
+            request_params={'mirna_codes': mirna_codes},
             is_paginated=False,
             method='post'
         )
+
+    def get(self, request):
+        """Generates a query to search miRNAs through Modulector"""
+        mirnas_found = global_mrna_service.get_modulector_service_content('mirna-codes-finder',
+                                                                          request.GET, is_paginated=False)
+
+        # Generates the structure for the frontend
+        aliases = self.__get_mirna_aliases(mirnas_found)
+        data = [{'molecule': mirna, 'standard': aliases.get(mirna, '')} for mirna in mirnas_found]
+
+        return generate_json_response_or_404(data)
+
+    def post(self, request: Request):
+        """Get the aliases for a list of miRNAs through Modulector"""
+        data = self.__get_mirna_aliases(request.data.get('mirna_codes'))
 
         # Standardizes the response to the same structure as mRNA and Methylation services (in case of null values
         # this returns an empty array). This is implemented this way because the miRNA service returns a unique string
         # or null instead of an array
-        data = {k: [v] if v is not None else [] for k, v in data.items()}
+        if data is not None:
+            data = {k: [v] if v is not None else [] for k, v in data.items()}
 
-        return generate_json_response_or_404(data)
-
-
-class MethylationSitesFinder(APIView):
-    """Generates a query to search Methylation sites through Modulector"""
-    permission_classes = [permissions.IsAuthenticated]
-
-    @staticmethod
-    def get(request):
-        data = global_mrna_service.get_modulector_service_content('methylation-sites-finder', request.GET,
-                                                                  is_paginated=False)
         return generate_json_response_or_404(data)
 
 
 class MethylationSites(APIView):
-    """Get the aliases for a list of Methylation sites from Modulector"""
+    """Methylation sites finder and methylation sites validator services."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def post(request):
-        data = global_mrna_service.get_modulector_service_content(
+    def __get_methylation_sites_aliases(methylation_sites: List[str]) -> Optional[Dict]:
+        """Get the aliases for a list of Methylation sites through Modulector"""
+        return global_mrna_service.get_modulector_service_content(
             'methylation-sites',
-            request_params=request.data,
+            request_params={'methylation_sites': methylation_sites},
             is_paginated=False,
             method='post'
         )
+
+    def get(self, request: Request):
+        """Generates a query to search Methylation sites through Modulector"""
+        sites_found = global_mrna_service.get_modulector_service_content('methylation-sites-finder', request.GET,
+                                                                         is_paginated=False)
+
+        # Generates the structure for the frontend
+        aliases = self.__get_methylation_sites_aliases(sites_found)
+        data = [{'molecule': site, 'standard': aliases.get(site, [None])[0]} for site in sites_found]
+
+        return generate_json_response_or_404(data)
+
+    def post(self, request: Request):
+        """Get the aliases for a list of Methylation sites through Modulector"""
+        data = self.__get_methylation_sites_aliases(request.data.get('methylation_sites'))
         return generate_json_response_or_404(data)
 
 

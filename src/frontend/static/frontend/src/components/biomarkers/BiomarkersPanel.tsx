@@ -34,6 +34,9 @@ declare const maxFeaturesBlindSearch: number
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
+/** A matched molecule with the search query and the validated alias. */
+type MoleculeFinderResult = { molecule: string, standard: string }
+
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {
     haveAmbiguous: boolean,
@@ -451,13 +454,16 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({ formBiomarker: formBiomarkerPreLoad })
 
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((jsonResponse: string[]) => {
+            response.json().then((jsonResponse: MoleculeFinderResult[]) => {
                 const formBiomarker = this.state.formBiomarker
-                formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(gen => ({
-                    key: gen,
-                    text: gen,
-                    value: gen
-                }))
+                formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(molecule => {
+                    const text = molecule.molecule === molecule.standard ? molecule.molecule : `${molecule.molecule} (${molecule.standard})`
+                    return {
+                        key: molecule.molecule,
+                        text,
+                        value: molecule.standard
+                    }
+                })
                 this.setState({ formBiomarker })
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
