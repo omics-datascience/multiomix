@@ -20,7 +20,8 @@ export const TextAreaMolecules = (props: TextAreaMoleculesProps) => {
     )
     const handleInputAreaChange = useCallback((name: string, value: string) => {
         const textFiltered: string[] = []
-        const textSplitted = value.split(/,|[|]|;|\W/)
+        /* Text is split by 'Tabs' - ',' - ';' - 'Enters' */
+        const textSplitted = value.split(/\t|,|;|\n/)
         textSplitted.forEach(item => {
             const itemNoSpace = item.trim()
             return !textFiltered.includes(itemNoSpace) && itemNoSpace && textFiltered.push(itemNoSpace)
