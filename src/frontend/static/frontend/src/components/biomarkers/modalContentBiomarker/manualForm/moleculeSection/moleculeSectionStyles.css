@@ -1,11 +1,12 @@
 .biomarkers--molecules--container {
-    width: 100%;
-    overflow-y: scroll;
+    max-width: 100%;
     height: 32vh;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
 }
 
 .biomarkers--molecules--container--item {
-    display: inline-block;
     margin: 0.5rem;
 }
 
@@ -24,4 +25,12 @@
 
 .biomarker--section--button {
     cursor: default !important;
+}
+
+.row-container {
+    /*  display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    /* Ajusta los estilos según sea necesario */
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button, Dimmer, Grid, Header, Icon, Loader, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import './moleculeSectionStyles.css'
@@ -15,16 +15,15 @@ interface MoleculeSectionProps {
 
 // eslint-disable-next-line react/display-name
 export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRemoveMolecule, handleSelectOptionMolecule, handleRemoveInvalidGenes }: MoleculeSectionProps) => {
+    const parentRef = useRef<HTMLDivElement>(null)
     const [searchInput, setSearchInput] = useState<string>('')
-
-    console.log('render', title)
-    // const asd = biomarkerFormData.data
+    const [parentWidth, setParentWidth] = useState(0)
+    const [parentHeight, setParentHeight] = useState(0)
     /**
      * Filter data to show in the section considering user search.
      * @returns Filtered data.
      */
     const dataFiltered = React.useMemo((): MoleculesSectionData[] => {
-        console.log('eje')
         const moleculeToSearch = searchInput.toUpperCase().trim()
         if (moleculeToSearch === '') {
             return biomarkerFormData.data
@@ -38,61 +37,75 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
             return item.value.toUpperCase().startsWith(moleculeToSearch)
         })
     }, [biomarkerFormData.data])
-    //  const dataFilteredMemo = React.useMemo(() => dataFiltered(), [])
     interface Asd {
         index: number,
         style: any,
     }
     const Row = ({ index, style }: Asd) => (
-        <div style={style}>
-            <Asd
+        <div style={style} className="row-container" >
+            {<MoleculeOption
                 mol={dataFiltered[index]}
                 handleRemoveMolecule={handleRemoveMolecule}
                 title={title}
                 index={index}
                 handleSelectOptionMolecule={handleSelectOptionMolecule}
-            />
+            />}
         </div>
     )
+    useEffect(() => {
+        const updateParentSize = () => {
+            if (parentRef.current) {
+                const { width, height } = parentRef.current.getBoundingClientRect()
+                setParentWidth(width)
+                setParentHeight(height)
+            }
+        }
+
+        window.addEventListener('resize', updateParentSize)
+        updateParentSize()
+
+        return () => {
+            window.removeEventListener('resize', updateParentSize)
+        }
+    }, [])
+    console.log(parentWidth, parentHeight)
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <Header as='h5'>{title}</Header>
 
             <SearchMoleculesInput handleChange={setSearchInput} handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)} />
 
-            <Segment className='biomarkers--molecules--container table-bordered'>
+            <div className='biomarkers--molecules--container table-bordered' ref={parentRef}>
                 <Dimmer active={biomarkerFormData.isLoading} inverted>
                     <Loader />
                 </Dimmer>
-                <React.Profiler id={'ChildComponent'} onRender={() => console.log('renderPropf')}>
-                    <FixedSizeList
-                        height={400}
-                        width={300}
-                        itemSize={50}
-                        itemCount={dataFiltered.length}
-                    >
-                        {Row}
-                    </FixedSizeList>
-                </React.Profiler>
-            </Segment>
+                <FixedSizeList
+                    height={parentHeight}
+                    width={parentWidth}
+                    itemSize={50}
+                    itemCount={dataFiltered.length}
+                >
+                    {Row}
+                </FixedSizeList>
+            </div>
         </Grid.Column>
     )
 })
 
-interface Props {
+interface PropsMoleculeOption {
     mol: MoleculesSectionData,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void
     title: BiomarkerType,
     index: number,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
 }
-const Asd = ({
+const MoleculeOption = ({
     mol,
     handleRemoveMolecule,
     title,
     index,
     handleSelectOptionMolecule
-}: Props) => {
+}: PropsMoleculeOption) => {
     console.log('ss')
 
     if (mol.isValid) {
