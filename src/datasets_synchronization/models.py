@@ -197,6 +197,9 @@ class SurvivalColumnsTuple(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return f'Time column: "{self.time_column}" | Event column: "{self.event_column}"'
+
 
 class SurvivalColumnsTupleCGDSDataset(SurvivalColumnsTuple):
     """Survival tuple for a CGDSDataset"""

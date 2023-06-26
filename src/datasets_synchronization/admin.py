@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, Union
 from django.contrib import admin
-from .models import CGDSStudy, CGDSDataset
+from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 
 
 class CGDSStudyAdmin(admin.ModelAdmin):
@@ -40,6 +40,19 @@ class CGDSDatasetAdmin(admin.ModelAdmin):
     search_fields = ('file_path', 'mongo_collection_name', 'study__name')
 
 
+
+class SurvivalColumnsTupleAdmin(admin.ModelAdmin):
+    """Useful for SurvivalColumnsTupleCGDSDataset and SurvivalColumnsTupleUserFile models."""
+    @staticmethod
+    @admin.display(description='CGDS Dataset')
+    def dataset(obj: Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]) -> str:
+        return str(obj.clinical_dataset)
+
+    list_display = ('pk', 'dataset', 'time_column', 'event_column')
+    search_fields = ('time_column', 'event_column')
+
 # IMPORTANT: these models should be managed in the CGDS Panel in the frontend!
 admin.site.register(CGDSStudy, CGDSStudyAdmin)
 admin.site.register(CGDSDataset, CGDSDatasetAdmin)
+admin.site.register(SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleAdmin)
+admin.site.register(SurvivalColumnsTupleUserFile, SurvivalColumnsTupleAdmin)
