@@ -798,7 +798,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                             name='cloud download'
                                             color='blue'
                                             className='clickable margin-left-5'
-                                            title='Download result'
+                                            title='Download file'
                                             onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
                                         />
 

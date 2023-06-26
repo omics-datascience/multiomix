@@ -320,9 +320,9 @@ interface DjangoTag {
  * A simple structure of UserFile model
  */
 interface DjangoSimpleUserFile {
+    id?: number
     name: string,
     description: Nullable<string>,
-    file_obj: string,
     file_type: FileType,
 }
 

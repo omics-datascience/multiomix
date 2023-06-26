@@ -12,6 +12,7 @@
 
 {% block js %}
         <script>
+            const downloadFileURL = "{% url 'download_user_file' %}"
             const urlRunExperiment = "{% url 'run_experiment' %}"
             const urlUserExperiments = "{% url 'mrna_gem_experiment' %}"
             const urlGetFullUserExperiment = "{% url 'get_full_experiment' %}"
