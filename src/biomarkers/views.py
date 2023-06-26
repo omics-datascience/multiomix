@@ -78,34 +78,41 @@ def biomarkers_action(request):
     })
 
 
+def get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
+    """Get the aliases for a list of genes from BioAPI"""
+    return global_mrna_service.get_bioapi_service_content(
+        'gene-symbols',
+        request_params={'gene_ids': genes_ids},
+        is_paginated=False,
+        method='post'
+    )
+
+def find_genes_from_request(request: Request) -> List[Dict]:
+    """
+    Generates the structure for the frontend for a list of genes. The needed structure is a list of dicts with
+    the following keys: molecule, standard
+    """
+    genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
+                                                                 request.GET, is_paginated=False)
+    aliases = get_gene_aliases(genes_found)
+    return [{'molecule': gene, 'standard': aliases.get(gene, [None])[0]} for gene in genes_found]
+
+
 class GeneSymbols(APIView):
     """Genes finder and genes symbols validator services."""
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def __get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
-        """Get the aliases for a list of genes from BioAPI"""
-        return global_mrna_service.get_bioapi_service_content(
-            'gene-symbols',
-            request_params={'gene_ids': genes_ids},
-            is_paginated=False,
-            method='post'
-        )
-
-    def get(self, request: Request):
+    def get(request: Request):
         """Generates a query to search genes through BioAPI"""
-        genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
-                                                                     request.GET, is_paginated=False)
-
-        # Generates the structure for the frontend
-        aliases = self.__get_gene_aliases(genes_found)
-        data = [{'molecule': gene, 'standard': aliases.get(gene, [None])[0]} for gene in genes_found]
+        data = find_genes_from_request(request)
 
         return generate_json_response_or_404(data)
 
-    def post(self, request: Request):
+    @staticmethod
+    def post(request: Request):
         """Get the aliases for a list of genes from BioAPI"""
-        data = self.__get_gene_aliases(request.data.get('gene_ids'))
+        data = get_gene_aliases(request.data.get('gene_ids'))
         return generate_json_response_or_404(data)
 
 
@@ -163,18 +170,36 @@ class MethylationSites(APIView):
 
     def get(self, request: Request):
         """Generates a query to search Methylation sites through Modulector"""
-        sites_found = global_mrna_service.get_modulector_service_content('methylation-sites-finder', request.GET,
-                                                                         is_paginated=False)
+        # methylation_sites = request.GET.get('methylation_sites', '')
+
+        # Gets the Methylation sites
+        sites_found = global_mrna_service.get_modulector_service_content(
+            'methylation-sites-finder',
+            request_params=request.GET,
+            is_paginated=False
+        )
 
         # Generates the structure for the frontend
         aliases = self.__get_methylation_sites_aliases(sites_found)
         data = [{'molecule': site, 'standard': aliases.get(site, [None])[0]} for site in sites_found]
 
+        # Appends genes to the response as cBioPortal has genes symbols and not Methylation sites
+        data_genes = find_genes_from_request(request)
+        data.extend(data_genes)
+
         return generate_json_response_or_404(data)
 
     def post(self, request: Request):
         """Get the aliases for a list of Methylation sites through Modulector"""
-        data = self.__get_methylation_sites_aliases(request.data.get('methylation_sites'))
+        list_of_molecules = request.data.get('methylation_sites')
+        data = self.__get_methylation_sites_aliases(list_of_molecules)
+
+        # Validates against genes DB as cBioPortal has genes symbols and not Methylation sites
+        data_genes = get_gene_aliases(list_of_molecules)
+
+        # Merges both dictionaries
+        data = {**data, **data_genes}
+
         return generate_json_response_or_404(data)
 
 
