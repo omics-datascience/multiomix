@@ -1,16 +1,17 @@
-from django.db.models import Max, OuterRef, Exists, F, Subquery
-from django.http import JsonResponse
+from django.db.models import OuterRef, F, Subquery
 from django.contrib.auth.decorators import login_required
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
 from .enums import SyncCGDSStudyResponseCode
-from .models import CGDSStudy, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
+from .models import CGDSStudy, CGDSDatasetSynchronizationState
 from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render
 from .synchronization_service import global_synchronization_service
-import json
 
 
 @login_required
@@ -87,42 +88,46 @@ class CGDSStudyDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-def synchronize_cgds_study_action(request):
-    """Synchronizes a CGDS Study to get its datasets"""
-    json_request_data = json.loads(request.body)
-    cgds_study_id = json_request_data.get('CGDSStudyId')
-    if not cgds_study_id:
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.NOT_ID_IN_REQUEST,
-                message='Missing id in request'
-            ).to_json(),
-        }
+class SynCGDSStudy(APIView):
+    permission_classes = [permissions.IsAdminUser]  # Only admin users can synchronize CGDS studies
 
-        return JsonResponse(response, safe=False)
+    @staticmethod
+    def post(request: Request):
+        """Synchronizes a CGDS Study to get its datasets"""
+        cgds_study_id = request.data.get('CGDSStudyId')
+        if not cgds_study_id:
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.NOT_ID_IN_REQUEST,
+                    message='Missing id in request'
+                ).to_json(),
+            }
 
-    # Retrieves object from DB
-    try:
-        cgds_study_id = int(cgds_study_id)
-        cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
+            return Response(response)
 
-        # Gets SynchronizationService and adds the study
-        global_synchronization_service.add_cgds_study(cgds_study)
+        # Retrieves object from DB
+        try:
+            cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
 
-        # Makes a successful response
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.SUCCESS,
-                message='The CGDS Study was added to the synchronization queue'
-            ).to_json(),
-        }
-    except CGDSStudy.DoesNotExist:
-        # If the study does not exist, show an error in the frontend
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST,
-                message='The CGDS Study selected does not exist'
-            ).to_json(),
-        }
+            create_new_version = request.data.get('createNewVersion', True)
 
-    return JsonResponse(response, safe=False)
+            # Gets SynchronizationService and adds the study
+            global_synchronization_service.add_cgds_study(cgds_study, create_new_version)
+
+            # Makes a successful response
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.SUCCESS,
+                    message='The CGDS Study was added to the synchronization queue'
+                ).to_json(),
+            }
+        except CGDSStudy.DoesNotExist:
+            # If the study does not exist, show an error in the frontend
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST,
+                    message='The CGDS Study selected does not exist'
+                ).to_json(),
+            }
+
+        return Response(response)

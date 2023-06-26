@@ -1,7 +1,6 @@
 from typing import List, Optional
 from os import listdir
 from os.path import isfile
-from django.db.models import Max
 from django.utils import timezone
 from urllib.error import URLError
 import requests
@@ -49,7 +48,7 @@ class SynchronizationService:
         @param dir_path: Directory path to check.
         @return: List of file names in the directory.
         """
-        return [filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))]
+        return sorted([filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))])
 
     def __sync_dataset(self, dataset: CGDSDataset, extract_path: str, check_patient_column: bool):
         """
@@ -368,12 +367,15 @@ class SynchronizationService:
         close_db_connection()
         global_mongo_service.close_mongo_db_connection()
 
-    def add_cgds_study(self, cgds_study: CGDSStudy):
+    def add_cgds_study(self, cgds_study: CGDSStudy, create_new_version: bool):
         """
-        Adds an CGDS Study to the ThreadPool to be processed
+        Adds an CGDS Study to the ThreadPool to be processed.
+        @param cgds_study: CGDSStudy to be processed.
+        @param create_new_version: True if a new version of the CGDSStudy must be created. Otherwise, the current
+        version will be updated (useful for studies with critical errors).
         """
         # First of all checks if exists at least one CGDS dataset with a success state
-        if cgds_study.has_at_least_one_dataset_synchronized():
+        if create_new_version and cgds_study.has_at_least_one_dataset_synchronized():
             logging.info(f'CGDS Study {cgds_study.name} has at least one dataset synchronized. '
                          f'Generating a new version...')
             cgds_study = self.generate_study_new_version(cgds_study)

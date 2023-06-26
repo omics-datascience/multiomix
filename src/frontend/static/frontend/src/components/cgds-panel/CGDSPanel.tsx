@@ -193,14 +193,22 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     }
 
     /**
-     * Makes a CGDS Study synchronization request
+     * Makes a CGDS Study synchronization request.
+     * @param createNewVersion If true, creates a new version of the CGDS Study. Otherwise, updates the current version.
      */
-    syncStudy = () => {
+    syncStudy = (createNewVersion: boolean) => {
+        if (!this.state.selectedCGDSStudyToDeleteOrSync) {
+            return
+        }
+
         this.setState({ sendingSyncRequest: true }, () => {
             // Sets the Request's Headers
             const myHeaders = getDjangoHeader()
 
-            const jsonParams = { CGDSStudyId: this.state.selectedCGDSStudyToDeleteOrSync?.id }
+            const jsonParams = {
+                CGDSStudyId: this.state.selectedCGDSStudyToDeleteOrSync?.id,
+                createNewVersion
+            }
 
             ky.post(urlSyncCGDSStudy, { headers: myHeaders, json: jsonParams }).then((response) => {
                 this.setState({ sendingSyncRequest: false })
@@ -481,15 +489,35 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 <Modal.Content>
                     <p>Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>?</p>
 
-                    <p>This process <strong>cannot</strong> be undone and will synchronize <strong>all</strong> the CGDS datasets related to this study</p>
+                    <p>This process <strong>cannot</strong> be undone and will synchronize <strong>all</strong> the CGDS datasets related to this study.</p>
+
+                    <p>
+                        <strong>IMPORTANT: only select <i>Sync</i> option if there were some critical errors that must be fixed. Synchronizing an existing dataset could lead to inconsistencies with existing experiments using its data. If it is just a new data update from cBioPortal, a new version should be generated.</strong>
+                    </p>
+
+                    {!this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
+                        <p>New versions of a Study can only be done from its last version</p>
+                    }
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
                         Cancel
                     </Button>
-                    <Button color='blue' onClick={this.syncStudy} loading={this.state.sendingSyncRequest} disabled={this.state.sendingSyncRequest}>
+                    <Button color='orange' onClick={() => this.syncStudy(false)} loading={this.state.sendingSyncRequest} disabled={this.state.sendingSyncRequest}>
                         Sync
                     </Button>
+
+                    {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
+                    {this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
+                        <Button
+                            color='blue'
+                            onClick={() => this.syncStudy(true)}
+                            loading={this.state.sendingSyncRequest}
+                            disabled={this.state.sendingSyncRequest}
+                        >
+                            Create new version and sync
+                        </Button>
+                    }
                 </Modal.Actions>
             </Modal>
         )
@@ -837,18 +865,15 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                 {userIsAdmin &&
                                                     <Table.Cell>
                                                         {/* Sync button */}
-                                                        {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
-                                                        {CGDSStudyFileRow.is_last_version &&
-                                                            <Icon
-                                                                name='sync alternate'
-                                                                color='blue'
-                                                                className='clickable'
-                                                                title='Sync study'
-                                                                loading={this.getStateObj(CGDSStudyFileRow.state).loading}
-                                                                disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
-                                                                onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
-                                                            />
-                                                        }
+                                                        <Icon
+                                                            name='sync alternate'
+                                                            color='blue'
+                                                            className='clickable'
+                                                            title='Sync study'
+                                                            loading={this.getStateObj(CGDSStudyFileRow.state).loading}
+                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                            onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
+                                                        />
 
                                                         {/* Edit button */}
                                                         <Icon
