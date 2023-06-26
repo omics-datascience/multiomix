@@ -26,9 +26,9 @@ class SimpleUserFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFile
         fields = [
+            'id',
             'name',
             'description',
-            'file_obj',
             'file_type'
         ]
 
