@@ -487,9 +487,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             <Modal size='small' open={this.state.showSyncCGDSStudyModal} onClose={this.handleClose} centered={false}>
                 <Header icon='sync' content='Sync CGDS Study' />
                 <Modal.Content>
-                    <p>Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>?</p>
-
-                    <p>This process <strong>cannot</strong> be undone and will synchronize <strong>all</strong> the CGDS datasets related to this study.</p>
+                    <p>
+                        Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>? This process <strong>cannot</strong> be undone and will synchronize <strong>all</strong> the CGDS datasets related to this study.
+                    </p>
 
                     <p>
                         <strong>IMPORTANT: only select <i>Sync</i> option if there were some critical errors that must be fixed. Synchronizing an existing dataset could lead to inconsistencies with existing experiments using its data. If it is just a new data update from cBioPortal, a new version should be generated.</strong>
@@ -851,7 +851,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                 <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
                                                 <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
                                                 <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
-                                                <Table.Cell>{CGDSStudyFileRow.date_last_synchronization
+                                                <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
                                                     ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
                                                     : '-'}
                                                 </Table.Cell>

@@ -131,9 +131,8 @@ class SynchronizationService:
                 logging.error(f"The dataset '{dataset}' has an invalid MongoDB collection's name")
                 dataset.state = CGDSDatasetSynchronizationState.COULD_NOT_SAVE_IN_MONGO
             except FileNotFoundError:
-                logging.error(f"The dataset '{dataset}' does not exist in the tar.gz file")
-                logging.error('Possible files to select in dataset:',
-                              self.__get_files_of_directory(extract_path))
+                logging.error(f"The file '{dataset.file_path}' does not exist in the tar.gz of the dataset '{dataset}'")
+                logging.error(f'Possible files to select in dataset: {self.__get_files_of_directory(extract_path)}')
                 dataset.state = CGDSDatasetSynchronizationState.FILE_DOES_NOT_EXIST
             except Exception as e:
                 logging.error(
