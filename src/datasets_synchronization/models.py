@@ -1,5 +1,5 @@
 import logging
-from typing import List, Iterable
+from typing import List, Iterable, cast
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np
@@ -271,15 +271,16 @@ class CGDSStudy(models.Model):
 
     def has_at_least_one_dataset_synchronized(self) -> bool:
         """Checks if at least one dataset is synchronized"""
-        for dataset in self.get_all_datasets():
+        for dataset in self.get_all_valid_datasets():
             if dataset.state == CGDSDatasetSynchronizationState.SUCCESS:
                 return True
         return False
 
-    def get_all_datasets(self) -> List[CGDSDataset]:
-        """Returns a list of all the associated CGDSDataset"""
-        return [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
+    def get_all_valid_datasets(self) -> List[CGDSDataset]:
+        """Returns a list of all the associated CGDSDataset (excluding None)"""
+        datasets = [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
                 self.clinical_sample_dataset, self.clinical_patient_dataset]
+        return [cast(CGDSDataset, dataset) for dataset in datasets if dataset is not None]
 
     def get_last_version(self) -> int:
         """Gets the maximum version of this CGDSStudy with the same URL."""
@@ -298,9 +299,8 @@ class CGDSStudy(models.Model):
             super().delete(*args, **kwargs)
 
             # On delete removes all the datasets
-            for dataset in self.get_all_datasets():
-                if dataset is not None:
-                    dataset.delete()
+            for dataset in self.get_all_valid_datasets():
+                dataset.delete()
 
             # Sends a websocket message to update the state in the frontend
             send_update_cgds_studies_command()

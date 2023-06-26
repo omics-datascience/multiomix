@@ -289,7 +289,7 @@ class SynchronizationService:
         @param cgds_study: CGDSStudy instance to get its CGDSDatasets.
         @return: True if all the datasets were correctly imported, False otherwise.
         """
-        for dataset in cgds_study.get_all_datasets():
+        for dataset in cgds_study.get_all_valid_datasets():
             if dataset.state not in [CGDSDatasetSynchronizationState.SUCCESS,
                                      CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED]:
                 return False
