@@ -158,4 +158,6 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
 
 def replace_event_col_for_booleans(value: Union[int, str]) -> bool:
     """Replaces string or integer events in datasets to booleans values to make survival analysis later."""
-    return value in [1, '1'] or any(candidate in value for candidate in COMMON_INTEREST_VALUES)
+    # Cast to string to check if it's '1' or contains any of the candidates
+    value_str = str(value)
+    return value_str == '1' or any(candidate in value_str for candidate in COMMON_INTEREST_VALUES)
