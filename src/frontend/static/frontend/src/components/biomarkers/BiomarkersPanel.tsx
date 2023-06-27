@@ -10,8 +10,7 @@ import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
-import _ from 'lodash'
-import './../../css/biomarkers.css'
+import { isEqual } from 'lodash'
 import { BiomarkerTypeSelection } from './modalContentBiomarker/biomarkerTypeSelection/BiomarkerTypeSelection'
 import { FeatureSelectionPanel } from './modalContentBiomarker/featureSelectionPanel/FeatureSelectionPanel'
 import { Alert } from '../common/Alert'
@@ -19,6 +18,9 @@ import { BiomarkerStateLabel } from './labels/BiomarkerStateLabel'
 import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters, getNumberOfMoleculesOfBiomarker } from './utils'
+
+// Styles
+import './../../css/biomarkers.css'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -354,7 +356,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     handleSelectOptionMolecule = (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => {
         const formBiomarker: FormBiomarkerData = { ...this.state.formBiomarker }
-        const indexToSelect = formBiomarker.moleculesSection[section].data.findIndex((item) => _.isEqual(item.value, moleculeToDisambiguate.value))
+        const indexToSelect = formBiomarker.moleculesSection[section].data.findIndex((item) => isEqual(item.value, moleculeToDisambiguate.value))
 
         // Checks if the molecule is already a valid one
         const exists = formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
@@ -586,7 +588,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             break
                         default:
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(
-                                item => _.isEqual(item.value, gene[1])
+                                item => isEqual(item.value, gene[1])
                             )
 
                             if (!condition.length) {
@@ -1176,7 +1178,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Checks if the form is entirely empty. Useful to enable 'Cancel' button
      * @returns True is any of the form's field contains any data. False otherwise
      */
-    isFormEmpty = (): boolean => _.isEqual(this.state.formBiomarker, this.getDefaultFormBiomarker())
+    isFormEmpty = (): boolean => isEqual(this.state.formBiomarker, this.getDefaultFormBiomarker())
 
     /**
      * Callback to mark a Biomarker as selected
