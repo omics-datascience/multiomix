@@ -138,12 +138,24 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
     clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
+    # NOTE: The event and time columns are ALWAYS the first and second one at this point
+    event_column, time_column = clinical_df.columns.tolist()
+
     # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
     if is_regression:
-        time_column = clinical_df.columns.tolist()[1]  # The time column is ALWAYS the second one at this point
         clinical_df = clinical_df[clinical_df[time_column] > 0]
 
-    # Keeps only the samples in common
+    # Replaces NaN values as False events and 0.0 time
+    clinical_df = clean_dataset(clinical_df, axis='index')
+
+    # Removes also inconsistencies in cBioPortal datasets where the event is 1 and the time value is 0, or the event
+    # is 0 (never occurred) and the time value is not 0
+    idx_missing_time = (clinical_df[event_column] == 1) & (clinical_df[time_column] == 0.0)
+    idx_wrong_event = (clinical_df[event_column] == 0) & (clinical_df[time_column] != 0.0)
+    idx_with_inconsistencies = idx_missing_time | idx_wrong_event
+    clinical_df = clinical_df.loc[~idx_with_inconsistencies]
+
+    # Keeps only the samples in common after data filtering
     valid_samples = clinical_df.index
     molecules_df = molecules_df[valid_samples]  # Samples are as columns in molecules_df
 

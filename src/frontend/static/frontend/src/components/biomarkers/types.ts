@@ -34,6 +34,21 @@ enum BiomarkerState {
 
 }
 
+/** All the possible states of a TrainedModel. */
+enum TrainedModelState {
+    COMPLETED = 1,
+    FINISHED_WITH_ERROR = 2,
+    IN_PROCESS = 3,
+    WAITING_FOR_QUEUE = 4,
+    NO_SAMPLES_IN_COMMON = 5,
+    STOPPING = 6,
+    STOPPED = 7,
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9,
+    NO_BEST_MODEL_FOUND = 10
+
+}
+
 /** Type of molecules input in the Biomarker creation form. */
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
@@ -221,6 +236,11 @@ interface ClusteringParameters extends ModelParameters {
     /** Number of clusters. */
     nClusters: number,
     /**
+     * Penalizer parameter for CoxPHFitter to prevent errors with some small datasets (or ones with high collinearity).
+     * Read more at: https://lifelines.readthedocs.io/en/latest/Examples.html#problems-with-convergence-in-the-cox-proportional-hazard-model
+     */
+    penalizer: Nullable<number>,
+    /**
      * If true, the algorithm will look for the optimal number of clusters during a new TrainedModel request.
      * (Used only in the TrainedModel panel)
      */
@@ -339,7 +359,7 @@ interface TrainedModel {
     id: number,
     name: string,
     description: string,
-    state: BiomarkerState,
+    state: TrainedModelState,
     fitness_function: FitnessFunction,
     created: string,
     best_fitness_value: Nullable<number>
@@ -531,6 +551,7 @@ export {
     FeatureSelectionPanelData,
     BiomarkerOrigin,
     BiomarkerState,
+    TrainedModelState,
     BiomarkerMolecule,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,

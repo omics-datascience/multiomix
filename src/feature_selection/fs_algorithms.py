@@ -313,7 +313,7 @@ def binary_black_hole_sequential(
 
 
 def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray,
-                              filter_zero_coeff: bool, top_n: Optional[int] = None) -> CoxNetAnalysisResult:
+                              filter_zero_coeff: bool, top_n: Optional[int]) -> CoxNetAnalysisResult:
     """
     Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
     alpha parameter and the filters the best features sorting by coefficients.
@@ -365,7 +365,6 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     # Gets best features sorted by coefficient
     coefficients_order = best_coefficients.abs().sort_values("coefficient").index
     res_df: pd.DataFrame = best_coefficients.loc[coefficients_order]
-
 
     best_features = res_df.index.tolist()
     best_features_coeff: List[float] = res_df['coefficient'].tolist()

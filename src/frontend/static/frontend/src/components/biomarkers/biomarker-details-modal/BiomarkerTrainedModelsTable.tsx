@@ -8,7 +8,7 @@ import { Nullable } from '../../../utils/interfaces'
 import { biomarkerStateOptions, fitnessFunctionsOptions } from '../utils'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
-import { BiomarkerStateLabel } from '../BiomarkerStateLabel'
+import { TrainedModelStateLabel } from '../labels/TrainedModelStateLabel'
 
 declare const urlBiomarkerTrainedModels: string
 
@@ -105,7 +105,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <TableCellWithTitle value={trainedModel.description ?? ''} />
                             <Table.Cell textAlign='center'>
                                 {/* NOTE: trained models have the same states as Biomarker */}
-                                <BiomarkerStateLabel biomarkerState={trainedModel.state} />
+                                <TrainedModelStateLabel trainedModelStateState={trainedModel.state} />
                             </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />

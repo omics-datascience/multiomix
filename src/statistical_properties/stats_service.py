@@ -16,8 +16,8 @@ from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
-from biomarkers.models import BiomarkerState, Biomarker
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from biomarkers.models import BiomarkerState, Biomarker, TrainedModelState
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
@@ -216,7 +216,7 @@ class StatisticalValidationService(object):
             return result[0]
 
         def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
-                             score_method: ClusteringScoringMethod) -> float:
+                             score_method: ClusteringScoringMethod, penalizer: Optional[float]) -> float:
             clustering_result = model.fit(subset.values)
 
             # Generates a DataFrame with a column for time, event and the group
@@ -230,7 +230,7 @@ class StatisticalValidationService(object):
             df = pd.concat(dfs)
 
             # Fits a Cox Regression model using the column group as the variable to consider
-            cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+            cph: CoxPHFitter = CoxPHFitter(penalizer=penalizer).fit(df, duration_col='T', event_col='E')
 
             # This documentation recommends using log-likelihood to optimize:
             # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
@@ -301,17 +301,27 @@ class StatisticalValidationService(object):
             gcv = GridSearchCV(
                 classifier,
                 param_grid,
-                scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method),
+                scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method,
+                                                             clustering_parameters.penalizer),
                 n_jobs=1,
                 refit=False,
                 cv=cv
             )
+
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        n_samples = clinical_df.shape[0]
+        if n_samples < cross_validation_folds:
+            raise NoBestModelFound(f'Number of samples ({n_samples}) are fewer than CV number of folds '
+                                   f'({cross_validation_folds})')
 
         # Trains the model
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
             gcv = gcv.fit(molecules_df, clinical_data)
 
+        best_score = gcv.best_score_
+        if not best_score or np.isnan(best_score):
+            raise NoBestModelFound(f'Best score is None/NaN: {best_score}')
 
         # Saves the n_clusters in the model
         if is_clustering:
@@ -321,9 +331,7 @@ class StatisticalValidationService(object):
         # Saves model instance and best score
         classifier.set_params(**gcv.best_params_)
         classifier.fit(molecules_df, clinical_data)
-        best_model = classifier
-        best_score = gcv.best_score_
-        save_model_dump_and_best_score(trained_model, best_model, best_score)
+        save_model_dump_and_best_score(trained_model, best_model=classifier, best_score=best_score)
 
     def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
         """
@@ -513,29 +521,33 @@ class StatisticalValidationService(object):
 
                 # Saves some data about the result of the stat_validation
                 trained_model.execution_time = total_execution_time
-                trained_model.state = BiomarkerState.COMPLETED
+                trained_model.state = TrainedModelState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False)
             logging.error('No samples in common')
-            trained_model.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+            trained_model.state = TrainedModelState.NO_SAMPLES_IN_COMMON
+        except NoBestModelFound as ex:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error(f'No best model found: {ex}')
+            trained_model.state = TrainedModelState.NO_BEST_MODEL_FOUND
         except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False)
             logging.error(f'TrainedModel {trained_model.pk} has failed. Check logs for more info')
-            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+            trained_model.state = TrainedModelState.FINISHED_WITH_ERROR
         except ServerSelectionTimeoutError:
             self.__commit_or_rollback(is_commit=False)
             logging.error('MongoDB connection timeout!')
-            trained_model.state = BiomarkerState.WAITING_FOR_QUEUE
+            trained_model.state = TrainedModelState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the stat_validation, discard changes
             logging.warning(f'TrainedModel {trained_model.pk} was stopped')
             self.__commit_or_rollback(is_commit=False)
-            trained_model.state = BiomarkerState.STOPPED
+            trained_model.state = TrainedModelState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False)
             logging.exception(e)
-            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to TrainedModel {trained_model.pk}')
-            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+            logging.warning(f'Setting TrainedModelState.FINISHED_WITH_ERROR to TrainedModel {trained_model.pk}')
+            trained_model.state = TrainedModelState.FINISHED_WITH_ERROR
         finally:
             # Removes the temporary files
             if molecules_temp_file_path is not None:

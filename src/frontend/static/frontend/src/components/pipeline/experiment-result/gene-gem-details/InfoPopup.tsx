@@ -12,6 +12,8 @@ interface InfoPopupProps {
     onEvent?: 'click' | 'hover'
     /** True to show in the top-right corner of parent element (default true) */
     onTop?: boolean,
+    /** If true, removes grey border from icon. */
+    noBorder?: boolean
     /** Id of the element (in case is needed to generate some particular CSS) */
     id?: string
     /** Extra classnames to add */
@@ -26,6 +28,7 @@ interface InfoPopupProps {
 export const InfoPopup = (props: InfoPopupProps) => {
     const mustAddOnTopClass = props.onTop ?? true
     const onTopClassName = mustAddOnTopClass ? 'info-popup-on-top' : ''
+    const noBorderClassName = props.noBorder ? 'no-border' : ''
     const extraClassName = props.extraClassName ?? ''
     const id = props.id ?? undefined
     const onEvent = props.onEvent ?? 'click'
@@ -41,7 +44,7 @@ export const InfoPopup = (props: InfoPopupProps) => {
                     size='small'
                     circular
                     id={id}
-                    className={`${onTopClassName} ${extraClassName} clickable`}
+                    className={`${onTopClassName} ${extraClassName} ${noBorderClassName} clickable`}
                 />
             }
             content={props.content}

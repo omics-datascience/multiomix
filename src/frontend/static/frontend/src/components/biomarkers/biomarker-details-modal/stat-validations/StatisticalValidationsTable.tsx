@@ -4,8 +4,8 @@ import { Biomarker, StatisticalValidationForTable } from '../../types'
 import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../../utils/util_functions'
-import { BiomarkerStateLabel } from '../../BiomarkerStateLabel'
 import { FitnessFunctionLabel } from '../../labels/FitnessFunctionLabel'
+import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 
 declare const urlBiomarkerStatisticalValidations: string
 

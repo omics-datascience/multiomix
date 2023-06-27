@@ -28,6 +28,20 @@ class BiomarkerState(models.IntegerChoices):
     NO_FEATURES_FOUND = 9
 
 
+class TrainedModelState(models.IntegerChoices):
+    """All the possible states of a TrainedModel."""
+    COMPLETED = 1
+    FINISHED_WITH_ERROR = 2
+    IN_PROCESS = 3
+    WAITING_FOR_QUEUE = 4
+    NO_SAMPLES_IN_COMMON = 5
+    STOPPING = 6
+    STOPPED = 7
+    REACHED_ATTEMPTS_LIMIT = 8
+    NO_FEATURES_FOUND = 9
+    NO_BEST_MODEL_FOUND = 10
+
+
 class Biomarker(models.Model):
     """Represents a biomarker"""
     name = models.CharField(max_length=100)

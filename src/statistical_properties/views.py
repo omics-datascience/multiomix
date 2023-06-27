@@ -392,7 +392,6 @@ class ModelDetails(APIView):
         response['best_fitness'] = best_fitness
         response['random_state'] = parameters.random_state
 
-        print(response)
         return Response(response)
 
 

@@ -11,3 +11,8 @@ class NoSamplesInCommon(Exception):
 class ExperimentStopped(Exception):
     """Raised when user stops the experiment"""
     pass
+
+
+class NoBestModelFound(Exception):
+    """Raised when GridSearch couldn't find the best score for a TrainedModel."""
+    pass

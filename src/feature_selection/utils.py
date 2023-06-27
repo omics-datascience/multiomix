@@ -114,10 +114,12 @@ def create_models_parameters_and_classifier(
         n_clusters = int(models_parameters['nClusters'])
         n_clusters = limit_between_min_max(n_clusters, min_value=2, max_value=10)
         random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
+        penalizer = float(models_parameters['penalizer']) if models_parameters['penalizer'] else None
 
         clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
             algorithm=int(models_parameters['algorithm']),
             metric=int(models_parameters['metric']),
+            penalizer=penalizer,
             n_clusters=n_clusters,
             scoring_method=int(models_parameters['scoringMethod']),
             random_state=random_state,

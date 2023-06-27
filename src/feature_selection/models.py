@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from api_service.websocket_functions import send_update_trained_models_command
-from biomarkers.models import BiomarkerState
+from biomarkers.models import TrainedModelState
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from user_files.models_choices import FileType
 
@@ -69,6 +69,7 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
+    penalizer = models.FloatField(null=True, blank=True)
     random_state = models.SmallIntegerField(null=True, blank=True)
     n_clusters = models.SmallIntegerField(default=2, validators=[MinValueValidator(2), MaxValueValidator(10)])
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
@@ -175,7 +176,7 @@ class TrainedModel(models.Model):
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
-    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker
+    state = models.IntegerField(choices=TrainedModelState.choices)  # Yes, has the same states as a Biomarker
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
     best_fitness_value =  models.FloatField(null=True, blank=True)

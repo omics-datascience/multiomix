@@ -1,12 +1,12 @@
 import React from 'react'
 import { Icon } from 'semantic-ui-react'
-import { BiomarkerState } from './types'
-import { StateIconInfo } from '../../utils/interfaces'
+import { StateIconInfo } from '../../../utils/interfaces'
+import { TrainedModelState } from '../types'
 
-/** BiomarkerStateLabel props. */
-interface BiomarkerStateLabelProps {
+/** TrainedModelStateLabel props. */
+interface TrainedModelStateLabelProps {
     /** Biomarker's state. */
-    biomarkerState: BiomarkerState
+    trainedModelStateState: TrainedModelState
 }
 
 /**
@@ -14,10 +14,10 @@ interface BiomarkerStateLabelProps {
  * @param props Component props.
  * @returns Component.
  */
-export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
+export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
     let stateIcon: StateIconInfo
-    switch (props.biomarkerState) {
-        case BiomarkerState.COMPLETED:
+    switch (props.trainedModelStateState) {
+        case TrainedModelState.COMPLETED:
             stateIcon = {
                 iconName: 'check',
                 color: 'green',
@@ -25,7 +25,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment is complete'
             }
             break
-        case BiomarkerState.FINISHED_WITH_ERROR:
+        case TrainedModelState.FINISHED_WITH_ERROR:
             stateIcon = {
                 iconName: 'times',
                 color: 'red',
@@ -33,7 +33,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment has finished with errors. Try again'
             }
             break
-        case BiomarkerState.WAITING_FOR_QUEUE:
+        case TrainedModelState.WAITING_FOR_QUEUE:
             stateIcon = {
                 iconName: 'wait',
                 color: 'yellow',
@@ -41,7 +41,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The process of this experiment will start soon'
             }
             break
-        case BiomarkerState.NO_SAMPLES_IN_COMMON:
+        case TrainedModelState.NO_SAMPLES_IN_COMMON:
             stateIcon = {
                 iconName: 'user outline',
                 color: 'red',
@@ -49,7 +49,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'Datasets don\'t have samples in common'
             }
             break
-        case BiomarkerState.IN_PROCESS:
+        case TrainedModelState.IN_PROCESS:
             stateIcon = {
                 iconName: 'sync alternate',
                 color: 'yellow',
@@ -57,7 +57,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment is being processed'
             }
             break
-        case BiomarkerState.STOPPING:
+        case TrainedModelState.STOPPING:
             stateIcon = {
                 iconName: 'stop',
                 loading: false,
@@ -65,7 +65,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 className: 'experiment-stopping-icon'
             }
             break
-        case BiomarkerState.STOPPED:
+        case TrainedModelState.STOPPED:
             stateIcon = {
                 iconName: 'stop',
                 color: 'red',
@@ -73,7 +73,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment was stopped'
             }
             break
-        case BiomarkerState.REACHED_ATTEMPTS_LIMIT:
+        case TrainedModelState.REACHED_ATTEMPTS_LIMIT:
             stateIcon = {
                 iconName: 'undo',
                 color: 'red',
@@ -81,12 +81,20 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The experiment has failed several times. Try changing some parameters and try again.'
             }
             break
-        case BiomarkerState.NO_FEATURES_FOUND:
+        case TrainedModelState.NO_FEATURES_FOUND:
             stateIcon = {
                 iconName: 'times rectangle',
                 color: 'red',
                 loading: false,
                 title: 'No features were found. Try changing some parameters and try again.'
+            }
+            break
+        case TrainedModelState.NO_BEST_MODEL_FOUND:
+            stateIcon = {
+                iconName: 'target',
+                color: 'red',
+                loading: false,
+                title: 'No model could be obtained. Maybe there are fewer samples than number of folds in the CrossValidation or the data presents high collinearity. Try changing some parameters as penalizer or number of folds in the CV process and try again.'
             }
             break
     }

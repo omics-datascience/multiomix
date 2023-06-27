@@ -1,7 +1,10 @@
 import React from 'react'
 
 /** InputLabel props. */
-type InputLabelProps = { label: string }
+type InputLabelProps = {
+    label: string,
+    children?: React.ReactNode
+}
 
 /**
  * Some inputs have problems with their labels in some contexts (for example they're shown
@@ -13,5 +16,7 @@ type InputLabelProps = { label: string }
 export const InputLabel = (props: InputLabelProps) => (
     <label>
         <strong>{props.label}</strong>
+
+        {props.children}
     </label>
 )

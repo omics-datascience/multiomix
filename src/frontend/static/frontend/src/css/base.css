@@ -178,6 +178,11 @@ div.ellipsis>button {
     z-index: 999;
 }
 
+/* Removes border from SemanticUI circular icons. */
+i.no-border {
+    box-shadow: none !important;
+}
+
 /* Support for Header with centered image */
 .ui.image.header.aligned {
     margin-left: auto;
