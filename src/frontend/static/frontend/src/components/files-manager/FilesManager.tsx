@@ -507,7 +507,9 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                 this.setState({ uploadingFile: true }, () => {
                     ky.patch(editUrl, { headers: myHeaders, body: formData, timeout: false })
                         .then((response) => {
-                            response.json().then(this.uploadSuccess).catch((err) => {
+                            response.json().then(() => {
+                                this.setState({ newFile: this.getDefaultNewFile() })
+                            }).catch((err) => {
                                 console.log('Error parsing JSON ->', err)
                                 alertGeneralError()
                             })
