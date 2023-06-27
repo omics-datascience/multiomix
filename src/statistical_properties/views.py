@@ -22,7 +22,7 @@ from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
-from common.datasets_utils import clinical_df_to_struct_array
+from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
@@ -184,6 +184,8 @@ class StatisticalValidationHeatMap(APIView):
 
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+            molecules_df = clean_dataset(molecules_df, axis='index')
+
             return Response({
                 'data': molecules_df.to_dict('index'),
                 'min': molecules_df.min().min(),
@@ -381,10 +383,16 @@ class ModelDetails(APIView):
         else:
             raise ValidationError(f'Invalid trained model type: {model_used}')
 
+        # Prevents NaNs breaking JSON compliant
+        if np.isnan(trained_model.best_fitness_value):
+            best_fitness = None
+        else:
+            best_fitness = trained_model.best_fitness_value
         response['model'] = model_used
-        response['best_fitness'] = trained_model.best_fitness_value
+        response['best_fitness'] = best_fitness
         response['random_state'] = parameters.random_state
 
+        print(response)
         return Response(response)
 
 

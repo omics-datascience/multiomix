@@ -87,9 +87,10 @@ class StatisticalValidationService(object):
             if source is None:
                 continue
 
+            only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
             chunks.extend([
                 process_chunk(chunk, file_type, molecules, samples_in_common)
-                for chunk in source.get_df_in_chunks()
+                for chunk in source.get_df_in_chunks(only_matching)
             ])
 
         # Concatenates all the chunks for all the molecules
