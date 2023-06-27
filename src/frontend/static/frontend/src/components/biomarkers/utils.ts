@@ -77,7 +77,7 @@ const getDefaultClusteringParameters = (): ClusteringParameters => {
         metric: ClusteringMetric.COX_REGRESSION,
         nClusters: 2,
         randomState: null,
-        penalizer: null,
+        penalizer: 0.0,
         lookForOptimalNClusters: true
     }
 }

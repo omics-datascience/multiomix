@@ -48,8 +48,9 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
     subset = subset.transpose()
     return subset
 
+IntOrFloat = Union[int, float]
 
-def limit_between_min_max(number: int, min_value: int, max_value: int) -> int:
+def limit_between_min_max(number: IntOrFloat, min_value: IntOrFloat, max_value: IntOrFloat) -> IntOrFloat:
     """Limits a number between a min and max values."""
     return max(min(number, max_value), min_value)
 

@@ -239,7 +239,7 @@ interface ClusteringParameters extends ModelParameters {
      * Penalizer parameter for CoxPHFitter to prevent errors with some small datasets (or ones with high collinearity).
      * Read more at: https://lifelines.readthedocs.io/en/latest/Examples.html#problems-with-convergence-in-the-cox-proportional-hazard-model
      */
-    penalizer: Nullable<number>,
+    penalizer: number,
     /**
      * If true, the algorithm will look for the optimal number of clusters during a new TrainedModel request.
      * (Used only in the TrainedModel panel)
