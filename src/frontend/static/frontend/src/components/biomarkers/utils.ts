@@ -36,7 +36,7 @@ const clusteringMetricOptions: DropdownItemProps[] = [
 
 /** Available options for a Clustering scoring method for Cox-Regression. */
 const clusteringScoringMethodOptions: DropdownItemProps[] = [
-    { key: ClusteringScoringMethod.C_INDEX, text: 'Cox-Regression', value: ClusteringScoringMethod.C_INDEX },
+    { key: ClusteringScoringMethod.C_INDEX, text: 'C-Index', value: ClusteringScoringMethod.C_INDEX },
     { key: ClusteringScoringMethod.LOG_LIKELIHOOD, text: 'Log likelihood', value: ClusteringScoringMethod.LOG_LIKELIHOOD }
 ]
 
