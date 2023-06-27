@@ -17,7 +17,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker, TrainedModelState
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound, \
+    NumberOfSamplesFewerThanCVFolds
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
@@ -194,9 +195,24 @@ class StatisticalValidationService(object):
             # TODO: add here all the metrics for every Source type
 
             stat_validation.save()
-            
+
     @staticmethod
-    def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
+    def __samples_are_fewer_than_folds(clinical_data: np.ndarray, number_of_folds: int) -> bool:
+        """
+        Checks if the number of samples is fewer than the number of folds.
+        Code retrieved from Sklearn model_selection module.
+        @param clinical_data: Clinical data Numpy array.
+        @param number_of_folds: Current number of folds
+        @return: True if the number of samples is fewer than the number of folds (an exception should be raised
+        as the GridSearch will be fail), False otherwise.
+        """
+        classes, y_idx, y_inv = np.unique(clinical_data, return_index=True, return_inverse=True)
+        _, class_perm = np.unique(y_idx, return_inverse=True)
+        y_encoded = class_perm[y_inv]
+        y_counts = np.bincount(y_encoded)
+        return np.all(number_of_folds > y_counts)
+
+    def __compute_trained_model(self, trained_model: TrainedModel, molecules_temp_file_path: str,
                                 clinical_temp_file_path: str, model_parameters: Dict,
                                 cross_validation_folds: int,
                                 stop_event: Event):
@@ -314,6 +330,11 @@ class StatisticalValidationService(object):
         if n_samples < cross_validation_folds:
             raise NoBestModelFound(f'Number of samples ({n_samples}) are fewer than CV number of folds '
                                    f'({cross_validation_folds})')
+
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        if self.__samples_are_fewer_than_folds(clinical_data, cross_validation_folds):
+            raise NumberOfSamplesFewerThanCVFolds(f'Number of samples: {n_samples} | CV number of folds '
+                                                  f'{cross_validation_folds}')
 
         # Trains the model
         with warnings.catch_warnings():
@@ -531,6 +552,11 @@ class StatisticalValidationService(object):
             self.__commit_or_rollback(is_commit=False)
             logging.error(f'No best model found: {ex}')
             trained_model.state = TrainedModelState.NO_BEST_MODEL_FOUND
+        except NumberOfSamplesFewerThanCVFolds as ex:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error(f'ValueError raised due to number of member of each class being fewer than number '
+                          f'of CV folds: {ex}')
+            trained_model.state = TrainedModelState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS
         except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False)
             logging.error(f'TrainedModel {trained_model.pk} has failed. Check logs for more info')

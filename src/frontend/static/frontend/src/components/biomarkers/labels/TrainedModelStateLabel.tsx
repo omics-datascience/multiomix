@@ -97,6 +97,14 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 title: 'No model could be obtained. Maybe there are fewer samples than number of folds in the CrossValidation or the data presents high collinearity. Try changing some parameters as penalizer or number of folds in the CV process and try again.'
             }
             break
+        case TrainedModelState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
+            stateIcon = {
+                iconName: 'user times',
+                color: 'red',
+                loading: false,
+                title: 'There are fewer samples than number of folds in the CrossValidation. Try changing the number of folds in the CV process or select a larger dataset and try again.'
+            }
+            break
     }
 
     return (
