@@ -145,14 +145,11 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     if is_regression:
         clinical_df = clinical_df[clinical_df[time_column] > 0]
 
-    # Replaces NaN values as False events and 0.0 time
+    # Replaces NaN values
     clinical_df = clean_dataset(clinical_df, axis='index')
 
-    # Removes also inconsistencies in cBioPortal datasets where the event is 1 and the time value is 0, or the event
-    # is 0 (never occurred) and the time value is not 0
-    idx_missing_time = (clinical_df[event_column] == 1) & (clinical_df[time_column] == 0.0)
-    idx_wrong_event = (clinical_df[event_column] == 0) & (clinical_df[time_column] != 0.0)
-    idx_with_inconsistencies = idx_missing_time | idx_wrong_event
+    # Removes also inconsistencies in cBioPortal datasets where the event is 1 and the time value is 0
+    idx_with_inconsistencies = (clinical_df[event_column] == 1) & (clinical_df[time_column] == 0.0)
     clinical_df = clinical_df.loc[~idx_with_inconsistencies]
 
     # Keeps only the samples in common after data filtering
