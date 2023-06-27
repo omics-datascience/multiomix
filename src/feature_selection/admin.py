@@ -26,9 +26,20 @@ class FSExperimentAdmin(admin.ModelAdmin):
     search_fields = ('origin_biomarker__name', 'target_biomarker__name')
 
 
+class TrainedModelAdmin(admin.ModelAdmin):
+    @staticmethod
+    @admin.display(description='Biomarker')
+    def biomarker(obj: TrainedModel) -> Optional[str]:
+        return obj.biomarker.name if obj.biomarker else None
+
+    list_display = ('name', 'description', 'biomarker', 'state', 'fitness_function', 'best_fitness_value')
+    list_filter = ('state', 'fitness_function')
+    search_fields = ('name', 'description', 'biomarker__name')
+
+
 admin.site.register(FSExperiment, FSExperimentAdmin)
 admin.site.register(SVMParameters)
 admin.site.register(ClusteringParameters)
-admin.site.register(TrainedModel)
+admin.site.register(TrainedModel, TrainedModelAdmin)
 admin.site.register(ClusterLabelsSet)
 admin.site.register(ClusterLabel)
