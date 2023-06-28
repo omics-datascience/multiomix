@@ -184,6 +184,8 @@ class StatisticalValidationService(object):
 
         # Makes predictions
         if is_regression:
+            # FIXME: this is broken as the model expects other data shape. There should be a new state indicating that some features are missing for this
+            # FIXME: TrainedModel and another one should be created
             predictions = model.predict(molecules_df)
 
             # Gets all the metrics for the SVM or RF
