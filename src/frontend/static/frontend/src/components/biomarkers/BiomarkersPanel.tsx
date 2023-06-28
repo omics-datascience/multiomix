@@ -137,7 +137,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultAdvancedAlgorithmParameters = (): AdvancedAlgorithmParameters => ({
         isActive: false,
         BBHA: {
-            numberOfStars: 25,
+            numberOfStars: 60,
             numberOfIterations: 10,
             BBHAVersion: BBHAVersion.ORIGINAL
         },
