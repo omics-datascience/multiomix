@@ -67,7 +67,7 @@ The following are the steps to perform a deployment in production. In case you w
     - Feature Selection:
       - `N_JOBS_RF`: Number of cores used to run the survival RF model. Set it to `-1` to use all cores. Default `1`. 
       - `N_JOBS_CV`: Number of cores used to compute CrossValidation. Set it to `-1` to use all cores. Default `1`.
-      - `COX_NET_GRID_SEARCH_N_JOBS`: Number of cores used to compute GridSearch for the [CoxNetSurvivalAnalysis][cox-net-surv-analysis]. Set it to `-1` to use all cores. Default `1`.
+      - `COX_NET_GRID_SEARCH_N_JOBS`: Number of cores used to compute GridSearch for the [CoxNetSurvivalAnalysis][cox-net-surv-analysis]. Set it to `-1` to use all cores. Default `2`.
     - Redis server for WebSocket connections:
         - `REDIS_HOST`: IP of the Redis server, if Docker is used it should be the name of the service since Docker has its own DNS and can resolve it. The default is `redis` which is the name of the service.
         - `REDIS_PORT`: Redis server port. Default `6379`.

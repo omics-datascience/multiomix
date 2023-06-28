@@ -300,9 +300,7 @@ N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', 1))
 N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
 
 # Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
-COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 1))
-
-# TODO: use and document all of the parameters below
+COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 2))
 
 # Minimum and maximum number of iterations user can select to run the BBHA algorithm
 MIN_ITERATIONS_BBHA: int = int(os.getenv('MIN_ITERATIONS_BBHA', 1))
