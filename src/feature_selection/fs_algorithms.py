@@ -9,7 +9,7 @@ from sklearn import clone
 from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 from lifelines import CoxPHFitter
 from scipy.special import factorial
-from sklearn.model_selection import StratifiedKFold, KFold, GridSearchCV
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.linear_model import CoxnetSurvivalAnalysis
 from sksurv.svm import FastKernelSurvivalSVM
@@ -340,8 +340,20 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
         warnings.simplefilter("ignore", FitFailedWarning)
         cox_net_pipe.fit(x, clinical_data)
 
-    estimated_alphas = cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
-    cv = KFold(n_splits=5, shuffle=True, random_state=0)
+    # Gets alphas to compute the GridSearch
+    estimated_alphas_np = np.array(cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_)
+
+    # To improve performance. Generates a list of at most 3 items consisting of the minimum value,
+    # the mean and the maximum
+    estimated_alphas = []
+    if len(estimated_alphas_np) > 3:
+        estimated_alphas.append(np.min(estimated_alphas_np))
+        estimated_alphas.append(np.median(estimated_alphas_np))
+        estimated_alphas.append(np.max(estimated_alphas_np))
+    else:
+        estimated_alphas = estimated_alphas_np.tolist()
+
+    cv = StratifiedKFold(n_splits=3, shuffle=True)
     gcv = GridSearchCV(
         make_pipeline(StandardScaler(), CoxnetSurvivalAnalysis(l1_ratio=0.9)),
         param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
