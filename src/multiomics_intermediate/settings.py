@@ -279,13 +279,12 @@ BIOAPI_SETTINGS = {
 AWS_EMR_SETTINGS = {
     'host': os.getenv('AWS_EMR_HOST', '127.0.0.1'),
     'port': os.getenv('AWS_EMR_PORT', '8003'),
-    # TODO: document this commenting that these have to be the same as in multiomix-aws-emr
-    'shared_folder_data': os.getenv('AWS_EMR_SHARED_FOLDER', '/data-spark'),
-    'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER', '/results-spark')
+    'shared_folder_data': os.getenv('AWS_EMR_SHARED_FOLDER_DATA', '/data-spark'),
+    'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER_RESULTS', '/results-spark')
 }
 
 # If True, indicates that the service of Multiomix-aws-emr is enabled (https://github.com/omics-datascience/multiomix-aws-emr)
-ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'true') == 'true'  # TODO: leave 'false' as default
+ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'false') == 'true'
 
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
