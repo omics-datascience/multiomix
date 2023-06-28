@@ -46,8 +46,9 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                         <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
                             <Form.Checkbox
                                 checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
+                                disabled // TODO: remove this when backend is implemented
                                 onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
-                                label='Search for the optimal number of clusters'
+                                label='Search for the optimal number of clusters (soon)'
                             />
 
                             {!fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters &&

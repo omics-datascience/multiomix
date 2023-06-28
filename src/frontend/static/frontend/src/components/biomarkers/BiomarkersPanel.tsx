@@ -151,7 +151,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @returns Default structure for all the fitness functions.
      */
     getDefaultFitnessFunctionParameters = (): FitnessFunctionParameters => ({
-        clusteringParameters: getDefaultClusteringParameters(),
+        clusteringParameters: { ...getDefaultClusteringParameters(), lookForOptimalNClusters: false }, // TODO: Change to default when implemented in backend
         svmParameters: getDefaultSvmParameters(),
         rfParameters: getDefaultRFParameters()
     })

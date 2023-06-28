@@ -1,3 +1,4 @@
+import os
 import tempfile
 import numpy as np
 from typing import Union, Optional, cast, List, Literal, Tuple
@@ -13,6 +14,17 @@ from user_files.models_choices import FileType
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
 ExperimentObjType = Union[FSExperiment, InferenceExperiment, StatisticalValidation, TrainedModel]
+
+
+def create_folder_with_permissions(dir_path: str):
+    """Creates (if not exist) a folder and assigns permissions to work without problems in the Spark container."""
+    # First, checks if the folder exists
+    if os.path.exists(dir_path):
+        return
+
+    mode = 0o777
+    os.mkdir(dir_path, mode)
+    os.chmod(dir_path, mode)  # Mode in mkdir is sometimes ignored: https://stackoverflow.com/a/5231994/7058363
 
 
 def get_samples_intersection(source: ExperimentSource, last_intersection: np.ndarray) -> np.ndarray:

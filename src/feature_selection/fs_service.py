@@ -158,14 +158,11 @@ class FSService(object):
                 job_id = binary_black_hole_spark(
                     job_name=f'Job for FSExperiment: {experiment.pk}',
                     app_name=app_name,
-                    classifier=classifier,
                     molecules_df=molecules_df,
+                    clinical_df=clinical_df,
+                    trained_model=trained_model,
                     n_stars=n_stars,
                     n_iterations=n_bbha_iterations,
-                    clinical_df=clinical_df,
-                    is_clustering=is_clustering,
-                    clustering_score_method=clustering_scoring_method,
-                    binary_threshold=None  # TODO: parametrize in frontend
                 )
 
                 # Saves the job id in the experiment

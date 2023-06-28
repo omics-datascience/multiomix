@@ -169,6 +169,9 @@ def user_directory_path_for_trained_models(instance, filename: str):
     return f'uploads/user_{instance.biomarker.user.id}/trained_models/{filename}'
 
 
+TrainedModelParameters = Union[SVMParameters, RFParameters, ClusteringParameters]
+
+
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
     name = models.CharField(max_length=100)
@@ -274,6 +277,16 @@ class TrainedModel(models.Model):
         with open(model_path, "rb") as fp:
             model = pickle.load(fp)
         return model
+
+    def get_model_parameter(self) -> Optional[TrainedModelParameters]:
+        """Returns the corresponding related Parameter instance."""
+        if hasattr(self, 'svm_parameters'):
+            return self.svm_parameters
+        elif hasattr(self, 'clustering_parameters'):
+            return self.clustering_parameters
+        elif hasattr(self, 'rf_parameters'):
+            return self.rf_parameters
+        return None
 
     def save(self, *args, **kwargs):
         """Every time the experiment status changes, uses websockets to update state in the frontend"""
