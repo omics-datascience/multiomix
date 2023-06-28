@@ -17,6 +17,7 @@ interface BlindSearchProps {
 
 /**
  * Renders a panel with the BlindSearch algorithm options.
+ * TODO: rename this component, this is used in BBHA and other panels
  * @param props Component props.
  * @returns Component.
  */
@@ -48,24 +49,27 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                 onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
                                 label='Search for the optimal number of clusters'
                             />
-                            <Form.Input
-                                type='number'
-                                label='Number of clusters'
-                                name='nClusters'
-                                min={2}
-                                max={10}
-                                value={fitnessFunctionParameters.clusteringParameters.nClusters}
-                                onChange={(_, { name, value }) => {
-                                    const numVal = Number(value)
-                                    if (numVal < 2) {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
-                                    } else if (numVal > 10) {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
-                                    } else {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
-                                    }
-                                }}
-                            />
+
+                            {!fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters &&
+                                <Form.Input
+                                    type='number'
+                                    label='Number of clusters'
+                                    name='nClusters'
+                                    min={2}
+                                    max={10}
+                                    value={fitnessFunctionParameters.clusteringParameters.nClusters}
+                                    onChange={(_, { name, value }) => {
+                                        const numVal = Number(value)
+                                        if (numVal < 2) {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
+                                        } else if (numVal > 10) {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
+                                        } else {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
+                                        }
+                                    }}
+                                />
+                            }
                         </Form.Group>
                     </>
                 )
