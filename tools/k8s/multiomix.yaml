@@ -117,6 +117,8 @@ spec:
         emptyDir: {}           
       - name: media-data
         emptyDir: {} 
+      - name: logs-data
+        emptyDir: {}        
       - name: config
         configMap: 
           name: multiomix-conf
@@ -157,6 +159,8 @@ spec:
           mountPath: /src/static
         - name: media-data
           mountPath: /src/media
+        - name: logs-data
+          mountPath: /logs          
         resources: {}
         imagePullPolicy: IfNotPresent
         ports:

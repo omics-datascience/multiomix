@@ -315,3 +315,29 @@ MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 
 # Max number of features to allow to run a Blind Search algorithm, if the number of features is greater than this
 # value, the algorithm is disabled and only metaheuristic algorithms are allowed
 MAX_FEATURES_BLIND_SEARCH: int = int(os.getenv('MAX_FEATURES_BLIND_SEARCH', 7))
+
+LOG_FILE_PATH = os.getenv('LOG_FILE_PATH', '/logs')+"/django.log"
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },    
+    'handlers': {
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': LOG_FILE_PATH,
+            'filters': ['require_debug_false'],
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}
