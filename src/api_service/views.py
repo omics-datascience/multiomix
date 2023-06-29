@@ -1,7 +1,7 @@
 import json
 import logging
 from builtins import map
-from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, Literal, cast
+from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union
 import numpy as np
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -12,20 +12,19 @@ from django.http import HttpResponse, HttpRequest, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
-from lifelines import KaplanMeierFitter
 from rest_framework import generics, permissions, filters
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from lifelines.statistics import logrank_test
 from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_integer_enum_from_value, encode_json_response_status, \
     request_bool_to_python_bool, get_intersection, create_survival_columns_from_json
 from common.pagination import StandardResultsSetPagination
-from common.response import ResponseStatus
+from common.response import ResponseStatus, generate_json_response_or_404
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
     SurvivalColumnsTupleUserFile
 from genes.models import Gene
+from statistical_properties.survival_functions import generate_survival_groups_by_median_expression
 from tags.models import Tag
 from user_files.models import UserFile
 from user_files.models_choices import FileType
@@ -46,11 +45,6 @@ from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
 from .task_queue import global_task_queue
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
 import pandas as pd
-
-KaplanMeierSample = Tuple[
-    int,
-    Literal[0, 1]  # 1 = interest, 0 = censored
-]
 
 
 @login_required
@@ -338,12 +332,12 @@ def get_samples_list(
         user
 ) -> Tuple[Optional[List[str]], Optional[Dict]]:
     """
-    Gets a DataFrame from the file retrieve from DB or MongoDB with an id and SourceType
-    @param id_source: Id of the UserFile/CGDSDataset to retrieve
-    @param type_source: Source type to check if it's a UserFile or a CGDSDataset
-    @param file_type: FileType (mRNA, miRNA, etc) to get the corresponding CGDSDataset
-    @param user: Current logged user to retrieve only his datasets
-    @return: A DataFrame (if corresponds) and a Response dict (the dataset doesn't exist)
+    Gets a DataFrame from the file retrieve from DB or MongoDB with an id and SourceType.
+    @param id_source: ID of the UserFile/CGDSDataset to retrieve.
+    @param type_source: Source type to check if it's a UserFile or a CGDSDataset.
+    @param file_type: FileType (mRNA, miRNA, etc.) to get the corresponding CGDSDataset.
+    @param user: Current logged user to retrieve only his datasets.
+    @return: A DataFrame (if corresponds) and a Response dict (the dataset doesn't exist).
     """
     list_of_samples = None
     response = None
@@ -492,23 +486,11 @@ def get_number_samples_in_common_action_one_front(request):
     return encode_json_response_status(response)
 
 
-def generate_modulector_response(data: Optional[Dict]) -> Union[JsonResponse, Http404]:
-    """
-    Checks if the data is None, if not return a JsonResponse with its content, otherwise raises a 404 error
-    @param data: JSON data to return
-    @raise Http404 if data is None
-    @return: A JsonResponse if data is valid
-    """
-    if data is not None:
-        return JsonResponse(data, safe=False)
-    raise Http404('Element not found')
-
-
 @login_required
 def get_mirna_data_action(request):
     """Gets miRNA data from Modulector"""
     data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
@@ -529,14 +511,14 @@ def get_mirna_interaction_action(request):
 def get_mirna_diseases_action(request):
     """Searches in papers miRNA associations with diseases"""
     data = global_mrna_service.get_modulector_service_content('diseases', request.GET, is_paginated=True)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_drugs_action(request):
     """Searches in papers miRNA associations with drugs"""
     data = global_mrna_service.get_modulector_service_content('drugs', request.GET, is_paginated=True)
-    return generate_modulector_response(data)
+    return generate_json_response_or_404(data)
 
 
 @login_required
@@ -661,7 +643,7 @@ def download_result_with_filters(request):
 
 
 def add_clinical_source(request):
-    """Adds an Experiment's clinical source"""
+    """Adds an Experiment clinical source"""
 
     # Gets experiment
     experiment_id = request.POST.get('experimentPk')
@@ -688,7 +670,7 @@ def add_clinical_source(request):
 
 
 class ExperimentClinicalSourceDetail(generics.RetrieveAPIView):
-    """REST endpoint: retrieve for Experiment's clinical source"""
+    """REST endpoint: retrieve for ExperimentClinicalSource model."""
 
     def get_queryset(self):
         # User can only retrieve its UserFile (or public ones), not CGDSDatasets nor other users' datasets instances
@@ -714,73 +696,6 @@ def unlink_clinical_source_user_file(request, pk: int):
     experiment.save()
     response = {'status': ResponseStatus(ResponseCode.SUCCESS)}
     return encode_json_response_status(response)
-
-
-def get_group_survival_function(data: List[KaplanMeierSample]) -> List[Dict]:
-    """
-    Gets list of times and events and gets the survival function
-    TODO: put in a class in another file
-    @param data: List of times and events
-    @return: List of dicts with two fields: "time" and "probability" which are consumed in this way in frontend
-    """
-    kmf = KaplanMeierFitter()
-    kmf.fit(
-        durations=list(map(lambda x: x[0], data)),
-        event_observed=list(map(lambda x: x[1], data)),
-        label='probability'
-    )
-
-    survival_function = kmf.survival_function_.reset_index()
-    survival_function = survival_function.rename(columns={'timeline': 'time'})
-    survival_function = survival_function.sort_values(by='time')
-
-    return survival_function.to_dict(orient='records')
-
-
-def generate_survival_groups(
-    clinical_time_values: np.ndarray,
-    clinical_event_values: np.ndarray,
-    expression_values: np.ndarray,
-    fields_interest: List[str]
-) -> Tuple[List[Dict], List[Dict], Dict[str, float]]:
-    """
-    Generate low and high groups from expression data, time and event
-    @param clinical_time_values: Time values
-    @param clinical_event_values: Event values
-    @param expression_values: Expression values
-    @param fields_interest: Field of interest, every value which is not in this list is considered censores
-    @return: Low group, high group and logrank test
-    """
-    median_value = np.median(expression_values)
-
-    low_group: List[KaplanMeierSample] = []
-    high_group: List[KaplanMeierSample] = []
-
-    for (time, event, expression) in zip(clinical_time_values, clinical_event_values, expression_values):
-        event_valid_value = 1 if event in fields_interest else 0  # 1 = interest, 0 = censored
-        new_value = cast(KaplanMeierSample, [time, event_valid_value])
-        if expression < median_value:
-            low_group.append(new_value)
-        else:
-            high_group.append(new_value)
-
-    # Generates logrank test from time values
-    logrank_res = logrank_test(
-        durations_A=list(map(lambda x: x[0], low_group)),
-        durations_B=list(map(lambda x: x[0], high_group)),
-        event_observed_A=list(map(lambda x: x[1], low_group)),
-        event_observed_B=list(map(lambda x: x[1], high_group)),
-        alpha=0.95
-    )
-
-    # Get times and survival function
-    low_group_survival_function = get_group_survival_function(low_group)
-    high_group_survival_function = get_group_survival_function(high_group)
-
-    return low_group_survival_function, high_group_survival_function, {
-        'test_statistic': logrank_res.test_statistic,
-        'p_value': logrank_res.p_value
-    }
 
 
 class SurvivalDataDetails(APIView):
@@ -836,9 +751,9 @@ class SurvivalDataDetails(APIView):
             )
 
             # Gets event values
-            clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attribute(
+            clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(
                 clinical_samples,
-                event_attribute
+                [event_attribute]
             )
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'
@@ -858,13 +773,13 @@ class SurvivalDataDetails(APIView):
             # Generates low and high groups
             fields_of_interest = request.data.get('fieldsInterest')
             if fields_of_interest:
-                low_group_genes, high_group_genes, logrank_genes = generate_survival_groups(
+                low_group_genes, high_group_genes, logrank_genes = generate_survival_groups_by_median_expression(
                     clinical_time_values,
                     clinical_event_values,
                     gene_values,
                     fields_of_interest
                 )
-                low_group_gem, high_group_gem, logrank_gem = generate_survival_groups(
+                low_group_gem, high_group_gem, logrank_gem = generate_survival_groups_by_median_expression(
                     clinical_time_values,
                     clinical_event_values,
                     gem_values,

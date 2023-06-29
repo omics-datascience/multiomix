@@ -1,8 +1,8 @@
 import React from 'react'
 import { MiRNAPipeline } from './MiRNAPipeline'
 import { Base } from '../Base'
-import { WebsocketConfig, FileType, Source, SourceType, ResponseRequestWithPagination, AllExperimentsTableControl, AllExperimentsSortField, NewExperiment, ExperimentRequestPrefix, Nullable, KySearchParams } from '../../utils/interfaces'
-import { getDjangoHeader, alertGeneralError, getDefaultNewTag, getDefaultSource, getInputFileCSVColumns, getFilenameFromSource, cleanRef, generatesOrderingQuery, getFileSizeInMB } from '../../utils/util_functions'
+import { WebsocketConfig, FileType, Source, SourceType, ResponseRequestWithPagination, AllExperimentsTableControl, AllExperimentsSortField, NewExperiment, Nullable, KySearchParams } from '../../utils/interfaces'
+import { getDjangoHeader, alertGeneralError, getDefaultNewTag, getDefaultSource, getInputFileCSVColumns, getFilenameFromSource, cleanRef, generatesOrderingQuery, getFileSizeInMB, makeSourceAndAppend } from '../../utils/util_functions'
 import ky from 'ky'
 import { DjangoResponseCode, DjangoCommonResponse, DjangoExperiment, ExperimentType, DjangoUserFile, DjangoCGDSStudy, CorrelationMethod, DjangoTag, TagType, DjangoNumberSamplesInCommonResult, DjangoNumberSamplesInCommonOneFrontResult, PValuesAdjustmentMethod, DjangoUserFileUploadErrorInternalCode } from '../../utils/django_interfaces'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
@@ -207,9 +207,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         if (mRNASourceId !== null && gemSourceId !== null) {
             const searchParams = {
-                mRNASourceId: mRNASourceId,
+                mRNASourceId,
                 mRNASourceType: mRNASource.type,
-                gemSourceId: gemSourceId,
+                gemSourceId,
                 gemSourceType: gemSource.type,
                 gemFileType: this.state.gemFileType
             }
@@ -289,9 +289,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
                 // Sends an array of headers to compare in server
                 const jsonData = {
-                    headersColumnsNames: headersColumnsNames,
-                    otherSourceId: otherSourceId,
-                    otherSourceType: otherSourceType
+                    headersColumnsNames,
+                    otherSourceId,
+                    otherSourceType
                 }
 
                 this.setState({ gettingCommonSamples: true }, () => {
@@ -623,33 +623,6 @@ class Pipeline extends React.Component<{}, PipelineState> {
     }
 
     /**
-     * Parse a Source considering its type to send specific parameters to the backend
-     * @param source Source to analyze
-     * @param formData FormData object to append request parameters
-     * @param prefix Prefix to make the different parameters' name
-     */
-    makeSourceAndAppend (source: Source, formData: FormData, prefix: ExperimentRequestPrefix) {
-        // In this function source.type is never null
-        const sourceType = source.type as SourceType
-        const sourceRef = source.newUploadedFileRef.current
-        const existingFilePk = sourceType === SourceType.UPLOADED_DATASETS && source.selectedExistingFile?.id
-            ? source.selectedExistingFile.id.toString()
-            : null
-
-        const CGDSStudyPk = sourceType === SourceType.CGDS && source.CGDSStudy?.id
-            ? source.CGDSStudy.id.toString()
-            : null
-
-        const file = sourceType === SourceType.NEW_DATASET && sourceRef && sourceRef.files.length > 0 ? sourceRef.files[0] : null
-
-        // Appends to the form data
-        formData.append(`${prefix}Type`, sourceType ? sourceType.toString() : 'null')
-        formData.append(`${prefix}ExistingFilePk`, existingFilePk ?? '')
-        formData.append(`${prefix}CGDSStudyPk`, CGDSStudyPk ?? '')
-        formData.append(`${prefix}File`, file)
-    }
-
-    /**
      * Run the specified pipeline
      */
     runPipeline = () => {
@@ -678,8 +651,8 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         // Appends the source type, and the file content depending of it (pk if selecting
         // an existing file, Blob content if uploading a new file, etc)
-        this.makeSourceAndAppend(newExperiment.mRNASource, formData, 'mRNA')
-        this.makeSourceAndAppend(newExperiment.gemSource, formData, 'gem')
+        makeSourceAndAppend(newExperiment.mRNASource, formData, 'mRNA')
+        makeSourceAndAppend(newExperiment.gemSource, formData, 'gem')
 
         // Methylation only fields
         if (this.state.gemFileType !== FileType.MIRNA) {
@@ -881,7 +854,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             type: TagType.EXPERIMENT
         }
 
-        ky.get(urlTagsCRUD, { searchParams: searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
             response.json().then((experimentTags: DjangoTag[]) => {
                 this.setState({ tags: experimentTags }, functionToExecute)
             }).catch((err) => {

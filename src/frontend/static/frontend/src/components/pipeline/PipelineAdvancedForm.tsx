@@ -6,6 +6,7 @@ import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } f
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
 import { CorrelationMethod } from '../../utils/django_interfaces'
+import { ExternalLink } from '../common/ExternalLink'
 
 // Slider styles
 import 'neo-react-semantic-ui-range/dist/styles.min.css'
@@ -125,6 +126,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
 
                         <Select
                             fluid
+                            selectOnBlur={false}
                             className="margin-top-5"
                             options={selectCorrelationMethodsOptions}
                             name='correlationMethod'
@@ -207,12 +209,13 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                         <LabelWithInfoPopup
                             labelText='P-value adjustment'
                             popupContent={
-                                <p>P-value adjustment method for <a href='http://www.biostathandbook.com/multiplecomparisons.html' target='_blank' rel='noopener noreferrer'>Family-wise Error Rate or False Discovert Rate</a></p>
+                                <p>P-value adjustment method for <ExternalLink href='http://www.biostathandbook.com/multiplecomparisons.html'>Family-wise Error Rate or False Discovert Rate</ExternalLink></p>
                             }
                         />
 
                         <Select
                             fluid
+                            selectOnBlur={false}
                             className="margin-top-5"
                             options={selectAdjustmentMethodsOptions}
                             name='adjustmentMethod'

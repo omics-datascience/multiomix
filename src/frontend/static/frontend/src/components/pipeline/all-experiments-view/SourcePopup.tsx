@@ -1,8 +1,10 @@
 import React from 'react'
 import { Popup, Button, Icon, Header, List } from 'semantic-ui-react'
-import { DjangoExperimentSource } from '../../../utils/django_interfaces'
+import { DjangoExperimentSource, SourceSimpleCGDSDataset } from '../../../utils/django_interfaces'
 import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
-import { getFileRowDescriptionInPlural } from '../../../utils/util_functions'
+import { formatDateLocale, getFileRowDescriptionInPlural } from '../../../utils/util_functions'
+
+declare const downloadFileURL: string
 
 /**
  * Component's props
@@ -25,10 +27,34 @@ interface SourcePopupProps {
  * @returns Component
  */
 export const SourcePopup = (props: SourcePopupProps) => {
+    const isUserFile = props.source.user_file !== null
     const datasetObj = props.source.user_file ?? props.source.cgds_dataset
 
     // Gets file's type description in plural to show the number of rows
     const datasetRowDescriptionInPlural = getFileRowDescriptionInPlural(datasetObj.file_type)
+
+    /**
+     * Gets the some extra content of the Popup for a CGDS dataset.
+     * @param obj CGDS dataset object.
+     * @returns JSX content.
+     */
+    const getCGDSData = (obj: SourceSimpleCGDSDataset): JSX.Element => {
+        const syncDate = obj.date_last_synchronization ? formatDateLocale(obj.date_last_synchronization) : '-'
+
+        return (
+            <>
+                <hr />
+                <List.Item>
+                    <List.Icon name='database' color='blue' />
+                    <List.Content>cBioPortal dataset (version {obj.version})</List.Content>
+                </List.Item>
+                <List.Item>
+                    <List.Icon name='clock' color='blue' />
+                    <List.Content>Sync. Date: {syncDate}</List.Content>
+                </List.Item>
+            </>
+        )
+    }
 
     return (
         <Popup
@@ -49,7 +75,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
             }
         >
             {/* Popup content */}
-            <React.Fragment>
+            <>
                 <Header as='h3' content={datasetObj.name} />
                 <p>{datasetObj.description ? datasetObj.description : ''}</p>
                 <List>
@@ -66,14 +92,10 @@ export const SourcePopup = (props: SourcePopupProps) => {
                                     <List.Icon name='users' color='blue' />
                                     <List.Content>Samples: {props.source.number_of_samples}</List.Content>
                                 </List.Item>
+
+                                {/* CGDS data */}
                                 {props.source.cgds_dataset &&
-                                    <React.Fragment>
-                                        <hr/>
-                                        <List.Item>
-                                            <List.Icon name='database' color='blue' />
-                                            <List.Content>cBioPortal dataset</List.Content>
-                                        </List.Item>
-                                    </React.Fragment>
+                                    getCGDSData(datasetObj as SourceSimpleCGDSDataset)
                                 }
                             </List.List>
                         </List.Content>
@@ -86,13 +108,13 @@ export const SourcePopup = (props: SourcePopupProps) => {
                     fluid
                     color="green"
                     title={props.downloadButtonTitle}
-                    as='a' href={datasetObj.file_obj} target='_blank'
-                    disabled={!datasetObj.file_obj}
+                    as='a' href={`${downloadFileURL}${datasetObj.id}`} target='_blank'
+                    disabled={!isUserFile}
                 >
                     <Icon name='cloud download' />
                     Download
                 </Button>
-            </React.Fragment>
+            </>
         </Popup>
     )
 }

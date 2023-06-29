@@ -33,7 +33,7 @@ services:
         command: --config /etc/mongo/mongod.conf
         volumes:
             - mongo_data:/data/db
-            - mongo_data:/data/configdb
+            - mongo_config:/data/configdb
             - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
 
     # Redis Server for Websockets connections
@@ -64,7 +64,7 @@ services:
             # LISTEN_PORT=8000
             # LISTEN_IP=0.0.0.0
             # DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
-            # RESULT_DATAFRAME_LIMIT_ROWS: 500
+            # RESULT_DATAFRAME_LIMIT_ROWS: 300000
             # TABLE_PAGE_SIZE: 10
 
             # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)

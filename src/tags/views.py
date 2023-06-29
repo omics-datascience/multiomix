@@ -10,7 +10,7 @@ class TagList(generics.ListCreateAPIView):
     def get_queryset(self):
         return Tag.objects.filter(user=self.request.user)
 
-    def perform_create(self, file_tag):
+    def perform_create(self, file_tag: Tag):
         file_tag.save(user=self.request.user)
 
     serializer_class = TagSerializer

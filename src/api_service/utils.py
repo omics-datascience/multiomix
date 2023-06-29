@@ -1,7 +1,7 @@
-from typing import Optional, Literal, Tuple
+from typing import Optional, Literal, Tuple, Union
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.db import connection
 from django.http.request import HttpRequest
+from rest_framework.request import Request
 from api_service.enums import SourceType
 from api_service.models import ExperimentSource, ExperimentClinicalSource
 from api_service.models_choices import ExperimentType
@@ -29,21 +29,24 @@ def create_clinical_dataset_from_cgds_study(cgds_study: CGDSStudy) -> Optional[E
 
 
 def get_experiment_source(
-        source_type: int,
-        request: HttpRequest,
+        source_type: Optional[int],
+        request: Union[HttpRequest, Request],
         file_type: Optional[FileType],
-        prefix: Literal['mRNA', 'gem', 'clinical']
+        prefix: Literal['mRNA', 'gem', 'miRNA', 'cna', 'methylation', 'clinical']
 ) -> Tuple[Optional[ExperimentSource], Optional[ExperimentClinicalSource]]:
     """
-    Generates a source object to run a pipeline. This method considers the source type
-    to create a new file, get an existing (previously uploaded) file or get a CGDS dataset
-    @param source_type: Type of the source: new dataset, existing file or a CGDS dataset
-    @param request: Request object to get the user and some parameters
-    @param file_type: File type to save the UserFile
-    @param prefix: Prefix of request param to get its values
+    Generates a Source object. This method considers the source type to create a new file, get an existing
+    (previously uploaded) file or get a CGDS dataset.
+    @param source_type: Type of the source: new dataset, existing file or a CGDS dataset.
+    @param request: Request object to get the user and some parameters.
+    @param file_type: File type to save the UserFile.
+    @param prefix: Prefix of request param to get its values.
     @return: Generated ExperimentSource Object to add to the Experiment and a Clinical source in case the sources has
-    that information
+    that information.
     """
+    if source_type is None:
+        return None, None
+
     is_clinical = prefix == 'clinical'
     source = ExperimentSource() if not is_clinical else ExperimentClinicalSource()
     clinical_source: Optional[ExperimentClinicalSource] = None
@@ -56,7 +59,7 @@ def get_experiment_source(
                 not is_clinical and
                 not has_uploaded_file_valid_format(source_file)
         ):
-            return None, clinical_source
+            return None, None
 
         user_file = UserFile(
             name=source_file.name,
@@ -79,10 +82,14 @@ def get_experiment_source(
         cgds_study = CGDSStudy.objects.get(pk=cgds_study_pk)
 
         # Gets the corresponding Study's Dataset
-        cgds_dataset = get_cgds_dataset(cgds_study, file_type)
-
+        if is_clinical:
+            # If it's clinical, it needs both datasets, so return None as dataset
+            cgds_dataset = None
+        else:
+            cgds_dataset = get_cgds_dataset(cgds_study, file_type)
         source.cgds_dataset = cgds_dataset
 
+        # Gets ExperimentClinicalSource() as CGDSStudies has two clinical datasets (sample and patients)
         clinical_source = create_clinical_dataset_from_cgds_study(cgds_study)
     else:
         # Otherwise, uses an existing User's file
@@ -126,11 +133,3 @@ def get_cgds_dataset(cgds_study: CGDSStudy, file_type: FileType) -> Optional[CGD
         return cgds_study.methylation_dataset
     else:
         return None
-
-
-def close_db_connection():
-    """
-    Closes connections as a ThreadPoolExecutor in Django does not close them automatically
-    See: https://stackoverflow.com/questions/57211476/django-orm-leaks-connections-when-using-threadpoolexecutor
-    """
-    connection.close()

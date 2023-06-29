@@ -1,5 +1,5 @@
 import React from 'react'
-import d3 from 'd3'
+import * as d3 from 'd3'
 import { Nullable } from '../../../../../utils/interfaces'
 
 /** Needed structure for KaplanMeier chart */
@@ -107,7 +107,7 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
     }
 
     generateLineFunction (xScale, yScale) {
-        return d3.svg.line().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).interpolate('step-after')
+        return d3.line().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).curve(d3.curveStepAfter)
     }
 
     buildCensorMarks (censorPoints, xScale, yScale, color) {
@@ -283,12 +283,23 @@ class Legend extends React.Component<LegendProps, {}> {
  * D3 util functions
  */
 const d3Utils = {
-    createAxis: (scale, orientation) => {
-        return d3.svg.axis().scale(scale).orient(orientation)
+    createAxis: (scale, orientation: 'bottom' | 'left' | 'top' | 'right') => {
+        switch (orientation) {
+            case 'bottom':
+                return d3.axisBottom(scale)
+            case 'left':
+                return d3.axisLeft(scale)
+            case 'top':
+                return d3.axisTop(scale)
+            case 'right':
+                return d3.axisRight(scale)
+            default:
+                break
+        }
     },
 
     createLinearScale: (range, domain) => {
-        return d3.scale.linear().range(range).domain(domain)
+        return d3.scaleLinear().range(range).domain(domain)
     },
 
     createAxisMarkup: (axis, width: number, height: number) => { // refactor, this is an insane hack
@@ -324,7 +335,6 @@ interface KaplanMeierState {
 
 /**
  * Renders a Kaplan-Meier chart
- * TODO: refactor using visx (https://github.com/airbnb/visx). After that, remove d3 dependency
  */
 class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
     constructor (props) {
@@ -368,7 +378,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
         const labels = data.map(({ label }) => label)
         const maxT = this.findMaxTime(data)
         const xDomain = [0, maxT]
-        const colors = d3.scale.category10().range()
+        const colors = d3.scaleOrdinal(d3.schemeCategory10).range()
         const yDomain = [1, 0]
 
         return (

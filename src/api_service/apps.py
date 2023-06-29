@@ -3,14 +3,14 @@ import logging
 from django.apps import AppConfig
 from django.conf import settings
 from django.db.utils import ProgrammingError
-
+import os
 
 class ApiServiceConfig(AppConfig):
     name = 'api_service'
 
     def ready(self):
-        import os
         from api_service.task_queue import global_task_queue
+
         if settings.COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP:
             # Checks if current command is not for migrations, staticfiles or secret key generation
             current_command = sys.argv[1]

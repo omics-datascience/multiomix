@@ -1,9 +1,22 @@
 import React from 'react'
-import { Table, Form, Pagination, DropdownMenuProps } from 'semantic-ui-react'
+import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
 import { AllExperimentsTableControl, Nullable } from '../../../utils/interfaces'
-import { DjangoExperiment, RowHeader, DjangoTag } from '../../../utils/django_interfaces'
-import { AllExperimentsRow } from './AllExperimentsRow'
-import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions } from '../../../utils/util_functions'
+import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
+import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
+import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
+import { TableCellWithTitle } from '../../common/TableCellWithTitle'
+import { SourcePopup } from './SourcePopup'
+import { ClinicalSourcePopup } from './ClinicalSourcePopup'
+import { SeeResultButton } from './SeeResultButton'
+import { StopExperimentButton } from './StopExperimentButton'
+import { DeleteExperimentButton } from './DeleteExperimentButton'
+
+declare const urlUserExperiments: string
+declare const urlDownloadFullResult: string
+
+// Defined in gem.html
+declare const urlClinicalSourceUserFileCRUD: string
+declare const urlUnlinkClinicalSourceUserFile: string
 
 /**
  * Component's props
@@ -26,42 +39,46 @@ interface AllExperimentsViewProps {
  * Component's state
  */
 interface AllExperimentsViewState {
-    headers: RowHeader<DjangoExperiment>[],
     /** Id of the experiment which clinical source popup must be opened */
     clinicalPopupOpenId: Nullable<number>
 }
 
 /**
  * Renders a table with filters and an experiment results rows
- * TODO: refactor component with PaginatedTable!
+ * @param experiment Component's experiment
+ * @returns Component
  */
-class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
+export class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
     constructor (props) {
         super(props)
 
         this.state = {
-            headers: this.getDefaultHeaders(),
             clinicalPopupOpenId: null
         }
     }
 
     /**
-     * Generates default table's headers
-     * @returns Default object for table's headers
+     * Generates default table's Filters
+     * @returns Default object for table's Filters
      */
-    getDefaultHeaders (): RowHeader<DjangoExperiment>[] {
+    getDefaultFilters (): PaginationCustomFilter[] {
+        const tagOptions: DropdownItemProps[] = this.props.tags.map((tag) => {
+            const id = tag.id as number
+            return { key: id, value: id, text: tag.name }
+        })
+
+        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+
+        // Get Experiment type select options, with 'All' option included
+        const experimentTypeOptions = getExperimentTypeSelectOptions()
+
+        // Get Correlation Method select options, with 'All' option included
+        const selectCorrelationMethodsOptions = getCorrelationMethodSelectOptions()
+
         return [
-            { name: 'Name', serverCodeToSort: 'name' },
-            { name: 'Description', serverCodeToSort: 'description', width: 3 },
-            { name: 'Date', serverCodeToSort: 'submit_date' },
-            { name: 'State', serverCodeToSort: 'state', width: 1 },
-            { name: 'Type', serverCodeToSort: 'type' },
-            { name: 'Cor. Method', serverCodeToSort: 'correlation_method' },
-            { name: 'N° Combinations', serverCodeToSort: 'result_final_row_count' },
-            { name: 'Clinical', width: 1 },
-            { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
-            { name: 'Sources' },
-            { name: 'Actions' }
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions },
+            { label: 'Experiment type', keyForServer: 'type', defaultValue: ExperimentType.ALL, options: experimentTypeOptions },
+            { label: 'Correlation method', keyForServer: 'correlation_method', defaultValue: CorrelationMethod.ALL, options: selectCorrelationMethodsOptions }
         ]
     }
 
@@ -76,158 +93,145 @@ class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExp
      */
     closePopup = () => { this.setState({ clinicalPopupOpenId: null }) }
 
-    render () {
-        // Sets the order icon in Table's header
-        const columnSorted = this.props.allExperimentsTableControl.sortField
-        const sortOrder = this.props.allExperimentsTableControl.sortOrderAscendant ? 'ascending' : 'descending'
-        const headers = this.state.headers.map((header) => {
-            const sorted = columnSorted === header.serverCodeToSort ? sortOrder : undefined
-
-            // If the column is not sortable the there's not callback
-            // Uses '!==' as it could be 'undefined' and that would mean that is sortable
-            const onClickCallback = (header.serverCodeToSort)
-                ? () => this.props.handleSortAllExperiments(header.serverCodeToSort as string)
-                : null
-
-            return (
-                <Table.HeaderCell
-                    key={header.name}
-                    title={header.name}
-                    width={header.width}
-                    sorted={sorted}
-                    onClick={onClickCallback}
-                >
-                    {header.name}
-                </Table.HeaderCell>
-            )
-        })
-
-        const selectPageSizeOptions = [
-            { key: '10', text: '10', value: 10 },
-            { key: '25', text: '25', value: 25 },
-            { key: '50', text: '50', value: 50 },
-            { key: '100', text: '100', value: 100 }
-        ]
-
-        // Calculates total pages
-        const totalPages = Math.max(1, Math.ceil(this.props.allExperimentsTableControl.totalRowCount as number / this.props.allExperimentsTableControl.pageSize))
-
-        // Generates Tags filter options
-        const tagOptions: DropdownMenuProps[] = this.props.tags.map((tag) => {
-            return { key: tag.name, value: tag.id, text: tag.name }
-        })
-        tagOptions.unshift({ key: 'select_tag', text: 'No tag selected', value: null })
-
-        // Get Experiment type select options, with 'All' option included
-        const experimentTypeOptions = getExperimentTypeSelectOptions()
-
-        // Get Correlation Method select options, with 'All' option included
-        const selectCorrelationMethodsOptions = getCorrelationMethodSelectOptions()
-
+    render (): JSX.Element {
         return (
             <div>
-                {/* Table filters */}
-                <Form>
-                    <Form.Group>
-                        {/* Name/Description search */}
-                        <Form.Input
-                            width={5}
-                            icon='search' iconPosition='left'
-                            label='Name/Description'
-                            placeholder='Search by name/description'
-                            name='textFilter'
-                            value={this.props.allExperimentsTableControl.textFilter}
-                            onChange={(_, { name, value }) => this.props.handleTableControlChangesAllExperiments(name, value)}
-                        />
+                <PaginatedTable<DjangoExperiment>
+                    headerTitle='GEM'
+                    updateWSKey='update_experiments'
+                    defaultSortProp={{ sortField: 'submit_date', sortOrderAscendant: false }}
+                    headers={[
+                        { name: 'Name', serverCodeToSort: 'name' },
+                        { name: 'Description', serverCodeToSort: 'description', width: 3 },
+                        { name: 'Date', serverCodeToSort: 'submit_date' },
+                        { name: 'State', serverCodeToSort: 'state', width: 1, textAlign: 'center' },
+                        { name: 'Type', serverCodeToSort: 'type' },
+                        { name: 'Cor. Method', serverCodeToSort: 'correlation_method' },
+                        { name: 'N° Combinations', serverCodeToSort: 'result_final_row_count' },
+                        { name: 'Clinical', width: 1, textAlign: 'center' },
+                        { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
+                        { name: 'Sources' },
+                        { name: 'Actions' }
+                    ]}
+                    customFilters={this.getDefaultFilters()}
+                    showSearchInput
+                    urlToRetrieveData={urlUserExperiments}
+                    mapFunction={(experiment: DjangoExperiment) => {
+                        // Generates Experiment's state info
+                        const experimentState = getExperimentStateObj(experiment.state)
 
-                        {/* Tag filter */}
-                        <Form.Dropdown
-                            fluid
-                            width={5}
-                            search
-                            label='Tag'
-                            selection
-                            options={tagOptions}
-                            name='tagId'
-                            clearable
-                            value={this.props.allExperimentsTableControl.tagId ?? undefined}
-                            onChange={(_, { name, value }) => this.props.handleTableControlChangesAllExperiments(name, value)}
-                            placeholder='Select an existing Tag'
-                        />
+                        const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
+                            experiment.state === ExperimentState.WAITING_FOR_QUEUE ||
+                            experiment.state === ExperimentState.STOPPING)
 
-                        {/* Experiment type filter */}
-                        <Form.Select
-                            fluid
-                            width={2}
-                            label='Experiment type'
-                            options={experimentTypeOptions}
-                            name='experimentType'
-                            value={this.props.allExperimentsTableControl.experimentType}
-                            onChange={(_, { name, value }) => this.props.handleTableControlChangesAllExperiments(name, value)}
-                        />
+                        // Generates ExperimentType info
+                        const experimentTypeInfo = getExperimentTypeObj(experiment.type, 'ExperimentType')
 
-                        {/* Correlation method filter */}
-                        <Form.Select
-                            fluid
-                            width={2}
-                            label='Correlation method'
-                            options={selectCorrelationMethodsOptions}
-                            name='correlationMethod'
-                            value={this.props.allExperimentsTableControl.correlationMethod}
-                            onChange={(_, { name, value }) => this.props.handleTableControlChangesAllExperiments(name, value)}
-                        />
+                        // Generates Experiment correlation method info
+                        const experimentCorrelationMethodInfo = getExperimentCorrelationMethodInfo(experiment.correlation_method)
 
-                        {/* Page size */}
-                        <Form.Select
-                            fluid
-                            width={2}
-                            label='Entries'
-                            options={selectPageSizeOptions}
-                            name='pageSize'
-                            value={this.props.allExperimentsTableControl.pageSize}
-                            onChange={(_, { name, value }) => this.props.handleTableControlChangesAllExperiments(name, value)}
-                        />
-                    </Form.Group>
-                </Form>
+                        // Number of combinations
+                        const finalRowCount = experiment.result_final_row_count ?? '-'
+                        const evaluatedRowCount = experiment.evaluated_row_count ?? finalRowCount
 
-                {/* Table */}
-                <Table sortable celled textAlign="center" fixed singleLine>
-                    {/* Header */}
-                    <Table.Header>
-                        <Table.Row>
-                            {headers}
-                        </Table.Row>
-                    </Table.Header>
+                        return (
+                            <Table.Row key={experiment.id as number}>
+                                <TableCellWithTitle value={experiment.name} />
+                                <TableCellWithTitle value={experiment.description} />
+                                <TableCellWithTitle value={formatDateLocale(experiment.submit_date, 'LLL')} />
+                                <TableCell textAlign='center'>
+                                    <Icon
+                                        title={experimentState.title}
+                                        className={experimentState.className}
+                                        name={experimentState.iconName}
+                                        color={experimentState.color}
+                                        loading={experimentState.loading}
+                                    />
+                                </TableCell>
+                                <TableCell>{experimentTypeInfo.description}</TableCell>
+                                <TableCell>{experimentCorrelationMethodInfo.description}</TableCell>
+                                <TableCell
+                                    title={
+                                        `The result consists of ${finalRowCount} combinations obtained from a total of ${evaluatedRowCount} evaluated combinations`
+                                    }
+                                >{finalRowCount} / {evaluatedRowCount}</TableCell>
+                                <TableCell textAlign='center'>
+                                    <ClinicalSourcePopup
+                                        experiment={experiment}
+                                        experimentType='correlation'
+                                        // It's not necessary to have survival tuples as user could want to link clinical data for CorrelationGraph
+                                        showOnlyClinicalDataWithSurvivalTuples={false}
+                                        urlClinicalSourceAddOrEdit={urlClinicalSourceUserFileCRUD}
+                                        urlUnlinkClinicalSource={urlUnlinkClinicalSourceUserFile}
+                                        showPopup={this.state.clinicalPopupOpenId === experiment.id}
+                                        openPopup={this.openPopup}
+                                        closePopup={this.closePopup}
+                                        onSuccessCallback={this.props.getAllUserExperiments}
+                                    />
+                                </TableCell>
+                                <TableCell>{experiment.tag ? experiment.tag.name : '-'}</TableCell>
+                                <TableCell>
+                                    {/* Download mRNA */}
+                                    <SourcePopup
+                                        source={experiment.mRNA_source}
+                                        iconName='file'
+                                        iconColor='blue'
+                                        downloadButtonTitle='Download source mRNA file'
+                                    />
 
-                    {/* Body */}
-                    <Table.Body>
-                        {this.props.allExperiments.map((experiment) => (
-                            <AllExperimentsRow
-                                key={experiment.id}
-                                experiment={experiment}
-                                openPopup={this.openPopup}
-                                closePopup={this.closePopup}
-                                showPopup={this.state.clinicalPopupOpenId === experiment.id}
-                                getAllUserExperiments={this.props.getAllUserExperiments}
-                                seeResult={this.props.seeResult}
-                                editExperiment={this.props.editExperiment}
-                                confirmExperimentDeletion={this.props.confirmExperimentDeletion}
-                                confirmExperimentStop={this.props.confirmExperimentStop}
-                            />
-                        ))}
-                    </Table.Body>
-                </Table>
+                                    {/* Download GEM file */}
+                                    <SourcePopup
+                                        source={experiment.gem_source}
+                                        iconName='file alternate'
+                                        iconColor='teal'
+                                        downloadButtonTitle={`Download ${getExperimentTypeObj(experiment.type, 'ExperimentType').description} source file`}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    {/* See results button */}
+                                    <SeeResultButton experiment={experiment} seeResult={this.props.seeResult} />
 
-                {/* Pagination control */}
-                <Pagination
-                    activePage={this.props.allExperimentsTableControl.pageNumber}
-                    onPageChange={(_, { activePage }) => this.props.handleTableControlChangesAllExperiments('pageNumber', activePage, false)}
-                    size='mini'
-                    totalPages={totalPages}
+                                    {/* Download button */}
+                                    <Icon
+                                        name='cloud download'
+                                        color='blue'
+                                        className='clickable margin-left-5'
+                                        title='Download result'
+                                        onClick={() => window.open(`${urlDownloadFullResult}/${experiment.id}`, '_blank')}
+                                        disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
+                                    />
+
+                                    {/* Edit button */}
+                                    <Icon
+                                        name='pencil'
+                                        className='clickable margin-left-5'
+                                        color='yellow'
+                                        title='Edit'
+                                        onClick={() => this.props.editExperiment(experiment)}
+                                        disabled={experiment.state !== ExperimentState.COMPLETED}
+                                    />
+
+                                    {/* Stop button */}
+                                    {(!isFinished && experiment.state !== ExperimentState.STOPPING) &&
+                                        <StopExperimentButton
+                                            experiment={experiment}
+                                            onClick={() => this.props.confirmExperimentStop(experiment)}
+                                        />
+                                    }
+
+                                    {/* Delete button */}
+                                    {isFinished &&
+                                        <DeleteExperimentButton
+                                            experiment={experiment}
+                                            onClick={() => this.props.confirmExperimentDeletion(experiment)}
+                                        />
+                                    }
+                                </TableCell>
+                            </Table.Row>
+                        )
+                    }}
                 />
             </div>
         )
     }
 }
-
-export { AllExperimentsView }

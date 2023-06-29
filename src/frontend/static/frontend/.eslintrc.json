@@ -34,7 +34,14 @@
             }
         ],
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_"
+            }
+        ],
         "no-undef": "off",
         "camelcase": "off",
         "react/no-unescaped-entities": "off",
@@ -54,7 +61,8 @@
         "jsdoc/require-returns": 1,
         // Hooks plugin config
         "react-hooks/rules-of-hooks": "error",
-        "react-hooks/exhaustive-deps": "warn"
+        "react-hooks/exhaustive-deps": 0,
+        "no-use-before-define": 0
     },
     "settings": {
         "react": {

@@ -11,12 +11,13 @@ import logging
 from django.db.models import Q, QuerySet
 from django.conf import settings
 from django.db import connection
-from .utils import close_db_connection
+from common.functions import close_db_connection
 
 
 class TaskQueue(object):
     """
-    Process experiments in a Thread Pool as explained at https://docs.python.org/3.7/library/concurrent.futures.html
+    Process correlation analysis in a Thread Pool
+    as explained at https://docs.python.org/3.8/library/concurrent.futures.html
     """
     executor: ThreadPoolExecutor = None
     use_transaction: bool
@@ -33,8 +34,9 @@ class TaskQueue(object):
 
     def __commit_or_rollback(self, is_commit: bool, experiment: Experiment):
         """
-        Executes a COMMIT or ROLLBACK sentence in DB
-        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
+        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
+        management for transactions didn't work as expected with exceptions thrown in subprocesses.
+        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise.
         """
         if self.use_transaction:
             query = "COMMIT" if is_commit else "ROLLBACK"
@@ -49,9 +51,9 @@ class TaskQueue(object):
 
     def eval_mrna_gem_experiment(self, experiment: Experiment, stop_event: Event) -> None:
         """
-        Computes a mRNA x miRNA/CNA/Methylation experiment
-        @param experiment: Experiment to be processed
-        @param stop_event: Stop event to cancel the experiment
+        Computes a mRNA x miRNA/CNA/Methylation experiment.
+        @param experiment: Experiment to be processed.
+        @param stop_event: Stop event to cancel the experiment.
         """
         experiment.state = ExperimentState.IN_PROCESS
         experiment.save()
@@ -65,7 +67,7 @@ class TaskQueue(object):
                 with connection.cursor() as cursor:
                     cursor.execute("BEGIN")
 
-            # Computes pearson
+            # Computes correlation analysis
             start = time.time()
             total_row_count, final_row_count, evaluated_combinations = global_pipeline_manager.compute_experiment(
                 experiment,
@@ -98,8 +100,8 @@ class TaskQueue(object):
             experiment.state = ExperimentState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
-            logging.warning(f'Experiment {experiment.pk} was stopped')
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.warning(f'Experiment {experiment.pk} was stopped')
             experiment.state = ExperimentState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
@@ -129,6 +131,7 @@ class TaskQueue(object):
         Stops a specific experiment
         @param experiment: Experiment to stop
         """
+        logging.warning(f'Stopping experiment with pk {experiment.pk}')
         if experiment.pk in self.experiments_futures:
             (experiment_future, experiment_event) = self.experiments_futures[experiment.pk]
             if experiment_future.cancel():
@@ -139,7 +142,7 @@ class TaskQueue(object):
                 # Sends signal to stop the experiment
                 experiment.state = ExperimentState.STOPPING
                 experiment_event.set()
-            experiment.save()
+            experiment.save(update_fields=['state'])
 
             # Removes key
             self.__removes_experiment_future(experiment.pk)
@@ -150,21 +153,23 @@ class TaskQueue(object):
         if the TaskQueue is being created It couldn't be processing experiments. Some experiments
         could be in that state due to unexpected errors in server
         """
-        logging.warning('Checking pending experiments')
         # Gets the experiment by submit date (ASC)
-        experiments: QuerySet = Experiment.objects.filter(
-            Q(state=ExperimentState.WAITING_FOR_QUEUE)
-            | Q(state=ExperimentState.IN_PROCESS)
-        ).order_by('submit_date')
+        logging.warning('Checking pending experiments')
+        experiments: QuerySet = Experiment.objects.filter(state__in=[
+            ExperimentState.WAITING_FOR_QUEUE,
+            ExperimentState.IN_PROCESS
+        ]).order_by('submit_date')
+
         logging.warning(f'{experiments.count()} pending experiments are being sent for processing')
         for experiment in experiments:
-            # If the experiment has already reached a limit of attempts, it's marked as error
+            # If the experiment has already reached a limit of attempts, it's marked as with error
             if experiment.attempt == 3:
                 experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
-                experiment.save()
+                experiment.save(update_fields=['state'])
+                logging.warning(f'Experiment "{experiment}" reached the limit of attempts')
             else:
                 experiment.attempt += 1
-                experiment.save()
+                experiment.save(update_fields=['attempt'])
                 logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
                 self.add_experiment(experiment)
 

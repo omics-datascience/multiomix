@@ -38,6 +38,17 @@ enum FileType {
 }
 
 /**
+ * Possible types of files
+ */
+enum MoleculeType {
+    ALL = 0,
+    MRNA = 1,
+    MIRNA = 2,
+    CNA = 3,
+    METHYLATION = 4,
+}
+
+/**
  * Enum to check if user want to select source from a file
  * that he uploaded, or from CGDS DB
  */
@@ -93,7 +104,11 @@ interface GeneralTableControlWithoutSorting {
     // TODO: after big refactoring using only PaginatedTable.tsx, check if totalRowCount is optional
     totalRowCount?: number,
     // TODO: after big refactoring using only PaginatedTable.tsx, check if filters is optional
-    filters: { [key: string]: any },
+    filters: { [key: string]: {
+        value: any,
+        /** Indicates if 0 as filter value is accepted */
+        allowZero?: boolean
+    } },
 }
 
 /**
@@ -181,7 +196,7 @@ type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'met
 /**
  * State icon info
  */
-interface ExperimentStateInfo {
+interface StateIconInfo {
     iconName: SemanticICONS,
     color?: SemanticCOLORS,
     loading: boolean,
@@ -208,7 +223,7 @@ interface ExperimentInfo {
 }
 
 /** Prefix in param of a request to run a new Experiment */
-type ExperimentRequestPrefix = 'mRNA' | 'gem'
+type ExperimentRequestPrefix = 'mRNA' | 'gem' | 'miRNA' | 'cna' | 'methylation' | 'clinical'
 
 /** Common type of changes handling for inputs */
 type HandleChangesCallback = (name: string, value: string) => void
@@ -267,10 +282,36 @@ type DataUICategoricalBinnedDatumShape = {
     bin: string,
     count: number,
 }
+/**
+ * Types of alerts
+ */
+enum CustomAlertTypes {
+    WARNING = 1,
+    ERROR = 2,
+    SUCCESS = 3
+}
+
+/**
+ * Alert interface
+ */
+interface CustomAlert {
+    message: string,
+    isOpen: boolean,
+    type: CustomAlertTypes,
+    duration: number,
+}
+
+/** Just a simple response from the server. */
+type OkResponse = {
+    ok: boolean
+}
 
 export {
+    CustomAlertTypes,
+    CustomAlert,
     Nullable,
     FileType,
+    MoleculeType,
     Command,
     WebsocketConfig,
     CorrelationType,
@@ -280,7 +321,7 @@ export {
     NameOfCGDSDataset,
     GeneralTableControl,
     ResponseRequestWithPagination,
-    ExperimentStateInfo,
+    StateIconInfo,
     GEMImageAndLabelInfo,
     ExperimentInfo,
     ExperimentResultTableControl,
@@ -299,5 +340,6 @@ export {
     MirDIPScoreClass,
     ScoreClassData,
     BinData,
-    DataUICategoricalBinnedDatumShape
+    DataUICategoricalBinnedDatumShape,
+    OkResponse
 }

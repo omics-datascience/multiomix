@@ -91,6 +91,7 @@ const TooltipElement = (props: TooltipElementProps) => (
 
 /**
  * Renders a Tooltip on hover
+ * TODO: optimize
  * @param props Component's props
  * @returns Component
  */
@@ -107,11 +108,11 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
                 </React.Fragment>
             }
             <TooltipElement strongTitle='Min' numberToDisplay={min} color={color} fixed={2} />
-            <TooltipElement strongTitle='Max' numberToDisplay={max} color={color} fixed={2} />
-            <TooltipElement strongTitle='Median' numberToDisplay={median} color={color} fixed={2} />
-            <TooltipElement strongTitle='Mean' numberToDisplay={mean} color={color} fixed={3} />
             <TooltipElement strongTitle='First quartile' numberToDisplay={firstQuartile} color={color} fixed={2} />
+            <TooltipElement strongTitle='Median' numberToDisplay={median} color={color} fixed={2} />
             <TooltipElement strongTitle='Third quartile' numberToDisplay={thirdQuartile} color={color} fixed={2} />
+            <TooltipElement strongTitle='Max' numberToDisplay={max} color={color} fixed={2} />
+            <TooltipElement strongTitle='Mean' numberToDisplay={mean} color={color} fixed={3} />
             {outliers && outliers.length > 0 &&
                 <React.Fragment>
                     <TooltipElement strongTitle='Outliers (using MAD)' numberToDisplay={outliers.length} color={color} />

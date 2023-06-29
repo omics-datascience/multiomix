@@ -44,7 +44,7 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
             <PaginatedTable<DjangoMiRNADiseasesJSON>
                 headerTitle='miRNA diseases associations'
                 headers={headers}
-                showSearchInput={true}
+                showSearchInput
                 searchLabel='Disease'
                 searchPlaceholder='Search by disease'
                 queryParams={{

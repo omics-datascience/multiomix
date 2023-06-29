@@ -7,7 +7,7 @@ services:
         container_name: multiomics_dev_db
         restart: always
         ports:
-            - 5432:5432
+            - "5432:5432"
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
             POSTGRES_USER: root
@@ -23,7 +23,7 @@ services:
         container_name: multiomics_dev_mongo_db
         restart: always
         ports:
-            - 27017:27017
+            - "27017:27017"
         # Sets the config file
         command: --config /etc/mongo/mongod.conf
         environment:
@@ -31,7 +31,7 @@ services:
             MONGO_INITDB_ROOT_PASSWORD: example
         volumes:
             - mongo_data:/data/db
-            - mongo_data:/data/configdb
+            - mongo_config:/data/configdb
             - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
 
     # Redis Server for Websocket connections
@@ -40,7 +40,21 @@ services:
         container_name: multiomics_dev_websocket_channel_redis
         restart: always
         ports:
-            - 6379:6379
+            - "6379:6379"
+
+    # Modulector services
+    modulector-db:
+        image: omicsdatascience/modulector-db:2.0.0
+
+    modulector-web:
+        image: omicsdatascience/modulector:2.0.0
+        depends_on:
+            - modulector-db
+        environment:
+            # Django
+            POSTGRES_HOST: 'modulector-db' # Name of the modulector-db service previously defined
+        ports:
+            - "8001:8000"
 
     # Web-based DB admin interface for PostgreSQL management
     adminer:
@@ -51,7 +65,7 @@ services:
             - 8080:8080
 
 
-    # Web-based MongoDB admin interface, written with Node.js and express 
+    # Web-based MongoDB admin interface, written with Node.js and express
     mongo-express:
         image: mongo-express:0.54.0
         container_name: multiomics_dev_mongo_express

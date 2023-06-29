@@ -1,15 +1,17 @@
-from django.http import JsonResponse
+from django.db.models import OuterRef, F, Subquery
 from django.contrib.auth.decorators import login_required
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
 from .enums import SyncCGDSStudyResponseCode
-from .models import CGDSStudy, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
+from .models import CGDSStudy, CGDSDatasetSynchronizationState
 from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render
 from .synchronization_service import global_synchronization_service
-import json
 
 
 @login_required
@@ -23,6 +25,8 @@ class CGDSStudyList(generics.ListCreateAPIView):
     def get_queryset(self):
         cgds_studies = CGDSStudy.objects
         file_type = self.request.GET.get('file_type')
+        only_last_version = self.request.GET.get('only_last_version', 'false') == 'true'
+
         if file_type is not None:
             file_type = int(file_type)
             if file_type == FileType.MRNA.value:
@@ -46,11 +50,27 @@ class CGDSStudyList(generics.ListCreateAPIView):
                     methylation_dataset__state=CGDSDatasetSynchronizationState.SUCCESS)
             elif file_type == FileType.CLINICAL.value:
                 cgds_studies = cgds_studies.filter(
-                    clinical_dataset__isnull=False,
-                    clinical_dataset__state=CGDSDatasetSynchronizationState.SUCCESS
+                    clinical_patient_dataset__isnull=False,
+                    clinical_patient_dataset__state=CGDSDatasetSynchronizationState.SUCCESS,
+                    clinical_sample_dataset__isnull=False,
+                    clinical_sample_dataset__state=CGDSDatasetSynchronizationState.SUCCESS
                 )
         else:
             cgds_studies = cgds_studies.all()
+
+        if only_last_version:
+            # Filters by max version and sorts by name
+            cgds_studies = cgds_studies.alias(
+                max_version=Subquery(
+                    CGDSStudy.objects.filter(url=OuterRef('url'))
+                    .order_by('-version')
+                    .values('version')[:1]
+                )
+            ).filter(version=F('max_version')).order_by('name')
+        else:
+            # Otherwise sorts by name and version
+            cgds_studies = cgds_studies.order_by('name', '-version')
+
         return cgds_studies
 
     serializer_class = CGDSStudySerializer
@@ -68,46 +88,46 @@ class CGDSStudyDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-def synchronize_cgds_study_action(request):
-    """Synchronizes a CGDS Study to get its datasets"""
-    json_request_data = json.loads(request.body)
-    cgds_study_id = json_request_data.get('CGDSStudyId')
-    if not cgds_study_id:
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.NOT_ID_IN_REQUEST,
-                message='Missing id in request'
-            ).to_json(),
-        }
+class SynCGDSStudy(APIView):
+    permission_classes = [permissions.IsAdminUser]  # Only admin users can synchronize CGDS studies
 
-        return JsonResponse(response, safe=False)
+    @staticmethod
+    def post(request: Request):
+        """Synchronizes a CGDS Study to get its datasets"""
+        cgds_study_id = request.data.get('CGDSStudyId')
+        if not cgds_study_id:
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.NOT_ID_IN_REQUEST,
+                    message='Missing id in request'
+                ).to_json(),
+            }
 
-    # Retrieves object from DB
-    try:
-        cgds_study_id = int(cgds_study_id)
-        cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
+            return Response(response)
 
-        # Updates the state
-        cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
-        cgds_study.save()
+        # Retrieves object from DB
+        try:
+            cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
 
-        # Gets SynchronizationService and adds the study
-        global_synchronization_service.add_cgds_study(cgds_study)
+            create_new_version = request.data.get('createNewVersion', True)
 
-        # Makes a successful response
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.SUCCESS,
-                message='The CGDS Study was added to the synchronization queue'
-            ).to_json(),
-        }
-    except CGDSStudy.DoesNotExist:
-        # If the study does not exist, show an error in the frontend
-        response = {
-            'status': ResponseStatus(
-                SyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST,
-                message='The CGDS Study selected does not exist'
-            ).to_json(),
-        }
+            # Gets SynchronizationService and adds the study
+            global_synchronization_service.add_cgds_study(cgds_study, create_new_version)
 
-    return JsonResponse(response, safe=False)
+            # Makes a successful response
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.SUCCESS,
+                    message='The CGDS Study was added to the synchronization queue'
+                ).to_json(),
+            }
+        except CGDSStudy.DoesNotExist:
+            # If the study does not exist, show an error in the frontend
+            response = {
+                'status': ResponseStatus(
+                    SyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST,
+                    message='The CGDS Study selected does not exist'
+                ).to_json(),
+            }
+
+        return Response(response)

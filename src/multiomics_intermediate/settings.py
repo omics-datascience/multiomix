@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
@@ -46,12 +45,16 @@ INSTALLED_APPS = [
     'institutions',
     'tags',
     'user_files',
+    'biomarkers',
+    'feature_selection',
     'statistical_properties',
     'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
     'genes',
-    'chunked_upload',
+    'inferences',
+    'molecules_details',
+    'chunked_upload'
 ]
 
 MIDDLEWARE = [
@@ -160,7 +163,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 
-# Redirections
+# Redirection
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
@@ -174,7 +177,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '4.7.3'
+VERSION: str = '5.0.0'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -184,7 +187,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # the DataFrame is truncated. None for prevent truncation
 RESULT_DATAFRAME_LIMIT_ROWS: int = int(os.getenv('RESULT_DATAFRAME_LIMIT_ROWS', 300000))
 
-# MongoDB credentials (should be setted as ENV vars)
+# MongoDB's credentials (should be set as ENV vars)
 MONGO_SETTINGS = {
     'username': os.getenv('MONGO_USERNAME', 'root'),
     'password': os.getenv('MONGO_PASSWORD', 'example'),
@@ -266,5 +269,49 @@ MODULECTOR_SETTINGS = {
     'port': os.getenv('MODULECTOR_PORT', '8001')
 }
 
+# BioAPI settings
+BIOAPI_SETTINGS = {
+    'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
+    'port': os.getenv('BIOAPI_PORT', '8002')
+}
+
+# Multiomix-aws-emr
+AWS_EMR_SETTINGS = {
+    'host': os.getenv('AWS_EMR_HOST', '127.0.0.1'),
+    'port': os.getenv('AWS_EMR_PORT', '8003'),
+    'shared_folder_data': os.getenv('AWS_EMR_SHARED_FOLDER_DATA', '/data-spark'),
+    'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER_RESULTS', '/results-spark')
+}
+
+# If True, indicates that the service of Multiomix-aws-emr is enabled (https://github.com/omics-datascience/multiomix-aws-emr)
+ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'false') == 'true'
+
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
+
+
+# Feature Selection settings
+
+# Number of cores used to run the survival RF model
+N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', 1))
+
+# Number of cores used to compute CrossValidation
+N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
+
+# Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
+COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 2))
+
+# Minimum and maximum number of iterations user can select to run the BBHA algorithm
+MIN_ITERATIONS_BBHA: int = int(os.getenv('MIN_ITERATIONS_BBHA', 1))
+MAX_ITERATIONS_BBHA: int = int(os.getenv('MAX_ITERATIONS_BBHA', 20))
+
+# Maximum number of stars in the BBHA algorithm
+MIN_STARS_BBHA: int = int(os.getenv('MIN_STARS_BBHA', 5))
+MAX_STARS_BBHA: int = int(os.getenv('MAX_STARS_BBHA', 90))
+
+# Max number of features to select in the CoxRegression algorithm
+MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 60))
+
+# Max number of features to allow to run a Blind Search algorithm, if the number of features is greater than this
+# value, the algorithm is disabled and only metaheuristic algorithms are allowed
+MAX_FEATURES_BLIND_SEARCH: int = int(os.getenv('MAX_FEATURES_BLIND_SEARCH', 7))

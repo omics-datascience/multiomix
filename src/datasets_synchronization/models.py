@@ -1,9 +1,9 @@
 import logging
-from typing import List, Iterable
-
+from typing import List, Iterable, cast
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np
+from django.db.models import Max
 from api_service.exceptions import CouldNotDeleteInMongo
 from api_service.mongo_service import global_mongo_service
 from api_service.websocket_functions import send_update_cgds_studies_command
@@ -57,7 +57,7 @@ class CGDSDataset(models.Model):
     )
     number_of_rows = models.PositiveIntegerField(blank=True, null=False, default=0)
     number_of_samples = models.PositiveIntegerField(blank=True, null=False, default=0)
-    mongo_collection_name = models.CharField(max_length=50, blank=True, null=True)  # Collection where will be saved
+    mongo_collection_name = models.CharField(max_length=100, blank=True, null=True)  # Collection where will be saved
 
     # TODO: move both fields to a general structure in the future in Methylation type entity
     # TODO: Don't forget to set the corresponding nullity in the new schema
@@ -65,7 +65,7 @@ class CGDSDataset(models.Model):
     platform = models.IntegerField(choices=MethylationPlatform.choices, blank=True, null=True)
 
     @property
-    def file_type(self):
+    def file_type(self) -> FileType:
         if hasattr(self, 'mrna_dataset'):
             return FileType.MRNA
         elif hasattr(self, 'mirna_dataset'):
@@ -76,7 +76,7 @@ class CGDSDataset(models.Model):
             return FileType.METHYLATION
         return FileType.CLINICAL
 
-    def get_reverse_study(self):
+    def __get_reverse_study(self):
         """Gets the related study model's name"""
         if hasattr(self, 'mrna_dataset'):
             return self.mrna_dataset
@@ -93,7 +93,7 @@ class CGDSDataset(models.Model):
 
     @property
     def study(self):
-        return self.get_reverse_study()
+        return self.__get_reverse_study()
 
     def __str__(self):
         study_name = self.study.name if self.study else '-'
@@ -106,21 +106,28 @@ class CGDSDataset(models.Model):
         self.number_of_rows = self.__get_row_count()
         self.number_of_samples = len(self.get_column_names())
 
-    def get_df(self) -> DataFrame:
+    def get_df(self, use_standard_column: bool = True, only_matching: bool = False) -> DataFrame:
         """
         Generates a DataFrame from a CGDSDataset's MongoDB collection
+        @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
+        column (useful for clinical datasets).
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame with the data to work
         """
-        return global_mongo_service.get_collection_as_df(self.mongo_collection_name)
+        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column, only_matching)
 
-    def get_df_in_chunks(self) -> Iterable[DataFrame]:
+    def get_df_in_chunks(self, only_matching: bool = False) -> Iterable[DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from a CGDSDataset's MongoDB collection
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame Iterator with the data to work
         """
         return global_mongo_service.get_collection_as_df_in_chunks(
             self.mongo_collection_name,
-            chunk_size=settings.EXPERIMENT_CHUNK_SIZE
+            chunk_size=settings.EXPERIMENT_CHUNK_SIZE,
+            only_matching=only_matching
         )
 
     def get_row_indexes(self) -> List[str]:
@@ -190,6 +197,9 @@ class SurvivalColumnsTuple(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return f'Time column: "{self.time_column}" | Event column: "{self.event_column}"'
+
 
 class SurvivalColumnsTupleCGDSDataset(SurvivalColumnsTuple):
     """Survival tuple for a CGDSDataset"""
@@ -207,6 +217,7 @@ class CGDSStudy(models.Model):
     description = models.TextField(blank=True, null=True)
     date_last_synchronization = models.DateTimeField(blank=True, null=True)  # General last sync date
     url = models.CharField(max_length=300)
+    version = models.PositiveSmallIntegerField(default=1)
     url_study_info = models.CharField(max_length=300, blank=True, null=True)  # Link to the paper of the study/site/etc
     state = models.IntegerField(
         choices=CGDSStudySynchronizationState.choices,
@@ -258,6 +269,23 @@ class CGDSStudy(models.Model):
     def __str__(self):
         return self.name
 
+    def has_at_least_one_dataset_synchronized(self) -> bool:
+        """Checks if at least one dataset is synchronized"""
+        for dataset in self.get_all_valid_datasets():
+            if dataset.state == CGDSDatasetSynchronizationState.SUCCESS:
+                return True
+        return False
+
+    def get_all_valid_datasets(self) -> List[CGDSDataset]:
+        """Returns a list of all the associated CGDSDataset (excluding None)"""
+        datasets = [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
+                self.clinical_sample_dataset, self.clinical_patient_dataset]
+        return [cast(CGDSDataset, dataset) for dataset in datasets if dataset is not None]
+
+    def get_last_version(self) -> int:
+        """Gets the maximum version of this CGDSStudy with the same URL."""
+        return CGDSStudy.objects.filter(url=self.url).aggregate(Max('version'))['version__max']
+
     def save(self, *args, **kwargs):
         """Everytime the CGDSStudy status changes, uses websocket to update state in the frontend"""
         super().save(*args, **kwargs)
@@ -267,7 +295,12 @@ class CGDSStudy(models.Model):
 
     def delete(self, *args, **kwargs):
         """Deletes the instance and its related MongoDB result (if exists)"""
-        super().delete(*args, **kwargs)
+        with transaction.atomic():
+            super().delete(*args, **kwargs)
 
-        # Sends a websocket message to update the state in the frontend
-        send_update_cgds_studies_command()
+            # On delete removes all the datasets
+            for dataset in self.get_all_valid_datasets():
+                dataset.delete()
+
+            # Sends a websocket message to update the state in the frontend
+            send_update_cgds_studies_command()

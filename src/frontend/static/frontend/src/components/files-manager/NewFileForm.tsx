@@ -10,12 +10,17 @@ import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { NewFile } from './FilesManager'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
 
+/** UploadLabel props. */
+interface UploadLabelProps {
+    uploadState: Nullable<UploadState>
+}
+
 /**
  * Renders a label component with a help popup.
  * @param props Component props.
  * @returns Component
  */
-const UploadLabel = (props: { uploadState: Nullable<UploadState> }) => {
+const UploadLabel = (props: UploadLabelProps) => {
     const isUploading = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS
     const [header, description]: [string, string] = isUploading
         ? ['Uploading file', 'The file is being uploaded in chunks']
@@ -159,6 +164,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             {/* File type */}
                             <Form.Select
                                 fluid
+                                selectOnBlur={false}
                                 options={props.fileTypeOptions}
                                 name='newFileType'
                                 value={props.newFile.newFileType}
@@ -173,6 +179,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             <Grid.Row>
                                 <Form.Select
                                     fluid
+                                    selectOnBlur={false}
                                     options={[
                                         { key: 'gene', value: false, text: 'Gene ID' },
                                         { key: 'cg', value: true, text: 'CpG site ID' }
@@ -189,6 +196,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             {props.newFile.isCpGSiteId && <Grid.Row>
                                 <Form.Select
                                     fluid
+                                    selectOnBlur={false}
                                     options={[
                                         { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 450' },
                                         /* TODO: implement platform 27 when dictionary is available */

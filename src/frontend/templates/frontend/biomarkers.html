@@ -1,0 +1,63 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| Biomarkers{% endblock %}
+
+{% block css %}
+        {% render_bundle 'biomarkers' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <div id="biomarkers-app"></div>
+{% endblock %}
+
+{% block js %}
+        <script>
+                const minIterationsBBHA = {{ min_iterations_bbha }}
+                const maxIterationsBBHA = {{ max_iterations_bbha }}
+                const minStarsBBHA = {{ min_stars_bbha }}
+                const maxStarsBBHA = {{ max_stars_bbha }}
+                const maxFeaturesCoxRegression = {{ max_features_cox_regression }}
+                const maxFeaturesBlindSearch = {{ max_features_blind_search }}
+
+                const urlBiomarkersCRUD = "{% url 'biomarkers_api' %}"
+                const urlGeneSymbols = "{% url 'gene_symbols' %}"
+                const urlGeneSymbolsFinder = "{% url 'gene_symbols_finder' %}"
+                const urlMiRNACodes = "{% url 'mirna_codes' %}"
+                const urlMiRNACodesFinder = "{% url 'mirna_codes_finder' %}"
+                const urlMethylationSites = "{% url 'methylation_sites' %}"
+                const urlMethylationSitesFinder = "{% url 'methylation_sites_finder' %}"
+                const urlFeatureSelectionSubmit = "{% url 'feature_selection_submit' %}"
+                const urlBiomarkerStatisticalValidations = "{% url 'biomarker_statistical_validations' %}"
+                const urlBiomarkerTrainedModels = "{% url 'biomarker_trained_models' %}"
+                const urlBiomarkerMolecules = "{% url 'biomarker_molecules' %}"
+                const urlNewStatisticalValidation = "{% url 'biomarker_new_statistical_validation' %}"
+                const urlStatisticalValidationMetrics = "{% url 'statistical_validation_metrics' %}"
+                const urlStatisticalValidationBestFeatures = "{% url 'statistical_validation_best_features' %}"
+                const urlStatisticalValidationHeatMap = "{% url 'statistical_validation_heatmap' %}"
+                const urlStatisticalValidationKaplanMeierClustering = "{% url 'statistical_validation_kaplan_meier_clustering' %}"
+                const urlStatisticalValidationKaplanMeierByAttr = "{% url 'statistical_validation_kaplan_meier_by_attr' %}"
+                const urlStatisticalValidationModalDetails = "{% url 'statistical_validation_modal_details' %}"
+                const urlStatisticalValidationSamplesAndClusters = "{% url 'statistical_validation_samples_and_clusters' %}"
+                const urlStatisticalValidationClinicalAttrs = "{% url 'statistical_validation_clinical_attrs' %}"
+                const urlNewTrainedModel = "{% url 'biomarker_new_trained_model' %}"
+                const urlClusterLabelsSets = "{% url 'cluster_labels_sets' %}"
+                const urlClusterLabelsSetsPaginated = "{% url 'cluster_labels_sets_paginated' %}"
+                const urlPredictionRangeLabelsSets = "{% url 'prediction_range_labels_sets' %}"
+                const urlPredictionRangeLabelsSetsPaginated = "{% url 'prediction_range_labels_sets_paginated' %}"
+                const urlBiomarkerInferenceExperiments = "{% url 'biomarker_inference_experiments' %}"
+                const urlInferenceExperimentClinicalAttrs = "{% url 'inference_experiment_clinical_attrs' %}"
+                const urlSubmitInferenceExperiment = "{% url 'submit_inference_experiment' %}"
+                const urlInferenceExperimentSamplesAndClusters = "{% url 'inference_experiment_samples_and_clusters' %}"
+                const urlInferenceExperimentSamplesAndTime = "{% url 'inference_experiment_samples_and_time' %}"
+                const urlClinicalSourceAddOrEditInferenceExperiment = "{% url 'clinical_source_inference_experiment' %}"
+                const urlUnlinkClinicalSourceInferenceExperiment = "{% url 'unlink_clinical_source_inference_experiment' %}"
+                const urlChartDataByAttribute = "{% url 'chart_data_by_attribute' %}"
+                const urlGeneInformation = "{% url 'gene_information' %}"
+                const urlPathwaysInformation = "{% url 'pathways_information' %}"
+                const urlMetabolicPathways = "{% url 'metabolic_pathways_information' %}"
+
+        </script>
+        {% render_bundle 'biomarkers' 'js' %}
+{% endblock %}

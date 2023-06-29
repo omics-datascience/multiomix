@@ -1,10 +1,5 @@
-/* All the main components must have 100% browser height */
-body > div {
-    height: 100% !important;
-}
-
 .wrapper {
-  min-height: 100%;
+    min-height: 100%;
 }
 
 .margin-left-1 {
@@ -23,6 +18,10 @@ body > div {
     margin-left: 30% !important;
 }
 
+.margin-top-0 {
+    margin-top: 0 !important;
+}
+
 .margin-top-2 {
     margin-top: 2% !important;
 }
@@ -33,6 +32,10 @@ body > div {
 
 .margin-top-10 {
     margin-top: 10% !important;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0 !important;
 }
 
 .margin-bottom-2 {
@@ -53,6 +56,10 @@ body > div {
 
 .no-margin-right {
     margin-right: 0 !important;
+}
+
+.margin-right-1 {
+    margin-right: 1% !important;
 }
 
 .no-padding-left {
@@ -88,14 +95,19 @@ body > div {
 }
 
 /* Removes box shadow to buttons inside a 'divided' Grid */
-.no-box-shadow, .ui.basic.button.borderless-button.no-box-shadow, .ui.basic.button.borderless-button.no-box-shadow:hover, .ui.basic.button.borderless-button.no-box-shadow:visited, .ui.basic.button.borderless-button.no-box-shadow:focus {
+.no-box-shadow,
+.ui.basic.button.borderless-button.no-box-shadow,
+.ui.basic.button.borderless-button.no-box-shadow:hover,
+.ui.basic.button.borderless-button.no-box-shadow:visited,
+.ui.basic.button.borderless-button.no-box-shadow:focus {
     box-shadow: none !important;
     -webkit-box-shadow: none !important;
 }
 
 /* The 'div.ellipsis > button' part is to cover Form.Button components
 where the class 'ellipsis' is added to the parent div and not to the button */
-.ellipsis, div.ellipsis > button {
+.ellipsis,
+div.ellipsis>button {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -109,13 +121,12 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     padding-right: 10% !important;
 }
 
-.box-shadow:hover {
-    box-shadow: 0 2px 8px #bbb !important;
+.padding-top-0 {
+    padding-top: 0 !important;
 }
 
-/* Fix modals floating to the left of the screen */
-.ui.fullscreen.modal.transition.visible.active {
-    right: 0;
+.box-shadow:hover {
+    box-shadow: 0 2px 8px #bbb !important;
 }
 
 /* Removes the border that adds Semantic UI to the buttons */
@@ -138,15 +149,10 @@ where the class 'ellipsis' is added to the parent div and not to the button */
 .bolder {
     display: block !important;
     margin: 0 0 .28571429rem 0 !important;
-    color: rgba(0,0,0,.87) !important;
+    color: rgba(0, 0, 0, .87) !important;
     font-size: .92857143em !important;
     font-weight: 700 !important;
     text-transform: none !important;
-}
-
-/* A little separator between the main navbar and the page content */
-#main-navbar {
-    margin-bottom: 0;
 }
 
 .table-bordered {
@@ -158,11 +164,23 @@ where the class 'ellipsis' is added to the parent div and not to the button */
     max-height: calc(80vh) !important;
 }
 
+.info-popup-paginated-table {
+    position: absolute;
+    right: 2%;
+    z-index: 999;
+    top: -1%;
+}
+
 .info-popup-on-top {
     position: absolute;
     right: 2%;
     top: 5%;
     z-index: 999;
+}
+
+/* Removes border from SemanticUI circular icons. */
+i.no-border {
+    box-shadow: none !important;
 }
 
 /* Support for Header with centered image */
@@ -208,6 +226,34 @@ where the class 'ellipsis' is added to the parent div and not to the button */
 }
 
 /* This prevents help icons to be over navbar menu */
-h2.menu, .menu.transition.visible {
-    z-index: 9999;
+h2.menu,
+.menu.transition.visible {
+    z-index: 2000;
+}
+
+.pull-down {
+    position: absolute;
+    bottom: 0;
+}
+
+/* Prevents the clinical source Popup to be over UserFiles modal */
+#select-gem-file-type {
+    z-index: 1000;
+}
+
+/* Prevents the Popup to be over some modals */
+#clinical-source-popup,
+.ui.dimmer {
+    z-index: 2000 !important;
+}
+
+/* Prevents modals to be over the popups */
+.popup {
+    z-index: 2500 !important;
+}
+
+/* Pulls the entries select in the Paginated table to the right. */
+.entries-select-table {
+    margin-left: auto !important;
+    order: 2;
 }

@@ -1,0 +1,30 @@
+.alert--icon {
+    align-items: center;
+    display: flex !important;
+}
+
+.alert--message {
+    word-break: break-word;
+}
+
+.alert--container--transition {
+    left: 40%;
+    max-height: 0;
+    padding: 1rem;
+    position: fixed;
+    top: 5%;
+    width: 100%;
+    z-index: 1000;
+}
+
+.alert--container--alert {
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 20px 10px rgb(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    max-width: 250px;
+    padding: 0.5rem;
+    text-align: center;
+}

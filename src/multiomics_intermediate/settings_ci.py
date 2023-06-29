@@ -28,7 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
@@ -46,12 +45,16 @@ INSTALLED_APPS = [
     'institutions',
     'tags',
     'user_files',
+    'biomarkers',
+    'feature_selection',
     'statistical_properties',
     'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
     'genes',
-    'chunked_upload',
+    'inferences',
+    'molecules_details',
+    'chunked_upload'
 ]
 
 MIDDLEWARE = [
@@ -160,7 +163,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 
-# Redirections
+# Redirection
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
@@ -180,7 +183,7 @@ VERSION: str = '4.7.1'
 # the DataFrame is truncated. None for prevent truncation
 RESULT_DATAFRAME_LIMIT_ROWS: int = int(os.getenv('RESULT_DATAFRAME_LIMIT_ROWS', 300000))
 
-# MongoDB credentials (should be setted as ENV vars)
+# MongoDB's credentials (should be set as ENV vars)
 MONGO_SETTINGS = {
     'username': os.getenv('MONGO_USERNAME', 'root'),
     'password': os.getenv('MONGO_PASSWORD', 'example'),
@@ -260,6 +263,12 @@ EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 MODULECTOR_SETTINGS = {
     'host': os.getenv('MODULECTOR_HOST', '127.0.0.1'),
     'port': os.getenv('MODULECTOR_PORT', '8001')
+}
+
+# BioAPI settings
+BIOAPI_SETTINGS = {
+    'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
+    'port': os.getenv('BIOAPI_PORT', '8002')
 }
 
 # Value used to indicate tha data is not present in a dataset

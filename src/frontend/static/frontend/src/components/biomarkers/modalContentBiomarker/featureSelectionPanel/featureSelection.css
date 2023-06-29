@@ -1,0 +1,54 @@
+.selections-grid-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.selection-step-container {
+    min-height: 400px;
+}
+.selection-all-space{
+    flex:1;
+}
+.selection-select-m {
+    margin: 2rem 0;
+}
+.advance-center-container{
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.selection-step-algorithm {
+    display: flex;
+    flex-direction: column;
+}
+
+.column-fixed-height div.grid {
+    min-height: 50vh;
+}
+
+.selection-step-button-advance-mode {
+    padding: 0;
+    margin: 0 2rem !important;
+}
+
+.selection-step-container-selection-confg {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+.selection-select {
+    width: 100%;
+}
+.form-group-button{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.form-gruop-button-segment{
+    margin: 0 !important;
+}

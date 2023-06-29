@@ -3,7 +3,7 @@ import { Card, Icon, Label, DropdownMenuProps } from 'semantic-ui-react'
 import { DjangoExperiment, DjangoTag, ExperimentState } from '../../../utils/django_interfaces'
 import { LastExperimentTypeAndMethodInfo } from './LastExperimentTypeAndMethodInfo'
 import { LastExperimentTagInfo } from './LastExperimentTagInfo'
-import { getStateObj, formatDateLocale } from '../../../utils/util_functions'
+import { getExperimentStateObj, formatDateLocale } from '../../../utils/util_functions'
 import { SeeResultButton } from '../all-experiments-view/SeeResultButton'
 import { DeleteExperimentButton } from '../all-experiments-view/DeleteExperimentButton'
 import { Nullable } from '../../../utils/interfaces'
@@ -32,7 +32,7 @@ interface LastExperimentCardProps {
  */
 export const LastExperimentCard = (props: LastExperimentCardProps) => {
     const experiment = props.experiment // For a short reference
-    const experimentState = getStateObj(experiment.state)
+    const experimentState = getExperimentStateObj(experiment.state)
 
     // If the result was truncated due to a larger size than the specified in settings.py, it alerts to the user
     let trunc_alert

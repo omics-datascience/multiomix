@@ -11,11 +11,12 @@ import csv
 import numpy as np
 import pandas as pd
 from user_files.models_choices import FileType, FileDecimalSeparator
-from user_files.utils import get_decimal_separator
+from user_files.utils import get_decimal_separator_and_numerical_data
 from django.conf import settings
+from api_service.websocket_functions import send_update_user_file_command
 
 
-def user_directory_path(instance, filename):
+def user_directory_path(instance, filename: str):
     """File will be uploaded to MEDIA_ROOT/uploads/user_<id>/<filename>"""
     return f'uploads/user_{instance.user.id}/{filename}'
 
@@ -79,7 +80,7 @@ class UserFile(models.Model):
     def __compute_decimal_separator(self):
         """Computes the UserFile decimal_separator field"""
         # This shouldn't fail as it was checked on upload
-        decimal_separator = get_decimal_separator(self.file_obj.file.name, seek_beginning=False, all_rows=False)
+        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file.name, seek_beginning=False, all_rows=False)
         self.decimal_separator = decimal_separator if decimal_separator is not None else FileDecimalSeparator.DOT
 
     def compute_post_saved_field(self):
@@ -134,9 +135,9 @@ class UserFile(models.Model):
 
     def __get_reader_from_file(self, csv_file: TextIO) -> Iterable:
         """
-        Generate a reader inferring the delimiter of a CSV file
-        @param csv_file: CSV file to read
-        @return: Reader object
+        Generate a reader inferring the delimiter of a CSV file.
+        @param csv_file: CSV file to read.
+        @return: Reader object.
         """
         # We need an entire line as we had cases where reading some bytes wasn't sufficient
         dialect = self.__get_csv_reader_dialect(csv_file)
@@ -147,8 +148,8 @@ class UserFile(models.Model):
         chunk_size: Optional[int] = None
     ) -> Union[pd.DataFrame, Iterable[pd.DataFrame]]:
         """
-        Returns a DataFrame (entirely or in chunks)
-        @param chunk_size: Chunk size to split the DataFrame (optional)
+        Returns a DataFrame (entirely or in chunks).
+        @param chunk_size: Chunk size to split the DataFrame (optional).
         @return: DataFrame or Iterator of DataFrame's chunks in case chunk_size is specified
         """
         return pd.read_csv(
@@ -160,17 +161,21 @@ class UserFile(models.Model):
             chunksize=chunk_size
         )
 
-    def get_df(self) -> pd.DataFrame:
+    def get_df(self, _only_matching: bool = False) -> pd.DataFrame:
         """
         Generates a DataFrame from the UserFile
+        @param _only_matching: If True, returns only the matching samples. Not used for UserFiles sources (only
+        for CGDSDatasets).
         @return: A DataFrame with the data to work
         """
         return self.__get_dataframe()
 
-    def get_df_in_chunks(self) -> Iterable[pd.DataFrame]:
+    def get_df_in_chunks(self, _only_matching: bool = False) -> Iterable[pd.DataFrame]:
         """
-        Returns an Iterator of a DataFrame in divided in chunks from an UserFile
-        @return: A DataFrame Iterator with the data to work
+        Returns an Iterator of a DataFrame in divided in chunks from an UserFile.
+        @param _only_matching: If True, returns only the matching samples. Not used for UserFiles sources (only
+        for CGDSDatasets).
+        @return: A DataFrame Iterator with the data to work.
         """
         return self.__get_dataframe(chunk_size=settings.EXPERIMENT_CHUNK_SIZE)
 
@@ -218,6 +223,22 @@ class UserFile(models.Model):
         # Subtracts 1 as it's assumed to have a header row in the file
         return row_count - 1
 
+    def delete(self, *args, **kwargs):
+        """Deletes the instance and sends a websockets message to update state in the frontend"""
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the user file state in the frontend
+        send_update_user_file_command(self.user.id)
+
+    def save(self, *args, **kwargs):
+        """Everytime the user file status changes, uses websocket to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websocket message to update the state in the frontend
+        send_update_user_file_command(self.user.id)
+
+    class Meta:
+        ordering = ['-id']
 
 @receiver(post_delete, sender=UserFile)
 def user_file_post_delete(sender, instance, **kwargs):

@@ -36,7 +36,7 @@ interface InstitutionsPanelState {
  * Also, this component renders a CRUD of Tags for files
  */
 export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelState> {
-    filterTimeout: number | undefined;
+    filterTimeout: number | undefined
 
     constructor (props) {
         super(props)
@@ -99,7 +99,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             const searchParams = {
                 querySearch: this.state.searchUserText
             }
-            ky.get(urlGetUsersCandidates, { searchParams: searchParams }).then((response) => {
+            ky.get(urlGetUsersCandidates, { searchParams }).then((response) => {
                 this.setState({ isFetchingUsersCandidates: false })
                 response.json().then((userCandidates: DjangoUserCandidates[]) => {
                     this.setState({ userCandidates })
@@ -157,9 +157,9 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         const myHeaders = getDjangoHeader()
 
         const params = {
-            userId: userId,
+            userId,
             institutionId: this.state.selectedInstitution?.id,
-            isAdding: isAdding
+            isAdding
         }
 
         const loadingFlag = isAdding ? 'addingRemovingUserToInstitution' : 'removingUserFromInstitution'

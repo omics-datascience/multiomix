@@ -1,12 +1,13 @@
 import React from 'react'
 import { Table } from 'semantic-ui-react'
+import { Nullable } from '../../utils/interfaces'
 
 /**
  * Components props
  */
 interface TableCellWithTitleProps {
     /** Value to show in cell and title */
-    value: string,
+    value: Nullable<string>,
     /** Optional className prop */
     className?: string
 }

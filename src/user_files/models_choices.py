@@ -2,8 +2,16 @@
 from django.db import models
 
 
+class MoleculeType(models.IntegerChoices):
+    """Possible types of molecules."""
+    MRNA = 1
+    MIRNA = 2
+    CNA = 3
+    METHYLATION = 4
+
+
 class FileType(models.IntegerChoices):
-    """Possible states for experiment evaluation"""
+    """Possible types of a Source (UserFile or CGDSDataset)"""
     MRNA = 1
     MIRNA = 2
     CNA = 3

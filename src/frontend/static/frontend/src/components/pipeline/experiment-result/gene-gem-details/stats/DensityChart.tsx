@@ -50,7 +50,7 @@ export const DensityChart = (props: DensityChartProps) => {
                 ariaLabel='Density chart'
                 orientation="vertical"
                 cumulative={false}
-                normalized={true}
+                normalized
                 binType={props.xAxisIsOrdinal ? 'categorical' : 'numeric'}
                 binCount={25}
                 valueAccessor={datum => datum}

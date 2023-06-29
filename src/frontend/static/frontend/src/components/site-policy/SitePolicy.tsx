@@ -1,6 +1,7 @@
 import React from 'react'
 import { Container, Grid, Header, Image } from 'semantic-ui-react'
 import { Base } from '../Base'
+import { ExternalLink } from '../common/ExternalLink'
 
 /**
  * Site policy (terms and privacy policy) page
@@ -56,7 +57,7 @@ export const SitePolicy = () => {
 
                                     <br />
 
-                                    Users can opt for setting up their own local Multiomix instance instead of using the {multiomixLink} service. The instructions to install the local instance are available at <a href='https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md' target='_blank' rel='noopener noreferrer'>https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md</a>
+                                    Users can opt for setting up their own local Multiomix instance instead of using the {multiomixLink} service. The instructions to install the local instance are available at <ExternalLink href='https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md'>https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md</ExternalLink>
                                 </p>
                             </Grid.Column>
                         </Grid.Row>

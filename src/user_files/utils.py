@@ -9,7 +9,7 @@ from user_files.enums import UserFileUploadErrorCode
 from user_files.models_choices import FileDecimalSeparator
 
 
-def get_decimal_separator(
+def get_decimal_separator_and_numerical_data(
         file: Union[str, BytesIO],
         seek_beginning: bool,
         all_rows: bool
@@ -21,11 +21,11 @@ def get_decimal_separator(
     @param all_rows: If True reads all the DataFrame to check if they are float. False to try only one (faster)
     @return: decimal separator if DataFrame is valid, None otherwise
     """
-    nrows = None if all_rows else 1
+    n_rows = None if all_rows else 1
     for name, decimal_separator in zip(FileDecimalSeparator.names, FileDecimalSeparator.values):
         try:
             # If no exception is thrown then the decimal separator is correct
-            for chunk in read_csv(file, sep=None, engine='python', index_col=0, nrows=nrows, decimal=decimal_separator,
+            for chunk in read_csv(file, sep=None, engine='python', index_col=0, nrows=n_rows, decimal=decimal_separator,
                                   chunksize=20_000):
                 chunk.astype(float)
             # TODO: implement parameter of file size to handle the DataFrame entirely
@@ -46,7 +46,7 @@ def has_uploaded_file_valid_format(uploaded_file: InMemoryUploadedFile) -> bool:
     @return: True if format is correct, False otherwise
     """
     content = TextIOWrapper(uploaded_file, encoding='utf-8')  # Need to make Pandas work
-    return get_decimal_separator(content, seek_beginning=True, all_rows=True) is not None
+    return get_decimal_separator_and_numerical_data(content, seek_beginning=True, all_rows=True) is not None
 
 
 def get_invalid_format_response() -> Dict:
