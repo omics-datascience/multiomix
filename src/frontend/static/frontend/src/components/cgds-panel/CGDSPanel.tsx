@@ -71,6 +71,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             url: '',
             url_study_info: '',
             version: null,
+            is_last_version: false,
             mrna_dataset: null,
             mirna_dataset: null,
             cna_dataset: null,
@@ -816,7 +817,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                         customFilters={[
                                             { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: false, type: 'checkbox' }
                                         ]}
-                                        infoPopupContent='These are the available cBioPortal datasets to launch experiments, there are different icons that indicate the state of each dataset. Hover on them to get more information'
+                                        infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
                                         mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => (
                                             <Table.Row key={CGDSStudyFileRow.id as number}>
                                                 <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
@@ -836,15 +837,18 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                 {userIsAdmin &&
                                                     <Table.Cell>
                                                         {/* Sync button */}
-                                                        <Icon
-                                                            name='sync alternate'
-                                                            color='blue'
-                                                            className='clickable'
-                                                            title='Sync study'
-                                                            loading={this.getStateObj(CGDSStudyFileRow.state).loading}
-                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
-                                                            onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
-                                                        />
+                                                        {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
+                                                        {CGDSStudyFileRow.is_last_version &&
+                                                            <Icon
+                                                                name='sync alternate'
+                                                                color='blue'
+                                                                className='clickable'
+                                                                title='Sync study'
+                                                                loading={this.getStateObj(CGDSStudyFileRow.state).loading}
+                                                                disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                                onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
+                                                            />
+                                                        }
 
                                                         {/* Edit button */}
                                                         <Icon

@@ -85,15 +85,22 @@ class MongoService(object):
         dictionary['experiment_key'] = unique_key
         return dictionary
 
-    def get_collection_as_df(self, collection_name: str, use_standard_column: bool) -> pd.DataFrame:
+    def get_collection_as_df(self, collection_name: str, use_standard_column: bool,
+                             only_matching: bool = False) -> pd.DataFrame:
         """
         Gets a MongoDB collection as a DataFrame.
         @param collection_name: Collection's name.
         @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
         column (useful for clinical datasets).
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: DataFrame with the collection data.
         """
-        df = pd.DataFrame(list(self.db[collection_name].find({}, self.default_non_used_fields_experiments)))
+        # Filter to only retrieve the molecules that are equal in both columns MOLECULE_SYMBOL and
+        # STANDARD_SYMBOL (if needed)
+        where = {'$where': f'this.{MOLECULE_SYMBOL} == this.{STANDARD_SYMBOL}'} if only_matching else {}
+        data = self.db[collection_name].find(where, self.default_non_used_fields_experiments)
+        df = pd.DataFrame(list(data))
 
         try:
             if use_standard_column:
@@ -118,19 +125,30 @@ class MongoService(object):
         df.set_index(STANDARD_SYMBOL, inplace=True)
         return df
 
-    def get_collection_as_df_in_chunks(self, collection_name: str, chunk_size: int) -> Iterator[pd.DataFrame]:
+    def get_collection_as_df_in_chunks(self, collection_name: str, chunk_size: int,
+                                       only_matching: bool = False) -> Iterator[pd.DataFrame]:
         """
         Gets a MongoDB collection as a DataFrame.
         NOTE: uses this kind of pagination as cursor is closed after 30 minutes by Mongo raising
         pymongo.errors.CursorNotFound exception, so we can't use built-in batch iterator with big experiments.
         @param collection_name: Collection's name.
         @param chunk_size: Chunk size in which the collection is retrieved.
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: DataFrame with the collection data.
         """
         last_id = None
         while True:
             # When it is first page doesn't apply filter
             filter_query = {'_id': {'$gt': last_id}} if last_id is not None else {}
+
+            # Filter to only retrieve the molecules that are equal in both columns MOLECULE_SYMBOL and
+            # STANDARD_SYMBOL (if needed)
+            where = {'$where': f'this.{MOLECULE_SYMBOL} == this.{STANDARD_SYMBOL}'} if only_matching else {}
+
+            # Concatenates where and filter_query
+            filter_query = {**filter_query, **where}
+
             cursor = self.db[collection_name].find(
                 filter_query,
                 self.default_non_used_fields_pagination

@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import tarfile
 import tempfile
 import pandas as pd
-from api_service.mongo_service import global_mongo_service
+from api_service.mongo_service import global_mongo_service, MOLECULE_SYMBOL
 import logging
 from urllib.parse import urlparse
 import os.path
@@ -94,7 +94,21 @@ class SynchronizationService:
                     # Samples in molecules datasets are in the header (as columns)
                     dataset_content.columns = dataset_content.columns.str.replace(TCGA_CONVENTION, '', regex=True)
 
+                    # Removes the duplicated molecules (if any). This is necessary because some datasets have
+                    # duplicated due to discontinued molecules identifiers.
+                    # First, generates a column with all the values of the MOLECULE_SYMBOL column as upper case as
+                    # cBioPortal contains some duplicated identifiers in different cases (upper and lower)
+                    upper_col = f'{MOLECULE_SYMBOL}_upper'
+                    dataset_content[upper_col] = dataset_content[MOLECULE_SYMBOL].str.upper()
+
+                    # Removes duplicated molecules and the generated column
+                    dataset_content = dataset_content.drop_duplicates(subset=[upper_col], keep=False)
+                    dataset_content = dataset_content.drop(columns=[upper_col])
+
+                # Removes the collection
                 global_mongo_service.drop_collection(dataset.mongo_collection_name)
+
+                # Inserts the documents in the collection
                 inserted_successfully = global_mongo_service.insert_cgds_dataset(
                     dataset_content,
                     dataset.mongo_collection_name,
@@ -212,11 +226,6 @@ class SynchronizationService:
 
         return dataset_copy
 
-    @staticmethod
-    def __get_max_version(study: CGDSStudy) -> int:
-        """Gets the maximum version of the study with the same URL."""
-        return CGDSStudy.objects.filter(url=study.url).aggregate(Max('version'))['version__max'] + 1
-
     def generate_study_new_version(self, study: CGDSStudy) -> CGDSStudy:
         """Generates a copy of a CGDSStudy and all its CGDSDatasets with a new version number."""
         # Creates a copy of study
@@ -224,7 +233,7 @@ class SynchronizationService:
         study_copy.pk = None
 
         # Updates version
-        new_version = self.__get_max_version(study)
+        new_version = study.get_last_version() + 1
         study_copy.version = new_version
 
         # Removes also the date of last synchronization

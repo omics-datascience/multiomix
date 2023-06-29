@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Dimmer, Grid, Header, Icon, Loader, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import './moleculeSectionStyles.css'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
 import { FixedSizeList } from 'react-window'
+//import { DynamicSizeList } from 'react-window-dynamic'
 
 interface MoleculeSectionProps {
     title: BiomarkerType,
@@ -19,13 +20,39 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
     const [searchInput, setSearchInput] = useState<string>('')
     const [parentWidth, setParentWidth] = useState(0)
     const [parentHeight, setParentHeight] = useState(0)
+    const listRef = useRef<any>(null)
+
+    const sizeMap = useRef<any>(null)
+    const setSize = useCallback((index, size) => {
+        sizeMap.current = { ...sizeMap.current, [index]: size }
+        if (listRef.current) {
+            console.log('current')
+            listRef.current.resetAfterIndex(index)
+        }
+    }, [])
+    const getSize = useCallback(index => {
+        console.log(sizeMap, 'execgetsize')
+        return 50
+    }, [])
     /**
      * Filter data to show in the section considering user search.
      * @returns Filtered data.
      */
-    const dataFiltered = React.useMemo((): MoleculesSectionData[] => {
-        const moleculeToSearch = searchInput.toUpperCase().trim()
-        if (moleculeToSearch === '') {
+    const dataFiltered = React.useMemo((): MoleculesSectionData[][] => {
+        const resultado: MoleculesSectionData[][] = []
+        let subarreglo: MoleculesSectionData[] = []
+
+        for (let i = 0; i < biomarkerFormData.data.length; i++) {
+            subarreglo.push(biomarkerFormData.data[i])
+
+            if (subarreglo.length === 4 || i === biomarkerFormData.data.length - 1) {
+                resultado.push(subarreglo)
+                subarreglo = []
+            }
+        }
+        // const moleculeToSearch = searchInput.toUpperCase().trim()
+        return resultado
+        /* if (moleculeToSearch === '') {
             return biomarkerFormData.data
         }
 
@@ -35,23 +62,33 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
             }
 
             return item.value.toUpperCase().startsWith(moleculeToSearch)
-        })
+        }) */
     }, [biomarkerFormData.data])
-    interface Asd {
+    interface RowProps {
         index: number,
-        style: any,
+        // style: any,
     }
-    const Row = ({ index, style }: Asd) => (
-        <div style={style} className="row-container" >
-            {<MoleculeOption
-                mol={dataFiltered[index]}
-                handleRemoveMolecule={handleRemoveMolecule}
-                title={title}
-                index={index}
-                handleSelectOptionMolecule={handleSelectOptionMolecule}
-            />}
-        </div>
-    )
+    const Row = ({ index }: RowProps) => {
+        return (
+            <div
+                className="row-container"
+                style={{ display: 'inline-flex' }}
+            >
+                {
+                    dataFiltered[index].map((mol, i) => (
+                        < MoleculeOption
+                            key={i + index}
+                            mol={mol}
+                            handleRemoveMolecule={handleRemoveMolecule}
+                            title={title}
+                            index={index}
+                            handleSelectOptionMolecule={handleSelectOptionMolecule}
+                        />
+                    ))
+                }
+            </div>
+        )
+    }
     useEffect(() => {
         const updateParentSize = () => {
             if (parentRef.current) {
@@ -69,6 +106,7 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
         }
     }, [])
     console.log(parentWidth, parentHeight)
+
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <Header as='h5'>{title}</Header>
@@ -80,12 +118,19 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
                     <Loader />
                 </Dimmer>
                 <FixedSizeList
+                    ref={listRef}
                     height={parentHeight}
                     width={parentWidth}
                     itemSize={50}
-                    itemCount={dataFiltered.length}
+                    itemCount={dataFiltered.length / 4}
                 >
-                    {Row}
+                    {({ index, style }) => (
+                        <div style={style}>
+                            <Row
+                                index={index}
+                            />
+                        </div>
+                    )}
                 </FixedSizeList>
             </div>
         </Grid.Column>

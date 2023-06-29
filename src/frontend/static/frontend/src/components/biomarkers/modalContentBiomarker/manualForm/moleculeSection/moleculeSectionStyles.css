@@ -8,6 +8,7 @@
 
 .biomarkers--molecules--container--item {
     margin: 0.5rem;
+    flex: 1;
 }
 
 .biomarkers--molecules--container--grid {
@@ -28,9 +29,8 @@
 }
 
 .row-container {
-    /*  display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: flex-start;
-    /* Ajusta los estilos según sea necesario */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
 }

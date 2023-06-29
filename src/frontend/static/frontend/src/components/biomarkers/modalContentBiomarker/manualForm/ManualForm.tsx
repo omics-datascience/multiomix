@@ -8,6 +8,10 @@ import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 /** ManualForm's props. */
 interface ManualFormProps {
     biomarkerForm: FormBiomarkerData,
+    /** Value for Checkbox. */
+    checkedIgnoreProposedAlias: boolean,
+    /** Handle change for Checkbox. */
+    handleChangeIgnoreProposedAlias: (value: boolean) => void,
     removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
     handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
     cleanForm: () => void,
@@ -37,6 +41,8 @@ export const ManualForm = (props: ManualFormProps) => {
                     biomarkerForm={props.biomarkerForm}
                     cleanForm={props.cleanForm}
                     isFormEmpty={props.isFormEmpty}
+                    checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
+                    handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
                     handleChangeMoleculeSelected={props.handleChangeMoleculeSelected}
                     handleChangeMoleculeInputSelected={props.handleChangeMoleculeInputSelected}
                     handleAddMoleculeToSection={props.handleAddMoleculeToSection}

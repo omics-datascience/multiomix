@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
@@ -143,7 +144,14 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return round(seconds)  # Rounds to the nearest second
 
     @staticmethod
-    def __remove_datasets(fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
+    def __remove_file_if_exists(path: str):
+        """Removes a file if exists. Otherwise, logs an error."""
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            logging.warning(f'Trying to remove file in {path}. But it does not exist')
+
+    def __remove_datasets(self, fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
         """Removes the datasets from the shared folder."""
         # Gets paths of both molecules_df and clinical_df in the shared volume with the microservice
         data_folder = emr_settings['shared_folder_data']
@@ -151,10 +159,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         clinical_df_path = os.path.join(data_folder, fs_experiment.app_name, 'clinical.csv')
 
         # Removes files in both paths
-        if os.path.exists(molecular_df_path):
-            os.remove(molecular_df_path)
-        if os.path.exists(clinical_df_path):
-            os.remove(clinical_df_path)
+        self.__remove_file_if_exists(molecular_df_path)
+        self.__remove_file_if_exists(clinical_df_path)
 
     @staticmethod
     def __get_parameters_columns(row: pd.Series) -> Tuple[str, str, str, str]:
@@ -226,19 +232,20 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         job_data = json.loads(request.body)
 
         with transaction.atomic():
-            fs_experiment.state = BiomarkerState.COMPLETED
-
             # Checks state
-            if job_data['state'] == 'COMPLETED':
+            state = job_data['state']
+            if state == 'COMPLETED':
                 fs_experiment.state = BiomarkerState.COMPLETED
 
                 # Saves execution time
                 exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
                 fs_experiment.execution_time = exec_time
-            elif job_data['state'] == 'CANCELLED':
+            elif state == 'CANCELLED':
                 fs_experiment.state = BiomarkerState.STOPPED
             else:
+                logging.warning(f'Job failed with state: {state}. Setting as FINISHED_WITH_ERROR')
                 fs_experiment.state = BiomarkerState.FINISHED_WITH_ERROR
+
             fs_experiment.save(update_fields=['state'])
 
             emr_settings = settings.AWS_EMR_SETTINGS

@@ -15,7 +15,7 @@ interface FeatureSelectionStep3Props {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
-    handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
+    handleChangeAdvanceAlgorithm: (advancedAlgorithmParameters: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
 

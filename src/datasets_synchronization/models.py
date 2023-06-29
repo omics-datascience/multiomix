@@ -3,6 +3,7 @@ from typing import List, Iterable
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np
+from django.db.models import Max
 from api_service.exceptions import CouldNotDeleteInMongo
 from api_service.mongo_service import global_mongo_service
 from api_service.websocket_functions import send_update_cgds_studies_command
@@ -105,23 +106,28 @@ class CGDSDataset(models.Model):
         self.number_of_rows = self.__get_row_count()
         self.number_of_samples = len(self.get_column_names())
 
-    def get_df(self, use_standard_column: bool = True) -> DataFrame:
+    def get_df(self, use_standard_column: bool = True, only_matching: bool = False) -> DataFrame:
         """
         Generates a DataFrame from a CGDSDataset's MongoDB collection
         @param use_standard_column: If True uses 'Standard_Symbol' as index of the DataFrame. False to use the first
         column (useful for clinical datasets).
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame with the data to work
         """
-        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column)
+        return global_mongo_service.get_collection_as_df(self.mongo_collection_name, use_standard_column, only_matching)
 
-    def get_df_in_chunks(self) -> Iterable[DataFrame]:
+    def get_df_in_chunks(self, only_matching: bool = False) -> Iterable[DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from a CGDSDataset's MongoDB collection
+        @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        STANDARD_SYMBOL.
         @return: A DataFrame Iterator with the data to work
         """
         return global_mongo_service.get_collection_as_df_in_chunks(
             self.mongo_collection_name,
-            chunk_size=settings.EXPERIMENT_CHUNK_SIZE
+            chunk_size=settings.EXPERIMENT_CHUNK_SIZE,
+            only_matching=only_matching
         )
 
     def get_row_indexes(self) -> List[str]:
@@ -271,6 +277,10 @@ class CGDSStudy(models.Model):
         """Returns a list of all the associated CGDSDataset"""
         return [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
                 self.clinical_sample_dataset, self.clinical_patient_dataset]
+
+    def get_last_version(self) -> int:
+        """Gets the maximum version of this CGDSStudy with the same URL."""
+        return CGDSStudy.objects.filter(url=self.url).aggregate(Max('version'))['version__max']
 
     def save(self, *args, **kwargs):
         """Everytime the CGDSStudy status changes, uses websocket to update state in the frontend"""
