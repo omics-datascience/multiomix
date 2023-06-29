@@ -609,7 +609,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     iconName: 'circle',
                     color: 'grey',
                     loading: false,
-                    title: 'The Dataset has not yet been synchronized'
+                    title: 'The dataset has not yet been synchronized'
                 }
                 break
             case CGDSDatasetSynchronizationState.SUCCESS: {
@@ -618,14 +618,14 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     // Case of clinical data where samples are as rows indexes
                     numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} samples x ${CGDSDataset.number_of_samples} attributes`
                 } else {
-                    numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} rows x ${CGDSDataset.number_of_samples} samples`
+                    numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} molecules x ${CGDSDataset.number_of_samples} samples`
                 }
 
                 stateIcon = {
                     iconName: 'circle',
                     color: 'green',
                     loading: false,
-                    title: `The Dataset was synchronized successfully: ${numberOfRowsAndSamplesMessage}`
+                    title: `The dataset was synchronized successfully: ${numberOfRowsAndSamplesMessage}`
                 }
             }
                 break
