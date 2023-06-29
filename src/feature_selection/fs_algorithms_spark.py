@@ -255,7 +255,9 @@ def binary_black_hole_spark(
         },
         {
             'name': 'clinical-dataset',
-            'value': clinical_relative_path,
+        {
+            'name': 'model',
+            'value': __get_model_value(trained_model.fitness_function),
         },
         {
             'name': 'n-stars',
