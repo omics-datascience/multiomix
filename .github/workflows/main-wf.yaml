@@ -96,7 +96,7 @@ jobs:
     - name: NPM linter checks
       run: npm --prefix src/frontend/static/frontend run check-all  
   docker-multiomix:
-    needs: [Python-tests, Node-checks]
+    needs: [Node-checks]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
