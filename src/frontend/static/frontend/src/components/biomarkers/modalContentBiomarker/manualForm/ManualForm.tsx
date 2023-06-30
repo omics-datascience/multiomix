@@ -60,6 +60,7 @@ export const ManualForm = (props: ManualFormProps) => {
                         <MoleculeSection
                             key={item}
                             title={item}
+                            canEditMolecules={props.biomarkerForm.canEditMolecules}
                             biomarkerFormData={props.biomarkerForm.moleculesSection[item]}
                             handleRemoveMolecule={props.handleRemoveMolecule}
                             handleSelectOptionMolecule={props.handleSelectOptionMolecule}

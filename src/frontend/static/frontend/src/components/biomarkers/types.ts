@@ -76,6 +76,8 @@ interface BiomarkerSimple {
     number_of_cnas: number,
     number_of_methylations: number,
     has_fs_experiment: boolean,
+    /** Indicates if the Biomarker was used for an Inference experiment, Statistical Validation or Trained Model. */
+    was_already_used: boolean,
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
@@ -122,6 +124,7 @@ interface FormBiomarkerData {
     id: Nullable<number>,
     biomarkerName: string,
     biomarkerDescription: string,
+    canEditMolecules: boolean,
     tag: any, // se esta laburando salu2
     moleculeSelected: BiomarkerType,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,

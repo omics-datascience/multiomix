@@ -399,6 +399,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Checks if the user can edit the Biomarker (i.e. It was not used for an Inference experiment, Statistical Validation or Trained Model).
+     * @param biomarker Biomarker to check.
+     * @returns True if the Biomarker can be edited, false otherwise.
+     */
+    canEditBiomarker = (biomarker: Biomarker): boolean => !biomarker.was_already_used && biomarker.state === BiomarkerState.COMPLETED
+
+    /**
      * Method that select how the user is going to create a Biomarker
      * @param biomarker Biomarker selected to update
      */
@@ -409,6 +416,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 openCreateEditBiomarkerModal: true,
                 formBiomarker: {
                     id: biomarker.id,
+                    canEditMolecules: this.canEditBiomarker(biomarker),
                     biomarkerName: biomarker.name,
                     biomarkerDescription: biomarker.description,
                     tag: biomarker.tag,
@@ -635,6 +643,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             id: null,
             biomarkerName: '',
             biomarkerDescription: '',
+            canEditMolecules: true,
             tag: null,
             moleculeSelected: BiomarkerType.MRNA,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
@@ -912,6 +921,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_cnas: 0,
             number_of_methylations: 0,
             has_fs_experiment: false,
+            was_already_used: false,
             origin: BiomarkerOrigin.BASE,
             state: BiomarkerState.COMPLETED,
             contains_nan_values: false,
@@ -951,7 +961,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Cleans the new/edit biomarker form
      */
-    cleanForm = () => { this.setState({ openCreateEditBiomarkerModal: true, formBiomarker: this.getDefaultFormBiomarker(), confirmModal: this.getDefaultConfirmModal() }) }
+    cleanForm = () => {
+        this.setState({
+            openCreateEditBiomarkerModal: true,
+            formBiomarker: this.getDefaultFormBiomarker(),
+            confirmModal: this.getDefaultConfirmModal()
+        })
+    }
 
     /**
      * Does a request to add a new Biomarker
@@ -1387,7 +1403,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     showSearchInput
                     customElements={[
                         <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
-                            <Button primary icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}>
+                            <Button
+                                primary
+                                icon
+                                onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}
+                            >
                                 <Icon name='add' />
                             </Button>
                         </Form.Field>
@@ -1398,6 +1418,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     updateWSKey='update_biomarkers'
                     mapFunction={(biomarker: Biomarker) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
+                        const canEdit = this.canEditBiomarker(biomarker)
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1426,10 +1447,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                                         {/* Edit button */}
                                         <Icon
-                                            name='pencil'
+                                            name={canEdit ? 'pencil' : 'eye'}
                                             className='clickable margin-left-5'
-                                            color='yellow'
-                                            title='Edit biomarker'
+                                            color={canEdit ? 'yellow' : 'blue'}
+                                            title={`${canEdit ? 'Edit' : 'See'} biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
 

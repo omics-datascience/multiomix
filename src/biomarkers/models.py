@@ -101,6 +101,17 @@ class Biomarker(models.Model):
         """Returns True if this Biomarker was created from a Feature Selection experiment"""
         return hasattr(self, 'fs_experiment')
 
+
+    @property
+    def was_already_used(self) -> bool:
+        """
+        Returns True if this Biomarker was used for an Inference experiment, Statistical Validation or Trained Model.
+        This avoids the user to edit a Biomarker that was already used and generate inconsistencies.
+        """
+        return self.trained_models.exists() or self.inference_experiments.exists() or \
+            self.statistical_validations.exists()
+
+
     def delete(self, *args, **kwargs):
         """Deletes the instance and sends a websockets message to update state in the frontend"""
         super().delete(*args, **kwargs)
