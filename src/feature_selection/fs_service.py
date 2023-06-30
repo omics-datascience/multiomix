@@ -1,14 +1,11 @@
 import os
-import tempfile
 import time
 import numpy as np
 from threading import Event
 from typing import Dict, Tuple, Optional, Any
-import pandas as pd
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
 from common.utils import limit_between_min_max
-from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
-    replace_event_col_for_booleans
+from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .fs_algorithms_spark import binary_black_hole_spark
@@ -72,27 +69,11 @@ class FSService(object):
         @return: Both DataFrames paths.
         """
         # Generates clinical DataFrame
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-            clinical_temp_file_path = temp_file.name
+        # TODO: implement the selection of the survival tuple from the frontend
+        survival_tuple = experiment.clinical_source.get_survival_columns().first()
+        clinical_temp_file_path = generate_clinical_file(experiment, samples_in_common, survival_tuple)
 
-            clinical_source = experiment.clinical_source
-            clinical_df: pd.DataFrame = clinical_source.get_df()
-
-            # Keeps only the survival tuple and samples in common
-            survival_tuple = clinical_source.get_survival_columns().first()  # TODO: implement the selection of the survival tuple from the frontend
-            clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
-
-            clinical_df = clinical_df.loc[samples_in_common]
-
-            # Replaces str values of CGDS for
-            clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                replace_event_col_for_booleans
-            )
-
-            # Saves in disk
-            clinical_df.to_csv(temp_file, sep='\t', decimal='.')
-
-        # Generates needed DataFrames
+        # Generates molecules DataFrame
         molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
@@ -444,7 +425,9 @@ class FSService(object):
                     logging.error(f'Invalid fitness function parameters for FSExperiment with PK: {experiment.pk}')
 
                 if fitness_function_parameters is not None:
-                    self.add_experiment(experiment, fitness_function_enum, fitness_function_parameters)
+                    pass
+                    # TODO: add fs_parameters and uncomment
+                    # self.add_experiment(experiment, fitness_function_enum, fitness_function_parameters)
                 else:
                     experiment.state = BiomarkerState.FINISHED_WITH_ERROR
                     experiment.save()
