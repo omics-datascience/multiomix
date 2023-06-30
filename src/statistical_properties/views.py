@@ -41,6 +41,11 @@ from statistical_properties.survival_functions import generate_survival_groups_b
     get_group_survival_function, compute_c_index_and_log_likelihood, struct_array_to_kaplan_meier_samples
 from user_files.models_choices import FileType
 
+
+# Possible suffix in a DataFrame to distinguish different kinds of molecules in a Biomarker
+TYPE_SUFFIX = f'_({FileType.MRNA.value}|{FileType.MIRNA.value}|{FileType.CNA.value}|{FileType.METHYLATION.value})$'
+
+# Most of the statistics need at least 3 samples
 NUMBER_OF_NEEDED_SAMPLES: int = 3
 
 
@@ -177,14 +182,19 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
 
 class StatisticalValidationHeatMap(APIView):
     """Gets the expressions of all the molecules of a Biomarker for all the samples."""
-
     @staticmethod
-    def get(request: Request):
+    def __remove_suffix(df: pd.DataFrame) -> pd.DataFrame:
+        """Removes the suffix from the index of a DataFrame."""
+        df.index = df.index.str.replace(TYPE_SUFFIX, '', regex=True)
+        return df
+
+    def get(self, request: Request):
         stat_validation = get_stat_validation_instance(request)
 
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
             molecules_df = clean_dataset(molecules_df, axis='index')
+            molecules_df = self.__remove_suffix(molecules_df)
 
             return Response({
                 'data': molecules_df.to_dict('index'),
