@@ -1,19 +1,37 @@
 import React, { useState } from 'react'
 import { Button, Dimmer, Grid, Header, Icon, Loader, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
-import './moleculeSectionStyles.css'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
 
+// Styles
+import './moleculeSectionStyles.css'
+
+/** MoleculeSection's props. */
 interface MoleculeSectionProps {
     title: BiomarkerType,
     biomarkerFormData: MoleculeSectionItem,
+    /** If true, the user can edit the molecules in the Biomarker. */
+    canEditMolecules: boolean,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
 
-export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule, handleSelectOptionMolecule, handleRemoveInvalidGenes }: MoleculeSectionProps) => {
+/**
+ * Renders a section to manage a specific type of molecules.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const MoleculeSection = (props: MoleculeSectionProps) => {
     const [searchInput, setSearchInput] = useState<string>('')
+    const {
+        title,
+        biomarkerFormData,
+        canEditMolecules,
+        handleRemoveMolecule,
+        handleSelectOptionMolecule,
+        handleRemoveInvalidGenes
+    } = props
 
     const dataToShow = biomarkerFormData.data // For short
 
@@ -41,7 +59,11 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <Header as='h5'>{title}</Header>
 
-            <SearchMoleculesInput handleChange={setSearchInput} handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)} />
+            <SearchMoleculesInput
+                handleChange={setSearchInput}
+                handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)}
+                canEditMolecules={canEditMolecules}
+            />
 
             <Segment className='biomarkers--molecules--container table-bordered'>
                 <Dimmer active={biomarkerFormData.isLoading} inverted>
@@ -54,7 +76,11 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                             <div className='biomarkers--molecules--container--item' key={title + mol.value}>
                                 <Button color='green' compact className='biomarkers--molecules--container--item biomarker--section--button'>
                                     {mol.value}
-                                    <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon'/>
+
+                                    {/* If user cannot edit the Biomarker, then he cannot remove molecules */}
+                                    {canEditMolecules &&
+                                        <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon'/>
+                                    }
                                 </Button>
                             </div>
                         )
@@ -79,7 +105,11 @@ export const MoleculeSection = ({ title, biomarkerFormData, handleRemoveMolecule
                         <div className='biomarkers--molecules--container--item' key={title + mol.value}>
                             <Button color='orange' compact className='biomarker--section--button'>
                                 {mol.value}
-                                <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
+
+                                {/* If user cannot edit the Biomarker, then he cannot remove molecules */}
+                                {canEditMolecules &&
+                                    <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
+                                }
                             </Button>
                         </div>
                     )

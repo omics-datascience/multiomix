@@ -5,11 +5,13 @@ import { debounce } from 'lodash'
 
 /** SearchMoleculesInput props. */
 interface SearchMoleculesProps {
+    /** If true, the user can edit the molecules in the Biomarker. */
+    canEditMolecules: boolean,
     handleChange: (searchData: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
 
-export const SearchMoleculesInput = ({ handleChange, handleRemoveInvalidGenes }: SearchMoleculesProps) => {
+export const SearchMoleculesInput = ({ canEditMolecules, handleChange, handleRemoveInvalidGenes }: SearchMoleculesProps) => {
     const [value, setValue] = useState<string>('')
 
     /** Makes the query to get KaplanMeierData with delay. */
@@ -42,13 +44,15 @@ export const SearchMoleculesInput = ({ handleChange, handleRemoveInvalidGenes }:
                 onClick={() => { setValue('') }}
             />
 
-            <Icon
-                className='biomarker--section--icon clickable margin-left-2'
-                name='ban'
-                title='Remove molecules with errors (in red)'
-                color='red'
-                onClick={handleRemoveInvalidGenes}
-            />
+            {canEditMolecules &&
+                <Icon
+                    className='biomarker--section--icon clickable margin-left-2'
+                    name='ban'
+                    title='Remove molecules with errors (in red)'
+                    color='red'
+                    onClick={handleRemoveInvalidGenes}
+                />
+            }
         </>
     )
 }

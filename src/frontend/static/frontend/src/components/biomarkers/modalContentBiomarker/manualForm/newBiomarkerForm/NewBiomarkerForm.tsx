@@ -1,11 +1,35 @@
 import React from 'react'
-import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea } from 'semantic-ui-react'
+import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea, Message } from 'semantic-ui-react'
 import { TextAreaMolecules } from './TextAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import './newBiomarkerFormStyles.css'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+
+/** All the types of molecules in a Biomarker. */
+const BIOMARKER_OPTIONS = [
+    {
+        key: BiomarkerType.MRNA,
+        value: BiomarkerType.MRNA,
+        text: BiomarkerType.MRNA
+    },
+    {
+        key: BiomarkerType.MIRNA,
+        value: BiomarkerType.MIRNA,
+        text: BiomarkerType.MIRNA
+    },
+    {
+        key: BiomarkerType.CNA,
+        value: BiomarkerType.CNA,
+        text: BiomarkerType.CNA
+    },
+    {
+        key: BiomarkerType.METHYLATION,
+        value: BiomarkerType.METHYLATION,
+        text: BiomarkerType.METHYLATION
+    }
+]
 
 /**
  * Component's props
@@ -37,28 +61,8 @@ interface NewBiomarkerFormProps {
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
-    const biomarkersOptions = [
-        {
-            key: BiomarkerType.MRNA,
-            value: BiomarkerType.MRNA,
-            text: BiomarkerType.MRNA
-        },
-        {
-            key: BiomarkerType.MIRNA,
-            value: BiomarkerType.MIRNA,
-            text: BiomarkerType.MIRNA
-        },
-        {
-            key: BiomarkerType.CNA,
-            value: BiomarkerType.CNA,
-            text: BiomarkerType.CNA
-        },
-        {
-            key: BiomarkerType.METHYLATION,
-            value: BiomarkerType.METHYLATION,
-            text: BiomarkerType.METHYLATION
-        }
-    ]
+
+    const canEditMolecules = props.biomarkerForm.canEditMolecules
 
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
@@ -66,6 +70,16 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 <Icon name='th' />
                 <Header.Content>New Biomarker</Header.Content>
             </Header>
+
+            {/* Notifies the user that the Biomarker was used and its molecules cannot be edited. */}
+            {!canEditMolecules &&
+                <Message
+                    color='blue'
+                    icon='info circle'
+                    header='Cannot edit molecules'
+                    content='This biomarker contains some associated models and validations, so its molecules cannot be modified. To change its molecules consider cloning this biomarker and work with its copy'
+                />
+            }
 
             <Input
                 onChange={(e) => props.handleChangeInputForm(e.target.value, 'biomarkerName')}
@@ -85,32 +99,37 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 value={props.biomarkerForm.biomarkerDescription}
             />
 
-            <Select
-                selectOnBlur={false}
-                className='biomarkers--side--bar--input--selection'
-                placeholder='Select molecule'
-                name='moleculeSelected'
-                options={biomarkersOptions}
-                value={props.biomarkerForm.moleculeSelected}
-                onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MRNA)}
-            />
+            {/* Only if molecules edition is enabled, shows all the inputs to add/edit molecules */}
+            {canEditMolecules &&
+                <>
+                    <Select
+                        selectOnBlur={false}
+                        className='biomarkers--side--bar--input--selection'
+                        placeholder='Select molecule'
+                        name='moleculeSelected'
+                        options={BIOMARKER_OPTIONS}
+                        value={props.biomarkerForm.moleculeSelected}
+                        onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MRNA)}
+                    />
 
-            <ButtonsForTypeOfInsert
-                handleChangeMoleculeInputSelected={props.handleChangeMoleculeInputSelected}
-                moleculesTypeOfSelection={props.biomarkerForm.moleculesTypeOfSelection}
-            />
+                    <ButtonsForTypeOfInsert
+                        handleChangeMoleculeInputSelected={props.handleChangeMoleculeInputSelected}
+                        moleculesTypeOfSelection={props.biomarkerForm.moleculesTypeOfSelection}
+                    />
 
-            {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT &&
-                <SelectDropDownSingleMolecule
-                    checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
-                    handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
-                    handleAddMoleculeToSection={props.handleAddMoleculeToSection}
-                    handleSearchNewData={props.handleGenesSymbolsFinder}
-                    options={props.biomarkerForm.moleculesSymbolsFinder} />
-            }
+                    {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT &&
+                        <SelectDropDownSingleMolecule
+                            checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
+                            handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
+                            handleAddMoleculeToSection={props.handleAddMoleculeToSection}
+                            handleSearchNewData={props.handleGenesSymbolsFinder}
+                            options={props.biomarkerForm.moleculesSymbolsFinder} />
+                    }
 
-            {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA &&
-                <TextAreaMolecules handleGenesSymbols={props.handleGenesSymbols} />
+                    {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA &&
+                        <TextAreaMolecules handleGenesSymbols={props.handleGenesSymbols} />
+                    }
+                </>
             }
 
             <Container className='biomarkers--side--bar--buttons--box'>
@@ -130,23 +149,25 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                     </div>
                 }
 
-                <Checkbox
-                    className='biomarkers--side--bar--validation--items'
-                    label={
-                        <label>
-                            Ignore molecules with warnings
+                {haveInvalid &&
+                    <Checkbox
+                        className='biomarkers--side--bar--validation--items'
+                        label={
+                            <label>
+                                Ignore molecules with warnings
 
-                            <InfoPopup
-                                content='This message does not indicate that there is an error in your data, but that these molecules were not found during our validation process. This may be due to outdated data or the use of different nomenclatures or standards. In case you are sure that there are no corrections to be made and you wish to continue with the Biomarker saving, check the following Checkbox to enable the form submission'
-                                onTop={false}
-                                onEvent='hover'
-                                extraClassName='margin-left-5'
-                            />
-                        </label>
-                    }
-                    checked={props.biomarkerForm.validation.checkBox}
-                    onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
-                />
+                                <InfoPopup
+                                    content='This message does not indicate that there is an error in your data, but that these molecules were not found during our validation process. This may be due to outdated data or the use of different nomenclatures or standards. In case you are sure that there are no corrections to be made and you wish to continue with the Biomarker saving, check the following Checkbox to enable the form submission'
+                                    onTop={false}
+                                    onEvent='hover'
+                                    extraClassName='margin-left-5'
+                                />
+                            </label>
+                        }
+                        checked={props.biomarkerForm.validation.checkBox}
+                        onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
+                    />
+                }
 
                 {/* Submit form button */}
                 <Container className='biomarkers--side--bar--box'>
@@ -160,18 +181,20 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                     />
                 </Container>
 
-                {/* Cancel button  */}
-                <Container className='biomarkers--side--bar--box'>
-                    <Button
-                        color='red'
-                        content='Reset Form'
-                        fluid
-                        onClick={() => props.handleChangeConfirmModalState(true, 'You are going to reset the form and clean all the data inserted', 'Are you sure?', props.cleanForm)}
-                        disabled={props.biomarkerForm.validation.isLoading}
-                        // TODO: chequear la opinion antes de borrar isFormEmpty
-                        // disabled={props.isFormEmpty()}
-                    />
-                </Container>
+                {/* Reset button  */}
+                {canEditMolecules &&
+                    <Container className='biomarkers--side--bar--box'>
+                        <Button
+                            color='red'
+                            content='Reset Form'
+                            fluid
+                            onClick={() => props.handleChangeConfirmModalState(true, 'You are going to reset the form and clean all the data inserted', 'Are you sure?', props.cleanForm)}
+                            disabled={props.biomarkerForm.validation.isLoading}
+                            // TODO: chequear la opinion antes de borrar isFormEmpty
+                            // disabled={props.isFormEmpty()}
+                        />
+                    </Container>
+                }
             </Container>
         </Segment>
     )

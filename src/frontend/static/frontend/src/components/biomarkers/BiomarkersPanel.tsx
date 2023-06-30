@@ -33,6 +33,7 @@ declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
 declare const maxFeaturesBlindSearch: number
+declare const urlCloneBiomarker: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
@@ -60,6 +61,10 @@ interface BiomarkersPanelState {
     tags: DjangoTag[],
     /** Indicates if the modal to create or edit a Biomarker is open. */
     openCreateEditBiomarkerModal: boolean,
+    /** Indicates if the modal to clone a Biomarker is open. Contains the pk of the Biomarker to clone. */
+    biomarkerToClone: Nullable<Biomarker>,
+    /** Indicates if there's a Biomarker being cloned. */
+    cloningBiomarker: boolean,
     /** Indicates if the modal to get the details of a Biomarker is open. */
     openDetailsModal: boolean,
     /** Selected Biomarker instance to show its details. */
@@ -89,6 +94,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
             openCreateEditBiomarkerModal: false,
+            cloningBiomarker: false,
+            biomarkerToClone: null,
             openDetailsModal: false,
             selectedBiomarker: null,
             alert: this.getDefaultAlertProps(),
@@ -399,6 +406,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
+     * Checks if the user can edit the Biomarker (i.e. It was not used for an Inference experiment, Statistical Validation or Trained Model).
+     * @param biomarker Biomarker to check.
+     * @returns True if the Biomarker can be edited, false otherwise.
+     */
+    canEditBiomarker = (biomarker: Biomarker): boolean => !biomarker.was_already_used && biomarker.state === BiomarkerState.COMPLETED
+
+    /**
      * Method that select how the user is going to create a Biomarker
      * @param biomarker Biomarker selected to update
      */
@@ -409,6 +423,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 openCreateEditBiomarkerModal: true,
                 formBiomarker: {
                     id: biomarker.id,
+                    canEditMolecules: this.canEditBiomarker(biomarker),
                     biomarkerName: biomarker.name,
                     biomarkerDescription: biomarker.description,
                     tag: biomarker.tag,
@@ -635,6 +650,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             id: null,
             biomarkerName: '',
             biomarkerDescription: '',
+            canEditMolecules: true,
             tag: null,
             moleculeSelected: BiomarkerType.MRNA,
             moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
@@ -912,6 +928,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             number_of_cnas: 0,
             number_of_methylations: 0,
             has_fs_experiment: false,
+            was_already_used: false,
             origin: BiomarkerOrigin.BASE,
             state: BiomarkerState.COMPLETED,
             contains_nan_values: false,
@@ -951,7 +968,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Cleans the new/edit biomarker form
      */
-    cleanForm = () => { this.setState({ openCreateEditBiomarkerModal: true, formBiomarker: this.getDefaultFormBiomarker(), confirmModal: this.getDefaultConfirmModal() }) }
+    cleanForm = () => {
+        this.setState({
+            openCreateEditBiomarkerModal: true,
+            formBiomarker: this.getDefaultFormBiomarker(),
+            confirmModal: this.getDefaultConfirmModal()
+        })
+    }
 
     /**
      * Does a request to add a new Biomarker
@@ -1231,6 +1254,39 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({ featureSelection })
     }
 
+    /** Closes the modal to confirm a Biomarker cloning. */
+    closeModalToClone = () => {
+        this.setState({ biomarkerToClone: null })
+    }
+
+    /** Sends a request to clone a Biomarker. */
+    cloneBiomarker = () => {
+        if (!this.state.biomarkerToClone || this.state.cloningBiomarker) {
+            return
+        }
+
+        this.setState({ cloningBiomarker: true })
+
+        const url = `${urlCloneBiomarker}/${this.state.biomarkerToClone.id}/`
+        ky.get(url, { searchParams: { limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
+            response.json().then((responseJSON: OkResponse) => {
+                if (responseJSON.ok) {
+                    this.closeModalToClone()
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error cloning Biomarker ->', err)
+            alertGeneralError()
+        }).finally(() => {
+            this.setState({ cloningBiomarker: false })
+        })
+    }
+
     /**
      * Function to go back to step 2
      */
@@ -1387,7 +1443,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     showSearchInput
                     customElements={[
                         <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
-                            <Button primary icon onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}>
+                            <Button
+                                primary
+                                icon
+                                onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}
+                            >
                                 <Icon name='add' />
                             </Button>
                         </Form.Field>
@@ -1398,6 +1458,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     updateWSKey='update_biomarkers'
                     mapFunction={(biomarker: Biomarker) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
+                        const canEditMolecules = this.canEditBiomarker(biomarker)
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1428,9 +1489,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         <Icon
                                             name='pencil'
                                             className='clickable margin-left-5'
-                                            color='yellow'
-                                            title='Edit biomarker'
+                                            color={canEditMolecules ? 'yellow' : 'orange'}
+                                            title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                        />
+
+                                        {/* Clone button */}
+                                        <Icon
+                                            name='copy'
+                                            color='teal'
+                                            className='clickable margin-left-5'
+                                            title='Clone biomarker'
+                                            onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                         />
 
                                         {/* Delete button */}
@@ -1447,6 +1517,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         )
                     }}
                 />
+
+                {/* Create/Edit modal. */}
+                <Modal
+                    open={this.state.biomarkerToClone !== null}
+                    centered={false}
+                    onClose={this.closeModalToClone}
+                >
+                    <Header icon='copy' content='Clone Biomarker' />
+                    <Modal.Content>
+                        Are you sure you want to clone the Biomarker "<strong>{this.state.biomarkerToClone?.name}</strong>"?
+                    </Modal.Content>
+                    <Modal.Actions>
+                        <Button onClick={this.closeModalToClone}>
+                            Cancel
+                        </Button>
+                        <Button color='blue' onClick={this.cloneBiomarker} loading={this.state.cloningBiomarker} disabled={this.state.cloningBiomarker}>
+                            Clone
+                        </Button>
+                    </Modal.Actions>
+                </Modal>
 
                 {/* Create/Edit modal. */}
                 <Modal

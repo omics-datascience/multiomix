@@ -1,18 +1,21 @@
+from copy import deepcopy
 from typing import List, Optional, Dict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
-from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
+from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
 from biomarkers.serializers import BiomarkerSerializer, TrainedModelSerializer, MoleculeIdentifierSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
-from django.db.models import Q, Count
+from django.db.models import Q, Count, QuerySet
 
 
 class BiomarkerList(generics.ListCreateAPIView):
@@ -63,6 +66,41 @@ class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class BiomarkerClone(APIView):
+    """Clones a Biomarker instance."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def __copy_molecules_instances(biomarker: Biomarker, molecules: QuerySet[MoleculeIdentifier]):
+        """Copies the molecules instances from a Biomarker to another."""
+        for molecule in molecules:
+            molecule.pk = None
+            molecule.biomarker = biomarker
+            molecule.save()
+
+    def get(self, request: Request, pk: int):
+        biomarker = get_object_or_404(Biomarker, pk=pk, user=request.user)
+
+        with transaction.atomic():
+            biomarker_copy: Biomarker = deepcopy(biomarker)
+            biomarker_copy.pk = None
+            biomarker_copy.name = f'{biomarker.name} (copy)'
+            biomarker_copy.origin = BiomarkerOrigin.MANUAL
+            biomarker_copy.state = BiomarkerState.COMPLETED
+
+            # Needs to be saved before copying the molecules instances
+            biomarker_copy.save()
+
+            # Copies all the related models
+            self.__copy_molecules_instances(biomarker_copy, biomarker.mrnas.all())
+            self.__copy_molecules_instances(biomarker_copy, biomarker.mirnas.all())
+            self.__copy_molecules_instances(biomarker_copy, biomarker.cnas.all())
+            self.__copy_molecules_instances(biomarker_copy, biomarker.methylations.all())
+
+
+        return Response({'ok': True})
 
 
 @login_required

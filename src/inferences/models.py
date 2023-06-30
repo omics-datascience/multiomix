@@ -8,7 +8,7 @@ from user_files.models_choices import FileType
 
 
 class InferenceExperiment(models.Model):
-    """Represents a inference experiment from test sources using a TrainedModel"""
+    """Represents an inference experiment from test sources using a TrainedModel"""
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='inference_experiments')
