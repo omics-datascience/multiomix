@@ -1,10 +1,11 @@
 import os
 import tempfile
 import numpy as np
-from typing import Union, Optional, cast, List, Literal, Tuple
+from typing import Union, Optional, cast, List, Literal, Tuple, Any
 import pandas as pd
 from api_service.models import ExperimentSource
 from common.exceptions import NoSamplesInCommon
+from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import FSExperiment, TrainedModel
 from inferences.models import InferenceExperiment
 from statistical_properties.models import StatisticalValidation
@@ -87,10 +88,61 @@ def process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str]
     return chunk
 
 
+def __is_numerical(value: Any) -> bool:
+    """Checks if a value is numerical. Taken from https://stackoverflow.com/a/23639915/7058363."""
+    res = isinstance(value, (int, float)) or (isinstance(value, str) and value.replace('.', '', 1).isdigit())
+    return res
+
+
+def generate_clinical_file(experiment: ExperimentObjType, samples_in_common: np.ndarray,
+                           survival_tuple: Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]) -> str:
+    """
+    Generates the clinical DataFrame for a specific instance with the samples in common and saves it in disk.
+    @param experiment: Instance to get the sources from.
+    @param samples_in_common: Samples in common between all the sources.
+    @param survival_tuple: Tuple with the event and time column names to retrieve.
+    @return: Clinical file path saved in disk.
+    """
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+        clinical_temp_file_path = temp_file.name
+
+        # Gets DataFrame
+        clinical_source = experiment.clinical_source
+        clinical_df: pd.DataFrame = clinical_source.get_df()
+
+        event_column = survival_tuple.event_column
+        time_column = survival_tuple.time_column
+
+        # Keeps only the survival tuple and samples in common
+        clinical_df = clinical_df[[event_column, time_column]]
+        clinical_df = clinical_df.loc[samples_in_common]
+
+        # Replaces str values of CGDS for booleans values
+        clinical_df[event_column] = clinical_df[event_column].apply(
+            replace_event_col_for_booleans
+        )
+
+        # Cast time column to numerical and removes invalid rows.
+        # cBioPortal datasets have some studies with the time as a string or values as '[Not Available]'
+        try:
+            clinical_df[time_column] = clinical_df[time_column].astype(float)
+        except ValueError:
+            clinical_df = clinical_df[clinical_df[time_column].apply(__is_numerical)]
+            clinical_df[time_column] = clinical_df[time_column].astype(float)
+
+        # Saves in disk
+        clinical_df.to_csv(temp_file, sep='\t', decimal='.')
+
+    return clinical_temp_file_path
+
+
 def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np.ndarray) -> str:
     """
     Generates the molecules DataFrame for a specific InferenceExperiment with the samples in common and saves
     it in disk.
+    @param experiment: Instance to get the sources from.
+    @param samples_in_common: Samples in common between all the sources.
+    @return: Molecules file path saved in disk.
     """
     with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
         molecules_temp_file_path = temp_file.name

@@ -1,6 +1,5 @@
 import logging
 import os
-import tempfile
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -22,7 +21,7 @@ from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFa
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
-    replace_event_col_for_booleans
+    generate_clinical_file
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -107,26 +106,10 @@ class StatisticalValidationService(object):
         @return: Both DataFrames paths.
         """
         # Generates clinical DataFrame
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-            clinical_temp_file_path = temp_file.name
+        survival_tuple = stat_validation.survival_column_tuple
+        clinical_temp_file_path = generate_clinical_file(stat_validation, samples_in_common, survival_tuple)
 
-            clinical_source = stat_validation.clinical_source
-            clinical_df: pd.DataFrame = clinical_source.get_df()
-
-            # Keeps only the survival tuple and samples in common
-            survival_tuple = stat_validation.survival_column_tuple
-            clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
-            clinical_df = clinical_df.loc[samples_in_common]
-
-            # Replaces str values of CGDS for boolean values
-            clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                replace_event_col_for_booleans
-            )
-
-            # Saves in disk
-            clinical_df.to_csv(temp_file, sep='\t', decimal='.')
-
-        # Generates all the molecules DataFrame
+        # Generates molecules DataFrame
         molecules_temp_file_path = generate_molecules_file(stat_validation, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path

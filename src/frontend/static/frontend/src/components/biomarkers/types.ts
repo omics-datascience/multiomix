@@ -363,6 +363,7 @@ interface TrainedModel {
     state: TrainedModelState,
     fitness_function: FitnessFunction,
     created: string,
+    fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
 }
 

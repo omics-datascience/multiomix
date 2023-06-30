@@ -64,7 +64,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: 'State', serverCodeToSort: 'state', width: 1 },
                     { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Best CV fitness', serverCodeToSort: 'best_fitness_value' }
+                    { name: 'Metric', serverCodeToSort: 'fitness_metric' },
+                    { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' }
                     // TODO: add actions column with an option to see the details of a trained model
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
@@ -109,6 +110,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
                         </Table.Row>
                     )
