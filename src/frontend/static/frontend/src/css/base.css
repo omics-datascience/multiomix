@@ -228,7 +228,7 @@ i.no-border {
 /* This prevents help icons to be over navbar menu */
 h2.menu,
 .menu.transition.visible {
-    z-index: 2000;
+    z-index: 2100;
 }
 
 .pull-down {
