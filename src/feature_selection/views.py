@@ -16,7 +16,8 @@ from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
-from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord
+from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
+    ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod
 from feature_selection.utils import save_molecule_identifiers
 from user_files.models_choices import FileType
 
@@ -133,8 +134,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
     @staticmethod
     def __get_date_time_from_format(date_str: str) -> datetime:
-        """Parses a date in the format "Fri, 09 Jun 2023 16:13:13 GMT" to a datetime object."""
-        return datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %Z')
+        """Parses a date in the format "2023-06-29 17:08:56+00:00" to a datetime object."""
+        return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S+00:00')
 
     def __compute_execution_time(self, created_at: str, finished_at: str) -> int:
         """Computed the difference between to dates in seconds."""
@@ -163,12 +164,112 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         self.__remove_file_if_exists(clinical_df_path)
 
     @staticmethod
-    def __get_parameters_columns(row: pd.Series) -> Tuple[str, str, str, str]:
-        """Iterates over rows generating some columns with model parameters"""
+    def __get_svm_parameters_columns(row: pd.Series) -> Tuple[str, str, str, str]:
+        """Iterates over rows generating some columns with SVM model parameters"""
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         task, max_iterations, optimizer, kernel = params[0], params[1], params[4], params[6]
         return task, max_iterations, optimizer, kernel
+
+    @staticmethod
+    def __get_clustering_parameters_columns(row: pd.Series) -> Tuple[int, ClusteringAlgorithm, ClusteringScoringMethod]:
+        """Iterates over rows generating some columns with Clustering model parameters"""
+        parameters_desc = row['parameters']
+        params = parameters_desc.split('_')
+        number_of_clusters, algorithm_description, scoring_method = params[0], params[1], params[4]
+        algorithm = ClusteringAlgorithm.K_MEANS if algorithm_description == 'k_means' else ClusteringAlgorithm.SPECTRAL
+        scoring = ClusteringScoringMethod.C_INDEX if scoring_method == 'concordance_index' \
+            else ClusteringScoringMethod.LOG_LIKELIHOOD
+        return number_of_clusters, algorithm, scoring
+
+    @staticmethod
+    def __get_rf_parameters_columns(row: pd.Series) -> int:
+        """Iterates over rows generating some columns with RF model parameters"""
+        parameters_desc = row['parameters']
+        params = parameters_desc.split('_')
+        number_of_trees = params[0]
+        return number_of_trees
+
+    def __save_svm_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
+        """Saves all the data about times from the Spark job for a SVM model."""
+        # Gets the parameters from the parameters column
+        parameters_df = times_df.apply(self.__get_svm_parameters_columns, axis=1, result_type='expand')
+        parameters_df.columns = ['task', 'max_iterations', 'optimizer', 'kernel']
+
+        # Appends to original DataFrame
+        times_df = pd.concat((times_df, parameters_df), axis='columns')
+
+        # Saves times in the database
+        SVMTimesRecord.objects.bulk_create([
+            SVMTimesRecord(
+                number_of_features=row['number_of_features'],
+                number_of_samples=row['number_of_samples'],
+                execution_time=row['execution_times'],
+                test_time=row['test_times'],
+                fitness=row['fitness'],
+                train_score=row['train_scores'],
+                # SVM parameters
+                number_of_iterations=row['number_of_iterations'],
+                time_by_iteration=row['times_by_iteration'],
+                max_iterations=row['max_iterations'],
+                optimizer=row['optimizer'],
+                kernel=row['kernel'],
+                fs_experiment=fs_experiment
+            )
+            for _, row in times_df.iterrows()
+        ])
+
+    def __save_clustering_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
+        """Saves all the data about times from the Spark job for a Clustering model."""
+        # Gets the parameters from the parameters column
+        parameters_df = times_df.apply(self.__get_clustering_parameters_columns, axis=1, result_type='expand')
+        parameters_df.columns = ['number_of_clusters', 'algorithm', 'scoring_method']
+
+        # Appends to original DataFrame
+        times_df = pd.concat((times_df, parameters_df), axis='columns')
+
+        # Saves times in the database
+        ClusteringTimesRecord.objects.bulk_create([
+            ClusteringTimesRecord(
+                number_of_features=row['number_of_features'],
+                number_of_samples=row['number_of_samples'],
+                execution_time=row['execution_times'],
+                test_time=row['test_times'],
+                fitness=row['fitness'],
+                train_score=row['train_scores'],
+                # Clustering parameters
+                number_of_clusters=row['number_of_clusters'],
+                algorithm=row['algorithm'],
+                scoring_method=row['scoring_method'],
+                fs_experiment=fs_experiment
+            )
+            for _, row in times_df.iterrows()
+        ])
+
+    def __save_rf_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
+        """Saves all the data about times from the Spark job for a Random Forest model."""
+        # Gets the parameters from the parameters column
+        parameters_df = times_df.apply(self.__get_rf_parameters_columns, axis=1, result_type='expand')
+        parameters_df.columns = ['number_of_trees']
+
+        # Appends to original DataFrame
+        times_df = pd.concat((times_df, parameters_df), axis='columns')
+
+        # Saves times in the database
+        RFTimesRecord.objects.bulk_create([
+            RFTimesRecord(
+                number_of_features=row['number_of_features'],
+                number_of_samples=row['number_of_samples'],
+                execution_time=row['execution_times'],
+                test_time=row['test_times'],
+                fitness=row['fitness'],
+                train_score=row['train_scores'],
+                # RF parameters
+                number_of_trees=row['number_of_trees'],
+                fs_experiment=fs_experiment
+            )
+            for _, row in times_df.iterrows()
+        ])
 
     def __save_results(self, fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
         """Gets results from the shared folder and saves them in the database."""
@@ -176,15 +277,29 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
         # Stores molecules in the target biomarker, the best model and its fitness value
         experiment_results_folder = os.path.join(shared_results_folder, fs_experiment.app_name)
-        res_df = pd.read_csv(experiment_results_folder, sep=',', index_col=0)
-        best_features = res_df['feature'].split(' | ')
+        result_path = os.path.join(experiment_results_folder, 'result.json')
+        with open(result_path, 'r') as fp:
+            json_content: Dict = json.load(fp)
+
+        best_features = json_content['features'].split(' | ')
         save_molecule_identifiers(fs_experiment.created_biomarker, best_features)
 
-        # Iterates over all JSON files in the Experiment's folder to save time data
+        best_fitness = json_content['best_metric']
+        trained_model: TrainedModel = fs_experiment.best_model
+        trained_model.best_fitness_value = best_fitness
+        # TODO: implement saving of the best model dump from Spark and here...
+        trained_model.save()
+
+        # Iterates over all JSON files in the Experiment's folder to accumulate time data in a DataFrame
         times_df = pd.DataFrame()
         for (_, _, files) in os.walk(experiment_results_folder):
             for filename in files:
+                # Skips non-JSON files
                 if not filename.endswith('.json'):
+                    continue
+
+                # Skips the result.json file
+                if filename == 'result.json':
                     continue
 
                 file_path = os.path.join(experiment_results_folder, filename)
@@ -199,35 +314,22 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                     current_df = pd.DataFrame.from_dict(json_content_filtered)
                     times_df = pd.concat((times_df, current_df), axis='rows', ignore_index=True)
 
-            # TODO: add support for RF and Clustering parameters too when times data is available
-            # Generate parameters columns
-            parameters_df = times_df.apply(self.__get_parameters_columns, axis=1, result_type='expand')
-            parameters_keys = ['task', 'max_iterations', 'optimizer', 'kernel']
-            parameters_df.columns = parameters_keys
-            times_df = pd.concat((times_df, parameters_df), axis='columns')
-
-            # Saves times in the database iterating over chunks of 1000 rows
-            for _, row in times_df.iterrows():
-                SVMTimesRecord.objects.bulk_create([
-                    SVMTimesRecord(
-                        number_of_features=row['number_of_features'],
-                        number_of_samples=row['number_of_samples'],
-                        execution_time=row['execution_time'],
-                        test_time=row['test_times'],
-                        fitness=row['fitness'],
-                        train_score=row['train_scores'],
-                        number_of_iterations=row['number_of_iterations'],
-                        time_by_iteration=row['times_by_iteration'],
-                        max_iterations=row['max_iterations'],
-                        optimizer=row['optimizer'],
-                        kernel=row['kernel'],
-                        fs_experiment=fs_experiment
-                    )
-                ])
+        # Finally, saves the times data
+        fitness_function_enum = trained_model.fitness_function
+        if fitness_function_enum == FitnessFunction.SVM:
+            self.__save_svm_times_data(fs_experiment, times_df)
+        elif fitness_function_enum == FitnessFunction.CLUSTERING:
+            self.__save_clustering_times_data(fs_experiment, times_df)
+        elif fitness_function_enum == FitnessFunction.RF:
+            self.__save_rf_times_data(fs_experiment, times_df)
+        else:
+            logging.error(f'Fitness function {fitness_function_enum} not supported for saving times data')
+            logging.error(f'FSExperiment ID: {fs_experiment.pk}')
 
     def post(self, request: Request, job_id: str):
         # Sets new state and execution time
         fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id)
+        created_biomarker = fs_experiment.created_biomarker
 
         job_data = json.loads(request.body)
 
@@ -235,18 +337,19 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             # Checks state
             state = job_data['state']
             if state == 'COMPLETED':
-                fs_experiment.state = BiomarkerState.COMPLETED
+                created_biomarker.state = BiomarkerState.COMPLETED
 
                 # Saves execution time
                 exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
                 fs_experiment.execution_time = exec_time
+                fs_experiment.save(update_fields=['execution_time'])
             elif state == 'CANCELLED':
-                fs_experiment.state = BiomarkerState.STOPPED
+                created_biomarker.state = BiomarkerState.STOPPED
             else:
                 logging.warning(f'Job failed with state: {state}. Setting as FINISHED_WITH_ERROR')
-                fs_experiment.state = BiomarkerState.FINISHED_WITH_ERROR
+                created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
 
-            fs_experiment.save(update_fields=['state'])
+            created_biomarker.save(update_fields=['state'])
 
             emr_settings = settings.AWS_EMR_SETTINGS
 

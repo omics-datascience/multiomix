@@ -27,11 +27,27 @@ def __get_kernel_value(kernel: SVMKernel) -> str:
     return 'linear'  # Default is linear as if faster
 
 
-def __get_clustering_value(cluster_algorithm: ClusteringAlgorithm) -> str:
+def __get_model_value(fitness_function: FitnessFunction) -> str:
+    """Gets the corresponding string value for the parameter 'model' of the EMR integration."""
+    if fitness_function == FitnessFunction.SVM:
+        return 'svm'
+    if fitness_function == FitnessFunction.RF:
+        return 'rf'
+    return 'clustering'  # Default is clustering
+
+
+def __get_clustering_algorithm_value(cluster_algorithm: ClusteringAlgorithm) -> str:
     """Gets the corresponding string value for the parameter 'clustering-algorithm' of the EMR integration."""
     if cluster_algorithm == ClusteringAlgorithm.SPECTRAL:
         return 'spectral'
     return 'k_means'  # Default is kmeans
+
+
+def __get_clustering_scoring_value(scoring_method: ClusteringScoringMethod) -> str:
+    """Gets the corresponding string value for the parameter 'clustering-scoring-method' of the EMR integration."""
+    if scoring_method == ClusteringScoringMethod.C_INDEX:
+        return 'concordance_index'
+    return 'log_likelihood'  # Default is kmeans
 
 
 def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[Dict[str, str]]:
@@ -48,7 +64,6 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
     fitness_function = trained_model.fitness_function
     result: List[Dict[str, str]]
 
-    # TODO: refactor all the parameters retrieval
     if fitness_function == FitnessFunction.SVM:
         models_parameters = cast(SVMParameters, models_parameters)
         result = [
@@ -80,16 +95,19 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
 
     elif trained_model.fitness_function == FitnessFunction.CLUSTERING:
         models_parameters = cast(ClusteringParameters, models_parameters)
-        # TODO: add 'metric', 'scoring method' and 'penalizer' parameters for C-Index or
-        # TODO: Log likelihood when implemented in the EMR integration
+        # TODO: add 'metric' and 'penalizer' parameters
         result = [
             {
                 'name': 'clustering-algorithm',
-                'value': __get_clustering_value(models_parameters.algorithm),
+                'value': __get_clustering_algorithm_value(models_parameters.algorithm),
             },
             {
                 'name': 'number-of-clusters',
                 'value': str(models_parameters.n_clusters),
+            },
+            {
+                'name': 'clustering-scoring-method',
+                'value': __get_clustering_scoring_value(models_parameters.scoring_method),
             }
         ]
     else:
@@ -255,7 +273,9 @@ def binary_black_hole_spark(
         },
         {
             'name': 'clinical-dataset',
-            'value': clinical_relative_path,
+        {
+            'name': 'model',
+            'value': __get_model_value(trained_model.fitness_function),
         },
         {
             'name': 'model',
@@ -274,8 +294,6 @@ def binary_black_hole_spark(
     # Extends the entrypoint_arguments with the trained model parameters
     model_arguments = __create_models_parameters_for_request(trained_model)
     entrypoint_arguments.extend(model_arguments)
-
-    print('entrypoint_arguments: ', entrypoint_arguments)  # TODO: remove
 
     # Makes a request to the EMR microservice to run the binary black hole algorithm.
     url = f'http://{emr_settings["host"]}:{emr_settings["port"]}/job'

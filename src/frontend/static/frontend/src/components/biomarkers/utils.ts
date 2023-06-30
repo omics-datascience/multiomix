@@ -73,7 +73,7 @@ const getDefaultSvmParameters = (): SVMParameters => {
 const getDefaultClusteringParameters = (): ClusteringParameters => {
     return {
         algorithm: ClusteringAlgorithm.K_MEANS,
-        scoringMethod: ClusteringScoringMethod.C_INDEX,
+        scoringMethod: ClusteringScoringMethod.LOG_LIKELIHOOD,
         metric: ClusteringMetric.COX_REGRESSION,
         nClusters: 2,
         randomState: null,
