@@ -168,7 +168,7 @@ class TrainedModelSerializer(serializers.ModelSerializer):
     def __get_scoring_method_description(scoring_method: ClusteringScoringMethod) -> Optional[str]:
         if scoring_method == ClusteringScoringMethod.C_INDEX:
             return 'C-Index'
-        if scoring_method == ClusteringScoringMethod.C_INDEX:
+        if scoring_method == ClusteringScoringMethod.LOG_LIKELIHOOD:
             return 'Log Likelihood'  # Default is kmeans
         return None
 
