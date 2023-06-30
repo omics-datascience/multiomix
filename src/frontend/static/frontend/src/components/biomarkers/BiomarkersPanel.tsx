@@ -1418,7 +1418,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     updateWSKey='update_biomarkers'
                     mapFunction={(biomarker: Biomarker) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
-                        const canEdit = this.canEditBiomarker(biomarker)
+                        const canEditMolecules = this.canEditBiomarker(biomarker)
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1447,10 +1447,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
                                         {/* Edit button */}
                                         <Icon
-                                            name={canEdit ? 'pencil' : 'eye'}
+                                            name='pencil'
                                             className='clickable margin-left-5'
-                                            color={canEdit ? 'yellow' : 'blue'}
-                                            title={`${canEdit ? 'Edit' : 'See'} biomarker`}
+                                            color={canEditMolecules ? 'yellow' : 'orange'}
+                                            title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
 
