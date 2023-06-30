@@ -252,9 +252,9 @@ def binary_black_hole_spark(
 
     # Saves datasets inside the shared volume
     molecules_path = os.path.join(app_data_folder, 'molecules.csv')
-    molecules_df.to_csv(molecules_path, sep=',', decimal='.')
+    molecules_df.to_csv(molecules_path, sep='\t', decimal='.')
     clinical_path = os.path.join(app_data_folder, 'clinical.csv')
-    clinical_df.to_csv(clinical_path, sep=',', decimal='.')
+    clinical_df.to_csv(clinical_path, sep='\t', decimal='.')
 
     # Gets relative paths to the shared volume for the EMR integration service
     molecules_relative_path = os.path.join(app_name, 'molecules.csv')
