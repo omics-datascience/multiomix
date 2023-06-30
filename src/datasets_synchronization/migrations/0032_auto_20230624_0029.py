@@ -85,6 +85,8 @@ def copy_cgds_studies(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('feature_selection', '0012_auto_20230508_1647'),
+        ('statistical_properties', '0003_statisticalvalidation_statisticalvalidationsourceresult'),
         ('datasets_synchronization', '0031_alter_cgdsdataset_mongo_collection_name'),
     ]
 

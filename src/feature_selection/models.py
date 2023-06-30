@@ -351,8 +351,8 @@ class TimesRecord(models.Model):
     """Represents some metrics to train a Spark load-balancer ML model."""
     number_of_features = models.PositiveIntegerField()
     number_of_samples = models.PositiveIntegerField()
-    execution_time = models.PositiveIntegerField()  # Execution time in seconds
-    test_time = models.PositiveIntegerField()  # Testing time in seconds
+    execution_time = models.FloatField()  # Execution time in seconds
+    test_time = models.FloatField()  # Testing time in seconds
     fitness = models.FloatField(null=True, blank=True)
     train_score = models.FloatField(null=True, blank=True)
 
@@ -365,6 +365,9 @@ class SVMTimesRecord(TimesRecord):
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='svm_times_records')
     number_of_iterations = models.PositiveIntegerField()
     time_by_iteration = models.PositiveIntegerField()  # Testing time in seconds
+
+    # These parameters are duplicated here to avoid having to load the related SVMParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
     max_iterations = models.PositiveIntegerField()
     optimizer = models.CharField(max_length=10, choices=SVMOptimizer.choices)
     kernel = models.IntegerField(choices=SVMKernel.choices)
@@ -372,9 +375,17 @@ class SVMTimesRecord(TimesRecord):
 
 class RFTimesRecord(TimesRecord):
     """Time records during Feature Selection using a Random Forest as classifier."""
+    # These parameters are duplicated here to avoid having to load the related RFParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
+    number_of_trees = models.PositiveIntegerField()
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='rf_times_records')
 
 
 class ClusteringTimesRecord(TimesRecord):
     """Time records during Feature Selection using a Clustering model as classifier."""
+    # These parameters are duplicated here to avoid having to load the related ClusteringParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
+    number_of_clusters = models.PositiveIntegerField()
+    algorithm = models.IntegerField(choices=ClusteringAlgorithm.choices)
+    scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices)
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='clustering_times_records')
