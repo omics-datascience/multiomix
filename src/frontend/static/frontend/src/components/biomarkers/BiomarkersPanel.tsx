@@ -1413,13 +1413,14 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
                                 <Table.Cell width={1}>
                                     {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
-                                    <React.Fragment>
+                                    <>
                                         {/* Details button */}
                                         <Icon
                                             name='chart bar'
                                             className='clickable'
                                             color='blue'
                                             title='Details'
+                                            disabled={biomarker.state !== BiomarkerState.COMPLETED}
                                             onClick={() => this.openBiomarkerDetailsModal(biomarker)}
                                         />
 
@@ -1440,7 +1441,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             title='Delete biomarker'
                                             onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                         />
-                                    </React.Fragment>
+                                    </>
                                 </Table.Cell>
                             </Table.Row>
                         )
