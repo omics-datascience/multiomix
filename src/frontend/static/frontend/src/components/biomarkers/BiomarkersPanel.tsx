@@ -33,6 +33,7 @@ declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
 declare const maxFeaturesBlindSearch: number
+declare const urlCloneBiomarker: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
@@ -60,6 +61,10 @@ interface BiomarkersPanelState {
     tags: DjangoTag[],
     /** Indicates if the modal to create or edit a Biomarker is open. */
     openCreateEditBiomarkerModal: boolean,
+    /** Indicates if the modal to clone a Biomarker is open. Contains the pk of the Biomarker to clone. */
+    biomarkerToClone: Nullable<Biomarker>,
+    /** Indicates if there's a Biomarker being cloned. */
+    cloningBiomarker: boolean,
     /** Indicates if the modal to get the details of a Biomarker is open. */
     openDetailsModal: boolean,
     /** Selected Biomarker instance to show its details. */
@@ -89,6 +94,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
             openCreateEditBiomarkerModal: false,
+            cloningBiomarker: false,
+            biomarkerToClone: null,
             openDetailsModal: false,
             selectedBiomarker: null,
             alert: this.getDefaultAlertProps(),
@@ -1247,6 +1254,39 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({ featureSelection })
     }
 
+    /** Closes the modal to confirm a Biomarker cloning. */
+    closeModalToClone = () => {
+        this.setState({ biomarkerToClone: null })
+    }
+
+    /** Sends a request to clone a Biomarker. */
+    cloneBiomarker = () => {
+        if (!this.state.biomarkerToClone || this.state.cloningBiomarker) {
+            return
+        }
+
+        this.setState({ cloningBiomarker: true })
+
+        const url = `${urlCloneBiomarker}/${this.state.biomarkerToClone.id}/`
+        ky.get(url, { searchParams: { limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
+            response.json().then((responseJSON: OkResponse) => {
+                if (responseJSON.ok) {
+                    this.closeModalToClone()
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error cloning Biomarker ->', err)
+            alertGeneralError()
+        }).finally(() => {
+            this.setState({ cloningBiomarker: false })
+        })
+    }
+
     /**
      * Function to go back to step 2
      */
@@ -1454,6 +1494,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
 
+                                        {/* Clone button */}
+                                        <Icon
+                                            name='copy'
+                                            color='teal'
+                                            className='clickable margin-left-5'
+                                            title='Clone biomarker'
+                                            onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                        />
+
                                         {/* Delete button */}
                                         <Icon
                                             name='trash'
@@ -1468,6 +1517,26 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         )
                     }}
                 />
+
+                {/* Create/Edit modal. */}
+                <Modal
+                    open={this.state.biomarkerToClone !== null}
+                    centered={false}
+                    onClose={this.closeModalToClone}
+                >
+                    <Header icon='copy' content='Clone Biomarker' />
+                    <Modal.Content>
+                        Are you sure you want to clone the Biomarker "<strong>{this.state.biomarkerToClone?.name}</strong>"?
+                    </Modal.Content>
+                    <Modal.Actions>
+                        <Button onClick={this.closeModalToClone}>
+                            Cancel
+                        </Button>
+                        <Button color='blue' onClick={this.cloneBiomarker} loading={this.state.cloningBiomarker} disabled={this.state.cloningBiomarker}>
+                            Clone
+                        </Button>
+                    </Modal.Actions>
+                </Modal>
 
                 {/* Create/Edit modal. */}
                 <Modal
