@@ -352,7 +352,6 @@ class TimesRecord(models.Model):
     number_of_features = models.PositiveIntegerField()
     number_of_samples = models.PositiveIntegerField()
     execution_time = models.FloatField()  # Execution time in seconds
-    test_time = models.FloatField()  # Testing time in seconds
     fitness = models.FloatField(null=True, blank=True)
     train_score = models.FloatField(null=True, blank=True)
 
@@ -364,7 +363,8 @@ class SVMTimesRecord(TimesRecord):
     """Time records during Feature Selection using an SVM as classifier."""
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='svm_times_records')
     number_of_iterations = models.PositiveIntegerField()
-    time_by_iteration = models.PositiveIntegerField()  # Testing time in seconds
+    time_by_iteration = models.PositiveIntegerField()  # Time by every SVM iteration during training
+    test_time = models.FloatField()  # Testing time in seconds
 
     # These parameters are duplicated here to avoid having to load the related SVMParameters instance. Also,
     # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
@@ -375,6 +375,8 @@ class SVMTimesRecord(TimesRecord):
 
 class RFTimesRecord(TimesRecord):
     """Time records during Feature Selection using a Random Forest as classifier."""
+    test_time = models.FloatField()  # Testing time in seconds
+
     # These parameters are duplicated here to avoid having to load the related RFParameters instance. Also,
     # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
     number_of_trees = models.PositiveIntegerField()

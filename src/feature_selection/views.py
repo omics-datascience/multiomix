@@ -234,7 +234,6 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                 number_of_features=row['number_of_features'],
                 number_of_samples=row['number_of_samples'],
                 execution_time=row['execution_times'],
-                test_time=row['test_times'],
                 fitness=row['fitness'],
                 train_score=row['train_scores'],
                 # Clustering parameters

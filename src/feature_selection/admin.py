@@ -38,16 +38,16 @@ class TrainedModelAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'biomarker__name')
 
 
-common_time_record_fields = ('pk', 'number_of_features', 'number_of_samples', 'execution_time', 'test_time', 'fitness')
+common_time_record_fields = ('pk', 'number_of_features', 'number_of_samples', 'execution_time', 'fitness')
 
 
 class SVMTimesRecordAdmin(admin.ModelAdmin):
-    list_display = common_time_record_fields + ('number_of_iterations', 'time_by_iteration', 'max_iterations',
-                                                'optimizer', 'kernel')
+    list_display = common_time_record_fields + ('test_time', 'number_of_iterations', 'time_by_iteration',
+                                                'max_iterations', 'optimizer', 'kernel')
 
 
 class RFTimesRecordAdmin(admin.ModelAdmin):
-    list_display = common_time_record_fields + ('number_of_trees', )
+    list_display = common_time_record_fields + ('test_time', 'number_of_trees')
 
 
 class ClusteringTimesRecordAdmin(admin.ModelAdmin):
