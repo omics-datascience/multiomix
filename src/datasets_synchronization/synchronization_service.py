@@ -7,6 +7,7 @@ import requests
 from pymongo.errors import InvalidName
 from requests.exceptions import ConnectionError
 from common.constants import PATIENT_ID_COLUMN, TCGA_CONVENTION, SAMPLE_ID_COLUMN
+from common.datasets_utils import clean_dataset
 from common.functions import close_db_connection
 from user_files.models_choices import FileType
 from .models import CGDSStudy, CGDSDataset, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
@@ -52,10 +53,10 @@ class SynchronizationService:
 
     def __sync_dataset(self, dataset: CGDSDataset, extract_path: str, check_patient_column: bool):
         """
-        Synchronizes a CGDS Dataset from a compressed file downloaded in 'sync_study' method
-        @param dataset:  Dataset to synchronize
-        @param extract_path: System path where the extracted files will be temporarily stored
-        @param check_patient_column: If True it checks that the patient id column is present (useful for clinical)
+        Synchronizes a CGDS Dataset from a compressed file downloaded in 'sync_study' method.
+        @param dataset: Dataset to synchronize.
+        @param extract_path: System path where the extracted files will be temporarily stored.
+        @param check_patient_column: If True it checks that the patient id column is present (useful for clinical).
         """
         if dataset is not None:
             # Gets file
@@ -63,7 +64,7 @@ class SynchronizationService:
             skip_rows = dataset.header_row_index if dataset.header_row_index else 0
 
             dataset_content: Optional[pd.DataFrame] = None
-            compute_post_saved_fields = False
+            sync_went_fine = False
             try:
                 dataset_content = pd.read_csv(
                     dataset_file_path,
@@ -78,7 +79,7 @@ class SynchronizationService:
                 # Replaces '.' with '_dot_' to prevent MongoDB errors
                 dataset_content.columns = dataset_content.columns.str.replace(".", "_dot_")
 
-                # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal)
+                # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) from samples
                 # to avoid breaking df join
                 if dataset.file_type == FileType.CLINICAL:
                     # Clinical data has a PATIENT_ID or SAMPLE_ID column. In the samples file (data_clinical_sample.txt)
@@ -104,6 +105,9 @@ class SynchronizationService:
                     dataset_content = dataset_content.drop_duplicates(subset=[upper_col], keep=False)
                     dataset_content = dataset_content.drop(columns=[upper_col])
 
+                    # Removes NaNs values to prevent errors in JSON sent to BioAPI/Modulector
+                    dataset_content = clean_dataset(dataset_content, axis='index')
+
                 # Removes the collection
                 global_mongo_service.drop_collection(dataset.mongo_collection_name)
 
@@ -118,7 +122,7 @@ class SynchronizationService:
                 dataset.date_last_synchronization = timezone.now()
                 if inserted_successfully:
                     dataset.state = CGDSDatasetSynchronizationState.SUCCESS
-                    compute_post_saved_fields = True
+                    sync_went_fine = True
                 else:
                     dataset.state = CGDSDatasetSynchronizationState.COULD_NOT_SAVE_IN_MONGO
             except SkipRowsIsIncorrect:
@@ -145,8 +149,13 @@ class SynchronizationService:
             dataset.save()
 
             # If everything is ok, computes some others fields
-            if compute_post_saved_fields:
+            if sync_went_fine:
                 dataset.compute_post_saved_field()
+            else:
+                # Raises an Exception to stop the CGDSStudy synchronization process
+                msg = f'The dataset {dataset} had a sync problem. Stopping the CGDSStudy synchronization process'
+                logging.error(msg)
+                raise Exception(msg)
 
     @staticmethod
     def __detect_sub_folder(dir_path: str) -> Optional[str]:
