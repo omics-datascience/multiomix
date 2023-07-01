@@ -326,8 +326,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             logging.error(f'FSExperiment ID: {fs_experiment.pk}')
 
     def post(self, request: Request, job_id: str):
-        # Sets new state and execution time
-        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id)
+        # Gets the instance (must be in process)
+        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id, state=BiomarkerState.IN_PROCESS)
         created_biomarker = fs_experiment.created_biomarker
 
         job_data = json.loads(request.body)
