@@ -1,11 +1,12 @@
 import pandas as pd
 from django.db import transaction
-from django.db.models import QuerySet, Exists, OuterRef, Q
+from django.db.models import QuerySet, Exists, OuterRef, Q, F
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
 from rest_framework.exceptions import ValidationError
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.enums import SourceType
@@ -38,6 +39,7 @@ def get_inference_experiment(request: HttpRequest) -> InferenceExperiment:
     inference_experiment_pk = request.GET.get('inference_experiment_pk')
     experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk, biomarker__user=request.user)
     return experiment
+
 
 class BiomarkerStatisticalInferenceExperiments(generics.ListAPIView):
     """Get all the inference experiments for a specific Biomarker."""
@@ -171,13 +173,23 @@ class SampleAndClusterPredictionSamples(generics.ListAPIView):
         samples_and_clusters = experiment.samples_and_clusters.all()
         return self.__filter_by_cluster(samples_and_clusters, self.request)
 
-
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SampleAndClusterPredictionSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     search_fields = ['sample']
     ordering_fields = ['sample', 'cluster']
+
+
+class ClustersUniqueInferenceExperiment(APIView):
+    """Gets all the pairs of samples and cluster for a specific inference experiment (that used a clustering model)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request, pk: int):
+        experiment = get_object_or_404(InferenceExperiment, pk=pk, biomarker__user=request.user)
+        samples_and_clusters = experiment.samples_and_clusters.values(text=F('cluster'), value=F('cluster')).distinct()
+        return Response(samples_and_clusters)
 
 
 class SampleAndTimePredictionSamples(generics.ListAPIView):
