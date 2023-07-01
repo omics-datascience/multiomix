@@ -244,7 +244,7 @@ h2.menu,
 /* Prevents the Popup to be over some modals */
 #clinical-source-popup,
 .ui.dimmer {
-    z-index: 2000 !important;
+    z-index: 2200 !important;
 }
 
 /* Prevents modals to be over the popups */
