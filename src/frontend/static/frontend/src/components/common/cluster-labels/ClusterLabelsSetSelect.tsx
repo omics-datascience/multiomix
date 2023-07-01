@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Select, DropdownItemProps } from 'semantic-ui-react'
 import { ClusterLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
 import { InputLabel } from '../InputLabel'
+import { WebsocketClientCustom } from '../../../websockets/WebsocketClient'
 
+declare const currentUserId: string
 declare const urlClusterLabelsSets: string
 
 /** ClusterLabelsSetSelect props. */
@@ -25,9 +27,22 @@ interface ClusterLabelsSetSelectProps {
 export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
     const [clusterLabelsSets, setClusterLabelsSets] = useState<ClusterLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
+    const websocketClient = useRef<WebsocketClientCustom>()
 
     useEffect(() => {
+        // Gets data
         getData()
+
+        // Initializes the websocket client
+        websocketClient.current = new WebsocketClientCustom({
+            channelUrl: `/ws/users/${currentUserId}/`,
+            commandsToAttend: [
+                {
+                    key: 'update_cluster_labels_sets',
+                    functionToExecute: getData
+                }
+            ]
+        })
     }, [])
 
     /** Retrieves all the ClusterLabelsSet instances for this user and the TrainedModel */
