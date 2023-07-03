@@ -327,7 +327,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
     def post(self, request: Request, job_id: str):
         # Gets the instance (must be in process)
-        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id, state=BiomarkerState.IN_PROCESS)
+        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id,
+                                          created_biomarker__state=BiomarkerState.IN_PROCESS)
         created_biomarker = fs_experiment.created_biomarker
 
         job_data = json.loads(request.body)
