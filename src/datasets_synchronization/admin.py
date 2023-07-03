@@ -37,7 +37,9 @@ class CGDSDatasetAdmin(admin.ModelAdmin):
     list_display = ('file_path', 'date_last_synchronization', 'study', 'study_version', 'number_of_rows',
                     'number_of_samples', 'state', 'mongo_collection_name')
     list_filter = ('state',)
-    search_fields = ('file_path', 'mongo_collection_name', 'study__name')
+    search_fields = ('file_path', 'mongo_collection_name', 'clinical_patient_dataset__name',
+                     'clinical_sample_dataset__name', 'cna_dataset__name', 'methylation_dataset__name',
+                     'mirna_dataset__name', 'mrna_dataset__name')
 
 
 
