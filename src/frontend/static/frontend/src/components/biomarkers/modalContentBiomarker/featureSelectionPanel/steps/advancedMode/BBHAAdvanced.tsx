@@ -1,13 +1,14 @@
 import React from 'react'
-import { Grid, Input, Select } from 'semantic-ui-react'
+import { Checkbox, Grid, Input, Select } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import './../../featureSelection.css'
 import { advanceBBHAOptions } from '../../../../utils'
 import { AdvancedBBHA } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
 
-declare const minIterationsBBHA: number
-declare const maxIterationsBBHA: number
+declare const sparkIntegrationIsEnabled: boolean
+declare const minIterationsMetaheuristics: number
+declare const maxIterationsMetaheuristics: number
 declare const minStarsBBHA: number
 declare const maxStarsBBHA: number
 
@@ -23,10 +24,7 @@ interface BBHAAdvancedProps {
  * @returns Component.
  */
 export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
-    const {
-        advancedData: advanceData,
-        handleChangeAdvanceAlgorithm
-    } = props
+    const { advancedData, handleChangeAdvanceAlgorithm } = props
     return (
         <Grid>
             <Grid.Row columns={2}>
@@ -40,7 +38,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         min={minStarsBBHA}
                         max={maxStarsBBHA}
                         name='numberOfStars'
-                        value={advanceData.numberOfStars}
+                        value={advancedData.numberOfStars}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
                             if (numVal < minStarsBBHA || isNaN(numVal) || numVal > maxStarsBBHA) {
@@ -65,14 +63,14 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         placeholder='An integer number'
                         type='number'
                         step={1}
-                        min={minIterationsBBHA}
-                        max={maxIterationsBBHA}
+                        min={minIterationsMetaheuristics}
+                        max={maxIterationsMetaheuristics}
                         name='numberOfIterations'
-                        value={advanceData.numberOfIterations}
+                        value={advancedData.numberOfIterations}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
                             // Prevents to set a value lower or higher than the limits
-                            if (numVal < minIterationsBBHA || isNaN(numVal) || numVal > maxIterationsBBHA) {
+                            if (numVal < minIterationsMetaheuristics || isNaN(numVal) || numVal > maxIterationsMetaheuristics) {
                                 return
                             }
 
@@ -94,7 +92,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         className='selection-select'
                         placeholder='Fitness function'
                         options={advanceBBHAOptions}
-                        value={advanceData.BBHAVersion}
+                        value={advancedData.BBHAVersion}
                         onChange={(_, { value }) => handleChangeAdvanceAlgorithm('BBHA', 'BBHAVersion', Number(value))}
                     />
                 </Grid.Column>
@@ -114,6 +112,28 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     />
                 </Grid.Column>
             </Grid.Row>
+
+            {/* Apache Spark optimization */}
+            {sparkIntegrationIsEnabled &&
+                <Grid.Row columns={2}>
+                    <Grid.Column width={14}>
+                        <Checkbox
+                            label='Try to optimize using Apache Spark'
+                            checked={advancedData.useSpark}
+                            onChange={(_e, { checked }) => { handleChangeAdvanceAlgorithm('BBHA', 'useSpark', checked ?? false) }}
+                        />
+                    </Grid.Column>
+                    <Grid.Column width={2} className='advance-center-container'>
+                        <InfoPopup
+                            content={
+                                <p>
+                                    If this option is enabled, the experiment will be executed (if possible) using <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink> to optimize execution times
+                                </p>}
+                            onTop={false}
+                        />
+                    </Grid.Column>
+                </Grid.Row>
+            }
         </Grid>
     )
 }

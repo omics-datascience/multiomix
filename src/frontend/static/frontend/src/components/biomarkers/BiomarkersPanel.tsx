@@ -33,6 +33,7 @@ declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
 declare const maxFeaturesBlindSearch: number
+declare const minFeaturesMetaheuristics: number
 declare const urlCloneBiomarker: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
@@ -144,11 +145,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultAdvancedAlgorithmParameters = (): AdvancedAlgorithmParameters => ({
         isActive: false,
         BBHA: {
+            useSpark: true,
             numberOfStars: 60,
             numberOfIterations: 10,
             BBHAVersion: BBHAVersion.ORIGINAL
         },
         coxRegression: {
+            useSpark: true,
             topN: 5
         }
     })
@@ -220,7 +223,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param name name of prop to change
      * @param value value to set
      */
-    handleChangeAdvanceAlgorithm = (advanceAlgorithm:string, name:string, value:any) => {
+    handleChangeAdvanceAlgorithm = (advanceAlgorithm: string, name: string, value: any) => {
         const featureSelection = this.state.featureSelection
         featureSelection.advancedAlgorithmParameters[advanceAlgorithm][name] = value
         this.setState({ featureSelection })
@@ -1222,10 +1225,16 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         featureSelection.biomarker = selectedBiomarker
         featureSelection.step = 2
 
-        // In case of a high number of features, prevents the user from using Blind Search
         const numberOfMolecules = getNumberOfMoleculesOfBiomarker(selectedBiomarker)
-        if (numberOfMolecules > maxFeaturesBlindSearch) {
-            featureSelection.algorithm = FeatureSelectionAlgorithm.BBHA
+
+        // In case of few molecules, the user cannot run metaheuristics
+        if (numberOfMolecules < minFeaturesMetaheuristics) {
+            featureSelection.algorithm = FeatureSelectionAlgorithm.BLIND_SEARCH
+        } else {
+            // In case of a high number of features, prevents the user from using Blind Search.
+            if (numberOfMolecules > maxFeaturesBlindSearch) {
+                featureSelection.algorithm = FeatureSelectionAlgorithm.BBHA
+            }
         }
 
         this.setState({ featureSelection })

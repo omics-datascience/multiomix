@@ -41,7 +41,7 @@ interface PopupClinicalSourceProps {
 /**
  * Component's state
  */
-interface AllExperimentRowState {
+interface ClinicalSourceState {
     clinicalSource: Source,
     /** Optional survival columns */
     survivalColumns: DjangoSurvivalColumnsTupleSimple[],
@@ -58,7 +58,7 @@ interface AllExperimentRowState {
 /**
  * Renders an icon with opens a Popup to manage clinical source for an experiment on the fly
  */
-export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProps, AllExperimentRowState> {
+export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProps, ClinicalSourceState> {
     constructor (props) {
         super(props)
 

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
-from .enums import SyncCGDSStudyResponseCode
+from .enums import SyncCGDSStudyResponseCode, SyncStrategy
 from .models import CGDSStudy, CGDSDatasetSynchronizationState
 from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
@@ -109,10 +109,15 @@ class SynCGDSStudy(APIView):
         try:
             cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
 
-            create_new_version = request.data.get('createNewVersion', True)
+            default_sync_strategy = SyncStrategy.NEW_VERSION
+            sync_strategy_value = request.data.get('strategy', default_sync_strategy)
+            try:
+                sync_strategy = SyncStrategy(sync_strategy_value)
+            except ValueError:
+                sync_strategy = default_sync_strategy
 
             # Gets SynchronizationService and adds the study
-            global_synchronization_service.add_cgds_study(cgds_study, create_new_version)
+            global_synchronization_service.add_cgds_study(cgds_study, sync_strategy)
 
             # Makes a successful response
             response = {

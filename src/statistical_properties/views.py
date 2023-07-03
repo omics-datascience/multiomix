@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F
 from django.db.models.functions import Abs
 from django.http import HttpRequest
 from django.http.response import Http404
@@ -248,6 +248,19 @@ class StatisticalValidationKaplanMeierClustering(APIView):
         })
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ClustersUniqueStatValidation(APIView):
+    """Gets all the pairs of samples and cluster for a specific StatisticalValidation (that used a clustering model)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request, pk: int):
+        stat_validation = get_object_or_404(StatisticalValidation, pk=pk,
+                                        biomarker__user=request.user)
+        samples_and_clusters = stat_validation.samples_and_clusters.values(text=F('cluster'),
+                                                                           value=F('cluster')).distinct()
+        return Response(samples_and_clusters)
 
 
 class StatisticalValidationClinicalAttributes(APIView):

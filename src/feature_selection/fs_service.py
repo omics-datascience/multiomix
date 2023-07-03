@@ -79,7 +79,17 @@ class FSService(object):
         return molecules_temp_file_path, clinical_temp_file_path
 
     @staticmethod
-    def __compute_experiment(experiment: FSExperiment, molecules_temp_file_path: str,
+    def __should_run_in_spark(n_agents: int, n_iterations: int) -> bool:
+        """
+        Return True if the number of combinations to be executed is greater than or equal to the
+        threshold (MIN_COMBINATIONS_SPARK parameter).
+        @param n_agents: Number of agents in the metaheuristic.
+        @param n_iterations: Number of iterations in the metaheuristic.
+        @return: True if the number of combinations to be executed is greater than or equal to the threshold.
+        """
+        return n_agents * n_iterations >= settings.MIN_COMBINATIONS_SPARK
+
+    def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
                              clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
                              fitness_function_parameters: Dict[str, Any],
                              algorithm_parameters: Dict[str, Any],
@@ -123,6 +133,7 @@ class FSService(object):
             n_stars = int(bbha_parameters['numberOfStars'])
             n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
             bbha_version = int(bbha_parameters['BBHAVersion'])
+            use_spark = bbha_parameters['useSpark']
 
             # Creates an instance of BBHAParameters
             BBHAParameters.objects.create(
@@ -132,8 +143,8 @@ class FSService(object):
                 version_used=bbha_version
             )
 
-            # TODO: add here a min_number_of_features parameter to prevent sending a little experiment to AWS
-            if settings.ENABLE_AWS_EMR_INTEGRATION:
+            if settings.ENABLE_AWS_EMR_INTEGRATION and use_spark and \
+                    self.__should_run_in_spark(n_agents=n_stars, n_iterations=n_bbha_iterations):
                 app_name = f'BBHA_{experiment.pk}'
 
                 job_id = binary_black_hole_spark(

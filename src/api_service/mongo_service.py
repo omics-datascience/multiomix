@@ -211,7 +211,7 @@ class MongoService(object):
         is_for_bioapi = file_type in [FileType.MRNA, FileType.CNA]
         if is_for_bioapi:
             logging.warning('Retrieving data from BioAPI')
-        else:
+        elif file_type == FileType.MIRNA:
             logging.warning('Retrieving data from Modulector')
 
         if is_for_bioapi:
@@ -229,13 +229,9 @@ class MongoService(object):
                 method='post'
             )
         else:
-            # In case of methylation
-            data = global_mrna_service.get_modulector_service_content(
-                'methylation-sites',
-                request_params={'methylation_sites': molecules},
-                is_paginated=False,
-                method='post'
-            )
+            # In case of methylation, cBioPortal don't manage the methylation sites, so we don't need to use Modulector.
+            # Generates a dummy dict with the same keys and values as the molecules list
+            data = {molecule: molecule for molecule in molecules}
 
         return data
 

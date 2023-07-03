@@ -326,11 +326,13 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             logging.error(f'FSExperiment ID: {fs_experiment.pk}')
 
     def post(self, request: Request, job_id: str):
-        # Sets new state and execution time
-        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id)
+        # Gets the instance (must be in process)
+        fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id, state=BiomarkerState.IN_PROCESS)
         created_biomarker = fs_experiment.created_biomarker
 
         job_data = json.loads(request.body)
+
+        emr_settings = settings.AWS_EMR_SETTINGS
 
         with transaction.atomic():
             # Checks state
@@ -342,6 +344,9 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                 exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
                 fs_experiment.execution_time = exec_time
                 fs_experiment.save(update_fields=['execution_time'])
+
+                # If everything went well, gets results, saves the corresponding data and returns ok
+                self.__save_results(fs_experiment, emr_settings)
             elif state == 'CANCELLED':
                 created_biomarker.state = BiomarkerState.STOPPED
             else:
@@ -350,12 +355,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
             created_biomarker.save(update_fields=['state'])
 
-            emr_settings = settings.AWS_EMR_SETTINGS
-
             # Removes the molecules and clinical datasets from the shared folder
             self.__remove_datasets(fs_experiment, emr_settings)
-
-            # If everything went well, gets results, saves the corresponding data and returns ok
-            self.__save_results(fs_experiment, emr_settings)
 
         return Response({'ok': True})

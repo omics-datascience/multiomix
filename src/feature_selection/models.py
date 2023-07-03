@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from api_service.websocket_functions import send_update_trained_models_command
+from api_service.websocket_functions import send_update_trained_models_command, send_update_cluster_label_set_command
 from biomarkers.models import TrainedModelState
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from user_files.models_choices import FileType
@@ -308,6 +308,14 @@ class ClusterLabelsSet(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='cluster_labels')
+
+    def save(self, *args, **kwargs):
+        """Every time the experiment status changes, uses websockets to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websockets message to update the list of cluster labels sets in the frontend
+        user_id = self.trained_model.biomarker.user.id
+        send_update_cluster_label_set_command(user_id)
 
 
 class ClusterLabel(models.Model):

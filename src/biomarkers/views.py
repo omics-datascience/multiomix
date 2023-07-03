@@ -107,12 +107,14 @@ class BiomarkerClone(APIView):
 def biomarkers_action(request):
     """Biomarkers Panel view"""
     return render(request, "frontend/biomarkers.html", context={
-        'min_iterations_bbha': settings.MIN_ITERATIONS_BBHA,
-        'max_iterations_bbha': settings.MAX_ITERATIONS_BBHA,
+        'enable_aws_emr_integration': settings.ENABLE_AWS_EMR_INTEGRATION,
+        'min_iterations_metaheuristics': settings.MIN_ITERATIONS_METAHEURISTICS,
+        'max_iterations_metaheuristics': settings.MAX_ITERATIONS_METAHEURISTICS,
         'min_stars_bbha': settings.MIN_STARS_BBHA,
         'max_stars_bbha': settings.MAX_STARS_BBHA,
         'max_features_cox_regression': settings.MAX_FEATURES_COX_REGRESSION,
-        'max_features_blind_search': settings.MAX_FEATURES_BLIND_SEARCH
+        'max_features_blind_search': settings.MAX_FEATURES_BLIND_SEARCH,
+        'min_features_metaheuristics': settings.MIN_FEATURES_METAHEURISTICS
     })
 
 

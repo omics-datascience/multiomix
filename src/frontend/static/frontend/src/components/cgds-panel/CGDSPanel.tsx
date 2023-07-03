@@ -40,6 +40,16 @@ interface CGDSStudyAndDatasetStateInfo {
     title: string
 }
 
+/** Sync strategies. */
+enum SyncStrategy {
+    /** Creates a new version of the CGDS Study and syncs it. */
+    NEW_VERSION = 1,
+    /** Updates the current version synchronizing all the datasets. */
+    SYNC_ALL = 2,
+    /** Updates the current version synchronizing only the datasets with a no successful state. */
+    SYNC_ONLY_FAILED = 3
+}
+
 /**
  * Renders a CRUD panel for a CGDS Studies and their datasets
  * @returns Component
@@ -194,9 +204,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
     /**
      * Makes a CGDS Study synchronization request.
-     * @param createNewVersion If true, creates a new version of the CGDS Study. Otherwise, updates the current version.
+     * @param strategy Strategy to use in the synchronization.
      */
-    syncStudy = (createNewVersion: boolean) => {
+    syncStudy = (strategy: SyncStrategy) => {
         if (!this.state.selectedCGDSStudyToDeleteOrSync) {
             return
         }
@@ -207,7 +217,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
             const jsonParams = {
                 CGDSStudyId: this.state.selectedCGDSStudyToDeleteOrSync?.id,
-                createNewVersion
+                strategy
             }
 
             ky.post(urlSyncCGDSStudy, { headers: myHeaders, json: jsonParams }).then((response) => {
@@ -488,11 +498,27 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 <Header icon='sync' content='Sync CGDS Study' />
                 <Modal.Content>
                     <p>
-                        Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>? This process <strong>cannot</strong> be undone and will synchronize <strong>all</strong> the CGDS datasets related to this study.
+                        Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>? This process <strong>cannot</strong> be undone.
                     </p>
 
                     <p>
-                        <strong>IMPORTANT: only select <i>Sync</i> option if there were some critical errors that must be fixed. Synchronizing an existing dataset could lead to inconsistencies with existing experiments using its data. If it is just a new data update from cBioPortal, a new version should be generated.</strong>
+                        The available strategies are the following:
+
+                        <ul>
+                            <li>
+                                <strong>Sync all:</strong> synchronizes all the data from the CGDS Study. This will delete all the existing data and replace it with the new one in the <strong>current version</strong>.
+                            </li>
+                            <li>
+                                <strong>Sync only failed:</strong> synchronizes only the data of <strong>failed/non-synchronized datasets</strong> from the CGDS Study. This will delete all their existing data and replace it with the new one in the <strong>current version</strong>.
+                            </li>
+                            <li>
+                                <strong>Create new version and sync:</strong> synchronizes all the data from the CGDS Study. This <strong>will create a new version</strong> of the study with the new data, leaving the previous version untouched.
+                            </li>
+                        </ul>
+                    </p>
+
+                    <p>
+                        <strong>IMPORTANT: only select <i>Sync all/failed</i> options if there were some critical errors that must be fixed. Synchronizing an existing dataset could lead to inconsistencies with existing experiments using its data. If it is just a new data update from cBioPortal, a new version should be generated.</strong>
                     </p>
 
                     {!this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
@@ -503,15 +529,32 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     <Button onClick={this.handleClose}>
                         Cancel
                     </Button>
-                    <Button color='orange' onClick={() => this.syncStudy(false)} loading={this.state.sendingSyncRequest} disabled={this.state.sendingSyncRequest}>
-                        Sync
+
+                    {/* Sync all button */}
+                    <Button
+                        color='orange'
+                        onClick={() => this.syncStudy(SyncStrategy.SYNC_ALL)}
+                        loading={this.state.sendingSyncRequest}
+                        disabled={this.state.sendingSyncRequest}
+                    >
+                        Sync all
+                    </Button>
+
+                    {/* Sync only failed button */}
+                    <Button
+                        color='teal'
+                        onClick={() => this.syncStudy(SyncStrategy.SYNC_ONLY_FAILED)}
+                        loading={this.state.sendingSyncRequest}
+                        disabled={this.state.sendingSyncRequest}
+                    >
+                        Sync only failed
                     </Button>
 
                     {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
                     {this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
                         <Button
                             color='blue'
-                            onClick={() => this.syncStudy(true)}
+                            onClick={() => this.syncStudy(SyncStrategy.NEW_VERSION)}
                             loading={this.state.sendingSyncRequest}
                             disabled={this.state.sendingSyncRequest}
                         >
