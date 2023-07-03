@@ -107,6 +107,7 @@ class BiomarkerClone(APIView):
 def biomarkers_action(request):
     """Biomarkers Panel view"""
     return render(request, "frontend/biomarkers.html", context={
+        'enable_aws_emr_integration': settings.ENABLE_AWS_EMR_INTEGRATION,
         'min_iterations_metaheuristics': settings.MIN_ITERATIONS_METAHEURISTICS,
         'max_iterations_metaheuristics': settings.MAX_ITERATIONS_METAHEURISTICS,
         'min_stars_bbha': settings.MIN_STARS_BBHA,

@@ -14,6 +14,7 @@
 
 {% block js %}
         <script>
+                const sparkIntegrationIsEnabled = "{{ enable_aws_emr_integration }}" == "True"
                 const minIterationsMetaheuristics = {{ min_iterations_metaheuristics }}
                 const maxIterationsMetaheuristics = {{ max_iterations_metaheuristics }}
                 const minStarsBBHA = {{ min_stars_bbha }}

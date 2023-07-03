@@ -145,11 +145,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getDefaultAdvancedAlgorithmParameters = (): AdvancedAlgorithmParameters => ({
         isActive: false,
         BBHA: {
+            useSpark: true,
             numberOfStars: 60,
             numberOfIterations: 10,
             BBHAVersion: BBHAVersion.ORIGINAL
         },
         coxRegression: {
+            useSpark: true,
             topN: 5
         }
     })
@@ -221,7 +223,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param name name of prop to change
      * @param value value to set
      */
-    handleChangeAdvanceAlgorithm = (advanceAlgorithm:string, name:string, value:any) => {
+    handleChangeAdvanceAlgorithm = (advanceAlgorithm: string, name: string, value: any) => {
         const featureSelection = this.state.featureSelection
         featureSelection.advancedAlgorithmParameters[advanceAlgorithm][name] = value
         this.setState({ featureSelection })

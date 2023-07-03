@@ -133,6 +133,7 @@ class FSService(object):
             n_stars = int(bbha_parameters['numberOfStars'])
             n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
             bbha_version = int(bbha_parameters['BBHAVersion'])
+            use_spark = bbha_parameters['useSpark']
 
             # Creates an instance of BBHAParameters
             BBHAParameters.objects.create(
@@ -142,8 +143,8 @@ class FSService(object):
                 version_used=bbha_version
             )
 
-            if settings.ENABLE_AWS_EMR_INTEGRATION and self.__should_run_in_spark(n_agents=n_stars,
-                                                                                  n_iterations=n_bbha_iterations):
+            if settings.ENABLE_AWS_EMR_INTEGRATION and use_spark and \
+                    self.__should_run_in_spark(n_agents=n_stars, n_iterations=n_bbha_iterations):
                 app_name = f'BBHA_{experiment.pk}'
 
                 job_id = binary_black_hole_spark(

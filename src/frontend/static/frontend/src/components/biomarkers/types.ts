@@ -308,26 +308,32 @@ interface FeatureSelectionPanelData {
 }
 
 /** Advanced algorithm parameters to make Feature selection */
-interface AdvancedAlgorithm{
+interface AdvancedAlgorithm {
     isActive: boolean,
     BBHA: AdvancedBBHA,
     coxRegression: AdvancedCoxRegression
 }
 
+/** Some common fields to use in the Expert mode. */
+interface AdvancedMode {
+    /** Try to optimize using Spark if the integration is enabled in the backend. */
+    useSpark: boolean
+}
+
 /** Advanced Cox Regression properties */
-interface AdvancedCoxRegression{
+interface AdvancedCoxRegression extends AdvancedMode {
     topN: number
 }
 
 /** Advanced BBHA properties */
-interface AdvancedBBHA{
+interface AdvancedBBHA extends AdvancedMode {
     numberOfStars: number;
     numberOfIterations: number;
     BBHAVersion: BBHAVersion;
 }
 
 /** Binary Black Hole Algorithm version */
-enum BBHAVersion{
+enum BBHAVersion {
     ORIGINAL = 1,
     IMPROVED = 2
 }
@@ -439,9 +445,11 @@ interface MoleculeWithCoefficient {
 /** Dict from the backend with all the molecules expressions for all the samples. */
 interface MoleculesExpressions {
     /** Object with the molecule's name as key. The value is an object with the sample as key, and the expression as value. */
-    data: {[moleculeName: string]: {
-        [sampleName: string]: number // This number is the expression
-    }},
+    data: {
+        [moleculeName: string]: {
+            [sampleName: string]: number // This number is the expression
+        }
+    },
     min: number,
     max: number
 }
