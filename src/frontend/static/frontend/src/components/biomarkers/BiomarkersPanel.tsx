@@ -33,6 +33,7 @@ declare const urlMethylationSites: string
 declare const urlMethylationSitesFinder: string
 declare const urlFeatureSelectionSubmit: string
 declare const maxFeaturesBlindSearch: number
+declare const minFeaturesMetaheuristics: number
 declare const urlCloneBiomarker: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
@@ -1222,10 +1223,16 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         featureSelection.biomarker = selectedBiomarker
         featureSelection.step = 2
 
-        // In case of a high number of features, prevents the user from using Blind Search
         const numberOfMolecules = getNumberOfMoleculesOfBiomarker(selectedBiomarker)
-        if (numberOfMolecules > maxFeaturesBlindSearch) {
-            featureSelection.algorithm = FeatureSelectionAlgorithm.BBHA
+
+        // In case of few molecules, the user cannot run metaheuristics
+        if (numberOfMolecules < minFeaturesMetaheuristics) {
+            featureSelection.algorithm = FeatureSelectionAlgorithm.BLIND_SEARCH
+        } else {
+            // In case of a high number of features, prevents the user from using Blind Search.
+            if (numberOfMolecules > maxFeaturesBlindSearch) {
+                featureSelection.algorithm = FeatureSelectionAlgorithm.BBHA
+            }
         }
 
         this.setState({ featureSelection })

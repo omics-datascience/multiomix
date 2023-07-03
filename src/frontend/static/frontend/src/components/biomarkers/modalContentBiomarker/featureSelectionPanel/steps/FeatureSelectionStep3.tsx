@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Form, Grid, Segment } from 'semantic-ui-react'
 import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters } from '../../../types'
 import { BlindSearchPanel } from './BlindSearchPanel'
@@ -8,6 +8,7 @@ import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
 import { getNumberOfMoleculesOfBiomarker } from '../../../utils'
 
 declare const maxFeaturesBlindSearch: number
+declare const minFeaturesMetaheuristics: number
 
 /** FeatureSelectionStep3 props. */
 interface FeatureSelectionStep3Props {
@@ -29,7 +30,13 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleSwitchAdvanceAlgorithm
     } = props
 
-    const blindSearchIsDisabled = getNumberOfMoleculesOfBiomarker(props.featureSelection.selectedBiomarker) > maxFeaturesBlindSearch
+    const numberOfMolecules = useMemo(
+        () => getNumberOfMoleculesOfBiomarker(props.featureSelection.selectedBiomarker),
+        [props.featureSelection.selectedBiomarker?.id]
+    )
+
+    const blindSearchIsDisabled = numberOfMolecules > maxFeaturesBlindSearch
+    const metaheuristicsAreDisabled = numberOfMolecules < minFeaturesMetaheuristics
 
     const algorithmSelection = () => {
         switch (featureSelection.algorithm) {
@@ -117,9 +124,23 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                             value: FeatureSelectionAlgorithm.BLIND_SEARCH,
                             disabled: blindSearchIsDisabled
                         },
-                        { key: FeatureSelectionAlgorithm.BBHA, text: 'BBHA', value: FeatureSelectionAlgorithm.BBHA },
-                        { key: FeatureSelectionAlgorithm.COX_REGRESSION, text: 'Cox Regression', value: FeatureSelectionAlgorithm.COX_REGRESSION },
-                        { key: FeatureSelectionAlgorithm.PSO, text: 'PSO', value: FeatureSelectionAlgorithm.PSO, disabled: true }
+                        {
+                            key: FeatureSelectionAlgorithm.BBHA,
+                            text: 'BBHA',
+                            value: FeatureSelectionAlgorithm.BBHA,
+                            disabled: metaheuristicsAreDisabled
+                        },
+                        {
+                            key: FeatureSelectionAlgorithm.COX_REGRESSION,
+                            text: 'Cox Regression',
+                            value: FeatureSelectionAlgorithm.COX_REGRESSION
+                        },
+                        {
+                            key: FeatureSelectionAlgorithm.PSO,
+                            text: 'PSO',
+                            value: FeatureSelectionAlgorithm.PSO,
+                            disabled: true || metaheuristicsAreDisabled // TODO: remove 'true'
+                        }
                     ]}
                     value={featureSelection.algorithm}
                     onChange={(_, { value }) => handleChangeAlgorithm(value as FeatureSelectionAlgorithm)}

@@ -301,9 +301,9 @@ N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
 # Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
 COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 2))
 
-# Minimum and maximum number of iterations user can select to run the BBHA algorithm
-MIN_ITERATIONS_BBHA: int = int(os.getenv('MIN_ITERATIONS_BBHA', 1))
-MAX_ITERATIONS_BBHA: int = int(os.getenv('MAX_ITERATIONS_BBHA', 20))
+# Minimum and maximum number of iterations user can select to run the BBHA/PSO algorithm
+MIN_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MIN_ITERATIONS_METAHEURISTICS', 1))
+MAX_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MAX_ITERATIONS_METAHEURISTICS', 20))
 
 # Maximum number of stars in the BBHA algorithm
 MIN_STARS_BBHA: int = int(os.getenv('MIN_STARS_BBHA', 5))
@@ -315,3 +315,10 @@ MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 
 # Max number of features to allow to run a Blind Search algorithm, if the number of features is greater than this
 # value, the algorithm is disabled and only metaheuristic algorithms are allowed
 MAX_FEATURES_BLIND_SEARCH: int = int(os.getenv('MAX_FEATURES_BLIND_SEARCH', 7))
+
+# Minimum number of features to allow the user to run Metaheuristic algorithms (>=). This prevents to run metaheuristic
+# on datasets with a small number of features which leads to experiments with more metaheuristics agents than number
+# of total features combinations. We recommend to set this parameter to a value N such that
+# N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations.
+# Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value
+MIN_FEATURES_METAHEURISTICS: int = int(os.getenv('MIN_FEATURES_METAHEURISTICS', 7))

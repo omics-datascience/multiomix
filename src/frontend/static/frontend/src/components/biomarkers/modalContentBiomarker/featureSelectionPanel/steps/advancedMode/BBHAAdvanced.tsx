@@ -6,8 +6,8 @@ import { advanceBBHAOptions } from '../../../../utils'
 import { AdvancedBBHA } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
 
-declare const minIterationsBBHA: number
-declare const maxIterationsBBHA: number
+declare const minIterationsMetaheuristics: number
+declare const maxIterationsMetaheuristics: number
 declare const minStarsBBHA: number
 declare const maxStarsBBHA: number
 
@@ -65,14 +65,14 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         placeholder='An integer number'
                         type='number'
                         step={1}
-                        min={minIterationsBBHA}
-                        max={maxIterationsBBHA}
+                        min={minIterationsMetaheuristics}
+                        max={maxIterationsMetaheuristics}
                         name='numberOfIterations'
                         value={advanceData.numberOfIterations}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
                             // Prevents to set a value lower or higher than the limits
-                            if (numVal < minIterationsBBHA || isNaN(numVal) || numVal > maxIterationsBBHA) {
+                            if (numVal < minIterationsMetaheuristics || isNaN(numVal) || numVal > maxIterationsMetaheuristics) {
                                 return
                             }
 
