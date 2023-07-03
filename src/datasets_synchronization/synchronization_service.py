@@ -10,6 +10,7 @@ from common.constants import PATIENT_ID_COLUMN, TCGA_CONVENTION, SAMPLE_ID_COLUM
 from common.datasets_utils import clean_dataset
 from common.functions import close_db_connection
 from user_files.models_choices import FileType
+from .enums import SyncStrategy
 from .models import CGDSStudy, CGDSDataset, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState
 from concurrent.futures import ThreadPoolExecutor
 import tarfile
@@ -51,14 +52,21 @@ class SynchronizationService:
         """
         return sorted([filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))])
 
-    def __sync_dataset(self, dataset: CGDSDataset, extract_path: str, check_patient_column: bool):
+    def __sync_dataset(self, dataset: CGDSDataset, extract_path: str, only_failed: bool,
+                       check_patient_column: bool):
         """
         Synchronizes a CGDS Dataset from a compressed file downloaded in 'sync_study' method.
         @param dataset: Dataset to synchronize.
         @param extract_path: System path where the extracted files will be temporarily stored.
+        @param only_failed: If True, only synchronizes the dataset if It's not synchronized yet.
         @param check_patient_column: If True it checks that the patient id column is present (useful for clinical).
         """
         if dataset is not None:
+            # Checks if the dataset is already synchronized
+            if only_failed and dataset.state == CGDSDatasetSynchronizationState.SUCCESS:
+                logging.warning(f'Dataset "{dataset}" is already synchronized and only_failed is True. Ignoring it.')
+                return
+
             # Gets file
             dataset_file_path = os.path.join(extract_path, dataset.file_path)
             skip_rows = dataset.header_row_index if dataset.header_row_index else 0
@@ -260,12 +268,13 @@ class SynchronizationService:
 
         return study_copy
 
-    def extract_file_and_sync_datasets(self, cgds_study: CGDSStudy, tar_file_path: str):
+    def extract_file_and_sync_datasets(self, cgds_study: CGDSStudy, tar_file_path: str, only_failed: bool):
         """
         Extracts the recently downloaded tar file of a CGDSStudy and syncs its CGDSDataset which
         are inside the tar file
         @param cgds_study: CGDSStudy to gets the reading mode of the tar file
         @param tar_file_path: Path of downloaded tar file to decompress it
+        @param only_failed: If True, only synchronizes the datasets that are not synchronized yet.
         """
         # Infers the mode of downloaded compressed file to open it
         path = urlparse(cgds_study.url).path
@@ -284,12 +293,14 @@ class SynchronizationService:
                 extract_path = os.path.join(extract_path, sub_folder_name)
 
             # Syncs CGDS study's datasets
-            self.__sync_dataset(cgds_study.mrna_dataset, extract_path, check_patient_column=False)
-            self.__sync_dataset(cgds_study.mirna_dataset, extract_path, check_patient_column=False)
-            self.__sync_dataset(cgds_study.cna_dataset, extract_path, check_patient_column=False)
-            self.__sync_dataset(cgds_study.methylation_dataset, extract_path, check_patient_column=False)
-            self.__sync_dataset(cgds_study.clinical_patient_dataset, extract_path, check_patient_column=True)
-            self.__sync_dataset(cgds_study.clinical_sample_dataset, extract_path, check_patient_column=True)
+            self.__sync_dataset(cgds_study.mrna_dataset, extract_path, only_failed, check_patient_column=False)
+            self.__sync_dataset(cgds_study.mirna_dataset, extract_path, only_failed, check_patient_column=False)
+            self.__sync_dataset(cgds_study.cna_dataset, extract_path, only_failed, check_patient_column=False)
+            self.__sync_dataset(cgds_study.methylation_dataset, extract_path, only_failed, check_patient_column=False)
+            self.__sync_dataset(cgds_study.clinical_patient_dataset, extract_path, only_failed,
+                                check_patient_column=True)
+            self.__sync_dataset(cgds_study.clinical_sample_dataset, extract_path, only_failed,
+                                check_patient_column=True)
 
     @staticmethod
     def __all_dataset_finished_correctly(cgds_study: CGDSStudy) -> bool:
@@ -305,10 +316,11 @@ class SynchronizationService:
 
         return True
 
-    def sync_study(self, cgds_study: CGDSStudy):
+    def sync_study(self, cgds_study: CGDSStudy, only_failed: bool):
         """
         Synchronizes a CGDS Study from CBioportal (https://www.cbioportal.org/)
         @param cgds_study: CGDS Study to synchronize
+        @param only_failed: If True, only synchronizes the datasets that are not synchronized yet.
         """
         # Updates the CGDS Study state
         cgds_study.state = CGDSStudySynchronizationState.IN_PROCESS
@@ -341,7 +353,7 @@ class SynchronizationService:
                 logging.warning(f'{cgds_study.name} downloading finished')
 
                 # Extracts and synchronizes the CGDSStudy's Datasets
-                self.extract_file_and_sync_datasets(cgds_study, downloaded_path)
+                self.extract_file_and_sync_datasets(cgds_study, downloaded_path, only_failed)
 
             # Saves new state of the CGDSStudy
             if self.__all_dataset_finished_correctly(cgds_study):
@@ -375,15 +387,15 @@ class SynchronizationService:
         close_db_connection()
         global_mongo_service.close_mongo_db_connection()
 
-    def add_cgds_study(self, cgds_study: CGDSStudy, create_new_version: bool):
+    def add_cgds_study(self, cgds_study: CGDSStudy, sync_strategy: SyncStrategy):
         """
         Adds an CGDS Study to the ThreadPool to be processed.
         @param cgds_study: CGDSStudy to be processed.
-        @param create_new_version: True if a new version of the CGDSStudy must be created. Otherwise, the current
+        @param sync_strategy: Sync strategy.
         version will be updated (useful for studies with critical errors).
         """
         # First of all checks if exists at least one CGDS dataset with a success state
-        if create_new_version and cgds_study.has_at_least_one_dataset_synchronized():
+        if sync_strategy == SyncStrategy.NEW_VERSION and cgds_study.has_at_least_one_dataset_synchronized():
             logging.info(f'CGDS Study {cgds_study.name} has at least one dataset synchronized. '
                          f'Generating a new version...')
             cgds_study = self.generate_study_new_version(cgds_study)
@@ -392,7 +404,8 @@ class SynchronizationService:
         cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
         cgds_study.save(update_fields=['state'])
 
-        self.executor.submit(self.sync_study, cgds_study)
+        only_failed = sync_strategy == SyncStrategy.SYNC_ONLY_FAILED
+        self.executor.submit(self.sync_study, cgds_study, only_failed)
 
 
 global_synchronization_service = SynchronizationService()
