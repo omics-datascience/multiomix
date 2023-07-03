@@ -322,3 +322,9 @@ MAX_FEATURES_BLIND_SEARCH: int = int(os.getenv('MAX_FEATURES_BLIND_SEARCH', 7))
 # N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations.
 # Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value
 MIN_FEATURES_METAHEURISTICS: int = int(os.getenv('MIN_FEATURES_METAHEURISTICS', 7))
+
+# Minimum number of combinations to allow the Spark execution (if less, the execution is done locally). This is computed
+# as the number of agents in the metaheuristic multiplied by the number of iterations. This prevents to run Spark jobs
+# (which are slow to start) on small experiments to save time and resources.
+# Only considered if the Spark execution is enabled (ENABLE_AWS_EMR_INTEGRATION = True)
+MIN_COMBINATIONS_SPARK: int = int(os.getenv('MIN_COMBINATIONS_SPARK', 60))
