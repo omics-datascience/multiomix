@@ -81,7 +81,7 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
             },
             {
                 'name': 'svm-is-regression',
-                'value': 'true',
+                'value': '',  # Boolean values are passed as empty string
             }
         ]
     elif trained_model.fitness_function == FitnessFunction.RF:
