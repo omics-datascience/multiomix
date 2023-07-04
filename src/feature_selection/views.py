@@ -17,8 +17,8 @@ from biomarkers.models import Biomarker, BiomarkerState
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
-    ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod
-from feature_selection.utils import save_molecule_identifiers
+    ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod, SVMKernel
+from feature_selection.utils import save_molecule_identifiers, get_svm_kernel_enum
 from user_files.models_choices import FileType
 
 
@@ -169,11 +169,12 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         self.__remove_file_if_exists(clinical_df_path)
 
     @staticmethod
-    def __get_svm_parameters_columns(row: pd.Series) -> Tuple[str, str, str, str]:
+    def __get_svm_parameters_columns(row: pd.Series) -> Tuple[str, str, str, SVMKernel]:
         """Iterates over rows generating some columns with SVM model parameters"""
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         task, max_iterations, optimizer, kernel = params[0], params[1], params[4], params[6]
+        kernel = get_svm_kernel_enum(kernel)
         return task, max_iterations, optimizer, kernel
 
     @staticmethod
@@ -349,38 +350,37 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
         emr_settings = settings.AWS_EMR_SETTINGS
 
-        with transaction.atomic():
-            # Checks state
-            state = job_data['state']
-            if state == 'COMPLETED':
-                created_biomarker.state = BiomarkerState.COMPLETED
+        # Checks state
+        state = job_data['state']
+        if state == 'COMPLETED':
+            created_biomarker.state = BiomarkerState.COMPLETED
 
-                # Saves execution time
-                exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
-                fs_experiment.execution_time = exec_time
-                fs_experiment.save(update_fields=['execution_time'])
+            # Saves execution time
+            exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
+            fs_experiment.execution_time = exec_time
+            fs_experiment.save(update_fields=['execution_time'])
 
-                # If everything went well, gets results, saves the corresponding data and returns ok
-                try:
-                    self.__save_results(fs_experiment, emr_settings)
-                except FileNotFoundError as e:
-                    logging.error(f'Could not find results file for FSExperiment ID {fs_experiment.pk}.'
-                                  f' Setting as FINISHED_WITH_ERROR')
-                    logging.exception(e)
-                    created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
-                except CouldNotSaveTimesRecord as e:
-                    logging.error(f'Could not save times data for FSExperiment ID {fs_experiment.pk}. Setting as '
-                                  f'COMPLETED anyway. See Spark logs or the exception for more details.')
-                    logging.exception(e)
-            elif state == 'CANCELLED':
-                created_biomarker.state = BiomarkerState.STOPPED
-            else:
-                logging.warning(f'Job failed with state: {state}. Setting as FINISHED_WITH_ERROR')
+            # If everything went well, gets results, saves the corresponding data and returns ok
+            try:
+                self.__save_results(fs_experiment, emr_settings)
+            except FileNotFoundError as e:
+                logging.error(f'Could not find results file for FSExperiment ID {fs_experiment.pk}.'
+                              f' Setting as FINISHED_WITH_ERROR')
+                logging.exception(e)
                 created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
+            except CouldNotSaveTimesRecord as e:
+                logging.error(f'Could not save times data for FSExperiment ID {fs_experiment.pk}. Setting as '
+                              f'COMPLETED anyway. See Spark logs or the exception for more details.')
+                logging.exception(e)
+        elif state == 'CANCELLED':
+            created_biomarker.state = BiomarkerState.STOPPED
+        else:
+            logging.warning(f'Job failed with state: {state}. Setting as FINISHED_WITH_ERROR')
+            created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
 
-            created_biomarker.save(update_fields=['state'])
+        created_biomarker.save(update_fields=['state'])
 
-            # Removes the molecules and clinical datasets from the shared folder
-            self.__remove_datasets(fs_experiment, emr_settings)
+        # Removes the molecules and clinical datasets from the shared folder
+        self.__remove_datasets(fs_experiment, emr_settings)
 
         return Response({'ok': True})

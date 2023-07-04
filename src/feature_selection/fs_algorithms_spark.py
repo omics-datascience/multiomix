@@ -4,27 +4,19 @@ from typing import Optional, Dict, cast, List
 import numpy as np
 import pandas as pd
 import requests
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from common.datasets_utils import create_folder_with_permissions
 from common.utils import remove_non_alphanumeric_chars
 from feature_selection.fs_algorithms import FSResult
 from feature_selection.models import ClusteringScoringMethod, FitnessFunction, TrainedModel, SVMParameters, \
-    RFParameters, ClusteringParameters, SVMKernel, ClusteringAlgorithm
-from multiomics_intermediate import settings
+    RFParameters, ClusteringParameters, ClusteringAlgorithm
+from feature_selection.utils import get_svm_kernel
 
 
 class EMRAlgorithms(Enum):
     BLIND_SEARCH = 0
     BBHA = 1
-
-
-def __get_kernel_value(kernel: SVMKernel) -> str:
-    """Gets the corresponding string value for the parameter 'svm-kernel' of the EMR integration."""
-    if kernel == SVMKernel.RBF:
-        return 'rbf'
-    if kernel == SVMKernel.POLYNOMIAL:
-        return 'poly'
-    return 'linear'  # Default is linear as if faster
 
 
 def __get_model_value(fitness_function: FitnessFunction) -> str:
@@ -69,7 +61,7 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
         result = [
             {
                 'name': 'svm-kernel',
-                'value': __get_kernel_value(models_parameters.kernel),
+                'value': get_svm_kernel(models_parameters.kernel),
             },
             {
                 'name': 'svm-optimizer',

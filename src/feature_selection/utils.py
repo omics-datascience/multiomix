@@ -14,7 +14,7 @@ from user_files.models_choices import FileType
 
 def get_svm_kernel(kernel: SVMKernel) -> SVMKernelOptions:
     """
-    Gets a valid Scikit-surv learn parameter for the specific SVMKernel enum value.
+    Gets a valid Scikit-surv learn (or AWS-EMR integration service) parameter for the specific SVMKernel enum value.
     @param kernel: SVMKernel enum value.
     @return: Valid Scikit-surv learn parameter for the FastKernelSurvivalSVM model.
     """
@@ -23,6 +23,20 @@ def get_svm_kernel(kernel: SVMKernel) -> SVMKernelOptions:
     if kernel == SVMKernel.POLYNOMIAL:
         return 'poly'
     return 'linear'  # Default is linear as if faster
+
+
+def get_svm_kernel_enum(kernel: SVMKernelOptions) -> SVMKernel:
+    """
+    Gets the corresponding enum from a Scikit-surv learn (or AWS-EMR integration service) value.
+    It's the inverse of get_svm_kernel().
+    @param kernel: Kernel str value.
+    @return: SVMKernel enum value.
+    """
+    if kernel == 'rbf':
+        return SVMKernel.RBF
+    if kernel == 'poly':
+        return SVMKernel.POLYNOMIAL
+    return SVMKernel.LINEAR
 
 
 def get_random_subset_of_features_bbha(n_features: int) -> np.ndarray:
