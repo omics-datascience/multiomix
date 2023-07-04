@@ -101,8 +101,8 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                 name='randomState'
                                 value={fitnessFunctionParameters.svmParameters.randomState}
                                 onChange={(_, { name, value }) => {
-                                    const numVal = Number(value)
-                                    if (numVal < 0) {
+                                    const numVal = value !== '' ? Number(value) : null
+                                    if (numVal !== null && numVal < 0) {
                                         handleChangeFitnessFunctionOption('svmParameters', name, 0)
                                     } else {
                                         handleChangeFitnessFunctionOption('svmParameters', name, numVal)
@@ -113,12 +113,10 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 )
             case FitnessFunction.RF:
                 return (
-                    <>
-                        <RFPanel
-                            parameters={fitnessFunctionParameters.rfParameters}
-                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        />
-                    </>
+                    <RFPanel
+                        parameters={fitnessFunctionParameters.rfParameters}
+                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                    />
                 )
         }
     }
