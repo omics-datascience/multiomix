@@ -14,6 +14,7 @@ from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sksurv.exceptions import NoComparablePairException
 from sksurv.metrics import concordance_index_censored
 from biomarkers.models import BiomarkerState, Biomarker, TrainedModelState
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound, \
@@ -533,7 +534,7 @@ class StatisticalValidationService(object):
             self.__commit_or_rollback(is_commit=False)
             logging.error('No samples in common')
             trained_model.state = TrainedModelState.NO_SAMPLES_IN_COMMON
-        except NoBestModelFound as ex:
+        except (NoBestModelFound, NoComparablePairException) as ex:
             self.__commit_or_rollback(is_commit=False)
             logging.error(f'No best model found: {ex}')
             trained_model.state = TrainedModelState.NO_BEST_MODEL_FOUND
