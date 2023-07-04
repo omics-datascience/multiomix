@@ -22,6 +22,11 @@ from feature_selection.utils import save_molecule_identifiers
 from user_files.models_choices import FileType
 
 
+class CouldNotSaveTimesRecord(Exception):
+    """Raised for edge cases where TimesRecord instances could not be stored."""
+    pass
+
+
 # Keys to keep from the Spark result JSONs
 JSON_KEYS = ['number_of_features', 'execution_times', 'fitness', 'times_by_iteration',
                          'test_times', 'train_scores', 'number_of_iterations', 'number_of_samples', 'parameters']
@@ -191,7 +196,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return number_of_trees
 
     def __save_svm_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
-        """Saves all the data about times from the Spark job for a SVM model."""
+        """Saves all the data about times from the Spark job for an SVM model."""
         # Gets the parameters from the parameters column
         parameters_df = times_df.apply(self.__get_svm_parameters_columns, axis=1, result_type='expand')
         parameters_df.columns = ['task', 'max_iterations', 'optimizer', 'kernel']
@@ -271,7 +276,13 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         ])
 
     def __save_results(self, fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
-        """Gets results from the shared folder and saves them in the database."""
+        """
+        Gets results from the shared folder and saves them in the database.
+        @param fs_experiment: FSExperiment instance.
+        @param emr_settings: EMR settings to get the shared folder path.
+        @raises: FileNotFoundError if the result file is not found.
+        @raises: CouldNotSaveTimesRecord if the results could not be saved due to some integrity or DB errors.
+        """
         shared_results_folder = emr_settings['shared_folder_results']
 
         # Stores molecules in the target biomarker, the best model and its fitness value
@@ -314,16 +325,19 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                     times_df = pd.concat((times_df, current_df), axis='rows', ignore_index=True)
 
         # Finally, saves the times data
-        fitness_function_enum = trained_model.fitness_function
-        if fitness_function_enum == FitnessFunction.SVM:
-            self.__save_svm_times_data(fs_experiment, times_df)
-        elif fitness_function_enum == FitnessFunction.CLUSTERING:
-            self.__save_clustering_times_data(fs_experiment, times_df)
-        elif fitness_function_enum == FitnessFunction.RF:
-            self.__save_rf_times_data(fs_experiment, times_df)
-        else:
-            logging.error(f'Fitness function {fitness_function_enum} not supported for saving times data')
-            logging.error(f'FSExperiment ID: {fs_experiment.pk}')
+        try:
+            fitness_function_enum = trained_model.fitness_function
+            if fitness_function_enum == FitnessFunction.SVM:
+                self.__save_svm_times_data(fs_experiment, times_df)
+            elif fitness_function_enum == FitnessFunction.CLUSTERING:
+                self.__save_clustering_times_data(fs_experiment, times_df)
+            elif fitness_function_enum == FitnessFunction.RF:
+                self.__save_rf_times_data(fs_experiment, times_df)
+            else:
+                logging.error(f'Fitness function {fitness_function_enum} not supported for saving times data')
+                logging.error(f'FSExperiment ID: {fs_experiment.pk}')
+        except Exception as e:
+            raise CouldNotSaveTimesRecord(e)
 
     def post(self, request: Request, job_id: str):
         # Gets the instance (must be in process)
@@ -347,7 +361,17 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                 fs_experiment.save(update_fields=['execution_time'])
 
                 # If everything went well, gets results, saves the corresponding data and returns ok
-                self.__save_results(fs_experiment, emr_settings)
+                try:
+                    self.__save_results(fs_experiment, emr_settings)
+                except FileNotFoundError as e:
+                    logging.error(f'Could not find results file for FSExperiment ID {fs_experiment.pk}.'
+                                  f' Setting as FINISHED_WITH_ERROR')
+                    logging.exception(e)
+                    created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
+                except CouldNotSaveTimesRecord as e:
+                    logging.error(f'Could not save times data for FSExperiment ID {fs_experiment.pk}. Setting as '
+                                  f'COMPLETED anyway. See Spark logs or the exception for more details.')
+                    logging.exception(e)
             elif state == 'CANCELLED':
                 created_biomarker.state = BiomarkerState.STOPPED
             else:

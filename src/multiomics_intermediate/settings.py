@@ -177,7 +177,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.0.10'
+VERSION: str = '5.0.11'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -329,31 +329,3 @@ MIN_FEATURES_METAHEURISTICS: int = int(os.getenv('MIN_FEATURES_METAHEURISTICS', 
 # (which are slow to start) on small experiments to save time and resources.
 # Only considered if the Spark execution is enabled (ENABLE_AWS_EMR_INTEGRATION = True)
 MIN_COMBINATIONS_SPARK: int = int(os.getenv('MIN_COMBINATIONS_SPARK', 60))
-
-
-# Logging
-LOG_FILE_PATH = os.getenv('LOG_FILE_PATH', '/logs')+"/django.log"
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        }
-    },    
-    'handlers': {
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': LOG_FILE_PATH,
-            'filters': ['require_debug_false'],
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'WARNING',
-            'propagate': True,
-        },
-    },
-}
