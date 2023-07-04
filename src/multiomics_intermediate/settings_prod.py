@@ -61,6 +61,7 @@ LOGGING = {
         'django': {
             'handlers': ['file'],
             'level': 'WARNING',
+            'format': '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s',
             'propagate': True,
         },
     },
