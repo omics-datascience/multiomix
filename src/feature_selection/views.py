@@ -13,7 +13,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker, BiomarkerState
+from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
@@ -340,6 +340,16 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         except Exception as e:
             raise CouldNotSaveTimesRecord(e)
 
+    @staticmethod
+    def __update_trained_model_state(fs_experiment: FSExperiment, is_ok: bool):
+        """Updates the state of the TrainedModel instance."""
+        trained_model = fs_experiment.best_model
+        if is_ok:
+            trained_model.state = TrainedModelState.COMPLETED
+        else:
+            trained_model.state = TrainedModelState.FINISHED_WITH_ERROR
+        trained_model.save(update_fields=['state'])
+
     def post(self, request: Request, job_id: str):
         # Gets the instance (must be in process)
         fs_experiment = get_object_or_404(FSExperiment, emr_job_id=job_id,
@@ -353,25 +363,31 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         # Checks state
         state = job_data['state']
         if state == 'COMPLETED':
+            # If everything went well, sets as completed, gets results, saves the corresponding data and returns ok
             created_biomarker.state = BiomarkerState.COMPLETED
 
             # Saves execution time
-            exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
-            fs_experiment.execution_time = exec_time
-            fs_experiment.save(update_fields=['execution_time'])
+            try:
+                exec_time = self.__compute_execution_time(job_data['createdAt'], job_data['finishedAt'])
+                fs_experiment.execution_time = exec_time
+                fs_experiment.save(update_fields=['execution_time'])
+            except Exception as ex:
+                logging.error(f'Could not save execution time for FSExperiment ID {fs_experiment.pk}. '
+                              f'Leaving default...')
+                logging.exception(ex)
 
-            # If everything went well, gets results, saves the corresponding data and returns ok
+            # Saves results and time records (these last ones are optional)
             try:
                 self.__save_results(fs_experiment, emr_settings)
-            except FileNotFoundError as e:
+            except FileNotFoundError as ex:
                 logging.error(f'Could not find results file for FSExperiment ID {fs_experiment.pk}.'
                               f' Setting as FINISHED_WITH_ERROR')
-                logging.exception(e)
+                logging.exception(ex)
                 created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
-            except CouldNotSaveTimesRecord as e:
+            except CouldNotSaveTimesRecord as ex:
                 logging.error(f'Could not save times data for FSExperiment ID {fs_experiment.pk}. Setting as '
                               f'COMPLETED anyway. See Spark logs or the exception for more details.')
-                logging.exception(e)
+                logging.exception(ex)
         elif state == 'CANCELLED':
             created_biomarker.state = BiomarkerState.STOPPED
         else:
@@ -379,6 +395,10 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
 
         created_biomarker.save(update_fields=['state'])
+
+        # Updates TrainedModel state
+        trained_model_is_ok = created_biomarker.state == BiomarkerState.COMPLETED
+        self.__update_trained_model_state(fs_experiment, trained_model_is_ok)
 
         # Removes the molecules and clinical datasets from the shared folder
         self.__remove_datasets(fs_experiment, emr_settings)
