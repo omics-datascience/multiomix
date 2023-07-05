@@ -46,7 +46,9 @@ enum TrainedModelState {
     REACHED_ATTEMPTS_LIMIT = 8,
     NO_FEATURES_FOUND = 9,
     NO_BEST_MODEL_FOUND = 10,
-    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
+    /** This could happen for a serialization error in the Spark job. */
+    MODEL_DUMP_NOT_AVAILABLE = 12
 
 }
 

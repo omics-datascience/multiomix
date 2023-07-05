@@ -105,6 +105,14 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 title: 'There are fewer samples than number of folds in the CrossValidation. Try changing the number of folds in the CV process or select a larger dataset and try again.'
             }
             break
+        case TrainedModelState.MODEL_DUMP_NOT_AVAILABLE:
+            stateIcon = {
+                iconName: 'target',
+                color: 'orange',
+                loading: false,
+                title: 'The Feature Selection process has finished correctly, but there was a problem obtaining the model. Try training a new model'
+            }
+            break
     }
 
     return (

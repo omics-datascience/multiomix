@@ -370,6 +370,8 @@ class TimesRecord(models.Model):
 class SVMTimesRecord(TimesRecord):
     """Time records during Feature Selection using an SVM as classifier."""
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='svm_times_records')
+    # 'number_of_iterations' is a float number as it's the mean, but it's stored as int as it's not much important
+    # losing precision in this case
     number_of_iterations = models.SmallIntegerField()
     time_by_iteration = models.FloatField()  # Time by every SVM iteration during training
     test_time = models.FloatField()  # Testing time in seconds

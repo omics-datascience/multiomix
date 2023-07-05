@@ -70,9 +70,11 @@ The following are the steps to perform a deployment in production. In case you w
       - `MAX_FEATURES_COX_REGRESSION`: Maximum number of features to select in the CoxRegression algorithm. Default `60`.
       - `MAX_FEATURES_BLIND_SEARCH`: Maximum number of features to allow to run a Blind Search algorithm (the number of computed combination is _N!_). If the number of features is greater than this value, the algorithm is disabled and only metaheuristic algorithms are allowed. Default `7`.
       - `MIN_FEATURES_METAHEURISTICS`: Minimum number of features to allow the user to run metaheuristics algorithms (>=). This prevents to run metaheuristics on datasets with a small number of features which leads to experiments with more metaheuristics agents than number of total features combinations. We recommend to set this parameter to a value N such that N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations. Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value. Default `7`.
-      - `MIN_COMBINATIONS_SPARK`: Minimum number of combinations to allow the Spark execution (if less, the execution is done locally). This is computed as the number of agents in the metaheuristic multiplied by the number of iterations. This prevents to run Spark jobs (which are slow to start) on small experiments to save time and resources. Only considered if the Spark execution is enabled (`ENABLE_AWS_EMR_INTEGRATION` = True). Default `60`.
+      - `MIN_COMBINATIONS_SPARK`: Minimum number of combinations to allow the Spark execution (if less, the execution is done locally). This is computed as the number of agents in the metaheuristic multiplied by the number of iterations. This prevents to run Spark jobs (which are slow to start) on small experiments to save time and resources. Only considered if the Spark execution is enabled (`ENABLE_AWS_EMR_INTEGRATION` = True). Default `60
+      - `.
       - [Multiomix AWS EMR integration][aws-emr-integration]:
-        - `ENABLE_AWS_EMR_INTEGRATION`: set the string `true` to enable the AWS-EMR integration service. Default `false`.
+        - `ENABLE_AWS_EMR_INTEGRATION`: set the string `true` to enable the _Multiomix-aws-emr_ integration service. Default `false`.
+        - `EMR_DEBUG_IS_ENABLED`: set the string `true` to send the `debug` parameter to _Multiomix-aws-emr_ service to log the Spark execution. Default `false`.
         - `AWS_EMR_HOST`: AWS-EMR integration service connection host. Default `127.0.0.1`.
         - `AWS_EMR_PORT`: AWS-EMR integration service connection port. Default `8003`.
         - `AWS_EMR_SHARED_FOLDER_DATA`: Share folder with the AWS-EMR integration service to move the datasets to be consumed by the integration service. Default `/data-spark`.

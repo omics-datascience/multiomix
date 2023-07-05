@@ -281,6 +281,13 @@ def binary_black_hole_spark(
         }
     ]
 
+    # If EMR_DEBUG_IS_ENABLED is True, send the debug parameter to generate logs in Spark
+    if settings.EMR_DEBUG_IS_ENABLED:
+        entrypoint_arguments.append({
+            'name': 'debug',
+            'value': 'true',
+        })
+
     # Extends the entrypoint_arguments with the trained model parameters
     model_arguments = __create_models_parameters_for_request(trained_model)
     entrypoint_arguments.extend(model_arguments)

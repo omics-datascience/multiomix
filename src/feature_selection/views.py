@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import pickle
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
 import pandas as pd
@@ -18,7 +19,7 @@ from common.utils import get_source_pk
 from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
     ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod, SVMKernel
-from feature_selection.utils import save_molecule_identifiers, get_svm_kernel_enum
+from feature_selection.utils import save_molecule_identifiers, get_svm_kernel_enum, save_model_dump_and_best_score
 from user_files.models_choices import FileType
 
 
@@ -295,11 +296,9 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         best_features = json_content['features'].split(' | ')
         save_molecule_identifiers(fs_experiment.created_biomarker, best_features)
 
-        best_fitness = json_content['best_metric']
+        # Gets the best model and its fitness value and saves them in the database
         trained_model: TrainedModel = fs_experiment.best_model
-        trained_model.best_fitness_value = best_fitness
-        # TODO: implement saving of the best model dump from Spark and here...
-        trained_model.save()
+        self.__save_trained_model_data(trained_model, json_content, experiment_results_folder)
 
         # Iterates over all JSON files in the Experiment's folder to accumulate time data in a DataFrame
         times_df = pd.DataFrame()
@@ -341,9 +340,28 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             raise CouldNotSaveTimesRecord(e)
 
     @staticmethod
+    def __save_trained_model_data(trained_model: TrainedModel, json_content: Dict, experiment_results_folder: str):
+        """Saves all the data about the best model in the database. Getting the model dump from the shared folder."""
+        best_fitness = json_content['best_metric']
+
+        model_path = os.path.join(experiment_results_folder, 'model.pkl')
+        if os.path.exists(model_path):
+            with open(model_path, "rb") as fp:
+                fs_generated_model = pickle.load(fp)
+            save_model_dump_and_best_score(trained_model, fs_generated_model, best_fitness)
+        else:
+            trained_model.state = TrainedModelState.MODEL_DUMP_NOT_AVAILABLE
+            trained_model.save(update_fields=['state'])
+
+    @staticmethod
     def __update_trained_model_state(fs_experiment: FSExperiment, is_ok: bool):
         """Updates the state of the TrainedModel instance."""
         trained_model = fs_experiment.best_model
+
+        # If the model dump is not available, the state is not updated
+        if trained_model.state == TrainedModelState.MODEL_DUMP_NOT_AVAILABLE:
+            return
+
         if is_ok:
             trained_model.state = TrainedModelState.COMPLETED
         else:

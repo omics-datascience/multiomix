@@ -177,7 +177,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.0.15'
+VERSION: str = '5.0.16'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -283,8 +283,8 @@ AWS_EMR_SETTINGS = {
     'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER_RESULTS', '/results-spark')
 }
 
-# If True, indicates that the service of Multiomix-aws-emr is enabled (https://github.com/omics-datascience/multiomix-aws-emr)
-ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'false') == 'true'
+# If True, sends the 'debug' parameter to Multiomix-aws-emr service to log the Spark execution
+EMR_DEBUG_IS_ENABLED: bool = os.getenv('EMR_DEBUG_IS_ENABLED', 'false') == 'true'
 
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
