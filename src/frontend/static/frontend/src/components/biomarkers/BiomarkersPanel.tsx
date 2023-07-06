@@ -394,9 +394,23 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param selectedBiomarker Selected Biomarker instance.
      */
     openBiomarkerDetailsModal = (selectedBiomarker: Biomarker) => {
-        this.setState({
-            selectedBiomarker,
-            openDetailsModal: true
+        ky.get(urlBiomarkersCRUD + '/' + selectedBiomarker.id + '/').then((response) => {
+            response.json().then((jsonResponse: Biomarker) => {
+                this.setState({
+                    selectedBiomarker: {
+                        ...selectedBiomarker,
+                        cnas: jsonResponse.cnas,
+                        mirnas: jsonResponse.mirnas,
+                        methylations: jsonResponse.methylations,
+                        mrnas: jsonResponse.mrnas
+                    },
+                    openDetailsModal: true
+                })
+            }).catch((err) => {
+                console.error('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error getting genes ->', err)
         })
     }
 
@@ -420,49 +434,58 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param biomarker Biomarker selected to update
      */
     handleOpenEditBiomarker = (biomarker: Biomarker) => {
-        this.setState(
-            {
-                biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
-                openCreateEditBiomarkerModal: true,
-                formBiomarker: {
-                    id: biomarker.id,
-                    canEditMolecules: this.canEditBiomarker(biomarker),
-                    biomarkerName: biomarker.name,
-                    biomarkerDescription: biomarker.description,
-                    tag: biomarker.tag,
-                    moleculeSelected: BiomarkerType.MRNA,
-                    moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
-                    moleculesSection: {
-                        [BiomarkerType.CNA]: {
-                            isLoading: false,
-                            data: biomarker.cnas.map(item => ({ isValid: true, value: item.identifier }))
-                        },
-                        [BiomarkerType.MIRNA]: {
-                            isLoading: false,
-                            data: biomarker.mirnas.map(item => ({ isValid: true, value: item.identifier }))
-                        },
-                        [BiomarkerType.METHYLATION]: {
-                            isLoading: false,
-                            data: biomarker.methylations.map(item => ({ isValid: true, value: item.identifier }))
-                        },
-                        [BiomarkerType.MRNA]: {
-                            isLoading: false,
-                            data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
+        ky.get(urlBiomarkersCRUD + '/' + biomarker.id + '/').then((response) => {
+            response.json().then((jsonResponse: Biomarker) => {
+                console.log(jsonResponse)
+                this.setState(
+                    {
+                        biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
+                        openCreateEditBiomarkerModal: true,
+                        formBiomarker: {
+                            id: biomarker.id,
+                            canEditMolecules: this.canEditBiomarker(biomarker),
+                            biomarkerName: biomarker.name,
+                            biomarkerDescription: biomarker.description,
+                            tag: biomarker.tag,
+                            moleculeSelected: BiomarkerType.MRNA,
+                            moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
+                            moleculesSection: {
+                                [BiomarkerType.CNA]: {
+                                    isLoading: false,
+                                    data: jsonResponse.cnas.map(item => ({ isValid: true, value: item.identifier }))
+                                },
+                                [BiomarkerType.MIRNA]: {
+                                    isLoading: false,
+                                    data: jsonResponse.mirnas.map(item => ({ isValid: true, value: item.identifier }))
+                                },
+                                [BiomarkerType.METHYLATION]: {
+                                    isLoading: false,
+                                    data: jsonResponse.methylations.map(item => ({ isValid: true, value: item.identifier }))
+                                },
+                                [BiomarkerType.MRNA]: {
+                                    isLoading: false,
+                                    data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
+                                }
+                            },
+                            validation: {
+                                haveAmbiguous: false,
+                                haveInvalid: false,
+                                isLoading: false,
+                                checkBox: false
+                            },
+                            moleculesSymbolsFinder: {
+                                isLoading: false,
+                                data: []
+                            }
                         }
-                    },
-                    validation: {
-                        haveAmbiguous: false,
-                        haveInvalid: false,
-                        isLoading: false,
-                        checkBox: false
-                    },
-                    moleculesSymbolsFinder: {
-                        isLoading: false,
-                        data: []
                     }
-                }
-            }
-        )
+                )
+            }).catch((err) => {
+                console.error('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error getting genes ->', err)
+        })
     }
 
     /**
