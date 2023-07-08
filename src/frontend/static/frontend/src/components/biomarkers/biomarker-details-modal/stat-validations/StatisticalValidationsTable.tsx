@@ -62,7 +62,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                         <Table.Cell textAlign='center'>
                             <FitnessFunctionLabel fitnessFunction={statisticalValidation.fitness_function} />
                         </Table.Cell>
-                        <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'LLL')} />
+                        <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'L')} />
                         <Table.Cell width={1}>
                             {statisticalValidation.state === BiomarkerState.COMPLETED &&
                                 <Icon

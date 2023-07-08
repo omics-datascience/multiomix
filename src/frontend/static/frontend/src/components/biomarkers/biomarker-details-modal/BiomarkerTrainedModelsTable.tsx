@@ -109,7 +109,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                 <TrainedModelStateLabel trainedModelStateState={trainedModel.state} />
                             </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
-                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
                             <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
                         </Table.Row>

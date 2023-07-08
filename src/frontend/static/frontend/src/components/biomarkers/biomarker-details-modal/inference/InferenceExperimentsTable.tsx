@@ -60,7 +60,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                             <BiomarkerStateLabel biomarkerState={inferenceExperiment.state} />
                         </Table.Cell>
                         <Table.Cell><FitnessFunctionLabel fitnessFunction={inferenceExperiment.model} /></Table.Cell>
-                        <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'LLL')} />
+                        <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'L')} />
                         <Table.Cell width={1}>
                             {inferenceExperiment.state === BiomarkerState.COMPLETED &&
                                 <Icon

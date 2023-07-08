@@ -65,7 +65,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right'/>
                 </Card.Header>
                 <Card.Meta className='experiment-data-card-submit-date'>
-                    {formatDateLocale(experiment.submit_date, 'LLL')}
+                    {formatDateLocale(experiment.submit_date, 'L')}
                 </Card.Meta>
                 <Card.Meta title={experiment.description} className='experiment-data-card-description ellipsis'>
                     {experiment.description ? experiment.description : '-'}

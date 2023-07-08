@@ -138,7 +138,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                             <Table.Row key={experiment.id as number}>
                                 <TableCellWithTitle value={experiment.name} />
                                 <TableCellWithTitle value={experiment.description} />
-                                <TableCellWithTitle value={formatDateLocale(experiment.submit_date, 'LLL')} />
+                                <TableCellWithTitle value={formatDateLocale(experiment.submit_date, 'L')} />
                                 <TableCell textAlign='center'>
                                     <Icon
                                         title={experimentState.title}

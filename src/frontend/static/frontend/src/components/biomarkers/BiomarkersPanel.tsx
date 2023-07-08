@@ -1484,7 +1484,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
                                 <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
                                 <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
-                                <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
+                                <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>

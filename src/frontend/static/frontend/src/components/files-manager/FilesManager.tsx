@@ -783,7 +783,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                     <TableCellWithTitle value={userFileRow.name} />
                                     <TableCellWithTitle value={userFileRow.description} />
                                     <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
-                                    <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'LLL')} />
+                                    <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
                                         {userFileRow.institutions.length > 0 &&
                                                 <Icon
