@@ -127,7 +127,7 @@ interface FormBiomarkerData {
     biomarkerName: string,
     biomarkerDescription: string,
     canEditMolecules: boolean,
-    tag: any, // se esta laburando salu2
+    tag: any, // WIP
     moleculeSelected: BiomarkerType,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,

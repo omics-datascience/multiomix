@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
-from biomarkers.serializers import BiomarkerSerializer, TrainedModelSerializer, MoleculeIdentifierSerializer
+from biomarkers.serializers import BiomarkerSerializer, TrainedModelSerializer, MoleculeIdentifierSerializer, \
+    BiomarkerSimpleSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
 from django.db.models import Q, Count, QuerySet
@@ -48,8 +49,7 @@ class BiomarkerList(generics.ListCreateAPIView):
         # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
         biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
 
-    # serializer_class = BiomarkerSimpleSerializer  # TODO: uncomment when implemented in frontend
-    serializer_class = BiomarkerSerializer
+    serializer_class = BiomarkerSimpleSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]

@@ -3,9 +3,9 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
-import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -49,9 +49,10 @@ type ValidationForm = {
 
 /** BiomarkersPanel's state */
 interface BiomarkersPanelState {
-    biomarkers: Biomarker[],
+    biomarkers: BiomarkerSimple[],
     newBiomarker: Biomarker,
-    selectedBiomarkerToDeleteOrSync: Nullable<Biomarker>,
+    loadingFullBiomarker: boolean,
+    selectedBiomarkerToDeleteOrSync: Nullable<BiomarkerSimple>,
     checkedIgnoreProposedAlias: boolean,
     showDeleteBiomarkerModal: boolean,
     deletingBiomarker: boolean,
@@ -63,7 +64,7 @@ interface BiomarkersPanelState {
     /** Indicates if the modal to create or edit a Biomarker is open. */
     openCreateEditBiomarkerModal: boolean,
     /** Indicates if the modal to clone a Biomarker is open. Contains the pk of the Biomarker to clone. */
-    biomarkerToClone: Nullable<Biomarker>,
+    biomarkerToClone: Nullable<BiomarkerSimple>,
     /** Indicates if there's a Biomarker being cloned. */
     cloningBiomarker: boolean,
     /** Indicates if the modal to get the details of a Biomarker is open. */
@@ -84,9 +85,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         this.state = {
             biomarkers: [],
+            newBiomarker: this.getDefaultNewBiomarker(),
+            loadingFullBiomarker: false,
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
             checkedIgnoreProposedAlias: false,
-            newBiomarker: this.getDefaultNewBiomarker(),
             showDeleteBiomarkerModal: false,
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
@@ -258,8 +260,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Manage the change of the option in cluster option in any algorithm selected inside a clustering
      * @param fitnessFunction name of fitness function to change
-     * @param key name of the fitnessfunction object that have changed
-     * @param value value selected typed depends of what fitness function and key is beeing changing
+     * @param key name of the fitnessFunction object that have changed
+     * @param value value selected typed depends of what fitness function and key is being changing
      */
     handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
         const featureSelection = this.state.featureSelection
@@ -389,28 +391,39 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({ biomarkerTypeSelected: type })
     }
 
+    getBiomarkerFullInstance = (biomarkerSimple: BiomarkerSimple): Promise<Biomarker> => {
+        return new Promise((resolve, reject) => {
+            this.setState({ loadingFullBiomarker: true })
+            ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/').then((response) => {
+                response.json().then(resolve).catch((err) => {
+                    console.error('Error parsing JSON on Biomarker retrieval:', err)
+                    reject(err)
+                })
+            }).catch((err) => {
+                console.error('Error getting Biomarker:', err)
+                reject(err)
+            }).finally(() => {
+                this.setState({ loadingFullBiomarker: false })
+            })
+        })
+    }
+
     /**
      * Opens the modal to show all the Biomarker details.
      * @param selectedBiomarker Selected Biomarker instance.
      */
-    openBiomarkerDetailsModal = (selectedBiomarker: Biomarker) => {
-        ky.get(urlBiomarkersCRUD + '/' + selectedBiomarker.id + '/').then((response) => {
-            response.json().then((jsonResponse: Biomarker) => {
-                this.setState({
-                    selectedBiomarker: {
-                        ...selectedBiomarker,
-                        cnas: jsonResponse.cnas,
-                        mirnas: jsonResponse.mirnas,
-                        methylations: jsonResponse.methylations,
-                        mrnas: jsonResponse.mrnas
-                    },
-                    openDetailsModal: true
-                })
-            }).catch((err) => {
-                console.error('Error parsing JSON ->', err)
+    openBiomarkerDetailsModal = (selectedBiomarker: BiomarkerSimple) => {
+        this.getBiomarkerFullInstance(selectedBiomarker).then((biomarker) => {
+            this.setState({
+                selectedBiomarker: {
+                    ...selectedBiomarker,
+                    cnas: biomarker.cnas,
+                    mirnas: biomarker.mirnas,
+                    methylations: biomarker.methylations,
+                    mrnas: biomarker.mrnas
+                },
+                openDetailsModal: true
             })
-        }).catch((err) => {
-            console.error('Error getting genes ->', err)
         })
     }
 
@@ -427,64 +440,55 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param biomarker Biomarker to check.
      * @returns True if the Biomarker can be edited, false otherwise.
      */
-    canEditBiomarker = (biomarker: Biomarker): boolean => !biomarker.was_already_used && biomarker.state === BiomarkerState.COMPLETED
+    canEditBiomarker = (biomarker: BiomarkerSimple): boolean => !biomarker.was_already_used && biomarker.state === BiomarkerState.COMPLETED
 
     /**
      * Method that select how the user is going to create a Biomarker
-     * @param biomarker Biomarker selected to update
+     * @param selectedBiomarker Biomarker selected to update
      */
-    handleOpenEditBiomarker = (biomarker: Biomarker) => {
-        ky.get(urlBiomarkersCRUD + '/' + biomarker.id + '/').then((response) => {
-            response.json().then((jsonResponse: Biomarker) => {
-                console.log(jsonResponse)
-                this.setState(
-                    {
-                        biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
-                        openCreateEditBiomarkerModal: true,
-                        formBiomarker: {
-                            id: biomarker.id,
-                            canEditMolecules: this.canEditBiomarker(biomarker),
-                            biomarkerName: biomarker.name,
-                            biomarkerDescription: biomarker.description,
-                            tag: biomarker.tag,
-                            moleculeSelected: BiomarkerType.MRNA,
-                            moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
-                            moleculesSection: {
-                                [BiomarkerType.CNA]: {
-                                    isLoading: false,
-                                    data: jsonResponse.cnas.map(item => ({ isValid: true, value: item.identifier }))
-                                },
-                                [BiomarkerType.MIRNA]: {
-                                    isLoading: false,
-                                    data: jsonResponse.mirnas.map(item => ({ isValid: true, value: item.identifier }))
-                                },
-                                [BiomarkerType.METHYLATION]: {
-                                    isLoading: false,
-                                    data: jsonResponse.methylations.map(item => ({ isValid: true, value: item.identifier }))
-                                },
-                                [BiomarkerType.MRNA]: {
-                                    isLoading: false,
-                                    data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
-                                }
-                            },
-                            validation: {
-                                haveAmbiguous: false,
-                                haveInvalid: false,
-                                isLoading: false,
-                                checkBox: false
-                            },
-                            moleculesSymbolsFinder: {
-                                isLoading: false,
-                                data: []
-                            }
+    handleOpenEditBiomarker = (selectedBiomarker: BiomarkerSimple) => {
+        this.getBiomarkerFullInstance(selectedBiomarker).then((biomarker) => {
+            this.setState({
+                biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
+                openCreateEditBiomarkerModal: true,
+                formBiomarker: {
+                    id: biomarker.id,
+                    canEditMolecules: this.canEditBiomarker(biomarker),
+                    biomarkerName: biomarker.name,
+                    biomarkerDescription: biomarker.description,
+                    tag: biomarker.tag,
+                    moleculeSelected: BiomarkerType.MRNA,
+                    moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT,
+                    moleculesSection: {
+                        [BiomarkerType.CNA]: {
+                            isLoading: false,
+                            data: biomarker.cnas.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.MIRNA]: {
+                            isLoading: false,
+                            data: biomarker.mirnas.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.METHYLATION]: {
+                            isLoading: false,
+                            data: biomarker.methylations.map(item => ({ isValid: true, value: item.identifier }))
+                        },
+                        [BiomarkerType.MRNA]: {
+                            isLoading: false,
+                            data: biomarker.mrnas.map(item => ({ isValid: true, value: item.identifier }))
                         }
+                    },
+                    validation: {
+                        haveAmbiguous: false,
+                        haveInvalid: false,
+                        isLoading: false,
+                        checkBox: false
+                    },
+                    moleculesSymbolsFinder: {
+                        isLoading: false,
+                        data: []
                     }
-                )
-            }).catch((err) => {
-                console.error('Error parsing JSON ->', err)
+                }
             })
-        }).catch((err) => {
-            console.error('Error getting genes ->', err)
         })
     }
 
@@ -967,28 +971,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Edits a biomarker
-     * @param biomarker Biomarker to edit
-     */
-    editBiomarker = (biomarker: Biomarker) => {
-        const biomarkerCopy = copyObject(biomarker)
-        this.setState({ newBiomarker: biomarkerCopy })
-    }
-
-    /**
      * When the component has been mounted, It requests for
      * tags and files
      */
     componentDidMount () {
         this.getUserTags()
-    }
-
-    /**
-     * Selects a new Biomarker to edit
-     * @param selectedBiomarker Biomarker to edit
-     */
-    editTag = (selectedBiomarker: Biomarker) => {
-        this.setState({ newBiomarker: copyObject(selectedBiomarker) })
     }
 
     /**
@@ -1090,7 +1077,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Show a modal to confirm a Biomarker deletion
      * @param biomarker Selected Biomarker to delete
      */
-    confirmBiomarkerDeletion = (biomarker: Biomarker) => {
+    confirmBiomarkerDeletion = (biomarker: BiomarkerSimple) => {
         this.setState<never>({
             selectedBiomarkerToDeleteOrSync: biomarker,
             showDeleteBiomarkerModal: true
@@ -1287,9 +1274,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /** Closes the modal to confirm a Biomarker cloning. */
-    closeModalToClone = () => {
-        this.setState({ biomarkerToClone: null })
-    }
+    closeModalToClone = () => { this.setState({ biomarkerToClone: null }) }
 
     /** Sends a request to clone a Biomarker. */
     cloneBiomarker = () => {
@@ -1455,7 +1440,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
 
-                <PaginatedTable<Biomarker>
+                <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
                     headers={[
                         { name: 'Name', serverCodeToSort: 'name', width: 3 },
@@ -1488,7 +1473,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     searchPlaceholder='Search by name'
                     urlToRetrieveData={urlBiomarkersCRUD}
                     updateWSKey='update_biomarkers'
-                    mapFunction={(biomarker: Biomarker) => {
+                    mapFunction={(biomarker: BiomarkerSimple) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
                         const canEditMolecules = this.canEditBiomarker(biomarker)
 
@@ -1513,7 +1498,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             className='clickable'
                                             color='blue'
                                             title='Details'
-                                            disabled={biomarker.state !== BiomarkerState.COMPLETED}
+                                            loading={this.state.loadingFullBiomarker}
+                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || this.state.loadingFullBiomarker}
                                             onClick={() => this.openBiomarkerDetailsModal(biomarker)}
                                         />
 
@@ -1522,6 +1508,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='pencil'
                                             className='clickable margin-left-5'
                                             color={canEditMolecules ? 'yellow' : 'orange'}
+                                            loading={this.state.loadingFullBiomarker}
+                                            disabled={this.state.loadingFullBiomarker}
                                             title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
@@ -1531,6 +1519,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='copy'
                                             color='teal'
                                             className='clickable margin-left-5'
+                                            disabled={this.state.loadingFullBiomarker}
                                             title='Clone biomarker'
                                             onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                         />
@@ -1540,6 +1529,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='trash'
                                             className='clickable margin-left-5'
                                             color='red'
+                                            disabled={this.state.loadingFullBiomarker}
                                             title='Delete biomarker'
                                             onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                         />
@@ -1677,5 +1667,3 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         )
     }
 }
-
-export { Biomarker }
