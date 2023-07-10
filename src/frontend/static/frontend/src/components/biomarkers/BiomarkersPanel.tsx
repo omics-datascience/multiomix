@@ -52,7 +52,8 @@ type ValidationForm = {
 interface BiomarkersPanelState {
     biomarkers: BiomarkerSimple[],
     newBiomarker: Biomarker,
-    loadingFullBiomarker: boolean,
+    /** PK of the Biomarker that's being loaded. */
+    loadingFullBiomarkerId: Nullable<number>,
     selectedBiomarkerToDeleteOrSync: Nullable<BiomarkerSimple>,
     checkedIgnoreProposedAlias: boolean,
     showDeleteBiomarkerModal: boolean,
@@ -87,7 +88,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.state = {
             biomarkers: [],
             newBiomarker: this.getDefaultNewBiomarker(),
-            loadingFullBiomarker: false,
+            loadingFullBiomarkerId: null,
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
             checkedIgnoreProposedAlias: false,
             showDeleteBiomarkerModal: false,
@@ -394,7 +395,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     getBiomarkerFullInstance = (biomarkerSimple: BiomarkerSimple): Promise<Biomarker> => {
         return new Promise((resolve, reject) => {
-            this.setState({ loadingFullBiomarker: true })
+            this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
             ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/').then((response) => {
                 response.json().then(resolve).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
@@ -404,7 +405,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 console.error('Error getting Biomarker:', err)
                 reject(err)
             }).finally(() => {
-                this.setState({ loadingFullBiomarker: false })
+                this.setState({ loadingFullBiomarkerId: null })
             })
         })
     }
@@ -1020,9 +1021,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Makes a request to delete a Biomarker
-     */
+    /** Makes a request to delete a Biomarker. */
     deleteBiomarker = () => {
         // Sets the Request's Headers
         if (this.state.selectedBiomarkerToDeleteOrSync === null) {
@@ -1078,9 +1077,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Closes the deletion confirm modals
-     */
+    /** Closes the deletion confirm modals. */
     handleClose = () => {
         this.setState({ showDeleteBiomarkerModal: false })
     }
@@ -1103,22 +1100,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const newBiomarker = this.state.newBiomarker
         newBiomarker[name] = value
         this.setState({ newBiomarker })
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes
-     * @param datasetName Name of the edited CGDS dataset
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleFormDatasetChanges = (datasetName: NameOfCGDSDataset, name: string, value: any) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-        if (dataset !== null) {
-            dataset[name] = value
-            this.setState({ newBiomarker })
-        }
     }
 
     /**
@@ -1429,6 +1410,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         // Biomarker deletion modal
         const deletionConfirmModal = this.getDeletionConfirmModal()
 
+        const isLoadingFullBiomarker = this.state.loadingFullBiomarkerId !== null
+
         return (
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
@@ -1470,6 +1453,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     mapFunction={(biomarker: BiomarkerSimple) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
                         const canEditMolecules = this.canEditBiomarker(biomarker)
+                        const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1488,22 +1472,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     <>
                                         {/* Details button */}
                                         <Icon
-                                            name='chart bar'
+                                            name={currentBiomarkerIsLoading ? 'spinner' : 'chart bar'}
                                             className='clickable'
                                             color='blue'
                                             title='Details'
-                                            loading={this.state.loadingFullBiomarker}
-                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || this.state.loadingFullBiomarker}
+                                            loading={currentBiomarkerIsLoading}
+                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || isLoadingFullBiomarker}
                                             onClick={() => this.openBiomarkerDetailsModal(biomarker)}
                                         />
 
                                         {/* Edit button */}
                                         <Icon
-                                            name='pencil'
+                                            name={currentBiomarkerIsLoading ? 'spinner' : 'pencil'}
                                             className='clickable margin-left-5'
                                             color={canEditMolecules ? 'yellow' : 'orange'}
-                                            loading={this.state.loadingFullBiomarker}
-                                            disabled={this.state.loadingFullBiomarker}
+                                            loading={currentBiomarkerIsLoading}
+                                            disabled={isLoadingFullBiomarker}
                                             title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
@@ -1513,7 +1497,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='copy'
                                             color='teal'
                                             className='clickable margin-left-5'
-                                            disabled={this.state.loadingFullBiomarker}
+                                            disabled={currentBiomarkerIsLoading}
                                             title='Clone biomarker'
                                             onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                         />
@@ -1523,7 +1507,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='trash'
                                             className='clickable margin-left-5'
                                             color='red'
-                                            disabled={this.state.loadingFullBiomarker}
+                                            disabled={currentBiomarkerIsLoading}
                                             title='Delete biomarker'
                                             onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                         />
