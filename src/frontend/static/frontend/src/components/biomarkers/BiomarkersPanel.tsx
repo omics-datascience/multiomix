@@ -264,7 +264,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param value value selected typed depends of what fitness function and key is being changing
      */
     handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
-        console.log(fitnessFunction, key, 'aver')
         const featureSelection = this.state.featureSelection
         featureSelection.fitnessFunctionParameters[fitnessFunction][key] = value
         this.setState({ featureSelection })
