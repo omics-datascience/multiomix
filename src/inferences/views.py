@@ -1,3 +1,6 @@
+import csv
+from collections import OrderedDict
+from typing import List
 import pandas as pd
 from django.db import transaction
 from django.db.models import QuerySet, Exists, OuterRef, Q, F
@@ -179,6 +182,36 @@ class SampleAndClusterPredictionSamples(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     search_fields = ['sample']
     ordering_fields = ['sample', 'cluster']
+
+
+class SampleAndClusterPredictionSamplesDownload(APIView):
+    """
+    Gets all the pairs of samples and cluster for a specific inference experiment (that used a clustering model).
+    But downloads them as a CSV file.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request):
+        experiment = get_inference_experiment(self.request)
+        samples_and_clusters_queryset = experiment.samples_and_clusters.all()
+
+        # Adds (if needed) the selected cluster label
+        samples_and_clusters: List[OrderedDict] = SampleAndClusterPredictionSerializer(many=True, context={
+            'request': request
+        }).to_representation(samples_and_clusters_queryset)
+
+        # Gets a clean name of the experiment
+        experiment_name = experiment.name.replace(' ', '_')
+
+        # Generates a downloading response in the CSV format
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{experiment_name}-samples_and_clusters.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Sample', 'Cluster'])
+        for sample_and_cluster in samples_and_clusters:
+            writer.writerow([sample_and_cluster['sample'], sample_and_cluster['cluster']])
+
+        return response
 
 
 class ClustersUniqueInferenceExperiment(APIView):

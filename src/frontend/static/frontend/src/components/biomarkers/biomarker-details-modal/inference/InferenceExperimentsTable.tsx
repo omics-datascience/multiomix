@@ -43,7 +43,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             searchPlaceholder='Search by name or description'
             urlToRetrieveData={urlBiomarkerInferenceExperiments}
             customElements={[
-                <Form.Field key={1} className='biomarkers--button--modal' title='New inference experiment'>
+                <Form.Field key={1} className='custom-table-field' title='New inference experiment'>
                     <Button primary icon onClick={() => { props.setOpenModalNewInferenceExperiment(true) }}>
                         <Icon name='add' />
                     </Button>

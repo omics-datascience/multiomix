@@ -24,3 +24,13 @@ class NumberOfSamplesFewerThanCVFolds(Exception):
     the StratifiedKFold used in GridSearch during some processes.
     """
     pass
+
+
+class NoValidSamples(Exception):
+    """Raised when there are no samples after filtering invalid values (NaN, Inf, etc.)."""
+    pass
+
+
+class NoValidMolecules(Exception):
+    """Raised when there is at least one missing molecule in the used dataset."""
+    pass

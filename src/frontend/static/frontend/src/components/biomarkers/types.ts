@@ -30,8 +30,9 @@ enum BiomarkerState {
     STOPPING = 6,
     STOPPED = 7,
     REACHED_ATTEMPTS_LIMIT = 8,
-    NO_FEATURES_FOUND = 9
-
+    NO_FEATURES_FOUND = 9,
+    NO_VALID_SAMPLES = 10,
+    NO_VALID_MOLECULES = 11
 }
 
 /** All the possible states of a TrainedModel. */

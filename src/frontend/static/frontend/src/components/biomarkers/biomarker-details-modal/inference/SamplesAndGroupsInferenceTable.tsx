@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Button, Grid, Table } from 'semantic-ui-react'
+import React, { useMemo, useState } from 'react'
+import { Button, Form, Grid, Icon, Table } from 'semantic-ui-react'
 import { InferenceExperimentForTable, SampleAndCluster } from '../../types'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
@@ -7,6 +7,7 @@ import { ClusterLabelsSetSelect } from '../../../common/cluster-labels/ClusterLa
 import { NewClusterLabelsSetModal } from '../../../common/cluster-labels/NewClusterLabelsSetModal'
 
 declare const urlInferenceExperimentSamplesAndClusters: string
+declare const urlInferenceExperimentSamplesAndClustersDownload: string
 declare const urlClustersUniqueInferenceExperiment: string
 
 /** SamplesAndGroupsInferenceTable props. */
@@ -28,6 +29,16 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
 
     const selectedTrainedModelPk = props.selectedInferenceExperiment.trained_model
 
+    // Adds inference_experiment_pk and cluster_labels_set_pk as query params
+    const downloadUrl = useMemo(() => {
+        const searchParams = new URLSearchParams()
+        searchParams.append('inference_experiment_pk', props.selectedInferenceExperiment.id.toString())
+        if (selectedClusterSetPk) {
+            searchParams.append('cluster_labels_set_pk', selectedClusterSetPk.toString())
+        }
+        return `${urlInferenceExperimentSamplesAndClustersDownload}?${searchParams.toString()}`
+    }, [props.selectedInferenceExperiment.id, selectedClusterSetPk])
+
     return (
         <Grid>
             <Grid.Row columns={2} divided>
@@ -41,6 +52,14 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                             inference_experiment_pk: props.selectedInferenceExperiment.id,
                             ...extraQueryParams
                         }}
+                        customElements={[
+                            <Form.Field key='download-csv-button' className='custom-table-field' title='Download results in a CSV file'>
+                                <Button color='green' icon as='a' href={downloadUrl}>
+                                    <Icon name='file excel' />
+                                </Button>
+                            </Form.Field>
+                        ]
+                        }
                         customFilters={[
                             {
                                 label: 'Cluster',

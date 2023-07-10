@@ -23,6 +23,11 @@ urlpatterns = [
         name='inference_experiment_samples_and_clusters'
     ),
     path(
+        'inference-experiment-samples-and-clusters-download',
+        views.SampleAndClusterPredictionSamplesDownload.as_view(),
+        name='inference_experiment_samples_and_clusters_download'
+    ),
+    path(
         'clusters-unique-inference-experiment',
         views.ClustersUniqueInferenceExperiment.as_view(),
         name='clusters_unique_inference_experiment'

@@ -6,11 +6,11 @@ from typing import Dict, Tuple, Optional
 import pandas as pd
 from biomarkers.models import BiomarkerState
 from common.utils import get_subset_of_features
-from common.datasets_utils import get_common_samples, generate_molecules_file
+from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoValidSamples, NoValidMolecules
 from concurrent.futures import ThreadPoolExecutor, Future
 from pymongo.errors import ServerSelectionTimeoutError
 import logging
@@ -78,8 +78,23 @@ class InferenceExperimentsService(object):
         # structure of data
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
+        # Clean invalid values
+        molecules_df = clean_dataset(molecules_df, axis='index')
+
+        if molecules_df.size == 0:
+            raise NoValidSamples('No valid values in the dataset')
+
         # Gets a list of samples
         samples = np.array(molecules_df.index.tolist())
+
+        # Gets number of features from the fitted model.
+        # If it's bigger than the number of molecules in the dataset, it's not possible to compute the
+        # experiment (raises NoValidMolecules)
+        n_features_model = classifier.n_features_in_
+        n_features_dataset = molecules_df.shape[1]
+        if n_features_model != n_features_dataset:
+            raise NoValidMolecules(f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
+                                   f'{n_features_dataset}')
 
         if is_clustering:
             # Gets the groups
@@ -169,6 +184,14 @@ class InferenceExperimentsService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('No samples in common')
             experiment.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+        except NoValidSamples:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error(f'InferenceExperiment {experiment.pk} has no valid samples')
+            experiment.state = BiomarkerState.NO_VALID_SAMPLES
+        except NoValidMolecules as ex:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error(f'InferenceExperiment {experiment.pk} has no valid molecules: {ex}')
+            experiment.state = BiomarkerState.NO_VALID_MOLECULES
         except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error(f'InferenceExperiment {experiment.pk} has failed. Check logs for more info')

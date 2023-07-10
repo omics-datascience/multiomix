@@ -21,15 +21,15 @@ from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFa
     NumberOfSamplesFewerThanCVFolds
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
-from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
-    generate_clinical_file
+from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
+    generate_clinical_file, generate_molecules_dataframe
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
     RFParameters
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
-from user_files.models_choices import MoleculeType, FileType
+from user_files.models_choices import MoleculeType
 
 
 class StatisticalValidationService(object):
@@ -63,39 +63,6 @@ class StatisticalValidationService(object):
             with connection.cursor() as cursor:
                 cursor.execute(query)
 
-    @staticmethod
-    def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
-                        samples_in_common: np.ndarray) -> pd.DataFrame:
-        """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
-        # Only keeps the samples in common
-        chunk = chunk[samples_in_common]
-
-        # Keeps only existing molecules in the current chunk
-        molecules_to_extract = np.intersect1d(chunk.index, molecules)
-        chunk = chunk.loc[molecules_to_extract]
-
-        # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-        chunk.index = chunk.index + f'_{file_type}'
-
-        return chunk
-
-    @staticmethod
-    def __generate_molecules_dataframe(stat_validation: StatisticalValidation,
-                                       samples_in_common: np.ndarray) -> pd.DataFrame:
-        """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
-        chunks: List[pd.DataFrame] = []
-        for source, molecules, file_type in stat_validation.get_sources_and_molecules():
-            if source is None:
-                continue
-
-            only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
-            chunks.extend([
-                process_chunk(chunk, file_type, molecules, samples_in_common)
-                for chunk in source.get_df_in_chunks(only_matching)
-            ])
-
-        # Concatenates all the chunks for all the molecules
-        return pd.concat(chunks, axis=0, sort=False)
 
     @staticmethod
     def __generate_df_molecules_and_clinical(stat_validation: Union[StatisticalValidation, TrainedModel],
@@ -341,7 +308,8 @@ class StatisticalValidationService(object):
         classifier.fit(molecules_df, clinical_data)
         save_model_dump_and_best_score(trained_model, best_model=classifier, best_score=best_score)
 
-    def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
+    @staticmethod
+    def get_all_expressions(stat_validation: StatisticalValidation) -> pd.DataFrame:
         """
         Gets a molecules Pandas DataFrame to get all the molecules' expressions for all the samples.
         @param stat_validation: StatisticalValidation instance.
@@ -352,7 +320,7 @@ class StatisticalValidationService(object):
         samples_in_common = get_common_samples(stat_validation)
 
         # Generates all the molecules DataFrame
-        return self.__generate_molecules_dataframe(stat_validation, samples_in_common)
+        return generate_molecules_dataframe(stat_validation, samples_in_common)
 
     def get_molecules_and_clinical_df(self,
                                       stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, np.ndarray]:

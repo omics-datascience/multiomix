@@ -60,7 +60,7 @@ export const PredictionRangeLabelsSetModal = (props: PredictionRangeLabelsSetMod
                         ]}
                         queryParams={{ trained_model_pk: props.trainedModelPk }}
                         customElements={[
-                            <Form.Field key={1} className='biomarkers--button--modal' title='New Cluster model'>
+                            <Form.Field key={1} className='custom-table-field' title='New Cluster model'>
                                 <Button primary icon onClick={() => { setShowNewPredictionRangeLabelsSet(true) }}>
                                     <Icon name='add' />
                                 </Button>

@@ -75,7 +75,7 @@ def get_common_samples(experiment: ExperimentObjType) -> np.ndarray:
     return last_intersection
 
 
-def process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
+def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
                     samples_in_common: np.ndarray) -> pd.DataFrame:
     """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
     # Only keeps the samples in common
@@ -139,10 +139,33 @@ def generate_clinical_file(experiment: ExperimentObjType, samples_in_common: np.
     return clinical_temp_file_path
 
 
+def generate_molecules_dataframe(experiment: ExperimentObjType, samples_in_common: np.ndarray) -> pd.DataFrame:
+    """
+    Generates the molecules DataFrame for a specific InferenceExperiment, FSExperiment or StatisticalValidation
+    with the samples in common.
+    @param experiment: Instance to get the sources from.
+    @param samples_in_common: Samples in common between all the sources.
+    @return: Molecules Pandas DataFrame.
+    """
+    chunks: List[pd.DataFrame] = []
+    for source, molecules, file_type in experiment.get_sources_and_molecules():
+        if source is None:
+            continue
+
+        only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
+        chunks.extend([
+            __process_chunk(chunk, file_type, molecules, samples_in_common)
+            for chunk in source.get_df_in_chunks(only_matching)
+        ])
+
+    # Concatenates all the chunks for all the molecules
+    return pd.concat(chunks, axis=0, sort=False)
+
+
 def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np.ndarray) -> str:
     """
-    Generates the molecules DataFrame for a specific InferenceExperiment with the samples in common and saves
-    it in disk.
+    Generates the molecules DataFrame for a specific InferenceExperiment, FSExperiment or StatisticalValidation
+    with the samples in common and saves it in disk.
     @param experiment: Instance to get the sources from.
     @param samples_in_common: Samples in common between all the sources.
     @return: Molecules file path saved in disk.
@@ -157,7 +180,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
 
             only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
             for chunk in source.get_df_in_chunks(only_matching=only_matching):
-                chunk = process_chunk(chunk, file_type, molecules, samples_in_common)
+                chunk = __process_chunk(chunk, file_type, molecules, samples_in_common)
 
                 # Saves in disk
                 chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')

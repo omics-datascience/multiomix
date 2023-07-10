@@ -184,7 +184,7 @@ class StatisticalValidationHeatMap(APIView):
     """Gets the expressions of all the molecules of a Biomarker for all the samples."""
     @staticmethod
     def __remove_suffix(df: pd.DataFrame) -> pd.DataFrame:
-        """Removes the suffix from the index of a DataFrame."""
+        """Removes the molecule type suffix from the index of a DataFrame."""
         df.index = df.index.str.replace(TYPE_SUFFIX, '', regex=True)
         return df
 

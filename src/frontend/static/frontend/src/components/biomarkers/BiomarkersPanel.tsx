@@ -1436,7 +1436,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     customFilters={this.getDefaultFilters()}
                     showSearchInput
                     customElements={[
-                        <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
+                        <Form.Field key={1} className='custom-table-field' title='Add new Biomarker'>
                             <Button
                                 primary
                                 icon
