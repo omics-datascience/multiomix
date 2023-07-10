@@ -24,6 +24,7 @@ import './../../css/biomarkers.css'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlBiomarkersCreate: string
 declare const urlTagsCRUD: string
 declare const urlGeneSymbols: string
 declare const urlGeneSymbolsFinder: string
@@ -809,7 +810,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
 
         if (!formBiomarker.id) {
-            ky.post(urlBiomarkersCRUD, settings).then((response) => {
+            ky.post(urlBiomarkersCreate, settings).then((response) => {
                 response.json().then((_jsonResponse: Biomarker) => {
                     this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
@@ -989,29 +990,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Does a request to add a new Biomarker
-     */
-    addOrEditBiomarker = () => {
-        if (!this.canAddBiomarker()) {
+    /** Does a request to edit a new Biomarker. */
+    editBiomarker = () => {
+        if (!this.canSubmitBiomarkerForm()) {
             return
         }
 
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
 
-        // If exists an id then we are editing, otherwise It's a new Tag
-        let addOrEditURL, requestMethod
-        if (this.state.newBiomarker.id) {
-            addOrEditURL = `${urlBiomarkersCRUD}/${this.state.newBiomarker.id}/`
-            requestMethod = ky.patch
-        } else {
-            addOrEditURL = urlBiomarkersCRUD
-            requestMethod = ky.post
-        }
-
+        const url = `${urlBiomarkersCRUD}/${this.state.newBiomarker.id}/`
         this.setState({ addingOrEditingBiomarker: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newBiomarker }).then((response) => {
+            ky.patch(url, { headers: myHeaders, json: this.state.newBiomarker }).then((response) => {
                 response.json().then((biomarker: Biomarker) => {
                     if (biomarker && biomarker.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
@@ -1065,7 +1055,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleKeyDown = (e) => {
         // If pressed Enter key submits the new Tag
         if (e.which === 13 || e.keyCode === 13) {
-            this.addOrEditBiomarker()
+            if (!this.state.newBiomarker.id) {
+                this.editBiomarker()
+            } else {
+                this.createBiomarker()
+            }
         } else {
             if (e.which === 27 || e.keyCode === 27) {
                 this.setState({ newBiomarker: this.getDefaultNewBiomarker() })
@@ -1095,7 +1089,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Check if can submit the new Biomarker form
      * @returns True if everything is OK, false otherwise
      */
-    canAddBiomarker = (): boolean => {
+    canSubmitBiomarkerForm = (): boolean => {
         return !this.state.addingOrEditingBiomarker &&
             this.state.newBiomarker.name.trim().length > 0
     }

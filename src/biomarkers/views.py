@@ -19,8 +19,8 @@ from common.response import generate_json_response_or_404
 from django.db.models import Q, Count, QuerySet
 
 
-class BiomarkerList(generics.ListCreateAPIView):
-    """REST endpoint: list and create for Biomarker model"""
+class BiomarkerList(generics.ListAPIView):
+    """REST endpoint: list for Biomarker model"""
 
     def get_queryset(self):
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
@@ -43,11 +43,6 @@ class BiomarkerList(generics.ListCreateAPIView):
 
         return biomarkers
 
-    def perform_create(self, biomarker: Biomarker):
-        """Adds some fields on saving"""
-        # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
-        biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
-
     serializer_class = BiomarkerSimpleSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
@@ -55,6 +50,21 @@ class BiomarkerList(generics.ListCreateAPIView):
     filterset_fields = ['tag']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'tag', 'upload_date']
+
+
+class BiomarkerCreate(generics.CreateAPIView):
+    """REST endpoint: create for Biomarker model"""
+
+    def get_queryset(self):
+        return Biomarker.objects.filter(user=self.request.user)
+
+    def perform_create(self, biomarker: Biomarker):
+        """Adds some fields on saving"""
+        # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
+        biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
+
+    serializer_class = BiomarkerSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):

@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.biomarkers_action, name='biomarkers'),
     path('api', views.BiomarkerList.as_view(), name='biomarkers_api'),
     path('api/<int:pk>/', views.BiomarkerDetail.as_view()),
+    path('create', views.BiomarkerCreate.as_view(), name='biomarkers_create'),
     path('gene-symbols', views.GeneSymbols.as_view(), name='gene_symbols'),
     path('gene-symbols-finder', views.GeneSymbols.as_view(), name='gene_symbols_finder'),
     path('clone_biomarker', views.BiomarkerClone.as_view(), name='clone_biomarker'),
