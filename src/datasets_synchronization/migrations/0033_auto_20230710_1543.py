@@ -27,7 +27,7 @@ def set_state_to_studies_with_prefix(apps, schema_editor):
                 samples = dataset.get_column_names()
                 # Checks if any of the samples has a suffix '-03'
                 if any([sample.endswith('-03') for sample in samples]):
-                    print(f"Setting state to {CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED} for dataset {dataset}")
+                    print(f"Setting state to CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED for dataset {dataset}")
                     dataset.state = CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED
                     dataset.save(update_fields=['state'])
 
