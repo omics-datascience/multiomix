@@ -184,7 +184,7 @@ class ExperimentClinicalSource(ExperimentSource):
         self,
         samples: Optional[List[str]],
         clinical_attributes: List[str]
-    ) -> np.ndarray:
+    ) -> pd.Series:
         """
         Gets specific samples and an attribute values from the source.
         @param samples: List of samples to retrieve. If None, returns all the samples
@@ -245,7 +245,7 @@ class ExperimentClinicalSource(ExperimentSource):
         self,
         samples: Optional[List[str]],
         clinical_attributes: List[str]
-    ) -> np.ndarray:
+    ) -> pd.Series:
         """
         Gets specific samples and an attribute values from the source as a Pandas DataFrame.
         @param samples: List of samples to retrieve. If None, returns all the samples
