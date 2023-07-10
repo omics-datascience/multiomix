@@ -122,21 +122,18 @@ def compute_c_index_and_log_likelihood(df: pd.DataFrame) -> Tuple[float, float]:
 def generate_survival_groups_by_clustering(
     classifier: ClusteringModels,
     molecules_df: pd.DataFrame,
-    clinical_df: pd.DataFrame,
+    clinical_data: np.ndarray,
     compute_samples_and_clusters: bool
 ) -> Tuple[List[Dict[str, LabelOrKaplanMeierResult]], float, float, np.ndarray]:
     """
     Generates the survival function to plot in a KaplanMeier curve for every group taken from a Clustering model.
     @param classifier: Clustering classifier to infer the group from expressions.
     @param molecules_df: Expression data.
-    @param clinical_df: Clinical data.
+    @param clinical_data: Clinical data.
     @param compute_samples_and_clusters: If True, it computes the samples and their clusters.
     @return: A tuple with all the groups with their survival function, the C-Index from (Cox Regression), the Log
     Likelihood from (Cox Regression), and a tuple with all the samples with their groups
     """
-    # Formats clinical data to a Numpy structured array
-    clinical_data = clinical_df_to_struct_array(clinical_df)
-
     # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
     # structure of data
     molecules_df = get_subset_of_features(molecules_df,  molecules_df.index)

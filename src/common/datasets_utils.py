@@ -11,6 +11,9 @@ from inferences.models import InferenceExperiment
 from statistical_properties.models import StatisticalValidation
 from user_files.models_choices import FileType
 
+# Axis to remove invalid values from Pandas DataFrames
+Axis = Literal['index', 'columns']
+
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
@@ -162,7 +165,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
     return molecules_temp_file_path
 
 
-def clean_dataset(df: pd.DataFrame, axis: Literal['index', 'columns']) -> pd.DataFrame:
+def clean_dataset(df: pd.DataFrame, axis: Axis) -> pd.DataFrame:
     """
     Removes NaN and Inf values.
     :param df: DataFrame to clean.

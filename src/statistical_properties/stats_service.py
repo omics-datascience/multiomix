@@ -355,7 +355,7 @@ class StatisticalValidationService(object):
         return self.__generate_molecules_dataframe(stat_validation, samples_in_common)
 
     def get_molecules_and_clinical_df(self,
-                                      stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                                      stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, np.ndarray]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the statistical validation.
         @param stat_validation: StatisticalValidation instance.
@@ -367,10 +367,11 @@ class StatisticalValidationService(object):
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
                                                                                                       samples_in_common)
 
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+        # Gets both DataFrames without NaNs values
+        molecules_df, _clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                                is_regression=False)
 
-        return molecules_df, clinical_df
+        return molecules_df, clinical_data
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
                                               stop_event: Event) -> Tuple[str, str]:
