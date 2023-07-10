@@ -35,6 +35,11 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         [props.featureSelection.selectedBiomarker?.id]
     )
 
+    const validateIfNeedExpand = (): boolean => {
+        return ![
+            FeatureSelectionAlgorithm.BLIND_SEARCH
+        ].includes(featureSelection.algorithm)
+    }
     const blindSearchIsDisabled = numberOfMolecules > maxFeaturesBlindSearch
     const metaheuristicsAreDisabled = numberOfMolecules < minFeaturesMetaheuristics
 
@@ -157,7 +162,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
             <Segment>
                 <Grid>
                     <Grid.Row columns={2} divided>
-                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 10 : 16}>
+                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive && validateIfNeedExpand() ? 10 : 16}>
                             {algorithmSelection()}
                         </Grid.Column>
                         <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 6 : undefined}>

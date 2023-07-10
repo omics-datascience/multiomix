@@ -40,7 +40,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 return (
                     <>
                         <ClusteringPanel
-                            settings={fitnessFunctionParameters?.clusteringParameters ?? null}
+                            settings={fitnessFunctionParameters?.clusteringParameters} /* ?? 0} */
                             handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
                         />
                         <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
@@ -71,6 +71,23 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                     }}
                                 />
                             }
+                            <Form.Input
+                                fluid
+                                label='Random state'
+                                placeholder='An integer number'
+                                type='number'
+                                step={1}
+                                min={0}
+                                name='randomState'
+                                value={fitnessFunctionParameters.clusteringParameters.randomState ?? ''}
+                                onChange={(_, { name, value }) => {
+                                    const numVal = value !== '' ? Number(value) : null
+                                    if (numVal !== null && numVal < 0) {
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 0)
+                                    } else {
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
+                                    }
+                                }} />
                         </Form.Group>
                     </>
                 )
@@ -99,7 +116,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                 step={1}
                                 min={0}
                                 name='randomState'
-                                value={fitnessFunctionParameters.svmParameters.randomState}
+                                value={fitnessFunctionParameters.svmParameters.randomState ?? ''}
                                 onChange={(_, { name, value }) => {
                                     const numVal = value !== '' ? Number(value) : null
                                     if (numVal !== null && numVal < 0) {
@@ -113,10 +130,31 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 )
             case FitnessFunction.RF:
                 return (
-                    <RFPanel
-                        parameters={fitnessFunctionParameters.rfParameters}
-                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                    />
+                    <>
+                        <RFPanel
+                            parameters={fitnessFunctionParameters.rfParameters}
+                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        />
+                        <Form.Group widths='equal' style={{ display: isExpertOn ? 'inherit' : 'none' }}>
+                            <Form.Input
+                                fluid
+                                label='Random state'
+                                placeholder='An integer number'
+                                type='number'
+                                step={1}
+                                min={0}
+                                name='randomState'
+                                value={fitnessFunctionParameters.rfParameters.randomState ?? ''}
+                                onChange={(_, { name, value }) => {
+                                    const numVal = value !== '' ? Number(value) : null
+                                    if (numVal !== null && numVal < 0) {
+                                        handleChangeFitnessFunctionOption('rfParameters', name, 0)
+                                    } else {
+                                        handleChangeFitnessFunctionOption('rfParameters', name, numVal)
+                                    }
+                                }} />
+                        </Form.Group>
+                    </>
                 )
         }
     }
