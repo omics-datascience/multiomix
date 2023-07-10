@@ -41,7 +41,6 @@ class BiomarkerList(generics.ListCreateAPIView):
                 )
             )
 
-
         return biomarkers
 
     def perform_create(self, biomarker: Biomarker):
