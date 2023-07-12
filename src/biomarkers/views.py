@@ -31,14 +31,15 @@ class BiomarkerList(generics.ListAPIView):
                 count_number_of_mrnas=Count('mrnas'),
                 count_number_of_mirnas=Count('mirnas'),
                 count_number_of_cnas=Count('cnas'),
-                count_number_of_methylations=Count('methylations')
+                count_number_of_methylations=Count('methylations'),
+                total_molecules=Count('mrnas') + Count('mirnas') + Count('cnas') + Count('methylations')
             ).filter(
                 Q(state=BiomarkerState.COMPLETED) & (
                         Q(count_number_of_mrnas__gt=0) |
                         Q(count_number_of_mirnas__gt=0) |
                         Q(count_number_of_cnas__gt=0) |
                         Q(count_number_of_methylations__gt=0)
-                )
+                ) & Q(total_molecules__gt=1)  # Optimizing a 1 molecule Biomarker is not useful
             )
 
         return biomarkers
