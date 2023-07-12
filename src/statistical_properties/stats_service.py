@@ -150,22 +150,7 @@ class StatisticalValidationService(object):
             stat_validation.save()
 
     @staticmethod
-    def __samples_are_fewer_than_folds(clinical_data: np.ndarray, number_of_folds: int) -> bool:
-        """
-        Checks if the number of samples is fewer than the number of folds.
-        Code retrieved from Sklearn model_selection module.
-        @param clinical_data: Clinical data Numpy array.
-        @param number_of_folds: Current number of folds
-        @return: True if the number of samples is fewer than the number of folds (an exception should be raised
-        as the GridSearch will be fail), False otherwise.
-        """
-        classes, y_idx, y_inv = np.unique(clinical_data, return_index=True, return_inverse=True)
-        _, class_perm = np.unique(y_idx, return_inverse=True)
-        y_encoded = class_perm[y_inv]
-        y_counts = np.bincount(y_encoded)
-        return np.all(number_of_folds > y_counts)
-
-    def __compute_trained_model(self, trained_model: TrainedModel, molecules_temp_file_path: str,
+    def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
                                 clinical_temp_file_path: str, model_parameters: Dict, stop_event: Event):
         """
         Computes the statistical validation using the params defined by the user.
@@ -217,7 +202,8 @@ class StatisticalValidationService(object):
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Stratified CV
-        cv = StratifiedKFold(n_splits=trained_model.cross_validation_folds, shuffle=True)
+        cross_validation_folds = trained_model.cross_validation_folds
+        cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
 
         # Generates GridSearchCV instance
         clustering_parameters: Optional[ClusteringParameters] = None
@@ -282,9 +268,7 @@ class StatisticalValidationService(object):
                                    f'({cross_validation_folds})')
 
         # Checks if there are fewer samples than splits in the CV to prevent ValueError
-        if self.__samples_are_fewer_than_folds(clinical_data, cross_validation_folds):
-            raise NumberOfSamplesFewerThanCVFolds(f'Number of samples: {n_samples} | CV number of folds '
-                                                  f'{cross_validation_folds}')
+        check_sample_classes(trained_model, clinical_data, cross_validation_folds)
 
         # Trains the model
         with warnings.catch_warnings():

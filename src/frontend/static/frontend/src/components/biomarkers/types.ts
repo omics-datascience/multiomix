@@ -32,7 +32,8 @@ enum BiomarkerState {
     REACHED_ATTEMPTS_LIMIT = 8,
     NO_FEATURES_FOUND = 9,
     NO_VALID_SAMPLES = 10,
-    NO_VALID_MOLECULES = 11
+    NO_VALID_MOLECULES = 11,
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
 }
 
 /** All the possible states of a TrainedModel. */
@@ -380,6 +381,7 @@ interface TrainedModel {
     description: string,
     state: TrainedModelState,
     fitness_function: FitnessFunction,
+    cv_folds_modified: boolean,
     created: string,
     fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>

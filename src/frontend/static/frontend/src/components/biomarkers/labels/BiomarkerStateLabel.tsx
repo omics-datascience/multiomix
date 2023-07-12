@@ -105,6 +105,14 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'The dataset used has not enough molecules to compute the experiment (i.e.: has less molecules than the specified in the Biomarker). Select other dataset and try again'
             }
             break
+        case BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
+            stateIcon = {
+                iconName: 'user times',
+                color: 'red',
+                loading: false,
+                title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
+            }
+            break
     }
 
     return (

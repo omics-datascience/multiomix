@@ -187,6 +187,8 @@ class TrainedModel(models.Model):
 
     cross_validation_folds = models.PositiveSmallIntegerField(default=10, validators=[MinValueValidator(3),
                                                                                       MaxValueValidator(10)])
+    # Indicates if the cross validation folds were modified to be stratified
+    cv_folds_modified = models.BooleanField(default=False)
 
     # Sources
     clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,

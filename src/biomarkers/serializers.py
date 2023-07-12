@@ -163,7 +163,7 @@ class TrainedModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainedModel
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
-                  'fitness_metric']
+                  'fitness_metric', 'cv_folds_modified']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:

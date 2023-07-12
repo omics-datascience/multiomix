@@ -5,8 +5,9 @@ from threading import Event
 from typing import Dict, Tuple, Optional, Any
 from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, TrainedModelState
 from common.utils import limit_between_min_max
-from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file, \
+    check_sample_classes
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NumberOfSamplesFewerThanCVFolds
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
@@ -128,6 +129,9 @@ class FSService(object):
         # Gets data in the correct format
         molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
                                                                is_regression)
+
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        check_sample_classes(trained_model, clinical_data, cross_validation_folds)
 
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
@@ -313,6 +317,11 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('MongoDB connection timeout!')
             biomarker.state = BiomarkerState.WAITING_FOR_QUEUE
+        except NumberOfSamplesFewerThanCVFolds as ex:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error(f'ValueError raised due to number of member of each class being fewer than number '
+                          f'of CV folds: {ex}')
+            biomarker.state = BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
             logging.warning(f'FSExperiment {experiment.pk} was stopped')
