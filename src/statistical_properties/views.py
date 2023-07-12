@@ -648,11 +648,11 @@ class BiomarkerNewTrainedModel(APIView):
                 mirna_source=mirna_source,
                 cna_source=cna_source,
                 methylation_source=methylation_source,
+                cross_validation_folds=cross_validation_folds,
             )
 
             # Runs statistical validation in background
-            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters,
-                                                                      cross_validation_folds)
+            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters)
 
         return Response({'ok': True})
 

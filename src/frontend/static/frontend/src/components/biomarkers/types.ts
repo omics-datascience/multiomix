@@ -282,6 +282,11 @@ interface FitnessFunctionParameters {
     rfParameters: RFParameters
 }
 
+/** CV parameters. */
+interface CrossValidationParameters {
+    folds: number
+}
+
 /** Structure for the Feature Selection panel. */
 interface FeatureSelectionPanelData {
     /** Current Step in the panel. */
@@ -307,7 +312,8 @@ interface FeatureSelectionPanelData {
     /** Fitness function to optimize in the algorithm. */
     fitnessFunction: FitnessFunction,
     /** Parameters of the selected `fitnessFunction`. */
-    fitnessFunctionParameters: FitnessFunctionParameters
+    fitnessFunctionParameters: FitnessFunctionParameters,
+    crossValidationParameters: CrossValidationParameters,
 }
 
 /** Advanced algorithm parameters to make Feature selection */
@@ -559,6 +565,7 @@ export {
     SVMParameters,
     ClusteringParameters,
     FitnessFunctionParameters,
+    CrossValidationParameters,
     FitnessFunction,
     FeatureSelectionAlgorithm,
     ClusteringMetric,

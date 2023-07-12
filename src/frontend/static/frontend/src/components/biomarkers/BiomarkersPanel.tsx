@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -126,7 +126,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
             fitnessFunction: FitnessFunction.CLUSTERING,
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters(),
-            advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters()
+            advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters(),
+            crossValidationParameters: { folds: 10 }
         }
     }
 
@@ -260,7 +261,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Manage the change of the option in cluster option in any algorithm selected inside a clustering
+     * Manage changes of Feature Selection process parameters.
      * @param fitnessFunction name of fitness function to change
      * @param key name of the fitnessFunction object that have changed
      * @param value value selected typed depends of what fitness function and key is being changing
@@ -268,6 +269,17 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
         const featureSelection = this.state.featureSelection
         featureSelection.fitnessFunctionParameters[fitnessFunction][key] = value
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * Manage changes of CrossValidation parameters.
+     * @param key name of the crossValidationParameters object that have changed.
+     * @param value value selected.
+     */
+    handleChangeCrossValidation = <T extends keyof CrossValidationParameters>(key: T, value: any) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.crossValidationParameters[key] = value
         this.setState({ featureSelection })
     }
 
@@ -1325,6 +1337,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formData.append('biomarkerPk', (fsSettings.biomarker?.id as number).toString())
             formData.append('algorithm', fsSettings.algorithm.toString())
             formData.append('algorithmParameters', JSON.stringify(fsSettings.advancedAlgorithmParameters))
+            formData.append('crossValidationParameters', JSON.stringify(fsSettings.crossValidationParameters))
             formData.append('fitnessFunction', fsSettings.fitnessFunction.toString())
             formData.append('fitnessFunctionParameters', JSON.stringify(fsSettings.fitnessFunctionParameters))
 
@@ -1600,6 +1613,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeAlgorithm={this.handleChangeAlgorithm}
                             handleChangeFitnessFunction={this.handleChangeFitnessFunction}
                             handleChangeFitnessFunctionOption={this.handleChangeFitnessFunctionOption}
+                            handleChangeCrossValidation={this.handleChangeCrossValidation}
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}

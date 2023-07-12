@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker, RFParameters } from '../../types'
+import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker, RFParameters, CrossValidationParameters } from '../../types'
 import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
 import { fitnessFunctionsOptions, getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../utils'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
@@ -19,11 +19,6 @@ interface NewTrainedModelModalProps {
     selectedBiomarker: Biomarker,
     showNewTrainedModelModal: boolean,
     setShowNewTrainedModelModal: (state: boolean) => void
-}
-
-/** CV parameters. */
-interface CrossValidationParameters {
-    folds: number
 }
 
 /** All the models parameters */
@@ -67,9 +62,7 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
     name: '',
     description: null,
     selectedFitnessFunction: null,
-    crossValidationParameters: {
-        folds: 10
-    },
+    crossValidationParameters: { folds: 10 },
     modelParameters: getDefaultModelParameters(),
     clinicalSource: getDefaultSource(),
     mRNASource: getDefaultSource(),

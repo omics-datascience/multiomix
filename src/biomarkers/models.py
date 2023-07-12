@@ -81,7 +81,7 @@ class Biomarker(models.Model):
         return self.methylations.count()
 
     def all_molecules(self, molecule_type: Optional[MoleculeType]) -> QuerySetSequence:
-        """TODO: complete docs"""
+        """Returns a QuerySetSequence with all the molecules in this Biomarker."""
         if molecule_type is None:
             return QuerySetSequence(
                 self.mrnas.all(), self.mirnas.all(), self.cnas.all(), self.methylations.all()

@@ -102,15 +102,19 @@ class FeatureSelectionSubmit(APIView):
             algorithm_parameters = request.POST.get('algorithmParameters')
             fitness_function = request.POST.get('fitnessFunction')
             fitness_function_parameters = request.POST.get('fitnessFunctionParameters')
+            cross_validation_parameters = request.POST.get('crossValidationParameters')
             if algorithm is None or fitness_function is None or fitness_function_parameters is None or \
-                    algorithm_parameters is None:
+                    algorithm_parameters is None or cross_validation_parameters is None:
                 raise ValidationError(f'Invalid parameters: algorithm: {algorithm}'
                                       f'| algorithm_parameters: {algorithm_parameters} '
                                       f'| fitness_function: {fitness_function} '
-                                      f'| fitness_function_parameters: {fitness_function_parameters}')
+                                      f'| fitness_function_parameters: {fitness_function_parameters}'
+                                      f'| cross_validation_parameters: {cross_validation_parameters}')
 
+            # Parses from JSON to dict
             algorithm_parameters = json.loads(algorithm_parameters)
             fitness_function_parameters = json.loads(fitness_function_parameters)
+            cross_validation_parameters = json.loads(cross_validation_parameters)
 
             # Creates FSExperiment instance
             fit_fun_enum = self.__get_fitness_function_enum(fitness_function)
@@ -130,7 +134,7 @@ class FeatureSelectionSubmit(APIView):
 
             # Adds Feature Selection experiment to the ThreadPool
             global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters,
-                                             algorithm_parameters)
+                                             algorithm_parameters, cross_validation_parameters)
 
         return Response({'ok': True})
 

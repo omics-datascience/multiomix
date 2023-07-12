@@ -45,18 +45,19 @@ def all_combinations(any_list: List) -> Iterable[List]:
     )
 
 
-def compute_cross_validation_sequential(classifier: SurvModel,
-                                        subset: pd.DataFrame, y: np.ndarray) -> Tuple[float, SurvModel, float]:
+def compute_cross_validation_sequential(classifier: SurvModel, subset: pd.DataFrame, y: np.ndarray,
+                                        cross_validation_folds: int) -> Tuple[float, SurvModel, float]:
     """
     Computes CrossValidation to get the Concordance Index (using StratifiedKFold to prevent "All samples are censored"
     error).
     @param classifier: Classifier to train.
     @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
     @param y: Classes.
+    @param cross_validation_folds: Number of folds in the CrossValidation process.
     @return: Average of the C-Index obtained in each CV fold, best model during CV and its fitness score.
     """
     # Create StratifiedKFold object.
-    skf = StratifiedKFold(n_splits=10, shuffle=True)
+    skf = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
     lst_score_stratified: List[float] = []
     estimators: List[SurvModel] = []
 
@@ -139,14 +140,15 @@ def blind_search_sequential(classifier: SurvModel,
                             molecules_df: pd.DataFrame,
                             clinical_data: np.ndarray,
                             is_clustering: bool,
-                            clustering_score_method: Optional[ClusteringScoringMethod]
-                            ) -> FSResult:
+                            cross_validations_folds: int,
+                            clustering_score_method: Optional[ClusteringScoringMethod]) -> FSResult:
     """
     Runs a Blind Search running a specific classifier using the molecular and clinical data passed by params.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
     @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
+    @param cross_validations_folds: TODO: remove
     @param clustering_score_method: Clustering scoring method to optimize.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
@@ -178,7 +180,8 @@ def blind_search_sequential(classifier: SurvModel,
                 current_mean_score, current_best_model, current_best_score = compute_cross_validation_sequential(
                     classifier,
                     subset,
-                    clinical_data
+                    clinical_data,
+                    cross_validations_folds
                 )
         except ValueError:
             continue
@@ -192,9 +195,9 @@ def blind_search_sequential(classifier: SurvModel,
     return best_features, best_model, best_score
 
 
-def compute_bbha_fitness_function(
-        classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray, is_clustering: bool,
-        clustering_score_method: Optional[ClusteringScoringMethod]) -> Tuple[float, SurvModel]:
+def compute_bbha_fitness_function(classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray,
+                                  is_clustering: bool, clustering_score_method: Optional[ClusteringScoringMethod],
+                                  cross_validation_folds: int) -> Tuple[float, SurvModel]:
     """Computes clustering or CV algorithm depending on the parameters. Return avg fitness value and best model."""
     if is_clustering:
         current_score, current_best_model, _best_score = compute_clustering_sequential(
@@ -207,7 +210,8 @@ def compute_bbha_fitness_function(
         current_score, current_best_model, _best_score = compute_cross_validation_sequential(
             classifier,
             subset,
-            clinical_data
+            clinical_data,
+            cross_validation_folds
         )
     return current_score, current_best_model
 
@@ -220,6 +224,7 @@ def binary_black_hole_sequential(
         clinical_data: np.ndarray,
         is_clustering: bool,
         clustering_score_method: Optional[ClusteringScoringMethod],
+        cross_validation_folds: int,
         binary_threshold: Optional[float] = 0.6
 ) -> FSResult:
     """
@@ -233,6 +238,7 @@ def binary_black_hole_sequential(
     @param clinical_data: Numpy array with the time and event columns.
     @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
     @param clustering_score_method: Clustering scoring method to optimize.
+    @param cross_validation_folds: Number of folds in the CrossValidation process.
     @param binary_threshold: Binary threshold to set 1 or 0 the feature. If None it'll be computed randomly.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
@@ -256,7 +262,7 @@ def binary_black_hole_sequential(
         subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
         score, initial_best_model = compute_bbha_fitness_function(classifier, subset_to_predict,
                                                                   clinical_data, is_clustering,
-                                                                  clustering_score_method)
+                                                                  clustering_score_method, cross_validation_folds)
 
         stars_fitness_values[i] = score
         stars_model[i] = initial_best_model
@@ -276,7 +282,8 @@ def binary_black_hole_sequential(
             current_star_combination = stars_subsets[a]
             subset = get_subset_of_features(molecules_df, combination=current_star_combination)
             current_score, current_best_model = compute_bbha_fitness_function(classifier, subset, clinical_data,
-                                                                              is_clustering, clustering_score_method)
+                                                                              is_clustering, clustering_score_method,
+                                                                              cross_validation_folds)
 
             # If it's the best fitness, swaps that star with the current black hole
             if current_score > best_score:

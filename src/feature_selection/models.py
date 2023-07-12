@@ -185,6 +185,9 @@ class TrainedModel(models.Model):
     best_fitness_value =  models.FloatField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    cross_validation_folds = models.PositiveSmallIntegerField(default=10, validators=[MinValueValidator(3),
+                                                                                      MaxValueValidator(10)])
+
     # Sources
     clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
                                         blank=True, related_name='trained_models_as_clinical')
