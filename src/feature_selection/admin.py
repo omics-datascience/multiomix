@@ -2,7 +2,7 @@ from typing import Optional
 from django.contrib import admin
 from biomarkers.models import BiomarkerState
 from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel, ClusterLabelsSet, \
-    ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord
+    ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters
 
 
 class FSExperimentAdmin(admin.ModelAdmin):
@@ -56,6 +56,7 @@ class ClusteringTimesRecordAdmin(admin.ModelAdmin):
 
 admin.site.register(FSExperiment, FSExperimentAdmin)
 admin.site.register(SVMParameters)
+admin.site.register(RFParameters)
 admin.site.register(ClusteringParameters)
 admin.site.register(TrainedModel, TrainedModelAdmin)
 admin.site.register(ClusterLabelsSet)
