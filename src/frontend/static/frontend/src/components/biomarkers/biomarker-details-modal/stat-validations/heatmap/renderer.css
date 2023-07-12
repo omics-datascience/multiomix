@@ -1,7 +1,7 @@
-.rectangle {
+.renderer-rectangle {
 	cursor: pointer;
 }
 
-.rectangle:hover {
+.renderer-rectangle:hover {
 	fill: rgb(167, 211, 241);
 }

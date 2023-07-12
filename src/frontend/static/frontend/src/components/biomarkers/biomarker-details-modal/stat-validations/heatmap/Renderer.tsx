@@ -68,7 +68,7 @@ export const Renderer = (props: RendererProps) => {
                 key={i}
                 x={xPos}
                 y={yPos}
-                className='rectangle'
+                className='renderer-rectangle'
                 width={xScale.bandwidth()}
                 height={yScale.bandwidth()}
                 fill={d.value ? colorScale(d.value) : '#F8F8F8'}
