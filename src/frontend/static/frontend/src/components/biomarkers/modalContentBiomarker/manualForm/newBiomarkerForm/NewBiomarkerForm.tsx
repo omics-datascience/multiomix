@@ -149,25 +149,23 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                     </div>
                 }
 
-                {haveInvalid &&
-                    <Checkbox
-                        className='biomarkers--side--bar--validation--items'
-                        label={
-                            <label>
-                                Ignore molecules with warnings
+                <Checkbox
+                    className='biomarkers--side--bar--validation--items'
+                    label={
+                        <label>
+                            Ignore molecules with warnings
 
-                                <InfoPopup
-                                    content='This message does not indicate that there is an error in your data, but that these molecules were not found during our validation process. This may be due to outdated data or the use of different nomenclatures or standards. In case you are sure that there are no corrections to be made and you wish to continue with the Biomarker saving, check the following Checkbox to enable the form submission'
-                                    onTop={false}
-                                    onEvent='hover'
-                                    extraClassName='margin-left-5'
-                                />
-                            </label>
-                        }
-                        checked={props.biomarkerForm.validation.checkBox}
-                        onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
-                    />
-                }
+                            <InfoPopup
+                                content='This message does not indicate that there is an error in your data, but that these molecules were not found during our validation process. This may be due to outdated data or the use of different nomenclatures or standards. In case you are sure that there are no corrections to be made and you wish to continue with the Biomarker saving, check the following Checkbox to enable the form submission'
+                                onTop={false}
+                                onEvent='hover'
+                                extraClassName='margin-left-5'
+                            />
+                        </label>
+                    }
+                    checked={props.biomarkerForm.validation.checkBox}
+                    onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
+                />
 
                 {/* Submit form button */}
                 <Container className='biomarkers--side--bar--box'>
