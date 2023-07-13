@@ -313,7 +313,6 @@ def check_sample_classes(trained_model: TrainedModel, clinical_data: np.ndarray,
     if __sample_classes_are_fewer_than_folds(clinical_data, cross_validation_folds):
         # Checks if a smaller number of folds can be used
         new_cross_validation = __get_new_cross_validation_folds(clinical_data, cross_validation_folds)
-        print('new_cross_validation found: ', new_cross_validation)  # TODO: remove
         if new_cross_validation is None:
             raise NumberOfSamplesFewerThanCVFolds(f'Number of unique classes is less than the CV number of folds '
                                                   f'({cross_validation_folds})')

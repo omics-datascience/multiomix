@@ -278,6 +278,10 @@ def binary_black_hole_spark(
         {
             'name': 'bbha-iterations',
             'value': n_iterations,
+        },
+        {
+            'name': 'cv-folds',
+            'value': trained_model.cross_validation_folds,
         }
     ]
 
