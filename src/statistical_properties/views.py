@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F
 from django.db.models.functions import Abs
 from django.http import HttpRequest
 from django.http.response import Http404
@@ -22,7 +22,7 @@ from api_service.models_choices import ExperimentType
 from api_service.pipelines import global_pipeline_manager
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
-from common.datasets_utils import clinical_df_to_struct_array
+from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.utils import get_source_pk, get_subset_of_features
@@ -41,6 +41,11 @@ from statistical_properties.survival_functions import generate_survival_groups_b
     get_group_survival_function, compute_c_index_and_log_likelihood, struct_array_to_kaplan_meier_samples
 from user_files.models_choices import FileType
 
+
+# Possible suffix in a DataFrame to distinguish different kinds of molecules in a Biomarker
+TYPE_SUFFIX = f'_({FileType.MRNA.value}|{FileType.MIRNA.value}|{FileType.CNA.value}|{FileType.METHYLATION.value})$'
+
+# Most of the statistics need at least 3 samples
 NUMBER_OF_NEEDED_SAMPLES: int = 3
 
 
@@ -177,13 +182,20 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
 
 class StatisticalValidationHeatMap(APIView):
     """Gets the expressions of all the molecules of a Biomarker for all the samples."""
-
     @staticmethod
-    def get(request: Request):
+    def __remove_suffix(df: pd.DataFrame) -> pd.DataFrame:
+        """Removes the suffix from the index of a DataFrame."""
+        df.index = df.index.str.replace(TYPE_SUFFIX, '', regex=True)
+        return df
+
+    def get(self, request: Request):
         stat_validation = get_stat_validation_instance(request)
 
         try:
             molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+            molecules_df = clean_dataset(molecules_df, axis='index')
+            molecules_df = self.__remove_suffix(molecules_df)
+
             return Response({
                 'data': molecules_df.to_dict('index'),
                 'min': molecules_df.min().min(),
@@ -236,6 +248,19 @@ class StatisticalValidationKaplanMeierClustering(APIView):
         })
 
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ClustersUniqueStatValidation(APIView):
+    """Gets all the pairs of samples and cluster for a specific StatisticalValidation (that used a clustering model)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request, pk: int):
+        stat_validation = get_object_or_404(StatisticalValidation, pk=pk,
+                                        biomarker__user=request.user)
+        samples_and_clusters = stat_validation.samples_and_clusters.values(text=F('cluster'),
+                                                                           value=F('cluster')).distinct()
+        return Response(samples_and_clusters)
 
 
 class StatisticalValidationClinicalAttributes(APIView):
@@ -381,8 +406,13 @@ class ModelDetails(APIView):
         else:
             raise ValidationError(f'Invalid trained model type: {model_used}')
 
+        # Prevents NaNs breaking JSON compliant
+        if np.isnan(trained_model.best_fitness_value):
+            best_fitness = None
+        else:
+            best_fitness = trained_model.best_fitness_value
         response['model'] = model_used
-        response['best_fitness'] = trained_model.best_fitness_value
+        response['best_fitness'] = best_fitness
         response['random_state'] = parameters.random_state
 
         return Response(response)

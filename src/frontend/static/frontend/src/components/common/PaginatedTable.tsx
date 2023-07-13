@@ -11,6 +11,14 @@ import { InputLabel } from './InputLabel'
 
 declare const currentUserId: string
 
+/** Structure in which the retrieved filter must be. */
+type FilterRetrievedOptions = {
+    /** Value for the DropDownItem */
+    value: string,
+    /** Label for the DropDownItem */
+    text: string,
+}
+
 /**
  * Type of sorting settings.
  * TODO: make this generics with keyof to prevent issues with unknown fields.
@@ -38,8 +46,19 @@ type PaginationCustomFilter = {
     allowZero?: boolean,
     /** `clearable` prop of the `Form.Select`. `true` by default. Only used if type === 'select'. */
     clearable?: boolean,
-    /** Form.Select options. If undefined, get uniques values from the data using the field `keyForServer`. */
+    /** Form.Select options. If undefined, checks the `urlToRetrieveOptions` parameter. */
     options?: DropdownItemProps[],
+    /**
+     * In case `options` is `undefined`, this parameter is checked. If it's `undefined` gets uniques values from the data using the field `keyForServer`.
+     * Otherwise, gets the options from the URL specified in this parameter, that endpoint must return a list of objects with the following structure:
+     * ```
+     * {
+     *    value: string,
+     *    text: string
+     * }
+     * ```
+     */
+    urlToRetrieveOptions?: string,
     /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
     disabledFunction?: (actualValues: {[key: string]: any}) => boolean
 }
@@ -91,6 +110,13 @@ interface PaginatedTableProps<T> {
 interface PaginatedTableState<T> {
     /** Table control to handle sorting, filter, and pagination */
     tableControl: GeneralTableControl,
+    /** Dict with all the retrieved options for the custom filters that have the parameter `urlToRetrieveOptions` */
+    retrievedOptions: {
+        [key: string]: {
+            data: DropdownItemProps[],
+            loading: boolean
+        }
+    },
     elements: T[],
     gettingData: boolean
 }
@@ -135,6 +161,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         this.state = {
             elements: [],
             tableControl: generalTableControl,
+            retrievedOptions: {},
             gettingData: false
         }
     }
@@ -144,6 +171,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     componentDidMount () {
         this.getData()
+
+        this.getFiltersOptions()
     }
 
     /**
@@ -153,6 +182,46 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     componentDidUpdate (prevProps: PaginatedTableProps<T>) {
         if (prevProps.queryParams !== this.props.queryParams) {
             this.getData()
+
+            this.getFiltersOptions()
+        }
+    }
+
+    /** Retrieves the filters options for all the custom filters that have the parameter `urlToRetrieveOptions` */
+    getFiltersOptions = () => {
+        const { customFilters } = this.props
+        if (customFilters) {
+            customFilters.forEach((filter) => {
+                if (filter.urlToRetrieveOptions) {
+                    const retrievedOptions = this.state.retrievedOptions
+                    retrievedOptions[filter.keyForServer] = {
+                        data: [],
+                        loading: true
+                    }
+                    this.setState({ retrievedOptions })
+
+                    ky.get(filter.urlToRetrieveOptions, { timeout: 60000 }).then((response) => {
+                        response.json().then((jsonResponse: FilterRetrievedOptions[]) => {
+                            retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
+                                return {
+                                    key: option.value,
+                                    value: option.value,
+                                    text: option.text
+                                }
+                            })
+
+                            this.setState({ retrievedOptions })
+                        }).catch((err) => {
+                            console.log('Error parsing JSON ->', err)
+                        })
+                    }).catch((err) => {
+                        console.log(`Error getting filters for ${filter.keyForServer} in URL "${filter.urlToRetrieveOptions}"->`, err)
+                    }).finally(() => {
+                        retrievedOptions[filter.keyForServer].loading = false
+                        this.setState({ retrievedOptions })
+                    })
+                }
+            })
         }
     }
 
@@ -267,8 +336,14 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 if (filter.options !== undefined) {
                     options = filter.options
                 } else {
-                    const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
-                    options = uniqueValues.map((value) => ({ key: value, text: value, value }))
+                    // First, checks retrieved options
+                    if (this.state.retrievedOptions[filter.keyForServer]) {
+                        options = this.state.retrievedOptions[filter.keyForServer].data
+                    } else {
+                        // As the last resource, gets the unique values from data
+                        const uniqueValues = [...new Set(this.state.elements.map((elem) => elem[filter.keyForServer]))].sort()
+                        options = uniqueValues.map((value) => ({ key: value, text: value, value }))
+                    }
                 }
                 return (
                     <Form.Select

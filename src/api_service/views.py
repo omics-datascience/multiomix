@@ -641,10 +641,9 @@ def download_result_with_filters(request):
     combinations = list(map(format_combinations_from_dict, combinations))
     return generate_result_file_response(combinations, experiment.name)
 
-
+@login_required
 def add_clinical_source(request):
     """Adds an Experiment clinical source"""
-
     # Gets experiment
     experiment_id = request.POST.get('experimentPk')
     experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)

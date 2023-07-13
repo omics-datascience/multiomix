@@ -49,12 +49,18 @@ class SampleAndClusterPredictionSerializer(serializers.ModelSerializer):
 
         if cluster_labels_set_pk:
             cluster_labels_set = get_object_or_404(ClusterLabelsSet, pk=cluster_labels_set_pk)
-            try:
-                label_obj: ClusterLabel = cluster_labels_set.labels.get(cluster_id=data['cluster'])
-                data['cluster'] = label_obj.label
-                data['color'] = label_obj.color
-            except ClusterLabel.DoesNotExist:
-                pass
+            # This should be always return a single object. But the first() prevents issues with duplicated
+            # 'cluster_id' set in the ClusterLabel instances.
+            cluster_id = data['cluster']
+            label_obj: ClusterLabel = cluster_labels_set.labels.filter(cluster_id=cluster_id).first()
+            if label_obj:
+                label = label_obj.label
+                color = label_obj.color
+            else:
+                label = cluster_id
+                color = None
+            data['cluster'] = label
+            data['color'] = color
 
         return data
 

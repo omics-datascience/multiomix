@@ -4,10 +4,12 @@ import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
 import countBy from 'lodash/countBy'
-import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { MAX_FILE_SIZE_IN_MB_ERROR } from './constants'
 
-dayjs.extend(localizedFormat)
+/** User locale extracted from the browser. */
+const USER_LOCALE: readonly string[] | string = navigator.languages !== undefined && navigator.languages.length > 0
+    ? navigator.languages
+    : navigator.language
 
 declare const CSRFToken: string
 
@@ -346,10 +348,27 @@ const getDefaultGeneralTableControl = (): GeneralTableControl => {
  * @param format Format to apply. Default to MM/DD/YYYY
  * @returns Formatted date
  */
-const formatDateLocale = (dateToFormat: string, format: string = 'L'): string => {
-    // TODO: enable Typescript strict null checking to prevent this kind of fixes
+const formatDateLocale = (dateToFormat: Nullable<string>, format: string = 'L'): string => {
     if (dateToFormat) {
-        return dayjs(dateToFormat).format(format)
+        // Dayjs needs to import all the locales to use them. Intl package is used instead
+        // as it's simpler to use
+        const date = dayjs(dateToFormat)
+
+        if (format === 'L' || format === 'LLL') {
+            // Generates a localized date
+            const options: Intl.DateTimeFormatOptions | undefined = format === 'LLL'
+                ? {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric'
+                }
+                : undefined
+            return new Intl.DateTimeFormat(USER_LOCALE as (string[] | string), options).format(date.toDate())
+        }
+
+        return date.format(format)
     }
     return '-'
 }

@@ -1,11 +1,11 @@
 import React from 'react'
 import { PaginatedTable } from '../../../common/PaginatedTable'
-import { Biomarker, InferenceExperimentForTable } from '../../types'
+import { Biomarker, BiomarkerState, InferenceExperimentForTable } from '../../types'
 import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../../utils/util_functions'
-import { BiomarkerStateLabel } from '../../BiomarkerStateLabel'
 import { FitnessFunctionLabel } from '../../labels/FitnessFunctionLabel'
+import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 
 declare const urlBiomarkerInferenceExperiments: string
 
@@ -60,9 +60,9 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                             <BiomarkerStateLabel biomarkerState={inferenceExperiment.state} />
                         </Table.Cell>
                         <Table.Cell><FitnessFunctionLabel fitnessFunction={inferenceExperiment.model} /></Table.Cell>
-                        <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'LLL')} />
+                        <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'L')} />
                         <Table.Cell width={1}>
-                            <React.Fragment>
+                            {inferenceExperiment.state === BiomarkerState.COMPLETED &&
                                 <Icon
                                     name='chart area'
                                     onClick={() => { props.openInferenceResult(inferenceExperiment) }}
@@ -70,7 +70,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                     color='blue'
                                     title='See results'
                                 />
-                            </React.Fragment>
+                            }
                         </Table.Cell>
                     </Table.Row>
                 )

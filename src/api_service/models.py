@@ -265,7 +265,7 @@ class ExperimentClinicalSource(ExperimentSource):
 
         # Sets the index to the patient ID column and joins both DataFrames
         # NOTE: df1 has already the index set to the patient ID column
-        df2 = df2.set_index([PATIENT_ID_COLUMN])
+        df2 = df2.reset_index().set_index([PATIENT_ID_COLUMN])
 
         return df1.join(df2)
 

@@ -7,6 +7,8 @@ urlpatterns = [
     path('api/<int:pk>/', views.BiomarkerDetail.as_view()),
     path('gene-symbols', views.GeneSymbols.as_view(), name='gene_symbols'),
     path('gene-symbols-finder', views.GeneSymbols.as_view(), name='gene_symbols_finder'),
+    path('clone_biomarker', views.BiomarkerClone.as_view(), name='clone_biomarker'),
+    path('clone_biomarker/<int:pk>/', views.BiomarkerClone.as_view(), name='clone_biomarker'),
     path('mirna-codes', views.MiRNACodes.as_view(), name='mirna_codes'),
     path('mirna-codes-finder', views.MiRNACodes.as_view(), name='mirna_codes_finder'),
     path('methylation-sites', views.MethylationSites.as_view(), name='methylation_sites'),

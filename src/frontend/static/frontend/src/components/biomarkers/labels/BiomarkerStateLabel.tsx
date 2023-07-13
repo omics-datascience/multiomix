@@ -1,7 +1,7 @@
 import React from 'react'
 import { Icon } from 'semantic-ui-react'
-import { BiomarkerState } from './types'
-import { StateIconInfo } from '../../utils/interfaces'
+import { StateIconInfo } from '../../../utils/interfaces'
+import { BiomarkerState } from '../types'
 
 /** BiomarkerStateLabel props. */
 interface BiomarkerStateLabelProps {

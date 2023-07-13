@@ -84,9 +84,13 @@ services:
             # Redis
             # REDIS_HOST: 'redis'
             # REDIS_PORT: 6379
+            #
+            # For logging (by default LOG_FILE_PATH is /logs)
+            # LOG_FILE_PATH: /path/to/folder/log
         volumes:
             - static_data:/src/static
             - media_data:/src/media
+            - logs_data:/logs
         depends_on:
             - db
             - mongo
@@ -107,4 +111,7 @@ volumes:
     media_data:
         external:
             name: 'multiomics_intermediate_media_data'
+    logs_data:
+        external:
+            name: 'multiomics_intermediate_logs_data'            
 

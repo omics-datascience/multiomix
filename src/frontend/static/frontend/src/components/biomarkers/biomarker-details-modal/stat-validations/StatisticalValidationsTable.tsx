@@ -1,11 +1,11 @@
 import React from 'react'
 import { PaginatedTable } from '../../../common/PaginatedTable'
-import { Biomarker, StatisticalValidationForTable } from '../../types'
+import { Biomarker, BiomarkerState, StatisticalValidationForTable } from '../../types'
 import { Button, Form, Icon, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { formatDateLocale } from '../../../../utils/util_functions'
-import { BiomarkerStateLabel } from '../../BiomarkerStateLabel'
 import { FitnessFunctionLabel } from '../../labels/FitnessFunctionLabel'
+import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 
 declare const urlBiomarkerStatisticalValidations: string
 
@@ -62,9 +62,9 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                         <Table.Cell textAlign='center'>
                             <FitnessFunctionLabel fitnessFunction={statisticalValidation.fitness_function} />
                         </Table.Cell>
-                        <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'LLL')} />
+                        <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'L')} />
                         <Table.Cell width={1}>
-                            <React.Fragment>
+                            {statisticalValidation.state === BiomarkerState.COMPLETED &&
                                 <Icon
                                     name='chart area'
                                     onClick={() => { props.openStatResult(statisticalValidation) }}
@@ -72,7 +72,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                     color='blue'
                                     title='See results'
                                 />
-                            </React.Fragment>
+                            }
                         </Table.Cell>
                     </Table.Row>
                 )

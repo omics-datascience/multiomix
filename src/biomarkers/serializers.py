@@ -1,7 +1,7 @@
 from math import isnan
-from typing import Optional
+from typing import Optional, cast
 from rest_framework import serializers
-from feature_selection.models import TrainedModel
+from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, ClusteringScoringMethod
 from user_files.models_choices import MoleculeType
 from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier, MoleculeIdentifier
 from tags.serializers import TagSerializer
@@ -107,6 +107,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
     number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
     has_fs_experiment = serializers.SerializerMethodField(method_name='get_has_fs_experiment')
+    was_already_used = serializers.SerializerMethodField(method_name='get_was_already_used')
 
     mrnas = MRNAIdentifierSerializer(many=True, required=False)
     mirnas = MiRNAIdentifierSerializer(many=True, required=False)
@@ -146,20 +147,49 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
         """Gets if the current Biomarker was created from a Feature Selection experiment"""
         return ins.has_fs_experiment
 
+    @staticmethod
+    def get_was_already_used(ins: Biomarker) -> bool:
+        """
+        Returns True if this Biomarker was used for an Inference experiment, Statistical Validation or Trained Model.
+        This avoids the user to edit a Biomarker that was already used and generate inconsistencies.
+        """
+        return ins.was_already_used
 
 class TrainedModelSerializer(serializers.ModelSerializer):
     """TrainedModel serializer"""
     best_fitness_value = serializers.SerializerMethodField(method_name='get_best_fitness_value')
+    fitness_metric = serializers.SerializerMethodField(method_name='get_fitness_metric')
 
     class Meta:
         model = TrainedModel
-        fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value']
+        fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
+                  'fitness_metric']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:
         """Gets the best fitness value of the TrainedModel setting it to None if it's NaN"""
         if instance.best_fitness_value is not None and not isnan(instance.best_fitness_value):
             return instance.best_fitness_value
+        return None
+
+    @staticmethod
+    def __get_scoring_method_description(scoring_method: ClusteringScoringMethod) -> Optional[str]:
+        if scoring_method == ClusteringScoringMethod.C_INDEX:
+            return 'C-Index'
+        if scoring_method == ClusteringScoringMethod.LOG_LIKELIHOOD:
+            return 'Log Likelihood'  # Default is kmeans
+        return None
+
+    def get_fitness_metric(self, instance: TrainedModel) -> Optional[str]:
+        """Gets the fitness metric of the TrainedModel."""
+        if instance.fitness_function == FitnessFunction.CLUSTERING:
+            parameters = instance.get_model_parameter()
+            if parameters is not None:
+                parameters = cast(ClusteringParameters, parameters)
+                return self.__get_scoring_method_description(parameters.scoring_method)
+        elif instance.fitness_function in [FitnessFunction.SVM, FitnessFunction.RF]:
+            return 'C-Index'
+
         return None
 
 

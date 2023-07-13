@@ -8,5 +8,5 @@ urlpatterns = [
     path('studies', views.CGDSStudyList.as_view(), name='cgds_studies'),
     path('studies/<int:pk>/', views.CGDSStudyDetail.as_view()),
     # Synchronization
-    path('sync', views.synchronize_cgds_study_action, name='sync_cgds_study'),
+    path('sync', views.SynCGDSStudy.as_view(), name='sync_cgds_study'),
 ]

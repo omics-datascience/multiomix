@@ -14,15 +14,18 @@
 
 {% block js %}
         <script>
-                const minIterationsBBHA = {{ min_iterations_bbha }}
-                const maxIterationsBBHA = {{ max_iterations_bbha }}
+                const sparkIntegrationIsEnabled = "{{ enable_aws_emr_integration }}" == "True"
+                const minIterationsMetaheuristics = {{ min_iterations_metaheuristics }}
+                const maxIterationsMetaheuristics = {{ max_iterations_metaheuristics }}
                 const minStarsBBHA = {{ min_stars_bbha }}
                 const maxStarsBBHA = {{ max_stars_bbha }}
                 const maxFeaturesCoxRegression = {{ max_features_cox_regression }}
                 const maxFeaturesBlindSearch = {{ max_features_blind_search }}
+                const minFeaturesMetaheuristics = {{ min_features_metaheuristics }}
 
                 const urlBiomarkersCRUD = "{% url 'biomarkers_api' %}"
                 const urlGeneSymbols = "{% url 'gene_symbols' %}"
+                const urlCloneBiomarker = "{% url 'clone_biomarker' %}"
                 const urlGeneSymbolsFinder = "{% url 'gene_symbols_finder' %}"
                 const urlMiRNACodes = "{% url 'mirna_codes' %}"
                 const urlMiRNACodesFinder = "{% url 'mirna_codes_finder' %}"
@@ -40,6 +43,7 @@
                 const urlStatisticalValidationKaplanMeierByAttr = "{% url 'statistical_validation_kaplan_meier_by_attr' %}"
                 const urlStatisticalValidationModalDetails = "{% url 'statistical_validation_modal_details' %}"
                 const urlStatisticalValidationSamplesAndClusters = "{% url 'statistical_validation_samples_and_clusters' %}"
+                const urlClustersUniqueStatValidation = "{% url 'clusters_unique_stat_validation' %}"
                 const urlStatisticalValidationClinicalAttrs = "{% url 'statistical_validation_clinical_attrs' %}"
                 const urlNewTrainedModel = "{% url 'biomarker_new_trained_model' %}"
                 const urlClusterLabelsSets = "{% url 'cluster_labels_sets' %}"
@@ -50,6 +54,7 @@
                 const urlInferenceExperimentClinicalAttrs = "{% url 'inference_experiment_clinical_attrs' %}"
                 const urlSubmitInferenceExperiment = "{% url 'submit_inference_experiment' %}"
                 const urlInferenceExperimentSamplesAndClusters = "{% url 'inference_experiment_samples_and_clusters' %}"
+                const urlClustersUniqueInferenceExperiment = "{% url 'clusters_unique_inference_experiment' %}"
                 const urlInferenceExperimentSamplesAndTime = "{% url 'inference_experiment_samples_and_time' %}"
                 const urlClinicalSourceAddOrEditInferenceExperiment = "{% url 'clinical_source_inference_experiment' %}"
                 const urlUnlinkClinicalSourceInferenceExperiment = "{% url 'unlink_clinical_source_inference_experiment' %}"
@@ -57,7 +62,6 @@
                 const urlGeneInformation = "{% url 'gene_information' %}"
                 const urlPathwaysInformation = "{% url 'pathways_information' %}"
                 const urlMetabolicPathways = "{% url 'metabolic_pathways_information' %}"
-
         </script>
         {% render_bundle 'biomarkers' 'js' %}
 {% endblock %}

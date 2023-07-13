@@ -178,6 +178,11 @@ div.ellipsis>button {
     z-index: 999;
 }
 
+/* Removes border from SemanticUI circular icons. */
+i.no-border {
+    box-shadow: none !important;
+}
+
 /* Support for Header with centered image */
 .ui.image.header.aligned {
     margin-left: auto;
@@ -223,7 +228,7 @@ div.ellipsis>button {
 /* This prevents help icons to be over navbar menu */
 h2.menu,
 .menu.transition.visible {
-    z-index: 2000;
+    z-index: 2100;
 }
 
 .pull-down {
@@ -239,7 +244,7 @@ h2.menu,
 /* Prevents the Popup to be over some modals */
 #clinical-source-popup,
 .ui.dimmer {
-    z-index: 2000 !important;
+    z-index: 2200 !important;
 }
 
 /* Prevents modals to be over the popups */

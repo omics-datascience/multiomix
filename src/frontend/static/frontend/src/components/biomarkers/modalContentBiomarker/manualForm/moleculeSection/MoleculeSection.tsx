@@ -1,39 +1,39 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Dimmer, Grid, Header, Icon, Loader, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
-import './moleculeSectionStyles.css'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
-import { FixedSizeList } from 'react-window'
-//import { DynamicSizeList } from 'react-window-dynamic'
+// import { FixedSizeList } from 'react-window'
+//  import { DynamicSizeList } from 'react-window-dynamic'
+import { List, ListRowProps } from 'react-virtualized'
+// Styles
+import './moleculeSectionStyles.css'
 
+/** MoleculeSection's props. */
 interface MoleculeSectionProps {
     title: BiomarkerType,
     biomarkerFormData: MoleculeSectionItem,
+    /** If true, the user can edit the molecules in the Biomarker. */
+    canEditMolecules: boolean,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
 }
 
 // eslint-disable-next-line react/display-name
-export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRemoveMolecule, handleSelectOptionMolecule, handleRemoveInvalidGenes }: MoleculeSectionProps) => {
+export const MoleculeSection = React.memo(({
+    title,
+    biomarkerFormData,
+    handleRemoveMolecule,
+    handleSelectOptionMolecule,
+    handleRemoveInvalidGenes,
+    canEditMolecules
+}: MoleculeSectionProps) => {
     const parentRef = useRef<HTMLDivElement>(null)
     const [searchInput, setSearchInput] = useState<string>('')
     const [parentWidth, setParentWidth] = useState(0)
     const [parentHeight, setParentHeight] = useState(0)
-    const listRef = useRef<any>(null)
+    const rowHeights = useRef<number[]>([])
 
-    const sizeMap = useRef<any>(null)
-    const setSize = useCallback((index, size) => {
-        sizeMap.current = { ...sizeMap.current, [index]: size }
-        if (listRef.current) {
-            console.log('current')
-            listRef.current.resetAfterIndex(index)
-        }
-    }, [])
-    const getSize = useCallback(index => {
-        console.log(sizeMap, 'execgetsize')
-        return 50
-    }, [])
     /**
      * Filter data to show in the section considering user search.
      * @returns Filtered data.
@@ -66,9 +66,9 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
     }, [biomarkerFormData.data])
     interface RowProps {
         index: number,
-        // style: any,
+        style: any,
     }
-    const Row = ({ index }: RowProps) => {
+    /* const Row = ({ index, style }: RowProps) => {
         return (
             <div
                 className="row-container"
@@ -76,7 +76,7 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
             >
                 {
                     dataFiltered[index].map((mol, i) => (
-                        < MoleculeOption
+                        <MoleculeOption
                             key={i + index}
                             mol={mol}
                             handleRemoveMolecule={handleRemoveMolecule}
@@ -88,8 +88,43 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
                 }
             </div>
         )
+    } */
+    const Row: React.FC<ListRowProps> = ({ index, style }: RowProps) => {
+        const content = dataFiltered[index]
+        const measuredRef = useRef<HTMLDivElement>(null)
+
+        useEffect(() => {
+            if (measuredRef.current) {
+                const measuredHeight = measuredRef.current.getBoundingClientRect().height
+                rowHeights.current[index] = measuredHeight
+            }
+        }, [index])
+
+        return (
+
+            <div
+                /*  ref={measuredRef} */
+                style={{ ...style, height: rowHeights.current[index] }}
+            /* className="row-container"
+            style={{ display: 'inline-flex' }} */
+            >
+                asdas
+                {/* {
+                    content.map((mol, i) => (
+                        <MoleculeOption
+                            key={i + index}
+                            mol={mol}
+                            handleRemoveMolecule={handleRemoveMolecule}
+                            title={title}
+                            index={index}
+                            handleSelectOptionMolecule={handleSelectOptionMolecule}
+                        />
+                    ))
+                } */}
+            </div>
+        )
     }
-    useEffect(() => {
+    /* useEffect(() => {
         const updateParentSize = () => {
             if (parentRef.current) {
                 const { width, height } = parentRef.current.getBoundingClientRect()
@@ -104,34 +139,37 @@ export const MoleculeSection = React.memo(({ title, biomarkerFormData, handleRem
         return () => {
             window.removeEventListener('resize', updateParentSize)
         }
-    }, [])
+    }, []) */
     console.log(parentWidth, parentHeight)
-
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <Header as='h5'>{title}</Header>
 
-            <SearchMoleculesInput handleChange={setSearchInput} handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)} />
+            <SearchMoleculesInput
+                handleChange={setSearchInput}
+                handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)}
+                canEditMolecules={canEditMolecules}
+            />
 
             <div className='biomarkers--molecules--container table-bordered' ref={parentRef}>
                 <Dimmer active={biomarkerFormData.isLoading} inverted>
                     <Loader />
                 </Dimmer>
-                <FixedSizeList
-                    ref={listRef}
-                    height={parentHeight}
-                    width={parentWidth}
-                    itemSize={50}
-                    itemCount={dataFiltered.length / 4}
-                >
-                    {({ index, style }) => (
+                <List
+                    height={1000}
+                    width={500}
+                    rowHeight={({ index }) => rowHeights.current[index] || 50}
+                    rowCount={dataFiltered.length / 4}
+                    rowRenderer={Row}
+                />
+                {/*  {({ index, style }) => (
                         <div style={style}>
                             <Row
                                 index={index}
                             />
                         </div>
-                    )}
-                </FixedSizeList>
+                    )} */}
+
             </div>
         </Grid.Column>
     )

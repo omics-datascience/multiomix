@@ -177,7 +177,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.0.0'
+VERSION: str = '5.0.18'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -279,13 +279,16 @@ BIOAPI_SETTINGS = {
 AWS_EMR_SETTINGS = {
     'host': os.getenv('AWS_EMR_HOST', '127.0.0.1'),
     'port': os.getenv('AWS_EMR_PORT', '8003'),
-    # TODO: document this commenting that these have to be the same as in multiomix-aws-emr
-    'shared_folder_data': os.getenv('AWS_EMR_SHARED_FOLDER', '/data-spark'),
-    'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER', '/results-spark')
+    'shared_folder_data': os.getenv('AWS_EMR_SHARED_FOLDER_DATA', '/data-spark'),
+    'shared_folder_results': os.getenv('AWS_EMR_SHARED_FOLDER_RESULTS', '/results-spark')
 }
 
-# If True, indicates that the service of Multiomix-aws-emr is enabled (https://github.com/omics-datascience/multiomix-aws-emr)
-ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'true') == 'true'  # TODO: leave 'false' as default
+# If True, indicates that the service of Multiomix-aws-emr is enabled
+# (https://github.com/omics-datascience/multiomix-aws-emr)
+ENABLE_AWS_EMR_INTEGRATION: bool = os.getenv('ENABLE_AWS_EMR_INTEGRATION', 'false') == 'true'
+
+# If True, sends the 'debug' parameter to Multiomix-aws-emr service to log the Spark execution
+EMR_DEBUG_IS_ENABLED: bool = os.getenv('EMR_DEBUG_IS_ENABLED', 'false') == 'true'
 
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
@@ -300,21 +303,33 @@ N_JOBS_RF: int = int(os.getenv('N_JOBS_RF', 1))
 N_JOBS_CV: int = int(os.getenv('N_JOBS_CV', 1))
 
 # Number of cores used to compute GridSearch for the CoxNetSurvivalAnalysis
-COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 1))
+COX_NET_GRID_SEARCH_N_JOBS: int = int(os.getenv('COX_NET_GRID_SEARCH_N_JOBS', 2))
 
-# TODO: use and document all of the parameters below
+# Minimum and maximum number of iterations user can select to run the BBHA/PSO algorithm
+MIN_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MIN_ITERATIONS_METAHEURISTICS', 1))
+MAX_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MAX_ITERATIONS_METAHEURISTICS', 20))
 
-# Minimum and maximum number of iterations user can select to run the BBHA algorithm
-MIN_ITERATIONS_BBHA: int = int(os.getenv('MIN_ITERATIONS_BBHA', 1))
-MAX_ITERATIONS_BBHA: int = int(os.getenv('MAX_ITERATIONS_BBHA', 20))
-
-# Maximum number of stars in the BBHA algorithm
+# Minimum and maximum number of stars in the BBHA algorithm
 MIN_STARS_BBHA: int = int(os.getenv('MIN_STARS_BBHA', 5))
 MAX_STARS_BBHA: int = int(os.getenv('MAX_STARS_BBHA', 90))
 
-# Max number of features to select in the CoxRegression algorithm
+# Maximum number of features to select in the CoxRegression algorithm
 MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 60))
 
-# Max number of features to allow to run a Blind Search algorithm, if the number of features is greater than this
-# value, the algorithm is disabled and only metaheuristic algorithms are allowed
+# Maximum number of features to allow to run a Blind Search algorithm (the number of computed combination is _N!_).
+# If the number of features is greater than this value, the algorithm is disabled and only metaheuristic
+# algorithms are allowed
 MAX_FEATURES_BLIND_SEARCH: int = int(os.getenv('MAX_FEATURES_BLIND_SEARCH', 7))
+
+# Minimum number of features to allow the user to run metaheuristics algorithms (>=). This prevents to run metaheuristic
+# on datasets with a small number of features which leads to experiments with more metaheuristics agents than number
+# of total features combinations. We recommend to set this parameter to a value N such that
+# N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations.
+# Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value
+MIN_FEATURES_METAHEURISTICS: int = int(os.getenv('MIN_FEATURES_METAHEURISTICS', 7))
+
+# Minimum number of combinations to allow the Spark execution (if less, the execution is done locally). This is computed
+# as the number of agents in the metaheuristic multiplied by the number of iterations. This prevents to run Spark jobs
+# (which are slow to start) on small experiments to save time and resources.
+# Only considered if the Spark execution is enabled (ENABLE_AWS_EMR_INTEGRATION = True)
+MIN_COMBINATIONS_SPARK: int = int(os.getenv('MIN_COMBINATIONS_SPARK', 60))

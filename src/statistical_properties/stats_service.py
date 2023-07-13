@@ -1,6 +1,5 @@
 import logging
 import os
-import tempfile
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, Future
@@ -15,13 +14,15 @@ from lifelines import CoxPHFitter
 from pymongo.errors import ServerSelectionTimeoutError
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sksurv.exceptions import NoComparablePairException
 from sksurv.metrics import concordance_index_censored
-from biomarkers.models import BiomarkerState, Biomarker
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from biomarkers.models import BiomarkerState, Biomarker, TrainedModelState
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound, \
+    NumberOfSamplesFewerThanCVFolds
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
-    replace_event_col_for_booleans
+    generate_clinical_file
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
@@ -87,9 +88,10 @@ class StatisticalValidationService(object):
             if source is None:
                 continue
 
+            only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
             chunks.extend([
                 process_chunk(chunk, file_type, molecules, samples_in_common)
-                for chunk in source.get_df_in_chunks()
+                for chunk in source.get_df_in_chunks(only_matching)
             ])
 
         # Concatenates all the chunks for all the molecules
@@ -105,26 +107,10 @@ class StatisticalValidationService(object):
         @return: Both DataFrames paths.
         """
         # Generates clinical DataFrame
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-            clinical_temp_file_path = temp_file.name
+        survival_tuple = stat_validation.survival_column_tuple
+        clinical_temp_file_path = generate_clinical_file(stat_validation, samples_in_common, survival_tuple)
 
-            clinical_source = stat_validation.clinical_source
-            clinical_df: pd.DataFrame = clinical_source.get_df()
-
-            # Keeps only the survival tuple and samples in common
-            survival_tuple = stat_validation.survival_column_tuple
-            clinical_df = clinical_df[[survival_tuple.event_column, survival_tuple.time_column]]
-            clinical_df = clinical_df.loc[samples_in_common]
-
-            # Replaces str values of CGDS for boolean values
-            clinical_df[survival_tuple.event_column] = clinical_df[survival_tuple.event_column].apply(
-                replace_event_col_for_booleans
-            )
-
-            # Saves in disk
-            clinical_df.to_csv(temp_file, sep='\t', decimal='.')
-
-        # Generates all the molecules DataFrame
+        # Generates molecules DataFrame
         molecules_temp_file_path = generate_molecules_file(stat_validation, samples_in_common)
 
         return molecules_temp_file_path, clinical_temp_file_path
@@ -171,7 +157,8 @@ class StatisticalValidationService(object):
 
         # Get top features
         best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data,
-                                                                          filter_zero_coeff=False)
+                                                                          filter_zero_coeff=True,
+                                                                          top_n=20)
         self.__save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
 
         # Computes general metrics
@@ -181,6 +168,8 @@ class StatisticalValidationService(object):
 
         # Makes predictions
         if is_regression:
+            # FIXME: this is broken as the model expects other data shape. There should be a new state indicating that some features are missing for this
+            # FIXME: TrainedModel and another one should be created
             predictions = model.predict(molecules_df)
 
             # Gets all the metrics for the SVM or RF
@@ -192,9 +181,24 @@ class StatisticalValidationService(object):
             # TODO: add here all the metrics for every Source type
 
             stat_validation.save()
-            
+
     @staticmethod
-    def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
+    def __samples_are_fewer_than_folds(clinical_data: np.ndarray, number_of_folds: int) -> bool:
+        """
+        Checks if the number of samples is fewer than the number of folds.
+        Code retrieved from Sklearn model_selection module.
+        @param clinical_data: Clinical data Numpy array.
+        @param number_of_folds: Current number of folds
+        @return: True if the number of samples is fewer than the number of folds (an exception should be raised
+        as the GridSearch will be fail), False otherwise.
+        """
+        classes, y_idx, y_inv = np.unique(clinical_data, return_index=True, return_inverse=True)
+        _, class_perm = np.unique(y_idx, return_inverse=True)
+        y_encoded = class_perm[y_inv]
+        y_counts = np.bincount(y_encoded)
+        return np.all(number_of_folds > y_counts)
+
+    def __compute_trained_model(self, trained_model: TrainedModel, molecules_temp_file_path: str,
                                 clinical_temp_file_path: str, model_parameters: Dict,
                                 cross_validation_folds: int,
                                 stop_event: Event):
@@ -215,7 +219,7 @@ class StatisticalValidationService(object):
             return result[0]
 
         def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
-                             score_method: ClusteringScoringMethod) -> float:
+                             score_method: ClusteringScoringMethod, penalizer: Optional[float]) -> float:
             clustering_result = model.fit(subset.values)
 
             # Generates a DataFrame with a column for time, event and the group
@@ -229,7 +233,7 @@ class StatisticalValidationService(object):
             df = pd.concat(dfs)
 
             # Fits a Cox Regression model using the column group as the variable to consider
-            cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+            cph: CoxPHFitter = CoxPHFitter(penalizer=penalizer).fit(df, duration_col='T', event_col='E')
 
             # This documentation recommends using log-likelihood to optimize:
             # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
@@ -300,17 +304,32 @@ class StatisticalValidationService(object):
             gcv = GridSearchCV(
                 classifier,
                 param_grid,
-                scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method),
+                scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method,
+                                                             clustering_parameters.penalizer),
                 n_jobs=1,
                 refit=False,
                 cv=cv
             )
+
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        n_samples = clinical_df.shape[0]
+        if n_samples < cross_validation_folds:
+            raise NoBestModelFound(f'Number of samples ({n_samples}) are fewer than CV number of folds '
+                                   f'({cross_validation_folds})')
+
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        if self.__samples_are_fewer_than_folds(clinical_data, cross_validation_folds):
+            raise NumberOfSamplesFewerThanCVFolds(f'Number of samples: {n_samples} | CV number of folds '
+                                                  f'{cross_validation_folds}')
 
         # Trains the model
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
             gcv = gcv.fit(molecules_df, clinical_data)
 
+        best_score = gcv.best_score_
+        if not best_score or np.isnan(best_score):
+            raise NoBestModelFound(f'Best score is None/NaN: {best_score}')
 
         # Saves the n_clusters in the model
         if is_clustering:
@@ -320,9 +339,7 @@ class StatisticalValidationService(object):
         # Saves model instance and best score
         classifier.set_params(**gcv.best_params_)
         classifier.fit(molecules_df, clinical_data)
-        best_model = classifier
-        best_score = gcv.best_score_
-        save_model_dump_and_best_score(trained_model, best_model, best_score)
+        save_model_dump_and_best_score(trained_model, best_model=classifier, best_score=best_score)
 
     def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
         """
@@ -512,29 +529,38 @@ class StatisticalValidationService(object):
 
                 # Saves some data about the result of the stat_validation
                 trained_model.execution_time = total_execution_time
-                trained_model.state = BiomarkerState.COMPLETED
+                trained_model.state = TrainedModelState.COMPLETED
         except NoSamplesInCommon:
             self.__commit_or_rollback(is_commit=False)
             logging.error('No samples in common')
-            trained_model.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+            trained_model.state = TrainedModelState.NO_SAMPLES_IN_COMMON
+        except (NoBestModelFound, NoComparablePairException) as ex:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error(f'No best model found: {ex}')
+            trained_model.state = TrainedModelState.NO_BEST_MODEL_FOUND
+        except NumberOfSamplesFewerThanCVFolds as ex:
+            self.__commit_or_rollback(is_commit=False)
+            logging.error(f'ValueError raised due to number of member of each class being fewer than number '
+                          f'of CV folds: {ex}')
+            trained_model.state = TrainedModelState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS
         except ExperimentFailed:
             self.__commit_or_rollback(is_commit=False)
             logging.error(f'TrainedModel {trained_model.pk} has failed. Check logs for more info')
-            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+            trained_model.state = TrainedModelState.FINISHED_WITH_ERROR
         except ServerSelectionTimeoutError:
             self.__commit_or_rollback(is_commit=False)
             logging.error('MongoDB connection timeout!')
-            trained_model.state = BiomarkerState.WAITING_FOR_QUEUE
+            trained_model.state = TrainedModelState.WAITING_FOR_QUEUE
         except ExperimentStopped:
             # If user cancel the stat_validation, discard changes
             logging.warning(f'TrainedModel {trained_model.pk} was stopped')
             self.__commit_or_rollback(is_commit=False)
-            trained_model.state = BiomarkerState.STOPPED
+            trained_model.state = TrainedModelState.STOPPED
         except Exception as e:
             self.__commit_or_rollback(is_commit=False)
             logging.exception(e)
-            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to TrainedModel {trained_model.pk}')
-            trained_model.state = BiomarkerState.FINISHED_WITH_ERROR
+            logging.warning(f'Setting TrainedModelState.FINISHED_WITH_ERROR to TrainedModel {trained_model.pk}')
+            trained_model.state = TrainedModelState.FINISHED_WITH_ERROR
         finally:
             # Removes the temporary files
             if molecules_temp_file_path is not None:

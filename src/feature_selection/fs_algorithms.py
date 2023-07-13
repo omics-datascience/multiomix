@@ -9,8 +9,9 @@ from sklearn import clone
 from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 from lifelines import CoxPHFitter
 from scipy.special import factorial
-from sklearn.model_selection import StratifiedKFold, KFold, GridSearchCV
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
+from sksurv.exceptions import NoComparablePairException
 from sksurv.linear_model import CoxnetSurvivalAnalysis
 from sksurv.svm import FastKernelSurvivalSVM
 from common.utils import get_subset_of_features
@@ -72,7 +73,11 @@ def compute_cross_validation_sequential(classifier: SurvModel,
 
         # Train and stores fitness
         cloned.fit(x_train_fold, y_train_fold)
-        score = cloned.score(x_test_fold, y_test_fold)
+        try:
+            score = cloned.score(x_test_fold, y_test_fold)
+        except NoComparablePairException:
+            # To prevent issues with RF training with data that don't have any comparable pair
+            score = 0.0
         lst_score_stratified.append(score)
 
         # Stores trained model
@@ -313,7 +318,7 @@ def binary_black_hole_sequential(
 
 
 def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray,
-                              filter_zero_coeff: bool, top_n: Optional[int] = None) -> CoxNetAnalysisResult:
+                              filter_zero_coeff: bool, top_n: Optional[int]) -> CoxNetAnalysisResult:
     """
     Get the top features using CoxNetSurvivalAnalysis model. It uses a GridSearch with Cross Validation to get the best
     alpha parameter and the filters the best features sorting by coefficients.
@@ -340,8 +345,20 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
         warnings.simplefilter("ignore", FitFailedWarning)
         cox_net_pipe.fit(x, clinical_data)
 
-    estimated_alphas = cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
-    cv = KFold(n_splits=5, shuffle=True, random_state=0)
+    # Gets alphas to compute the GridSearch
+    estimated_alphas_np = np.array(cox_net_pipe.named_steps["coxnetsurvivalanalysis"].alphas_)
+
+    # To improve performance. Generates a list of at most 3 items consisting of the minimum value,
+    # the mean and the maximum
+    estimated_alphas = []
+    if len(estimated_alphas_np) > 3:
+        estimated_alphas.append(np.min(estimated_alphas_np))
+        estimated_alphas.append(np.median(estimated_alphas_np))
+        estimated_alphas.append(np.max(estimated_alphas_np))
+    else:
+        estimated_alphas = estimated_alphas_np.tolist()
+
+    cv = StratifiedKFold(n_splits=3, shuffle=True)
     gcv = GridSearchCV(
         make_pipeline(StandardScaler(), CoxnetSurvivalAnalysis(l1_ratio=0.9)),
         param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
@@ -365,7 +382,6 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     # Gets best features sorted by coefficient
     coefficients_order = best_coefficients.abs().sort_values("coefficient").index
     res_df: pd.DataFrame = best_coefficients.loc[coefficients_order]
-
 
     best_features = res_df.index.tolist()
     best_features_coeff: List[float] = res_df['coefficient'].tolist()

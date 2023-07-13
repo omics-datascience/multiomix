@@ -16,11 +16,6 @@ echo "##############################################"
 python3 ${BASE_DIR}/manage.py collectstatic --no-input
 
 echo "##############################################"
-echo "Make migrations..."
-echo "##############################################"
-python3 ${BASE_DIR}/manage.py makemigrations
-
-echo "##############################################"
 echo "Migrate..."
 echo "##############################################"
 python3 ${BASE_DIR}/manage.py migrate

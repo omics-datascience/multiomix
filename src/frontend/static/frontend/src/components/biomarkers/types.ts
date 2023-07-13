@@ -34,6 +34,24 @@ enum BiomarkerState {
 
 }
 
+/** All the possible states of a TrainedModel. */
+enum TrainedModelState {
+    COMPLETED = 1,
+    FINISHED_WITH_ERROR = 2,
+    IN_PROCESS = 3,
+    WAITING_FOR_QUEUE = 4,
+    NO_SAMPLES_IN_COMMON = 5,
+    STOPPING = 6,
+    STOPPED = 7,
+    REACHED_ATTEMPTS_LIMIT = 8,
+    NO_FEATURES_FOUND = 9,
+    NO_BEST_MODEL_FOUND = 10,
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
+    /** This could happen for a serialization error in the Spark job. */
+    MODEL_DUMP_NOT_AVAILABLE = 12
+
+}
+
 /** Type of molecules input in the Biomarker creation form. */
 enum MoleculesTypeOfSelection {
     INPUT = 'input',
@@ -60,6 +78,8 @@ interface BiomarkerSimple {
     number_of_cnas: number,
     number_of_methylations: number,
     has_fs_experiment: boolean,
+    /** Indicates if the Biomarker was used for an Inference experiment, Statistical Validation or Trained Model. */
+    was_already_used: boolean,
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
@@ -106,7 +126,8 @@ interface FormBiomarkerData {
     id: Nullable<number>,
     biomarkerName: string,
     biomarkerDescription: string,
-    tag: any, // se esta laburando salu2
+    canEditMolecules: boolean,
+    tag: any, // WIP
     moleculeSelected: BiomarkerType,
     moleculesTypeOfSelection: MoleculesTypeOfSelection.INPUT | MoleculesTypeOfSelection.AREA,
     moleculesSection: MoleculesSection,
@@ -221,6 +242,11 @@ interface ClusteringParameters extends ModelParameters {
     /** Number of clusters. */
     nClusters: number,
     /**
+     * Penalizer parameter for CoxPHFitter to prevent errors with some small datasets (or ones with high collinearity).
+     * Read more at: https://lifelines.readthedocs.io/en/latest/Examples.html#problems-with-convergence-in-the-cox-proportional-hazard-model
+     */
+    penalizer: number,
+    /**
      * If true, the algorithm will look for the optimal number of clusters during a new TrainedModel request.
      * (Used only in the TrainedModel panel)
      */
@@ -284,26 +310,32 @@ interface FeatureSelectionPanelData {
 }
 
 /** Advanced algorithm parameters to make Feature selection */
-interface AdvancedAlgorithm{
+interface AdvancedAlgorithm {
     isActive: boolean,
     BBHA: AdvancedBBHA,
     coxRegression: AdvancedCoxRegression
 }
 
+/** Some common fields to use in the Expert mode. */
+interface AdvancedMode {
+    /** Try to optimize using Spark if the integration is enabled in the backend. */
+    useSpark: boolean
+}
+
 /** Advanced Cox Regression properties */
-interface AdvancedCoxRegression{
+interface AdvancedCoxRegression extends AdvancedMode {
     topN: number
 }
 
 /** Advanced BBHA properties */
-interface AdvancedBBHA{
+interface AdvancedBBHA extends AdvancedMode {
     numberOfStars: number;
     numberOfIterations: number;
     BBHAVersion: BBHAVersion;
 }
 
 /** Binary Black Hole Algorithm version */
-enum BBHAVersion{
+enum BBHAVersion {
     ORIGINAL = 1,
     IMPROVED = 2
 }
@@ -339,9 +371,10 @@ interface TrainedModel {
     id: number,
     name: string,
     description: string,
-    state: BiomarkerState,
+    state: TrainedModelState,
     fitness_function: FitnessFunction,
     created: string,
+    fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
 }
 
@@ -414,9 +447,11 @@ interface MoleculeWithCoefficient {
 /** Dict from the backend with all the molecules expressions for all the samples. */
 interface MoleculesExpressions {
     /** Object with the molecule's name as key. The value is an object with the sample as key, and the expression as value. */
-    data: {[moleculeName: string]: {
-        [sampleName: string]: number // This number is the expression
-    }},
+    data: {
+        [moleculeName: string]: {
+            [sampleName: string]: number // This number is the expression
+        }
+    },
     min: number,
     max: number
 }
@@ -531,6 +566,7 @@ export {
     FeatureSelectionPanelData,
     BiomarkerOrigin,
     BiomarkerState,
+    TrainedModelState,
     BiomarkerMolecule,
     SaveMoleculeStructure,
     SaveBiomarkerStructure,

@@ -131,6 +131,7 @@ class TaskQueue(object):
         Stops a specific experiment
         @param experiment: Experiment to stop
         """
+        logging.warning(f'Stopping experiment with pk {experiment.pk}')
         if experiment.pk in self.experiments_futures:
             (experiment_future, experiment_event) = self.experiments_futures[experiment.pk]
             if experiment_future.cancel():
@@ -141,7 +142,7 @@ class TaskQueue(object):
                 # Sends signal to stop the experiment
                 experiment.state = ExperimentState.STOPPING
                 experiment_event.set()
-            experiment.save()
+            experiment.save(update_fields=['state'])
 
             # Removes key
             self.__removes_experiment_future(experiment.pk)
@@ -152,21 +153,23 @@ class TaskQueue(object):
         if the TaskQueue is being created It couldn't be processing experiments. Some experiments
         could be in that state due to unexpected errors in server
         """
-        logging.warning('Checking pending experiments')
         # Gets the experiment by submit date (ASC)
-        experiments: QuerySet = Experiment.objects.filter(
-            Q(state=ExperimentState.WAITING_FOR_QUEUE)
-            | Q(state=ExperimentState.IN_PROCESS)
-        ).order_by('submit_date')
+        logging.warning('Checking pending experiments')
+        experiments: QuerySet = Experiment.objects.filter(state__in=[
+            ExperimentState.WAITING_FOR_QUEUE,
+            ExperimentState.IN_PROCESS
+        ]).order_by('submit_date')
+
         logging.warning(f'{experiments.count()} pending experiments are being sent for processing')
         for experiment in experiments:
-            # If the experiment has already reached a limit of attempts, it's marked as error
+            # If the experiment has already reached a limit of attempts, it's marked as with error
             if experiment.attempt == 3:
                 experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
-                experiment.save()
+                experiment.save(update_fields=['state'])
+                logging.warning(f'Experiment "{experiment}" reached the limit of attempts')
             else:
                 experiment.attempt += 1
-                experiment.save()
+                experiment.save(update_fields=['attempt'])
                 logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
                 self.add_experiment(experiment)
 

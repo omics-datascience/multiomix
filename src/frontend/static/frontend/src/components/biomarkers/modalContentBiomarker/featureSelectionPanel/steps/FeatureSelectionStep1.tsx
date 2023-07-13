@@ -54,7 +54,7 @@ export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
                     <TableCellWithTitle value={biomarker.name} />
                     <TableCellWithTitle value={biomarker.description} />
                     <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
-                    <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'LLL')} />
+                    <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
                     <Table.Cell>{biomarker.number_of_mrnas}</Table.Cell>
                     <Table.Cell>{biomarker.number_of_mirnas}</Table.Cell>
                     <Table.Cell>{biomarker.number_of_cnas}</Table.Cell>

@@ -5,6 +5,7 @@ import { PaginatedTable } from '../../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../../common/TableCellWithTitle'
 
 declare const urlStatisticalValidationSamplesAndClusters: string
+declare const urlClustersUniqueStatValidation: string
 
 interface SamplesAndGroupsTableProps {
     /** Selected StatisticalValidationForTable instance to retrieve all its data. */
@@ -26,7 +27,14 @@ export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
             ]}
             queryParams={{ statistical_validation_pk: props.selectedStatisticalValidation.id }}
             customFilters={[
-                { label: 'Cluster', keyForServer: 'cluster', defaultValue: '', placeholder: 'Filter by cluster' }
+                {
+                    label: 'Cluster',
+                    keyForServer: 'cluster',
+                    defaultValue: '',
+                    placeholder: 'Filter by cluster',
+                    allowZero: true,
+                    urlToRetrieveOptions: `${urlClustersUniqueStatValidation}/${props.selectedStatisticalValidation.id}/`
+                }
             ]}
             defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
             showSearchInput

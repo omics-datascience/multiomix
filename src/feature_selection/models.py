@@ -5,8 +5,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from api_service.websocket_functions import send_update_trained_models_command
-from biomarkers.models import BiomarkerState
+from api_service.websocket_functions import send_update_trained_models_command, send_update_cluster_label_set_command
+from biomarkers.models import TrainedModelState
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
 from user_files.models_choices import FileType
 
@@ -69,6 +69,7 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
+    penalizer = models.FloatField(default=0.0)
     random_state = models.SmallIntegerField(null=True, blank=True)
     n_clusters = models.SmallIntegerField(default=2, validators=[MinValueValidator(2), MaxValueValidator(10)])
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
@@ -168,6 +169,9 @@ def user_directory_path_for_trained_models(instance, filename: str):
     return f'uploads/user_{instance.biomarker.user.id}/trained_models/{filename}'
 
 
+TrainedModelParameters = Union[SVMParameters, RFParameters, ClusteringParameters]
+
+
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
     name = models.CharField(max_length=100)
@@ -175,7 +179,7 @@ class TrainedModel(models.Model):
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
-    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker
+    state = models.IntegerField(choices=TrainedModelState.choices)  # Yes, has the same states as a Biomarker
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
     best_fitness_value =  models.FloatField(null=True, blank=True)
@@ -274,6 +278,16 @@ class TrainedModel(models.Model):
             model = pickle.load(fp)
         return model
 
+    def get_model_parameter(self) -> Optional[TrainedModelParameters]:
+        """Returns the corresponding related Parameter instance."""
+        if hasattr(self, 'svm_parameters'):
+            return self.svm_parameters
+        elif hasattr(self, 'clustering_parameters'):
+            return self.clustering_parameters
+        elif hasattr(self, 'rf_parameters'):
+            return self.rf_parameters
+        return None
+
     def save(self, *args, **kwargs):
         """Every time the experiment status changes, uses websockets to update state in the frontend"""
         super().save(*args, **kwargs)
@@ -294,6 +308,14 @@ class ClusterLabelsSet(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='cluster_labels')
+
+    def save(self, *args, **kwargs):
+        """Every time the experiment status changes, uses websockets to update state in the frontend"""
+        super().save(*args, **kwargs)
+
+        # Sends a websockets message to update the list of cluster labels sets in the frontend
+        user_id = self.trained_model.biomarker.user.id
+        send_update_cluster_label_set_command(user_id)
 
 
 class ClusterLabel(models.Model):
@@ -335,10 +357,9 @@ class SVMOptimizer(models.TextChoices):
 
 class TimesRecord(models.Model):
     """Represents some metrics to train a Spark load-balancer ML model."""
-    number_of_features = models.PositiveIntegerField()
-    number_of_samples = models.PositiveIntegerField()
-    execution_time = models.PositiveIntegerField()  # Execution time in seconds
-    test_time = models.PositiveIntegerField()  # Testing time in seconds
+    number_of_features = models.IntegerField()
+    number_of_samples = models.IntegerField()
+    execution_time = models.FloatField()  # Execution time in seconds
     fitness = models.FloatField(null=True, blank=True)
     train_score = models.FloatField(null=True, blank=True)
 
@@ -349,18 +370,34 @@ class TimesRecord(models.Model):
 class SVMTimesRecord(TimesRecord):
     """Time records during Feature Selection using an SVM as classifier."""
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='svm_times_records')
-    number_of_iterations = models.PositiveIntegerField()
-    time_by_iteration = models.PositiveIntegerField()  # Testing time in seconds
-    max_iterations = models.PositiveIntegerField()
+    # 'number_of_iterations' is a float number as it's the mean, but it's stored as int as it's not much important
+    # losing precision in this case
+    number_of_iterations = models.SmallIntegerField()
+    time_by_iteration = models.FloatField()  # Time by every SVM iteration during training
+    test_time = models.FloatField()  # Testing time in seconds
+
+    # These parameters are duplicated here to avoid having to load the related SVMParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
+    max_iterations = models.SmallIntegerField()
     optimizer = models.CharField(max_length=10, choices=SVMOptimizer.choices)
     kernel = models.IntegerField(choices=SVMKernel.choices)
 
 
 class RFTimesRecord(TimesRecord):
     """Time records during Feature Selection using a Random Forest as classifier."""
+    test_time = models.FloatField()  # Testing time in seconds
+
+    # These parameters are duplicated here to avoid having to load the related RFParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
+    number_of_trees = models.SmallIntegerField()
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='rf_times_records')
 
 
 class ClusteringTimesRecord(TimesRecord):
     """Time records during Feature Selection using a Clustering model as classifier."""
+    # These parameters are duplicated here to avoid having to load the related ClusteringParameters instance. Also,
+    # they are retrieved from logs in the Spark job, so they are store in the way the job received them.
+    number_of_clusters = models.SmallIntegerField()
+    algorithm = models.IntegerField(choices=ClusteringAlgorithm.choices)
+    scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices)
     fs_experiment = models.ForeignKey(FSExperiment, on_delete=models.CASCADE, related_name='clustering_times_records')

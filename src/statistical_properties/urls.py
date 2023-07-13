@@ -49,6 +49,15 @@ urlpatterns = [
         name='statistical_validation_samples_and_clusters'
     ),
     path(
+        'clusters-unique-stat-validation',
+        views.ClustersUniqueStatValidation.as_view(),
+        name='clusters_unique_stat_validation'
+    ),
+    path(
+        'clusters-unique-stat-validation/<int:pk>/',
+        views.ClustersUniqueStatValidation.as_view()
+    ),
+    path(
         'statistical-validation-clinical-attrs',
         views.StatisticalValidationClinicalAttributes.as_view(),
         name='statistical_validation_clinical_attrs'

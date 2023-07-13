@@ -8,7 +8,7 @@ import { Nullable } from '../../../utils/interfaces'
 import { biomarkerStateOptions, fitnessFunctionsOptions } from '../utils'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
-import { BiomarkerStateLabel } from '../BiomarkerStateLabel'
+import { TrainedModelStateLabel } from '../labels/TrainedModelStateLabel'
 
 declare const urlBiomarkerTrainedModels: string
 
@@ -64,7 +64,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: 'State', serverCodeToSort: 'state', width: 1 },
                     { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Best CV fitness', serverCodeToSort: 'best_fitness_value' }
+                    { name: 'Metric', serverCodeToSort: 'fitness_metric' },
+                    { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' }
                     // TODO: add actions column with an option to see the details of a trained model
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
@@ -105,10 +106,11 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <TableCellWithTitle value={trainedModel.description ?? ''} />
                             <Table.Cell textAlign='center'>
                                 {/* NOTE: trained models have the same states as Biomarker */}
-                                <BiomarkerStateLabel biomarkerState={trainedModel.state} />
+                                <TrainedModelStateLabel trainedModelStateState={trainedModel.state} />
                             </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
-                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'LLL')} />
+                            <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
+                            <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
                         </Table.Row>
                     )

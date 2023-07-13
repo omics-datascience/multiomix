@@ -4,8 +4,8 @@ import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, Fitnes
 import { clusteringAlgorithmOptions } from '../../../../utils'
 import './../../featureSelection.css'
 
-/** Clustering props. */
-interface ClusteringProps {
+/** ClusteringPanel props. */
+interface ClusteringPanelProps {
     settings: ClusteringParameters,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
 }
@@ -15,7 +15,7 @@ interface ClusteringProps {
  * @param props Component props.
  * @returns Component.
  */
-export const ClusteringPanel = (props: ClusteringProps) => {
+export const ClusteringPanel = (props: ClusteringPanelProps) => {
     const { settings, handleChangeFitnessFunctionOption } = props
 
     return (
@@ -29,6 +29,7 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                 value={settings.algorithm}
                 onChange={(_, { value }) => handleChangeFitnessFunctionOption('clusteringParameters', 'algorithm', value as number)}
             />
+
             <Form.Group className='form-group-button'>
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>
@@ -77,7 +78,6 @@ export const ClusteringPanel = (props: ClusteringProps) => {
                     </Button.Group>
                 </Segment>
             </Form.Group>
-
         </>
     )
 }

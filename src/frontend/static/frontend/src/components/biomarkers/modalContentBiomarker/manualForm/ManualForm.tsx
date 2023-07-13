@@ -92,6 +92,7 @@ const Asd = React.memo(({
                             handleRemoveMolecule={handleRemoveMolecule}
                             handleSelectOptionMolecule={handleSelectOptionMolecule}
                             handleRemoveInvalidGenes={handleRemoveInvalidGenes}
+                            canEditMolecules={false}
                         />
                     )
                 })}

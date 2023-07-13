@@ -28,7 +28,7 @@ CHANNEL_LAYERS = {
 
 # +++++ Custom settings +++++
 
-# MongoDB credentials (should be setted as ENV vars)
+# MongoDB's credentials (should be set as ENV vars)
 MONGO_SETTINGS = {
     'username': os.environ['MONGO_USERNAME'],
     'password': os.environ['MONGO_PASSWORD'],
@@ -36,4 +36,33 @@ MONGO_SETTINGS = {
     'port': os.environ['MONGO_PORT'],
     'db': os.environ['MONGO_DB'],  # Default DB to use to manage the MongoDB collections
     'timeout': os.getenv('MONGO_TIMEOUT_MS', 5000)  # Connection timeout
+}
+
+# Logging
+log_folder = os.getenv('LOG_FILE_PATH', '/logs')
+LOG_FILE_PATH = os.path.join(log_folder, "django.log")
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': LOG_FILE_PATH,
+            'filters': ['require_debug_false'],
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'format': '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s',
+            'propagate': True,
+        },
+    },
 }

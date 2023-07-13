@@ -3,7 +3,6 @@ from channels.http import AsgiRequest
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q, Count, QuerySet
 from django.http import HttpRequest, HttpResponse, Http404
@@ -11,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import ValidationError
+from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
@@ -145,17 +145,20 @@ class UserFileDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-@login_required
-def download_user_file(request: HttpRequest, pk: Optional[int] = None):
-    """Downloads the specified file considering security"""
-    if not pk:
-        raise Http404()
+class DownloadUserFile(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    # This function raises a 404 error in case of non-existing UserFile
-    user_file = get_an_user_file(user=request.user, user_file_pk=pk)
+    @staticmethod
+    def get(request: HttpRequest, pk: Optional[int] = None):
+        """Downloads the specified file considering security"""
+        if not pk:
+            raise Http404()
 
-    file_obj = user_file.file_obj.file
-    response = HttpResponse(file_obj, content_type='text/plain')
-    response['Content-Disposition'] = f'attachment; filename={user_file.name}'
+        # This function raises a 404 error in case of non-existing UserFile
+        user_file = get_an_user_file(user=request.user, user_file_pk=pk)
 
-    return response
+        file_obj = user_file.file_obj.file
+        response = HttpResponse(file_obj, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={user_file.name}'
+
+        return response

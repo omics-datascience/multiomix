@@ -17,6 +17,7 @@ interface BlindSearchProps {
 
 /**
  * Renders a panel with the BlindSearch algorithm options.
+ * TODO: rename this component, this is used in BBHA and other panels
  * @param props Component props.
  * @returns Component.
  */
@@ -45,27 +46,31 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                         <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
                             <Form.Checkbox
                                 checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
+                                disabled // TODO: remove this when backend is implemented
                                 onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
-                                label='Search for the optimal number of clusters'
+                                label='Search for the optimal number of clusters (soon)'
                             />
-                            <Form.Input
-                                type='number'
-                                label='Number of clusters'
-                                name='nClusters'
-                                min={2}
-                                max={10}
-                                value={fitnessFunctionParameters.clusteringParameters.nClusters}
-                                onChange={(_, { name, value }) => {
-                                    const numVal = Number(value)
-                                    if (numVal < 2) {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
-                                    } else if (numVal > 10) {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
-                                    } else {
-                                        handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
-                                    }
-                                }}
-                            />
+
+                            {!fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters &&
+                                <Form.Input
+                                    type='number'
+                                    label='Number of clusters'
+                                    name='nClusters'
+                                    min={2}
+                                    max={10}
+                                    value={fitnessFunctionParameters.clusteringParameters.nClusters}
+                                    onChange={(_, { name, value }) => {
+                                        const numVal = Number(value)
+                                        if (numVal < 2) {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
+                                        } else if (numVal > 10) {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
+                                        } else {
+                                            handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
+                                        }
+                                    }}
+                                />
+                            }
                         </Form.Group>
                     </>
                 )
@@ -96,8 +101,8 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                 name='randomState'
                                 value={fitnessFunctionParameters.svmParameters.randomState}
                                 onChange={(_, { name, value }) => {
-                                    const numVal = Number(value)
-                                    if (numVal < 0) {
+                                    const numVal = value !== '' ? Number(value) : null
+                                    if (numVal !== null && numVal < 0) {
                                         handleChangeFitnessFunctionOption('svmParameters', name, 0)
                                     } else {
                                         handleChangeFitnessFunctionOption('svmParameters', name, numVal)
@@ -108,12 +113,10 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 )
             case FitnessFunction.RF:
                 return (
-                    <>
-                        <RFPanel
-                            parameters={fitnessFunctionParameters.rfParameters}
-                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                        />
-                    </>
+                    <RFPanel
+                        parameters={fitnessFunctionParameters.rfParameters}
+                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                    />
                 )
         }
     }
