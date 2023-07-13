@@ -41,6 +41,11 @@ MONGO_SETTINGS = {
 # Logging
 log_folder = os.getenv('LOG_FILE_PATH', '/logs')
 LOG_FILE_PATH = os.path.join(log_folder, "django.log")
+
+# Creates the logs folder if it doesn't exist
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
