@@ -194,12 +194,12 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return number_of_clusters, algorithm, scoring
 
     @staticmethod
-    def __get_rf_parameters_columns(row: pd.Series) -> int:
+    def __get_rf_parameters_columns(row: pd.Series) -> Tuple[int]:
         """Iterates over rows generating some columns with RF model parameters"""
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         number_of_trees = params[0]
-        return number_of_trees
+        return (number_of_trees, )  #  NOTE: must be a tuple or the setting of columns names won't work in Pandas
 
     def __save_svm_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
         """Saves all the data about times from the Spark job for an SVM model."""
