@@ -2,7 +2,8 @@ from typing import Optional
 from django.contrib import admin
 from biomarkers.models import BiomarkerState
 from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel, ClusterLabelsSet, \
-    ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters
+    ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters, CoxRegressionParameters, \
+    BBHAParameters
 
 
 class FSExperimentAdmin(admin.ModelAdmin):
@@ -51,7 +52,16 @@ class RFTimesRecordAdmin(admin.ModelAdmin):
 
 
 class ClusteringTimesRecordAdmin(admin.ModelAdmin):
-    list_display = common_time_record_fields + ('number_of_clusters', 'algorithm', 'scoring_method')
+    list_display = common_time_record_fields + ('number_of_clusters', 'algorithm', 'scoring_method', 'fs_experiment')
+
+
+class BBHAParametersAdmin(admin.ModelAdmin):
+    list_display = ('n_stars', 'n_iterations', 'version_used', 'fs_experiment')
+    list_filter = ('version_used', )
+
+
+class CoxRegressionParametersAdmin(admin.ModelAdmin):
+    list_display = ('top_n', )
 
 
 admin.site.register(FSExperiment, FSExperimentAdmin)
@@ -64,3 +74,5 @@ admin.site.register(ClusterLabel)
 admin.site.register(SVMTimesRecord, SVMTimesRecordAdmin)
 admin.site.register(RFTimesRecord, RFTimesRecordAdmin)
 admin.site.register(ClusteringTimesRecord, ClusteringTimesRecordAdmin)
+admin.site.register(BBHAParameters, BBHAParametersAdmin)
+admin.site.register(CoxRegressionParameters, CoxRegressionParametersAdmin)
