@@ -26,11 +26,14 @@ class BiomarkerList(generics.ListAPIView):
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
         biomarkers = Biomarker.objects.filter(user=self.request.user)
         if only_successful:
+            # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
+            # FIXME: autovacuum settings could help
             # In this case shows only Biomarkers that are valid (completed and have at least two molecules,
             # optimizing a 1 molecule Biomarker is not useful)
-            biomarkers = biomarkers.alias(
-                total_molecules=Count('mrnas') + Count('mirnas') + Count('cnas') + Count('methylations')
-            ).filter(state=BiomarkerState.COMPLETED, total_molecules__gt=1)
+            # biomarkers = biomarkers.alias(
+            #     total_molecules=Count('mrnas') + Count('mirnas') + Count('cnas') + Count('methylations')
+            # ).filter(state=BiomarkerState.COMPLETED, total_molecules__gt=1)
+            biomarkers = biomarkers.filter(state=BiomarkerState.COMPLETED)
 
         return biomarkers
 
