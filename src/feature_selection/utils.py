@@ -54,9 +54,14 @@ def get_random_subset_of_features_bbha(n_features: int) -> np.ndarray:
 
 
 def get_best_bbha(subsets: np.ndarray,
-                  fitness_values: Union[np.ndarray, List[float]]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                  fitness_values: Union[np.ndarray, List[float]],
+                  more_is_better: bool) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Get the best value of the fitness values."""
-    best_idx = np.argmax(fitness_values)  # Keeps the idx to avoid ambiguous comparisons
+    if more_is_better:
+        best_idx = np.argmax(fitness_values)
+
+    else:
+        best_idx = np.argmin(fitness_values)
     return best_idx, subsets[best_idx], fitness_values[best_idx]
 
 

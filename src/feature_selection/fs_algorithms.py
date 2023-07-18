@@ -1,3 +1,4 @@
+import logging
 import random
 import warnings
 import itertools
@@ -5,6 +6,7 @@ import numpy as np
 import pandas as pd
 from math import tanh
 from django.conf import settings
+from lifelines.exceptions import ConvergenceError
 from sklearn import clone
 from typing import Iterable, List, Callable, Tuple, Union, Optional, cast
 from lifelines import CoxPHFitter
@@ -35,9 +37,9 @@ FSResult = Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]
 CoxNetAnalysisResult = Tuple[Optional[List[str]], Optional[SurvModel],List[float]]
 
 
-def all_combinations(any_list: List) -> Iterable[List]:
+def __all_combinations(any_list: List) -> Iterable[List]:
     """
-    Returns a Generator with all the combinations of a list. Taken from https://stackoverflow.com/a/31474532/7058363
+    Returns a Generator with all the combinations of a list. Taken from https://stackoverflow.com/a/31474532/7058363.
     """
     return itertools.chain.from_iterable(
         itertools.combinations(any_list, i + 1)
@@ -45,8 +47,9 @@ def all_combinations(any_list: List) -> Iterable[List]:
     )
 
 
-def compute_cross_validation_sequential(classifier: SurvModel, subset: pd.DataFrame, y: np.ndarray,
-                                        cross_validation_folds: int) -> Tuple[float, SurvModel, float]:
+def __compute_cross_validation_sequential(classifier: SurvModel, subset: pd.DataFrame, y: np.ndarray,
+                                          cross_validation_folds: int,
+                                          more_is_better: bool) -> Tuple[float, SurvModel, float]:
     """
     Computes CrossValidation to get the Concordance Index (using StratifiedKFold to prevent "All samples are censored"
     error).
@@ -85,24 +88,28 @@ def compute_cross_validation_sequential(classifier: SurvModel, subset: pd.DataFr
         estimators.append(cloned)
 
     # Gets best fitness
-    best_model_idx = np.argmax(lst_score_stratified)
+    if more_is_better:
+        best_model_idx = np.argmax(lst_score_stratified)
+    else:
+        best_model_idx = np.argmin(lst_score_stratified)
     best_model = estimators[best_model_idx]
-    best_c_index = lst_score_stratified[best_model_idx]
+    best_fitness_value = lst_score_stratified[best_model_idx]
     fitness_value_mean = cast(float, np.mean(lst_score_stratified))
 
-    return fitness_value_mean, best_model, best_c_index
+    return fitness_value_mean, best_model, best_fitness_value
 
 
-def compute_clustering_sequential(classifier: ClusteringModels,
-                                  subset: pd.DataFrame,
-                                  y: np.ndarray,
-                                  score_method: ClusteringScoringMethod) -> Tuple[float, SurvModel, float]:
+def __compute_clustering_sequential(classifier: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
+                                    score_method: ClusteringScoringMethod,
+                                    more_is_better: bool) -> Tuple[float, SurvModel, float]:
     """
     Computes a clustering algorithm and gets the C-Index or Log Likelihood.
     @param classifier: Classifier to train.
     @param subset: Subset of features to be used in the model evaluated in the CrossValidation.
     @param y: Classes.
     @param score_method: Clustering scoring method to optimize.
+    @param more_is_better: If the scoring method is C-Index, this parameter indicates if the higher value is better.
+    For Log Likelihood, the lower value is better.
     @return: C-Index/Log-likelihood obtained in the clustering process, best model during CV and the fitness value again
     (just for compatibility with the caller function).
     """
@@ -126,12 +133,25 @@ def compute_clustering_sequential(classifier: ClusteringModels,
     df = pd.concat(dfs)
 
     # Fits a Cox Regression model using the column group as the variable to consider
-    cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
+    try:
+        cph: CoxPHFitter = CoxPHFitter().fit(df, duration_col='T', event_col='E')
 
-    # This documentation recommends using log-likelihood to optimize:
-    # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
-    scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
-    fitness_value = cph.score(df, scoring_method=scoring_method)
+        # This documentation recommends using log-likelihood to optimize:
+        # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
+        scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
+        fitness_value = cph.score(df, scoring_method=scoring_method)
+    except ConvergenceError as ex:
+        n_features = subset.shape[1]
+
+        # If the model does not converge, it returns the worst fitness value
+        if more_is_better:
+            fitness_value = -1.0
+        else:
+            # For negative Log-likelihood the worst value is the higher one
+            fitness_value = 0.0
+
+        logging.warning(f'Convergence error during FS with {n_features} features: {ex}. '
+                        f'Setting to fitness value to {fitness_value}...')
 
     return fitness_value, cloned, fitness_value
 
@@ -148,18 +168,21 @@ def blind_search_sequential(classifier: SurvModel,
     @param molecules_df: DataFrame with all the molecules' data.
     @param clinical_data: Numpy array with the time and event columns.
     @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
-    @param cross_validations_folds: TODO: remove
+    @param cross_validations_folds: Number of folds to use in the Cross Validation.
     @param clustering_score_method: Clustering scoring method to optimize.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
     """
+    # In case of negative Log-likelihood (only used in clustering). If it is lower, better!
+    more_is_better = not is_clustering or clustering_score_method != ClusteringScoringMethod.LOG_LIKELIHOOD
+
     list_of_molecules: List[str] = molecules_df.index.tolist()
-    best_mean_score = float("-inf")
+    best_mean_score = float("-inf") if more_is_better else float("inf")
     best_features: Optional[List[str]] = None
     best_model: Optional[SurvModel] = None
     best_score: Optional[float] = None
 
-    for combination in all_combinations(list_of_molecules):
+    for combination in __all_combinations(list_of_molecules):
         subset = get_subset_of_features(molecules_df, combination)
 
         # If no molecules are present in the subset due to NaNs values, just discards this combination
@@ -170,23 +193,27 @@ def blind_search_sequential(classifier: SurvModel,
         # than the best found so far
         try:
             if is_clustering:
-                current_mean_score, current_best_model, current_best_score = compute_clustering_sequential(
+                current_mean_score, current_best_model, current_best_score = __compute_clustering_sequential(
                     classifier,
                     subset,
                     clinical_data,
-                    score_method=clustering_score_method
+                    score_method=clustering_score_method,
+                    more_is_better=more_is_better
                 )
             else:
-                current_mean_score, current_best_model, current_best_score = compute_cross_validation_sequential(
+                # SVM/RF
+                current_mean_score, current_best_model, current_best_score = __compute_cross_validation_sequential(
                     classifier,
                     subset,
                     clinical_data,
-                    cross_validations_folds
+                    cross_validations_folds,
+                    more_is_better=more_is_better
                 )
         except ValueError:
             continue
 
-        if current_mean_score > best_mean_score:
+        if (more_is_better and current_mean_score > best_mean_score) or \
+                (not more_is_better and current_mean_score < best_mean_score):
             best_mean_score = current_mean_score
             best_features = combination
             best_model = current_best_model
@@ -195,25 +222,29 @@ def blind_search_sequential(classifier: SurvModel,
     return best_features, best_model, best_score
 
 
-def compute_bbha_fitness_function(classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray,
-                                  is_clustering: bool, clustering_score_method: Optional[ClusteringScoringMethod],
-                                  cross_validation_folds: int) -> Tuple[float, SurvModel]:
+def __compute_bbha_fitness_function(classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray,
+                                    is_clustering: bool, clustering_score_method: Optional[ClusteringScoringMethod],
+                                    cross_validation_folds: int, more_is_better: bool) -> Tuple[float, SurvModel]:
     """Computes clustering or CV algorithm depending on the parameters. Return avg fitness value and best model."""
     if is_clustering:
-        current_score, current_best_model, _best_score = compute_clustering_sequential(
+        current_mean_score, current_best_model, _best_score = __compute_clustering_sequential(
             classifier,
             subset,
             clinical_data,
-            score_method=clustering_score_method
+            score_method=clustering_score_method,
+            more_is_better=more_is_better
         )
     else:
-        current_score, current_best_model, _best_score = compute_cross_validation_sequential(
+        # SVM/RF
+        current_mean_score, current_best_model, _best_score = __compute_cross_validation_sequential(
             classifier,
             subset,
             clinical_data,
-            cross_validation_folds
+            cross_validation_folds,
+            more_is_better=more_is_better  # False is only for Clustering Log-Likelihood metric, not for C-Index
         )
-    return current_score, current_best_model
+
+    return current_mean_score, current_best_model
 
 
 def binary_black_hole_sequential(
@@ -255,20 +286,24 @@ def binary_black_hole_sequential(
     stars_fitness_values = np.empty((n_stars,), dtype=float)
     stars_model = np.empty((n_stars,), dtype=object)
 
+    # In case of negative Log-likelihood (only used in clustering). If it is lower, better!
+    more_is_better = not is_clustering or clustering_score_method != ClusteringScoringMethod.LOG_LIKELIHOOD
+
     # Initializes the stars with their subsets and their fitness values
     for i in range(n_stars):
         random_features_to_select = get_random_subset_of_features_bbha(n_features)
         stars_subsets[i] = random_features_to_select  # Initialize 'Population'
         subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
-        score, initial_best_model = compute_bbha_fitness_function(classifier, subset_to_predict,
-                                                                  clinical_data, is_clustering,
-                                                                  clustering_score_method, cross_validation_folds)
+        mean_score, initial_best_model = __compute_bbha_fitness_function(classifier, subset_to_predict,
+                                                                         clinical_data, is_clustering,
+                                                                         clustering_score_method,
+                                                                         cross_validation_folds, more_is_better)
 
-        stars_fitness_values[i] = score
+        stars_fitness_values[i] = mean_score
         stars_model[i] = initial_best_model
 
     # The star with the best fitness is the Black Hole
-    black_hole_idx, best_features, best_score = get_best_bbha(stars_subsets, stars_fitness_values)
+    black_hole_idx, best_features, best_mean_score = get_best_bbha(stars_subsets, stars_fitness_values, more_is_better)
     best_model: SurvModel = stars_model[black_hole_idx]
 
     # Iterations
@@ -281,26 +316,30 @@ def binary_black_hole_sequential(
             # Computes the current star fitness
             current_star_combination = stars_subsets[a]
             subset = get_subset_of_features(molecules_df, combination=current_star_combination)
-            current_score, current_best_model = compute_bbha_fitness_function(classifier, subset, clinical_data,
-                                                                              is_clustering, clustering_score_method,
-                                                                              cross_validation_folds)
+            current_mean_score, current_best_model = __compute_bbha_fitness_function(classifier, subset, clinical_data,
+                                                                                     is_clustering,
+                                                                                     clustering_score_method,
+                                                                                     cross_validation_folds,
+                                                                                     more_is_better)
 
             # If it's the best fitness, swaps that star with the current black hole
-            if current_score > best_score:
+            if (more_is_better and current_mean_score > best_mean_score) or \
+                    (not more_is_better and current_mean_score < best_mean_score):
+                print(f"New best score: {current_mean_score} | Old best score: {best_mean_score}")
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
-                best_score, current_score = current_score, best_score
+                best_mean_score, current_mean_score = current_mean_score, best_mean_score
                 best_model = current_best_model
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
-            elif current_score == best_score and np.count_nonzero(current_star_combination) < np.count_nonzero(
+            elif current_mean_score == best_mean_score and np.count_nonzero(current_star_combination) < np.count_nonzero(
                     best_features):
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
-                best_score, current_score = current_score, best_score
+                best_mean_score, current_mean_score = current_mean_score, best_mean_score
 
             # Computes the event horizon
-            event_horizon = best_score / np.sum(stars_fitness_values)
+            event_horizon = best_mean_score / np.sum(stars_fitness_values)
 
             # Checks if the current star falls in the event horizon
             dist_to_black_hole = np.linalg.norm(best_features - current_star_combination)  # Euclidean distance
@@ -321,7 +360,7 @@ def binary_black_hole_sequential(
 
     best_features = best_features.astype(bool)  # Pandas needs a boolean array to select the rows
     best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()
-    return best_features_str, best_model, best_score
+    return best_features_str, best_model, best_mean_score
 
 
 def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndarray,

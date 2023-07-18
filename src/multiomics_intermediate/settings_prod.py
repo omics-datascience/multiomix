@@ -54,11 +54,18 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse',
         }
     },
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {module} {funcName} {lineno}: {message}",
+            "style": "{",
+        }
+    },
     'handlers': {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': LOG_FILE_PATH,
+            'formatter': "verbose",
             'filters': ['require_debug_false'],
         },
     },
@@ -66,8 +73,7 @@ LOGGING = {
         'django': {
             'handlers': ['file'],
             'level': 'WARNING',
-            'format': '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s',
             'propagate': True,
         },
-    },
+    }
 }

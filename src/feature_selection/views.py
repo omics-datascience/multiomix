@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pickle
+import shutil
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
 import pandas as pd
@@ -155,23 +156,21 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return round(seconds)  # Rounds to the nearest second
 
     @staticmethod
-    def __remove_file_if_exists(path: str):
-        """Removes a file if exists. Otherwise, logs an error."""
+    def __remove_folder_if_exists(path: str):
+        """Removes a folder if exists. Otherwise, logs an error."""
         if os.path.exists(path):
-            os.remove(path)
+            shutil.rmtree(path)
         else:
-            logging.warning(f'Trying to remove file in {path}. But it does not exist')
+            logging.warning(f'Trying to remove folder in {path}. But it does not exist')
 
     def __remove_datasets(self, fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
         """Removes the datasets from the shared folder."""
         # Gets paths of both molecules_df and clinical_df in the shared volume with the microservice
         data_folder = emr_settings['shared_folder_data']
-        molecular_df_path = os.path.join(data_folder, fs_experiment.app_name, 'molecules.csv')
-        clinical_df_path = os.path.join(data_folder, fs_experiment.app_name, 'clinical.csv')
+        app_folder_path = os.path.join(data_folder, fs_experiment.app_name)
 
-        # Removes files in both paths
-        self.__remove_file_if_exists(molecular_df_path)
-        self.__remove_file_if_exists(clinical_df_path)
+        # Removes datasets folder
+        self.__remove_folder_if_exists(app_folder_path)
 
     @staticmethod
     def __get_svm_parameters_columns(row: pd.Series) -> Tuple[str, str, str, SVMKernel]:
