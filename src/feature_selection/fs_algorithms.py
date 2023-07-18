@@ -24,6 +24,10 @@ from sklearn.exceptions import FitFailedWarning
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+# Negative and positive infinity constants
+NEG_INF: float = float("-inf")
+POS_INF: float = float("inf")
+
 # Fitness function shape
 FitnessFunction = Callable[[pd.DataFrame, np.ndarray], float]
 
@@ -144,11 +148,7 @@ def __compute_clustering_sequential(classifier: ClusteringModels, subset: pd.Dat
         n_features = subset.shape[1]
 
         # If the model does not converge, it returns the worst fitness value
-        if more_is_better:
-            fitness_value = -1.0
-        else:
-            # For negative Log-likelihood the worst value is the higher one
-            fitness_value = 0.0
+        fitness_value = NEG_INF if more_is_better else POS_INF
 
         logging.warning(f'Convergence error during FS with {n_features} features: {ex}. '
                         f'Setting to fitness value to {fitness_value}...')
@@ -177,7 +177,7 @@ def blind_search_sequential(classifier: SurvModel,
     more_is_better = not is_clustering or clustering_score_method != ClusteringScoringMethod.LOG_LIKELIHOOD
 
     list_of_molecules: List[str] = molecules_df.index.tolist()
-    best_mean_score = float("-inf") if more_is_better else float("inf")
+    best_mean_score = NEG_INF if more_is_better else POS_INF
     best_features: Optional[List[str]] = None
     best_model: Optional[SurvModel] = None
     best_score: Optional[float] = None
@@ -325,7 +325,6 @@ def binary_black_hole_sequential(
             # If it's the best fitness, swaps that star with the current black hole
             if (more_is_better and current_mean_score > best_mean_score) or \
                     (not more_is_better and current_mean_score < best_mean_score):
-                print(f"New best score: {current_mean_score} | Old best score: {best_mean_score}")
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
