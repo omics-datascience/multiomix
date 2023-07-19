@@ -25,7 +25,7 @@ class FSExperimentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'origin_biomarker', 'target_biomarker', 'target_biomarker_state', 'algorithm', 'app_name',
                     'emr_job_id')
     list_filter = ('algorithm', )
-    search_fields = ('origin_biomarker__name', 'target_biomarker__name')
+    search_fields = ('origin_biomarker__name', 'created_biomarker__name')
 
 
 class TrainedModelAdmin(admin.ModelAdmin):
