@@ -22,7 +22,7 @@ from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFa
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
-    generate_clinical_file, generate_molecules_dataframe
+    generate_clinical_file, generate_molecules_dataframe, check_sample_classes
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
