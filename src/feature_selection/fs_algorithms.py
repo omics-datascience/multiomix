@@ -173,8 +173,10 @@ def blind_search_sequential(classifier: SurvModel,
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
     """
-    # In case of negative Log-likelihood (only used in clustering). If it is lower, better!
-    more_is_better = not is_clustering or clustering_score_method != ClusteringScoringMethod.LOG_LIKELIHOOD
+    # Even in case of Log-likelihood (only used in clustering) it has to be maximized:
+    # https://github.com/CamDavidsonPilon/lifelines/issues/1545
+    # For the moment there is no model that needs to be minimized
+    more_is_better = True
 
     list_of_molecules: List[str] = molecules_df.index.tolist()
     best_mean_score = NEG_INF if more_is_better else POS_INF
@@ -286,8 +288,10 @@ def binary_black_hole_sequential(
     stars_fitness_values = np.empty((n_stars,), dtype=float)
     stars_model = np.empty((n_stars,), dtype=object)
 
-    # In case of negative Log-likelihood (only used in clustering). If it is lower, better!
-    more_is_better = not is_clustering or clustering_score_method != ClusteringScoringMethod.LOG_LIKELIHOOD
+    # Even in case of Log-likelihood (only used in clustering) it has to be maximized:
+    # https://github.com/CamDavidsonPilon/lifelines/issues/1545
+    # For the moment there is no model that needs to be minimized
+    more_is_better = True
 
     # Initializes the stars with their subsets and their fitness values
     for i in range(n_stars):
