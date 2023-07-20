@@ -1356,6 +1356,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 response.json().then((responseJSON: OkResponse) => {
                     if (responseJSON.ok) {
                         this.closeModalWithSuccessMsg('Experiment submitted!')
+                        this.setState({ featureSelection: this.getDefaultFeatureSelectionProps(), openCreateEditBiomarkerModal: false })
                     } else {
                         alertGeneralError()
                     }
