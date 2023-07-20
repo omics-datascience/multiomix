@@ -381,6 +381,9 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
         const colors = d3.scaleOrdinal(d3.schemeCategory10).range()
         const yDomain = [1, 0]
 
+        const seriesWidth = this.props.width - 64
+        const seriesHeight = this.props.height - 64
+
         return (
             <Base {...this.props}>
                 <XAxis
@@ -389,11 +392,11 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
                     label={this.props.xAxisLabel}
                     left={48}
                     top={this.props.height - 32}
-                    width={this.props.width - 64}
+                    width={seriesWidth}
                 />
                 <YAxis
                     domain={yDomain}
-                    height={this.props.height - 64}
+                    height={seriesHeight}
                     label={this.props.yAxisLabel}
                     left={32}
                     top={16}
@@ -405,10 +408,10 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
                     disabledGroups={this.state.disabledGroups}
                     xDomain={xDomain}
                     yDomain={yDomain}
-                    height={this.props.height - 64}
+                    height={seriesHeight}
                     left={48}
                     top={16}
-                    width={this.props.width - 64}
+                    width={seriesWidth}
                 />
                 <Legend
                     colors={colors}

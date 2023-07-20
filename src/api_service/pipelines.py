@@ -393,7 +393,7 @@ class PipelineManager(object):
         @param experiment: Experiment to compute in chunks
         @param common_samples: Numpy array with the samples in common
         @param combination_class: Model class to create the bulk and insert
-        @param result_limit_row_count: TODO: complete
+        @param result_limit_row_count: Number of combinations to keep. If None, all combinations will be kept.
         @param stop_event: Stop event to cancel the experiment
         @return Number of evaluated combinations
         """

@@ -78,7 +78,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'undo',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has failed several times. Try changing some parameters and try again.'
+                title: 'The experiment has failed several times. Try changing some parameters and try again'
             }
             break
         case BiomarkerState.NO_FEATURES_FOUND:
@@ -86,7 +86,31 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'times rectangle',
                 color: 'red',
                 loading: false,
-                title: 'No features were found. Try changing some parameters and try again.'
+                title: 'No features were found. Try changing some parameters and try again'
+            }
+            break
+        case BiomarkerState.NO_VALID_SAMPLES:
+            stateIcon = {
+                iconName: 'user times',
+                color: 'red',
+                loading: false,
+                title: 'After filtering invalid values as NaN or inf, there were no samples to make the inference. Try changing the used dataset or fix your data and try again'
+            }
+            break
+        case BiomarkerState.NO_VALID_MOLECULES:
+            stateIcon = {
+                iconName: 'browser',
+                color: 'red',
+                loading: false,
+                title: 'The dataset used has not enough molecules to compute the experiment (i.e.: has less molecules than the specified in the Biomarker). Select other dataset and try again'
+            }
+            break
+        case BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
+            stateIcon = {
+                iconName: 'user times',
+                color: 'red',
+                loading: false,
+                title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
             }
             break
     }

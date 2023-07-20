@@ -43,7 +43,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
             searchPlaceholder='Search by name or description'
             urlToRetrieveData={urlBiomarkerStatisticalValidations}
             customElements={[
-                <Form.Field key={1} className='biomarkers--button--modal' title='New statistical validation'>
+                <Form.Field key={1} className='custom-table-field' title='New statistical validation'>
                     <Button primary icon onClick={() => { props.setOpenModalNewStatValidation(true) }}>
                         <Icon name='add' />
                     </Button>

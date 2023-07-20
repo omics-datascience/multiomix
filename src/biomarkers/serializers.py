@@ -58,7 +58,7 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
 
 
 class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
-    """Biomarker model serializer without the molecules."""
+    """Biomarker model serializer without the molecules (useful to list Biomarkers)."""
     number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
     number_of_mirnas = serializers.SerializerMethodField(method_name='get_number_of_mirnas')
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
@@ -101,7 +101,7 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):
-    """Biomarker model serializer."""
+    """Biomarker model serializer (useful to create/edit a Biomarker)."""
     number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
     number_of_mirnas = serializers.SerializerMethodField(method_name='get_number_of_mirnas')
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
@@ -163,7 +163,7 @@ class TrainedModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainedModel
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
-                  'fitness_metric']
+                  'fitness_metric', 'cv_folds_modified']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:

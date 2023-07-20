@@ -3,7 +3,7 @@ import { Button, Grid, Icon, Modal, Segment, Step } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
 import { Source, SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
-import { Biomarker, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters, SourceStateBiomarker } from '../../types'
+import { Biomarker, CrossValidationParameters, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters, SourceStateBiomarker } from '../../types'
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
@@ -24,6 +24,7 @@ interface FeatureSelectionPanelProps {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeCrossValidation: <T extends keyof CrossValidationParameters>(key: T, value: any) => void,
     handleGoBackStep1: () => void,
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
@@ -83,6 +84,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     handleChangeAlgorithm={props.handleChangeAlgorithm}
                     handleChangeFitnessFunction={props.handleChangeFitnessFunction}
                     handleChangeFitnessFunctionOption={props.handleChangeFitnessFunctionOption}
+                    handleChangeCrossValidation={props.handleChangeCrossValidation}
                     handleSwitchAdvanceAlgorithm={props.handleSwitchAdvanceAlgorithm}
                 />)
         }

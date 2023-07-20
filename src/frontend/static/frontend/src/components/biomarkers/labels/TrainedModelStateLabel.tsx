@@ -5,12 +5,14 @@ import { TrainedModelState } from '../types'
 
 /** TrainedModelStateLabel props. */
 interface TrainedModelStateLabelProps {
-    /** Biomarker's state. */
-    trainedModelStateState: TrainedModelState
+    /** TrainedModel's state. */
+    trainedModelStateState: TrainedModelState,
+    /** Indicates if the cross validation folds were modified to be stratified. */
+    cvFoldsWereModified: boolean
 }
 
 /**
- * Renders a Label for the Biomarker's state
+ * Renders a Label for the TrainedModel's state
  * @param props Component props.
  * @returns Component.
  */
@@ -20,9 +22,9 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
         case TrainedModelState.COMPLETED:
             stateIcon = {
                 iconName: 'check',
-                color: 'green',
+                color: props.cvFoldsWereModified ? 'orange' : 'green',
                 loading: false,
-                title: 'The experiment is complete'
+                title: 'The experiment is complete' + (props.cvFoldsWereModified ? ' (number of CrossValidation folds were modified to be stratified)' : '')
             }
             break
         case TrainedModelState.FINISHED_WITH_ERROR:
@@ -78,7 +80,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'undo',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has failed several times. Try changing some parameters and try again.'
+                title: 'The experiment has failed several times. Try changing some parameters and try again'
             }
             break
         case TrainedModelState.NO_FEATURES_FOUND:
@@ -86,7 +88,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'times rectangle',
                 color: 'red',
                 loading: false,
-                title: 'No features were found. Try changing some parameters and try again.'
+                title: 'No features were found. Try changing some parameters and try again'
             }
             break
         case TrainedModelState.NO_BEST_MODEL_FOUND:
@@ -94,7 +96,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'target',
                 color: 'red',
                 loading: false,
-                title: 'No model could be obtained. Maybe there are fewer samples than number of folds in the CrossValidation or the data presents high collinearity. Try changing some parameters as penalizer or number of folds in the CV process and try again.'
+                title: 'No model could be obtained. Maybe there are fewer samples than number of folds in the CrossValidation or the data presents high collinearity. Try changing some parameters as penalizer or number of folds in the CV process and try again'
             }
             break
         case TrainedModelState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
@@ -102,7 +104,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'There are fewer samples than number of folds in the CrossValidation. Try changing the number of folds in the CV process or select a larger dataset and try again.'
+                title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
             }
             break
         case TrainedModelState.MODEL_DUMP_NOT_AVAILABLE:

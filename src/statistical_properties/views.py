@@ -184,7 +184,7 @@ class StatisticalValidationHeatMap(APIView):
     """Gets the expressions of all the molecules of a Biomarker for all the samples."""
     @staticmethod
     def __remove_suffix(df: pd.DataFrame) -> pd.DataFrame:
-        """Removes the suffix from the index of a DataFrame."""
+        """Removes the molecule type suffix from the index of a DataFrame."""
         df.index = df.index.str.replace(TYPE_SUFFIX, '', regex=True)
         return df
 
@@ -218,7 +218,7 @@ class StatisticalValidationKaplanMeierClustering(APIView):
         stat_validation = get_stat_validation_instance(request)
 
         # Gets Gene and GEM expression with time values
-        molecules_df, clinical_df = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
+        molecules_df, clinical_data = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
 
         compute_samples_and_clusters = not stat_validation.samples_and_clusters.exists()
 
@@ -226,7 +226,7 @@ class StatisticalValidationKaplanMeierClustering(APIView):
         groups, concordance_index, log_likelihood, samples_and_clusters = generate_survival_groups_by_clustering(
             classifier,
             molecules_df,
-            clinical_df,
+            clinical_data,
             compute_samples_and_clusters=compute_samples_and_clusters
         )
 
@@ -294,10 +294,12 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
 
         # Gets clinical with only the needed columns (survival event/time and grouping attribute)
         survival_tuple = stat_validation.survival_column_tuple
+        event_column = survival_tuple.event_column
+        time_column = survival_tuple.time_column
         try:
             clinical_df = stat_validation.clinical_source.get_specific_samples_and_attributes_df(
                 samples=None,
-                clinical_attributes=[clinical_attribute, survival_tuple.event_column, survival_tuple.time_column]
+                clinical_attributes=[clinical_attribute, event_column, time_column]
             )
         except KeyError:
             raise ValidationError('Invalid clinical attribute')
@@ -309,6 +311,9 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
 
         # Removes TCGA suffix and joins with the clinical data
         joined = molecules_df.join(clinical_df, how='inner')
+
+        # Removes invalid values from joined (removes samples)
+        joined = clean_dataset(joined, axis='index')
 
         # Groups by the clinical attribute and computes the survival function for every group
         groups: List[Dict[str, LabelOrKaplanMeierResult]] = []
@@ -643,11 +648,11 @@ class BiomarkerNewTrainedModel(APIView):
                 mirna_source=mirna_source,
                 cna_source=cna_source,
                 methylation_source=methylation_source,
+                cross_validation_folds=cross_validation_folds,
             )
 
             # Runs statistical validation in background
-            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters,
-                                                                      cross_validation_folds)
+            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters)
 
         return Response({'ok': True})
 

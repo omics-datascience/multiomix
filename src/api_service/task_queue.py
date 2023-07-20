@@ -94,10 +94,10 @@ class TaskQueue(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error(f'Experiment {experiment.pk} has failed. Check logs for more info')
             experiment.state = ExperimentState.FINISHED_WITH_ERROR
-        except ServerSelectionTimeoutError:
+        except ServerSelectionTimeoutError as ex:
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error('MongoDB connection timeout!')
-            experiment.state = ExperimentState.WAITING_FOR_QUEUE
+            logging.error(f'MongoDB connection timeout: {ex}')
+            experiment.state = ExperimentState.FINISHED_WITH_ERROR
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
@@ -163,15 +163,20 @@ class TaskQueue(object):
         logging.warning(f'{experiments.count()} pending experiments are being sent for processing')
         for experiment in experiments:
             # If the experiment has already reached a limit of attempts, it's marked as with error
-            if experiment.attempt == 3:
-                experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
-                experiment.save(update_fields=['state'])
-                logging.warning(f'Experiment "{experiment}" reached the limit of attempts')
-            else:
-                experiment.attempt += 1
-                experiment.save(update_fields=['attempt'])
-                logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
-                self.add_experiment(experiment)
+            # FIXME: when Django starts up this object is created twice, loosing the reference to the Future instance
+            # and making impossible to cancel or update the experiment
+            experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
+            experiment.save(update_fields=['state'])
+            logging.warning(f'Experiment "{experiment}" reached the limit of attempts')
+            # if experiment.attempt == 3:
+            #     experiment.state = ExperimentState.REACHED_ATTEMPTS_LIMIT
+            #     experiment.save(update_fields=['state'])
+            #     logging.warning(f'Experiment "{experiment}" reached the limit of attempts')
+            # else:
+            #     experiment.attempt += 1
+            #     experiment.save(update_fields=['attempt'])
+            #     logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
+            #     self.add_experiment(experiment)
 
         close_db_connection()
 

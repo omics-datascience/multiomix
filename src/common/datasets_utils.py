@@ -4,12 +4,15 @@ import numpy as np
 from typing import Union, Optional, cast, List, Literal, Tuple, Any
 import pandas as pd
 from api_service.models import ExperimentSource
-from common.exceptions import NoSamplesInCommon
+from common.exceptions import NoSamplesInCommon, NumberOfSamplesFewerThanCVFolds
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import FSExperiment, TrainedModel
 from inferences.models import InferenceExperiment
 from statistical_properties.models import StatisticalValidation
 from user_files.models_choices import FileType
+
+# Axis to remove invalid values from Pandas DataFrames
+Axis = Literal['index', 'columns']
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -72,7 +75,7 @@ def get_common_samples(experiment: ExperimentObjType) -> np.ndarray:
     return last_intersection
 
 
-def process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
+def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
                     samples_in_common: np.ndarray) -> pd.DataFrame:
     """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
     # Only keeps the samples in common
@@ -136,10 +139,33 @@ def generate_clinical_file(experiment: ExperimentObjType, samples_in_common: np.
     return clinical_temp_file_path
 
 
+def generate_molecules_dataframe(experiment: ExperimentObjType, samples_in_common: np.ndarray) -> pd.DataFrame:
+    """
+    Generates the molecules DataFrame for a specific InferenceExperiment, FSExperiment or StatisticalValidation
+    with the samples in common.
+    @param experiment: Instance to get the sources from.
+    @param samples_in_common: Samples in common between all the sources.
+    @return: Molecules Pandas DataFrame.
+    """
+    chunks: List[pd.DataFrame] = []
+    for source, molecules, file_type in experiment.get_sources_and_molecules():
+        if source is None:
+            continue
+
+        only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
+        chunks.extend([
+            __process_chunk(chunk, file_type, molecules, samples_in_common)
+            for chunk in source.get_df_in_chunks(only_matching)
+        ])
+
+    # Concatenates all the chunks for all the molecules
+    return pd.concat(chunks, axis=0, sort=False)
+
+
 def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np.ndarray) -> str:
     """
-    Generates the molecules DataFrame for a specific InferenceExperiment with the samples in common and saves
-    it in disk.
+    Generates the molecules DataFrame for a specific InferenceExperiment, FSExperiment or StatisticalValidation
+    with the samples in common and saves it in disk.
     @param experiment: Instance to get the sources from.
     @param samples_in_common: Samples in common between all the sources.
     @return: Molecules file path saved in disk.
@@ -154,7 +180,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
 
             only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
             for chunk in source.get_df_in_chunks(only_matching=only_matching):
-                chunk = process_chunk(chunk, file_type, molecules, samples_in_common)
+                chunk = __process_chunk(chunk, file_type, molecules, samples_in_common)
 
                 # Saves in disk
                 chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
@@ -162,7 +188,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
     return molecules_temp_file_path
 
 
-def clean_dataset(df: pd.DataFrame, axis: Literal['index', 'columns']) -> pd.DataFrame:
+def clean_dataset(df: pd.DataFrame, axis: Axis) -> pd.DataFrame:
     """
     Removes NaN and Inf values.
     :param df: DataFrame to clean.
@@ -234,3 +260,65 @@ def replace_event_col_for_booleans(value: Union[int, str]) -> bool:
     # Cast to string to check if it's '1' or contains any of the candidates
     value_str = str(value)
     return value_str == '1' or any(candidate in value_str for candidate in COMMON_INTEREST_VALUES)
+
+
+def __get_sample_classes(clinical_data: np.ndarray) -> np.ndarray:
+    """
+    Returns the number of sample classes. Code retrieved from Sklearn model_selection module.
+    @param clinical_data: Clinical data Numpy array.
+    @return: List with a count of each sample class.
+    """
+    classes, y_idx, y_inv = np.unique(clinical_data, return_index=True, return_inverse=True)
+    _, class_perm = np.unique(y_idx, return_inverse=True)
+    y_encoded = class_perm[y_inv]
+    return np.bincount(y_encoded)
+
+
+def __sample_classes_are_fewer_than_folds(clinical_data: np.ndarray, number_of_folds: int) -> bool:
+    """
+    Checks if the number of sample classes is fewer than the number of folds.
+    @param clinical_data: Clinical data Numpy array.
+    @param number_of_folds: Current number of folds
+    @return: True if the number of samples is fewer than the number of folds (an exception should be raised
+    as the GridSearch will be fail), False otherwise.
+    """
+    sample_classes_count = __get_sample_classes(clinical_data)
+    return np.all(number_of_folds > sample_classes_count)
+
+
+def __get_new_cross_validation_folds(clinical_data: np.ndarray, number_of_folds: int) -> int:
+    """
+    Returns the maximum number of folds to use in the cross validation process. This value is computed from the
+    number of sample classes in the clinical data, keeping the maximum count.
+    @param clinical_data: Clinical data Numpy array.
+    @param number_of_folds: Current number of folds
+    @return: True if the number of samples is fewer than the number of folds (an exception should be raised
+    as the GridSearch will be fail), False otherwise.
+    """
+    sample_classes_count = __get_sample_classes(clinical_data)
+    smaller_than_splits = sample_classes_count[(sample_classes_count < number_of_folds) & (sample_classes_count >= 3)]
+    return np.max(smaller_than_splits) if smaller_than_splits.size > 0 else None
+
+
+def check_sample_classes(trained_model: TrainedModel, clinical_data: np.ndarray, cross_validation_folds: int):
+    """
+    Checks if the number of sample classes is fewer than the number of folds. In that case tries to get a possible
+    number of folds to train the model. In case no valid number of folds is found, raises an exception.
+    @param trained_model: Trained model instance.
+    @param clinical_data: Clinical data Numpy array.
+    @param cross_validation_folds: Current number of folds.
+    @raise NumberOfSamplesFewerThanCVFolds if the number of sample classes is fewer than the number of folds and no
+    valid number of folds could be found.
+    """
+    if __sample_classes_are_fewer_than_folds(clinical_data, cross_validation_folds):
+        # Checks if a smaller number of folds can be used
+        new_cross_validation = __get_new_cross_validation_folds(clinical_data, cross_validation_folds)
+        if new_cross_validation is None:
+            raise NumberOfSamplesFewerThanCVFolds(f'Number of unique classes is less than the CV number of folds '
+                                                  f'({cross_validation_folds})')
+
+        # Updates the number of folds
+        cross_validation_folds = new_cross_validation
+        trained_model.cross_validation_folds = cross_validation_folds
+        trained_model.cv_folds_modified = True
+        trained_model.save(update_fields=['cross_validation_folds', 'cv_folds_modified'])

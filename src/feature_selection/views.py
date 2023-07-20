@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pickle
+import shutil
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
 import pandas as pd
@@ -102,15 +103,19 @@ class FeatureSelectionSubmit(APIView):
             algorithm_parameters = request.POST.get('algorithmParameters')
             fitness_function = request.POST.get('fitnessFunction')
             fitness_function_parameters = request.POST.get('fitnessFunctionParameters')
+            cross_validation_parameters = request.POST.get('crossValidationParameters')
             if algorithm is None or fitness_function is None or fitness_function_parameters is None or \
-                    algorithm_parameters is None:
+                    algorithm_parameters is None or cross_validation_parameters is None:
                 raise ValidationError(f'Invalid parameters: algorithm: {algorithm}'
                                       f'| algorithm_parameters: {algorithm_parameters} '
                                       f'| fitness_function: {fitness_function} '
-                                      f'| fitness_function_parameters: {fitness_function_parameters}')
+                                      f'| fitness_function_parameters: {fitness_function_parameters}'
+                                      f'| cross_validation_parameters: {cross_validation_parameters}')
 
+            # Parses from JSON to dict
             algorithm_parameters = json.loads(algorithm_parameters)
             fitness_function_parameters = json.loads(fitness_function_parameters)
+            cross_validation_parameters = json.loads(cross_validation_parameters)
 
             # Creates FSExperiment instance
             fit_fun_enum = self.__get_fitness_function_enum(fitness_function)
@@ -130,7 +135,7 @@ class FeatureSelectionSubmit(APIView):
 
             # Adds Feature Selection experiment to the ThreadPool
             global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters,
-                                             algorithm_parameters)
+                                             algorithm_parameters, cross_validation_parameters)
 
         return Response({'ok': True})
 
@@ -151,23 +156,21 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return round(seconds)  # Rounds to the nearest second
 
     @staticmethod
-    def __remove_file_if_exists(path: str):
-        """Removes a file if exists. Otherwise, logs an error."""
+    def __remove_folder_if_exists(path: str):
+        """Removes a folder if exists. Otherwise, logs an error."""
         if os.path.exists(path):
-            os.remove(path)
+            shutil.rmtree(path)
         else:
-            logging.warning(f'Trying to remove file in {path}. But it does not exist')
+            logging.warning(f'Trying to remove folder in {path}. But it does not exist')
 
     def __remove_datasets(self, fs_experiment: FSExperiment, emr_settings: Dict[str, Any]):
         """Removes the datasets from the shared folder."""
         # Gets paths of both molecules_df and clinical_df in the shared volume with the microservice
         data_folder = emr_settings['shared_folder_data']
-        molecular_df_path = os.path.join(data_folder, fs_experiment.app_name, 'molecules.csv')
-        clinical_df_path = os.path.join(data_folder, fs_experiment.app_name, 'clinical.csv')
+        app_folder_path = os.path.join(data_folder, fs_experiment.app_name)
 
-        # Removes files in both paths
-        self.__remove_file_if_exists(molecular_df_path)
-        self.__remove_file_if_exists(clinical_df_path)
+        # Removes datasets folder
+        self.__remove_folder_if_exists(app_folder_path)
 
     @staticmethod
     def __get_svm_parameters_columns(row: pd.Series) -> Tuple[str, str, str, SVMKernel]:
@@ -190,12 +193,12 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         return number_of_clusters, algorithm, scoring
 
     @staticmethod
-    def __get_rf_parameters_columns(row: pd.Series) -> int:
+    def __get_rf_parameters_columns(row: pd.Series) -> Tuple[int]:
         """Iterates over rows generating some columns with RF model parameters"""
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         number_of_trees = params[0]
-        return number_of_trees
+        return (number_of_trees, )  #  NOTE: must be a tuple or the setting of columns names won't work in Pandas
 
     def __save_svm_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
         """Saves all the data about times from the Spark job for an SVM model."""

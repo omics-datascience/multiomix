@@ -19,35 +19,23 @@ from common.response import generate_json_response_or_404
 from django.db.models import Q, Count, QuerySet
 
 
-class BiomarkerList(generics.ListCreateAPIView):
-    """REST endpoint: list and create for Biomarker model"""
+class BiomarkerList(generics.ListAPIView):
+    """REST endpoint: list for Biomarker model"""
 
     def get_queryset(self):
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
         biomarkers = Biomarker.objects.filter(user=self.request.user)
         if only_successful:
-            # In this case shows only Biomarkers that are valid (completed and have at least a molecule)
-            biomarkers = biomarkers.alias(
-                count_number_of_mrnas=Count('mrnas'),
-                count_number_of_mirnas=Count('mirnas'),
-                count_number_of_cnas=Count('cnas'),
-                count_number_of_methylations=Count('methylations')
-            ).filter(
-                Q(state=BiomarkerState.COMPLETED) & (
-                        Q(count_number_of_mrnas__gt=0) |
-                        Q(count_number_of_mirnas__gt=0) |
-                        Q(count_number_of_cnas__gt=0) |
-                        Q(count_number_of_methylations__gt=0)
-                )
-            )
-
+            # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
+            # FIXME: autovacuum settings could help
+            # In this case shows only Biomarkers that are valid (completed and have at least two molecules,
+            # optimizing a 1 molecule Biomarker is not useful)
+            # biomarkers = biomarkers.alias(
+            #     total_molecules=Count('mrnas') + Count('mirnas') + Count('cnas') + Count('methylations')
+            # ).filter(state=BiomarkerState.COMPLETED, total_molecules__gt=1)
+            biomarkers = biomarkers.filter(state=BiomarkerState.COMPLETED)
 
         return biomarkers
-
-    def perform_create(self, biomarker: Biomarker):
-        """Adds some fields on saving"""
-        # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
-        biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
 
     serializer_class = BiomarkerSimpleSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -56,6 +44,21 @@ class BiomarkerList(generics.ListCreateAPIView):
     filterset_fields = ['tag']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'tag', 'upload_date']
+
+
+class BiomarkerCreate(generics.CreateAPIView):
+    """REST endpoint: create for Biomarker model"""
+
+    def get_queryset(self):
+        return Biomarker.objects.filter(user=self.request.user)
+
+    def perform_create(self, biomarker: Biomarker):
+        """Adds some fields on saving"""
+        # NOTE: it's always a manual creating if the Biomarker is created from this endpoint
+        biomarker.save(origin=BiomarkerOrigin.MANUAL, state=BiomarkerState.COMPLETED, user=self.request.user)
+
+    serializer_class = BiomarkerSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):

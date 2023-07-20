@@ -30,8 +30,10 @@ enum BiomarkerState {
     STOPPING = 6,
     STOPPED = 7,
     REACHED_ATTEMPTS_LIMIT = 8,
-    NO_FEATURES_FOUND = 9
-
+    NO_FEATURES_FOUND = 9,
+    NO_VALID_SAMPLES = 10,
+    NO_VALID_MOLECULES = 11,
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
 }
 
 /** All the possible states of a TrainedModel. */
@@ -281,6 +283,11 @@ interface FitnessFunctionParameters {
     rfParameters: RFParameters
 }
 
+/** CV parameters. */
+interface CrossValidationParameters {
+    folds: number
+}
+
 /** Structure for the Feature Selection panel. */
 interface FeatureSelectionPanelData {
     /** Current Step in the panel. */
@@ -306,7 +313,8 @@ interface FeatureSelectionPanelData {
     /** Fitness function to optimize in the algorithm. */
     fitnessFunction: FitnessFunction,
     /** Parameters of the selected `fitnessFunction`. */
-    fitnessFunctionParameters: FitnessFunctionParameters
+    fitnessFunctionParameters: FitnessFunctionParameters,
+    crossValidationParameters: CrossValidationParameters,
 }
 
 /** Advanced algorithm parameters to make Feature selection */
@@ -373,6 +381,7 @@ interface TrainedModel {
     description: string,
     state: TrainedModelState,
     fitness_function: FitnessFunction,
+    cv_folds_modified: boolean,
     created: string,
     fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
@@ -558,6 +567,7 @@ export {
     SVMParameters,
     ClusteringParameters,
     FitnessFunctionParameters,
+    CrossValidationParameters,
     FitnessFunction,
     FeatureSelectionAlgorithm,
     ClusteringMetric,

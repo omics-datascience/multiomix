@@ -88,7 +88,7 @@ class SynchronizationService:
                 dataset_content.columns = dataset_content.columns.str.replace(".", "_dot_")
 
                 # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) from samples
-                # to avoid breaking df join
+                # to avoid breaking df join. There's also '-03' suffix in some Firehose Legacy studies
                 if dataset.file_type == FileType.CLINICAL:
                     # Clinical data has a PATIENT_ID or SAMPLE_ID column. In the samples file (data_clinical_sample.txt)
                     # there is a SAMPLE_ID column that has the TCGA suffix. In the patients file

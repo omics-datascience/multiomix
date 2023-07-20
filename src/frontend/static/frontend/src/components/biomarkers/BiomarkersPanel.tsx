@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -24,6 +24,7 @@ import './../../css/biomarkers.css'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlBiomarkersCreate: string
 declare const urlTagsCRUD: string
 declare const urlGeneSymbols: string
 declare const urlGeneSymbolsFinder: string
@@ -51,7 +52,8 @@ type ValidationForm = {
 interface BiomarkersPanelState {
     biomarkers: BiomarkerSimple[],
     newBiomarker: Biomarker,
-    loadingFullBiomarker: boolean,
+    /** PK of the Biomarker that's being loaded. */
+    loadingFullBiomarkerId: Nullable<number>,
     selectedBiomarkerToDeleteOrSync: Nullable<BiomarkerSimple>,
     checkedIgnoreProposedAlias: boolean,
     showDeleteBiomarkerModal: boolean,
@@ -86,7 +88,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.state = {
             biomarkers: [],
             newBiomarker: this.getDefaultNewBiomarker(),
-            loadingFullBiomarker: false,
+            loadingFullBiomarkerId: null,
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
             checkedIgnoreProposedAlias: false,
             showDeleteBiomarkerModal: false,
@@ -124,7 +126,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             algorithm: FeatureSelectionAlgorithm.BLIND_SEARCH,
             fitnessFunction: FitnessFunction.CLUSTERING,
             fitnessFunctionParameters: this.getDefaultFitnessFunctionParameters(),
-            advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters()
+            advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters(),
+            crossValidationParameters: { folds: 10 }
         }
     }
 
@@ -258,7 +261,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Manage the change of the option in cluster option in any algorithm selected inside a clustering
+     * Manage changes of Feature Selection process parameters.
      * @param fitnessFunction name of fitness function to change
      * @param key name of the fitnessFunction object that have changed
      * @param value value selected typed depends of what fitness function and key is being changing
@@ -266,6 +269,17 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
         const featureSelection = this.state.featureSelection
         featureSelection.fitnessFunctionParameters[fitnessFunction][key] = value
+        this.setState({ featureSelection })
+    }
+
+    /**
+     * Manage changes of CrossValidation parameters.
+     * @param key name of the crossValidationParameters object that have changed.
+     * @param value value selected.
+     */
+    handleChangeCrossValidation = <T extends keyof CrossValidationParameters>(key: T, value: any) => {
+        const featureSelection = this.state.featureSelection
+        featureSelection.crossValidationParameters[key] = value
         this.setState({ featureSelection })
     }
 
@@ -393,7 +407,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
     getBiomarkerFullInstance = (biomarkerSimple: BiomarkerSimple): Promise<Biomarker> => {
         return new Promise((resolve, reject) => {
-            this.setState({ loadingFullBiomarker: true })
+            this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
             ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/').then((response) => {
                 response.json().then(resolve).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
@@ -403,7 +417,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 console.error('Error getting Biomarker:', err)
                 reject(err)
             }).finally(() => {
-                this.setState({ loadingFullBiomarker: false })
+                this.setState({ loadingFullBiomarkerId: null })
             })
         })
     }
@@ -809,7 +823,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
 
         if (!formBiomarker.id) {
-            ky.post(urlBiomarkersCRUD, settings).then((response) => {
+            ky.post(urlBiomarkersCreate, settings).then((response) => {
                 response.json().then((_jsonResponse: Biomarker) => {
                     this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
@@ -989,29 +1003,18 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Does a request to add a new Biomarker
-     */
-    addOrEditBiomarker = () => {
-        if (!this.canAddBiomarker()) {
+    /** Does a request to edit a new Biomarker. */
+    editBiomarker = () => {
+        if (!this.canSubmitBiomarkerForm()) {
             return
         }
 
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
 
-        // If exists an id then we are editing, otherwise It's a new Tag
-        let addOrEditURL, requestMethod
-        if (this.state.newBiomarker.id) {
-            addOrEditURL = `${urlBiomarkersCRUD}/${this.state.newBiomarker.id}/`
-            requestMethod = ky.patch
-        } else {
-            addOrEditURL = urlBiomarkersCRUD
-            requestMethod = ky.post
-        }
-
+        const url = `${urlBiomarkersCRUD}/${this.state.newBiomarker.id}/`
         this.setState({ addingOrEditingBiomarker: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newBiomarker }).then((response) => {
+            ky.patch(url, { headers: myHeaders, json: this.state.newBiomarker }).then((response) => {
                 response.json().then((biomarker: Biomarker) => {
                     if (biomarker && biomarker.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
@@ -1030,9 +1033,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Makes a request to delete a Biomarker
-     */
+    /** Makes a request to delete a Biomarker. */
     deleteBiomarker = () => {
         // Sets the Request's Headers
         if (this.state.selectedBiomarkerToDeleteOrSync === null) {
@@ -1065,7 +1066,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     handleKeyDown = (e) => {
         // If pressed Enter key submits the new Tag
         if (e.which === 13 || e.keyCode === 13) {
-            this.addOrEditBiomarker()
+            if (!this.state.newBiomarker.id) {
+                this.editBiomarker()
+            } else {
+                this.createBiomarker()
+            }
         } else {
             if (e.which === 27 || e.keyCode === 27) {
                 this.setState({ newBiomarker: this.getDefaultNewBiomarker() })
@@ -1084,9 +1089,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /**
-     * Closes the deletion confirm modals
-     */
+    /** Closes the deletion confirm modals. */
     handleClose = () => {
         this.setState({ showDeleteBiomarkerModal: false })
     }
@@ -1095,7 +1098,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * Check if can submit the new Biomarker form
      * @returns True if everything is OK, false otherwise
      */
-    canAddBiomarker = (): boolean => {
+    canSubmitBiomarkerForm = (): boolean => {
         return !this.state.addingOrEditingBiomarker &&
             this.state.newBiomarker.name.trim().length > 0
     }
@@ -1109,22 +1112,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const newBiomarker = this.state.newBiomarker
         newBiomarker[name] = value
         this.setState({ newBiomarker })
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes
-     * @param datasetName Name of the edited CGDS dataset
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleFormDatasetChanges = (datasetName: NameOfCGDSDataset, name: string, value: any) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-        if (dataset !== null) {
-            dataset[name] = value
-            this.setState({ newBiomarker })
-        }
     }
 
     /**
@@ -1350,6 +1337,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             formData.append('biomarkerPk', (fsSettings.biomarker?.id as number).toString())
             formData.append('algorithm', fsSettings.algorithm.toString())
             formData.append('algorithmParameters', JSON.stringify(fsSettings.advancedAlgorithmParameters))
+            formData.append('crossValidationParameters', JSON.stringify(fsSettings.crossValidationParameters))
             formData.append('fitnessFunction', fsSettings.fitnessFunction.toString())
             formData.append('fitnessFunctionParameters', JSON.stringify(fsSettings.fitnessFunctionParameters))
 
@@ -1435,6 +1423,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         // Biomarker deletion modal
         const deletionConfirmModal = this.getDeletionConfirmModal()
 
+        const isLoadingFullBiomarker = this.state.loadingFullBiomarkerId !== null
+
         return (
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
@@ -1459,7 +1449,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     customFilters={this.getDefaultFilters()}
                     showSearchInput
                     customElements={[
-                        <Form.Field key={1} className='biomarkers--button--modal' title='Add new Biomarker'>
+                        <Form.Field key={1} className='custom-table-field' title='Add new Biomarker'>
                             <Button
                                 primary
                                 icon
@@ -1476,6 +1466,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     mapFunction={(biomarker: BiomarkerSimple) => {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
                         const canEditMolecules = this.canEditBiomarker(biomarker)
+                        const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1494,22 +1485,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                     <>
                                         {/* Details button */}
                                         <Icon
-                                            name='chart bar'
+                                            name={currentBiomarkerIsLoading ? 'spinner' : 'chart bar'}
                                             className='clickable'
                                             color='blue'
                                             title='Details'
-                                            loading={this.state.loadingFullBiomarker}
-                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || this.state.loadingFullBiomarker}
+                                            loading={currentBiomarkerIsLoading}
+                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || isLoadingFullBiomarker}
                                             onClick={() => this.openBiomarkerDetailsModal(biomarker)}
                                         />
 
                                         {/* Edit button */}
                                         <Icon
-                                            name='pencil'
+                                            name={currentBiomarkerIsLoading ? 'spinner' : 'pencil'}
                                             className='clickable margin-left-5'
                                             color={canEditMolecules ? 'yellow' : 'orange'}
-                                            loading={this.state.loadingFullBiomarker}
-                                            disabled={this.state.loadingFullBiomarker}
+                                            loading={currentBiomarkerIsLoading}
+                                            disabled={isLoadingFullBiomarker}
                                             title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
                                             onClick={() => this.handleOpenEditBiomarker(biomarker)}
                                         />
@@ -1519,7 +1510,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='copy'
                                             color='teal'
                                             className='clickable margin-left-5'
-                                            disabled={this.state.loadingFullBiomarker}
+                                            disabled={currentBiomarkerIsLoading}
                                             title='Clone biomarker'
                                             onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                         />
@@ -1529,7 +1520,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             name='trash'
                                             className='clickable margin-left-5'
                                             color='red'
-                                            disabled={this.state.loadingFullBiomarker}
+                                            disabled={currentBiomarkerIsLoading}
                                             title='Delete biomarker'
                                             onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                         />
@@ -1622,6 +1613,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeAlgorithm={this.handleChangeAlgorithm}
                             handleChangeFitnessFunction={this.handleChangeFitnessFunction}
                             handleChangeFitnessFunctionOption={this.handleChangeFitnessFunctionOption}
+                            handleChangeCrossValidation={this.handleChangeCrossValidation}
                             handleGoBackStep1={this.handleGoBackStep1}
                             handleGoBackStep2={this.handleGoBackStep2}
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}

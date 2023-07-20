@@ -88,7 +88,7 @@ class CGDSStudyDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class SynCGDSStudy(APIView):
+class SyncCGDSStudy(APIView):
     permission_classes = [permissions.IsAdminUser]  # Only admin users can synchronize CGDS studies
 
     @staticmethod

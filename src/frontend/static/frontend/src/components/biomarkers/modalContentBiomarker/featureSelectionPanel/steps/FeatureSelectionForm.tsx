@@ -1,32 +1,37 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
-import { FitnessFunctionParameters, FitnessFunction } from '../../../types'
+import { FitnessFunctionParameters, FitnessFunction, CrossValidationParameters } from '../../../types'
 import { ClusteringPanel } from './algorithms/ClusteringPanel'
 import { SVMPanel } from './algorithms/SVMPanel'
 import { fitnessFunctionsOptions } from '../../../utils'
 import { RFPanel } from './algorithms/RFPanel'
+import { RandomStateInput } from '../RandomStateInput'
+import { CrossValidationInput } from '../CrossValidationInput'
 
-/** BlindSearch props. */
-interface BlindSearchProps {
+/** FeatureSelectionForm props. */
+interface FeatureSelectionFormProps {
     fitnessFunction: FitnessFunction,
     fitnessFunctionParameters: FitnessFunctionParameters,
+    crossValidationParameters: CrossValidationParameters,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeCrossValidation: <T extends keyof CrossValidationParameters>(key: T, value: any) => void,
     isExpertOn: boolean,
 }
 
 /**
- * Renders a panel with the BlindSearch algorithm options.
- * TODO: rename this component, this is used in BBHA and other panels
+ * Renders a form to set all the Feature Selection parameters.
  * @param props Component props.
  * @returns Component.
  */
-export const BlindSearchPanel = (props: BlindSearchProps) => {
+export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
     const {
         fitnessFunction,
         fitnessFunctionParameters,
+        crossValidationParameters,
         handleChangeFitnessFunction,
         handleChangeFitnessFunctionOption,
+        handleChangeCrossValidation,
         isExpertOn
     } = props
 
@@ -40,7 +45,7 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                 return (
                     <>
                         <ClusteringPanel
-                            settings={fitnessFunctionParameters?.clusteringParameters ?? null}
+                            settings={fitnessFunctionParameters?.clusteringParameters} /* ?? 0} */
                             handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
                         />
                         <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
@@ -71,6 +76,14 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                     }}
                                 />
                             }
+
+                            {/* General fields */}
+                            <RandomStateInput
+                                value={fitnessFunctionParameters.clusteringParameters.randomState}
+                                parameterKey='clusteringParameters'
+                                handleChange={handleChangeFitnessFunctionOption}
+                            />
+                            <CrossValidationInput value={crossValidationParameters.folds} handleChange={handleChangeCrossValidation} />
                         </Form.Group>
                     </>
                 )
@@ -91,32 +104,34 @@ export const BlindSearchPanel = (props: BlindSearchProps) => {
                                 onChange={(_, { name, value }) => handleChangeFitnessFunctionOption('svmParameters', name, value)}
                             />
 
-                            <Form.Input
-                                fluid
-                                label='Random state'
-                                placeholder='An integer number'
-                                type='number'
-                                step={1}
-                                min={0}
-                                name='randomState'
+                            {/* General fields */}
+                            <RandomStateInput
                                 value={fitnessFunctionParameters.svmParameters.randomState}
-                                onChange={(_, { name, value }) => {
-                                    const numVal = value !== '' ? Number(value) : null
-                                    if (numVal !== null && numVal < 0) {
-                                        handleChangeFitnessFunctionOption('svmParameters', name, 0)
-                                    } else {
-                                        handleChangeFitnessFunctionOption('svmParameters', name, numVal)
-                                    }
-                                }} />
+                                parameterKey='svmParameters'
+                                handleChange={handleChangeFitnessFunctionOption}
+                            />
+                            <CrossValidationInput value={crossValidationParameters.folds} handleChange={handleChangeCrossValidation} />
                         </Form.Group>
                     </>
                 )
             case FitnessFunction.RF:
                 return (
-                    <RFPanel
-                        parameters={fitnessFunctionParameters.rfParameters}
-                        handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
-                    />
+                    <>
+                        <RFPanel
+                            parameters={fitnessFunctionParameters.rfParameters}
+                            handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        />
+
+                        {/* General fields */}
+                        <Form.Group widths='equal' style={{ display: isExpertOn ? 'inherit' : 'none' }}>
+                            <RandomStateInput
+                                value={fitnessFunctionParameters.rfParameters.randomState}
+                                parameterKey='rfParameters'
+                                handleChange={handleChangeFitnessFunctionOption}
+                            />
+                            <CrossValidationInput value={crossValidationParameters.folds} handleChange={handleChangeCrossValidation} />
+                        </Form.Group>
+                    </>
                 )
         }
     }

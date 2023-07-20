@@ -20,7 +20,17 @@ class NoBestModelFound(Exception):
 
 class NumberOfSamplesFewerThanCVFolds(Exception):
     """
-    Raised when the number of unique samples is fewer than the number of CrossValidation folds, this is raised in
+    Raised when the number of unique sample classes is fewer than the number of CrossValidation folds, this is raised in
     the StratifiedKFold used in GridSearch during some processes.
     """
+    pass
+
+
+class NoValidSamples(Exception):
+    """Raised when there are no samples after filtering invalid values (NaN, Inf, etc.)."""
+    pass
+
+
+class NoValidMolecules(Exception):
+    """Raised when there is at least one missing molecule in the used dataset."""
     pass

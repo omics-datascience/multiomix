@@ -21,15 +21,15 @@ from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFa
     NumberOfSamplesFewerThanCVFolds
 from common.functions import close_db_connection
 from common.utils import get_subset_of_features
-from common.datasets_utils import get_common_samples, generate_molecules_file, process_chunk, format_data, \
-    generate_clinical_file
+from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
+    generate_clinical_file, generate_molecules_dataframe, check_sample_classes
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
     RFParameters
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
 from statistical_properties.models import StatisticalValidation, MoleculeWithCoefficient
-from user_files.models_choices import MoleculeType, FileType
+from user_files.models_choices import MoleculeType
 
 
 class StatisticalValidationService(object):
@@ -63,39 +63,6 @@ class StatisticalValidationService(object):
             with connection.cursor() as cursor:
                 cursor.execute(query)
 
-    @staticmethod
-    def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[str],
-                        samples_in_common: np.ndarray) -> pd.DataFrame:
-        """Processes a chunk of a DataFrame adding the file type to the index and keeping just the samples in common."""
-        # Only keeps the samples in common
-        chunk = chunk[samples_in_common]
-
-        # Keeps only existing molecules in the current chunk
-        molecules_to_extract = np.intersect1d(chunk.index, molecules)
-        chunk = chunk.loc[molecules_to_extract]
-
-        # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
-        chunk.index = chunk.index + f'_{file_type}'
-
-        return chunk
-
-    @staticmethod
-    def __generate_molecules_dataframe(stat_validation: StatisticalValidation,
-                                       samples_in_common: np.ndarray) -> pd.DataFrame:
-        """Generates the molecules DataFrame for a specific StatisticalValidation with the samples in common."""
-        chunks: List[pd.DataFrame] = []
-        for source, molecules, file_type in stat_validation.get_sources_and_molecules():
-            if source is None:
-                continue
-
-            only_matching = file_type in [FileType.MRNA, FileType.CNA]  # Only genes must be disambiguated
-            chunks.extend([
-                process_chunk(chunk, file_type, molecules, samples_in_common)
-                for chunk in source.get_df_in_chunks(only_matching)
-            ])
-
-        # Concatenates all the chunks for all the molecules
-        return pd.concat(chunks, axis=0, sort=False)
 
     @staticmethod
     def __generate_df_molecules_and_clinical(stat_validation: Union[StatisticalValidation, TrainedModel],
@@ -183,33 +150,15 @@ class StatisticalValidationService(object):
             stat_validation.save()
 
     @staticmethod
-    def __samples_are_fewer_than_folds(clinical_data: np.ndarray, number_of_folds: int) -> bool:
-        """
-        Checks if the number of samples is fewer than the number of folds.
-        Code retrieved from Sklearn model_selection module.
-        @param clinical_data: Clinical data Numpy array.
-        @param number_of_folds: Current number of folds
-        @return: True if the number of samples is fewer than the number of folds (an exception should be raised
-        as the GridSearch will be fail), False otherwise.
-        """
-        classes, y_idx, y_inv = np.unique(clinical_data, return_index=True, return_inverse=True)
-        _, class_perm = np.unique(y_idx, return_inverse=True)
-        y_encoded = class_perm[y_inv]
-        y_counts = np.bincount(y_encoded)
-        return np.all(number_of_folds > y_counts)
-
-    def __compute_trained_model(self, trained_model: TrainedModel, molecules_temp_file_path: str,
-                                clinical_temp_file_path: str, model_parameters: Dict,
-                                cross_validation_folds: int,
-                                stop_event: Event):
+    def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_path: str,
+                                clinical_temp_file_path: str, model_parameters: Dict, stop_event: Event):
         """
         Computes the statistical validation using the params defined by the user.
-        TODO: use stop_event and cross_validation_type
+        TODO: use stop_event
         @param trained_model: StatisticalValidation instance.
         @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
         @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal.
         """
         def score_svm_rf(model: SurvModel, x: pd.DataFrame, y: np.ndarray) -> float:
@@ -253,6 +202,7 @@ class StatisticalValidationService(object):
         molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
         # Stratified CV
+        cross_validation_folds = trained_model.cross_validation_folds
         cv = StratifiedKFold(n_splits=cross_validation_folds, shuffle=True)
 
         # Generates GridSearchCV instance
@@ -318,9 +268,7 @@ class StatisticalValidationService(object):
                                    f'({cross_validation_folds})')
 
         # Checks if there are fewer samples than splits in the CV to prevent ValueError
-        if self.__samples_are_fewer_than_folds(clinical_data, cross_validation_folds):
-            raise NumberOfSamplesFewerThanCVFolds(f'Number of samples: {n_samples} | CV number of folds '
-                                                  f'{cross_validation_folds}')
+        check_sample_classes(trained_model, clinical_data, cross_validation_folds)
 
         # Trains the model
         with warnings.catch_warnings():
@@ -341,7 +289,8 @@ class StatisticalValidationService(object):
         classifier.fit(molecules_df, clinical_data)
         save_model_dump_and_best_score(trained_model, best_model=classifier, best_score=best_score)
 
-    def get_all_expressions(self, stat_validation: StatisticalValidation) -> pd.DataFrame:
+    @staticmethod
+    def get_all_expressions(stat_validation: StatisticalValidation) -> pd.DataFrame:
         """
         Gets a molecules Pandas DataFrame to get all the molecules' expressions for all the samples.
         @param stat_validation: StatisticalValidation instance.
@@ -352,10 +301,10 @@ class StatisticalValidationService(object):
         samples_in_common = get_common_samples(stat_validation)
 
         # Generates all the molecules DataFrame
-        return self.__generate_molecules_dataframe(stat_validation, samples_in_common)
+        return generate_molecules_dataframe(stat_validation, samples_in_common)
 
     def get_molecules_and_clinical_df(self,
-                                      stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                                      stat_validation: StatisticalValidation) -> Tuple[pd.DataFrame, np.ndarray]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the statistical validation.
         @param stat_validation: StatisticalValidation instance.
@@ -367,10 +316,11 @@ class StatisticalValidationService(object):
         molecules_temp_file_path, clinical_temp_file_path = self.__generate_df_molecules_and_clinical(stat_validation,
                                                                                                       samples_in_common)
 
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
-        clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
+        # Gets both DataFrames without NaNs values
+        molecules_df, _clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
+                                                                is_regression=False)
 
-        return molecules_df, clinical_df
+        return molecules_df, clinical_data
 
     def __prepare_and_compute_stat_validation(self, stat_validation: StatisticalValidation,
                                               stop_event: Event) -> Tuple[str, str]:
@@ -392,13 +342,12 @@ class StatisticalValidationService(object):
         return molecules_temp_file_path, clinical_temp_file_path
 
     def __prepare_and_compute_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
-                                            cross_validation_folds: int, stop_event: Event) -> Tuple[str, str]:
+                                            stop_event: Event) -> Tuple[str, str]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the TrainedModel's training process.
         TODO: use stop_event
         @param trained_model: TrainedModel instance.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop signal
         """
         # Get samples in common
@@ -409,7 +358,7 @@ class StatisticalValidationService(object):
                                                                                                       samples_in_common)
 
         self.__compute_trained_model(trained_model, molecules_temp_file_path, clinical_temp_file_path, model_parameters,
-                                     cross_validation_folds, stop_event)
+                                     stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path
 
@@ -490,13 +439,11 @@ class StatisticalValidationService(object):
 
         close_db_connection()
 
-    def eval_trained_model(self, trained_model: TrainedModel, model_parameters: Dict,
-                           cross_validation_folds: int, stop_event: Event) -> None:
+    def eval_trained_model(self, trained_model: TrainedModel, model_parameters: Dict, stop_event: Event) -> None:
         """
         Computes a training to get a good TrainedModel.
         @param trained_model: TrainedModel to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_folds: Number of folds for cross validation.
         @param stop_event: Stop event to cancel the stat_validation
         """
         # Computes the TrainedModel
@@ -515,7 +462,6 @@ class StatisticalValidationService(object):
             molecules_temp_file_path, clinical_temp_file_path = self.__prepare_and_compute_trained_model(
                 trained_model,
                 model_parameters,
-                cross_validation_folds,
                 stop_event
             )
             total_execution_time = time.time() - start
@@ -589,19 +535,17 @@ class StatisticalValidationService(object):
                                                       stat_validation_event)
         self.statistical_validations_futures[stat_validation.pk] = (stat_validation_future, stat_validation_event)
 
-    def add_trained_model_training(self, trained_model: TrainedModel, model_parameters: Dict,
-                                   cross_validation_folds: int,):
+    def add_trained_model_training(self, trained_model: TrainedModel, model_parameters: Dict):
         """
         Adds a new TrainedModel training request to the ThreadPool to be processed.
         @param trained_model: StatisticalValidation to be processed.
         @param model_parameters: A dict with all the model parameters.
-        @param cross_validation_folds: Number of folds for cross validation.
         """
         trained_model_event = Event()
 
         # Submits
         trained_model_future = self.executor.submit(self.eval_trained_model, trained_model, model_parameters,
-                                                    cross_validation_folds, trained_model_event)
+                                                    trained_model_event)
         self.trained_model_futures[trained_model.pk] = (trained_model_future, trained_model_event)
 
     def stop_stat_validation(self, stat_validation: StatisticalValidation):

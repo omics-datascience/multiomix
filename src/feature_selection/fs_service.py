@@ -3,10 +3,11 @@ import time
 import numpy as np
 from threading import Event
 from typing import Dict, Tuple, Optional, Any
-from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin
+from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, TrainedModelState
 from common.utils import limit_between_min_max
-from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
+from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file, \
+    check_sample_classes
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NumberOfSamplesFewerThanCVFolds
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
 from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, SVMParameters, TrainedModel, \
@@ -89,11 +90,11 @@ class FSService(object):
         """
         return n_agents * n_iterations >= settings.MIN_COMBINATIONS_SPARK
 
-    def __compute_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
-                             clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
-                             fitness_function_parameters: Dict[str, Any],
-                             algorithm_parameters: Dict[str, Any],
-                             stop_event: Event) -> bool:
+    def __compute_fs_experiment(self, experiment: FSExperiment, molecules_temp_file_path: str,
+                                clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
+                                fitness_function_parameters: Dict[str, Any],
+                                algorithm_parameters: Dict[str, Any],
+                                cross_validation_parameters: Dict[str, Any], stop_event: Event) -> bool:
         """
         Computes the Feature Selection experiment using the params defined by the user.
         TODO: use stop_event
@@ -103,15 +104,20 @@ class FSService(object):
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
+        @param cross_validation_parameters: Parameters of the CrossValidation process.
         @param stop_event: Stop signal.
         @return A flag to indicate whether the experiment is running in spark
         """
         # Creates TrainedModel instance
+        cross_validation_folds = int(cross_validation_parameters['folds'])
+        cross_validation_folds = limit_between_min_max(cross_validation_folds, min_value=3, max_value=10)
+
         trained_model: TrainedModel = TrainedModel.objects.create(
             name=f'From FS for biomarker {experiment.created_biomarker.name}',
             biomarker=experiment.created_biomarker,
             fitness_function=fit_fun_enum,
             state=BiomarkerState.IN_PROCESS,
+            cross_validation_folds=cross_validation_folds,
             fs_experiment=experiment
         )
 
@@ -124,10 +130,14 @@ class FSService(object):
         molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
                                                                is_regression)
 
+        # Checks if there are fewer samples than splits in the CV to prevent ValueError
+        check_sample_classes(trained_model, clinical_data, cross_validation_folds)
+
         # Gets FS algorithm
         if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
             best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
-                                                                            is_clustering, clustering_scoring_method)
+                                                                            is_clustering, clustering_scoring_method,
+                                                                            trained_model.cross_validation_folds)
         elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
             bbha_parameters = algorithm_parameters['BBHA']
             n_stars = int(bbha_parameters['numberOfStars'])
@@ -173,7 +183,8 @@ class FSService(object):
                     n_iterations=n_bbha_iterations,
                     clinical_data=clinical_data,
                     is_clustering=is_clustering,
-                    clustering_score_method=clustering_scoring_method
+                    clustering_score_method=clustering_scoring_method,
+                    cross_validation_folds=trained_model.cross_validation_folds
                 )
         elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
             cox_regression_parameters = algorithm_parameters['coxRegression']
@@ -203,28 +214,30 @@ class FSService(object):
             # Stores molecules in the target biomarker, the best model and its fitness value
             save_molecule_identifiers(experiment.created_biomarker, best_features)
 
-            trained_model.state = BiomarkerState.COMPLETED
+            trained_model.state = TrainedModelState.COMPLETED
 
             # Stores the trained model and best score
             if best_model is not None and best_score is not None:
                 save_model_dump_and_best_score(trained_model, best_model, best_score)
         else:
-            trained_model.state = BiomarkerState.NO_FEATURES_FOUND
+            trained_model.state = TrainedModelState.NO_FEATURES_FOUND
 
         trained_model.save(update_fields=['state'])
 
         return False  # It is not running in spark
 
-    def __prepare_and_compute_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
-                                         fitness_function_parameters: Dict[str, Any],
-                                         algorithm_parameters: Dict[str, Any],
-                                         stop_event: Event) -> Tuple[str, str, bool]:
+    def __prepare_and_compute_fs_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
+                                            fitness_function_parameters: Dict[str, Any],
+                                            algorithm_parameters: Dict[str, Any],
+                                            cross_validation_parameters: Dict[str, Any],
+                                            stop_event: Event) -> Tuple[str, str, bool]:
         """
         Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
         @param experiment: FSExperiment instance.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
+        @param cross_validation_parameters: Parameters of the CrossValidation process.
         @param stop_event: Stop signal.
         @return Both molecules and clinical files paths.
         """
@@ -237,9 +250,9 @@ class FSService(object):
             samples_in_common
         )
 
-        running_in_spark = self.__compute_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
-                                                     fit_fun_enum, fitness_function_parameters,
-                                                     algorithm_parameters, stop_event)
+        running_in_spark = self.__compute_fs_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
+                                                        fit_fun_enum, fitness_function_parameters,
+                                                        cross_validation_parameters, algorithm_parameters, stop_event)
 
         return molecules_temp_file_path, clinical_temp_file_path, running_in_spark
 
@@ -247,13 +260,14 @@ class FSService(object):
     def eval_feature_selection_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
                                           fitness_function_parameters: Dict[str, Any],
                                           algorithm_parameters: Dict[str, Any],
-                                          stop_event: Event):
+                                          cross_validation_parameters: Dict[str, Any], stop_event: Event):
         """
         Computes a Feature Selection experiment.
         @param experiment: FSExperiment to be processed.
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
         @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
+        @param cross_validation_parameters: Parameters of the CrossValidation process.
         @param stop_event: Stop event to cancel the experiment
         """
         # Resulting Biomarker instance from the FS experiment.
@@ -272,8 +286,9 @@ class FSService(object):
 
             # Computes Feature Selection experiment
             start = time.time()
-            molecules_temp_file_path, clinical_temp_file_path, running_in_spark = self.__prepare_and_compute_experiment(
-                experiment, fit_fun_enum, fitness_function_parameters, algorithm_parameters, stop_event
+            molecules_temp_file_path, clinical_temp_file_path, running_in_spark = self.__prepare_and_compute_fs_experiment(
+                experiment, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
+                cross_validation_parameters, stop_event
             )
             total_execution_time = time.time() - start
             logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
@@ -302,6 +317,11 @@ class FSService(object):
             self.__commit_or_rollback(is_commit=False, experiment=experiment)
             logging.error('MongoDB connection timeout!')
             biomarker.state = BiomarkerState.WAITING_FOR_QUEUE
+        except NumberOfSamplesFewerThanCVFolds as ex:
+            self.__commit_or_rollback(is_commit=False, experiment=experiment)
+            logging.error(f'ValueError raised due to number of member of each class being fewer than number '
+                          f'of CV folds: {ex}')
+            biomarker.state = BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS
         except ExperimentStopped:
             # If user cancel the experiment, discard changes
             logging.warning(f'FSExperiment {experiment.pk} was stopped')
@@ -324,6 +344,11 @@ class FSService(object):
         biomarker.save()
         experiment.save()
 
+        # Maybe the experiment didn't find any feature. NOTE: needs to be checked after saving the experiment
+        if experiment.best_model.state == TrainedModelState.NO_FEATURES_FOUND:
+            biomarker.state = BiomarkerState.NO_FEATURES_FOUND
+            biomarker.save(update_fields=['state'])
+
         # Removes key
         self.__removes_experiment_future(experiment.pk)
 
@@ -344,12 +369,14 @@ class FSService(object):
         experiment.save()
 
     def add_experiment(self, experiment: FSExperiment, fit_fun_enum: FitnessFunction,
-                       fitness_function_parameters: Dict[str, Any], algorithm_parameters: Dict[str, Any]):
+                       fitness_function_parameters: Dict[str, Any], cross_validation_parameters: Dict[str, Any],
+                       algorithm_parameters: Dict[str, Any]):
         """
         Adds a Feature Selection experiment to the ThreadPool to be processed
         @param experiment: FSExperiment to be processed
         @param fit_fun_enum: Selected fitness function to compute.
         @param fitness_function_parameters: Parameters of the fitness function to compute.
+        @param cross_validation_parameters: Parameters of the CrossValidation process.
         @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
         """
         experiment_event = Event()
@@ -359,7 +386,8 @@ class FSService(object):
 
         # Submits
         experiment_future = self.executor.submit(self.eval_feature_selection_experiment, experiment, fit_fun_enum,
-                                                 fitness_function_parameters, algorithm_parameters, experiment_event)
+                                                 fitness_function_parameters, algorithm_parameters,
+                                                 cross_validation_parameters, experiment_event)
         self.fs_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
 
     def stop_experiment(self, experiment: FSExperiment):

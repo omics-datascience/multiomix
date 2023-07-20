@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { Form, Grid, Segment } from 'semantic-ui-react'
-import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters } from '../../../types'
-import { BlindSearchPanel } from './BlindSearchPanel'
+import { CrossValidationParameters, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters } from '../../../types'
+import { FeatureSelectionForm } from './FeatureSelectionForm'
 import './../featureSelection.css'
 import { BBHAAdvanced } from './advancedMode/BBHAAdvanced'
 import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
@@ -16,6 +16,7 @@ interface FeatureSelectionStep3Props {
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
     handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeCrossValidation: <T extends keyof CrossValidationParameters>(key: T, value: any) => void,
     handleChangeAdvanceAlgorithm: (advancedAlgorithmParameters: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
@@ -26,6 +27,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleChangeAlgorithm,
         handleChangeFitnessFunction,
         handleChangeFitnessFunctionOption,
+        handleChangeCrossValidation,
         handleChangeAdvanceAlgorithm,
         handleSwitchAdvanceAlgorithm
     } = props
@@ -35,6 +37,11 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         [props.featureSelection.selectedBiomarker?.id]
     )
 
+    const validateIfNeedExpand = (): boolean => {
+        return ![
+            FeatureSelectionAlgorithm.BLIND_SEARCH
+        ].includes(featureSelection.algorithm)
+    }
     const blindSearchIsDisabled = numberOfMolecules > maxFeaturesBlindSearch
     const metaheuristicsAreDisabled = numberOfMolecules < minFeaturesMetaheuristics
 
@@ -42,21 +49,25 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         switch (featureSelection.algorithm) {
             case FeatureSelectionAlgorithm.BLIND_SEARCH:
                 return (
-                    <BlindSearchPanel
+                    <FeatureSelectionForm
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
+                        crossValidationParameters={featureSelection.crossValidationParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        handleChangeCrossValidation={handleChangeCrossValidation}
                         isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
                 return (
-                    <BlindSearchPanel
+                    <FeatureSelectionForm
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
+                        crossValidationParameters={featureSelection.crossValidationParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        handleChangeCrossValidation={handleChangeCrossValidation}
                         isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
@@ -66,11 +77,13 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 )
             case FeatureSelectionAlgorithm.PSO:
                 return (
-                    <BlindSearchPanel
+                    <FeatureSelectionForm
                         fitnessFunction={featureSelection.fitnessFunction}
                         fitnessFunctionParameters={featureSelection.fitnessFunctionParameters}
+                        crossValidationParameters={featureSelection.crossValidationParameters}
                         handleChangeFitnessFunction={handleChangeFitnessFunction}
                         handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
+                        handleChangeCrossValidation={handleChangeCrossValidation}
                         isExpertOn={featureSelection.advancedAlgorithmParameters.isActive}
                     />
                 )
@@ -157,7 +170,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
             <Segment>
                 <Grid>
                     <Grid.Row columns={2} divided>
-                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 10 : 16}>
+                        <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive && validateIfNeedExpand() ? 10 : 16}>
                             {algorithmSelection()}
                         </Grid.Column>
                         <Grid.Column width={featureSelection.advancedAlgorithmParameters.isActive ? 6 : undefined}>

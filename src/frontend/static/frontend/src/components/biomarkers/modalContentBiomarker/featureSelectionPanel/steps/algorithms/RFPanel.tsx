@@ -34,9 +34,10 @@ export const RFPanel = (props: RFPanelProps) => {
             <Form.Input
                 type='number'
                 label='Maximum depth'
+                placeholder='An integer number'
                 name='maxDepth'
                 min={3}
-                value={parameters.maxDepth}
+                value={parameters.maxDepth ?? ''}
                 onChange={(_event, { name, value }) => handleChangeFitnessFunctionOption('rfParameters', name, Number(value))}
             />
         </>

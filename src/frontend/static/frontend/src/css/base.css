@@ -257,3 +257,10 @@ h2.menu,
     margin-left: auto !important;
     order: 2;
 }
+
+/* Pulls down the button when set in the `customElements` prop of `PaginatedTable` component */
+.custom-table-field {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
