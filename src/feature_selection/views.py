@@ -393,7 +393,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
                 fs_experiment.execution_time = exec_time
                 fs_experiment.save(update_fields=['execution_time'])
             except Exception as ex:
-                logging.error(f'Could not save execution time for FSExperiment ID {fs_experiment.pk}. '
+                logging.error(f'Could not save execution time for FSExperiment with pk {fs_experiment.pk}. '
                               f'Leaving default...')
                 logging.exception(ex)
 
@@ -412,7 +412,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         elif state == 'CANCELLED':
             created_biomarker.state = BiomarkerState.STOPPED
         else:
-            logging.warning(f'Job failed with state: {state}. Setting as FINISHED_WITH_ERROR')
+            logging.warning(f'Job {fs_experiment.pk} failed with state: {state}. Setting as FINISHED_WITH_ERROR')
             created_biomarker.state = BiomarkerState.FINISHED_WITH_ERROR
 
         created_biomarker.save(update_fields=['state'])
