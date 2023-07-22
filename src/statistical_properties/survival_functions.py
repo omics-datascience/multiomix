@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from lifelines import KaplanMeierFitter, CoxPHFitter
 from lifelines.statistics import logrank_test
-from common.datasets_utils import clinical_df_to_struct_array
 from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
 
