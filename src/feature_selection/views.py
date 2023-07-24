@@ -186,7 +186,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         """Iterates over rows generating some columns with Clustering model parameters"""
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
-        number_of_clusters, algorithm_description, scoring_method = params[0], params[1], params[4]
+        number_of_clusters, algorithm_description, scoring_method = params[0], params[2], params[4]
         algorithm = ClusteringAlgorithm.K_MEANS if algorithm_description == 'k-means' else ClusteringAlgorithm.SPECTRAL
         scoring = ClusteringScoringMethod.C_INDEX if scoring_method == 'concordance-index' \
             else ClusteringScoringMethod.LOG_LIKELIHOOD
