@@ -19,7 +19,7 @@ statsmodels==0.14.0
 django-webpack-loader==0.7.0
 django-email-verification==0.0.7
 lifelines==0.25.8
-ggca==0.4.1
+# ggca==0.4.1
 django-chunked-upload==2.0.0
 drf-writable-nested==0.7.0
 django-querysetsequence==0.16

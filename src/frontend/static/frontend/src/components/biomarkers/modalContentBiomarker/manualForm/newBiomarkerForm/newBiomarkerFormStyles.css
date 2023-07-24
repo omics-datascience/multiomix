@@ -19,7 +19,7 @@
     align-self: flex-end;
     display: flex;
     justify-self: flex-end;
-    margin-top: 50px;
+    margin-top: 0.5rem;
 }
 
 .biomarkers--side--bar--validation--items {

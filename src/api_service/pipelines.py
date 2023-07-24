@@ -13,7 +13,7 @@ from django.conf import settings
 from typing import Tuple, Type, List, cast, Optional, Union, Iterator
 from .models import ExperimentSource, Experiment, GeneGEMCombination
 from django.db import connection
-import ggca
+# import ggca
 import logging
 from multiprocessing import Process, Pool
 
@@ -25,7 +25,7 @@ def run_ggca(
     collect_gem_dataset: bool,
     is_cpg_analysis: bool,
     keep_top_n: Optional[int]
-) -> Tuple[List[ggca.CorResult], int, int]:
+) -> Tuple[List, int, int]:
     """
     Runs GGCA correlation analysis.
     @param mrna_file_path: mRNA temp file path.
@@ -37,7 +37,9 @@ def run_ggca(
     @return: A tuple with a vec of CorResult, the number of combinations before truncating by 'keep_top_n' parameter
     and the number of combinations evaluated.
     """
-    return ggca.correlate(
+    return None
+    """
+    ggca.correlate(
         mrna_file_path,
         gem_file_path,
         correlation_method=experiment.correlation_method,
@@ -48,7 +50,8 @@ def run_ggca(
         gem_contains_cpg=is_cpg_analysis,
         collect_gem_dataset=collect_gem_dataset,
         keep_top_n=keep_top_n
-    )
+    ) 
+    """
 
 
 class PipelineManager(object):
@@ -279,7 +282,7 @@ class PipelineManager(object):
         for i in range(0, len(lst), page_size):
             yield lst[i:i + page_size]
 
-    def __save_result_in_db(self, combinations: List[ggca.CorResult], experiment: Experiment, table_name: str):
+    def __save_result_in_db(self, combinations: List, experiment: Experiment, table_name: str):
         """
         Saves in Db a list of combinations resulting from an experiment
         @param combinations: List of combinations to insert in DB
@@ -354,7 +357,7 @@ class PipelineManager(object):
         return temp_file, number_of_rows, gem_platform_df is not None
 
     @staticmethod
-    def __concatenate_gene_and_cpg_as_gem(combinations: List[ggca.CorResult]) -> List[ggca.CorResult]:
+    def __concatenate_gene_and_cpg_as_gem(combinations: List) -> List:
         """
         Concatenates Gene and CpG Site ID for methylation results
         @param combinations: List of analysis result combinations
