@@ -277,7 +277,7 @@ class FSService(object):
         molecules_temp_file_path: Optional[str] = None
         clinical_temp_file_path: Optional[str] = None
         try:
-            logging.warning(f'ID FSExperiment -> {biomarker.pk}')
+            logging.warning(f'ID FSExperiment -> {experiment.pk}')
             # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
             # with exceptions thrown in subprocesses
             if self.use_transaction:
@@ -291,7 +291,7 @@ class FSService(object):
                 cross_validation_parameters, stop_event
             )
             total_execution_time = time.time() - start
-            logging.warning(f'FSExperiment {biomarker.pk} total time -> {total_execution_time} seconds')
+            logging.warning(f'FSExperiment {experiment.pk} total time -> {total_execution_time} seconds')
 
             # If user cancel the experiment, discard changes
             if stop_event.is_set():
