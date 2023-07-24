@@ -72,7 +72,7 @@ export const MoleculeOption = (props: PropsMoleculeOption) => {
     return (
         <div className='biomarkers--molecules--container--item' key={title + molecule.value}>
             <Button
-                color='red'
+                color='orange'
                 compact
                 className='biomarkers--molecules--container--item biomarker--section--button'
                 disabled={!canRemove}
