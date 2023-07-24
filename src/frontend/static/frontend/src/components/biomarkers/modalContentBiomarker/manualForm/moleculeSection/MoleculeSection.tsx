@@ -1,12 +1,12 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Dimmer, Grid, Header, Loader } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
 import { List } from 'react-virtualized'
-import { MoleculeDinamicRow } from './MoleculeDinamicRow'
 
 // Styles
 import './moleculeSectionStyles.css'
+import { MoleculeDynamicRow } from './MoleculeDynamicRow'
 
 /** MoleculeSection's props. */
 interface MoleculeSectionProps {
@@ -18,7 +18,8 @@ interface MoleculeSectionProps {
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleRestartSection: (sector: BiomarkerType) => void,
 }
-const MoleculeSection = memo(({
+
+export const MoleculeSection = ({
     title,
     biomarkerFormData,
     handleRemoveMolecule,
@@ -31,37 +32,36 @@ const MoleculeSection = memo(({
     const [parentWidth, setParentWidth] = useState(0)
     const [parentHeight, setParentHeight] = useState(0)
     let rowCount = 0
+
     /**
      * Filter data to show in the section considering user search.
      * @returns Filtered data.
      */
-    const dataFiltered = useMemo((): MoleculesSectionData[][] => {
+    const getDataFiltered = (): MoleculesSectionData[][] => {
         const data = biomarkerFormData.data.filter(item =>
-            (
-                !Array.isArray(item.value) && item.value.includes(searchInput)
-            ) ||
-            (
-                Array.isArray(item.value) && item.value.some(itemVal => itemVal.includes(searchInput))
-            )
+            (!Array.isArray(item.value) && item.value.includes(searchInput)) ||
+            (Array.isArray(item.value) && item.value.some(itemVal => itemVal.includes(searchInput)))
         )
-        const resultado: MoleculesSectionData[][] = []
-        let subarreglo: MoleculesSectionData[] = []
+
+        const result: MoleculesSectionData[][] = []
+        let subArray: MoleculesSectionData[] = []
         for (let i = 0; i < data.length; i++) {
             if (Array.isArray(data[i].value)) {
                 rowCount += 1
-                resultado.push([data[i]])
+                result.push([data[i]])
             } else {
-                subarreglo.push(data[i])
+                subArray.push(data[i])
 
-                if (subarreglo.length === 3 || i === data.length - 1) {
+                if (subArray.length === 3 || i === data.length - 1) {
                     rowCount += 1
-                    resultado.push(subarreglo)
-                    subarreglo = []
+                    result.push(subArray)
+                    subArray = []
                 }
             }
         }
-        return resultado
-    }, [biomarkerFormData, searchInput])
+        return result
+    }
+
     useEffect(() => {
         const updateParentSize = () => {
             if (parentRef.current) {
@@ -79,6 +79,8 @@ const MoleculeSection = memo(({
         }
     }, [])
 
+    const dataFiltered = getDataFiltered()
+
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
             <Header as='h5'>{title}</Header>
@@ -87,7 +89,6 @@ const MoleculeSection = memo(({
                 handleChange={setSearchInput}
                 handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)}
                 handleRestartSection={() => handleRestartSection(title)}
-
             />
 
             <div className='biomarkers--molecules--container table-bordered' ref={parentRef}>
@@ -99,12 +100,12 @@ const MoleculeSection = memo(({
                     width={parentWidth}
                     height={parentHeight}
                     rowCount={rowCount}
-                    rowHeight={80}
+                    rowHeight={50}
                     rowRenderer={({ index, key, style }) => {
                         const item = dataFiltered[index]
                         return (
                             <div key={key} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <MoleculeDinamicRow
+                                <MoleculeDynamicRow
                                     content={item}
                                     handleRemoveMolecule={handleRemoveMolecule}
                                     handleSelectOptionMolecule={handleSelectOptionMolecule}
@@ -117,7 +118,4 @@ const MoleculeSection = memo(({
             </div >
         </Grid.Column >
     )
-})
-MoleculeSection.displayName = 'MoleculeSection'
-
-export default MoleculeSection
+}

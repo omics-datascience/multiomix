@@ -188,8 +188,6 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                             fluid
                             onClick={() => props.handleChangeConfirmModalState(true, 'You are going to reset the form and clean all the data inserted', 'Are you sure?', props.cleanForm)}
                             disabled={props.biomarkerForm.validation.isLoading}
-                            // TODO: chequear la opinion antes de borrar isFormEmpty
-                            // disabled={props.isFormEmpty()}
                         />
                     </Container>
                 }

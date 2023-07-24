@@ -1,21 +1,28 @@
-import React, { FC, useRef } from 'react'
+import React, { useRef } from 'react'
 import { BiomarkerType, MoleculesSectionData } from '../../../types'
 import { MoleculeOption } from './MoleculeOption'
 
 // Styles
 import './moleculeSectionStyles.css'
 
-// Componente interno para medir la altura del contenido dinámico en cada fila
-interface Props {
-    content: MoleculesSectionData[];
+/** MoleculeDynamicRow props. */
+interface MoleculeDynamicRowProps {
+    content: MoleculesSectionData[],
+    title: BiomarkerType,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
-    title: BiomarkerType,
 
 }
 
-export const MoleculeDinamicRow: FC<Props> = ({ title, content, handleSelectOptionMolecule, handleRemoveMolecule }) => {
+/**
+ * Internal component to measure the height of the dynamic content in each row.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const MoleculeDynamicRow = (props: MoleculeDynamicRowProps) => {
     const measuredRef = useRef<HTMLDivElement>(null)
+
+    const { title, content, handleSelectOptionMolecule, handleRemoveMolecule } = props
 
     return (
         <div

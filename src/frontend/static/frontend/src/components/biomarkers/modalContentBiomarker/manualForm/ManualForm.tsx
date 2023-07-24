@@ -3,7 +3,7 @@ import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
-import MoleculesSectionsContainer from './MoleculeSectionContainer'
+import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
 
 /** ManualForm's props. */
 interface ManualFormProps {

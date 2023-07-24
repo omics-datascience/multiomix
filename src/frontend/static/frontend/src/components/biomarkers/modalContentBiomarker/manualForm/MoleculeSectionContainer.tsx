@@ -1,7 +1,7 @@
-import React, { memo } from 'react'
+import React from 'react'
 import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData } from './../../types'
-import MoleculeSection from './moleculeSection/MoleculeSection'
+import { MoleculeSection } from './moleculeSection/MoleculeSection'
 
 interface Props {
     biomarkerForm: FormBiomarkerData,
@@ -10,7 +10,8 @@ interface Props {
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleRestartSection: (sector: BiomarkerType) => void,
 }
-const MoleculesSectionsContainer = memo(({
+
+export const MoleculesSectionsContainer = ({
     biomarkerForm,
     handleRemoveMolecule,
     handleSelectOptionMolecule,
@@ -36,8 +37,4 @@ const MoleculesSectionsContainer = memo(({
             </Grid>
         </Grid.Column>
     )
-})
-
-MoleculesSectionsContainer.displayName = 'MoleculesSectionsContainer'
-
-export default MoleculesSectionsContainer
+}
