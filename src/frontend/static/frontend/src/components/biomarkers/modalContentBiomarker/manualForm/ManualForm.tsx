@@ -2,8 +2,8 @@ import React from 'react'
 import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
-import { MoleculeSection } from './moleculeSection/MoleculeSection'
 import { NameOfCGDSDataset } from '../../../../utils/interfaces'
+import MoleculesSectionsContainer from './MoleculeSectionContainer'
 
 /** ManualForm's props. */
 interface ManualFormProps {
@@ -24,6 +24,7 @@ interface ManualFormProps {
     handleGenesSymbols: (genes: string[]) => void,
     handleSelectOptionMolecule: (mol: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
+    handleRestartSection: (sector: BiomarkerType) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
@@ -54,21 +55,13 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleChangeCheckBox={props.handleChangeCheckBox}
                 />
             </Grid.Column>
-            <Grid.Column width={12}>
-                <Grid columns={2} stackable className='biomarkers--modal--container'>
-                    {Object.values(BiomarkerType).map(item => (
-                        <MoleculeSection
-                            key={item}
-                            title={item}
-                            canEditMolecules={props.biomarkerForm.canEditMolecules}
-                            biomarkerFormData={props.biomarkerForm.moleculesSection[item]}
-                            handleRemoveMolecule={props.handleRemoveMolecule}
-                            handleSelectOptionMolecule={props.handleSelectOptionMolecule}
-                            handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
-                        />
-                    ))}
-                </Grid>
-            </Grid.Column>
+            <MoleculesSectionsContainer
+                biomarkerForm={props.biomarkerForm}
+                handleRemoveMolecule={props.handleRemoveMolecule}
+                handleSelectOptionMolecule={props.handleSelectOptionMolecule}
+                handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
+                handleRestartSection={props.handleRestartSection}
+            />
         </Grid >
     )
 }

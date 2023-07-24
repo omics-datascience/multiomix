@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
-import { Button, Dimmer, Grid, Header, Icon, Loader, Segment } from 'semantic-ui-react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { Dimmer, Grid, Header, Loader } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
+import { List } from 'react-virtualized'
+import { MoleculeDinamicRow } from './MoleculeDinamicRow'
 
 // Styles
 import './moleculeSectionStyles.css'
@@ -11,49 +13,71 @@ interface MoleculeSectionProps {
     title: BiomarkerType,
     biomarkerFormData: MoleculeSectionItem,
     /** If true, the user can edit the molecules in the Biomarker. */
-    canEditMolecules: boolean,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
+    handleRestartSection: (sector: BiomarkerType) => void,
 }
-
-/**
- * Renders a section to manage a specific type of molecules.
- * @param props Component props.
- * @returns Component.
- */
-export const MoleculeSection = (props: MoleculeSectionProps) => {
+const MoleculeSection = memo(({
+    title,
+    biomarkerFormData,
+    handleRemoveMolecule,
+    handleSelectOptionMolecule,
+    handleRemoveInvalidGenes,
+    handleRestartSection
+}: MoleculeSectionProps) => {
+    const parentRef = useRef<HTMLDivElement>(null)
     const [searchInput, setSearchInput] = useState<string>('')
-    const {
-        title,
-        biomarkerFormData,
-        canEditMolecules,
-        handleRemoveMolecule,
-        handleSelectOptionMolecule,
-        handleRemoveInvalidGenes
-    } = props
-
-    const dataToShow = biomarkerFormData.data // For short
-
+    const [parentWidth, setParentWidth] = useState(0)
+    const [parentHeight, setParentHeight] = useState(0)
+    let rowCount = 0
     /**
      * Filter data to show in the section considering user search.
      * @returns Filtered data.
      */
-    const dataFiltered = (): MoleculesSectionData[] => {
-        const moleculeToSearch = searchInput.toUpperCase().trim()
+    const dataFiltered = useMemo((): MoleculesSectionData[][] => {
+        const data = biomarkerFormData.data.filter(item =>
+            (
+                !Array.isArray(item.value) && item.value.includes(searchInput)
+            ) ||
+            (
+                Array.isArray(item.value) && item.value.some(itemVal => itemVal.includes(searchInput))
+            )
+        )
+        const resultado: MoleculesSectionData[][] = []
+        let subarreglo: MoleculesSectionData[] = []
+        for (let i = 0; i < data.length; i++) {
+            if (Array.isArray(data[i].value)) {
+                rowCount += 1
+                resultado.push([data[i]])
+            } else {
+                subarreglo.push(data[i])
 
-        if (moleculeToSearch === '') {
-            return dataToShow
+                if (subarreglo.length === 3 || i === data.length - 1) {
+                    rowCount += 1
+                    resultado.push(subarreglo)
+                    subarreglo = []
+                }
+            }
+        }
+        return resultado
+    }, [biomarkerFormData, searchInput])
+    useEffect(() => {
+        const updateParentSize = () => {
+            if (parentRef.current) {
+                const { width, height } = parentRef.current.getBoundingClientRect()
+                setParentWidth(width)
+                setParentHeight(height)
+            }
         }
 
-        return dataToShow.filter((item) => {
-            if (Array.isArray(item.value)) {
-                return item.value.some(itemValue => itemValue.toUpperCase().startsWith(moleculeToSearch))
-            }
+        window.addEventListener('resize', updateParentSize)
+        updateParentSize()
 
-            return item.value.toUpperCase().startsWith(moleculeToSearch)
-        })
-    }
+        return () => {
+            window.removeEventListener('resize', updateParentSize)
+        }
+    }, [])
 
     return (
         <Grid.Column width={8} className='biomarkers--molecules--container--grid'>
@@ -62,59 +86,38 @@ export const MoleculeSection = (props: MoleculeSectionProps) => {
             <SearchMoleculesInput
                 handleChange={setSearchInput}
                 handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)}
-                canEditMolecules={canEditMolecules}
+                handleRestartSection={() => handleRestartSection(title)}
+
             />
 
-            <Segment className='biomarkers--molecules--container table-bordered'>
+            <div className='biomarkers--molecules--container table-bordered' ref={parentRef}>
                 <Dimmer active={biomarkerFormData.isLoading} inverted>
                     <Loader />
                 </Dimmer>
 
-                {dataFiltered().map((mol, index) => {
-                    if (mol.isValid) {
+                <List
+                    width={parentWidth}
+                    height={parentHeight}
+                    rowCount={rowCount}
+                    rowHeight={80}
+                    rowRenderer={({ index, key, style }) => {
+                        const item = dataFiltered[index]
                         return (
-                            <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                                <Button color='green' compact className='biomarkers--molecules--container--item biomarker--section--button'>
-                                    {mol.value}
-
-                                    {/* If user cannot edit the Biomarker, then he cannot remove molecules */}
-                                    {canEditMolecules &&
-                                        <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon'/>
-                                    }
-                                </Button>
+                            <div key={key} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <MoleculeDinamicRow
+                                    content={item}
+                                    handleRemoveMolecule={handleRemoveMolecule}
+                                    handleSelectOptionMolecule={handleSelectOptionMolecule}
+                                    title={title}
+                                />
                             </div>
                         )
-                    }
-
-                    // If it's an array, it's a yellow button (ambiguous molecule)
-                    if (Array.isArray(mol.value)) {
-                        const moleculeKey = index + title + mol.value.length
-                        return (
-                            <Segment key={moleculeKey} className="biomarkers--molecules--container--item margin-right-1">
-                                {mol.value.map((item) => (
-                                    <Button key={moleculeKey + item} color='yellow' compact onClick={() => { handleSelectOptionMolecule(mol, title, item) }} >
-                                        {item}
-                                    </Button>
-                                ))}
-                            </Segment>
-                        )
-                    }
-
-                    // Molecule with error
-                    return (
-                        <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                            <Button color='orange' compact className='biomarker--section--button'>
-                                {mol.value}
-
-                                {/* If user cannot edit the Biomarker, then he cannot remove molecules */}
-                                {canEditMolecules &&
-                                    <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
-                                }
-                            </Button>
-                        </div>
-                    )
-                })}
-            </Segment>
-        </Grid.Column>
+                    }}
+                />
+            </div >
+        </Grid.Column >
     )
-}
+})
+MoleculeSection.displayName = 'MoleculeSection'
+
+export default MoleculeSection

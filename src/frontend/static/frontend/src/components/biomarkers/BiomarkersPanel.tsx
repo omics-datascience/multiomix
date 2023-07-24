@@ -381,20 +381,33 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param selectedOption Selected option.
      */
     handleSelectOptionMolecule = (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => {
-        const formBiomarker: FormBiomarkerData = { ...this.state.formBiomarker }
+        const formBiomarker = this.state.formBiomarker
         const indexToSelect = formBiomarker.moleculesSection[section].data.findIndex((item) => isEqual(item.value, moleculeToDisambiguate.value))
 
         // Checks if the molecule is already a valid one
         const exists = formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
+        const data: MoleculesSectionData[] = formBiomarker.moleculesSection[section].data
+        data.splice(indexToSelect, 1)
         if (!exists) {
-            formBiomarker.moleculesSection[section].data[indexToSelect].isValid = true
-            formBiomarker.moleculesSection[section].data[indexToSelect].value = selectedOption
-        } else {
-            // If exists a valid molecule with the same name than the selected option, removes the molecule from the list
-            formBiomarker.moleculesSection[section].data.splice(indexToSelect, 1)
+            data.push({
+                isValid: true,
+                value: selectedOption
+            })
         }
 
-        this.setState({ formBiomarker })
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesSection: {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [section]: {
+                        ...this.state.formBiomarker.moleculesSection[section],
+                        data
+                    }
+                }
+            }
+        })
     }
 
     /**
@@ -562,9 +575,39 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param sector string of the sector selected to change state
      */
     handleRemoveInvalidGenes = (sector: BiomarkerType): void => {
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker.moleculesSection[sector].data = formBiomarker.moleculesSection[sector].data.filter(gen => gen.isValid || Array.isArray(gen.value))
-        this.setState({ formBiomarker })
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesSection: {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [sector]: {
+                        ...this.state.formBiomarker.moleculesSection[sector],
+                        data: this.state.formBiomarker.moleculesSection[sector].data.filter(gen => gen.isValid || Array.isArray(gen.value))
+                    }
+                }
+            }
+        })
+    }
+
+    /**
+     * Method that removes all the molecules of the sector selecterd
+     * @param sector string of the sector selected to change state
+     */
+    handleRestartSection = (sector: BiomarkerType): void => {
+        this.setState({
+            ...this.state,
+            formBiomarker: {
+                ...this.state.formBiomarker,
+                moleculesSection: {
+                    ...this.state.formBiomarker.moleculesSection,
+                    [sector]: {
+                        ...this.state.formBiomarker.moleculesSection[sector],
+                        data: []
+                    }
+                }
+            }
+        })
     }
 
     /**
@@ -1597,6 +1640,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleValidateForm={this.handleValidateForm}
                             handleSendForm={this.createBiomarker}
                             handleChangeCheckBox={this.handleChangeCheckBox}
+                            handleRestartSection={this.handleRestartSection}
                         />
                     }
 
