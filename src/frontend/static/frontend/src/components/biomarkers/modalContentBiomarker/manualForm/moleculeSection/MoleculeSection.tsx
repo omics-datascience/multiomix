@@ -3,15 +3,17 @@ import { Dimmer, Grid, Header, Loader } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData, MoleculeSectionItem } from '../../../types'
 import { SearchMoleculesInput } from './SearchMoleculesInput'
 import { List } from 'react-virtualized'
+import { MoleculeDynamicRow } from './MoleculeDynamicRow'
 
 // Styles
 import './moleculeSectionStyles.css'
-import { MoleculeDynamicRow } from './MoleculeDynamicRow'
 
 /** MoleculeSection's props. */
 interface MoleculeSectionProps {
     title: BiomarkerType,
     biomarkerFormData: MoleculeSectionItem,
+    /** If true, the user can edit the molecules in the Biomarker. */
+    canEditMolecules: boolean,
     /** If true, the user can edit the molecules in the Biomarker. */
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
@@ -21,11 +23,12 @@ interface MoleculeSectionProps {
 
 export const MoleculeSection = ({
     title,
-    biomarkerFormData,
+    biomarkerFormData: sectionFormData,
     handleRemoveMolecule,
     handleSelectOptionMolecule,
     handleRemoveInvalidGenes,
-    handleRestartSection
+    handleRestartSection,
+    canEditMolecules
 }: MoleculeSectionProps) => {
     const parentRef = useRef<HTMLDivElement>(null)
     const [searchInput, setSearchInput] = useState<string>('')
@@ -38,9 +41,10 @@ export const MoleculeSection = ({
      * @returns Filtered data.
      */
     const getDataFiltered = (): MoleculesSectionData[][] => {
-        const data = biomarkerFormData.data.filter(item =>
-            (!Array.isArray(item.value) && item.value.includes(searchInput)) ||
-            (Array.isArray(item.value) && item.value.some(itemVal => itemVal.includes(searchInput)))
+        const searchInputLower = searchInput.toLowerCase()
+        const data = sectionFormData.data.filter(item =>
+            (!Array.isArray(item.value) && item.value.toLowerCase().includes(searchInputLower)) ||
+            (Array.isArray(item.value) && item.value.some(itemVal => itemVal.toLocaleLowerCase().includes(searchInputLower)))
         )
 
         const result: MoleculesSectionData[][] = []
@@ -89,10 +93,11 @@ export const MoleculeSection = ({
                 handleChange={setSearchInput}
                 handleRemoveInvalidGenes={() => handleRemoveInvalidGenes(title)}
                 handleRestartSection={() => handleRestartSection(title)}
+                disabled={!canEditMolecules}
             />
 
             <div className='biomarkers--molecules--container table-bordered' ref={parentRef}>
-                <Dimmer active={biomarkerFormData.isLoading} inverted>
+                <Dimmer active={sectionFormData.isLoading} inverted>
                     <Loader />
                 </Dimmer>
 
@@ -107,9 +112,10 @@ export const MoleculeSection = ({
                             <div key={key} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 <MoleculeDynamicRow
                                     content={item}
+                                    title={title}
+                                    canEditMolecules={canEditMolecules}
                                     handleRemoveMolecule={handleRemoveMolecule}
                                     handleSelectOptionMolecule={handleSelectOptionMolecule}
-                                    title={title}
                                 />
                             </div>
                         )

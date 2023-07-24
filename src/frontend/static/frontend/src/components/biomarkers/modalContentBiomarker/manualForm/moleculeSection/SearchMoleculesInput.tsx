@@ -9,15 +9,20 @@ interface SearchMoleculesProps {
     handleChange: (searchData: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleRestartSection: (sector: BiomarkerType) => void,
-
+    /** `disabled` prop to prevent changes in this section. */
+    disabled: boolean
 }
 
-export const SearchMoleculesInput = ({
-    handleChange,
-    handleRemoveInvalidGenes,
-    handleRestartSection
-}: SearchMoleculesProps) => {
+/**
+ * Renders a search input to filter the molecules in the Biomarker molecules section. Also
+ * renders some useful buttons.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const SearchMoleculesInput = (props: SearchMoleculesProps) => {
     const [value, setValue] = useState<string>('')
+
+    const { handleChange, handleRemoveInvalidGenes, handleRestartSection, disabled } = props
 
     /** Makes the query to get KaplanMeierData with delay. */
     const executeHandleChange = useCallback(
@@ -48,18 +53,22 @@ export const SearchMoleculesInput = ({
                 title='Clean search'
                 onClick={() => setValue('')}
             />
+
             <Icon
                 className='biomarker--section--icon clickable margin-left-2'
                 name='repeat'
-                title='Restart molecules (remove all the molecules from the section)'
+                title='Restart molecules (remove all the molecules from this section)'
                 onClick={handleRestartSection}
+                disabled={disabled}
             />
+
             <Icon
                 className='biomarker--section--icon clickable margin-left-2'
                 name='ban'
                 title='Remove molecules with errors (in red)'
                 color='red'
                 onClick={handleRemoveInvalidGenes}
+                disabled={disabled}
             />
         </>
     )

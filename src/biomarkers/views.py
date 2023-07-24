@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
 from biomarkers.serializers import BiomarkerSerializer, TrainedModelSerializer, MoleculeIdentifierSerializer, \
-    BiomarkerSimpleSerializer
+    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
 from django.db.models import Q, Count, QuerySet
@@ -47,7 +47,7 @@ class BiomarkerList(generics.ListAPIView):
 
 
 class BiomarkerCreate(generics.CreateAPIView):
-    """REST endpoint: create for Biomarker model"""
+    """REST endpoint: create for Biomarker model."""
 
     def get_queryset(self):
         return Biomarker.objects.filter(user=self.request.user)
@@ -62,12 +62,22 @@ class BiomarkerCreate(generics.CreateAPIView):
 
 
 class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
-    """REST endpoint: get, modify and delete for Biomarker model"""
+    """REST endpoint: get, modify and delete for Biomarker model."""
 
     def get_queryset(self):
         return Biomarker.objects.filter(user=self.request.user)
 
     serializer_class = BiomarkerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class BiomarkerSimpleUpdate(generics.UpdateAPIView):
+    """REST endpoint: modify (only name and description) for Biomarker model."""
+
+    def get_queryset(self):
+        return Biomarker.objects.filter(user=self.request.user)
+
+    serializer_class = BiomarkerSimpleUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

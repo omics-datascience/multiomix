@@ -35,6 +35,7 @@ class MRNAIdentifierSerializer(serializers.ModelSerializer):
         model = MRNAIdentifier
         exclude = ['biomarker']
 
+
 class MiRNAIdentifierSerializer(serializers.ModelSerializer):
     """MiRNAIdentifier serializer"""
 
@@ -42,12 +43,14 @@ class MiRNAIdentifierSerializer(serializers.ModelSerializer):
         model = MiRNAIdentifier
         exclude = ['biomarker']
 
+
 class CNAIdentifierSerializer(serializers.ModelSerializer):
     """CNAIdentifier serializer"""
 
     class Meta:
         model = CNAIdentifier
         exclude = ['biomarker']
+
 
 class MethylationIdentifierSerializer(serializers.ModelSerializer):
     """MethylationIdentifier serializer"""
@@ -98,6 +101,16 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     def get_has_fs_experiment(ins: Biomarker) -> bool:
         """Gets if the current Biomarker was created from a Feature Selection experiment"""
         return ins.has_fs_experiment
+
+
+class BiomarkerSimpleUpdateSerializer(serializers.ModelSerializer):
+    """
+    This serializer is used to update only the name and description of the Biomarker model to prevent updating all
+    the molecules when it's not necessary.
+    """
+    class Meta:
+        model = Biomarker
+        fields = ['name', 'description']
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):

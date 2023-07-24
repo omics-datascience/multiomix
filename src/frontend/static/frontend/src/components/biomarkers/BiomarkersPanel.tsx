@@ -24,6 +24,7 @@ import './../../css/biomarkers.css'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
+declare const urlBiomarkersSimpleUpdate: string
 declare const urlBiomarkersCreate: string
 declare const urlTagsCRUD: string
 declare const urlGeneSymbols: string
@@ -41,6 +42,12 @@ const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
 /** A matched molecule with the search query and the validated alias. */
 type MoleculeFinderResult = { molecule: string, standard: string }
+
+/** Extremely simple struct of a Biomarker (useful for simple updates). */
+type BiomarkerNameAndDesc = {
+    name: string,
+    description: string
+}
 
 /** Some flags to validate the Biomarkers form. */
 type ValidationForm = {
@@ -845,19 +852,27 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Makes the request to create a Biomarker
      */
-    createBiomarker = () => {
+    handleSendForm = () => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker.validation.isLoading = true
         this.setState({ formBiomarker })
 
-        const biomarkerToSend: SaveBiomarkerStructure = {
+        // Gets name and description
+        const simpleBiomarker: BiomarkerNameAndDesc = {
             name: formBiomarker.biomarkerName,
-            description: formBiomarker.biomarkerDescription,
-            mrnas: this.getMoleculesData(formBiomarker.moleculesSection.mRNA.data),
-            mirnas: this.getMoleculesData(formBiomarker.moleculesSection.miRNA.data),
-            cnas: this.getMoleculesData(formBiomarker.moleculesSection.CNA.data),
-            methylations: this.getMoleculesData(formBiomarker.moleculesSection.Methylation.data)
+            description: formBiomarker.biomarkerDescription
         }
+
+        // Adds molecules if needed
+        const biomarkerToSend: SaveBiomarkerStructure | BiomarkerNameAndDesc = formBiomarker.canEditMolecules
+            ? {
+                ...simpleBiomarker,
+                mrnas: this.getMoleculesData(formBiomarker.moleculesSection.mRNA.data),
+                mirnas: this.getMoleculesData(formBiomarker.moleculesSection.miRNA.data),
+                cnas: this.getMoleculesData(formBiomarker.moleculesSection.CNA.data),
+                methylations: this.getMoleculesData(formBiomarker.moleculesSection.Methylation.data)
+            }
+            : simpleBiomarker
 
         const settings: Options = {
             headers: getDjangoHeader(),
@@ -865,6 +880,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             timeout: REQUEST_TIMEOUT
         }
 
+        // Checks if it's a creation or an update
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCreate, settings).then((response) => {
                 response.json().then((_jsonResponse: Biomarker) => {
@@ -884,7 +900,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 this.setState({ formBiomarker })
             })
         } else {
-            ky.patch(urlBiomarkersCRUD + `/${formBiomarker.id}/`, settings).then((response) => {
+            const url = formBiomarker.canEditMolecules ? urlBiomarkersCRUD : urlBiomarkersSimpleUpdate
+            ky.patch(`${url}/${formBiomarker.id}/`, settings).then((response) => {
                 response.json().then((_jsonResponse: Biomarker) => {
                     this.closeModalWithSuccessMsg('Biomarker edited successfully')
                 }).catch((err) => {
@@ -1046,36 +1063,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
     }
 
-    /** Does a request to edit a new Biomarker. */
-    editBiomarker = () => {
-        if (!this.canSubmitBiomarkerForm()) {
-            return
-        }
-
-        // Sets the Request's Headers
-        const myHeaders = getDjangoHeader()
-
-        const url = `${urlBiomarkersCRUD}/${this.state.newBiomarker.id}/`
-        this.setState({ addingOrEditingBiomarker: true }, () => {
-            ky.patch(url, { headers: myHeaders, json: this.state.newBiomarker }).then((response) => {
-                response.json().then((biomarker: Biomarker) => {
-                    if (biomarker && biomarker.id) {
-                        // If all is OK, resets the form and gets the User's tag to refresh the list
-                        this.cleanForm()
-                    }
-                }).catch((err) => {
-                    alertGeneralError()
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                alertGeneralError()
-                console.log('Error adding new Biomarker ->', err)
-            }).finally(() => {
-                this.setState({ addingOrEditingBiomarker: false })
-            })
-        })
-    }
-
     /** Makes a request to delete a Biomarker. */
     deleteBiomarker = () => {
         // Sets the Request's Headers
@@ -1100,25 +1087,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 console.log('Error deleting Biomarker ->', err)
             })
         })
-    }
-
-    /**
-     * Handles New Tag Input Key Press
-     * @param e Event of change
-     */
-    handleKeyDown = (e) => {
-        // If pressed Enter key submits the new Tag
-        if (e.which === 13 || e.keyCode === 13) {
-            if (!this.state.newBiomarker.id) {
-                this.editBiomarker()
-            } else {
-                this.createBiomarker()
-            }
-        } else {
-            if (e.which === 27 || e.keyCode === 27) {
-                this.setState({ newBiomarker: this.getDefaultNewBiomarker() })
-            }
-        }
     }
 
     /**
@@ -1638,7 +1606,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
                             handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                             handleValidateForm={this.handleValidateForm}
-                            handleSendForm={this.createBiomarker}
+                            handleSendForm={this.handleSendForm}
                             handleChangeCheckBox={this.handleChangeCheckBox}
                             handleRestartSection={this.handleRestartSection}
                         />

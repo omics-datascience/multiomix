@@ -9,9 +9,10 @@ import './moleculeSectionStyles.css'
 interface MoleculeDynamicRowProps {
     content: MoleculesSectionData[],
     title: BiomarkerType,
+    /** If true, the user can edit the molecules in the Biomarker. */
+    canEditMolecules: boolean,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
-
 }
 
 /**
@@ -22,7 +23,7 @@ interface MoleculeDynamicRowProps {
 export const MoleculeDynamicRow = (props: MoleculeDynamicRowProps) => {
     const measuredRef = useRef<HTMLDivElement>(null)
 
-    const { title, content, handleSelectOptionMolecule, handleRemoveMolecule } = props
+    const { title, content, canEditMolecules, handleSelectOptionMolecule, handleRemoveMolecule } = props
 
     return (
         <div
@@ -30,18 +31,17 @@ export const MoleculeDynamicRow = (props: MoleculeDynamicRowProps) => {
             className={content.length === 1 ? '' : 'row-container'}
             style={{ flex: 1 }}
         >
-            {
-                content.map((mol, i) => (
-                    <MoleculeOption
-                        key={i}
-                        mol={mol}
-                        handleRemoveMolecule={handleRemoveMolecule}
-                        title={title}
-                        index={i}
-                        handleSelectOptionMolecule={handleSelectOptionMolecule}
-                    />
-                ))
-            }
+            {content.map((molecule, i) => (
+                <MoleculeOption
+                    key={i}
+                    molecule={molecule}
+                    title={title}
+                    index={i}
+                    canRemove={canEditMolecules}
+                    handleRemoveMolecule={handleRemoveMolecule}
+                    handleSelectOptionMolecule={handleSelectOptionMolecule}
+                />
+            ))}
         </div >
     )
 }

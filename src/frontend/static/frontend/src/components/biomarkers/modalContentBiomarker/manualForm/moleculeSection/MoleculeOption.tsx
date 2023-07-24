@@ -1,41 +1,66 @@
 import React from 'react'
 import { Button, Icon, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData } from '../../../types'
+
 // Styles
 import './moleculeSectionStyles.css'
 
+/** MoleculeOption props. */
 interface PropsMoleculeOption {
-    mol: MoleculesSectionData,
-    handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void
+    molecule: MoleculesSectionData,
     title: BiomarkerType,
     index: number,
+    /** Indicates if user can remove the molecule. */
+    canRemove: boolean,
+    handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void
     handleSelectOptionMolecule: (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => void,
 }
-export const MoleculeOption = ({
-    mol,
-    handleRemoveMolecule,
-    title,
-    index,
-    handleSelectOptionMolecule
-}: PropsMoleculeOption) => {
-    if (mol.isValid) {
+
+/**
+ * Renders a label with a molecule and a button to remove it.
+ * @param props Component props.
+ * @returns Component.
+ */
+export const MoleculeOption = (props: PropsMoleculeOption) => {
+    const {
+        molecule,
+        title,
+        index,
+        canRemove,
+        handleRemoveMolecule,
+        handleSelectOptionMolecule
+    } = props
+
+    if (molecule.isValid) {
         return (
-            <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-                <Button color='green' compact className='biomarkers--molecules--container--item biomarker--section--button'>
-                    {mol.value}
-                    <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
+            <div className='biomarkers--molecules--container--item' key={title + molecule.value}>
+                <Button
+                    color='green'
+                    compact
+                    className='biomarkers--molecules--container--item biomarker--section--button'
+                    disabled={!canRemove}
+                >
+                    {molecule.value}
+                    <Icon name='close' onClick={() => handleRemoveMolecule(title, molecule)} className='biomarker--section--icon' />
                 </Button>
             </div>
         )
     }
 
     // If it's an array, it's a yellow button (ambiguous molecule)
-    if (Array.isArray(mol.value)) {
-        const moleculeKey = index + title + mol.value.length
+    if (Array.isArray(molecule.value)) {
+        const moleculeKey = index + title + molecule.value.length
         return (
             <Segment key={moleculeKey} className="biomarkers--molecules--container--item table-bordered">
-                {mol.value.map((item) => (
-                    <Button compact className='biomarkers--molecules--container--item biomarker--section--button' key={moleculeKey + item} color='yellow' onClick={() => { handleSelectOptionMolecule(mol, title, item) }} >
+                {molecule.value.map((item) => (
+                    <Button
+                        key={moleculeKey + item}
+                        compact
+                        className='biomarkers--molecules--container--item biomarker--section--button'
+                        color='yellow'
+                        onClick={() => { handleSelectOptionMolecule(molecule, title, item) }}
+                        disabled={!canRemove}
+                    >
                         {item}
                     </Button>
                 ))}
@@ -45,10 +70,15 @@ export const MoleculeOption = ({
 
     // Molecule with error
     return (
-        <div className='biomarkers--molecules--container--item' key={title + mol.value}>
-            <Button color='red' compact className='biomarkers--molecules--container--item biomarker--section--button'>
-                {mol.value}
-                <Icon name='close' onClick={() => handleRemoveMolecule(title, mol)} className='biomarker--section--icon' />
+        <div className='biomarkers--molecules--container--item' key={title + molecule.value}>
+            <Button
+                color='red'
+                compact
+                className='biomarkers--molecules--container--item biomarker--section--button'
+                disabled={!canRemove}
+            >
+                {molecule.value}
+                <Icon name='close' onClick={() => handleRemoveMolecule(title, molecule)} className='biomarker--section--icon' />
             </Button>
         </div>
     )
