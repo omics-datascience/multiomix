@@ -174,7 +174,7 @@ TrainedModelParameters = Union[SVMParameters, RFParameters, ClusteringParameters
 
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=300)
     description = models.TextField(blank=True, null=True)
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',

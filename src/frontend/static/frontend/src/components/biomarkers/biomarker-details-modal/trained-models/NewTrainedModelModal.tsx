@@ -513,7 +513,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                     name='name'
                                     value={form.name}
                                     onChange={(_, { name, value }) => handleInputChanges(name, value)}
-                                    maxLength={100}
+                                    maxLength={300}
                                 />
 
                                 <Form.TextArea

@@ -50,7 +50,7 @@ class TrainedModelState(models.IntegerChoices):
 
 class Biomarker(models.Model):
     """Represents a biomarker"""
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=300)
     description = models.TextField(null=True, blank=True)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     upload_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
