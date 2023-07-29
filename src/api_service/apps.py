@@ -1,29 +1,50 @@
-import sys
 import logging
 from django.apps import AppConfig
-from django.conf import settings
-from django.db.utils import ProgrammingError
-import os
+
 
 class ApiServiceConfig(AppConfig):
     name = 'api_service'
 
-    def ready(self):
-        from api_service.task_queue import global_task_queue
+    # TODO: this is being called by Celery when it starts not by Django!
+    # def ready(self):
+    #     from multiomics_intermediate.celery import app
+    #     from api_service.models import Experiment, ExperimentState
+    #     from django.db.models import QuerySet
+    #     from .tasks import eval_mrna_gem_experiment
+    #     from celery.contrib.abortable import AbortableAsyncResult
+    #
+    #     def __task_is_being_executed(task_id: str) -> bool:
+    #         """
+    #         Returns whether the task with given task_name is already being executed.
+    #         Taken from https://dev.to/ebram96/checking-whether-a-celery-task-is-already-running-59f4
+    #         @param task_id: ID of the task to check if it is running currently.
+    #         @return A boolean indicating whether the task with the given task name is running currently.
+    #         """
+    #         active_tasks = app.control.inspect().active()
+    #         if active_tasks is None:
+    #             return False
+    #
+    #         for _worker, running_tasks in active_tasks.items():
+    #             for task in running_tasks:
+    #                 if task["id"] == task_id:
+    #                     return True
+    #
+    #     # Gets experiments that were saved as being processed but Celery failed in the middle of the execution.
+    #     # NOTE: parameter task_acks_late=True didn't work as expected, so we have to check manually if the task is
+    #     # being executed, and in case it is not, we set it as an error.
+    #     logging.info('Getting experiments to be processed')
+    #     experiments: QuerySet = Experiment.objects.filter(state__in=[
+    #         ExperimentState.WAITING_FOR_QUEUE,
+    #         ExperimentState.IN_PROCESS
+    #     ])
+    #
+    #     for experiment in experiments:
+    #         if experiment.task_id and not __task_is_being_executed(experiment.task_id):
+    #             experiment.attempt += 1
+    #             experiment.save(update_fields=['attempt'])
+    #             logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
+    #             async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk,),
+    #                                                                                    queue='correlation_analysis')
+    #             experiment.task_id = async_res.task_id
+    #             experiment.save(update_fields=['task_id'])
 
-        if settings.COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP:
-            # Checks if current command is not for migrations, staticfiles or secret key generation
-            current_command = sys.argv[1]
-            command_is_startup = current_command not in ['generate_secret_key', 'collectstatic',
-                                                         'makemigrations', 'migrate']
-
-            # It checks for RUN_MAIN env var to prevent this method be called twice without the need to use
-            # --noreload flag on runserver command
-            if command_is_startup and os.environ.get('RUN_MAIN', None) != 'true':
-                # This try/except block prevents issues when makemigrations and migrate commands are executed.
-                # If not present maybe Django fails to run as models are evaluated before generating the migrations.
-                try:
-                    global_task_queue.compute_pending_experiments()
-                except ProgrammingError as ex:
-                    logging.error(f'Probably there are come changes in models and ApiServiceConfig '
-                                  f'is failing with the exception: "{ex}"')

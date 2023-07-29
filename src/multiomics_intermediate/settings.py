@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'genes',
     'inferences',
     'molecules_details',
-    'chunked_upload'
+    'chunked_upload',
 ]
 
 MIDDLEWARE = [
@@ -88,13 +88,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'multiomics_intermediate.wsgi.application'
 
+# Redis
+REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+
 # Channels
 ASGI_APPLICATION = "multiomics_intermediate.routing.application"
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(os.getenv('REDIS_HOST', '127.0.0.1'), os.getenv('REDIS_PORT', 6379))],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
@@ -197,13 +201,14 @@ MONGO_SETTINGS = {
     'timeout': os.getenv('MONGO_TIMEOUT_MS', 5000)  # Connection timeout
 }
 
+# Celery settings. Uses same Redis as Channels and same RESULT_BACKEND as BROKER_URL
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
 # Result experiment table view config
 TABLE_SETTINGS = {
     'page_size': os.getenv('TABLE_PAGE_SIZE', 10)  # Default page size
 }
-
-# To compute pending experiment on server start
-COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP: bool = os.getenv('COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP', 'true') == 'true'
 
 # Number of rows in which the CSV or Mongo's collection is retrieved when an Experiment is computed
 EXPERIMENT_CHUNK_SIZE: int = int(os.getenv('EXPERIMENT_CHUNK_SIZE', 500))
@@ -213,9 +218,13 @@ SORT_BUFFER_SIZE: int = int(os.getenv('SORT_BUFFER_SIZE', 2_000_000))
 
 # Number of threads used in ThreadPool to run experiments. Please take memory in consideration
 # IMPORTANT: needs a server restart
-THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))
+THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))  # TODO: remove and document in DEPLOYING to set in CELERY
 
-# Number of elements to format the INSERT query statement from an experiment's result. This prevent memory errors
+# Time limit in seconds for a correlation analysis to be computed. If the experiment is not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
+# Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
 
 # Indicates if the experiment is computed inside a DB transaction or handle manually by Python

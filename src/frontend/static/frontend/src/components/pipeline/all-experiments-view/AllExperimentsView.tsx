@@ -121,8 +121,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         const experimentState = getExperimentStateObj(experiment.state)
 
                         const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
-                            experiment.state === ExperimentState.WAITING_FOR_QUEUE ||
-                            experiment.state === ExperimentState.STOPPING)
+                            experiment.state === ExperimentState.WAITING_FOR_QUEUE)
 
                         // Generates ExperimentType info
                         const experimentTypeInfo = getExperimentTypeObj(experiment.type, 'ExperimentType')
@@ -212,7 +211,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     />
 
                                     {/* Stop button */}
-                                    {(!isFinished && experiment.state !== ExperimentState.STOPPING) &&
+                                    {!isFinished &&
                                         <StopExperimentButton
                                             experiment={experiment}
                                             onClick={() => this.props.confirmExperimentStop(experiment)}

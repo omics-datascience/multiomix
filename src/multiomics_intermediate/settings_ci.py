@@ -198,9 +198,6 @@ TABLE_SETTINGS = {
     'page_size': os.getenv('TABLE_PAGE_SIZE', 10)  # Default page size
 }
 
-# To compute pending experiment on server start
-COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP: bool = os.getenv('COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP', 'true') == 'true'
-
 # Number of rows in which the CSV or Mongo's collection is retrieved when an Experiment is computed
 EXPERIMENT_CHUNK_SIZE: int = int(os.getenv('EXPERIMENT_CHUNK_SIZE', 500))
 

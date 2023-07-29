@@ -339,6 +339,8 @@ class Experiment(models.Model):
     type = models.IntegerField(choices=ExperimentType.choices)
     # Number of attempts to prevent a buggy experiment running forever
     attempt = models.PositiveSmallIntegerField(default=1)
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+    execution_time = models.FloatField(blank=True, null=True)  # Execution time in seconds
 
     # TODO: analyze if this go here, maybe when refactor the GEM type for UserFile and CGDSDataset
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema

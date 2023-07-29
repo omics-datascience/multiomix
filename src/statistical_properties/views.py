@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from sklearn.preprocessing import OrdinalEncoder
 from api_service.models import get_combination_class, GeneGEMCombination, ExperimentSource
 from api_service.models_choices import ExperimentType
-from api_service.pipelines import global_pipeline_manager
+import api_service.pipelines as pipelines 
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
@@ -100,7 +100,7 @@ class CombinationSourceDataStatisticalPropertiesDetails(APIView):
         # If it wasn't computed previously, computes all the statistical properties
         gene = gene_gem_combination.gene_name
         gem = gene_gem_combination.gem
-        gene_data, gem_data, gene_samples, gem_samples = global_pipeline_manager.get_valid_data_from_sources(
+        gene_data, gem_data, gene_samples, gem_samples = pipelines.get_valid_data_from_sources(
             gene_gem_combination.experiment,
             gene,
             gem,
