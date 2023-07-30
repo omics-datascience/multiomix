@@ -39,6 +39,8 @@ services:
         image: redis:6.0.8
         container_name: multiomics_dev_websocket_channel_redis
         restart: always
+        volumes:
+            - redis_data:/data
         ports:
             - "6379:6379"
 
@@ -86,3 +88,6 @@ volumes:
     postgres_data:
         external:
             name: 'multiomics_intermediate_postgres_data'
+    redis_data:
+        external:
+            name: 'multiomics_intermediate_redis_data'
