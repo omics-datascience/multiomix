@@ -32,6 +32,9 @@ This document is focused on the **development** of the system. If you are lookin
        2. `docker volume create --name=multiomics_intermediate_mongo_config`
        3. `docker volume create --name=multiomics_intermediate_postgres_data`
        3. `docker volume create --name=multiomics_intermediate_redis_data`
+       3. `docker volume create --name=multiomics_intermediate_static_data`
+       3. `docker volume create --name=multiomics_intermediate_media_data`
+       3. `docker volume create --name=multiomics_intermediate_logs_data`
     2. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
 4. Go back to the `src` folder to create the DB and an admin user: 
     1. `python3 manage.py makemigrations`

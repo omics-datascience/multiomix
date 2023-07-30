@@ -83,6 +83,8 @@ The following are the steps to perform a deployment in production. In case you w
     - Redis server for WebSocket connections:
         - `REDIS_HOST`: IP of the Redis server, if Docker is used it should be the name of the service since Docker has its own DNS and can resolve it. The default is `redis` which is the name of the service.
         - `REDIS_PORT`: Redis server port. Default `6379`.
+    - Celery workers:
+      - `CONCURRENCY`: Number of workers to run in parallel.
 3. Return to the root folder of the project and start up all services with:
     - [Docker Compose](https://docs.docker.com/compose/):
         - Start: `docker-compose up -d`. The application will be accessible from the address `127.0.0.1`.
@@ -252,6 +254,15 @@ In order to create a database dump you can execute the following command **insid
 `mongorestore --username [username] --password [password] --authenticationDatabase admin --nsFrom 'multiomics.*' --nsTo '[target DB name].*' --archive='multiomix_mongo_backup.txt.gz' --gzip`
 
 That command will restore the database using a compressed dump as source. You can use the flags `--numInsertionWorkersPerCollection [number of workers]` to increase importing speed or `-vvvv` to check importing status.
+
+
+### Importing media file
+
+To import a `media` folder backup inside a new environment you must (from the root project folder):
+
+1. Extract the `media` folder inside `src` folder
+2. Run the script `./tools/import_media.sh`.
+
 
 [docker-swarm]: https://docs.docker.com/engine/swarm/
 [modulector]: https://github.com/omics-datascience/modulector
