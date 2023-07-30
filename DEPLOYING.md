@@ -198,6 +198,17 @@ Then the following environment variables must be configured:
    - `AWS_EMR_SHARED_FOLDER`
 
 
+## Execution of tasks with Celery
+
+Multiomix uses Celery to distribute the computational load of its most expensive tasks. This requires the user to have a messaging broker, such as RabbitMQ or Redis, installed and configured. In this project, Redis is used and a worker is deployed for each of the execution queues serving a different type of task. The Docker configuration is left ready to run in Docker Compose or Docker Swarm and K8S.
+
+As for the execution flow, the following error scenarios are considered:
+
+- **The task is submitted but the Celery worker is down**: in this case the task remains queued in Redis until the worker gets up and runs it.
+- **The task is submitted and is being executed by Celery, but the Django server is down**: in this case the task continues to run in Celery until it finishes, and the user can check the status of the task in the user interface when the Django instance becomes available again.
+- **The task is submitted and being executed by Celery but the Celery worker crashes**: in this case the task remains in `PENDING` state and will be executed by Celery when the worker starts thanks to the script implemented in the `celery.py` file.
+
+
 ## Creating Dumps and Restoring from Dumps
 
 
