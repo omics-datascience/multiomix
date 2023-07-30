@@ -338,7 +338,7 @@ class Experiment(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     type = models.IntegerField(choices=ExperimentType.choices)
     # Number of attempts to prevent a buggy experiment running forever
-    attempt = models.PositiveSmallIntegerField(default=1)
+    attempt = models.PositiveSmallIntegerField(default=0)
     task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
     execution_time = models.FloatField(blank=True, null=True)  # Execution time in seconds
 

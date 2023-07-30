@@ -205,6 +205,9 @@ MONGO_SETTINGS = {
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
+# Indicates this is the main Django app which prevents Celery from loading the tasks twice
+IS_MAIN_DJANGO_APP: bool = os.getenv('IS_MAIN_DJANGO_APP', 'false') == 'true'
+
 # Result experiment table view config
 TABLE_SETTINGS = {
     'page_size': os.getenv('TABLE_PAGE_SIZE', 10)  # Default page size

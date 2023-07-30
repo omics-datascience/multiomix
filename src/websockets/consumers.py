@@ -4,7 +4,7 @@ import json
 
 class UserConsumer(AsyncWebsocketConsumer):
     """
-    A Consumer to handle Asyncronic websocket connections to send real time
+    A Consumer to handle async websocket connections to send real time
     commands to the frontend. Was developed using 'Channels' library, following
     the tutorial: https://channels.readthedocs.io/en/latest/tutorial/
     This consumer is for a specific user channel
@@ -43,7 +43,7 @@ class UserConsumer(AsyncWebsocketConsumer):
 
 class AdminConsumer(AsyncWebsocketConsumer):
     """
-    A Consumer to handle Asyncronic websocket connections to send real time
+    A Consumer to handle async websocket connections to send real time
     commands to the frontend. Was developed using 'Channels' library, following
     the tutorial: https://channels.readthedocs.io/en/latest/tutorial/.
     This consumer is for all admins channel

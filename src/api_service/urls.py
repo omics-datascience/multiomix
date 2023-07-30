@@ -4,7 +4,7 @@ import statistical_properties.views
 from . import views
 
 urlpatterns = [
-    path('', views.mrna_gem_action, name='run_experiment'),
+    path('', views.CorrelationAnalysis.as_view(), name='run_experiment'),
     # Experiments URLs
     path('last-experiments', views.LastList.as_view(), name='last_experiments'),
     path('experiments', views.ExperimentList.as_view(), name='mrna_gem_experiment'),
