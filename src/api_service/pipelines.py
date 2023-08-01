@@ -7,6 +7,7 @@ from billiard.pool import Pool
 from common.constants import GEM_INDEX_NAME
 from common.methylation import get_cpg_from_cpg_format_gem, get_gene_from_cpg_format_gem, \
     map_cpg_to_genes_df
+from common.typing import AbortEvent
 from .exceptions import NoSamplesInCommon, ExperimentStopped, ExperimentFailed
 from django.conf import settings
 from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO, Callable
@@ -14,9 +15,6 @@ from .models import ExperimentSource, Experiment, GeneGEMCombination
 from django.db import connection
 import ggca
 import logging
-
-AbortEvent = Callable[[], bool]
-
 
 def __check_if_stopped(is_aborted: AbortEvent):
     """

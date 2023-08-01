@@ -114,6 +114,7 @@ class FSExperiment(models.Model):
                                    related_name='fs_experiments_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     # AWS-EMR fields
     app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results

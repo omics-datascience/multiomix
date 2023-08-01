@@ -6,6 +6,8 @@ import shutil
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
 import pandas as pd
+from .tasks import eval_feature_selection_experiment
+from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.db import transaction
 from rest_framework import permissions
@@ -17,7 +19,6 @@ from rest_framework.views import APIView
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.utils import get_source_pk
-from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
     ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod, SVMKernel
 from feature_selection.utils import save_molecule_identifiers, get_svm_kernel_enum, save_model_dump_and_best_score
@@ -134,8 +135,12 @@ class FeatureSelectionSubmit(APIView):
             )
 
             # Adds Feature Selection experiment to the ThreadPool
-            global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters,
-                                             algorithm_parameters, cross_validation_parameters)
+            async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
+                (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
+                 cross_validation_parameters), queue='feature_selection')
+
+            fs_experiment.task_id = async_res.task_id
+            fs_experiment.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 

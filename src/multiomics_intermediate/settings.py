@@ -224,6 +224,10 @@ THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))  # TODO: remove an
 # marked as TIMEOUT_EXCEEDED
 COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
+# Time limit in seconds for a Feature Selectio experiment to be computed. If the experiment is not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+FS_SOFT_TIME_LIMIT: int = int(os.getenv('FS_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
 # Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
 

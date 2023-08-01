@@ -33,7 +33,9 @@ enum BiomarkerState {
     NO_FEATURES_FOUND = 9,
     NO_VALID_SAMPLES = 10,
     NO_VALID_MOLECULES = 11,
-    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12,
+    /** This could happen for a timeout in the Celery job. */
+    TIMEOUT_EXCEEDED = 13
 }
 
 /** All the possible states of a TrainedModel. */

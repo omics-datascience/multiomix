@@ -113,6 +113,14 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
             }
             break
+        case BiomarkerState.TIMEOUT_EXCEEDED:
+            stateIcon = {
+                iconName: 'wait',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has reached the timeout limit. Try changing some parameters and try again'
+            }
+            break
     }
 
     return (
