@@ -1,4 +1,3 @@
-from threading import Event
 from typing import Dict, Tuple, Any
 import numpy as np
 from django.conf import settings
