@@ -16,6 +16,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 def eval_mrna_gem_experiment(self, experiment_pk: int):
     """
     Computes a mRNA x miRNA/CNA/Methylation experiment.
+    @param self: Self instance of the Celery task (available due to bind=True).
     @param experiment_pk: Experiment pk to be processed.
     """
     # Due to Celery getting old jobs from the queue, we need to check if the experiment still exists

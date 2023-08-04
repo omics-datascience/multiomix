@@ -6,6 +6,7 @@ from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, Traine
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file, \
     check_sample_classes
 from common.exceptions import ExperimentStopped
+from common.functions import check_if_stopped
 from common.typing import AbortEvent
 from common.utils import limit_between_min_max
 from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
@@ -17,16 +18,6 @@ from .utils import save_model_dump_and_best_score, create_models_parameters_and_
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
-
-
-def __check_if_stopped(is_aborted: AbortEvent):
-    """
-    Check if the experiment was stopped raising the corresponding exception. TODO: use this function
-    @param is_aborted: Stop event to check if the experiment was stopped
-    @raise ExperimentStopped If the stop event is set
-    """
-    if is_aborted():
-        raise ExperimentStopped
 
 
 def __generate_df_molecules_and_clinical(experiment: FSExperiment,
@@ -62,10 +53,9 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
                             clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
                             fitness_function_parameters: Dict[str, Any],
                             algorithm_parameters: Dict[str, Any],
-                            cross_validation_parameters: Dict[str, Any], stop_event: Event) -> bool:
+                            cross_validation_parameters: Dict[str, Any], is_aborted: AbortEvent) -> bool:
     """
     Computes the Feature Selection experiment using the params defined by the user.
-    TODO: use stop_event
     @param experiment: FSExperiment instance.
     @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
     @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
@@ -73,7 +63,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
     @param fitness_function_parameters: Parameters of the fitness function to compute.
     @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
     @param cross_validation_parameters: Parameters of the CrossValidation process.
-    @param stop_event: Stop signal.
+    @param is_aborted: Method to call to check if the experiment has been stopped.
     @return A flag to indicate whether the experiment is running in spark
     """
     # Creates TrainedModel instance
@@ -95,18 +85,24 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
     )
 
     # Gets data in the correct format
+    check_if_stopped(is_aborted, ExperimentStopped)
     molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
                                                            is_regression)
 
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
+    check_if_stopped(is_aborted, ExperimentStopped)
     check_sample_classes(trained_model, clinical_data, cross_validation_folds)
 
     # Gets FS algorithm
+    # TODO: send is_aborted to all the algorithms!
     if experiment.algorithm == FeatureSelectionAlgorithm.BLIND_SEARCH:
+        check_if_stopped(is_aborted, ExperimentStopped)
         best_features, best_model, best_score = blind_search_sequential(classifier, molecules_df, clinical_data,
                                                                         is_clustering, clustering_scoring_method,
                                                                         trained_model.cross_validation_folds)
     elif experiment.algorithm == FeatureSelectionAlgorithm.BBHA:
+        check_if_stopped(is_aborted, ExperimentStopped)
+
         bbha_parameters = algorithm_parameters['BBHA']
         n_stars = int(bbha_parameters['numberOfStars'])
         n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
@@ -123,8 +119,9 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
 
         if settings.ENABLE_AWS_EMR_INTEGRATION and use_spark and \
                 __should_run_in_spark(n_agents=n_stars, n_iterations=n_bbha_iterations):
-            app_name = f'BBHA_{experiment.pk}'
+            check_if_stopped(is_aborted, ExperimentStopped)
 
+            app_name = f'BBHA_{experiment.pk}'
             job_id = binary_black_hole_spark(
                 job_name=f'Job for FSExperiment: {experiment.pk}',
                 app_name=app_name,
@@ -144,6 +141,8 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
             return True  # Indicates that the experiment is running in AWS
         else:
             # Runs sequential version
+            check_if_stopped(is_aborted, ExperimentStopped)
+
             best_features, best_model, best_score = binary_black_hole_sequential(
                 classifier,
                 molecules_df,
@@ -155,6 +154,8 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
                 cross_validation_folds=trained_model.cross_validation_folds
             )
     elif experiment.algorithm == FeatureSelectionAlgorithm.COX_REGRESSION:
+        check_if_stopped(is_aborted, ExperimentStopped)
+
         cox_regression_parameters = algorithm_parameters['coxRegression']
         if cox_regression_parameters['topN']:
             top_n = int(cox_regression_parameters['topN'])
@@ -180,6 +181,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
 
     if best_features is not None:
         # Stores molecules in the target biomarker, the best model and its fitness value
+        check_if_stopped(is_aborted, ExperimentStopped)
         save_molecule_identifiers(experiment.created_biomarker, best_features)
 
         trained_model.state = TrainedModelState.COMPLETED
@@ -199,7 +201,7 @@ def prepare_and_compute_fs_experiment(experiment: FSExperiment, fit_fun_enum: Fi
                                         fitness_function_parameters: Dict[str, Any],
                                         algorithm_parameters: Dict[str, Any],
                                         cross_validation_parameters: Dict[str, Any],
-                                        stop_event: Event) -> Tuple[str, str, bool]:
+                                        is_aborted: AbortEvent) -> Tuple[str, str, bool]:
     """
     Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
     @param experiment: FSExperiment instance.
@@ -207,20 +209,23 @@ def prepare_and_compute_fs_experiment(experiment: FSExperiment, fit_fun_enum: Fi
     @param fitness_function_parameters: Parameters of the fitness function to compute.
     @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc.) to compute.
     @param cross_validation_parameters: Parameters of the CrossValidation process.
-    @param stop_event: Stop signal.
+    @param is_aborted: Method to call to check if the experiment has been stopped.
     @return Both molecules and clinical files paths.
     """
     # Get samples in common
+    check_if_stopped(is_aborted, ExperimentStopped)
     samples_in_common = get_common_samples(experiment)
 
     # Generates needed DataFrames
+    check_if_stopped(is_aborted, ExperimentStopped)
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(
         experiment,
         samples_in_common
     )
 
+    check_if_stopped(is_aborted, ExperimentStopped)
     running_in_spark = __compute_fs_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
                                                     fit_fun_enum, fitness_function_parameters,
-                                                    cross_validation_parameters, algorithm_parameters, stop_event)
+                                                    algorithm_parameters, cross_validation_parameters, is_aborted)
 
     return molecules_temp_file_path, clinical_temp_file_path, running_in_spark

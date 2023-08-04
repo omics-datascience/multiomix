@@ -213,7 +213,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     {/* Stop button */}
                                     {!isFinished &&
                                         <StopExperimentButton
-                                            experiment={experiment}
+                                            title='Stop experiment'
                                             onClick={() => this.props.confirmExperimentStop(experiment)}
                                         />
                                     }
@@ -221,7 +221,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     {/* Delete button */}
                                     {isFinished &&
                                         <DeleteExperimentButton
-                                            experiment={experiment}
+                                            title='Delete experiment'
                                             onClick={() => this.props.confirmExperimentDeletion(experiment)}
                                         />
                                     }

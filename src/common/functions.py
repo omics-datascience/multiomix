@@ -6,6 +6,7 @@ from django.db import models, connection
 from django.http import JsonResponse
 from common.response import ResponseStatus
 import numpy as np
+from common.typing import AbortEvent
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile
 from user_files.models import UserFile
 
@@ -82,3 +83,14 @@ def close_db_connection():
     See: https://stackoverflow.com/questions/57211476/django-orm-leaks-connections-when-using-threadpoolexecutor
     """
     connection.close()
+
+
+def check_if_stopped(is_aborted: AbortEvent, exception: Type[Exception]):
+    """
+    Check if the event is set raising the corresponding exception.
+    @param is_aborted: Stop event to check if the experiment was stopped
+    @param exception: Exception to raise if the event is set.
+    @raise ExperimentStopped If the stop event is set
+    """
+    if is_aborted():
+        raise exception

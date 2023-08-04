@@ -5,25 +5,17 @@ import pandas as pd
 import numpy as np
 from billiard.pool import Pool
 from common.constants import GEM_INDEX_NAME
+from common.functions import check_if_stopped
 from common.methylation import get_cpg_from_cpg_format_gem, get_gene_from_cpg_format_gem, \
     map_cpg_to_genes_df
 from common.typing import AbortEvent
 from .exceptions import NoSamplesInCommon, ExperimentStopped, ExperimentFailed
 from django.conf import settings
-from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO, Callable
+from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO
 from .models import ExperimentSource, Experiment, GeneGEMCombination
 from django.db import connection
 import ggca
 import logging
-
-def __check_if_stopped(is_aborted: AbortEvent):
-    """
-    Check if the experiment was stopped raising the corresponding exception
-    @param is_aborted: Stop event to check if the experiment was stopped
-    @raise ExperimentStopped If the stop event is set
-    """
-    if is_aborted():
-        raise ExperimentStopped
 
 
 def __run_ggca(
@@ -400,7 +392,7 @@ def __compute_correlation_and_p_values(
     table_name = combination_class._meta.db_table
 
     # Generates temp files to be consumed by Rust
-    __check_if_stopped(is_aborted)
+    check_if_stopped(is_aborted, ExperimentStopped)
     mrna_temp_file, mrna_number_of_rows, _ = __generate_clean_temp_file(experiment.mRNA_source, common_samples,
                                                                              experiment, 'geneID',
                                                                              check_cpg_platform=False)
@@ -418,7 +410,7 @@ def __compute_correlation_and_p_values(
 
     # Checks if it should collect GEM dataset in memory
     collect_gem_dataset = __should_collect_gem_dataset(gem_file_path)
-    __check_if_stopped(is_aborted)
+    check_if_stopped(is_aborted, ExperimentStopped)
 
     # Runs GGCA correlation in a Process to allow user stopping
     with Pool(processes=1) as pool:
@@ -441,12 +433,12 @@ def __compute_correlation_and_p_values(
     result_combinations, total_row_count, number_of_evaluated_combinations = analysis_result
 
     # Concatenates Gene with CpG Site IDs (if needed)
-    __check_if_stopped(is_aborted)
+    check_if_stopped(is_aborted, ExperimentStopped)
     if is_cpg_analysis:
         result_combinations = __concatenate_gene_and_cpg_as_gem(result_combinations)
 
     # Saves in DB. It spawns a new Process to prevent high memory consumption
-    __check_if_stopped(is_aborted)
+    check_if_stopped(is_aborted, ExperimentStopped)
     __save_result_in_db(result_combinations, experiment, table_name)
 
     # Deletes temp files
@@ -472,7 +464,7 @@ def __compute_correlation_experiment(experiment: Experiment, is_aborted: AbortEv
     # Gets the combination class
     combination_class: Type[GeneGEMCombination] = experiment.get_combination_class()
 
-    __check_if_stopped(is_aborted)
+    check_if_stopped(is_aborted, ExperimentStopped)
 
     # Truncates the result if specified in settings.py
     result_limit_row_count: Optional[int] = settings.RESULT_DATAFRAME_LIMIT_ROWS \

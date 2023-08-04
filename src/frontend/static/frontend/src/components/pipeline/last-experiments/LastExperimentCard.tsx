@@ -58,7 +58,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     {/* Delete button */}
                     {/* TODO: remove this, is a temporal fix to prevent errors in server */}
                     {!(experiment.state === ExperimentState.IN_PROCESS || experiment.state === ExperimentState.WAITING_FOR_QUEUE) &&
-                        <DeleteExperimentButton experiment={experiment} className='pull-right' onClick={() => props.confirmExperimentDeletion(experiment)} />
+                        <DeleteExperimentButton className='pull-right' onClick={() => props.confirmExperimentDeletion(experiment)} />
                     }
 
                     {/* See result button */}

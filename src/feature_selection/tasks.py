@@ -21,6 +21,7 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
                                       cross_validation_parameters: Dict[str, Any]):
     """
     Computes a Feature Selection experiment.
+    @param self: Self instance of the Celery task (available due to bind=True).
     @param experiment_pk: FSExperiment's PK to be processed.
     @param fit_fun_enum: Selected fitness function to compute.
     @param fitness_function_parameters: Parameters of the fitness function to compute.

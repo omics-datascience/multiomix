@@ -1,3 +1,4 @@
+# TODO: try to change to alpine image
 FROM python:3.8.6-buster
 
 # Docker Files Vars

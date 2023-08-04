@@ -21,6 +21,8 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 
 // Styles
 import './../../css/biomarkers.css'
+import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
+import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -37,6 +39,7 @@ declare const urlFeatureSelectionSubmit: string
 declare const maxFeaturesBlindSearch: number
 declare const minFeaturesMetaheuristics: number
 declare const urlCloneBiomarker: string
+declare const urlStopFSExperiment: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 
@@ -64,7 +67,12 @@ interface BiomarkersPanelState {
     selectedBiomarkerToDeleteOrSync: Nullable<BiomarkerSimple>,
     checkedIgnoreProposedAlias: boolean,
     showDeleteBiomarkerModal: boolean,
+    /** Indicates if there's a Biomarker being deleted. */
     deletingBiomarker: boolean,
+    /** Indicates if there's a Biomarker being stopped. */
+    stoppingExperiment: boolean,
+    /** Biomarker to stop. */
+    biomarkerToStop: Nullable<BiomarkerSimple>,
     addingOrEditingBiomarker: boolean,
     biomarkerTypeSelected: BiomarkerOrigin,
     formBiomarker: FormBiomarkerData,
@@ -99,6 +107,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
             checkedIgnoreProposedAlias: false,
             showDeleteBiomarkerModal: false,
+            stoppingExperiment: false,
+            biomarkerToStop: null,
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
             addingOrEditingBiomarker: false,
@@ -136,6 +146,35 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             advancedAlgorithmParameters: this.getDefaultAdvancedAlgorithmParameters(),
             crossValidationParameters: { folds: 10 }
         }
+    }
+
+    /** Makes a request to delete an Experiment. */
+    stopFSExperiment = () => {
+        if (this.state.biomarkerToStop === null) {
+            return
+        }
+
+        // Sets the Request's Headers
+        const myHeaders = getDjangoHeader()
+        const biomarkerId = this.state.biomarkerToStop.id as number // This is safe
+        this.setState({ stoppingExperiment: true }, () => {
+            ky.get(urlStopFSExperiment, {
+                headers: myHeaders,
+                searchParams: { biomarkerId }
+            }).then((response) => {
+                // If OK is returned refresh the experiments
+                if (response.ok) {
+                    this.setState({ biomarkerToStop: null })
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error deleting experiment ->', err)
+            }).finally(() => {
+                this.setState({ stoppingExperiment: false })
+            })
+        })
     }
 
     /**
@@ -202,6 +241,43 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             contentText: '',
             onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
         }
+    }
+
+    handleCloseStopFSExperiment = () => {
+        this.setState({ biomarkerToStop: null })
+    }
+
+    /**
+     * Generates the modal to confirm an Experiment stopping
+     * @returns Modal component. Null if no Experiment was selected to stop
+     */
+    getExperimentStopConfirmModals () {
+        const biomarkerToStop = this.state.biomarkerToStop
+        if (!biomarkerToStop) {
+            return null
+        }
+
+        return (
+            <Modal size='small' open={biomarkerToStop !== null} onClose={this.handleCloseStopFSExperiment} centered={false}>
+                <Header icon='stop' content='Stop experiment' />
+                <Modal.Content>
+                    Are you sure you want to stop the experiment <strong>{biomarkerToStop.name}</strong>?
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={this.handleCloseStopFSExperiment}>
+                        Cancel
+                    </Button>
+                    <Button
+                        color='red'
+                        onClick={() => this.stopFSExperiment()}
+                        loading={this.state.stoppingExperiment}
+                        disabled={this.state.stoppingExperiment}
+                    >
+                        Stop
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
     }
 
     /**
@@ -1071,7 +1147,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
 
         const myHeaders = getDjangoHeader()
-        const deleteURL = `${urlBiomarkersCRUD}/${this.state.selectedBiomarkerToDeleteOrSync.id}`
+        const deleteURL = `${urlBiomarkersCRUD}/${this.state.selectedBiomarkerToDeleteOrSync.id}/`
         this.setState({ deletingBiomarker: true }, () => {
             ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
                 // If OK is returned refresh the tags
@@ -1434,6 +1510,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     render () {
         // Biomarker deletion modal
         const deletionConfirmModal = this.getDeletionConfirmModal()
+        const experimentStopConfirmModal = this.getExperimentStopConfirmModals()
 
         const isLoadingFullBiomarker = this.state.loadingFullBiomarkerId !== null
 
@@ -1441,6 +1518,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
+
+                {/* Experiment stopping confirm modal */}
+                {experimentStopConfirmModal}
 
                 <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
@@ -1479,6 +1559,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
                         const canEditMolecules = this.canEditBiomarker(biomarker)
                         const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
+                        const isFinished = !(biomarker.state === BiomarkerState.IN_PROCESS ||
+                            biomarker.state === BiomarkerState.WAITING_FOR_QUEUE)
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1527,15 +1609,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                         />
 
+                                        {/* Stop button */}
+                                        {!isFinished &&
+                                            <StopExperimentButton
+                                                title='Stop experiment'
+                                                onClick={() => this.setState({ biomarkerToStop: biomarker })}
+                                            />
+                                        }
+
                                         {/* Delete button */}
-                                        <Icon
-                                            name='trash'
-                                            className='clickable margin-left-5'
-                                            color='red'
-                                            disabled={currentBiomarkerIsLoading}
-                                            title='Delete biomarker'
-                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                        />
+                                        {isFinished &&
+                                            <DeleteExperimentButton
+                                                title='Delete experiment'
+                                                disabled={currentBiomarkerIsLoading}
+                                                onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                            />
+                                        }
                                     </>
                                 </Table.Cell>
                             </Table.Row>
