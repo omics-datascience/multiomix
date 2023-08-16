@@ -74,6 +74,7 @@ interface FilesManagerState {
 class FilesManager extends React.Component<{}, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
+    abortController = new AbortController()
 
     constructor (props) {
         super(props)
@@ -168,18 +169,21 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         this.getUserInstitutions()
     }
 
-    /** Removes event on component unmount. */
+    /** Removes event on component unmount and Abort controller if component unmount. */
     componentWillUnmount () {
         window.removeEventListener('beforeunload', this.onUnload)
+        this.abortController.abort()
     }
 
     /**
      * Fetches the Institutions of which the User is part of
      */
     getUserInstitutions () {
-        ky.get(urlUserInstitutions).then((response) => {
+        ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
             response.json().then((userInstitutions: DjangoInstitution[]) => {
-                this.setState({ userInstitutions })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ userInstitutions })
+                }
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -197,9 +201,11 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             type: TagType.FILE
         }
 
-        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
-                this.setState({ tags })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ tags })
+                }
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })

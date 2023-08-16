@@ -65,6 +65,8 @@ interface SourceFormState {
  * @returns Component
  */
 class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
+    abortController = new AbortController()
+
     constructor (props) {
         super(props)
 
@@ -75,6 +77,13 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             selectedStudy: null,
             userInstitutions: []
         }
+    }
+
+    /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -96,9 +105,11 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * Fetches the Institutions of which the User is part of
      */
     getUserInstitutions () {
-        ky.get(urlUserInstitutions).then((response) => {
+        ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
             response.json().then((userInstitutions: DjangoInstitution[]) => {
-                this.setState({ userInstitutions })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ userInstitutions })
+                }
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })

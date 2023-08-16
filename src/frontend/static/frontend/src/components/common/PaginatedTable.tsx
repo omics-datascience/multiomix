@@ -129,7 +129,7 @@ interface PaginatedTableState<T> {
 class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, PaginatedTableState<T>> {
     private filterTimeout: number | undefined
     websocketClient: WebsocketClientCustom
-
+    abortController = new AbortController()
     constructor (props: PaginatedTableProps<T>) {
         super(props)
 
@@ -176,6 +176,13 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     }
 
     /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
+    }
+
+    /**
      * When changes the 'queryParams' prop refresh the table.
      * @param prevProps Previous props.
      */
@@ -200,25 +207,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     }
                     this.setState({ retrievedOptions })
 
-                    ky.get(filter.urlToRetrieveOptions, { timeout: 60000 }).then((response) => {
+                    ky.get(filter.urlToRetrieveOptions, { signal: this.abortController.signal, timeout: 60000 }).then((response) => {
                         response.json().then((jsonResponse: FilterRetrievedOptions[]) => {
-                            retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
-                                return {
-                                    key: option.value,
-                                    value: option.value,
-                                    text: option.text
-                                }
-                            })
-
-                            this.setState({ retrievedOptions })
+                            if (!this.abortController.signal.aborted) {
+                                retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
+                                    return {
+                                        key: option.value,
+                                        value: option.value,
+                                        text: option.text
+                                    }
+                                })
+                                this.setState({ retrievedOptions })
+                            }
                         }).catch((err) => {
                             console.log('Error parsing JSON ->', err)
                         })
                     }).catch((err) => {
                         console.log(`Error getting filters for ${filter.keyForServer} in URL "${filter.urlToRetrieveOptions}"->`, err)
                     }).finally(() => {
-                        retrievedOptions[filter.keyForServer].loading = false
-                        this.setState({ retrievedOptions })
+                        if (this.abortController.signal.aborted) {
+                            retrievedOptions[filter.keyForServer].loading = false
+                            this.setState({ retrievedOptions })
+                        }
                     })
                 }
             })
@@ -284,23 +294,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         }
 
         this.setState({ gettingData: true }, () => {
-            ky.get(this.props.urlToRetrieveData, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(this.props.urlToRetrieveData, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
-                    tableControl.totalRowCount = jsonResponse.count
-
-                    this.setState({
-                        elements: jsonResponse.results,
-                        tableControl
-                    })
+                    if (!this.abortController.signal.aborted) {
+                        tableControl.totalRowCount = jsonResponse.count
+                        this.setState({
+                            elements: jsonResponse.results,
+                            tableControl
+                        })
+                    }
                 }).catch((err) => {
                     alertGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    alertGeneralError()
+                }
                 console.log('Error getting data ->', err)
             }).finally(() => {
-                this.setState({ gettingData: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingData: false })
+                }
             })
         })
     }

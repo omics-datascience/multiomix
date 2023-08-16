@@ -59,6 +59,8 @@ interface ClinicalSourceState {
  * Renders an icon with opens a Popup to manage clinical source for an experiment on the fly
  */
 export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProps, ClinicalSourceState> {
+    abortController = new AbortController()
+
     constructor (props) {
         super(props)
 
@@ -70,6 +72,13 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             unlinkingSource: false,
             cgdsStudyName: null
         }
+    }
+
+    /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -200,33 +209,41 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             const url = `${urlClinicalSourceUserFileCRUD}/${this.props.experiment.clinical_source_id}`
             ky.get(url).then((response) => {
                 response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
-                    if (clinicalSource && clinicalSource.id) {
-                        this.setState({
-                            clinicalSource: {
-                                id: clinicalSource.id,
-                                filename: '', // Will be completed after this
-                                newUploadedFileRef: React.createRef(), // Ref is not possible as it's getting a UserFile from backend
-                                CGDSStudy: null, // CGDSStudy is not needed for clinical data for a user file
-                                type: SourceType.UPLOADED_DATASETS,
-                                selectedExistingFile: clinicalSource.user_file
-                            },
-                            cgdsStudyName: clinicalSource.cgds_dataset?.name ?? null
-                        }, this.updateSourceFilenames)
-                    } else {
+                    if (!this.abortController.signal.aborted) {
+                        if (clinicalSource && clinicalSource.id) {
+                            this.setState({
+                                clinicalSource: {
+                                    id: clinicalSource.id,
+                                    filename: '', // Will be completed after this
+                                    newUploadedFileRef: React.createRef(), // Ref is not possible as it's getting a UserFile from backend
+                                    CGDSStudy: null, // CGDSStudy is not needed for clinical data for a user file
+                                    type: SourceType.UPLOADED_DATASETS,
+                                    selectedExistingFile: clinicalSource.user_file
+                                },
+                                cgdsStudyName: clinicalSource.cgds_dataset?.name ?? null
+                            }, this.updateSourceFilenames)
+                        } else {
+                            alertGeneralError()
+                            this.closePopup()
+                        }
+                    }
+                }).catch((err) => {
+                    if (!this.abortController.signal.aborted) {
                         alertGeneralError()
                         this.closePopup()
                     }
-                }).catch((err) => {
-                    alertGeneralError()
-                    this.closePopup()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                alertGeneralError()
-                this.closePopup()
+                if (!this.abortController.signal.aborted) {
+                    alertGeneralError()
+                    this.closePopup()
+                }
                 console.log('Error adding new Tag ->', err)
             }).finally(() => {
-                this.setState({ gettingSourceData: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingSourceData: false })
+                }
             })
         })
     }

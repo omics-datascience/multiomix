@@ -116,6 +116,7 @@ interface GeneGemDetailsModalState {
  */
 class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, GeneGemDetailsModalState> {
     private loadingComponent: JSX.Element
+    abortController = new AbortController()
 
     constructor (props) {
         super(props)
@@ -124,6 +125,13 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         this.loadingComponent = <LoadingPanel />
 
         this.state = this.getDefaultState()
+    }
+
+    /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -175,9 +183,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             mirna: this.props.selectedRow?.gem as string
         }
 
-        ky.get(urlGetMiRNAData, { searchParams }).then((response) => {
+        ky.get(urlGetMiRNAData, { signal: this.abortController.signal, searchParams }).then((response) => {
             response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
-                this.setState({ miRNAData: jsonResponse })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ miRNAData: jsonResponse })
+                }
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -388,76 +398,82 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 searchParams.selectedClinicalGroupBy = this.state.correlationGraphData?.selectedClinicalGroupBy
             }
 
-            ky.get(urlCorrelationGraph, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(urlCorrelationGraph, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: DjangoResponseGetCorrelationGraph) => {
-                    if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
-                        // For short...
-                        const geneData = jsonResponse.data.gene_values
-                        const gemData = jsonResponse.data.gem_values
+                    if (!this.abortController.signal.aborted) {
+                        if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                            // For short...
+                            const geneData = jsonResponse.data.gene_values
+                            const gemData = jsonResponse.data.gem_values
 
-                        const isDataOk = jsonResponse.data.is_data_ok
+                            const isDataOk = jsonResponse.data.is_data_ok
 
-                        // Check if needs to show CorrelationGraph or CorrelationBoxplot
-                        const gemDataIsOrdinal = isDataOk
-                            ? this.checkIfDataIsOrdinal(gemData)
-                            : false
+                            // Check if needs to show CorrelationGraph or CorrelationBoxplot
+                            const gemDataIsOrdinal = isDataOk
+                                ? this.checkIfDataIsOrdinal(gemData)
+                                : false
 
-                        let keyToUpdate: keyof GeneGemDetailsModalState
-                        let correlationGraphDataFormatted: CorrelationBoxplotData | CorrelationChartData
-                        if (gemDataIsOrdinal) {
-                            keyToUpdate = 'correlationBoxplotData'
-                            const boxplotData: StatChartData[] = this.generateCorrelationBoxplotData(
-                                geneData,
-                                gemData
-                            )
-                            correlationGraphDataFormatted = {
-                                data: boxplotData,
-                                isDataOk
+                            let keyToUpdate: keyof GeneGemDetailsModalState
+                            let correlationGraphDataFormatted: CorrelationBoxplotData | CorrelationChartData
+                            if (gemDataIsOrdinal) {
+                                keyToUpdate = 'correlationBoxplotData'
+                                const boxplotData: StatChartData[] = this.generateCorrelationBoxplotData(
+                                    geneData,
+                                    gemData
+                                )
+                                correlationGraphDataFormatted = {
+                                    data: boxplotData,
+                                    isDataOk
+                                }
+                            } else {
+                                keyToUpdate = 'correlationGraphData'
+                                const correlationGraphData = this.generateCorrelationGraphData(
+                                    gene,
+                                    geneData,
+                                    gem,
+                                    gemData,
+                                    jsonResponse.data.clinical_values
+                                )
+
+                                correlationGraphDataFormatted = {
+                                    series: correlationGraphData,
+                                    isDataOk,
+                                    clinicalColumns: jsonResponse.data.clinical_columns,
+                                    clinicalValues: jsonResponse.data.clinical_values,
+                                    selectedClinicalGroupBy: this.state.correlationGraphData?.selectedClinicalGroupBy ?? null
+                                }
                             }
+
+                            this.setState<never>({
+                                [keyToUpdate]: correlationGraphDataFormatted,
+                                gemDataIsOrdinal,
+                                gettingCorrelationData: false // Sets at the same time to prevent old chart being showed before new data
+                            })
                         } else {
-                            keyToUpdate = 'correlationGraphData'
-                            const correlationGraphData = this.generateCorrelationGraphData(
-                                gene,
-                                geneData,
-                                gem,
-                                gemData,
-                                jsonResponse.data.clinical_values
-                            )
-
-                            correlationGraphDataFormatted = {
-                                series: correlationGraphData,
-                                isDataOk,
-                                clinicalColumns: jsonResponse.data.clinical_columns,
-                                clinicalValues: jsonResponse.data.clinical_values,
-                                selectedClinicalGroupBy: this.state.correlationGraphData?.selectedClinicalGroupBy ?? null
+                            switch (jsonResponse.status.internal_code) {
+                                case DjangoCorrelationGraphInternalCode.EXPERIMENT_DOES_NOT_EXISTS:
+                                    alert('It seems that the experiment does not exist. If you think it\'s an error, please, contact with the administrator')
+                                    break
+                                default:
+                                    alertGeneralError()
+                                    break
                             }
-                        }
-
-                        this.setState<never>({
-                            [keyToUpdate]: correlationGraphDataFormatted,
-                            gemDataIsOrdinal,
-                            gettingCorrelationData: false // Sets at the same time to prevent old chart being showed before new data
-                        })
-                    } else {
-                        switch (jsonResponse.status.internal_code) {
-                            case DjangoCorrelationGraphInternalCode.EXPERIMENT_DOES_NOT_EXISTS:
-                                alert('It seems that the experiment does not exist. If you think it\'s an error, please, contact with the administrator')
-                                break
-                            default:
-                                alertGeneralError()
-                                break
                         }
                     }
                 }).catch((err) => {
-                    this.setState({ gettingCorrelationData: false })
-                    // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    if (!this.abortController.signal.aborted) {
+                        this.setState({ gettingCorrelationData: false })
+                        // If an error ocurred, sets the selected row to null
+                        alertGeneralError()
+                    }
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                this.setState({ gettingCorrelationData: false })
-                // If an error ocurred, sets the selected row to null
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingCorrelationData: false })
+                    // If an error ocurred, sets the selected row to null
+                    alertGeneralError()
+                }
                 console.log('Error getting correlation graph ->', err)
             })
         })
@@ -480,24 +496,30 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 experiment_type: this.props.experiment.type
             }
 
-            ky.get(url, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(url, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((statisticalProperties: SourceDataStatisticalPropertiesResponse) => {
-                    const gemDataIsOrdinal = statisticalProperties.is_data_ok
-                        ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
-                        : false
+                    if (!this.abortController.signal.aborted) {
+                        const gemDataIsOrdinal = statisticalProperties.is_data_ok
+                            ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
+                            : false
 
-                    this.setState({ statisticalProperties, gemDataIsOrdinal })
+                        this.setState({ statisticalProperties, gemDataIsOrdinal })
+                    }
                 }).catch((err) => {
                     // If an error ocurred, sets the selected row to null
                     alertGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                // If an error ocurred, sets the selected row to null
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    // If an error ocurred, sets the selected row to null
+                    alertGeneralError()
+                }
                 console.log('Error getting correlation graph ->', err)
             }).finally(() => {
-                this.setState({ gettingStatisticalProperties: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingStatisticalProperties: false })
+                }
             })
         })
     }
