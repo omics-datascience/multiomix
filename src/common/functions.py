@@ -88,9 +88,9 @@ def close_db_connection():
 def check_if_stopped(is_aborted: AbortEvent, exception: Type[Exception]):
     """
     Check if the event is set raising the corresponding exception.
-    @param is_aborted: Stop event to check if the experiment was stopped
+    @param is_aborted: Stop event to check if It's set.
     @param exception: Exception to raise if the event is set.
-    @raise ExperimentStopped If the stop event is set
+    @raise Specified exception If the stop event is set.
     """
     if is_aborted():
         raise exception

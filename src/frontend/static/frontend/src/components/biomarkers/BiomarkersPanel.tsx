@@ -148,7 +148,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }
     }
 
-    /** Makes a request to delete an Experiment. */
+    /** Makes a request to stop an FSExperiment. */
     stopFSExperiment = () => {
         if (this.state.biomarkerToStop === null) {
             return
@@ -162,7 +162,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 headers: myHeaders,
                 searchParams: { biomarkerId }
             }).then((response) => {
-                // If OK is returned refresh the experiments
+                // If OK closes the modal
                 if (response.ok) {
                     this.setState({ biomarkerToStop: null })
                 } else {
@@ -170,7 +170,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 }
             }).catch((err) => {
                 alertGeneralError()
-                console.log('Error deleting experiment ->', err)
+                console.log('Error stopping FSExperiment ->', err)
             }).finally(() => {
                 this.setState({ stoppingExperiment: false })
             })

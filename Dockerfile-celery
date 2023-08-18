@@ -1,4 +1,4 @@
-# TODO: try to change to alpine image
+# TODO: try to change to alpine image and inherit from original Dockerfile of Multiomix
 FROM python:3.8.6-buster
 
 # Docker Files Vars
@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev l
     && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs && mkdir /config \
     && mkdir /src
 
-# Installs Python dependencies
+# Installs Python dependencies and compiles the frontend
 # TODO: make a custom requirements.txt for celery workers' image. They don't need Daphne or Flower for example
 ADD config/requirements.txt /config/
 WORKDIR /src
