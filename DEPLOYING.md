@@ -257,7 +257,7 @@ In order to create a database dump you can execute the following command **insid
 That command will restore the database using a compressed dump as source. You can use the flags `--numInsertionWorkersPerCollection [number of workers]` to increase importing speed or `-vvvv` to check importing status.
 
 
-### Importing media file
+### Importing _media_ folder
 
 To import a `media` folder backup inside a new environment you must (from the root project folder):
 
