@@ -67,6 +67,7 @@ jobs:
           DOCKER_BUILDKIT: 1        
         with:
           context: .
+          file: Dockerfile-celery
           push: true
           tags: omicsdatascience/multiomix:${{ env.VERSION }}-celery
   tag-release:
