@@ -4,7 +4,25 @@ on:
     branches:
       - "main"
 jobs:
-  version-check:
+  version-check-repo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh
+      - name: Set version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh >> $GITHUB_ENV
+      - name: Check if tag exist.
+        shell: bash
+        run: |
+          git tag ${{ env.VERSION }}
+          if [ $? -ne 0 ]
+          then
+            core.setFailed('This multiomix version tag already exists in repository')
+          fi
+
+  version-check-docker:
     runs-on: ubuntu-latest
 
     steps:

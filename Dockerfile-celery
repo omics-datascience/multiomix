@@ -1,5 +1,5 @@
 # TODO: try to change to alpine image
-FROM python:3.8.6-alpine
+FROM python:3.8.17-slim-bullseye
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 
@@ -39,12 +39,11 @@ ENV REDIS_HOST "redis"
 ENV REDIS_PORT 6379
 
 # Installs system dependencies
-RUN apk add curl libressl libxml2 gsl \
+RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev \
     && mkdir /config \
     && mkdir /src
 
 # Installs Python dependencies
-# TODO: make a custom requirements.txt for celery workers' image. They don't need Daphne or Flower for example
 ADD config/requirements_celery.txt /config/requirements.txt
 WORKDIR /src
 ADD src .

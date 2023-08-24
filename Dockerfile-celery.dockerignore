@@ -4,7 +4,6 @@
 *.pyc
 src/api_service/experiments/venv
 src/db.sqlite3
-src/frontend
 src/media
 src/static
 src/uploads
