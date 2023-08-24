@@ -58,8 +58,9 @@ Every time you want to work with Multiomix, you need to follow the below steps:
         - `npm run prod`: compiles code in production mode.
 1. Run Celery tasks queue to run experiments:
    1. `cd src`
-   2. `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis` <!-- TODO: add the other queues when implemented -->
-   2. If you want to check Task in the GUI you can run [Flower](https://flower.readthedocs.io/en/latest/index.html) `python3 -m celery -A multiomics_intermediate flower`
+   1. `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis`
+   1. `python3 -m celery -A multiomics_intermediate worker -l info -Q feature_selection`
+   1. If you want to check Task in the GUI you can run [Flower](https://flower.readthedocs.io/en/latest/index.html) `python3 -m celery -A multiomics_intermediate flower`
 
 ### Linter and Typescript
 

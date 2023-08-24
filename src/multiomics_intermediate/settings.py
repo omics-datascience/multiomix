@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_object_actions',
     'django_filters',
     'api_service.apps.ApiServiceConfig',
     'frontend',
@@ -218,7 +219,7 @@ SORT_BUFFER_SIZE: int = int(os.getenv('SORT_BUFFER_SIZE', 2_000_000))
 
 # Number of threads used in ThreadPool to run experiments. Please take memory in consideration
 # IMPORTANT: needs a server restart
-THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))  # TODO: remove and document in DEPLOYING to set in CELERY
+THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))  # TODO: remove and document in DEPLOYING to set in CELERY when finished the implementation of Celery integration
 
 # Time limit in seconds for a correlation analysis to be computed. If the experiment is not finished in this time, it is
 # marked as TIMEOUT_EXCEEDED
