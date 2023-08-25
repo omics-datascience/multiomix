@@ -6,6 +6,7 @@ src/api_service/experiments/venv
 src/db.sqlite3
 src/media
 src/static
+src/frontend/static
 src/uploads
 src/venv
 tools/k8s
