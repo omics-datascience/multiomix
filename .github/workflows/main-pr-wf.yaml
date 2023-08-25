@@ -4,11 +4,33 @@ on:
     branches:
       - "main"
 jobs:
-  version-check:
+  version-check-repo:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh
+      - name: Set version
+        run: BASEDIR=$(pwd) ./tools/get_version.sh >> $GITHUB_ENV
+      - name: Check if tag exist 2
+        run: |
+          TAG=$(git tag -l ${{ env.VERSION }})
+          if [ -n "$TAG" ]
+          then
+            echo "::error::This bio-api version tag ($TAG) already exists in repository."
+            exit 1
+          fi 
+
+  version-check-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Get version
         run: BASEDIR=$(pwd) ./tools/get_version.sh
       - name: Set version

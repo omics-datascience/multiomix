@@ -1,5 +1,5 @@
 # omicsdatascience/multiomics:5.0.0
-FROM python:3.8.6-buster
+FROM python:3.8.17-slim-bullseye
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 

@@ -1,5 +1,4 @@
-# TODO: try to change to alpine image and inherit from original Dockerfile of Multiomix
-FROM python:3.8.6-buster
+FROM python:3.8.17-slim-bullseye
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 
@@ -40,15 +39,19 @@ ENV REDIS_PORT 6379
 
 # Installs system dependencies
 RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs && mkdir /config \
+    && mkdir /config \
     && mkdir /src
 
+<<<<<<< HEAD
+# Installs Python dependencies
+ADD config/requirements_celery.txt /config/requirements.txt
+=======
 # Installs Python dependencies and compiles the frontend
 # TODO: make a custom requirements.txt for celery workers' image. They don't need Daphne or Flower for example
 ADD config/requirements.txt /config/
+>>>>>>> celery-integration
 WORKDIR /src
 ADD src .
-RUN pip3 install -r /config/requirements.txt && npm --prefix /src/frontend/static/frontend i \
-    && npm --prefix /src/frontend/static/frontend run prod
+RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt
 
 ENTRYPOINT ["/bin/bash", "-c", "/src/entrypoint_celery.sh"]
