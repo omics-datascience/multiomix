@@ -3,7 +3,7 @@ import { TextArea } from 'semantic-ui-react'
 import _ from 'lodash'
 
 interface TextAreaMoleculesProps {
-    handleGenesSymbols: (genes: string[]) => void,
+    handleGenesSymbols: (genes: string[]) => boolean,
 }
 
 export const TextAreaMolecules = (props: TextAreaMoleculesProps) => {
@@ -26,8 +26,11 @@ export const TextAreaMolecules = (props: TextAreaMoleculesProps) => {
             const itemNoSpace = item.trim()
             return !textFiltered.includes(itemNoSpace) && itemNoSpace && textFiltered.push(itemNoSpace)
         })
-        handleGenesSymbols(textFiltered)
-        setTextAreaString({ ...textAreaString, value: '' })
+        const searchGenesResult = handleGenesSymbols(textFiltered)
+        console.log(searchGenesResult)
+        if (searchGenesResult) {
+            setTextAreaString({ ...textAreaString, value: '' })
+        }
     }, [handleGenesSymbols])
     /** Every time the query changes, makes a debounced request. */
     useEffect(() => {

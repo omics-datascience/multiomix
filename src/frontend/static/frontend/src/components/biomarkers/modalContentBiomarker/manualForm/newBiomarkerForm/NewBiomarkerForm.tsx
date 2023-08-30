@@ -46,7 +46,7 @@ interface NewBiomarkerFormProps {
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
     handleGenesSymbolsFinder: (query: string) => void,
-    handleGenesSymbols: (genes: string[]) => void,
+    handleGenesSymbols: (genes: string[]) => boolean,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,

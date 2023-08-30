@@ -563,9 +563,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
-
         this.setState({ formBiomarker: formBiomarkerPreLoad })
-
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
                 const formBiomarker = this.state.formBiomarker
@@ -655,8 +653,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Method that gets symbols while user is writing in Select molecules input
      * @param molecules array of strings that is sending to the api
+     * @returns boolean api query result
      */
-    handleGeneSymbols = (molecules: string[]): void => {
+    handleGeneSymbols = (molecules: string[]): boolean => {
         const moleculesSectionPreload = {
             ...this.state.formBiomarker.moleculesSection,
             [this.state.formBiomarker.moleculeSelected]: {
@@ -664,14 +663,14 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data]
             }
         }
-
+        const alert = this.state.alert
         this.setState({
             formBiomarker: {
                 ...this.state.formBiomarker,
                 moleculesSection: moleculesSectionPreload
             }
         })
-
+        let apiResult: boolean = false
         let urlToFind: string
         let json: {[key: string]: string[]}
         switch (this.state.formBiomarker.moleculeSelected) {
@@ -742,17 +741,27 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         moleculesSection
                     }
                 })
+                apiResult = true
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
+                alert.isOpen = true
+                alert.message = 'Error in insert molecule!'
+                alert.type = CustomAlertTypes.ERROR
+                this.setState({ alert })
             })
         }).catch((err) => {
             console.error('Error getting genes ->', err)
+            alert.isOpen = true
+            alert.message = 'Error in insert molecule!'
+            alert.type = CustomAlertTypes.ERROR
+            this.setState({ alert })
         }).finally(() => {
             // Sets loading in false
             const formBiomarker = this.state.formBiomarker
             formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
             this.setState({ formBiomarker })
         })
+        return apiResult
     }
 
     /**
@@ -1465,7 +1474,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
-                <button onClick={() => this.setState({ openDetailsModal2: true })}>test</button>
                 <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
                     headers={[
