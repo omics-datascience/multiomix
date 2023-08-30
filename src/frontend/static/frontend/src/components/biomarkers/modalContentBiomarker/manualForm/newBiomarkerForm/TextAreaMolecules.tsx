@@ -27,7 +27,6 @@ export const TextAreaMolecules = (props: TextAreaMoleculesProps) => {
             return !textFiltered.includes(itemNoSpace) && itemNoSpace && textFiltered.push(itemNoSpace)
         })
         const searchGenesResult = handleGenesSymbols(textFiltered)
-        console.log(searchGenesResult)
         if (searchGenesResult) {
             setTextAreaString({ ...textAreaString, value: '' })
         }
