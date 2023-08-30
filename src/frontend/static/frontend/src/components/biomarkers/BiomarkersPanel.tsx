@@ -82,13 +82,16 @@ interface BiomarkersPanelState {
     selectedBiomarker: Nullable<Biomarker>,
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
-    submittingFSExperiment: boolean
+    submittingFSExperiment: boolean,
+    openDetailsModal2: boolean
+
 }
 
 /**
  * Renders a CRUD panel for a Biomarker.
  */
 export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
+    abortController = new AbortController()
     constructor (props) {
         super(props)
 
@@ -112,8 +115,17 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             selectedBiomarker: null,
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
-            submittingFSExperiment: false
+            submittingFSExperiment: false,
+            openDetailsModal2: false
         }
+    }
+
+    /**
+     * Abort controller if component is render
+     */
+
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -428,16 +440,22 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     getBiomarkerFullInstance = (biomarkerSimple: BiomarkerSimple): Promise<Biomarker> => {
         return new Promise((resolve, reject) => {
             this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
-            ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/').then((response) => {
-                response.json().then(resolve).catch((err) => {
+            ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/', { signal: this.abortController.signal }).then((response) => {
+                response.json().then((jsonResponse: Biomarker | PromiseLike<Biomarker>) => {
+                    resolve(jsonResponse)
+                }).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
                     reject(err)
                 })
             }).catch((err) => {
                 console.error('Error getting Biomarker:', err)
-                reject(err)
+                if (!this.abortController.signal.aborted) {
+                    reject(err)
+                }
             }).finally(() => {
-                this.setState({ loadingFullBiomarkerId: null })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ loadingFullBiomarkerId: null })
+                }
             })
         })
     }
@@ -548,7 +566,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         this.setState({ formBiomarker: formBiomarkerPreLoad })
 
-        ky.get(urlToFind, { searchParams: { query, limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
+        ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
                 const formBiomarker = this.state.formBiomarker
                 const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
@@ -571,9 +589,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         }).catch((err) => {
             console.error('Error getting genes ->', err)
         }).finally(() => {
-            const formBiomarker = this.state.formBiomarker
-            formBiomarker.moleculesSymbolsFinder.isLoading = false
-            this.setState({ formBiomarker })
+            if (!this.abortController.signal.aborted) {
+                const formBiomarker = this.state.formBiomarker
+                formBiomarker.moleculesSymbolsFinder.isLoading = false
+                this.setState({ formBiomarker })
+            }
         })
     }
 
@@ -1283,7 +1303,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         this.setState({ cloningBiomarker: true })
 
         const url = `${urlCloneBiomarker}/${this.state.biomarkerToClone.id}/`
-        ky.get(url, { searchParams: { limit: 5 }, timeout: REQUEST_TIMEOUT }).then((response) => {
+        ky.get(url, { searchParams: { limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((responseJSON: OkResponse) => {
                 if (responseJSON.ok) {
                     this.closeModalToClone()
@@ -1296,9 +1316,13 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         }).catch((err) => {
             console.error('Error cloning Biomarker ->', err)
-            alertGeneralError()
+            if (!this.abortController.signal.aborted) {
+                alertGeneralError()
+            }
         }).finally(() => {
-            this.setState({ cloningBiomarker: false })
+            if (!this.abortController.signal.aborted) {
+                this.setState({ cloningBiomarker: false })
+            }
         })
     }
 
@@ -1410,7 +1434,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             type: TagType.FILE
         }
 
-        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
                 this.setState({ tags })
             }).catch((err) => {
@@ -1441,7 +1465,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
-
+                <button onClick={() => this.setState({ openDetailsModal2: true })}>test</button>
                 <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
                     headers={[

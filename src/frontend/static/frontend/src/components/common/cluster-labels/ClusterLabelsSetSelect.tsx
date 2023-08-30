@@ -25,6 +25,7 @@ interface ClusterLabelsSetSelectProps {
  * @returns Component.
  */
 export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
+    const abortController = useRef(new AbortController())
     const [clusterLabelsSets, setClusterLabelsSets] = useState<ClusterLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
     const websocketClient = useRef<WebsocketClientCustom>()
@@ -43,6 +44,10 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
                 }
             ]
         })
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [])
 
     /** Retrieves all the ClusterLabelsSet instances for this user and the TrainedModel */
@@ -50,7 +55,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
         setLoading(true)
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
-        ky.get(urlClusterLabelsSets, { searchParams }).then((response) => {
+        ky.get(urlClusterLabelsSets, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((clusterLabelsSetsData: ClusterLabelsSet[]) => {
                 setClusterLabelsSets(clusterLabelsSetsData)
             }).catch((err) => {
@@ -58,10 +63,14 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting model ClusterLabelsSets', err)
         }).finally(() => {
-            setLoading(false)
+            if (!abortController.current.signal.aborted) {
+                setLoading(false)
+            }
         })
     }
 

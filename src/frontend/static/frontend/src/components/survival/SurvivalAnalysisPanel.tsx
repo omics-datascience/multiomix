@@ -33,6 +33,8 @@ interface SurvivalAnalysisPanelState {
  * @returns Component
  */
 class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelState> {
+    abortController = new AbortController()
+
     constructor (props) {
         super(props)
 
@@ -46,6 +48,13 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
             genes: [],
             selectedGenes: []
         }
+    }
+
+    /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -147,15 +156,19 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
             sourceType: this.state.survivalSource.type as SourceType
         }
 
-        ky.get(urlDatasetColumnName, { searchParams }).then((response) => {
+        ky.get(urlDatasetColumnName, { signal: this.abortController.signal, searchParams }).then((response) => {
             response.json()
-                .then(this.setColumnNamesAsOptions)
+                .then((columnNames: string[]) => {
+                    this.setColumnNamesAsOptions(columnNames)
+                })
                 .catch((err) => {
                     this.alertErrorColumnNames()
                     console.log('Error parsing JSON ->', err)
                 })
         }).catch((err) => {
-            this.alertErrorColumnNames()
+            if (!this.abortController.signal.aborted) {
+                this.alertErrorColumnNames()
+            }
             console.log('Error getting colum names ->', err)
         })
     }

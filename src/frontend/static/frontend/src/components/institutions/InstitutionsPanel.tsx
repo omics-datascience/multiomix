@@ -37,6 +37,7 @@ interface InstitutionsPanelState {
  */
 export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelState> {
     filterTimeout: number | undefined
+    abortController = new AbortController()
 
     constructor (props) {
         super(props)
@@ -68,10 +69,18 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     componentDidMount () { this.getUserInstitutions() }
 
     /**
+     * Abort controller if component unmount
+     */
+
+    componentWillUnmount () {
+        this.abortController.abort()
+    }
+
+    /**
      * Fetches the Institutions which the current user belongs to
      */
     getUserInstitutions () {
-        ky.get(urlUserInstitutionsAsAdmin).then((response) => {
+        ky.get(urlUserInstitutionsAsAdmin, { signal: this.abortController.signal }).then((response) => {
             response.json().then((institutions: DjangoInstitution[]) => {
                 // If it's showing an institution, refresh it's state
                 // For example, in the case of adding or removing a user to/from an Institution
@@ -99,7 +108,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             const searchParams = {
                 querySearch: this.state.searchUserText
             }
-            ky.get(urlGetUsersCandidates, { searchParams }).then((response) => {
+            ky.get(urlGetUsersCandidates, { searchParams, signal: this.abortController.signal }).then((response) => {
                 this.setState({ isFetchingUsersCandidates: false })
                 response.json().then((userCandidates: DjangoUserCandidates[]) => {
                     this.setState({ userCandidates })
@@ -107,7 +116,9 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                this.setState({ isFetchingUsersCandidates: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ isFetchingUsersCandidates: false })
+                }
                 console.log("Error getting user's datasets ->", err)
             })
         })

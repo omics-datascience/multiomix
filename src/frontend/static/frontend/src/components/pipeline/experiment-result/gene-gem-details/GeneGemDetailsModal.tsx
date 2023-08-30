@@ -116,6 +116,7 @@ interface GeneGemDetailsModalState {
  */
 class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, GeneGemDetailsModalState> {
     private loadingComponent: JSX.Element
+    abortController = new AbortController()
 
     constructor (props) {
         super(props)
@@ -124,6 +125,13 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         this.loadingComponent = <LoadingPanel />
 
         this.state = this.getDefaultState()
+    }
+
+    /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -175,7 +183,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             mirna: this.props.selectedRow?.gem as string
         }
 
-        ky.get(urlGetMiRNAData, { searchParams }).then((response) => {
+        ky.get(urlGetMiRNAData, { signal: this.abortController.signal, searchParams }).then((response) => {
             response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
                 this.setState({ miRNAData: jsonResponse })
             }).catch((err) => {
@@ -388,7 +396,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 searchParams.selectedClinicalGroupBy = this.state.correlationGraphData?.selectedClinicalGroupBy
             }
 
-            ky.get(urlCorrelationGraph, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(urlCorrelationGraph, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: DjangoResponseGetCorrelationGraph) => {
                     if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                         // For short...
@@ -455,9 +463,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                this.setState({ gettingCorrelationData: false })
-                // If an error ocurred, sets the selected row to null
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingCorrelationData: false })
+                    // If an error ocurred, sets the selected row to null
+                    alertGeneralError()
+                }
                 console.log('Error getting correlation graph ->', err)
             })
         })
@@ -480,7 +490,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 experiment_type: this.props.experiment.type
             }
 
-            ky.get(url, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(url, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((statisticalProperties: SourceDataStatisticalPropertiesResponse) => {
                     const gemDataIsOrdinal = statisticalProperties.is_data_ok
                         ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
@@ -493,11 +503,15 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                // If an error ocurred, sets the selected row to null
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    // If an error ocurred, sets the selected row to null
+                    alertGeneralError()
+                }
                 console.log('Error getting correlation graph ->', err)
             }).finally(() => {
-                this.setState({ gettingStatisticalProperties: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingStatisticalProperties: false })
+                }
             })
         })
     }

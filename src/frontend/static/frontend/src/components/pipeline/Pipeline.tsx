@@ -78,6 +78,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
     websocketClient: WebsocketClientCustom
     filterTimeout: number | undefined
     defaultNewExperiment: NewExperiment
+    abortController = new AbortController()
 
     constructor (props) {
         super(props)
@@ -107,6 +108,13 @@ class Pipeline extends React.Component<{}, PipelineState> {
             allExperimentsTableControl: this.getDefaultAllExperimentsTableControl(),
             gettingAllExperiments: false
         }
+    }
+    /**
+     * Abort controller if component unmount
+     */
+
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -215,7 +223,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             }
 
             this.setState({ gettingCommonSamples: true }, () => {
-                ky.get(urlGetCommonSamples, { searchParams: searchParams as KySearchParams }).then((response) => {
+                ky.get(urlGetCommonSamples, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                     this.setState({ gettingCommonSamples: false })
                     response.json().then((jsonResponse: DjangoNumberSamplesInCommonResult) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
@@ -229,7 +237,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
                         console.log('Error parsing JSON ->', err)
                     })
                 }).catch((err) => {
-                    this.setState({ gettingCommonSamples: false })
+                    if (!this.abortController.signal.aborted) {
+                        this.setState({ gettingCommonSamples: false })
+                    }
                     console.log('Error getting user experiments', err)
                 })
             })
@@ -440,7 +450,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
         }
 
         this.setState({ gettingAllExperiments: true }, () => {
-            ky.get(urlUserExperiments, { searchParams: searchParams as KySearchParams }).then((response) => {
+            ky.get(urlUserExperiments, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                 this.setState({ gettingAllExperiments: false })
                 response.json().then((jsonResponse: ResponseRequestWithPagination<DjangoExperiment>) => {
                     allExperimentsTableControl.totalRowCount = jsonResponse.count
@@ -449,7 +459,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                this.setState({ gettingAllExperiments: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingAllExperiments: false })
+                }
                 // If it's a 404 error, maybe it's getting the wrong page after removing an Experiment
                 // For ex. removes the unique Experiment in the third page, request that page after removing
                 // will return a 404 error si we need to return a page before
@@ -510,7 +522,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
      */
     getLastUserExperiments = () => {
         this.setState({ gettingExperiments: true }, () => {
-            ky.get(urlLastExperiments).then((response) => {
+            ky.get(urlLastExperiments, { signal: this.abortController.signal }).then((response) => {
                 this.setState({ gettingExperiments: false })
 
                 response.json().then((experiments: DjangoExperiment[]) => {
@@ -519,7 +531,9 @@ class Pipeline extends React.Component<{}, PipelineState> {
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                this.setState({ gettingExperiments: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingExperiments: false })
+                }
                 console.log('Error getting user experiments', err)
             })
         })
@@ -854,7 +868,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             type: TagType.EXPERIMENT
         }
 
-        ky.get(urlTagsCRUD, { searchParams }).then((response) => {
+        ky.get(urlTagsCRUD, { signal: this.abortController.signal, searchParams }).then((response) => {
             response.json().then((experimentTags: DjangoTag[]) => {
                 this.setState({ tags: experimentTags }, functionToExecute)
             }).catch((err) => {

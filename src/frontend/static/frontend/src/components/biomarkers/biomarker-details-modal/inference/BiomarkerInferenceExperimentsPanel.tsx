@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { InferenceExperimentsTable } from './InferenceExperimentsTable'
 import { Biomarker, InferenceExperimentForTable } from '../../types'
 import { Header, Icon, Modal } from 'semantic-ui-react'
@@ -22,6 +22,8 @@ interface BiomarkerInferenceExperimentsPanelProps {
  * @returns Component.
  */
 export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExperimentsPanelProps) => {
+    const abortController = useRef(new AbortController())
+
     const [openModalNewInferenceExperiment, setOpenModalNewInferenceExperiment] = useState(false)
     const [openModalResultInferenceExperiment, setOpenModalResultInferenceExperiment] = useState(false)
     const [selectedInferenceExperiment, setSelectedInferenceExperiment] = useState<Nullable<InferenceExperimentForTable>>(null)
@@ -51,7 +53,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
 
         const url = `${urlBiomarkerInferenceExperiments}/${selectedInferenceExperiment.id}/`
         const searchParams = { biomarker_pk: props.selectedBiomarker.id as number }
-        ky.get(url, { searchParams }).then((response) => {
+        ky.get(url, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((experiment: InferenceExperimentForTable) => {
                 setSelectedInferenceExperiment(experiment)
             }).catch((err) => {
@@ -59,11 +61,18 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting experiment', err)
         })
     }
-
+    useEffect(() => {
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
+    }, [])
     // Shows modal to add a new inference experiment analysis
     if (openModalNewInferenceExperiment) {
         return (

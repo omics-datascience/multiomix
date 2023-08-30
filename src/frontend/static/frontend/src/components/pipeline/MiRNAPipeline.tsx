@@ -152,6 +152,7 @@ interface MiRNAPipelineState {
 class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineState> {
     websocketClient: WebsocketClientCustom
     filterTimeout: number | undefined
+    abortController = new AbortController()
 
     constructor (props: MiRNAPipelineProps) {
         super(props)
@@ -175,6 +176,13 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
             ]
         }
         this.websocketClient = new WebsocketClientCustom(websocketConfig)
+    }
+    /**
+     * Abort controller if component unmount
+     */
+
+    componentWillUnmount () {
+        this.abortController.abort()
     }
 
     /**
@@ -348,7 +356,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         }
 
         // Makes the request
-        ky.get(urlGetExperimentData, { searchParams }).then((response) => {
+        ky.get(urlGetExperimentData, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((experimentResult: ResponseRequestWithPagination<DjangoMRNAxGEMResultRow>) => {
                 const experimentTabs = this.state.experimentTabs
                 experimentTabs[experimentId].experimentInfo.rows = experimentResult.results
@@ -364,8 +372,10 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
-            this.closeTab(experimentId)
+            if (!this.abortController.signal.aborted) {
+                alertGeneralError()
+                this.closeTab(experimentId)
+            }
             console.log('Error getting experiment data', err)
         })
     }
@@ -507,7 +517,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
      */
     refreshExperimentInfo = (experimentId: number) => {
         const url = `${urlGetFullUserExperiment}/${experimentId}/`
-        ky.get(url).then((response) => {
+        ky.get(url, { signal: this.abortController.signal }).then((response) => {
             response.json().then((experiment: DjangoExperiment) => {
                 this.updateTab(experimentId, experiment)
             }).catch((err) => {
@@ -515,7 +525,9 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!this.abortController.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting experiment', err)
         })
     }
@@ -661,6 +673,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         const experimentId = this.state.selectedExperimentToDeleteOrStop.id
         this.setState({ stoppingExperiment: true }, () => {
             ky.get(urlStopExperiment, {
+                signal: this.abortController.signal,
                 headers: myHeaders,
                 searchParams: { experimentId }
             }).then((response) => {
@@ -680,8 +693,10 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     }
                 }
             }).catch((err) => {
-                this.setState({ stoppingExperiment: false })
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ stoppingExperiment: false })
+                    alertGeneralError()
+                }
                 console.log('Error deleting experiment ->', err)
             })
         })

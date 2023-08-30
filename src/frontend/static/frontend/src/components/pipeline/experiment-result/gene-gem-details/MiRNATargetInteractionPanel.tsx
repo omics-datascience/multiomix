@@ -37,6 +37,8 @@ export class MiRNATargetInteractionPanel extends React.Component<
     MiRNATargetInteractionPanelProps,
     MiRNATargetInteractionPanelState
 > {
+    abortController = new AbortController()
+
     constructor (props) {
         super(props)
 
@@ -51,6 +53,13 @@ export class MiRNATargetInteractionPanel extends React.Component<
     }
 
     /**
+     * Abort controller if component unmount
+     */
+    componentWillUnmount () {
+        this.abortController.abort()
+    }
+
+    /**
      * Retrieves data from server
      */
     getData () {
@@ -60,7 +69,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
         }
 
         this.setState({ gettingData: true }, () => {
-            ky.get(urlMiRNAInteraction, { searchParams, timeout: 60000 }).then((response) => {
+            ky.get(urlMiRNAInteraction, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((data: DjangoMiRNAGeneInteractionJSON) => {
                     this.setState({ data })
                 }).catch((err) => {
@@ -68,11 +77,15 @@ export class MiRNATargetInteractionPanel extends React.Component<
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                // If an error ocurred, sets the selected row to null
-                alertGeneralError()
+                if (!this.abortController.signal.aborted) {
+                    // If an error ocurred, sets the selected row to null
+                    alertGeneralError()
+                }
                 console.log('Error getting miRNA target interactions ->', err)
             }).finally(() => {
-                this.setState({ gettingData: false })
+                if (!this.abortController.signal.aborted) {
+                    this.setState({ gettingData: false })
+                }
             })
         })
     }
