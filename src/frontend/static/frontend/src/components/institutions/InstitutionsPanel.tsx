@@ -82,18 +82,16 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     getUserInstitutions () {
         ky.get(urlUserInstitutionsAsAdmin, { signal: this.abortController.signal }).then((response) => {
             response.json().then((institutions: DjangoInstitution[]) => {
-                if (!this.abortController.signal.aborted) {
-                    // If it's showing an institution, refresh it's state
-                    // For example, in the case of adding or removing a user to/from an Institution
-                    let newSelectedInstitution: Nullable<DjangoInstitution> = null
-                    if (this.state.selectedInstitution !== null) {
-                        newSelectedInstitution = institutions.find((institution) => {
-                            return institution.id === this.state.selectedInstitution?.id
-                        }) ?? null
-                    }
-
-                    this.setState({ institutions, selectedInstitution: newSelectedInstitution })
+                // If it's showing an institution, refresh it's state
+                // For example, in the case of adding or removing a user to/from an Institution
+                let newSelectedInstitution: Nullable<DjangoInstitution> = null
+                if (this.state.selectedInstitution !== null) {
+                    newSelectedInstitution = institutions.find((institution) => {
+                        return institution.id === this.state.selectedInstitution?.id
+                    }) ?? null
                 }
+
+                this.setState({ institutions, selectedInstitution: newSelectedInstitution })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -111,14 +109,12 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                 querySearch: this.state.searchUserText
             }
             ky.get(urlGetUsersCandidates, { searchParams, signal: this.abortController.signal }).then((response) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ isFetchingUsersCandidates: false })
-                    response.json().then((userCandidates: DjangoUserCandidates[]) => {
-                        this.setState({ userCandidates })
-                    }).catch((err) => {
-                        console.log('Error parsing JSON ->', err)
-                    })
-                }
+                this.setState({ isFetchingUsersCandidates: false })
+                response.json().then((userCandidates: DjangoUserCandidates[]) => {
+                    this.setState({ userCandidates })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ isFetchingUsersCandidates: false })

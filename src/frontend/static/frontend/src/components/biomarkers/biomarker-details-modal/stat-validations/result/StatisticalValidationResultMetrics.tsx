@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FitnessFunction, StatisticalValidation, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
@@ -21,6 +21,7 @@ interface StatisticalValidationResultMetricsProps {
  * @returns Component
  */
 export const StatisticalValidationResultMetrics = (props: StatisticalValidationResultMetricsProps) => {
+    const abortController = useRef(new AbortController())
     const [loadingMetrics, setLoadingMetrics] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<StatisticalValidation>>(null)
 
@@ -34,6 +35,10 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
         if (props.selectedStatisticalValidation.id) {
             getStatValidationData()
         }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
@@ -46,7 +51,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
         setLoadingMetrics(true)
 
         const url = `${urlStatisticalValidationMetrics}/${props.selectedStatisticalValidation.id}/`
-        ky.get(url).then((response) => {
+        ky.get(url, { signal: abortController.current.signal }).then((response) => {
             response.json().then((statValidation: StatisticalValidation) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
@@ -54,10 +59,14 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation data', err)
         }).finally(() => {
-            setLoadingMetrics(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingMetrics(false)
+            }
         })
     }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
 import { alertGeneralError } from '../../../../../utils/util_functions'
@@ -22,19 +22,24 @@ interface PathwaysInformationProps {
  * @returns Component.
  */
 export const PathwaysInformation = (props: PathwaysInformationProps) => {
+    const abortController = useRef(new AbortController())
     const [pathwaysData, setPathwaysData] = useState<Nullable<GeneData>>(null)
     const [loadingData, setLoadingData] = useState(false)
 
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getPathwaysData(props.selectedMolecule)
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedMolecule.id])
 
     const getPathwaysData = (selectedMolecule: BiomarkerMolecule) => {
         setLoadingData(true)
 
         const searchParams = { gene: selectedMolecule.identifier }
-        ky.get(urlPathwaysInformation, { searchParams }).then((response) => {
+        ky.get(urlPathwaysInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { data: GeneData }) => {
                 setPathwaysData(jsonResponse.data)
             }).catch((err) => {
@@ -42,10 +47,14 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting pathways information', err)
         }).finally(() => {
-            setLoadingData(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingData(false)
+            }
         })
     }
 

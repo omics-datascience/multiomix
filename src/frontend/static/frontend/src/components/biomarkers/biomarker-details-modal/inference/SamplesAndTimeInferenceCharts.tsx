@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BoxPlotSeries, XAxis, YAxis, PatternLines } from '@data-ui/xy-chart'
 import { InferenceExperimentForTable } from '../../types'
 import { NoClinicalData } from '../../../pipeline/experiment-result/gene-gem-details/survival-analysis/NoClinicalData'
@@ -38,6 +38,7 @@ interface SamplesAndTimeInferenceChartsProps {
  * @returns Component.
  */
 export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChartsProps) => {
+    const abortController = useRef(new AbortController())
     const [loadingChartData, setLoadingChartData] = useState(false)
     const [chartData, setChartData] = useState<ChartData[]>([]) // TODO: type
 
@@ -45,6 +46,10 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
     useEffect(() => {
         if (props.selectedClinicalAttribute) {
             getStatValidationKaplanMeierByAttr(props.selectedClinicalAttribute)
+        }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
         }
     }, [props.selectedClinicalAttribute])
 
@@ -86,7 +91,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
             clinical_attribute: clinicalAttribute
         }
 
-        ky.get(urlChartDataByAttribute, { searchParams, timeout: 60000 }).then((response) => {
+        ky.get(urlChartDataByAttribute, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
             response.json().then((kaplanMeierResult/*: TODO: add type */) => {
                 setChartData(kaplanMeierResult)
             }).catch((err) => {
@@ -94,10 +99,14 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting InferenceExperiment data grouped by a clinical attribute', err)
         }).finally(() => {
-            setLoadingChartData(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingChartData(false)
+            }
         })
     }
 

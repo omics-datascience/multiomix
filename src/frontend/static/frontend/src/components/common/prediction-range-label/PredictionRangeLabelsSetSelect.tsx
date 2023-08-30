@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Select, DropdownItemProps } from 'semantic-ui-react'
 import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
@@ -23,6 +23,7 @@ interface PredictionRangeLabelsSetSelectProps {
  * @returns Component.
  */
 export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSelectProps) => {
+    const abortController = useRef(new AbortController())
     const [predictionRangeLabelsSets, setPredictionRangeLabelsSets] = useState<PredictionRangeLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
 
@@ -35,7 +36,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
         setLoading(true)
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
-        ky.get(urlPredictionRangeLabelsSets, { searchParams }).then((response) => {
+        ky.get(urlPredictionRangeLabelsSets, { searchParams, signal: abortController?.current.signal }).then((response) => {
             response.json().then((predictionRangeLabelsSetData: PredictionRangeLabelsSet[]) => {
                 setPredictionRangeLabelsSets(predictionRangeLabelsSetData)
             }).catch((err) => {
@@ -43,16 +44,26 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController?.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting model PredictionRangeLabelsSets', err)
         }).finally(() => {
-            setLoading(false)
+            if (!abortController?.current.signal.aborted) {
+                setLoading(false)
+            }
         })
     }
 
     const options: DropdownItemProps[] = predictionRangeLabelsSets.map((predictionRangeLabelsSet) => (
         { key: predictionRangeLabelsSet.id, text: predictionRangeLabelsSet.name, value: predictionRangeLabelsSet.id }
     ))
+    useEffect(() => {
+        return () => {
+        // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
+    }, [])
 
     return (
         <>

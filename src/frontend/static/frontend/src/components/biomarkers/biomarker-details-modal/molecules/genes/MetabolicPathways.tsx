@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
 import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
@@ -38,6 +38,7 @@ interface MetabolicPathwaysProps {
  * @returns Component.
  */
 export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
+    const abortController = useRef(new AbortController())
     const [searchInput, setSearchInput] = useState<string>('')
     const [selectedSource, setSelectedSource] = useState<string | undefined>(undefined)
     const [listOfGenes, setListOfGenes] = useState<string[]>([])
@@ -46,6 +47,10 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getMetabolicPathwaysData(props.selectedMolecule)
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [selectedSource])
 
     /**
@@ -56,7 +61,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
         setLoadingData(true)
 
         const searchParams = { gene: selectedMolecule.identifier, source: selectedSource ?? '' }
-        ky.get(urlMetabolicPathways, { searchParams }).then((response) => {
+        ky.get(urlMetabolicPathways, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: string[]) => {
                 setListOfGenes(jsonResponse)
             }).catch((err) => {
@@ -64,10 +69,14 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting gene information', err)
         }).finally(() => {
-            setLoadingData(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingData(false)
+            }
         })
     }
 

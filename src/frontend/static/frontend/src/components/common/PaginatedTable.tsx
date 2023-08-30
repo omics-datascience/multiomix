@@ -209,16 +209,14 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
                     ky.get(filter.urlToRetrieveOptions, { signal: this.abortController.signal, timeout: 60000 }).then((response) => {
                         response.json().then((jsonResponse: FilterRetrievedOptions[]) => {
-                            if (!this.abortController.signal.aborted) {
-                                retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
-                                    return {
-                                        key: option.value,
-                                        value: option.value,
-                                        text: option.text
-                                    }
-                                })
-                                this.setState({ retrievedOptions })
-                            }
+                            retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
+                                return {
+                                    key: option.value,
+                                    value: option.value,
+                                    text: option.text
+                                }
+                            })
+                            this.setState({ retrievedOptions })
                         }).catch((err) => {
                             console.log('Error parsing JSON ->', err)
                         })
@@ -296,13 +294,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         this.setState({ gettingData: true }, () => {
             ky.get(this.props.urlToRetrieveData, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
-                    if (!this.abortController.signal.aborted) {
-                        tableControl.totalRowCount = jsonResponse.count
-                        this.setState({
-                            elements: jsonResponse.results,
-                            tableControl
-                        })
-                    }
+                    tableControl.totalRowCount = jsonResponse.count
+                    this.setState({
+                        elements: jsonResponse.results,
+                        tableControl
+                    })
                 }).catch((err) => {
                     alertGeneralError()
                     console.log('Error parsing JSON ->', err)

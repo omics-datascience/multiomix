@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { MoleculesExpressions, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
@@ -21,6 +21,7 @@ interface StatisticalValidationResultHeatMapProps {
  * @returns Component
  */
 export const StatisticalValidationResultHeatMap = (props: StatisticalValidationResultHeatMapProps) => {
+    const abortController = useRef(new AbortController())
     const [loading, setLoading] = useState(false)
     const [heatMapData, setHeatMapData] = useState<Nullable<MoleculesExpressions>>(null)
 
@@ -32,6 +33,10 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         if (props.selectedStatisticalValidation.id) {
             getStatValidationHeatMap()
         }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
@@ -39,7 +44,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationHeatMap, { searchParams, timeout: 60000 }).then((response) => {
+        ky.get(urlStatisticalValidationHeatMap, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
             response.json().then((headMapData: MoleculesExpressions) => {
                 setHeatMapData(headMapData)
             }).catch((err) => {
@@ -47,10 +52,14 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation heatmap', err)
         }).finally(() => {
-            setLoading(false)
+            if (!abortController.current.signal.aborted) {
+                setLoading(false)
+            }
         })
     }
 

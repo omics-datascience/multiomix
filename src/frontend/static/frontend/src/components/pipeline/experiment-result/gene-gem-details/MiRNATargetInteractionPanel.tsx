@@ -71,9 +71,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
         this.setState({ gettingData: true }, () => {
             ky.get(urlMiRNAInteraction, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((data: DjangoMiRNAGeneInteractionJSON) => {
-                    if (!this.abortController.signal.aborted) {
-                        this.setState({ data })
-                    }
+                    this.setState({ data })
                 }).catch((err) => {
                     alertGeneralError()
                     console.log('Error parsing JSON ->', err)

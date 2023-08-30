@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
 import ky from 'ky'
@@ -24,6 +24,7 @@ interface StatisticalValidationResultBestFeaturesProps {
  * @returns Component
  */
 export const StatisticalValidationResultBestFeatures = (props: StatisticalValidationResultBestFeaturesProps) => {
+    const abortController = useRef(new AbortController())
     const [loading, setLoading] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<MoleculeWithCoefficient[]>>(null)
 
@@ -35,6 +36,10 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         if (props.selectedStatisticalValidation.id) {
             getStatValidationBestFeatures()
         }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedStatisticalValidation.id])
 
     /** Retrieve all the data of the selected StatisticalValidation instance. */
@@ -42,7 +47,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         setLoading(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationBestFeatures, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationBestFeatures, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((statValidation: MoleculeWithCoefficient[]) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
@@ -50,10 +55,14 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation best features', err)
         }).finally(() => {
-            setLoading(false)
+            if (!abortController.current.signal.aborted) {
+                setLoading(false)
+            }
         })
     }
 

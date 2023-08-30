@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { MainNavbar, ActiveItemOptions } from './MainNavbar'
 import ky from 'ky'
 import { DjangoUser } from '../utils/django_interfaces'
@@ -28,25 +28,32 @@ const CurrentUserContext = React.createContext<Nullable<DjangoUser>>(null)
  * @returns Component
  */
 const Base = (props: BaseProps) => {
+    const abortController = useRef(new AbortController())
     const [currentUser, setUser] = useState<Nullable<DjangoUser>>(null)
 
     /**
      * Method which is executed when the component has mounted
      */
-    useEffect(getCurrentUser, [])
+    useEffect(() => {
+        getCurrentUser()
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
+    }, [])
 
     /**
      * Fetches logged User data
      */
     function getCurrentUser () {
-        ky.get(urlCurrentUser, { retry: 5 }).then((response) => {
+        ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
             response.json().then((currentUser: DjangoUser) => {
                 setUser(currentUser)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            if (err.response.status === 403) {
+            if (err.response.status === 403 && !abortController.current.signal.aborted) {
                 // It's an anonymous user
                 setUser({
                     id: null,
@@ -66,7 +73,7 @@ const Base = (props: BaseProps) => {
     return (
         <CurrentUserContext.Provider value={currentUser}>
             {/* Navbar */}
-            <MainNavbar activeItem={props.activeItem}/>
+            <MainNavbar activeItem={props.activeItem} />
 
             {/* Composition part */}
             <div className={props.wrapperClass}>

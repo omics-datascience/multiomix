@@ -181,9 +181,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
     getUserInstitutions () {
         ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
             response.json().then((userInstitutions: DjangoInstitution[]) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ userInstitutions })
-                }
+                this.setState({ userInstitutions })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -203,9 +201,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
         ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ tags })
-                }
+                this.setState({ tags })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })

@@ -358,21 +358,17 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         // Makes the request
         ky.get(urlGetExperimentData, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((experimentResult: ResponseRequestWithPagination<DjangoMRNAxGEMResultRow>) => {
-                if (!this.abortController.signal.aborted) {
-                    const experimentTabs = this.state.experimentTabs
-                    experimentTabs[experimentId].experimentInfo.rows = experimentResult.results
-                    experimentTabs[experimentId].experimentInfo.totalRowCount = experimentResult.count
+                const experimentTabs = this.state.experimentTabs
+                experimentTabs[experimentId].experimentInfo.rows = experimentResult.results
+                experimentTabs[experimentId].experimentInfo.totalRowCount = experimentResult.count
 
-                    this.setState({
-                        activeTab: experimentId,
-                        experimentTabs
-                    })
-                }
+                this.setState({
+                    activeTab: experimentId,
+                    experimentTabs
+                })
             }).catch((err) => {
-                if (!this.abortController.signal.aborted) {
-                    alertGeneralError()
-                    this.closeTab(experimentId)
-                }
+                alertGeneralError()
+                this.closeTab(experimentId)
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
@@ -523,13 +519,9 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
         const url = `${urlGetFullUserExperiment}/${experimentId}/`
         ky.get(url, { signal: this.abortController.signal }).then((response) => {
             response.json().then((experiment: DjangoExperiment) => {
-                if (!this.abortController.signal.aborted) {
-                    this.updateTab(experimentId, experiment)
-                }
+                this.updateTab(experimentId, experiment)
             }).catch((err) => {
-                if (!this.abortController.signal.aborted) {
-                    alertGeneralError()
-                }
+                alertGeneralError()
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
@@ -685,21 +677,19 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                 headers: myHeaders,
                 searchParams: { experimentId }
             }).then((response) => {
-                if (!this.abortController.signal.aborted) {
-                    // If OK is returned refresh the experiments
-                    if (response.ok) {
-                        this.setState({
-                            stoppingExperiment: false,
-                            showStopExperimentModal: false
-                        })
+                // If OK is returned refresh the experiments
+                if (response.ok) {
+                    this.setState({
+                        stoppingExperiment: false,
+                        showStopExperimentModal: false
+                    })
 
-                        // Refresh the experiments tables
-                        this.props.updateAllExperimentsTables()
+                    // Refresh the experiments tables
+                    this.props.updateAllExperimentsTables()
 
-                        // If the experiment which was deleted is the same which is being edited, cleans the form
-                        if (this.state.selectedExperimentToDeleteOrStop?.id === this.props.newExperiment.id) {
-                            this.props.resetExperimentForm()
-                        }
+                    // If the experiment which was deleted is the same which is being edited, cleans the form
+                    if (this.state.selectedExperimentToDeleteOrStop?.id === this.props.newExperiment.id) {
+                        this.props.resetExperimentForm()
                     }
                 }
             }).catch((err) => {

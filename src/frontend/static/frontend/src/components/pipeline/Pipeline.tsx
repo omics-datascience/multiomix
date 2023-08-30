@@ -226,14 +226,12 @@ class Pipeline extends React.Component<{}, PipelineState> {
                 ky.get(urlGetCommonSamples, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                     this.setState({ gettingCommonSamples: false })
                     response.json().then((jsonResponse: DjangoNumberSamplesInCommonResult) => {
-                        if (!this.abortController.signal.aborted) {
-                            if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
-                                this.setState({
-                                    numberOfSamplesMRNA: jsonResponse.data.number_samples_mrna,
-                                    numberOfSamplesGEM: jsonResponse.data.number_samples_gem,
-                                    numberOfSamplesInCommon: jsonResponse.data.number_samples_in_common
-                                })
-                            }
+                        if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                            this.setState({
+                                numberOfSamplesMRNA: jsonResponse.data.number_samples_mrna,
+                                numberOfSamplesGEM: jsonResponse.data.number_samples_gem,
+                                numberOfSamplesInCommon: jsonResponse.data.number_samples_in_common
+                            })
                         }
                     }).catch((err) => {
                         console.log('Error parsing JSON ->', err)
@@ -453,15 +451,13 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         this.setState({ gettingAllExperiments: true }, () => {
             ky.get(urlUserExperiments, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ gettingAllExperiments: false })
-                    response.json().then((jsonResponse: ResponseRequestWithPagination<DjangoExperiment>) => {
-                        allExperimentsTableControl.totalRowCount = jsonResponse.count
-                        this.setState({ allExperiments: jsonResponse.results, allExperimentsTableControl })
-                    }).catch((err) => {
-                        console.log('Error parsing JSON ->', err)
-                    })
-                }
+                this.setState({ gettingAllExperiments: false })
+                response.json().then((jsonResponse: ResponseRequestWithPagination<DjangoExperiment>) => {
+                    allExperimentsTableControl.totalRowCount = jsonResponse.count
+                    this.setState({ allExperiments: jsonResponse.results, allExperimentsTableControl })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingAllExperiments: false })
@@ -527,15 +523,13 @@ class Pipeline extends React.Component<{}, PipelineState> {
     getLastUserExperiments = () => {
         this.setState({ gettingExperiments: true }, () => {
             ky.get(urlLastExperiments, { signal: this.abortController.signal }).then((response) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ gettingExperiments: false })
+                this.setState({ gettingExperiments: false })
 
-                    response.json().then((experiments: DjangoExperiment[]) => {
-                        this.setState({ lastExperiments: experiments })
-                    }).catch((err) => {
-                        console.log('Error parsing JSON ->', err)
-                    })
-                }
+                response.json().then((experiments: DjangoExperiment[]) => {
+                    this.setState({ lastExperiments: experiments })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingExperiments: false })
@@ -876,9 +870,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         ky.get(urlTagsCRUD, { signal: this.abortController.signal, searchParams }).then((response) => {
             response.json().then((experimentTags: DjangoTag[]) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ tags: experimentTags }, functionToExecute)
-                }
+                this.setState({ tags: experimentTags }, functionToExecute)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })

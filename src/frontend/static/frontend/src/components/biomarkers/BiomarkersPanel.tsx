@@ -82,7 +82,9 @@ interface BiomarkersPanelState {
     selectedBiomarker: Nullable<Biomarker>,
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
-    submittingFSExperiment: boolean
+    submittingFSExperiment: boolean,
+    openDetailsModal2: boolean
+
 }
 
 /**
@@ -113,7 +115,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             selectedBiomarker: null,
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
-            submittingFSExperiment: false
+            submittingFSExperiment: false,
+            openDetailsModal2: false
         }
     }
 
@@ -439,14 +442,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
             ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/', { signal: this.abortController.signal }).then((response) => {
                 response.json().then((jsonResponse: Biomarker | PromiseLike<Biomarker>) => {
-                    if (!this.abortController.signal.aborted) {
-                        resolve(jsonResponse)
-                    }
+                    resolve(jsonResponse)
                 }).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
-                    if (!this.abortController.signal.aborted) {
-                        reject(err)
-                    }
+                    reject(err)
                 })
             }).catch((err) => {
                 console.error('Error getting Biomarker:', err)
@@ -569,23 +568,21 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
-                if (!this.abortController.signal.aborted) {
-                    const formBiomarker = this.state.formBiomarker
-                    const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
+                const formBiomarker = this.state.formBiomarker
+                const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
 
-                    formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(molecule => {
-                        const text = checkedIgnoreProposedAlias || molecule.molecule === molecule.standard
-                            ? molecule.molecule
-                            : `${molecule.molecule} (${molecule.standard})`
+                formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(molecule => {
+                    const text = checkedIgnoreProposedAlias || molecule.molecule === molecule.standard
+                        ? molecule.molecule
+                        : `${molecule.molecule} (${molecule.standard})`
 
-                        return {
-                            key: molecule.molecule,
-                            text,
-                            value: checkedIgnoreProposedAlias ? molecule.molecule : molecule.standard
-                        }
-                    })
-                    this.setState({ formBiomarker })
-                }
+                    return {
+                        key: molecule.molecule,
+                        text,
+                        value: checkedIgnoreProposedAlias ? molecule.molecule : molecule.standard
+                    }
+                })
+                this.setState({ formBiomarker })
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
@@ -1308,12 +1305,10 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const url = `${urlCloneBiomarker}/${this.state.biomarkerToClone.id}/`
         ky.get(url, { searchParams: { limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((responseJSON: OkResponse) => {
-                if (!this.abortController.signal.aborted) {
-                    if (responseJSON.ok) {
-                        this.closeModalToClone()
-                    } else {
-                        alertGeneralError()
-                    }
+                if (responseJSON.ok) {
+                    this.closeModalToClone()
+                } else {
+                    alertGeneralError()
                 }
             }).catch((err) => {
                 alertGeneralError()
@@ -1441,9 +1436,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
             response.json().then((tags: DjangoTag[]) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ tags })
-                }
+                this.setState({ tags })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -1472,7 +1465,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
-
+                <button onClick={() => this.setState({ openDetailsModal2: true })}>test</button>
                 <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
                     headers={[

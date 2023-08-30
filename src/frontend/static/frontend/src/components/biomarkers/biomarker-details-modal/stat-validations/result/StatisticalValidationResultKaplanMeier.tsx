@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { Button, Form, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
 import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
@@ -30,6 +30,7 @@ type KaplanMeierStrategy = 'clustering' | 'clinical_attribute'
  * @returns Component
  */
 export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
+    const abortController = useRef(new AbortController())
     const hasClusteringModel = props.selectedStatisticalValidation.fitness_function === FitnessFunction.CLUSTERING
     const [loadingKaplanMeier, setLoadingKaplanMeier] = useState(false)
     const [showSamplesAndClusters, setShowSamplesAndClusters] = useState(false)
@@ -51,6 +52,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 getStatValidationKaplanMeierByClusteringModel()
             }
         }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedStatisticalValidation.id])
 
     /** Makes the query to get KaplanMeierData with delay. */
@@ -69,6 +74,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         if (selectedClinicalAttribute !== undefined) {
             makeKaplanMeierRequestByAttrs(selectedClinicalAttribute)
         }
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [selectedClinicalAttribute])
 
     /** Retrieve all the clinical attributes of the selected StatisticalValidation instance. */
@@ -76,7 +85,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         setLoadingClinicalAttributes(true)
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationClinicalAttrs, { searchParams, timeout: 60000 }).then((response) => {
+        ky.get(urlStatisticalValidationClinicalAttrs, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
             response.json().then((clinicalAttributes: string[]) => {
                 setClinicalAttributes(clinicalAttributes)
             }).catch((err) => {
@@ -84,10 +93,14 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation clinical attributes data', err)
         }).finally(() => {
-            setLoadingClinicalAttributes(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingClinicalAttributes(false)
+            }
         })
     }
 
@@ -97,7 +110,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         setKaplanMeierData(null) // Resets some data in the right panel
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
-        ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams, timeout: 60000 }).then((response) => {
+        ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
             response.json().then((statValidation: KaplanMeierResultData) => {
                 setKaplanMeierData(statValidation)
             }).catch((err) => {
@@ -105,10 +118,14 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation KaplanMeier by clustering model', err)
         }).finally(() => {
-            setLoadingKaplanMeier(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingKaplanMeier(false)
+            }
         })
     }
 
@@ -124,7 +141,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             statistical_validation_pk: props.selectedStatisticalValidation.id,
             clinical_attribute: clinicalAttribute
         }
-        ky.get(urlStatisticalValidationKaplanMeierByAttr, { searchParams, timeout: 60000 }).then((response) => {
+        ky.get(urlStatisticalValidationKaplanMeierByAttr, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
             response.json().then((kaplanMeierResult: KaplanMeierResultData) => {
                 setKaplanMeierData(kaplanMeierResult)
             }).catch((err) => {
@@ -132,10 +149,14 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting StatisticalValidation KaplanMeier by clinical attribute', err)
         }).finally(() => {
-            setLoadingKaplanMeier(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingKaplanMeier(false)
+            }
         })
     }
 

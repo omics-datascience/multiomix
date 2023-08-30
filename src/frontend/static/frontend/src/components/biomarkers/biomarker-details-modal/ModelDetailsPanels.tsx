@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { List, Placeholder, Segment } from 'semantic-ui-react'
 import { ClusteringAlgorithmLabel } from '../labels/ClusteringAlgorithmLabel'
 import { ClusteringScoringMethodLabel } from '../labels/ClusteringScoringMethodLabel'
@@ -178,11 +178,16 @@ interface ModelDetailsModelDetailsPanelProps {
  * @returns Component.
  */
 export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => {
+    const abortController = useRef(new AbortController())
     const [modelDetails, setModelDetails] = useState<Nullable<ModelDetails>>(null)
     const [loadingModelDetails, setLoadingModelDetails] = useState(false)
 
     useEffect(() => {
         getModelDetails()
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.trainedModelPk])
 
     /** Retrieve all the details of the selected StatisticalValidation's Trained model. */
@@ -190,7 +195,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
         setLoadingModelDetails(true)
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
-        ky.get(urlStatisticalValidationModalDetails, { searchParams }).then((response) => {
+        ky.get(urlStatisticalValidationModalDetails, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((modelDetails: ModelDetails) => {
                 setModelDetails(modelDetails)
             }).catch((err) => {
@@ -198,10 +203,14 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting model details data', err)
         }).finally(() => {
-            setLoadingModelDetails(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingModelDetails(false)
+            }
         })
     }
 

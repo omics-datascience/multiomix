@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
 import { alertGeneralError } from '../../../../../utils/util_functions'
@@ -21,19 +21,24 @@ interface GeneInformationProps {
  * @returns Component.
  */
 export const GeneInformation = (props: GeneInformationProps) => {
+    const abortController = useRef(new AbortController())
     const [geneData, setGeneData] = useState<Nullable<GeneData>>(null)
     const [loadingData, setLoadingData] = useState(false)
 
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getMoleculeData(props.selectedMolecule)
+        return () => {
+            // Cleanup: cancel the ongoing request when component unmounts
+            abortController.current.abort()
+        }
     }, [props.selectedMolecule.id])
 
     const getMoleculeData = (selectedMolecule: BiomarkerMolecule) => {
         setLoadingData(true)
 
         const searchParams = { gene: selectedMolecule.identifier }
-        ky.get(urlGeneInformation, { searchParams }).then((response) => {
+        ky.get(urlGeneInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { data: GeneData }) => {
                 setGeneData(jsonResponse.data)
             }).catch((err) => {
@@ -41,10 +46,14 @@ export const GeneInformation = (props: GeneInformationProps) => {
                 console.log('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            alertGeneralError()
+            if (!abortController.current.signal.aborted) {
+                alertGeneralError()
+            }
             console.log('Error getting gene information', err)
         }).finally(() => {
-            setLoadingData(false)
+            if (!abortController.current.signal.aborted) {
+                setLoadingData(false)
+            }
         })
     }
 
