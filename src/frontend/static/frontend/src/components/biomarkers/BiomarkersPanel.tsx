@@ -653,9 +653,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     /**
      * Method that gets symbols while user is writing in Select molecules input
      * @param molecules array of strings that is sending to the api
-     * @returns boolean api query result
      */
-    handleGeneSymbols = (molecules: string[]): boolean => {
+    handleGeneSymbols = (molecules: string[]): void => {
         const moleculesSectionPreload = {
             ...this.state.formBiomarker.moleculesSection,
             [this.state.formBiomarker.moleculeSelected]: {
@@ -663,36 +662,36 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data]
             }
         }
-        const alert = this.state.alert
         this.setState({
             formBiomarker: {
                 ...this.state.formBiomarker,
                 moleculesSection: moleculesSectionPreload
             }
         })
-        let apiResult: boolean = false
         let urlToFind: string
         let json: {[key: string]: string[]}
+        let keyMolecules: string
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
                 urlToFind = urlMiRNACodes
                 json = { mirna_codes: molecules }
+                keyMolecules = 'mirna_codes'
                 break
             case BiomarkerType.METHYLATION:
                 urlToFind = urlMethylationSites
                 json = { methylation_sites: molecules }
+                keyMolecules = 'methylation_sites'
                 break
             default:
                 urlToFind = urlGeneSymbols
                 json = { gene_ids: molecules }
+                keyMolecules = 'gene_ids'
                 break
         }
-
+        const genesArray: MoleculesSectionData[] = []
         ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
-                const genesArray: MoleculesSectionData[] = []
-
                 genes.forEach(gene => {
                     let condition
                     switch (gene[1].length) {
@@ -728,40 +727,42 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             break
                     }
                 })
-                const moleculesSection = {
-                    ...this.state.formBiomarker.moleculesSection,
-                    [this.state.formBiomarker.moleculeSelected]: {
-                        isLoading: false,
-                        data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
-                    }
-                }
-                this.setState({
-                    formBiomarker: {
-                        ...this.state.formBiomarker,
-                        moleculesSection
-                    }
-                })
-                apiResult = true
             }).catch((err) => {
+                json[keyMolecules].forEach(molecule => {
+                    genesArray.push({
+                        isValid: false,
+                        value: molecule
+                    })
+                })
                 console.error('Error parsing JSON ->', err)
-                alert.isOpen = true
-                alert.message = 'Error in insert molecule!'
-                alert.type = CustomAlertTypes.ERROR
-                this.setState({ alert })
             })
         }).catch((err) => {
+            json[keyMolecules].forEach(molecule => {
+                genesArray.push({
+                    isValid: false,
+                    value: molecule
+                })
+            })
             console.error('Error getting genes ->', err)
-            alert.isOpen = true
-            alert.message = 'Error in insert molecule!'
-            alert.type = CustomAlertTypes.ERROR
-            this.setState({ alert })
         }).finally(() => {
             // Sets loading in false
+            const moleculesSection = {
+                ...this.state.formBiomarker.moleculesSection,
+                [this.state.formBiomarker.moleculeSelected]: {
+                    isLoading: false,
+                    data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
+                }
+            }
+            this.setState({
+                formBiomarker: {
+                    ...this.state.formBiomarker,
+                    moleculesSection
+                }
+            })
             const formBiomarker = this.state.formBiomarker
             formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
             this.setState({ formBiomarker })
         })
-        return apiResult
     }
 
     /**

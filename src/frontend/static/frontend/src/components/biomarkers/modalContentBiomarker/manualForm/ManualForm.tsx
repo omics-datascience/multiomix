@@ -21,7 +21,7 @@ interface ManualFormProps {
     handleAddMoleculeToSection: (value: MoleculesSectionData) => void,
     handleRemoveMolecule: (section: BiomarkerType, molecule: MoleculesSectionData) => void,
     handleGenesSymbolsFinder: (query: string) => void,
-    handleGenesSymbols: (genes: string[]) => boolean,
+    handleGenesSymbols: (genes: string[]) => void,
     handleSelectOptionMolecule: (molecule: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleRestartSection: (sector: BiomarkerType) => void,
