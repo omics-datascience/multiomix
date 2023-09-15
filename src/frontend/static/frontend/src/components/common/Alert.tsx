@@ -52,7 +52,7 @@ export const Alert = (props: AlertProps) => {
             open={isOpen}
             transition={{ duration }}
         >
-            <div className='alert--container--transition'>
+            <div className='alert--container--transition' style={{ zIndex: 10000 }}>
                 <div className='alert--container--alert' style={{ border: `1px solid ${color}` }}>
                     <Icon
                         className='alert--icon'
@@ -62,6 +62,6 @@ export const Alert = (props: AlertProps) => {
                     <p className='alert--message'>{message}</p>
                 </div>
             </div>
-        </TransitionablePortal >
+        </TransitionablePortal>
     )
 }

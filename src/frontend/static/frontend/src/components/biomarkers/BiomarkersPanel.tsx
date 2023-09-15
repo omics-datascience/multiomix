@@ -563,9 +563,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
-
         this.setState({ formBiomarker: formBiomarkerPreLoad })
-
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
                 const formBiomarker = this.state.formBiomarker
@@ -664,36 +662,36 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data]
             }
         }
-
         this.setState({
             formBiomarker: {
                 ...this.state.formBiomarker,
                 moleculesSection: moleculesSectionPreload
             }
         })
-
         let urlToFind: string
         let json: {[key: string]: string[]}
+        let keyMolecules: string
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
                 urlToFind = urlMiRNACodes
                 json = { mirna_codes: molecules }
+                keyMolecules = 'mirna_codes'
                 break
             case BiomarkerType.METHYLATION:
                 urlToFind = urlMethylationSites
                 json = { methylation_sites: molecules }
+                keyMolecules = 'methylation_sites'
                 break
             default:
                 urlToFind = urlGeneSymbols
                 json = { gene_ids: molecules }
+                keyMolecules = 'gene_ids'
                 break
         }
-
+        const genesArray: MoleculesSectionData[] = []
         ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
-                const genesArray: MoleculesSectionData[] = []
-
                 genes.forEach(gene => {
                     let condition
                     switch (gene[1].length) {
@@ -729,26 +727,38 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             break
                     }
                 })
-                const moleculesSection = {
-                    ...this.state.formBiomarker.moleculesSection,
-                    [this.state.formBiomarker.moleculeSelected]: {
-                        isLoading: false,
-                        data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
-                    }
-                }
-                this.setState({
-                    formBiomarker: {
-                        ...this.state.formBiomarker,
-                        moleculesSection
-                    }
-                })
             }).catch((err) => {
+                json[keyMolecules].forEach(molecule => {
+                    genesArray.push({
+                        isValid: false,
+                        value: molecule
+                    })
+                })
                 console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
+            json[keyMolecules].forEach(molecule => {
+                genesArray.push({
+                    isValid: false,
+                    value: molecule
+                })
+            })
             console.error('Error getting genes ->', err)
         }).finally(() => {
             // Sets loading in false
+            const moleculesSection = {
+                ...this.state.formBiomarker.moleculesSection,
+                [this.state.formBiomarker.moleculeSelected]: {
+                    isLoading: false,
+                    data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
+                }
+            }
+            this.setState({
+                formBiomarker: {
+                    ...this.state.formBiomarker,
+                    moleculesSection
+                }
+            })
             const formBiomarker = this.state.formBiomarker
             formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
             this.setState({ formBiomarker })
@@ -1465,7 +1475,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
                 {deletionConfirmModal}
-                <button onClick={() => this.setState({ openDetailsModal2: true })}>test</button>
                 <PaginatedTable<BiomarkerSimple>
                     headerTitle='Biomarkers'
                     headers={[
