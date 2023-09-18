@@ -30,8 +30,8 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
 
     /** Makes the query to Modulector/Bio-API to retrieve molecules. */
     const makeSearchRequest = useCallback(
-        debounce((search: string) => {
-            handleSearchNewData(search)
+        debounce(async (search: string) => {
+            await handleSearchNewData(search)
         }, 1000),
         []
     )

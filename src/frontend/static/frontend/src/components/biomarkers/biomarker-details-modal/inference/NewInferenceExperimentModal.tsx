@@ -335,7 +335,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                             {/* Steps */}
                             <Step.Group widths={3}>
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
-                                    <Icon name='truck' />
+                                    <Icon name='list' />
                                     <Step.Content>
                                         <Step.Title>Step 1: Trained model</Step.Title>
                                     </Step.Content>
@@ -351,7 +351,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                         }
                                     }}
                                 >
-                                    <Icon name='credit card' />
+                                    <Icon name='boxes' />
                                     <Step.Content>
                                         <Step.Title>Step 2: molecules datasets</Step.Title>
                                     </Step.Content>
