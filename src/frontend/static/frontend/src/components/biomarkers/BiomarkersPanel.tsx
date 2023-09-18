@@ -1721,7 +1721,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}
                             handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
                             handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
-                            cancelForm= {() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
+                            cancelForm={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
                         />
                     }
                 </Modal>

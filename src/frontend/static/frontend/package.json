@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "check-lint": "eslint ./src/**/*.{ts,tsx,js}",
+    "fix-lint": "eslint ./src/**/*.{ts,tsx,js} --fix",
     "check-tsc": "tsc --noEmit",
     "check-all": "npm run check-tsc && npm run check-lint",
     "dev": "webpack --config webpack.dev.js",

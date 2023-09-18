@@ -97,7 +97,6 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
 
                     <Header as='h3'>
                         Metabolic pathways
-
                     </Header>
 
                     <InputLabel label='Select a source' />
