@@ -19,7 +19,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
+from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState, BiomarkerOrigin
 from common.utils import get_source_pk
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
     ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod, SVMKernel
@@ -57,6 +57,20 @@ class FeatureSelectionSubmit(APIView):
             return FitnessFunction.RF
         else:
             return None
+
+    @staticmethod
+    def __create_target_biomarker(fs_experiment: FSExperiment):
+        """Creates a new Biomarker and assigns it to the FSExperiment instance."""
+        origin_biomarker = fs_experiment.origin_biomarker
+        new_biomarker = Biomarker.objects.create(
+            name=f'"{origin_biomarker.name}" (FS optimized {fs_experiment.pk})',
+            description=origin_biomarker.description,
+            origin=BiomarkerOrigin.FEATURE_SELECTION,
+            state=BiomarkerState.WAITING_FOR_QUEUE,
+            user=origin_biomarker.user
+        )
+        fs_experiment.created_biomarker = new_biomarker
+        fs_experiment.save()
 
     def post(self, request: Request):
         with transaction.atomic():
@@ -137,6 +151,8 @@ class FeatureSelectionSubmit(APIView):
             )
 
             # Adds Feature Selection experiment to the ThreadPool
+            self.__create_target_biomarker(fs_experiment)
+
             async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
                 (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
                  cross_validation_parameters), queue='feature_selection')

@@ -28,19 +28,6 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
     @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc.) to compute.
     @param cross_validation_parameters: Parameters of the CrossValidation process.
     """
-    def __create_target_biomarker(fs_experiment: FSExperiment):
-        """Creates a new Biomarker and assigns it to the FSExperiment instance."""
-        origin_biomarker = fs_experiment.origin_biomarker
-        new_biomarker = Biomarker.objects.create(
-            name=f'"{origin_biomarker.name}" (FS optimized {fs_experiment.pk})',
-            description=origin_biomarker.description,
-            origin=BiomarkerOrigin.FEATURE_SELECTION,
-            state=BiomarkerState.IN_PROCESS,
-            user=origin_biomarker.user
-        )
-        fs_experiment.created_biomarker = new_biomarker
-        fs_experiment.save()
-
     # Due to Celery getting old jobs from the queue, we need to check if the experiment still exists
     try:
         experiment: FSExperiment = FSExperiment.objects.get(pk=experiment_pk)
@@ -48,11 +35,13 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
         logging.error(f'Experiment {experiment_pk} does not exist')
         return
 
-    # Creates the resulting Biomarker
-    __create_target_biomarker(experiment)
-
     # Resulting Biomarker instance from the FS experiment.
+    # NOTE: the created_biomarker is created BEFORE calling this task
     biomarker: Biomarker = experiment.created_biomarker
+
+    # Sets the state of the biomarker to IN_PROCESS
+    biomarker.state = BiomarkerState.IN_PROCESS
+    biomarker.save(update_fields=['state'])
 
     # Computes the experiment
     molecules_temp_file_path: Optional[str] = None
