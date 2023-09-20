@@ -147,6 +147,9 @@ class StatisticalValidation(models.Model):
     methylation_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE,
                                                      null=True, blank=True,
                                                      related_name='statistical_validations_as_methylation')
+    # Number of attempts to prevent a buggy statistical validation running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
+
     task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     @property

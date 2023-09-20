@@ -28,11 +28,17 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
         logging.error(f'StatisticalValidation {stat_validation_pk} does not exist')
         return
 
-    # Sets the state as IN_PROCESS
-    stat_validation.state = BiomarkerState.IN_PROCESS
-    stat_validation.save(update_fields=['state'])
+    # Checks if the experiment has reached the limit of attempts
+    if stat_validation.attempt >= 3:
+        logging.warning(f'StatisticalValidation {stat_validation.pk} has reached attempts limit.')
+        stat_validation.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
+        stat_validation.save(update_fields=['state'])
+        return
 
-    # TODO: add here check by attempts
+    # Sets the state as IN_PROCESS
+    stat_validation.attempt += 1
+    stat_validation.state = BiomarkerState.IN_PROCESS
+    stat_validation.save(update_fields=['attempt', 'state'])
 
     # Resulting Biomarker instance from the FS stat_validation.
     biomarker: Biomarker = stat_validation.biomarker
