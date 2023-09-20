@@ -1,5 +1,5 @@
+import logging
 from .settings import *
-import os
 
 # You can set the SECRET_KEY with an env var or a file generated automatically
 secret_key_env = os.getenv('SECRET_KEY')
@@ -44,6 +44,7 @@ LOG_FILE_PATH = os.path.join(log_folder, "django.log")
 
 # Creates the logs folder if it doesn't exist
 if not os.path.exists(log_folder):
+    logging.warning(f'Creating logs folder: {log_folder}')
     os.makedirs(log_folder)
 
 LOGGING = {
