@@ -32,16 +32,23 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
     try:
         experiment: FSExperiment = FSExperiment.objects.get(pk=experiment_pk)
     except FSExperiment.DoesNotExist:
-        logging.error(f'Experiment {experiment_pk} does not exist')
+        logging.error(f'FSExperiment {experiment_pk} does not exist')
         return
-
-    # TODO: add here check by attempts
 
     # Resulting Biomarker instance from the FS experiment.
     # NOTE: the created_biomarker is created BEFORE calling this task
     biomarker: Biomarker = experiment.created_biomarker
 
-    # Sets the state of the biomarker to IN_PROCESS
+    # Checks if the experiment has reached the limit of attempts
+    if experiment.attempt >= 3:
+        logging.warning(f'FSExperiment {experiment.pk} has reached attempts limit.')
+        biomarker.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
+        biomarker.save(update_fields=['state'])
+        return
+
+    # Increments the attempt and sets the state of the biomarker to IN_PROCESS
+    experiment.attempt += 1
+    experiment.save(update_fields=['attempt'])
     biomarker.state = BiomarkerState.IN_PROCESS
     biomarker.save(update_fields=['state'])
 

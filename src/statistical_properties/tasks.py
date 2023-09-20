@@ -35,7 +35,7 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
         stat_validation.save(update_fields=['state'])
         return
 
-    # Sets the state as IN_PROCESS
+    # Increments the attempt and sets the state of the biomarker to IN_PROCESS
     stat_validation.attempt += 1
     stat_validation.state = BiomarkerState.IN_PROCESS
     stat_validation.save(update_fields=['attempt', 'state'])
