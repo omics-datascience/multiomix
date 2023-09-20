@@ -61,32 +61,38 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
     const handleSectionActive = () => {
         switch (props.featureSelection.step) {
             case 1:
-                return (<FeatureSelectionStep1
-                    defaultHeaders={getDefaultHeaders()}
-                    customFilters={props.getDefaultFilters}
-                    featureSelectionData={props.featureSelection}
-                    markBiomarkerAsSelected={props.markBiomarkerAsSelected}
-                    handleCompleteStep1={props.handleCompleteStep1}
-                />)
+                return (
+                    <FeatureSelectionStep1
+                        defaultHeaders={getDefaultHeaders()}
+                        customFilters={props.getDefaultFilters}
+                        featureSelectionData={props.featureSelection}
+                        markBiomarkerAsSelected={props.markBiomarkerAsSelected}
+                        handleCompleteStep1={props.handleCompleteStep1}
+                    />
+                )
             case 2:
-                return (<FeatureSelectionStep2
-                    featureSelection={props.featureSelection}
-                    selectNewFile={props.selectNewFile}
-                    selectStudy={props.selectStudy}
-                    selectUploadedFile={props.selectUploadedFile}
-                    handleChangeSourceType={props.handleChangeSourceType}
-                />)
+                return (
+                    <FeatureSelectionStep2
+                        featureSelection={props.featureSelection}
+                        selectNewFile={props.selectNewFile}
+                        selectStudy={props.selectStudy}
+                        selectUploadedFile={props.selectUploadedFile}
+                        handleChangeSourceType={props.handleChangeSourceType}
+                    />
+                )
 
             default:
-                return (<FeatureSelectionStep3
-                    handleChangeAdvanceAlgorithm={props.handleChangeAdvanceAlgorithm}
-                    featureSelection={props.featureSelection}
-                    handleChangeAlgorithm={props.handleChangeAlgorithm}
-                    handleChangeFitnessFunction={props.handleChangeFitnessFunction}
-                    handleChangeFitnessFunctionOption={props.handleChangeFitnessFunctionOption}
-                    handleChangeCrossValidation={props.handleChangeCrossValidation}
-                    handleSwitchAdvanceAlgorithm={props.handleSwitchAdvanceAlgorithm}
-                />)
+                return (
+                    <FeatureSelectionStep3
+                        handleChangeAdvanceAlgorithm={props.handleChangeAdvanceAlgorithm}
+                        featureSelection={props.featureSelection}
+                        handleChangeAlgorithm={props.handleChangeAlgorithm}
+                        handleChangeFitnessFunction={props.handleChangeFitnessFunction}
+                        handleChangeFitnessFunctionOption={props.handleChangeFitnessFunctionOption}
+                        handleChangeCrossValidation={props.handleChangeCrossValidation}
+                        handleSwitchAdvanceAlgorithm={props.handleSwitchAdvanceAlgorithm}
+                    />
+                )
         }
     }
 

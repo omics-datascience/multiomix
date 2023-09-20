@@ -149,13 +149,15 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         }
 
         if (kaplanMeierData !== null) {
-            return <KaplanMeier
-                data={kaplanMeierData.groups}
-                height={480}
-                width={600}
-                xAxisLabel='Time'
-                yAxisLabel='Probability'
-            />
+            return (
+                <KaplanMeier
+                    data={kaplanMeierData.groups}
+                    height={480}
+                    width={600}
+                    xAxisLabel='Time'
+                    yAxisLabel='Probability'
+                />
+            )
         }
 
         return null
@@ -185,7 +187,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             <Form.Field>
                                 <Button.Group
                                     compact
-                                    className='biomarkers--side--bar--buttons-group'>
+                                    className='biomarkers--side--bar--buttons-group'
+                                >
                                     <Button
                                         onClick={() => setKaplanMeierStrategy('clustering')}
                                         active={kaplanMeierStrategy === 'clustering'}

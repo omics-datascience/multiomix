@@ -175,42 +175,46 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             />
                         </Grid.Row>
 
-                        {props.newFile.newFileType === FileType.METHYLATION && <React.Fragment>
-                            <Grid.Row>
-                                <Form.Select
-                                    fluid
-                                    selectOnBlur={false}
-                                    options={[
-                                        { key: 'gene', value: false, text: 'Gene ID' },
-                                        { key: 'cg', value: true, text: 'CpG site ID' }
-                                    ]}
-                                    name='isCpGSiteId'
-                                    value={props.newFile.isCpGSiteId}
-                                    onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                    placeholder='File type'
-                                    width={16}
-                                    disabled={props.uploadingFile}
-                                />
-                            </Grid.Row>
+                        {props.newFile.newFileType === FileType.METHYLATION &&
+                            <React.Fragment>
+                                <Grid.Row>
+                                    <Form.Select
+                                        fluid
+                                        selectOnBlur={false}
+                                        options={[
+                                            { key: 'gene', value: false, text: 'Gene ID' },
+                                            { key: 'cg', value: true, text: 'CpG site ID' }
+                                        ]}
+                                        name='isCpGSiteId'
+                                        value={props.newFile.isCpGSiteId}
+                                        onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
+                                        placeholder='File type'
+                                        width={16}
+                                        disabled={props.uploadingFile}
+                                    />
+                                </Grid.Row>
 
-                            {props.newFile.isCpGSiteId && <Grid.Row>
-                                <Form.Select
-                                    fluid
-                                    selectOnBlur={false}
-                                    options={[
-                                        { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 450' },
-                                        /* TODO: implement platform 27 when dictionary is available */
-                                        { key: '27', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 27', disabled: true }
-                                    ]}
-                                    name='platform'
-                                    value={props.newFile.platform}
-                                    onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                    placeholder='File type'
-                                    width={16}
-                                    disabled={props.uploadingFile}
-                                />
-                            </Grid.Row>}
-                        </React.Fragment>}
+                                {props.newFile.isCpGSiteId &&
+                                    <Grid.Row>
+                                        <Form.Select
+                                            fluid
+                                            selectOnBlur={false}
+                                            options={[
+                                                { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 450' },
+                                                /* TODO: implement platform 27 when dictionary is available */
+                                                { key: '27', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 27', disabled: true }
+                                            ]}
+                                            name='platform'
+                                            value={props.newFile.platform}
+                                            onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
+                                            placeholder='File type'
+                                            width={16}
+                                            disabled={props.uploadingFile}
+                                        />
+                                    </Grid.Row>
+                                }
+                            </React.Fragment>
+                        }
 
                         <Grid.Row>
                             {/* File description input */}

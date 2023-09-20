@@ -195,11 +195,7 @@ export const ChartSection = (props: ChartSectionProps) => {
     return (
         <Grid.Column textAlign='center'>
             <Header className='stats-header' dividing>
-                <span style={{ color: geneStrokeColor }}>
-                    {gene}
-                </span> x <span style={{ color: gemStrokeColor }}>
-                    {gem}
-                </span>
+                <span style={{ color: geneStrokeColor }}>{gene}</span> x <span style={{ color: gemStrokeColor }}>{gem}</span>
             </Header>
 
             <Grid>

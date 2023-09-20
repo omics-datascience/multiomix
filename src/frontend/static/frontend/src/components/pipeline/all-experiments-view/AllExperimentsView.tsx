@@ -153,7 +153,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     title={
                                         `The result consists of ${finalRowCount} combinations obtained from a total of ${evaluatedRowCount} evaluated combinations`
                                     }
-                                >{finalRowCount} / {evaluatedRowCount}</TableCell>
+                                >{finalRowCount} / {evaluatedRowCount}
+                                </TableCell>
                                 <TableCell textAlign='center'>
                                     <ClinicalSourcePopup
                                         experiment={experiment}

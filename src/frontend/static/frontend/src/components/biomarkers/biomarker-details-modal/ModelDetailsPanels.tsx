@@ -234,20 +234,26 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
         const { model } = modelDetails
         switch (model) {
             case FitnessFunction.CLUSTERING:
-                return <ClusteringModelDetailsPanel
-                    data={modelDetails as ClusteringModelDetails}
-                    fitness_function={model}
-                />
+                return (
+                    <ClusteringModelDetailsPanel
+                        data={modelDetails as ClusteringModelDetails}
+                        fitness_function={model}
+                    />
+                )
             case FitnessFunction.SVM:
-                return <SVMModelDetailsPanel
-                    data={modelDetails as SVMModelDetails}
-                    fitness_function={model}
-                />
+                return (
+                    <SVMModelDetailsPanel
+                        data={modelDetails as SVMModelDetails}
+                        fitness_function={model}
+                    />
+                )
             case FitnessFunction.RF:
-                return <RFModelDetailsPanel
-                    data={modelDetails as RFModelDetails}
-                    fitness_function={model}
-                />
+                return (
+                    <RFModelDetailsPanel
+                        data={modelDetails as RFModelDetails}
+                        fitness_function={model}
+                    />
+                )
         }
     }
 

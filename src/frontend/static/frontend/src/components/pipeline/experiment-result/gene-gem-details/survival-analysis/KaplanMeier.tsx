@@ -281,9 +281,11 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         )
 
         if (!this.state.geneData) {
-            return <Grid>
-                {selectSurvivalColumns}
-            </Grid>
+            return (
+                <Grid>
+                    {selectSurvivalColumns}
+                </Grid>
+            )
         }
 
         return (

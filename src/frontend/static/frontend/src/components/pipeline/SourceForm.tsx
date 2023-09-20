@@ -156,7 +156,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         className="clickable full-width"
                         title="Select your dataset"
                         color={this.props.source.selectedExistingFile !== null ? 'green' : 'red'}
-                        onClick={this.openUsersDatasetsSelectionModal}>
+                        onClick={this.openUsersDatasetsSelectionModal}
+                    >
                         {sourceFilename}
                     </Label>
                 )
@@ -167,7 +168,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         className="clickable full-width"
                         title="Select your dataset"
                         color={this.props.source.CGDSStudy !== null ? 'green' : 'red'}
-                        onClick={this.openCGDSDatasetsSelectionModal}>
+                        onClick={this.openCGDSDatasetsSelectionModal}
+                    >
                         {sourceFilename}
                     </Label>
                 )

@@ -76,7 +76,8 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                                 <Table.Cell>{CGDSStudy.version}</Table.Cell>
                                 <Table.Cell collapsing>{CGDSStudy.date_last_synchronization
                                     ? formatDateLocale(CGDSStudy.date_last_synchronization)
-                                    : '-'}</Table.Cell>
+                                    : '-'}
+                                </Table.Cell>
                                 <Table.Cell collapsing textAlign='center'>
                                     <Button
                                         basic

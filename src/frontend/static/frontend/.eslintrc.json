@@ -64,7 +64,9 @@
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": 0,
         "no-use-before-define": 0,
-        "react/jsx-equals-spacing": "error"
+        "react/jsx-equals-spacing": "error",
+        "react/jsx-closing-bracket-location": "error",
+        "react/jsx-closing-tag-location": "error"
     },
     "settings": {
         "react": {

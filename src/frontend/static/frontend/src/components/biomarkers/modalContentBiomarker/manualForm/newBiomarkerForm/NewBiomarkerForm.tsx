@@ -123,7 +123,8 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                             handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
                             handleAddMoleculeToSection={props.handleAddMoleculeToSection}
                             handleSearchNewData={props.handleGenesSymbolsFinder}
-                            options={props.biomarkerForm.moleculesSymbolsFinder} />
+                            options={props.biomarkerForm.moleculesSymbolsFinder}
+                        />
                     }
 
                     {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA &&
