@@ -188,7 +188,8 @@ def blind_search_sequential(classifier: SurvModel,
         subset = get_subset_of_features(molecules_df, combination)
 
         # If no molecules are present in the subset due to NaNs values, just discards this combination
-        if not subset.any().any():
+        number_of_columns = subset.shape[1]
+        if not subset.any().any() or number_of_columns == 0:
             continue
 
         # Computes the fitness function and checks if this combination of features has a higher score
