@@ -6,7 +6,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from api_service.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from api_service.models import Experiment
 from api_service.models_choices import ExperimentState
-import api_service.pipelines as pipelines
+from api_service.pipelines import compute_correlation_experiment
 from multiomics_intermediate.celery import app
 from celery.exceptions import SoftTimeLimitExceeded
 
@@ -43,7 +43,7 @@ def eval_mrna_gem_experiment(self, experiment_pk: int):
 
         # Computes correlation analysis
         start = time.time()
-        total_row_count, final_row_count, evaluated_combinations = pipelines.__compute_correlation_experiment(
+        total_row_count, final_row_count, evaluated_combinations = compute_correlation_experiment(
             experiment,
             self.is_aborted
         )

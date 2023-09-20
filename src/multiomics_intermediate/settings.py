@@ -229,6 +229,10 @@ COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT'
 # marked as TIMEOUT_EXCEEDED
 FS_SOFT_TIME_LIMIT: int = int(os.getenv('FS_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
+# Time limit in seconds for a StatisticalValidation to be computed. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+STAT_VALIDATION_SOFT_TIME_LIMIT: int = int(os.getenv('STAT_VALIDATION_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
 # Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
 

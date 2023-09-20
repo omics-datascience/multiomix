@@ -6,7 +6,7 @@ services:
         image: postgres:13
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
-            # IMPORTANT: these three params must be the same than POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
+            # IMPORTANT: these three params must be the same as POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
             # below in 'web' service respectively
             POSTGRES_USER: 'multiomics'
             POSTGRES_PASSWORD: 'multiomics'
@@ -24,7 +24,7 @@ services:
     mongo:
         image: mongo:4.2
         environment:
-            # IMPORTANT: these three params must be the same than MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
+            # IMPORTANT: these three params must be the same as MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
             # below in 'web' service respectively
             MONGO_INITDB_ROOT_USERNAME: 'multiomics'
             MONGO_INITDB_ROOT_PASSWORD: 'multiomics'
@@ -46,7 +46,7 @@ services:
     nginx:
         image: nginx:1.19.3
         ports:
-            - 80:8000
+            - '80:8000'
             # - 443:443 # Uncomment for HTTPS support
         volumes:
             - ./config/nginx/conf.d:/etc/nginx/conf.d
@@ -87,7 +87,24 @@ services:
 
             # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
-            
+
+
+    # Celery worker for statistical validations and trained models
+    stats-worker:
+        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        depends_on:
+            - db
+            - mongo
+        volumes:
+            - media_data:/src/media
+        environment:
+            # Celery parameters
+            QUEUE_NAME: 'stats'  # This MUST NOT be changed
+            CONCURRENCY: 2
+
+            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # changed here too!
+
     # Django Backend Server
     web:
         image: omicsdatascience/multiomix:5.1.0
@@ -128,6 +145,7 @@ services:
             - mongo
             - correlation-analysis-worker
             - fs-experiments-worker
+            - stats-worker
 
 volumes:
     mongo_data:

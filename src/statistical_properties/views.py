@@ -1,7 +1,9 @@
 import json
+import logging
 from typing import Optional, Union, List, Dict
 import numpy as np
 import pandas as pd
+from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import transaction
 from django.db.models import QuerySet, F
@@ -23,8 +25,10 @@ import api_service.pipelines as pipelines
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState
 from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
+from common.enums import ResponseCode
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
+from common.response import ResponseStatus
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters, \
@@ -40,6 +44,7 @@ from statistical_properties.stats_service import global_stat_validation_service
 from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
     get_group_survival_function, compute_c_index_and_log_likelihood, struct_array_to_kaplan_meier_samples
 from user_files.models_choices import FileType
+from .tasks import eval_statistical_validation
 
 
 # Possible suffix in a DataFrame to distinguish different kinds of molecules in a Biomarker
@@ -157,6 +162,16 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
     search_fields = ['name', 'description']
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     ordering_fields = ['name', 'description', 'state', 'created']
+
+
+class StatisticalValidationDestroy(generics.DestroyAPIView):
+    """REST endpoint: delete for StatisticalValidation model."""
+
+    def get_queryset(self):
+        return StatisticalValidation(biomarker__user=self.request.user)
+
+    serializer_class = StatisticalValidation
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class StatisticalValidationMetrics(generics.RetrieveAPIView):
@@ -525,10 +540,70 @@ class BiomarkerNewStatisticalValidations(APIView):
                 methylation_source_result=stat_methylation_source,
             )
 
-            # Runs statistical validation in background
-            global_stat_validation_service.add_stat_validation(stat_validation)
+        # Adds the experiment to the TaskQueue and gets Task id
+        async_res: AbortableAsyncResult = eval_statistical_validation.apply_async((stat_validation.pk,),
+                                                                                  queue='stats')
+
+        stat_validation.task_id = async_res.task_id
+        stat_validation.save(update_fields=['task_id'])
 
         return Response({'ok': True})
+
+
+class StopStatisticalValidation(APIView):
+    """Stops a StatisticalValidation."""
+    @staticmethod
+    def get(request: Request):
+        stat_validation_id = request.GET.get('statValidationId')
+
+        # Check if all the required parameters are in request
+        if stat_validation_id is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params'
+                )
+            }
+        else:
+            try:
+                # Gets Biomarker and FSExperiment
+                stat_validation: StatisticalValidation = StatisticalValidation.objects.get(pk=stat_validation_id,
+                                                                                           biomarker__user=request.user)
+
+                logging.warning(f'Aborting StatisticalValidation {stat_validation_id}')
+
+                # Sends the signal to abort it
+                if stat_validation.task_id:
+                    abortable_async_result = AbortableAsyncResult(stat_validation.task_id)
+                    abortable_async_result.abort()
+
+                # Updates Biomarker state
+                stat_validation.state = BiomarkerState.STOPPED
+                stat_validation.save(update_fields=['state'])
+
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS).to_json()
+                }
+            except ValueError as ex:
+                # Cast errors...
+                logging.exception(ex)
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='Invalid request params type'
+                    ).to_json()
+                }
+            except StatisticalValidation.DoesNotExist:
+                # If the experiment does not exist, returns an error
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='The StatisticalValidation does not exists'
+                    ).to_json()
+                }
+
+        # Formats to JSON the ResponseStatus object
+        return Response(response)
 
 
 class BiomarkerNewTrainedModel(APIView):

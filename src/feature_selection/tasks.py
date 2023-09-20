@@ -35,6 +35,8 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
         logging.error(f'Experiment {experiment_pk} does not exist')
         return
 
+    # TODO: add here check by attempts
+
     # Resulting Biomarker instance from the FS experiment.
     # NOTE: the created_biomarker is created BEFORE calling this task
     biomarker: Biomarker = experiment.created_biomarker

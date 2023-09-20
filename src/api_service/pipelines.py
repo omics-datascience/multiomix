@@ -448,7 +448,7 @@ def __compute_correlation_and_p_values(
     return total_row_count, number_of_evaluated_combinations
 
 
-def __compute_correlation_experiment(experiment: Experiment, is_aborted: AbortEvent) -> Tuple[int, int, int]:
+def compute_correlation_experiment(experiment: Experiment, is_aborted: AbortEvent) -> Tuple[int, int, int]:
     """
     Computes a correlation analysis between all the rows from a Cartesian Product between two Dataframes.
     @param experiment: Experiment to compute.

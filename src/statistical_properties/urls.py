@@ -8,6 +8,10 @@ urlpatterns = [
         name='biomarker_statistical_validations'
     ),
     path(
+        'biomarker-statistical-validations/<int:pk>/',
+        views.StatisticalValidationDestroy.as_view()
+    ),
+    path(
         'biomarker-new-statistical-validation',
         views.BiomarkerNewStatisticalValidations.as_view(),
         name='biomarker_new_statistical_validation'
@@ -78,5 +82,6 @@ urlpatterns = [
         'prediction-range-labels-paginated-sets',
         views.PredictionRangeLabelsSetsListPaginated.as_view(),
         name='prediction_range_labels_sets_paginated'
-    )
+    ),
+    path('stop-statistical-validation', views.StopStatisticalValidation.as_view(), name='stop_statistical_validation')
 ]
