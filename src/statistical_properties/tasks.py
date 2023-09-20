@@ -23,61 +23,64 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
     """
     # Due to Celery getting old jobs from the queue, we need to check if the experiment still exists
     try:
-        stat_validation_pk: StatisticalValidation = StatisticalValidation.objects.get(pk=stat_validation_pk)
+        stat_validation: StatisticalValidation = StatisticalValidation.objects.get(pk=stat_validation_pk)
     except StatisticalValidation.DoesNotExist:
         logging.error(f'StatisticalValidation {stat_validation_pk} does not exist')
         return
 
+    # Sets the state as IN_PROCESS
+    stat_validation.state = BiomarkerState.IN_PROCESS
+    stat_validation.save(update_fields=['state'])
+
     # TODO: add here check by attempts
-    time.sleep(10)  # TODO: remove!!!
 
     # Resulting Biomarker instance from the FS stat_validation.
-    biomarker: Biomarker = stat_validation_pk.biomarker
+    biomarker: Biomarker = stat_validation.biomarker
 
     # Computes the stat_validation
     molecules_temp_file_path: Optional[str] = None
     clinical_temp_file_path: Optional[str] = None
     try:
-        logging.warning(f'ID Statistical validation -> {stat_validation_pk.pk}')
+        logging.warning(f'ID Statistical validation -> {stat_validation.pk}')
 
         # Computes statistical validation
         start = time.time()
         molecules_temp_file_path, clinical_temp_file_path = prepare_and_compute_stat_validation(
-            stat_validation_pk,
+            stat_validation,
             self.is_aborted
         )
         total_execution_time = time.time() - start
-        logging.warning(f'StatisticalValidation {stat_validation_pk.pk} total time -> {total_execution_time} seconds')
+        logging.warning(f'StatisticalValidation {stat_validation.pk} total time -> {total_execution_time} seconds')
 
         # If user cancel the stat_validation, discard changes
         if self.is_aborted():
             raise ExperimentStopped
         else:
             # Saves some data about the result of the stat_validation
-            stat_validation_pk.execution_time = total_execution_time
-            stat_validation_pk.state = BiomarkerState.COMPLETED
+            stat_validation.execution_time = total_execution_time
+            stat_validation.state = BiomarkerState.COMPLETED
     except NoSamplesInCommon:
         logging.error('No samples in common')
-        stat_validation_pk.state = BiomarkerState.NO_SAMPLES_IN_COMMON
+        stat_validation.state = BiomarkerState.NO_SAMPLES_IN_COMMON
     except ExperimentFailed:
-        logging.error(f'StatisticalValidation {stat_validation_pk.pk} has failed. Check logs for more info')
-        stat_validation_pk.state = BiomarkerState.FINISHED_WITH_ERROR
+        logging.error(f'StatisticalValidation {stat_validation.pk} has failed. Check logs for more info')
+        stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
     except ServerSelectionTimeoutError:
         logging.error('MongoDB connection timeout!')
-        stat_validation_pk.state = BiomarkerState.WAITING_FOR_QUEUE
+        stat_validation.state = BiomarkerState.WAITING_FOR_QUEUE
     except ExperimentStopped:
         # If user cancel the stat_validation, discard changes
-        logging.warning(f'StatisticalValidation {stat_validation_pk.pk} was stopped')
-        stat_validation_pk.state = BiomarkerState.STOPPED
+        logging.warning(f'StatisticalValidation {stat_validation.pk} was stopped')
+        stat_validation.state = BiomarkerState.STOPPED
     except SoftTimeLimitExceeded as e:
         # If celery soft time limit is exceeded, sets the experiment as TIMEOUT_EXCEEDED
-        logging.warning(f'StatisticalValidation {stat_validation_pk.pk} has exceeded the soft time limit')
+        logging.warning(f'StatisticalValidation {stat_validation.pk} has exceeded the soft time limit')
         logging.exception(e)
-        stat_validation_pk.state = BiomarkerState.TIMEOUT_EXCEEDED
+        stat_validation.state = BiomarkerState.TIMEOUT_EXCEEDED
     except Exception as e:
         logging.exception(e)
         logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to StatisticalValidation {biomarker.pk}')
-        stat_validation_pk.state = BiomarkerState.FINISHED_WITH_ERROR
+        stat_validation.state = BiomarkerState.FINISHED_WITH_ERROR
     finally:
         # Removes the temporary files
         if molecules_temp_file_path is not None:
@@ -88,4 +91,4 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
 
     # Saves changes in DB
     biomarker.save()
-    stat_validation_pk.save()
+    stat_validation.save()

@@ -168,7 +168,7 @@ class StatisticalValidationDestroy(generics.DestroyAPIView):
     """REST endpoint: delete for StatisticalValidation model."""
 
     def get_queryset(self):
-        return StatisticalValidation(biomarker__user=self.request.user)
+        return StatisticalValidation.objects.filter(biomarker__user=self.request.user)
 
     serializer_class = StatisticalValidation
     permission_classes = [permissions.IsAuthenticated]
@@ -530,7 +530,7 @@ class BiomarkerNewStatisticalValidations(APIView):
                 description=description,
                 biomarker=biomarker,
                 trained_model=trained_model,
-                state=BiomarkerState.IN_PROCESS,
+                state=BiomarkerState.WAITING_FOR_QUEUE,
                 clinical_source=clinical_source,
                 survival_column_tuple_user_file=survival_column_tuple_user_file,
                 survival_column_tuple_cgds=survival_column_tuple_cgds,
