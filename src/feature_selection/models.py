@@ -114,6 +114,7 @@ class FSExperiment(models.Model):
                                    related_name='fs_experiments_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
+
     task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     # Number of attempts to prevent a buggy experiment running forever
@@ -213,6 +214,11 @@ class TrainedModel(models.Model):
                                    related_name='trained_models_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='trained_models_as_methylation')
+
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+
+    # Number of attempts to prevent a buggy model training running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
 
     @property
     def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:

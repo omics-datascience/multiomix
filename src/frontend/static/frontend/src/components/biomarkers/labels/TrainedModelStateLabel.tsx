@@ -115,6 +115,14 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 title: 'The Feature Selection process has finished correctly, but there was a problem obtaining the model. Try training a new model'
             }
             break
+        case TrainedModelState.TIMEOUT_EXCEEDED:
+            stateIcon = {
+                iconName: 'wait',
+                color: 'red',
+                loading: false,
+                title: 'The training process has reached the timeout limit. Try changing some parameters and try again'
+            }
+            break
     }
 
     return (

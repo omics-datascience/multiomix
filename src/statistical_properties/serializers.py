@@ -1,6 +1,9 @@
+from math import isnan
+from typing import Optional, cast
 from rest_framework import serializers
 from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
 from feature_selection.fs_algorithms import FitnessFunction
+from feature_selection.models import TrainedModel, ClusteringScoringMethod, FitnessFunction, ClusteringParameters
 from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, LinearityTest, MonotonicTest, \
     BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
     StatisticalValidation, MoleculeWithCoefficient, SampleAndCluster
@@ -158,3 +161,41 @@ class SampleAndClusterSerializer(serializers.ModelSerializer):
     class Meta:
         model = SampleAndCluster
         exclude = ['id']
+
+
+class TrainedModelSerializer(serializers.ModelSerializer):
+    """TrainedModel serializer. TODO: rename to TrainedModelForTableSerializer"""
+    best_fitness_value = serializers.SerializerMethodField(method_name='get_best_fitness_value')
+    fitness_metric = serializers.SerializerMethodField(method_name='get_fitness_metric')
+
+    class Meta:
+        model = TrainedModel
+        fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
+                  'fitness_metric', 'cv_folds_modified']
+
+    @staticmethod
+    def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:
+        """Gets the best fitness value of the TrainedModel setting it to None if it's NaN"""
+        if instance.best_fitness_value is not None and not isnan(instance.best_fitness_value):
+            return instance.best_fitness_value
+        return None
+
+    @staticmethod
+    def __get_scoring_method_description(scoring_method: ClusteringScoringMethod) -> Optional[str]:
+        if scoring_method == ClusteringScoringMethod.C_INDEX:
+            return 'C-Index'
+        if scoring_method == ClusteringScoringMethod.LOG_LIKELIHOOD:
+            return 'Log Likelihood'  # Default is kmeans
+        return None
+
+    def get_fitness_metric(self, instance: TrainedModel) -> Optional[str]:
+        """Gets the fitness metric of the TrainedModel."""
+        if instance.fitness_function == FitnessFunction.CLUSTERING:
+            parameters = instance.get_model_parameter()
+            if parameters is not None:
+                parameters = cast(ClusteringParameters, parameters)
+                return self.__get_scoring_method_description(parameters.scoring_method)
+        elif instance.fitness_function in [FitnessFunction.SVM, FitnessFunction.RF]:
+            return 'C-Index'
+
+        return None

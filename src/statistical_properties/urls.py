@@ -66,6 +66,8 @@ urlpatterns = [
         views.StatisticalValidationClinicalAttributes.as_view(),
         name='statistical_validation_clinical_attrs'
     ),
+    path('biomarker-trained-models', views.TrainedModelsOfBiomarker.as_view(), name='biomarker_trained_models'),
+    path('biomarker-trained-models/<int:pk>/', views.TrainedModelDestroy.as_view()),
     path('biomarker-new-trained-model', views.BiomarkerNewTrainedModel.as_view(), name='biomarker_new_trained_model'),
     path('cluster-labels-sets', views.ClusterLabelsSetsList.as_view(), name='cluster_labels_sets'),
     path(
@@ -83,5 +85,6 @@ urlpatterns = [
         views.PredictionRangeLabelsSetsListPaginated.as_view(),
         name='prediction_range_labels_sets_paginated'
     ),
-    path('stop-statistical-validation', views.StopStatisticalValidation.as_view(), name='stop_statistical_validation')
+    path('stop-statistical-validation', views.StopStatisticalValidation.as_view(), name='stop_statistical_validation'),
+    path('stop-trained-model', views.StopTrainedModel.as_view(), name='stop_trained_model')
 ]

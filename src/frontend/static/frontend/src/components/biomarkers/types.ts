@@ -52,8 +52,8 @@ enum TrainedModelState {
     NO_BEST_MODEL_FOUND = 10,
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
     /** This could happen for a serialization error in the Spark job. */
-    MODEL_DUMP_NOT_AVAILABLE = 12
-
+    MODEL_DUMP_NOT_AVAILABLE = 12,
+    TIMEOUT_EXCEEDED = 13
 }
 
 /** Type of molecules input in the Biomarker creation form. */

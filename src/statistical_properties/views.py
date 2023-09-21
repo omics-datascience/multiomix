@@ -23,7 +23,7 @@ from api_service.models import get_combination_class, GeneGEMCombination, Experi
 from api_service.models_choices import ExperimentType
 import api_service.pipelines as pipelines 
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker, BiomarkerState
+from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
 from common.enums import ResponseCode
 from common.exceptions import NoSamplesInCommon
@@ -37,15 +37,14 @@ from feature_selection.serializers import ClusterLabelsSetSerializer, Prediction
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
-    SampleAndClusterSerializer
+    SampleAndClusterSerializer, TrainedModelSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
-from statistical_properties.stats_service import global_stat_validation_service
 from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
     get_group_survival_function, compute_c_index_and_log_likelihood, struct_array_to_kaplan_meier_samples
 from user_files.models_choices import FileType
-from .tasks import eval_statistical_validation
-
+from .stats_service import get_all_expressions, get_molecules_and_clinical_df
+from .tasks import eval_statistical_validation, eval_trained_model
 
 # Possible suffix in a DataFrame to distinguish different kinds of molecules in a Biomarker
 TYPE_SUFFIX = f'_({FileType.MRNA.value}|{FileType.MIRNA.value}|{FileType.CNA.value}|{FileType.METHYLATION.value})$'
@@ -207,7 +206,7 @@ class StatisticalValidationHeatMap(APIView):
         stat_validation = get_stat_validation_instance(request)
 
         try:
-            molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+            molecules_df = get_all_expressions(stat_validation)
             molecules_df = clean_dataset(molecules_df, axis='index')
             molecules_df = self.__remove_suffix(molecules_df)
 
@@ -233,7 +232,7 @@ class StatisticalValidationKaplanMeierClustering(APIView):
         stat_validation = get_stat_validation_instance(request)
 
         # Gets Gene and GEM expression with time values
-        molecules_df, clinical_data = global_stat_validation_service.get_molecules_and_clinical_df(stat_validation)
+        molecules_df, clinical_data = get_molecules_and_clinical_df(stat_validation)
 
         compute_samples_and_clusters = not stat_validation.samples_and_clusters.exists()
 
@@ -305,7 +304,7 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
             raise ValidationError('Invalid clinical attribute')
 
         # Gets molecules DF
-        molecules_df = global_stat_validation_service.get_all_expressions(stat_validation)
+        molecules_df = get_all_expressions(stat_validation)
 
         # Gets clinical with only the needed columns (survival event/time and grouping attribute)
         survival_tuple = stat_validation.survival_column_tuple
@@ -566,7 +565,7 @@ class StopStatisticalValidation(APIView):
             }
         else:
             try:
-                # Gets Biomarker and FSExperiment
+                # Gets StatisticalValidation
                 stat_validation: StatisticalValidation = StatisticalValidation.objects.get(pk=stat_validation_id,
                                                                                            biomarker__user=request.user)
 
@@ -714,7 +713,7 @@ class BiomarkerNewTrainedModel(APIView):
                 name=request.POST.get('name'),
                 description=description,
                 biomarker=biomarker,
-                state=BiomarkerState.IN_PROCESS,
+                state=TrainedModelState.WAITING_FOR_QUEUE,
                 fitness_function=int(fitness_function),
                 clinical_source=clinical_source,
                 survival_column_tuple_user_file=survival_column_tuple_user_file,
@@ -726,10 +725,83 @@ class BiomarkerNewTrainedModel(APIView):
                 cross_validation_folds=cross_validation_folds,
             )
 
-            # Runs statistical validation in background
-            global_stat_validation_service.add_trained_model_training(trained_model, model_parameters)
+            # Adds the experiment to the TaskQueue and gets Task id
+            async_res: AbortableAsyncResult = eval_trained_model.apply_async(
+                (trained_model.pk, model_parameters),
+                queue='stats'
+            )
+
+            trained_model.task_id = async_res.task_id
+            trained_model.save(update_fields=['task_id'])
 
         return Response({'ok': True})
+
+
+class TrainedModelDestroy(generics.DestroyAPIView):
+    """REST endpoint: delete for TrainedModel model."""
+
+    def get_queryset(self):
+        return TrainedModel.objects.filter(biomarker__user=self.request.user)
+
+    serializer_class = TrainedModel
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class StopTrainedModel(APIView):
+    """Stops a TrainedModel."""
+    @staticmethod
+    def get(request: Request):
+        trained_model_id = request.GET.get('trainedModelId')
+
+        # Check if all the required parameters are in request
+        if trained_model_id is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params'
+                )
+            }
+        else:
+            try:
+                # Gets TrainedModel instance
+                trained_model: TrainedModel = TrainedModel.objects.get(pk=trained_model_id,
+                                                                         biomarker__user=request.user)
+
+                logging.warning(f'Aborting TrainedModel {trained_model_id}')
+
+                # Sends the signal to abort it
+                if trained_model.task_id:
+                    abortable_async_result = AbortableAsyncResult(trained_model.task_id)
+                    abortable_async_result.abort()
+
+                # Updates Biomarker state
+                trained_model.state = TrainedModelState.STOPPED
+                trained_model.save(update_fields=['state'])
+
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS).to_json()
+                }
+            except ValueError as ex:
+                # Cast errors...
+                logging.exception(ex)
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='Invalid request params type'
+                    ).to_json()
+                }
+            except TrainedModel.DoesNotExist:
+                # If the experiment does not exist, returns an error
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='The TrainedModel does not exists'
+                    ).to_json()
+                }
+
+        # Formats to JSON the ResponseStatus object
+        return Response(response)
+
 
 
 class ClusterLabelsSetsList(generics.ListCreateAPIView):
@@ -806,3 +878,20 @@ class PredictionRangeLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = PredictionRangeLabelsSetSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class TrainedModelsOfBiomarker(generics.ListAPIView):
+    """Get all the trained models for a specific Biomarker."""
+
+    def get_queryset(self):
+        biomarker_pk = self.request.GET.get('biomarker_pk')
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        return biomarker.trained_models.all()
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TrainedModelSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['state', 'fitness_function']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'description', 'created', 'fitness_function', 'best_fitness_value']

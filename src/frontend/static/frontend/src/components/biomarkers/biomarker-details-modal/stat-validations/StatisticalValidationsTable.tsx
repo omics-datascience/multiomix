@@ -108,9 +108,9 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
 
         return (
             <Modal size='small' open={statValidationToStop !== null} onClose={handleCloseStopStatValidation} centered={false}>
-                <Header icon='stop' content='Stop experiment' />
+                <Header icon='stop' content='Stop statistical validation' />
                 <Modal.Content>
-                    Are you sure you want to stop the experiment <strong>{statValidationToStop.name}</strong>?
+                    Are you sure you want to stop the statistical validation <strong>{statValidationToStop.name}</strong>?
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseStopStatValidation}>
@@ -227,7 +227,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 {/* Delete button */}
                                 {isFinished &&
                                     <DeleteExperimentButton
-                                        title='Delete sgtatistical validation'
+                                        title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
                                     />
                                 }
