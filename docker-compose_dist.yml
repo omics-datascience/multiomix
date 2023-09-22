@@ -131,7 +131,7 @@ services:
         environment:
             # Celery parameters
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
-            CONCURRENCY: 2
+            CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
 
             # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
