@@ -10,5 +10,6 @@ urlpatterns = [
         views.MetabolicPathwaysInformation.as_view(),
         name='metabolic_pathways_information'
     ),
-    path('gene-ontology-terms', views.GeneOntologyTerms.as_view(), name='gene_ontology_terms')
+    path('gene-ontology-gene-terms', views.GeneOntologyTermsOfGene.as_view(), name='gene_ontology_gene_terms'),
+    path('gene-ontology-term-terms', views.GeneOntologyTermsOfTerm.as_view(), name='gene_ontology_term_terms')
 ]
