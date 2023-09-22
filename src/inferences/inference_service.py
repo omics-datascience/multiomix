@@ -1,293 +1,114 @@
-import os
-import time
 import numpy as np
-from threading import Event
-from typing import Dict, Tuple, Optional
 import pandas as pd
-from biomarkers.models import BiomarkerState
-from common.utils import get_subset_of_features
 from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset
+from common.exceptions import NoValidSamples, NoValidMolecules, ExperimentStopped
+from common.functions import check_if_stopped
+from common.typing import AbortEvent
+from common.utils import get_subset_of_features
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import TrainedModel
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoValidSamples, NoValidMolecules
-from concurrent.futures import ThreadPoolExecutor, Future
-from pymongo.errors import ServerSelectionTimeoutError
-import logging
-from django.db.models import Q, QuerySet
-from django.conf import settings
-from django.db import connection
-from common.functions import close_db_connection
 
 
-class InferenceExperimentsService(object):
+def __compute_inference_experiment(experiment: InferenceExperiment, molecules_temp_file_path: str,
+                                   is_aborted: AbortEvent):
     """
-    Process InferenceExperiments in a Thread Pool as explained
-    at https://docs.python.org/3.8/library/concurrent.futures.html
+    Computes the Feature Selection experiment using the params defined by the user.
+    @param experiment: InferenceExperiment instance.
+    @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
+    @param is_aborted: Method to call to check if the experiment has been stopped.
     """
-    executor: ThreadPoolExecutor = None
-    use_transaction: bool
-    inference_experiments_futures: Dict[int, Tuple[Future, Event]] = {}
+    check_if_stopped(is_aborted, ExperimentStopped)
+    trained_model: TrainedModel = experiment.trained_model
+    classifier: SurvModel = trained_model.get_model_instance()
+    is_clustering = hasattr(trained_model, 'clustering_parameters')
 
-    def __init__(self):
-        # Instantiates the executor
-        # IMPORTANT: ProcessPoolExecutor doesn't work well with Channels. It wasn't sending
-        # websockets messages by some weird reason that I couldn't figure out. Let's use Threads instead of
-        # processes
-        self.executor = ThreadPoolExecutor(max_workers=settings.THREAD_POOL_SIZE)
-        self.use_transaction = settings.USE_TRANSACTION_IN_EXPERIMENT
-        self.inference_experiments_futures = {}
+    # TODO: refactor this retrieval of data as it's repeated in the fs_service
+    # Gets molecules and clinical DataFrames
+    check_if_stopped(is_aborted, ExperimentStopped)
+    molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
 
-    def __commit_or_rollback(self, is_commit: bool, experiment: InferenceExperiment):
-        """
-        Executes a COMMIT or ROLLBACK sentence in DB. IMPORTANT: uses plain SQL as Django's autocommit
-        management for transactions didn't work as expected with exceptions thrown in subprocesses.
-        @param is_commit: If True, COMMIT is executed. ROLLBACK otherwise
-        """
-        if self.use_transaction:
-            query = "COMMIT" if is_commit else "ROLLBACK"
-            with connection.cursor() as cursor:
-                cursor.execute(query)
-        elif not is_commit:
-            # Simulates a rollback removing all associated combinations
-            logging.warning(f'Rolling back {experiment.pk} manually')
-            start = time.time()
-            # experiment.combinations.delete()  # TODO: implement when time data is stored
-            logging.warning(f'Manual rollback of experiment {experiment.pk} -> {time.time() - start} seconds')
+    # Computes general metrics
+    # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
+    # structure of data
+    check_if_stopped(is_aborted, ExperimentStopped)
+    molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
-    @staticmethod
-    def __compute_inference_experiment(experiment: InferenceExperiment, molecules_temp_file_path: str,
-                                       stop_event: Event):
-        """
-        Computes the Feature Selection experiment using the params defined by the user.
-        TODO: use stop_event
-        @param experiment: InferenceExperiment instance.
-        @param molecules_temp_file_path: Path of the DataFrame with the molecule expressions.
-        @param stop_event: Stop signal.
-        """
-        trained_model: TrainedModel = experiment.trained_model
-        classifier: SurvModel = trained_model.get_model_instance()
-        is_clustering = hasattr(trained_model, 'clustering_parameters')
+    # Clean invalid values
+    check_if_stopped(is_aborted, ExperimentStopped)
+    molecules_df = clean_dataset(molecules_df, axis='index')
 
-        # TODO: refactor this retrieval of data as it's repeated in the fs_service
-        # Gets molecules and clinical DataFrames
-        molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
+    if molecules_df.size == 0:
+        raise NoValidSamples('No valid values in the dataset')
 
-        # Computes general metrics
-        # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
-        # structure of data
-        molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
+    # Gets a list of samples
+    check_if_stopped(is_aborted, ExperimentStopped)
+    samples = np.array(molecules_df.index.tolist())
 
-        # Clean invalid values
-        molecules_df = clean_dataset(molecules_df, axis='index')
+    # Gets number of features from the fitted model.
+    # If it's bigger than the number of molecules in the dataset, it's not possible to compute the
+    # experiment (raises NoValidMolecules)
+    n_features_model = classifier.n_features_in_
+    n_features_dataset = molecules_df.shape[1]
+    if n_features_model != n_features_dataset:
+        raise NoValidMolecules(f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
+                               f'{n_features_dataset}')
 
-        if molecules_df.size == 0:
-            raise NoValidSamples('No valid values in the dataset')
+    if is_clustering:
+        # Gets the groups
+        check_if_stopped(is_aborted, ExperimentStopped)
+        clustering_result = classifier.predict(molecules_df.values)
 
-        # Gets a list of samples
-        samples = np.array(molecules_df.index.tolist())
-
-        # Gets number of features from the fitted model.
-        # If it's bigger than the number of molecules in the dataset, it's not possible to compute the
-        # experiment (raises NoValidMolecules)
-        n_features_model = classifier.n_features_in_
-        n_features_dataset = molecules_df.shape[1]
-        if n_features_model != n_features_dataset:
-            raise NoValidMolecules(f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
-                                   f'{n_features_dataset}')
-
-        if is_clustering:
-            # Gets the groups
-            clustering_result = classifier.predict(molecules_df.values)
-
-            # Retrieves the data for every group and stores the survival function
-            for cluster_id in range(classifier.n_clusters):
-                # Gets the samples in the current cluster
-                current_samples = samples[np.where(clustering_result == cluster_id)]
-
-                # Stores the prediction and the samples
-                SampleAndClusterPrediction.objects.bulk_create([
-                    SampleAndClusterPrediction(
-                        sample=sample_id,
-                        cluster=cluster_id,
-                        experiment=experiment
-                    )
-                    for sample_id in current_samples
-                ])
-        else:
-            # If it's not a clustering model, it's an SVM or RF
-            regression_result = np.round(classifier.predict(molecules_df.values), 4)
+        # Retrieves the data for every group and stores the survival function
+        for cluster_id in range(classifier.n_clusters):
+            # Gets the samples in the current cluster
+            check_if_stopped(is_aborted, ExperimentStopped)
+            current_samples = samples[np.where(clustering_result == cluster_id)]
 
             # Stores the prediction and the samples
-            SampleAndTimePrediction.objects.bulk_create([
-                SampleAndTimePrediction(
+            check_if_stopped(is_aborted, ExperimentStopped)
+            SampleAndClusterPrediction.objects.bulk_create([
+                SampleAndClusterPrediction(
                     sample=sample_id,
-                    prediction=predicted_time,
+                    cluster=cluster_id,
                     experiment=experiment
                 )
-                for sample_id, predicted_time in zip(samples, regression_result)
+                for sample_id in current_samples
             ])
+    else:
+        # If it's not a clustering model, it's an SVM or RF
+        check_if_stopped(is_aborted, ExperimentStopped)
+        regression_result = np.round(classifier.predict(molecules_df.values), 4)
 
-        experiment.save()
+        # Stores the prediction and the samples
+        check_if_stopped(is_aborted, ExperimentStopped)
+        SampleAndTimePrediction.objects.bulk_create([
+            SampleAndTimePrediction(
+                sample=sample_id,
+                prediction=predicted_time,
+                experiment=experiment
+            )
+            for sample_id, predicted_time in zip(samples, regression_result)
+        ])
 
-    def __prepare_and_compute_experiment(self, experiment: InferenceExperiment, stop_event: Event) -> str:
-        """
-        Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
-        @param experiment: InferenceExperiment instance.
-        @param stop_event: Stop signal.
-        @return Trained model instance if everything was ok. None if no best features were found.
-        """
-        # Get samples in common
-        samples_in_common = get_common_samples(experiment)
+    experiment.save()
 
-        # Generates needed DataFrames
-        molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
+def prepare_and_compute_inference_experiment(experiment: InferenceExperiment, is_aborted: AbortEvent) -> str:
+    """
+    Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
+    @param experiment: InferenceExperiment instance.
+    @param is_aborted: Method to call to check if the experiment has been stopped.
+    @return Trained model instance if everything was ok. None if no best features were found.
+    """
+    # Get samples in common
+    check_if_stopped(is_aborted, ExperimentStopped)
+    samples_in_common = get_common_samples(experiment)
 
-        self.__compute_inference_experiment(experiment, molecules_temp_file_path, stop_event)
+    # Generates needed DataFrames
+    check_if_stopped(is_aborted, ExperimentStopped)
+    molecules_temp_file_path = generate_molecules_file(experiment, samples_in_common)
 
-        return molecules_temp_file_path
+    check_if_stopped(is_aborted, ExperimentStopped)
+    __compute_inference_experiment(experiment, molecules_temp_file_path, is_aborted)
 
-    def eval_inference_experiment(self, experiment: InferenceExperiment, stop_event: Event):
-        """
-        Computes a Feature Selection experiment.
-        @param experiment: InferenceExperiment to be processed.
-        @param stop_event: Stop event to cancel the experiment
-        """
-        # Resulting Biomarker instance from the FS experiment.
-
-        # Computes the experiment
-        molecules_temp_file_path: Optional[str] = None
-        try:
-            logging.warning(f'ID InferenceExperiment -> {experiment.pk}')
-            # IMPORTANT: uses plain SQL as Django's autocommit management for transactions didn't work as expected
-            # with exceptions thrown in subprocesses
-            if self.use_transaction:
-                with connection.cursor() as cursor:
-                    cursor.execute("BEGIN")
-
-            # Computes Feature Selection experiment
-            start = time.time()
-            molecules_temp_file_path = self.__prepare_and_compute_experiment(experiment, stop_event)
-            total_execution_time = time.time() - start
-            logging.warning(f'InferenceExperiment {experiment.pk} total time -> {total_execution_time} seconds')
-
-            # If user cancel the experiment, discard changes
-            if stop_event.is_set():
-                raise ExperimentStopped
-            else:
-                self.__commit_or_rollback(is_commit=True, experiment=experiment)
-
-                # Saves some data about the result of the experiment
-                experiment.execution_time = total_execution_time
-                experiment.state = BiomarkerState.COMPLETED
-        except NoSamplesInCommon:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error('No samples in common')
-            experiment.state = BiomarkerState.NO_SAMPLES_IN_COMMON
-        except NoValidSamples:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error(f'InferenceExperiment {experiment.pk} has no valid samples')
-            experiment.state = BiomarkerState.NO_VALID_SAMPLES
-        except NoValidMolecules as ex:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error(f'InferenceExperiment {experiment.pk} has no valid molecules: {ex}')
-            experiment.state = BiomarkerState.NO_VALID_MOLECULES
-        except ExperimentFailed:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error(f'InferenceExperiment {experiment.pk} has failed. Check logs for more info')
-            experiment.state = BiomarkerState.FINISHED_WITH_ERROR
-        except ServerSelectionTimeoutError:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.error('MongoDB connection timeout!')
-            experiment.state = BiomarkerState.WAITING_FOR_QUEUE
-        except ExperimentStopped:
-            # If user cancel the experiment, discard changes
-            logging.warning(f'InferenceExperiment {experiment.pk} was stopped')
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            experiment.state = BiomarkerState.STOPPED
-        except Exception as e:
-            self.__commit_or_rollback(is_commit=False, experiment=experiment)
-            logging.exception(e)
-            logging.warning(f'Setting BiomarkerState.FINISHED_WITH_ERROR to experiment {experiment.pk}')
-            experiment.state = BiomarkerState.FINISHED_WITH_ERROR
-        finally:
-            # Removes the temporary files
-            if molecules_temp_file_path is not None:
-                os.unlink(molecules_temp_file_path)
-
-        # Saves changes in DB
-        experiment.save()
-
-        # Removes key
-        self.__removes_experiment_future(experiment.pk)
-
-        close_db_connection()
-
-    def add_inference_experiment(self, experiment: InferenceExperiment):
-        """
-        Adds a Feature Selection experiment to the ThreadPool to be processed
-        @param experiment: InferenceExperiment to be processed
-        """
-        experiment_event = Event()
-
-        # Submits
-        experiment_future = self.executor.submit(self.eval_inference_experiment, experiment, experiment_event)
-        self.inference_experiments_futures[experiment.pk] = (experiment_future, experiment_event)
-
-    def stop_experiment(self, experiment: InferenceExperiment):
-        """
-        Stops a specific experiment
-        @param experiment: InferenceExperiment to stop
-        """
-        if experiment.pk in self.inference_experiments_futures:
-            (experiment_future, experiment_event) = self.inference_experiments_futures[experiment.pk]
-            if experiment_future.cancel():
-                # If cancel() returns True it means that the experiment was waiting in queue and was
-                # successfully canceled
-                experiment.state = BiomarkerState.STOPPED
-            else:
-                # Sends signal to stop the experiment
-                experiment.state = BiomarkerState.STOPPING
-                experiment_event.set()
-            experiment.save()
-
-            # Removes key
-            self.__removes_experiment_future(experiment.pk)
-
-    def compute_pending_experiments(self):
-        """
-        Gets all the not computed experiments to add to the queue. Get IN_PROCESS too because
-        if the TaskQueue is being created It couldn't be processing experiments. Some experiments
-        could be in that state due to unexpected errors in server.
-        TODO: call this in the apps.py
-        """
-        logging.warning('Checking pending InferenceExperiments')
-        # Gets the experiment by submit date (ASC)
-        experiments: QuerySet = InferenceExperiment.objects.filter(
-            Q(state=BiomarkerState.WAITING_FOR_QUEUE)
-            | Q(state=BiomarkerState.IN_PROCESS)
-        ).order_by('submit_date')
-        logging.warning(f'{experiments.count()} pending experiments are being sent for processing')
-        for experiment in experiments:
-            # If the experiment has already reached a limit of attempts, it's marked as error
-            if experiment.attempt == 3:
-                logging.error(f'InferenceExperiment with PK: {experiment.pk} has reached attempts limit.')
-                experiment.state = BiomarkerState.REACHED_ATTEMPTS_LIMIT
-                experiment.save()
-            else:
-                experiment.attempt += 1  # TODO: add this field to the model
-                experiment.save()
-                logging.warning(f'Running experiment "{experiment}". Current attempt: {experiment.attempt}')
-                self.add_inference_experiment(experiment)
-
-        close_db_connection()
-
-    def __removes_experiment_future(self, experiment_pk: int):
-        """
-        Removes a specific key from self.experiments_futures
-        @param experiment_pk: PK to remove
-        """
-        del self.inference_experiments_futures[experiment_pk]
-
-
-global_inference_service = InferenceExperimentsService()
+    return molecules_temp_file_path

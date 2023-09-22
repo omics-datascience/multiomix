@@ -36,8 +36,8 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
     const [deletingStatValidation, setDeletingStatValidation] = useState(false)
     const [statValidationToRemove, setStatValidationToRemove] = useState<Nullable<StatisticalValidationForTable>>(null)
 
-    /** Makes a request to stop an FSExperiment. */
-    const stopFSExperiment = () => {
+    /** Makes a request to stop an StatisticalValidation. */
+    const stopStatValidationExperiment = () => {
         if (statValidationToStop === null) {
             return
         }
@@ -118,7 +118,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                     </Button>
                     <Button
                         color='red'
-                        onClick={stopFSExperiment}
+                        onClick={stopStatValidationExperiment}
                         loading={stoppingStatValidation}
                         disabled={stoppingStatValidation}
                     >
@@ -140,9 +140,9 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
 
         return (
             <Modal size='small' open={statValidationToRemove !== null} onClose={handleCloseRemoveStatValidation} centered={false}>
-                <Header icon='trash' content='Delete Biomarker' />
+                <Header icon='trash' content='Delete statistical validation' />
                 <Modal.Content>
-                    Are you sure you want to delete the Biomarker <strong>{statValidationToRemove.name}</strong>?
+                    Are you sure you want to delete the statistical validation <strong>{statValidationToRemove.name}</strong>?
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseRemoveStatValidation}>

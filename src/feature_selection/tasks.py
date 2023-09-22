@@ -5,7 +5,7 @@ from typing import Optional, Any, Dict
 from celery.contrib.abortable import AbortableTask
 from django.conf import settings
 from pymongo.errors import ServerSelectionTimeoutError
-from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState, BiomarkerOrigin
+from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.exceptions import NumberOfSamplesFewerThanCVFolds, ExperimentStopped, NoSamplesInCommon, ExperimentFailed
 from feature_selection.fs_service import prepare_and_compute_fs_experiment
 from feature_selection.models import FSExperiment, FitnessFunction

@@ -237,6 +237,10 @@ STAT_VALIDATION_SOFT_TIME_LIMIT: int = int(os.getenv('STAT_VALIDATION_SOFT_TIME_
 # marked as TIMEOUT_EXCEEDED
 TRAINED_MODEL_SOFT_TIME_LIMIT: int = int(os.getenv('TRAINED_MODEL_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
+# Time limit in seconds for an InferenceExperiment to be computed. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+INFERENCE_SOFT_TIME_LIMIT: int = int(os.getenv('INFERENCE_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
 # Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
 

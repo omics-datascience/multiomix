@@ -13,7 +13,8 @@ app.autodiscover_tasks()
 
 # Gets the max between all the parameters of timeout in the tasks. TODO: add here the other parameters when implemented
 max_timeout = max(settings.COR_ANALYSIS_SOFT_TIME_LIMIT, settings.FS_SOFT_TIME_LIMIT,
-                  settings.STAT_VALIDATION_SOFT_TIME_LIMIT, settings.TRAINED_MODEL_SOFT_TIME_LIMIT)
+                  settings.STAT_VALIDATION_SOFT_TIME_LIMIT, settings.TRAINED_MODEL_SOFT_TIME_LIMIT,
+                  settings.INFERENCE_SOFT_TIME_LIMIT)
 app.conf.broker_transport_options = {'visibility_timeout': max_timeout + 60}  # 60 seconds of margin
 
 

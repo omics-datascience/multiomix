@@ -28,6 +28,11 @@ class InferenceExperiment(models.Model):
     methylation_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='inference_experiments_as_methylation')
 
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+
+    # Number of attempts to prevent a buggy experiment running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
+
     def get_all_sources(self) -> List[Optional[ExperimentSource]]:
         """Returns a list with all the sources."""
         res = []

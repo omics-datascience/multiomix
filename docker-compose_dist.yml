@@ -88,7 +88,6 @@ services:
             # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
-
     # Celery worker for statistical validations and trained models
     stats-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
@@ -100,6 +99,22 @@ services:
         environment:
             # Celery parameters
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
+            CONCURRENCY: 2
+
+            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # changed here too!
+
+    # Celery worker for inference experiments
+    inference-worker:
+        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        depends_on:
+            - db
+            - mongo
+        volumes:
+            - media_data:/src/media
+        environment:
+            # Celery parameters
+            QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
 
             # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
@@ -146,6 +161,7 @@ services:
             - correlation-analysis-worker
             - fs-experiments-worker
             - stats-worker
+            - inference-worker
 
 volumes:
     mongo_data:

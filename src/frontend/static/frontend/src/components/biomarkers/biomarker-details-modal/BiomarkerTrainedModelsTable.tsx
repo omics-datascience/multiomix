@@ -22,7 +22,7 @@ interface BiomarkerTrainedModelsPanelProps {
     selectedBiomarker: Biomarker,
     /** If `true`, shows only the TrainedModel with state = `BiomarkerState.COMPLETED`. */
     showOnlyCompleted?: boolean,
-    /** If `true`, shows a button to add a new TrainedModel. */
+    /** If `true`, shows a button to add a new TrainedModel and the column of actions. */
     allowFullManagement: boolean,
     /** Selected TrainedModel instance. */
     selectedTrainedModel?: Nullable<TrainedModel>,
@@ -176,6 +176,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
         extraQueryParams = {}
     }
 
+    const actionColumn = props.allowFullManagement ? [{ name: 'Actions' }] : []
+
     return (
         <>
             {/* New TrainedModel modal */}
@@ -202,7 +204,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: 'Date', serverCodeToSort: 'created' },
                     { name: 'Metric', serverCodeToSort: 'fitness_metric' },
                     { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' },
-                    { name: 'Actions' }
+                    ...actionColumn
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
@@ -251,23 +253,27 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
                             <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
-                            <Table.Cell width={1}>
-                                {/* Stop button */}
-                                {!isFinished &&
-                                    <StopExperimentButton
-                                        title='Stop trained model'
-                                        onClick={() => setTrainedModelToStop(trainedModel)}
-                                    />
-                                }
 
-                                {/* Delete button */}
-                                {isFinished &&
-                                    <DeleteExperimentButton
-                                        title='Delete trained model'
-                                        onClick={() => setTrainedModelToRemove(trainedModel)}
-                                    />
-                                }
-                            </Table.Cell>
+                            {/* Actions column */}
+                            {props.allowFullManagement &&
+                                <Table.Cell width={1}>
+                                    {/* Stop button */}
+                                    {!isFinished &&
+                                        <StopExperimentButton
+                                            title='Stop trained model'
+                                            onClick={() => setTrainedModelToStop(trainedModel)}
+                                        />
+                                    }
+
+                                    {/* Delete button */}
+                                    {isFinished &&
+                                        <DeleteExperimentButton
+                                            title='Delete trained model'
+                                            onClick={() => setTrainedModelToRemove(trainedModel)}
+                                        />
+                                    }
+                                </Table.Cell>
+                            }
                         </Table.Row>
                     )
                 }}
