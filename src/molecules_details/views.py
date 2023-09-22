@@ -11,7 +11,7 @@ class GeneInformation(APIView):
 
     @staticmethod
     def get(request: HttpRequest):
-        gene = request.GET.get('gene','').strip()
+        gene = request.GET.get('gene', '').strip()
         data = global_mrna_service.get_bioapi_service_content(
             'information-of-genes',
             request_params={
@@ -27,7 +27,7 @@ class GeneInformation(APIView):
 
 
 class PathwaysInformation(APIView):
-    """ Retrieves general data of a gene from BioAPI 'pathways-in-common' service. 
+    """ Retrieves general data of a gene from BioAPI 'pathways-in-common' service.
     The service is used with a single gene to bring from the databases all the information related to metabolic pathways for it. """
 
     permission_classes = [permissions.IsAuthenticated]
