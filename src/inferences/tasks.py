@@ -35,7 +35,7 @@ def eval_inference_experiment(self, experiment_pk: int):
         experiment.save(update_fields=['state'])
         return
 
-    # Increments the attempt and sets the state of the biomarker to IN_PROCESS
+    # Increments the attempt and sets the state of the experiment to IN_PROCESS
     experiment.attempt += 1
     experiment.state = BiomarkerState.IN_PROCESS
     experiment.save(update_fields=['attempt', 'state'])

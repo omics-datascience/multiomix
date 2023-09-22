@@ -15,6 +15,7 @@
 {% block js %}
         <script>
                 const urlSyncCGDSStudy = "{% url 'sync_cgds_study' %}"
+                const urlStopCGDSSync = "{% url 'stop_cgds_study_sync' %}"
         </script>
         {% render_bundle 'cgds' 'js' %}
 {% endblock %}

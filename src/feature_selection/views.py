@@ -452,6 +452,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
 
 class StopFSExperiment(APIView):
     """Stops a FSExperiment"""
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request: Request):
         # TODO: replicate this code in api_service.views where function views

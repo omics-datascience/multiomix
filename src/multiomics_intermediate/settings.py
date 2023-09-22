@@ -241,6 +241,10 @@ TRAINED_MODEL_SOFT_TIME_LIMIT: int = int(os.getenv('TRAINED_MODEL_SOFT_TIME_LIMI
 # marked as TIMEOUT_EXCEEDED
 INFERENCE_SOFT_TIME_LIMIT: int = int(os.getenv('INFERENCE_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
+# Time limit in seconds for a CGDSStudy to be synchronized. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+SYNC_STUDY_SOFT_TIME_LIMIT: int = int(os.getenv('SYNC_STUDY_SOFT_TIME_LIMIT', 3600))  # 1 hour
+
 # Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
 

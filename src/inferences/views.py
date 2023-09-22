@@ -137,7 +137,7 @@ class PredictionExperimentSubmit(APIView):
                 name=request.POST.get('name'),
                 description=description,
                 biomarker=biomarker,
-                state=BiomarkerState.IN_PROCESS,
+                state=BiomarkerState.WAITING_FOR_QUEUE,
                 trained_model=trained_model,
                 mrna_source=mrna_source,
                 mirna_source=mirna_source,
@@ -158,6 +158,8 @@ class PredictionExperimentSubmit(APIView):
 
 class StopInferenceExperiment(APIView):
     """Stops a InferenceExperiment."""
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request: Request):
         inference_experiment_id = request.GET.get('inferenceExperimentId')

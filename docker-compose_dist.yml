@@ -120,6 +120,22 @@ services:
             # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
+    # Celery worker for sync CGDSStudies
+    sync-datasets-worker:
+        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        depends_on:
+            - db
+            - mongo
+        volumes:
+            - media_data:/src/media
+        environment:
+            # Celery parameters
+            QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
+            CONCURRENCY: 2
+
+            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # changed here too!
+
     # Django Backend Server
     web:
         image: omicsdatascience/multiomix:5.1.0
@@ -162,6 +178,7 @@ services:
             - fs-experiments-worker
             - stats-worker
             - inference-worker
+            - sync-datasets-worker
 
 volumes:
     mongo_data:

@@ -551,6 +551,8 @@ class BiomarkerNewStatisticalValidations(APIView):
 
 class StopStatisticalValidation(APIView):
     """Stops a StatisticalValidation."""
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request: Request):
         stat_validation_id = request.GET.get('statValidationId')
@@ -749,6 +751,8 @@ class TrainedModelDestroy(generics.DestroyAPIView):
 
 class StopTrainedModel(APIView):
     """Stops a TrainedModel."""
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request: Request):
         trained_model_id = request.GET.get('trainedModelId')
@@ -801,7 +805,6 @@ class StopTrainedModel(APIView):
 
         # Formats to JSON the ResponseStatus object
         return Response(response)
-
 
 
 class ClusterLabelsSetsList(generics.ListCreateAPIView):
