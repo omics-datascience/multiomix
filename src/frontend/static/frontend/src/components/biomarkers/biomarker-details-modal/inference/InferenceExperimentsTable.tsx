@@ -57,13 +57,13 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             }
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error stopping StatisticalValidation:', err)
+            console.log('Error stopping InferenceExperiment:', err)
         }).finally(() => {
             setStoppingInferenceExperiment(false)
         })
     }
 
-    /** Makes a request to delete a StatisticalValidation. */
+    /** Makes a request to delete a InferenceExperiment. */
     const deleteInferenceExperiment = () => {
         // Sets the Request's Headers
         if (!inferenceExperimentToRemove) {
@@ -81,7 +81,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             }
         }).catch((err) => {
             alertGeneralError()
-            console.log('Error deleting StatisticalValidation:', err)
+            console.log('Error deleting InferenceExperiment:', err)
         }).finally(() => {
             setDeletingInferenceExperiment(false)
         })
@@ -158,10 +158,10 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
 
     return (
         <>
-            {/* Modal to confirm stopping the StatisticalValidation */}
+            {/* Modal to confirm stopping the InferenceExperiment */}
             {getExperimentStopConfirmModals()}
 
-            {/* Modal to confirm deleting the StatisticalValidation */}
+            {/* Modal to confirm deleting the InferenceExperiment */}
             {getDeletionConfirmModal()}
             <PaginatedTable<InferenceExperimentForTable>
                 headerTitle='Inference experiments'
@@ -188,8 +188,8 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                 ]}
                 updateWSKey='update_prediction_experiment'
                 mapFunction={(inferenceExperiment: InferenceExperimentForTable) => {
-                    const isFinished = !(inferenceExperiment.state === BiomarkerState.IN_PROCESS ||
-                        inferenceExperiment.state === BiomarkerState.WAITING_FOR_QUEUE)
+                    const isInProcess = inferenceExperiment.state === BiomarkerState.IN_PROCESS ||
+                        inferenceExperiment.state === BiomarkerState.WAITING_FOR_QUEUE
 
                     return (
                         <Table.Row key={inferenceExperiment.id as number}>
@@ -213,7 +213,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 }
 
                                 {/* Stop button */}
-                                {!isFinished &&
+                                {isInProcess &&
                                     <StopExperimentButton
                                         title='Stop experiment'
                                         onClick={() => setInferenceExperimentToStop(inferenceExperiment)}
@@ -221,7 +221,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 }
 
                                 {/* Delete button */}
-                                {isFinished &&
+                                {!isInProcess &&
                                     <DeleteExperimentButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}

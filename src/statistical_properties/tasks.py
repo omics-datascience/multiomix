@@ -65,10 +65,10 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
         # If user cancel the stat_validation, discard changes
         if self.is_aborted():
             raise ExperimentStopped
-        else:
-            # Saves some data about the result of the stat_validation
-            stat_validation.execution_time = total_execution_time
-            stat_validation.state = BiomarkerState.COMPLETED
+
+        # Saves some data about the result of the stat_validation
+        stat_validation.execution_time = total_execution_time
+        stat_validation.state = BiomarkerState.COMPLETED
     except NoSamplesInCommon:
         logging.error('No samples in common')
         stat_validation.state = BiomarkerState.NO_SAMPLES_IN_COMMON
@@ -151,10 +151,10 @@ def eval_trained_model(self, trained_model_pk: int, model_parameters: Dict) -> N
         # If user cancel the stat_validation, discard changes
         if self.is_aborted():
             raise ExperimentStopped
-        else:
-            # Saves some data about the result of the stat_validation
-            trained_model.execution_time = total_execution_time
-            trained_model.state = TrainedModelState.COMPLETED
+
+        # Saves some data about the result of the stat_validation
+        trained_model.execution_time = total_execution_time
+        trained_model.state = TrainedModelState.COMPLETED
     except NoSamplesInCommon:
         logging.error('No samples in common')
         trained_model.state = TrainedModelState.NO_SAMPLES_IN_COMMON

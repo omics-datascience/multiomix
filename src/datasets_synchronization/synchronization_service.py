@@ -12,6 +12,9 @@ from pymongo.errors import InvalidName
 from api_service.mongo_service import global_mongo_service, MOLECULE_SYMBOL
 from common.constants import PATIENT_ID_COLUMN, TCGA_CONVENTION, SAMPLE_ID_COLUMN
 from common.datasets_utils import clean_dataset
+from common.exceptions import ExperimentStopped
+from common.functions import check_if_stopped
+from common.typing import AbortEvent
 from user_files.models_choices import FileType
 from .models import CGDSStudy, CGDSDataset, CGDSDatasetSynchronizationState
 
@@ -33,14 +36,16 @@ def __get_files_of_directory(dir_path: str) -> List[str]:
     return sorted([filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))])
 
 def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
-                   check_patient_column: bool):
+                   check_patient_column: bool, is_aborted: AbortEvent):
     """
     Synchronizes a CGDS Dataset from a compressed file downloaded in 'sync_study' method.
     @param dataset: Dataset to synchronize.
     @param extract_path: System path where the extracted files will be temporarily stored.
     @param only_failed: If True, only synchronizes the dataset if It's not synchronized yet.
     @param check_patient_column: If True it checks that the patient id column is present (useful for clinical).
+    @param is_aborted: AbortEvent to check if the process was aborted.
     """
+    check_if_stopped(is_aborted, ExperimentStopped)
     if dataset is not None:
         # Checks if the dataset is already synchronized
         if only_failed and dataset.state == CGDSDatasetSynchronizationState.SUCCESS:
@@ -48,12 +53,14 @@ def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
             return
 
         # Gets file
+        check_if_stopped(is_aborted, ExperimentStopped)
         dataset_file_path = os.path.join(extract_path, dataset.file_path)
         skip_rows = dataset.header_row_index if dataset.header_row_index else 0
 
         dataset_content: Optional[pd.DataFrame] = None
         sync_went_fine = False
         try:
+            check_if_stopped(is_aborted, ExperimentStopped)
             dataset_content = pd.read_csv(
                 dataset_file_path,
                 sep=dataset.separator,
@@ -65,10 +72,12 @@ def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
                 raise SkipRowsIsIncorrect
 
             # Replaces '.' with '_dot_' to prevent MongoDB errors
+            check_if_stopped(is_aborted, ExperimentStopped)
             dataset_content.columns = dataset_content.columns.str.replace(".", "_dot_")
 
             # Replaces TCGA suffix: '-01' (primary tumor), -06 (metastatic) and '-11' (normal) from samples
             # to avoid breaking df join. There's also '-03' suffix in some Firehose Legacy studies
+            check_if_stopped(is_aborted, ExperimentStopped)
             if dataset.file_type == FileType.CLINICAL:
                 # Clinical data has a PATIENT_ID or SAMPLE_ID column. In the samples file (data_clinical_sample.txt)
                 # there is a SAMPLE_ID column that has the TCGA suffix. In the patients file
@@ -86,20 +95,25 @@ def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
                 # duplicated due to discontinued molecules identifiers.
                 # First, generates a column with all the values of the MOLECULE_SYMBOL column as upper case as
                 # cBioPortal contains some duplicated identifiers in different cases (upper and lower)
+                check_if_stopped(is_aborted, ExperimentStopped)
                 upper_col = f'{MOLECULE_SYMBOL}_upper'
                 dataset_content[upper_col] = dataset_content[MOLECULE_SYMBOL].str.upper()
 
                 # Removes duplicated molecules and the generated column
+                check_if_stopped(is_aborted, ExperimentStopped)
                 dataset_content = dataset_content.drop_duplicates(subset=[upper_col], keep=False)
                 dataset_content = dataset_content.drop(columns=[upper_col])
 
                 # Removes NaNs values to prevent errors in JSON sent to BioAPI/Modulector
+                check_if_stopped(is_aborted, ExperimentStopped)
                 dataset_content = clean_dataset(dataset_content, axis='index')
 
             # Removes the collection
+            check_if_stopped(is_aborted, ExperimentStopped)
             global_mongo_service.drop_collection(dataset.mongo_collection_name)
 
             # Inserts the documents in the collection
+            check_if_stopped(is_aborted, ExperimentStopped)
             inserted_successfully = global_mongo_service.insert_cgds_dataset(
                 dataset_content,
                 dataset.mongo_collection_name,
@@ -107,6 +121,7 @@ def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
             )
 
             # If everything goes well, change the dataset info
+            check_if_stopped(is_aborted, ExperimentStopped)
             dataset.date_last_synchronization = timezone.now()
             if inserted_successfully:
                 dataset.state = CGDSDatasetSynchronizationState.SUCCESS
@@ -250,15 +265,18 @@ def generate_study_new_version(study: CGDSStudy) -> CGDSStudy:
     return study_copy
 
 
-def extract_file_and_sync_datasets(cgds_study: CGDSStudy, tar_file_path: str, only_failed: bool):
+def extract_file_and_sync_datasets(cgds_study: CGDSStudy, tar_file_path: str, only_failed: bool,
+                                   is_aborted: AbortEvent):
     """
     Extracts the recently downloaded tar file of a CGDSStudy and syncs its CGDSDataset which
     are inside the tar file
     @param cgds_study: CGDSStudy to gets the reading mode of the tar file
     @param tar_file_path: Path of downloaded tar file to decompress it
     @param only_failed: If True, only synchronizes the datasets that are not synchronized yet.
+    @param is_aborted: AbortEvent to check if the process was aborted.
     """
     # Infers the mode of downloaded compressed file to open it
+    check_if_stopped(is_aborted, ExperimentStopped)
     path = urlparse(cgds_study.url).path
     ext = os.path.splitext(path)[1]
     mode = "r:gz" if ext == ".gz" else "r:"
@@ -266,23 +284,29 @@ def extract_file_and_sync_datasets(cgds_study: CGDSStudy, tar_file_path: str, on
     # Creates a temp dir
     with tempfile.TemporaryDirectory() as extract_path:
         # Open the tar/tar.gz file into the temp dir
+        check_if_stopped(is_aborted, ExperimentStopped)
         with tarfile.open(tar_file_path, mode) as downloaded_tar_file:
             downloaded_tar_file.extractall(extract_path)
 
         # Checks if there is a sub folder and concatenates its name
+        check_if_stopped(is_aborted, ExperimentStopped)
         sub_folder_name = __detect_sub_folder(extract_path)
         if sub_folder_name is not None:
             extract_path = os.path.join(extract_path, sub_folder_name)
 
         # Syncs CGDS study's datasets
-        __sync_dataset(cgds_study.mrna_dataset, extract_path, only_failed, check_patient_column=False)
-        __sync_dataset(cgds_study.mirna_dataset, extract_path, only_failed, check_patient_column=False)
-        __sync_dataset(cgds_study.cna_dataset, extract_path, only_failed, check_patient_column=False)
-        __sync_dataset(cgds_study.methylation_dataset, extract_path, only_failed, check_patient_column=False)
+        __sync_dataset(cgds_study.mrna_dataset, extract_path, only_failed, check_patient_column=False,
+                       is_aborted=is_aborted)
+        __sync_dataset(cgds_study.mirna_dataset, extract_path, only_failed, check_patient_column=False,
+                       is_aborted=is_aborted)
+        __sync_dataset(cgds_study.cna_dataset, extract_path, only_failed, check_patient_column=False,
+                       is_aborted=is_aborted)
+        __sync_dataset(cgds_study.methylation_dataset, extract_path, only_failed, check_patient_column=False,
+                       is_aborted=is_aborted)
         __sync_dataset(cgds_study.clinical_patient_dataset, extract_path, only_failed,
-                            check_patient_column=True)
+                            check_patient_column=True, is_aborted=is_aborted)
         __sync_dataset(cgds_study.clinical_sample_dataset, extract_path, only_failed,
-                            check_patient_column=True)
+                            check_patient_column=True, is_aborted=is_aborted)
 
 
 def all_dataset_finished_correctly(cgds_study: CGDSStudy) -> bool:

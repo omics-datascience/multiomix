@@ -54,10 +54,10 @@ def eval_inference_experiment(self, experiment_pk: int):
         # If user cancel the experiment, discard changes
         if self.is_aborted():
             raise ExperimentStopped
-        else:
-            # Saves some data about the result of the experiment
-            experiment.execution_time = total_execution_time
-            experiment.state = BiomarkerState.COMPLETED
+
+        # Saves some data about the result of the experiment
+        experiment.execution_time = total_execution_time
+        experiment.state = BiomarkerState.COMPLETED
     except NoSamplesInCommon:
         logging.error('No samples in common')
         experiment.state = BiomarkerState.NO_SAMPLES_IN_COMMON

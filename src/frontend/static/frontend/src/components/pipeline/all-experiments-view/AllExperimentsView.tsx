@@ -120,8 +120,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         // Generates Experiment's state info
                         const experimentState = getExperimentStateObj(experiment.state)
 
-                        const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
-                            experiment.state === ExperimentState.WAITING_FOR_QUEUE)
+                        const isInProcess = experiment.state === ExperimentState.IN_PROCESS ||
+                            experiment.state === ExperimentState.WAITING_FOR_QUEUE
 
                         // Generates ExperimentType info
                         const experimentTypeInfo = getExperimentTypeObj(experiment.type, 'ExperimentType')
@@ -212,7 +212,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     />
 
                                     {/* Stop button */}
-                                    {!isFinished &&
+                                    {isInProcess &&
                                         <StopExperimentButton
                                             title='Stop experiment'
                                             onClick={() => this.props.confirmExperimentStop(experiment)}
@@ -220,7 +220,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     }
 
                                     {/* Delete button */}
-                                    {isFinished &&
+                                    {!isInProcess &&
                                         <DeleteExperimentButton
                                             title='Delete experiment'
                                             onClick={() => this.props.confirmExperimentDeletion(experiment)}

@@ -70,13 +70,13 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
         # If user cancel the experiment, discard changes
         if self.is_aborted():
             raise ExperimentStopped
-        else:
-            # Saves some data about the result of the experiment
-            # If it's running in Spark, the execution time is not saved here because it's not known yet and
-            # the state is set from the /aws-notification endpoint asynchronously
-            if not running_in_spark:
-                experiment.execution_time = total_execution_time
-                biomarker.state = BiomarkerState.COMPLETED
+
+        # Saves some data about the result of the experiment
+        # If it's running in Spark, the execution time is not saved here because it's not known yet and
+        # the state is set from the /aws-notification endpoint asynchronously
+        if not running_in_spark:
+            experiment.execution_time = total_execution_time
+            biomarker.state = BiomarkerState.COMPLETED
     except NoSamplesInCommon:
         logging.error('No samples in common')
         biomarker.state = BiomarkerState.NO_SAMPLES_IN_COMMON

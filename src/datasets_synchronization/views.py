@@ -85,8 +85,8 @@ class CGDSStudyList(generics.ListCreateAPIView):
     ordering_fields = '__all__'
 
 
-class CGDSStudyDetail(generics.RetrieveUpdateDestroyAPIView):
-    """REST endpoint: get, modify or delete for CGDSStudy model"""
+class CGDSStudyDetail(generics.RetrieveUpdateAPIView):
+    """REST endpoint: get, modify for CGDSStudy model"""
     queryset = CGDSStudy.objects.all()
     serializer_class = CGDSStudySerializer
     permission_classes = [permissions.IsAuthenticated]

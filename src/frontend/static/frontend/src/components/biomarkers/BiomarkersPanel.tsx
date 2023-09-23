@@ -1559,8 +1559,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
                         const canEditMolecules = this.canEditBiomarker(biomarker)
                         const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
-                        const isFinished = !(biomarker.state === BiomarkerState.IN_PROCESS ||
-                            biomarker.state === BiomarkerState.WAITING_FOR_QUEUE)
+                        const isInProcess = biomarker.state === BiomarkerState.IN_PROCESS ||
+                            biomarker.state === BiomarkerState.WAITING_FOR_QUEUE
 
                         return (
                             <Table.Row key={biomarker.id as number}>
@@ -1610,7 +1610,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         />
 
                                         {/* Stop button */}
-                                        {!isFinished &&
+                                        {isInProcess &&
                                             <StopExperimentButton
                                                 title='Stop experiment'
                                                 onClick={() => this.setState({ biomarkerToStop: biomarker })}
@@ -1618,7 +1618,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         }
 
                                         {/* Delete button */}
-                                        {isFinished &&
+                                        {!isInProcess &&
                                             <DeleteExperimentButton
                                                 title='Delete experiment'
                                                 disabled={currentBiomarkerIsLoading}

@@ -229,8 +229,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 urlToRetrieveData={urlBiomarkerTrainedModels}
                 updateWSKey='update_trained_models'
                 mapFunction={(trainedModel: TrainedModel) => {
-                    const isFinished = !(trainedModel.state === TrainedModelState.IN_PROCESS ||
-                        trainedModel.state === TrainedModelState.WAITING_FOR_QUEUE)
+                    const isInProcess = trainedModel.state === TrainedModelState.IN_PROCESS ||
+                        trainedModel.state === TrainedModelState.WAITING_FOR_QUEUE
 
                     return (
                         <Table.Row
@@ -258,7 +258,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             {props.allowFullManagement &&
                                 <Table.Cell width={1}>
                                     {/* Stop button */}
-                                    {!isFinished &&
+                                    {isInProcess &&
                                         <StopExperimentButton
                                             title='Stop trained model'
                                             onClick={() => setTrainedModelToStop(trainedModel)}
@@ -266,7 +266,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                     }
 
                                     {/* Delete button */}
-                                    {isFinished &&
+                                    {!isInProcess &&
                                         <DeleteExperimentButton
                                             title='Delete trained model'
                                             onClick={() => setTrainedModelToRemove(trainedModel)}

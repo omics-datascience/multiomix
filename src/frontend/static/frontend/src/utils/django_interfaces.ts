@@ -27,7 +27,9 @@ enum CGDSStudySynchronizationState {
     FINISHED_WITH_ERROR = 4,
     URL_ERROR = 5,
     CONNECTION_TIMEOUT_ERROR = 6,
-    READ_TIMEOUT_ERROR = 7
+    READ_TIMEOUT_ERROR = 7,
+    TIMEOUT_EXCEEDED = 9,
+    STOPPED = 10
 }
 
 /**

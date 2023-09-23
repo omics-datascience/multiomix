@@ -190,8 +190,8 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                 ]}
                 updateWSKey='update_statistical_validations'
                 mapFunction={(statisticalValidation: StatisticalValidationForTable) => {
-                    const isFinished = !(statisticalValidation.state === BiomarkerState.IN_PROCESS ||
-                        statisticalValidation.state === BiomarkerState.WAITING_FOR_QUEUE)
+                    const isInProcess = statisticalValidation.state === BiomarkerState.IN_PROCESS ||
+                        statisticalValidation.state === BiomarkerState.WAITING_FOR_QUEUE
 
                     return (
                         <Table.Row key={statisticalValidation.id as number}>
@@ -217,7 +217,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 }
 
                                 {/* Stop button */}
-                                {!isFinished &&
+                                {isInProcess &&
                                     <StopExperimentButton
                                         title='Stop statistical validation'
                                         onClick={() => setStatValidationToStop(statisticalValidation)}
@@ -225,7 +225,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 }
 
                                 {/* Delete button */}
-                                {isFinished &&
+                                {!isInProcess &&
                                     <DeleteExperimentButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
