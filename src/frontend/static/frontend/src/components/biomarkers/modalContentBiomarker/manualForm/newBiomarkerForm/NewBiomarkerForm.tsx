@@ -61,7 +61,6 @@ interface NewBiomarkerFormProps {
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
     const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
-
     const canEditMolecules = props.biomarkerForm.canEditMolecules
 
     return (
@@ -107,6 +106,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         className='biomarkers--side--bar--input--selection'
                         placeholder='Select molecule'
                         name='moleculeSelected'
+                        disabled={props.biomarkerForm.moleculesSymbolsFinder.isLoading}
                         options={BIOMARKER_OPTIONS}
                         value={props.biomarkerForm.moleculeSelected}
                         onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MRNA)}

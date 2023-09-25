@@ -175,19 +175,19 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                         <Grid.Column >
                             <Step.Group widths={3}>
                                 <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} onClick={() => handleGoBackPanel(props.handleGoBackStep1, props.featureSelection.step > 1)}>
-                                    <Icon name='truck' />
+                                    <Icon name='list' />
                                     <Step.Content>
                                         <Step.Title>Step 1: {props.featureSelection.biomarker?.id ? `Selected ${props.featureSelection.biomarker?.name}` : 'Select biomarker'}</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step active={props.featureSelection.step === 2} completed={props.featureSelection.step > 2} disabled={props.featureSelection.step === 1} onClick={() => handleGoBackPanel(props.handleGoBackStep2, props.featureSelection.step > 2)}>
-                                    <Icon name='credit card' />
+                                    <Icon name='boxes' />
                                     <Step.Content>
                                         <Step.Title>Step 2: Datasets</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step active={props.featureSelection.step === 3} completed={props.featureSelection.step > 3} disabled={props.featureSelection.step < 3}>
-                                    <Icon name='info' />
+                                    <Icon name='lab' />
                                     <Step.Content>
                                         <Step.Title>Step 3: Feature selection</Step.Title>
                                     </Step.Content>
