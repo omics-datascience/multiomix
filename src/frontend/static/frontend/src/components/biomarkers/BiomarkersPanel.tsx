@@ -765,6 +765,24 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     value: molecule
                 })
             })
+            // Sets loading in false
+            const moleculesSection = {
+                ...this.state.formBiomarker.moleculesSection,
+                [this.state.formBiomarker.moleculeSelected]: {
+                    isLoading: false,
+                    data: this.orderData([...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data].concat(genesArray))
+                }
+            }
+            this.setState({
+                formBiomarker: {
+                    ...this.state.formBiomarker,
+                    moleculesSection
+                }
+            })
+            const formBiomarker = this.state.formBiomarker
+            formBiomarker.moleculesSymbolsFinder.isLoading = false
+            formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].isLoading = false
+            this.setState({ formBiomarker })
             console.error('Error getting genes ->', err)
         })
     }
