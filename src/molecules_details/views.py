@@ -26,6 +26,35 @@ class GeneInformation(APIView):
         })
 
 
+class GeneGroups(APIView):
+    """ Gets the identifier of a gene, validates it and then returns the group of genes to which
+    it belongs according to HGNC, and all the other genes that belong to the same group. """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    """
+    Ejemplos:
+    http://localhost:8000/molecules/gene-groups?gene=ALK
+    http://localhost:8000/molecules/gene-groups?gene=BRAF
+    """
+    @staticmethod
+    def get(request: HttpRequest):
+        gene = request.GET.get('gene', '').strip()
+        if not gene:
+            # print("No gene found")
+            return Response({})
+
+        data = global_mrna_service.get_bioapi_service_content(
+            f'/genes-of-its-group/{gene}',
+            request_params={},  # No params needed
+            is_paginated=False,
+            method='get'
+        )
+        return Response({
+            'data': data if data else None
+        })
+
+
 class PathwaysInformation(APIView):
     """ Retrieves general data of a gene from BioAPI 'pathways-in-common' service.
     The service is used with a single gene to bring from the databases all the information related to metabolic pathways for it. """
@@ -246,3 +275,56 @@ class GeneOntologyTermsOfTerm(APIView):
         return Response({
             'go_terms': data
         })
+
+
+class ActionableAndCancerGenes(APIView):
+    """ retrieves information of actionable genes and drugs obtained from the
+    OncoKB database, at a therapeutic, diagnostic and prognostic level"""
+
+    # permission_classes = [permissions.IsAuthenticated]
+
+    """
+    Examples:
+    http://localhost:8000/molecules/actionable-cancer-genes?gene=TP53
+    http://localhost:8000/molecules/actionable-cancer-genes?gene=MSH6,EGFR
+    """
+
+    @staticmethod
+    def get(request: HttpRequest):
+        gene = request.GET.get('gene', '').strip()
+        if not gene:
+            print("No gene found")
+            return Response({})
+        else:
+            gene = gene.split(',')
+            print(gene)
+        data = global_mrna_service.get_bioapi_service_content(
+            'information-of-oncokb',
+            request_params={
+                'gene_ids': gene
+            },
+            is_paginated=False,
+            method='post'
+        )
+
+        return Response({
+            'data': data if data else None
+        })
+
+
+"""
+Servicios BIOAPI:
+ -  Genes symbols validator --> No Implementar
+ -  Genes symbols finder --> No Implementar
+ -  Genes information --> HECHO
+ -  Gene Groups --> HECHO
+ -  Genes of a metabolic pathway --> HECHO
+ -  Metabolic pathways from different genes --> HECHO
+ -  Gene expression --> No Implementar
+ -  Actionable and Cancer genes --> HECHO
+ -  Gene Ontology terms related to a list of genes --> HECHO
+ -  Gene Ontology terms related to a list of genes --> HECHO
+ -  Cancer related drugs (PharmGKB) --> PENDIENTE
+ -  Predicted functional associations network (String) --> PENDIENTE
+ -  Drugs that regulate a gene  --> CONSULTAR (Retorna solo un link)
+"""
