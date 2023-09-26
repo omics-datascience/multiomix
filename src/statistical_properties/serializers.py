@@ -163,15 +163,16 @@ class SampleAndClusterSerializer(serializers.ModelSerializer):
         exclude = ['id']
 
 
-class TrainedModelSerializer(serializers.ModelSerializer):
-    """TrainedModel serializer. TODO: rename to TrainedModelForTableSerializer"""
+class TrainedModelForTableSerializer(serializers.ModelSerializer):
+    """TrainedModel serializer."""
     best_fitness_value = serializers.SerializerMethodField(method_name='get_best_fitness_value')
     fitness_metric = serializers.SerializerMethodField(method_name='get_fitness_metric')
+    can_be_deleted = serializers.SerializerMethodField(method_name='get_can_be_deleted')
 
     class Meta:
         model = TrainedModel
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
-                  'fitness_metric', 'cv_folds_modified']
+                  'fitness_metric', 'cv_folds_modified', 'can_be_deleted']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:
@@ -199,3 +200,11 @@ class TrainedModelSerializer(serializers.ModelSerializer):
             return 'C-Index'
 
         return None
+
+    @staticmethod
+    def get_can_be_deleted(instance: TrainedModel) -> bool:
+        """
+        Gets if the TrainedModel can be deleted (i.e. doesn't have related StatisticalValidations or
+        InferenceExperiments).
+        """
+        return not instance.statistical_validations.exists() and not instance.inference_experiments.exists()

@@ -377,7 +377,7 @@ enum ActiveBiomarkerMoleculeItemMenu {
 }
 
 /** Django TrainedModel model. */
-interface TrainedModel {
+interface TrainedModelForTable {
     id: number,
     name: string,
     description: string,
@@ -385,6 +385,7 @@ interface TrainedModel {
     fitness_function: FitnessFunction,
     cv_folds_modified: boolean,
     created: string,
+    can_be_deleted: boolean,
     fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
 }
@@ -597,7 +598,7 @@ export {
     ActiveBiomarkerDetailItemMenu,
     ActiveStatValidationsItemMenu,
     ActiveBiomarkerMoleculeItemMenu,
-    TrainedModel,
+    TrainedModelForTable,
     BasicStatisticalValidation,
     StatisticalValidationForTable,
     StatisticalValidation,

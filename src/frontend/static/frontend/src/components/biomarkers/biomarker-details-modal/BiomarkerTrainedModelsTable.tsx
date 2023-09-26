@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { PaginatedTable } from '../../common/PaginatedTable'
-import { Biomarker, BiomarkerState, TrainedModel, TrainedModelState } from '../types'
+import { Biomarker, BiomarkerState, TrainedModelForTable, TrainedModelState } from '../types'
 import { Button, Form, Header, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { alertGeneralError, formatDateLocale, getDjangoHeader } from '../../../utils/util_functions'
@@ -25,9 +25,9 @@ interface BiomarkerTrainedModelsPanelProps {
     /** If `true`, shows a button to add a new TrainedModel and the column of actions. */
     allowFullManagement: boolean,
     /** Selected TrainedModel instance. */
-    selectedTrainedModel?: Nullable<TrainedModel>,
+    selectedTrainedModel?: Nullable<TrainedModelForTable>,
     /** Callback to update the selected TrainedModel instance. */
-    selectTrainedModel?: (newSelectedTrainedModel: TrainedModel) => void
+    selectTrainedModel?: (newSelectedTrainedModel: TrainedModelForTable) => void
 }
 
 /**
@@ -39,10 +39,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
 
     const [stoppingTrainedModel, setStoppingTrainedModel] = useState(false)
-    const [trainedModelToStop, setTrainedModelToStop] = useState<Nullable<TrainedModel>>(null)
+    const [trainedModelToStop, setTrainedModelToStop] = useState<Nullable<TrainedModelForTable>>(null)
 
     const [deletingTrainedModel, setDeletingTrainedModel] = useState(false)
-    const [trainedModelToRemove, setTrainedModelToRemove] = useState<Nullable<TrainedModel>>(null)
+    const [trainedModelToRemove, setTrainedModelToRemove] = useState<Nullable<TrainedModelForTable>>(null)
 
     /** Makes a request to stop an FSExperiment. */
     const stopFSExperiment = () => {
@@ -194,7 +194,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
             {getDeletionConfirmModal()}
 
             {/* TrainedModels table. */}
-            <PaginatedTable<TrainedModel>
+            <PaginatedTable<TrainedModelForTable>
                 headerTitle='Trained models'
                 headers={[
                     { name: 'Name', serverCodeToSort: 'name', width: 3 },
@@ -228,7 +228,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 searchPlaceholder='Search by name or description'
                 urlToRetrieveData={urlBiomarkerTrainedModels}
                 updateWSKey='update_trained_models'
-                mapFunction={(trainedModel: TrainedModel) => {
+                mapFunction={(trainedModel: TrainedModelForTable) => {
                     const isInProcess = trainedModel.state === TrainedModelState.IN_PROCESS ||
                         trainedModel.state === TrainedModelState.WAITING_FOR_QUEUE
 
@@ -268,7 +268,11 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                     {/* Delete button */}
                                     {!isInProcess &&
                                         <DeleteExperimentButton
-                                            title='Delete trained model'
+                                            disabled={!trainedModel.can_be_deleted}
+                                            title={trainedModel.can_be_deleted
+                                                ? 'Delete trained model'
+                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'
+                                            }
                                             onClick={() => setTrainedModelToRemove(trainedModel)}
                                         />
                                     }

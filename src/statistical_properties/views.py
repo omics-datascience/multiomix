@@ -37,7 +37,7 @@ from feature_selection.serializers import ClusterLabelsSetSerializer, Prediction
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
     StatisticalValidationSimpleSerializer, StatisticalValidationSerializer, MoleculeWithCoefficientSerializer, \
-    SampleAndClusterSerializer, TrainedModelSerializer
+    SampleAndClusterSerializer, TrainedModelForTableSerializer
 from common.functions import get_integer_enum_from_value
 from statistical_properties.statistics_utils import COMMON_DECIMAL_PLACES, compute_source_statistical_properties
 from statistical_properties.survival_functions import generate_survival_groups_by_clustering, LabelOrKaplanMeierResult, \
@@ -743,7 +743,10 @@ class TrainedModelDestroy(generics.DestroyAPIView):
     """REST endpoint: delete for TrainedModel model."""
 
     def get_queryset(self):
-        return TrainedModel.objects.filter(biomarker__user=self.request.user)
+        # Only gets the TrainedModels of the current user and don't have a related StatisticalValidation or
+        # InferenceExperiment
+        return TrainedModel.objects.filter(biomarker__user=self.request.user, statistical_validations=None,
+                                           inference_experiments=None)
 
     serializer_class = TrainedModel
     permission_classes = [permissions.IsAuthenticated]
@@ -892,7 +895,7 @@ class TrainedModelsOfBiomarker(generics.ListAPIView):
         return biomarker.trained_models.all()
 
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = TrainedModelSerializer
+    serializer_class = TrainedModelForTableSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['state', 'fitness_function']
