@@ -24,10 +24,7 @@ The following are the steps to perform a deployment in production. In case you w
         - `SYNC_STUDY_SOFT_TIME_LIMIT`: Time limit in seconds for a CGDSStudy to be synchronized. If It's not finished in this time, it is marked as `TIMEOUT_EXCEEDED`. Default to `3600` (1 hour).
         - `RESULT_DATAFRAME_LIMIT_ROWS`: maximum number of tuples of an experiment result to save in DB. If it has a larger amount it is truncated by warning the user. The bigger the size the longer it takes to save the resulting combinations of a correlation analysis in Postgres. Set it to `0` to save all the resulting combinations. Default to `300000`.
         - `EXPERIMENT_CHUNK_SIZE`: the size of the batches/chunks in which each dataset of an experiment is processed. By default, `500`.
-        - `COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP`: set the string `false` if you want to avoid the computation of the experiments that were pending when starting the server. **IMPORTANT: note that the only function this parameter has is to avoid an exceptional problem when starting the server, it should not be left in production as some experiments could be left inconsistent**. Default to `true`.
-        - `THREAD_POOL_SIZE`: number of threads to use in the ThreadPool that triggers the experiments/pipelines, i.e. the size of the processing queue. Please take into consideration the memory occupied by each experiment, the larger the queue the more likely the system will crash due to lack of resources. **A server restart is required**. Default `5`.
         - `SORT_BUFFER_SIZE`: number of elements in memory to perform external sorting (i.e. disk sorting) in the case of having to sort by fit. This impacts the final sorting performance during the computation of an experiment, at the cost of higher memory consumption. Default `2_000_000` of elements. 
-        - `USE_TRANSACTION_IN_EXPERIMENT`: set the string `false` if you want to prevent the computation of experiments that are inside a DB transaction. This parameter is useful to be able to perform heavy experiments in very low resource environments but at the cost of the security that an atomic operation handled by the DBMS can offer. In case the server crashes in the middle of processing, there will be garbage left in the DB that will have to be manually removed. Another thing to consider is that it increases disk usage since the transaction is not kept in memory, but each batch is inserted and then removed; the latter also impacts the final performance of the experiment. Default to `true`.
         - `NUMBER_OF_LAST_EXPERIMENTS`: number of last experiments shown to each user in the `Last experiments` panel in the `Pipeline` page. Default `4`.
         - `MAX_NUMBER_OF_OPEN_TABS`: maximum number of experiment result tabs that the user can open. When the limit is reached it throws a prompt asking to close some tabs to open more. The more experiment tabs you open, the more memory is consumed. Default `8`.
         - `CGDS_CONNECTION_TIMEOUT`: timeout **in seconds** of the connection to the cBioPortal server when a study is synchronized. Default `5` seconds.
@@ -207,7 +204,7 @@ Then the following environment variables must be configured:
 
 ## Execution of tasks with Celery
 
-Multiomix uses Celery to distribute the computational load of its most expensive tasks. This requires the user to have a messaging broker, such as RabbitMQ or Redis, installed and configured. In this project, Redis is used and a worker is deployed for each of the execution queues serving a different type of task. The Docker configuration is left ready to run in Docker Compose or Docker Swarm and K8S.
+Multiomix uses [Celery][celery] to distribute the computational load of its most expensive tasks (such as correlation analysis, Biomarkers Feature Selection, static validations, Machine Learning model training, etc.). This requires the user to have a messaging broker, such as RabbitMQ or Redis, installed and configured. In this project, Redis is used and a worker is deployed for each of the execution queues serving a different type of task. The Docker configuration is left ready to run in Docker Compose or Docker Swarm and K8S.
 
 As for the execution flow, the following error scenarios are considered:
 
@@ -215,6 +212,11 @@ As for the execution flow, the following error scenarios are considered:
 - **The task is submitted and is being executed by Celery, but the Django server is down**: in this case the task continues to run in Celery until it finishes, and the user can check the status of the task in the user interface when the Django instance becomes available again.
 - **The task is submitted and being executed by Celery but the Celery worker crashes**: in this case the task remains in `PENDING` state and will be executed by Celery when the worker starts thanks to the script implemented in the `celery.py` file.
 
+The specification of all the Celery services is available both in the Docker Compose/Docker Swarm (file `docker-compose_dist.yml`) or in the K8S configuration files.
+
+In those files each of these services has a parameter called `CONCURRENCY` (default `2`, except for `sync-datasets-worker` used to sync CGDS datasets which is a non-frequent task) that specifies how many computing instances can run on that Celery worker. Increasing this parameter will allow more tasks to run in parallel.
+
+You can also increase the number of replicas of the Docker service to create the required instances (by default only one instance of each service is raised).
 
 ## Creating Dumps and Restoring from Dumps
 
@@ -274,3 +276,4 @@ To import a `media` folder backup inside a new environment you must (from the ro
 [bioapi]: https://github.com/omics-datascience/BioAPI
 [cox-net-surv-analysis]: https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.linear_model.CoxnetSurvivalAnalysis.html
 [aws-emr-integration]: https://github.com/omics-datascience/multiomix-aws-emr
+[celery]: https://docs.celeryq.dev/en/stable/getting-started/introduction.html

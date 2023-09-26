@@ -217,10 +217,6 @@ EXPERIMENT_CHUNK_SIZE: int = int(os.getenv('EXPERIMENT_CHUNK_SIZE', 500))
 # Number of elements to compute external sorting in Rust
 SORT_BUFFER_SIZE: int = int(os.getenv('SORT_BUFFER_SIZE', 2_000_000))
 
-# Number of threads used in ThreadPool to run experiments. Please take memory in consideration
-# IMPORTANT: needs a server restart
-THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))  # TODO: remove and document in DEPLOYING to set in CELERY when finished the implementation of Celery integration
-
 # Time limit in seconds for a correlation analysis to be computed. If the experiment is not finished in this time, it is
 # marked as TIMEOUT_EXCEEDED
 COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT', 10800))  # 3 hours
@@ -247,9 +243,6 @@ SYNC_STUDY_SOFT_TIME_LIMIT: int = int(os.getenv('SYNC_STUDY_SOFT_TIME_LIMIT', 36
 
 # Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
-
-# Indicates if the experiment is computed inside a DB transaction or handle manually by Python
-USE_TRANSACTION_IN_EXPERIMENT: bool = os.getenv('USE_TRANSACTION_IN_EXPERIMENT', 'true') == 'true'
 
 # Number of last experiments returned to the user in the "Last experiments" panel in Pipeline page
 NUMBER_OF_LAST_EXPERIMENTS: int = int(os.getenv('NUMBER_OF_LAST_EXPERIMENTS', 4))
