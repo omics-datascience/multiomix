@@ -1,7 +1,7 @@
 import os
 from django.test import TestCase
 from api_service.models import ExperimentSource, Experiment, GeneMiRNACombination
-from api_service.pipelines import global_pipeline_manager
+from api_service.pipelines import get_valid_data_from_sources, get_common_samples
 from genes.models import Gene
 from statistical_properties.statistics_utils import compute_source_statistical_properties, COMMON_DECIMAL_PLACES,\
     P_VALUES_DECIMAL_PLACES
@@ -80,7 +80,7 @@ class GeneGEMTestCase(TestCase):
         """Tests statistical properties computing"""
         gene = self.mrna_mirna_combination.gene_name
         gem = self.mrna_mirna_combination.gem
-        gene_data, gem_data, gene_samples, gem_samples = global_pipeline_manager.get_valid_data_from_sources(
+        gene_data, gem_data, gene_samples, gem_samples = get_valid_data_from_sources(
             self.mrna_mirna_combination.experiment,
             gene,
             gem,
@@ -92,7 +92,7 @@ class GeneGEMTestCase(TestCase):
         # Assertions
 
         # All the statistical props must be computed from samples in common only
-        samples_in_common = global_pipeline_manager.get_common_samples(
+        samples_in_common = get_common_samples(
             self.mrna_normal_source,
             self.mirna_normal_source
         )

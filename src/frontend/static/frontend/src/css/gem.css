@@ -179,6 +179,7 @@
     color: #fff;
 }
 
+/* TODO: remove if not used */
 .experiment-stopping-icon {
     animation-name: stop-color-palette;
     animation-duration: 1s;

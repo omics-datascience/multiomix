@@ -1,16 +1,20 @@
 import React, { useState } from 'react'
 import { PaginatedTable } from '../../common/PaginatedTable'
-import { Biomarker, BiomarkerState, TrainedModel } from '../types'
-import { Button, Form, Icon, Table } from 'semantic-ui-react'
+import { Biomarker, BiomarkerState, TrainedModelForTable, TrainedModelState } from '../types'
+import { Button, Form, Header, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
-import { formatDateLocale } from '../../../utils/util_functions'
+import { alertGeneralError, formatDateLocale, getDjangoHeader } from '../../../utils/util_functions'
 import { Nullable } from '../../../utils/interfaces'
 import { biomarkerStateOptions, fitnessFunctionsOptions } from '../utils'
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
 import { TrainedModelStateLabel } from '../labels/TrainedModelStateLabel'
+import ky from 'ky'
+import { StopExperimentButton } from '../../pipeline/all-experiments-view/StopExperimentButton'
+import { DeleteExperimentButton } from '../../pipeline/all-experiments-view/DeleteExperimentButton'
 
 declare const urlBiomarkerTrainedModels: string
+declare const urlStopTrainedModel: string
 
 /** BiomarkerTrainedModelsTable props. */
 interface BiomarkerTrainedModelsPanelProps {
@@ -18,12 +22,12 @@ interface BiomarkerTrainedModelsPanelProps {
     selectedBiomarker: Biomarker,
     /** If `true`, shows only the TrainedModel with state = `BiomarkerState.COMPLETED`. */
     showOnlyCompleted?: boolean,
-    /** If `true`, shows a button to add a new TrainedModel. */
+    /** If `true`, shows a button to add a new TrainedModel and the column of actions. */
     allowFullManagement: boolean,
     /** Selected TrainedModel instance. */
-    selectedTrainedModel?: Nullable<TrainedModel>,
+    selectedTrainedModel?: Nullable<TrainedModelForTable>,
     /** Callback to update the selected TrainedModel instance. */
-    selectTrainedModel?: (newSelectedTrainedModel: TrainedModel) => void
+    selectTrainedModel?: (newSelectedTrainedModel: TrainedModelForTable) => void
 }
 
 /**
@@ -33,6 +37,132 @@ interface BiomarkerTrainedModelsPanelProps {
  */
 export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelProps) => {
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
+
+    const [stoppingTrainedModel, setStoppingTrainedModel] = useState(false)
+    const [trainedModelToStop, setTrainedModelToStop] = useState<Nullable<TrainedModelForTable>>(null)
+
+    const [deletingTrainedModel, setDeletingTrainedModel] = useState(false)
+    const [trainedModelToRemove, setTrainedModelToRemove] = useState<Nullable<TrainedModelForTable>>(null)
+
+    /** Makes a request to stop an FSExperiment. */
+    const stopFSExperiment = () => {
+        if (trainedModelToStop === null) {
+            return
+        }
+
+        setStoppingTrainedModel(true)
+
+        // Sets the Request's Headers
+        const myHeaders = getDjangoHeader()
+        const trainedModelId = trainedModelToStop.id as number // This is safe
+
+        ky.get(urlStopTrainedModel, { headers: myHeaders, searchParams: { trainedModelId } }).then((response) => {
+            // If OK closes the modal
+            if (response.ok) {
+                handleCloseStopTrainedModel()
+            } else {
+                alertGeneralError()
+            }
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error stopping TrainedModel:', err)
+        }).finally(() => {
+            setStoppingTrainedModel(false)
+        })
+    }
+
+    /** Makes a request to delete a TrainedModel. */
+    const deleteTrainedModel = () => {
+        // Sets the Request's Headers
+        if (!trainedModelToRemove) {
+            return
+        }
+
+        setDeletingTrainedModel(true)
+
+        const myHeaders = getDjangoHeader()
+        const deleteURL = `${urlBiomarkerTrainedModels}/${trainedModelToRemove.id}/`
+        ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
+            // If OK is returned refresh the tags
+            if (response.ok) {
+                handleCloseRemoveTrainedModel()
+            }
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error deleting TrainedModel:', err)
+        }).finally(() => {
+            setDeletingTrainedModel(false)
+        })
+    }
+
+    /** Sets the trainedModelToStop to null to close the modal to confirm the action. */
+    const handleCloseStopTrainedModel = () => {
+        setTrainedModelToStop(null)
+    }
+
+    /** Sets the trainedModelToRemove to null to close the modal to confirm the action. */
+    const handleCloseRemoveTrainedModel = () => {
+        setTrainedModelToRemove(null)
+    }
+
+    /**
+     * Generates the modal to confirm an Experiment stopping
+     * @returns Modal component. Null if no Experiment was selected to stop
+     */
+    const getExperimentStopConfirmModals = () => {
+        if (!trainedModelToStop) {
+            return null
+        }
+
+        return (
+            <Modal size='small' open={trainedModelToStop !== null} onClose={handleCloseStopTrainedModel} centered={false}>
+                <Header icon='stop' content='Stop training' />
+                <Modal.Content>
+                    Are you sure you want to stop the training of model <strong>{trainedModelToStop.name}</strong>?
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={handleCloseStopTrainedModel}>
+                        Cancel
+                    </Button>
+                    <Button
+                        color='red'
+                        onClick={stopFSExperiment}
+                        loading={stoppingTrainedModel}
+                        disabled={stoppingTrainedModel}
+                    >
+                        Stop
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
+
+    /**
+     * Generates the modal to confirm a biomarker deletion
+     * @returns Modal component. Null if no Tag was selected to delete
+     */
+    const getDeletionConfirmModal = () => {
+        if (!trainedModelToRemove) {
+            return null
+        }
+
+        return (
+            <Modal size='small' open={trainedModelToRemove !== null} onClose={handleCloseRemoveTrainedModel} centered={false}>
+                <Header icon='trash' content='Delete Biomarker' />
+                <Modal.Content>
+                    Are you sure you want to delete the Biomarker <strong>{trainedModelToRemove.name}</strong>?
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={handleCloseRemoveTrainedModel}>
+                        Cancel
+                    </Button>
+                    <Button color='red' onClick={deleteTrainedModel} loading={deletingTrainedModel} disabled={deletingTrainedModel}>
+                        Delete
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
 
     const showOnlyCompleted = props.showOnlyCompleted ?? false
     let stateFilter
@@ -46,6 +176,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
         extraQueryParams = {}
     }
 
+    const actionColumn = props.allowFullManagement ? [{ name: 'Actions' }] : []
+
     return (
         <>
             {/* New TrainedModel modal */}
@@ -55,8 +187,14 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 selectedBiomarker={props.selectedBiomarker}
             />
 
+            {/* Modal to confirm stopping the TrainedModel */}
+            {getExperimentStopConfirmModals()}
+
+            {/* Modal to confirm deleting the TrainedModel */}
+            {getDeletionConfirmModal()}
+
             {/* TrainedModels table. */}
-            <PaginatedTable<TrainedModel>
+            <PaginatedTable<TrainedModelForTable>
                 headerTitle='Trained models'
                 headers={[
                     { name: 'Name', serverCodeToSort: 'name', width: 3 },
@@ -65,8 +203,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
                     { name: 'Metric', serverCodeToSort: 'fitness_metric' },
-                    { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' }
-                    // TODO: add actions column with an option to see the details of a trained model
+                    { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' },
+                    ...actionColumn
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
@@ -90,7 +228,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 searchPlaceholder='Search by name or description'
                 urlToRetrieveData={urlBiomarkerTrainedModels}
                 updateWSKey='update_trained_models'
-                mapFunction={(trainedModel: TrainedModel) => {
+                mapFunction={(trainedModel: TrainedModelForTable) => {
+                    const isInProcess = trainedModel.state === TrainedModelState.IN_PROCESS ||
+                        trainedModel.state === TrainedModelState.WAITING_FOR_QUEUE
+
                     return (
                         <Table.Row
                             key={trainedModel.id as number}
@@ -112,6 +253,31 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
                             <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
+
+                            {/* Actions column */}
+                            {props.allowFullManagement &&
+                                <Table.Cell width={1}>
+                                    {/* Stop button */}
+                                    {isInProcess &&
+                                        <StopExperimentButton
+                                            title='Stop trained model'
+                                            onClick={() => setTrainedModelToStop(trainedModel)}
+                                        />
+                                    }
+
+                                    {/* Delete button */}
+                                    {!isInProcess &&
+                                        <DeleteExperimentButton
+                                            disabled={!trainedModel.can_be_deleted}
+                                            title={trainedModel.can_be_deleted
+                                                ? 'Delete trained model'
+                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'
+                                            }
+                                            onClick={() => setTrainedModelToRemove(trainedModel)}
+                                        />
+                                    }
+                                </Table.Cell>
+                            }
                         </Table.Row>
                     )
                 }}

@@ -57,7 +57,8 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
                         as='a' href={drugRow.pubmed} target="_blank"
                     >
                         <Icon
-                            name='file' />
+                            name='file'
+                        />
                     </Button>
                 </Table.Cell>
             </Table.Row>

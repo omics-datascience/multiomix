@@ -5,7 +5,6 @@ services:
     db:
         image: postgres:13
         container_name: multiomics_dev_db
-        restart: always
         ports:
             - "5432:5432"
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
@@ -21,7 +20,6 @@ services:
     mongo:
         image: mongo:4.2
         container_name: multiomics_dev_mongo_db
-        restart: always
         ports:
             - "27017:27017"
         # Sets the config file
@@ -38,7 +36,8 @@ services:
     redis:
         image: redis:6.0.8
         container_name: multiomics_dev_websocket_channel_redis
-        restart: always
+        volumes:
+            - redis_data:/data
         ports:
             - "6379:6379"
 
@@ -60,7 +59,6 @@ services:
     adminer:
         image: adminer
         container_name: multiomics_dev_adminer
-        restart: always
         ports:
             - 8080:8080
 
@@ -69,7 +67,6 @@ services:
     mongo-express:
         image: mongo-express:0.54.0
         container_name: multiomics_dev_mongo_express
-        restart: always
         ports:
             - 8081:8081
         environment:
@@ -86,3 +83,6 @@ volumes:
     postgres_data:
         external:
             name: 'multiomics_intermediate_postgres_data'
+    redis_data:
+        external:
+            name: 'multiomics_intermediate_redis_data'

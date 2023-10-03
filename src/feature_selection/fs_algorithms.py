@@ -188,7 +188,8 @@ def blind_search_sequential(classifier: SurvModel,
         subset = get_subset_of_features(molecules_df, combination)
 
         # If no molecules are present in the subset due to NaNs values, just discards this combination
-        if not subset.any().any():
+        number_of_columns = subset.shape[1]
+        if not subset.any().any() or number_of_columns == 0:
             continue
 
         # Computes the fitness function and checks if this combination of features has a higher score
@@ -332,7 +333,7 @@ def binary_black_hole_sequential(
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
-                best_model = current_best_model
+                best_model, current_best_model = current_best_model, best_model
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
             elif current_mean_score == best_mean_score and np.count_nonzero(current_star_combination) < np.count_nonzero(
@@ -340,6 +341,7 @@ def binary_black_hole_sequential(
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
+                best_model, current_best_model = current_best_model, best_model
 
             # Computes the event horizon
             event_horizon = best_mean_score / np.sum(stars_fitness_values)
@@ -355,11 +357,20 @@ def binary_black_hole_sequential(
             if black_hole_idx == a:
                 continue
 
-            for d in range(n_features):
-                x_old = stars_subsets[a][d]
-                threshold = binary_threshold if binary_threshold is not None else random.uniform(0, 1)
-                x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
-                stars_subsets[a][d] = 1 if abs(tanh(x_new)) > threshold else 0
+            # Due to randomization, it's possible that a star has no features selected. In that case, it has to be
+            # regenerated
+            features_are_valid = False
+            star_subset_new = stars_subsets[a].copy()
+            while not features_are_valid:
+                for d in range(n_features):
+                    x_old = stars_subsets[a][d]
+                    threshold = binary_threshold if binary_threshold is not None else random.uniform(0, 1)
+                    x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
+                    star_subset_new[d] = 1 if abs(tanh(x_new)) > threshold else 0
+
+                # Checks if all the features are valid (at least one feature has to be 1)
+                features_are_valid = np.count_nonzero(star_subset_new) > 0
+            stars_subsets[a] = star_subset_new
 
     best_features = best_features.astype(bool)  # Pandas needs a boolean array to select the rows
     best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()

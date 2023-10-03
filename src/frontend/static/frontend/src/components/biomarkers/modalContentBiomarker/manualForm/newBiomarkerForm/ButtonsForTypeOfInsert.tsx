@@ -13,7 +13,8 @@ export const ButtonsForTypeOfInsert = ({ handleChangeMoleculeInputSelected, mole
             <Button.Group
                 compact
                 name="moleculesTypeOfSelection"
-                className='biomarkers--side--bar--buttons-group'>
+                className='biomarkers--side--bar--buttons-group'
+            >
                 <Button
                     onClick={() => handleChangeMoleculeInputSelected(MoleculesTypeOfSelection.INPUT)}
                     active={moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT}

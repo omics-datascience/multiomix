@@ -7,6 +7,7 @@ urlpatterns = [
         views.BiomarkerStatisticalInferenceExperiments.as_view(),
         name='biomarker_inference_experiments'
     ),
+    path('biomarker-inference-experiments/<int:pk>/', views.InferenceExperimentDestroy.as_view()),
     path(
         'biomarker-inference-experiments/<int:pk>/',
         views.BiomarkerStatisticalInferenceExperimentsDetails.as_view()
@@ -56,4 +57,5 @@ urlpatterns = [
         views.InferenceExperimentChartDataByAttribute.as_view(),
         name='chart_data_by_attribute'
     ),
+    path('stop-experiment', views.StopInferenceExperiment.as_view(), name='stop_inference_experiment')
 ]

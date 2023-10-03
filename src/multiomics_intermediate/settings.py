@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_object_actions',
     'django_filters',
     'api_service.apps.ApiServiceConfig',
     'frontend',
@@ -54,7 +55,7 @@ INSTALLED_APPS = [
     'genes',
     'inferences',
     'molecules_details',
-    'chunked_upload'
+    'chunked_upload',
 ]
 
 MIDDLEWARE = [
@@ -88,13 +89,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'multiomics_intermediate.wsgi.application'
 
+# Redis
+REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+
 # Channels
 ASGI_APPLICATION = "multiomics_intermediate.routing.application"
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(os.getenv('REDIS_HOST', '127.0.0.1'), os.getenv('REDIS_PORT', 6379))],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
@@ -197,13 +202,14 @@ MONGO_SETTINGS = {
     'timeout': os.getenv('MONGO_TIMEOUT_MS', 5000)  # Connection timeout
 }
 
+# Celery settings. Uses same Redis as Channels and same RESULT_BACKEND as BROKER_URL
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
 # Result experiment table view config
 TABLE_SETTINGS = {
     'page_size': os.getenv('TABLE_PAGE_SIZE', 10)  # Default page size
 }
-
-# To compute pending experiment on server start
-COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP: bool = os.getenv('COMPUTE_PENDING_EXPERIMENTS_AT_STARTUP', 'true') == 'true'
 
 # Number of rows in which the CSV or Mongo's collection is retrieved when an Experiment is computed
 EXPERIMENT_CHUNK_SIZE: int = int(os.getenv('EXPERIMENT_CHUNK_SIZE', 500))
@@ -211,15 +217,32 @@ EXPERIMENT_CHUNK_SIZE: int = int(os.getenv('EXPERIMENT_CHUNK_SIZE', 500))
 # Number of elements to compute external sorting in Rust
 SORT_BUFFER_SIZE: int = int(os.getenv('SORT_BUFFER_SIZE', 2_000_000))
 
-# Number of threads used in ThreadPool to run experiments. Please take memory in consideration
-# IMPORTANT: needs a server restart
-THREAD_POOL_SIZE: int = int(os.getenv('THREAD_POOL_SIZE', 5))
+# Time limit in seconds for a correlation analysis to be computed. If the experiment is not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
-# Number of elements to format the INSERT query statement from an experiment's result. This prevent memory errors
+# Time limit in seconds for a Feature Selectio experiment to be computed. If the experiment is not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+FS_SOFT_TIME_LIMIT: int = int(os.getenv('FS_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
+# Time limit in seconds for a StatisticalValidation to be computed. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+STAT_VALIDATION_SOFT_TIME_LIMIT: int = int(os.getenv('STAT_VALIDATION_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
+# Time limit in seconds for a TrainedModel to be computed. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+TRAINED_MODEL_SOFT_TIME_LIMIT: int = int(os.getenv('TRAINED_MODEL_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
+# Time limit in seconds for an InferenceExperiment to be computed. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+INFERENCE_SOFT_TIME_LIMIT: int = int(os.getenv('INFERENCE_SOFT_TIME_LIMIT', 10800))  # 3 hours
+
+# Time limit in seconds for a CGDSStudy to be synchronized. If It's not finished in this time, it is
+# marked as TIMEOUT_EXCEEDED
+SYNC_STUDY_SOFT_TIME_LIMIT: int = int(os.getenv('SYNC_STUDY_SOFT_TIME_LIMIT', 3600))  # 1 hour
+
+# Number of elements to format the INSERT query statement from an experiment's result. This prevents memory errors
 INSERT_CHUNK_SIZE: int = int(os.getenv('INSERT_CHUNK_SIZE', 1000))
-
-# Indicates if the experiment is computed inside a DB transaction or handle manually by Python
-USE_TRANSACTION_IN_EXPERIMENT: bool = os.getenv('USE_TRANSACTION_IN_EXPERIMENT', 'true') == 'true'
 
 # Number of last experiments returned to the user in the "Last experiments" panel in Pipeline page
 NUMBER_OF_LAST_EXPERIMENTS: int = int(os.getenv('NUMBER_OF_LAST_EXPERIMENTS', 4))

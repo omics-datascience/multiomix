@@ -1,3 +1,8 @@
+import logging
+from common.enums import ResponseCode
+from .synchronization_service import generate_study_new_version
+from .tasks import sync_study
+from celery.contrib.abortable import AbortableAsyncResult
 from django.db.models import OuterRef, F, Subquery
 from django.contrib.auth.decorators import login_required
 from rest_framework.request import Request
@@ -6,12 +11,11 @@ from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
 from .enums import SyncCGDSStudyResponseCode, SyncStrategy
-from .models import CGDSStudy, CGDSDatasetSynchronizationState
+from .models import CGDSStudy, CGDSDatasetSynchronizationState, CGDSStudySynchronizationState
 from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render
-from .synchronization_service import global_synchronization_service
 
 
 @login_required
@@ -81,8 +85,8 @@ class CGDSStudyList(generics.ListCreateAPIView):
     ordering_fields = '__all__'
 
 
-class CGDSStudyDetail(generics.RetrieveUpdateDestroyAPIView):
-    """REST endpoint: get, modify or delete for CGDSStudy model"""
+class CGDSStudyDetail(generics.RetrieveUpdateAPIView):
+    """REST endpoint: get, modify for CGDSStudy model"""
     queryset = CGDSStudy.objects.all()
     serializer_class = CGDSStudySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -116,8 +120,25 @@ class SyncCGDSStudy(APIView):
             except ValueError:
                 sync_strategy = default_sync_strategy
 
+            # First of all checks if exists at least one CGDS dataset with a success state
+            if sync_strategy == SyncStrategy.NEW_VERSION and cgds_study.has_at_least_one_dataset_synchronized():
+                logging.info(f'CGDS Study {cgds_study.name} has at least one dataset synchronized. '
+                             f'Generating a new version...')
+                cgds_study = generate_study_new_version(cgds_study)
+
+            # Updates the state
+            cgds_study.state = CGDSStudySynchronizationState.WAITING_FOR_QUEUE
+            cgds_study.save(update_fields=['state'])
+
             # Gets SynchronizationService and adds the study
-            global_synchronization_service.add_cgds_study(cgds_study, sync_strategy)
+            only_failed = sync_strategy == SyncStrategy.SYNC_ONLY_FAILED
+
+            # Adds the experiment to the TaskQueue and gets Task id
+            async_res: AbortableAsyncResult = sync_study.apply_async((cgds_study.pk, only_failed),
+                                                                     queue='sync_datasets')
+
+            cgds_study.task_id = async_res.task_id
+            cgds_study.save(update_fields=['task_id'])
 
             # Makes a successful response
             response = {
@@ -135,4 +156,61 @@ class SyncCGDSStudy(APIView):
                 ).to_json(),
             }
 
+        return Response(response)
+
+
+class StopCGDSSync(APIView):
+    """Stops a CGDSStudy sync process."""
+    permission_classes = [permissions.IsAdminUser]  # Only admin users can stop CGDS studies
+
+    @staticmethod
+    def get(request: Request):
+        cgds_study_id = request.GET.get('studyId')
+
+        # Check if all the required parameters are in request
+        if cgds_study_id is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params'
+                )
+            }
+        else:
+            try:
+                # Gets CGDSStudy
+                cgds_study: CGDSStudy = CGDSStudy.objects.get(pk=cgds_study_id)
+
+                logging.warning(f'Aborting CGDSStudy {cgds_study_id}')
+
+                # Sends the signal to abort it
+                if cgds_study.task_id:
+                    abortable_async_result = AbortableAsyncResult(cgds_study.task_id)
+                    abortable_async_result.abort()
+
+                # Updates Biomarker state
+                cgds_study.state = CGDSStudySynchronizationState.STOPPED
+                cgds_study.save(update_fields=['state'])
+
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS).to_json()
+                }
+            except ValueError as ex:
+                # Cast errors...
+                logging.exception(ex)
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='Invalid request params type'
+                    ).to_json()
+                }
+            except CGDSStudy.DoesNotExist:
+                # If the CGDSStudy does not exist, returns an error
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='The CGDSStudy does not exists'
+                    ).to_json()
+                }
+
+        # Formats to JSON the ResponseStatus object
         return Response(response)

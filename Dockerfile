@@ -1,5 +1,5 @@
 # omicsdatascience/multiomics:5.0.0
-FROM python:3.8.6-buster
+FROM python:3.8.17-slim-bullseye
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 
@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev l
     && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs && mkdir /config \
     && mkdir /src
 
-# Installs Python dependencies
+# Installs Python dependencies and compiles the frontend
 ADD config/requirements.txt /config/
 WORKDIR /src
 ADD src .
@@ -53,7 +53,7 @@ RUN pip3 install -r /config/requirements.txt && npm --prefix /src/frontend/stati
 # Media folder
 VOLUME /src/media
 
-# Healtchecker and Housekeeping
+# Healthcheck and Housekeeping
 HEALTHCHECK --interval=5m --timeout=30s CMD ["/bin/bash", "-c", "/src/tools/checks.sh"]
 
 ENTRYPOINT ["/bin/bash", "-c", "/src/entrypoint.sh"]

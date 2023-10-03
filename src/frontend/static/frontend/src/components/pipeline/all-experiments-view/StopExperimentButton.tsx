@@ -1,17 +1,18 @@
 import React from 'react'
-import { DjangoExperiment } from '../../../utils/django_interfaces'
 import { Icon } from 'semantic-ui-react'
 
 /**
  * Component's props
  */
 interface StopExperimentButtonProps {
-    /** Experiment to stop in case of click */
-    experiment: DjangoExperiment,
     /** className property */
     className?: string,
+    /** `title` property */
+    title?: string,
+    /** Whether the button is disabled */
+    disabled?: boolean,
     /** Callback to execute on click event */
-    onClick: (experiment: DjangoExperiment) => void
+    onClick: () => void
 }
 
 /**
@@ -26,8 +27,9 @@ export const StopExperimentButton = (props: StopExperimentButtonProps) => {
             name='stop'
             className={`clickable margin-left-5 ${extraClassName}`}
             color='red'
-            title='Stop experiment'
-            onClick={() => props.onClick(props.experiment)}
+            disabled={props.disabled}
+            title={props.title}
+            onClick={props.onClick}
         />
     )
 }

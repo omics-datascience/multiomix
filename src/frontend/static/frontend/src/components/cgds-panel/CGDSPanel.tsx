@@ -9,12 +9,14 @@ import { NewCGDSStudyForm } from './NewCGDSStudyForm'
 import { survivalTupleIsValid } from '../survival/utils'
 import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
 
 // URLs defined in cgds.html
 declare const urlSyncCGDSStudy: string
+declare const urlStopCGDSSync: string
 
 /**
  * Component's state
@@ -23,11 +25,10 @@ interface CGDSPanelState {
     CGDSStudies: DjangoCGDSStudy[],
     newCGDSStudy: DjangoCGDSStudy,
     sendingSyncRequest: boolean,
-    selectedCGDSStudyToDeleteOrSync: Nullable<DjangoCGDSStudy>,
-    showDeleteCGDSStudyModal: boolean,
-    showSyncCGDSStudyModal: boolean,
-    deletingCGDSStudy: boolean,
+    selectedCGDSStudyToSync: Nullable<DjangoCGDSStudy>,
     addingOrEditingCGDSStudy: boolean,
+    stoppingCGDSStudy: boolean,
+    selectedCGDSStudyToStop: Nullable<DjangoCGDSStudy>,
 }
 
 /**
@@ -61,12 +62,11 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         this.state = {
             CGDSStudies: [],
             newCGDSStudy: this.getDefaultNewCGDSStudy(),
-            showDeleteCGDSStudyModal: false,
-            showSyncCGDSStudyModal: false,
             sendingSyncRequest: false,
-            selectedCGDSStudyToDeleteOrSync: null,
-            deletingCGDSStudy: false,
-            addingOrEditingCGDSStudy: false
+            selectedCGDSStudyToSync: null,
+            addingOrEditingCGDSStudy: false,
+            selectedCGDSStudyToStop: null,
+            stoppingCGDSStudy: false
         }
     }
 
@@ -159,7 +159,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
 
-        // If exists an id then we are editing, otherwise It's a new Tag
+        // If exists an id then we are editing, otherwise It's a new CGDSStudy
         let addOrEditURL, requestMethod
         if (this.state.newCGDSStudy.id) {
             addOrEditURL = `${urlCGDSStudiesCRUD}/${this.state.newCGDSStudy.id}/`
@@ -197,7 +197,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 } else {
                     alertGeneralError()
                 }
-                console.log('Error adding new Tag ->', err)
+                console.log('Error adding new CGDSStudy ->', err)
             })
         })
     }
@@ -207,7 +207,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param strategy Strategy to use in the synchronization.
      */
     syncStudy = (strategy: SyncStrategy) => {
-        if (!this.state.selectedCGDSStudyToDeleteOrSync) {
+        if (!this.state.selectedCGDSStudyToSync) {
             return
         }
 
@@ -216,7 +216,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             const myHeaders = getDjangoHeader()
 
             const jsonParams = {
-                CGDSStudyId: this.state.selectedCGDSStudyToDeleteOrSync?.id,
+                CGDSStudyId: this.state.selectedCGDSStudyToSync?.id,
                 strategy
             }
 
@@ -241,45 +241,44 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 this.setState({ sendingSyncRequest: false })
                 this.handleClose()
                 alertGeneralError()
-                console.log('Error adding new Tag ->', err)
+                console.log('Error adding new CGDSStudy ->', err)
             })
         })
     }
 
-    /**
-     * Makes a request to delete a Tag
-     */
-    deleteCGDSStudy = () => {
-        // Sets the Request's Headers
-        if (this.state.selectedCGDSStudyToDeleteOrSync === null) {
+    /** Makes a request to stop an CGDSStudy. */
+    stopCGDSStudy = () => {
+        if (!this.state.selectedCGDSStudyToStop) {
             return
         }
 
-        const myHeaders = getDjangoHeader()
-        const deleteURL = `${urlCGDSStudiesCRUD}/${this.state.selectedCGDSStudyToDeleteOrSync.id}`
-        this.setState({ deletingCGDSStudy: true }, () => {
-            ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
-                // If OK is returned refresh the tags
+        this.setState({ stoppingCGDSStudy: true }, () => {
+            // Sets the Request's Headers
+            const myHeaders = getDjangoHeader()
+            const studyId = this.state.selectedCGDSStudyToStop?.id as number // This is safe
+
+            ky.get(urlStopCGDSSync, { headers: myHeaders, searchParams: { studyId } }).then((response) => {
+                // If OK closes the modal
                 if (response.ok) {
-                    this.setState({
-                        deletingCGDSStudy: false,
-                        showDeleteCGDSStudyModal: false
-                    })
+                    this.handleClose()
+                } else {
+                    alertGeneralError()
                 }
             }).catch((err) => {
-                this.setState({ deletingCGDSStudy: false })
                 alertGeneralError()
-                console.log('Error deleting Tag ->', err)
+                console.log('Error stopping CGDSStudy:', err)
+            }).finally(() => {
+                this.setState({ stoppingCGDSStudy: false })
             })
         })
     }
 
     /**
-     * Handles New Tag Input Key Press
+     * Handles New CGDSStudy Input Key Press
      * @param e Event of change
      */
     handleKeyDown = (e) => {
-        // If pressed Enter key submits the new Tag
+        // If pressed Enter key submits the new CGDSStudy
         if (e.which === 13 || e.keyCode === 13) {
             this.addOrEditStudy()
         } else {
@@ -290,25 +289,20 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     }
 
     /**
-     * Show a modal to confirm a CGDS Study deletion/synchronization
-     * @param CGDSStudy Selected CGDS Study to delete
-     * @param isDeletion If true show deletion modal. Otherwise shows sync modal
+     * Show a modal to confirm a CGDS Study synchronization
+     * @param CGDSStudy Selected CGDS Study to sync.
      */
-    confirmCGDSStudyDeletionOrSync = (CGDSStudy: DjangoCGDSStudy, isDeletion: boolean) => {
-        const modalField = isDeletion ? 'showDeleteCGDSStudyModal' : 'showSyncCGDSStudyModal'
-        this.setState<never>({
-            selectedCGDSStudyToDeleteOrSync: CGDSStudy,
-            [modalField]: true
-        })
+    confirmCGDSStudySync = (CGDSStudy: DjangoCGDSStudy) => {
+        this.setState({ selectedCGDSStudyToSync: CGDSStudy })
     }
 
     /**
-     * Closes the deletion confirm modals
+     * Closes the sync/stop confirm modals
      */
     handleClose = () => {
         this.setState({
-            showDeleteCGDSStudyModal: false,
-            showSyncCGDSStudyModal: false
+            selectedCGDSStudyToSync: null,
+            selectedCGDSStudyToStop: null
         })
     }
 
@@ -458,26 +452,26 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     }
 
     /**
-     * Generates the modal to confirm a CGDSStudy deletion
-     * @returns Modal component. Null if no Tag was selected to delete
+     * Generates the modal to confirm a CGDSStudy sync stopping
+     * @returns Modal component. Null if no CGDSStudy was selected to stop
      */
-    getCGDSStudyDeletionConfirmModal () {
-        if (!this.state.selectedCGDSStudyToDeleteOrSync) {
+    getCGDSStudyStopConfirmModal () {
+        if (!this.state.selectedCGDSStudyToStop) {
             return null
         }
 
         return (
-            <Modal size='small' open={this.state.showDeleteCGDSStudyModal} onClose={this.handleClose} centered={false}>
-                <Header icon='trash' content='Delete CGDS Study' />
+            <Modal size='small' open={this.state.selectedCGDSStudyToStop !== null} onClose={this.handleClose} centered={false}>
+                <Header icon='trash' content='Stop CGDS Study' />
                 <Modal.Content>
-                    Are you sure you want to delete the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>?
+                    Are you sure you want to stop the Study <strong>{this.state.selectedCGDSStudyToStop.name}</strong>?
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
                         Cancel
                     </Button>
-                    <Button color='red' onClick={this.deleteCGDSStudy} loading={this.state.deletingCGDSStudy} disabled={this.state.deletingCGDSStudy}>
-                        Delete
+                    <Button color='red' onClick={this.stopCGDSStudy} loading={this.state.stoppingCGDSStudy} disabled={this.state.stoppingCGDSStudy}>
+                        Stop
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -486,19 +480,19 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
     /**
      * Generates the modal to confirm a CGDSStudy synchronization
-     * @returns Modal component. Null if no Tag was selected to delete
+     * @returns Modal component. Null if no CGDSStudy was selected to sync.
      */
     getCGDSStudySyncConfirmModal () {
-        if (!this.state.selectedCGDSStudyToDeleteOrSync) {
+        if (!this.state.selectedCGDSStudyToSync) {
             return null
         }
 
         return (
-            <Modal size='small' open={this.state.showSyncCGDSStudyModal} onClose={this.handleClose} centered={false}>
+            <Modal size='small' open={this.state.selectedCGDSStudyToSync !== null} onClose={this.handleClose} centered={false}>
                 <Header icon='sync' content='Sync CGDS Study' />
                 <Modal.Content>
                     <p>
-                        Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToDeleteOrSync.name}</strong>? This process <strong>cannot</strong> be undone.
+                        Are you sure you want to sync the Study <strong>{this.state.selectedCGDSStudyToSync.name}</strong>? This process <strong>cannot</strong> be undone.
                     </p>
 
                     <p>
@@ -521,7 +515,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                         <strong>IMPORTANT: only select <i>Sync all/failed</i> options if there were some critical errors that must be fixed. Synchronizing an existing dataset could lead to inconsistencies with existing experiments using its data. If it is just a new data update from cBioPortal, a new version should be generated.</strong>
                     </p>
 
-                    {!this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
+                    {!this.state.selectedCGDSStudyToSync.is_last_version &&
                         <p>New versions of a Study can only be done from its last version</p>
                     }
                 </Modal.Content>
@@ -551,7 +545,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     </Button>
 
                     {/* NOTE: only the last version can be sync to prevent errors with the Mongo collection names */}
-                    {this.state.selectedCGDSStudyToDeleteOrSync.is_last_version &&
+                    {this.state.selectedCGDSStudyToSync.is_last_version &&
                         <Button
                             color='blue'
                             onClick={() => this.syncStudy(SyncStrategy.NEW_VERSION)}
@@ -824,6 +818,22 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     title: 'cBioPortal is not sending data. Try again later'
                 }
                 break
+            case CGDSStudySynchronizationState.TIMEOUT_EXCEEDED:
+                stateIcon = {
+                    iconName: 'wait',
+                    color: 'red',
+                    loading: false,
+                    title: 'The synchronization process has reached the timeout limit. Try again later'
+                }
+                break
+            case CGDSStudySynchronizationState.STOPPED:
+                stateIcon = {
+                    iconName: 'stop',
+                    color: 'red',
+                    loading: false,
+                    title: 'The synchronization was stopped'
+                }
+                break
             default:
                 stateIcon = {
                     iconName: 'question',
@@ -837,14 +847,14 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     }
 
     render () {
-        // CGDS Study deletion modal
-        const cgdsStudyDeletionConfirmModal = this.getCGDSStudyDeletionConfirmModal()
+        // CGDS Study modals
+        const cgdsStudyStopConfirmModal = this.getCGDSStudyStopConfirmModal()
         const cgdsStudySyncConfirmModal = this.getCGDSStudySyncConfirmModal()
 
         return (
             <Base activeItem='cgds' wrapperClass='wrapper'>
-                {/* CGDS Study deletion modal */}
-                {cgdsStudyDeletionConfirmModal}
+                {/* CGDS Study stop modal */}
+                {cgdsStudyStopConfirmModal}
 
                 {/* CGDS Study synchronization modal */}
                 {cgdsStudySyncConfirmModal}
@@ -889,23 +899,28 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                             { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                                         ]}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
-                                        mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => (
-                                            <Table.Row key={CGDSStudyFileRow.id as number}>
-                                                <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
-                                                <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
-                                                <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
-                                                    ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
-                                                    : '-'}
-                                                </Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mrna_dataset)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mirna_dataset)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.cna_dataset)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.methylation_dataset)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_patient_dataset, true)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
-                                                <Table.Cell textAlign='center'>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
-                                                {userIsAdmin &&
+                                        mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => {
+                                            const studyState = this.getStateObj(CGDSStudyFileRow.state)
+                                            const isInProcess = CGDSStudyFileRow.state === CGDSStudySynchronizationState.WAITING_FOR_QUEUE ||
+                                                CGDSStudyFileRow.state === CGDSStudySynchronizationState.IN_PROCESS
+
+                                            return (
+                                                <Table.Row key={CGDSStudyFileRow.id as number}>
+                                                    <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
+                                                    <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
+                                                    <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
+                                                        ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
+                                                        : '-'}
+                                                    </Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mrna_dataset)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.mirna_dataset)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.cna_dataset)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.methylation_dataset)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_patient_dataset, true)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
+                                                    <Table.Cell textAlign='center'>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
+                                                    {userIsAdmin &&
                                                     <Table.Cell>
                                                         {/* Sync button */}
                                                         <Icon
@@ -913,9 +928,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                             color='blue'
                                                             className='clickable'
                                                             title='Sync study'
-                                                            loading={this.getStateObj(CGDSStudyFileRow.state).loading}
-                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
-                                                            onClick={() => this.confirmCGDSStudyDeletionOrSync(CGDSStudyFileRow, false)}
+                                                            loading={studyState.loading}
+                                                            disabled={studyState.loading || this.state.sendingSyncRequest}
+                                                            onClick={() => this.confirmCGDSStudySync(CGDSStudyFileRow)}
                                                         />
 
                                                         {/* Edit button */}
@@ -924,13 +939,22 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                             color='yellow'
                                                             className='clickable margin-left-30'
                                                             title='Edit study'
-                                                            disabled={this.getStateObj(CGDSStudyFileRow.state).loading || this.state.sendingSyncRequest}
+                                                            disabled={studyState.loading || this.state.sendingSyncRequest}
                                                             onClick={() => this.editCGDSStudy(CGDSStudyFileRow)}
                                                         />
+
+                                                        {/* Stop button */}
+                                                        {isInProcess &&
+                                                            <StopExperimentButton
+                                                                title='Stop CGDS study synchronization'
+                                                                onClick={() => this.setState({ selectedCGDSStudyToStop: CGDSStudyFileRow })}
+                                                            />
+                                                        }
                                                     </Table.Cell>
-                                                }
-                                            </Table.Row>
-                                        )}
+                                                    }
+                                                </Table.Row>
+                                            )
+                                        }}
                                     />
                                 </Grid.Column>
                             </Grid>

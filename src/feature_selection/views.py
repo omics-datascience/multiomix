@@ -6,6 +6,10 @@ import shutil
 from datetime import datetime
 from typing import Optional, Any, Dict, Tuple
 import pandas as pd
+from common.enums import ResponseCode
+from common.response import ResponseStatus
+from .tasks import eval_feature_selection_experiment
+from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.db import transaction
 from rest_framework import permissions
@@ -15,9 +19,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.utils import get_experiment_source
-from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
+from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState, BiomarkerOrigin
 from common.utils import get_source_pk
-from feature_selection.fs_service import global_fs_service
 from feature_selection.models import FSExperiment, FitnessFunction, SVMTimesRecord, TrainedModel, ClusteringTimesRecord, \
     ClusteringAlgorithm, RFTimesRecord, ClusteringScoringMethod, SVMKernel
 from feature_selection.utils import save_molecule_identifiers, get_svm_kernel_enum, save_model_dump_and_best_score
@@ -54,6 +57,20 @@ class FeatureSelectionSubmit(APIView):
             return FitnessFunction.RF
         else:
             return None
+
+    @staticmethod
+    def __create_target_biomarker(fs_experiment: FSExperiment):
+        """Creates a new Biomarker and assigns it to the FSExperiment instance."""
+        origin_biomarker = fs_experiment.origin_biomarker
+        new_biomarker = Biomarker.objects.create(
+            name=f'"{origin_biomarker.name}" (FS optimized {fs_experiment.pk})',
+            description=origin_biomarker.description,
+            origin=BiomarkerOrigin.FEATURE_SELECTION,
+            state=BiomarkerState.WAITING_FOR_QUEUE,
+            user=origin_biomarker.user
+        )
+        fs_experiment.created_biomarker = new_biomarker
+        fs_experiment.save()
 
     def post(self, request: Request):
         with transaction.atomic():
@@ -134,8 +151,14 @@ class FeatureSelectionSubmit(APIView):
             )
 
             # Adds Feature Selection experiment to the ThreadPool
-            global_fs_service.add_experiment(fs_experiment, fit_fun_enum, fitness_function_parameters,
-                                             algorithm_parameters, cross_validation_parameters)
+            self.__create_target_biomarker(fs_experiment)
+
+            async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
+                (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
+                 cross_validation_parameters), queue='feature_selection')
+
+            fs_experiment.task_id = async_res.task_id
+            fs_experiment.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 
@@ -425,3 +448,63 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         self.__remove_datasets(fs_experiment, emr_settings)
 
         return Response({'ok': True})
+
+
+class StopFSExperiment(APIView):
+    """Stops a FSExperiment"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        # TODO: replicate this code in api_service.views where function views
+        # TODO: is being used instead of APIViews
+        biomarker_id = request.GET.get('biomarkerId')
+
+        # Check if all the required parameters are in request
+        if biomarker_id is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params'
+                )
+            }
+        else:
+            try:
+                # Gets Biomarker and FSExperiment
+                biomarker: Biomarker = Biomarker.objects.get(pk=biomarker_id, user=request.user)
+                experiment: FSExperiment = biomarker.fs_experiment
+
+                logging.warning(f'Aborting FSExperiment {biomarker_id}')
+
+                # Sends the signal to abort it
+                if experiment.task_id:
+                    abortable_async_result = AbortableAsyncResult(experiment.task_id)
+                    abortable_async_result.abort()
+
+                # Updates Biomarker state
+                biomarker.state = BiomarkerState.STOPPED
+                biomarker.save(update_fields=['state'])
+
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS).to_json()
+                }
+            except ValueError as ex:
+                # Cast errors...
+                logging.exception(ex)
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='Invalid request params type'
+                    ).to_json()
+                }
+            except FSExperiment.DoesNotExist:
+                # If the experiment does not exist, returns an error
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='The FSExperiment does not exists'
+                    ).to_json()
+                }
+
+        # Formats to JSON the ResponseStatus object
+        return Response(response)

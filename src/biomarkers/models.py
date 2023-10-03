@@ -29,6 +29,7 @@ class BiomarkerState(models.IntegerChoices):
     NO_VALID_SAMPLES = 10,
     NO_VALID_MOLECULES = 11
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
+    TIMEOUT_EXCEEDED = 13
 
 
 class TrainedModelState(models.IntegerChoices):
@@ -46,6 +47,7 @@ class TrainedModelState(models.IntegerChoices):
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
     # This could happen for a serialization error in the Spark job
     MODEL_DUMP_NOT_AVAILABLE = 12
+    TIMEOUT_EXCEEDED = 13
 
 
 class Biomarker(models.Model):

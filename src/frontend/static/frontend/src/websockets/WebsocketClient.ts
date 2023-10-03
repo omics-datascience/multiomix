@@ -1,5 +1,6 @@
 import { WebsocketConfig } from '../utils/interfaces'
 import WebsocketClient from '@gamestdio/websocket'
+import { debounce } from 'lodash'
 
 declare const usingHTTPS: boolean
 
@@ -22,7 +23,7 @@ class WebsocketClientCustom {
             console.log('Websocket connection established')
         }
 
-        this.websocket.onmessage = function (event) {
+        this.websocket.onmessage = debounce(function (event) {
             try {
                 const dataParsed: WebsocketMessage = JSON.parse(event.data)
 
@@ -37,7 +38,7 @@ class WebsocketClientCustom {
                 console.log('Data:', event.data)
                 console.log('Exception:', ex)
             }
-        }
+        }, 300)
 
         this.websocket.onerror = function (event) {
             console.log('Error establishing websocket connection', event)

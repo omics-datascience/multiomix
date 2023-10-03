@@ -33,7 +33,9 @@ enum BiomarkerState {
     NO_FEATURES_FOUND = 9,
     NO_VALID_SAMPLES = 10,
     NO_VALID_MOLECULES = 11,
-    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12,
+    /** This could happen for a timeout in the Celery job. */
+    TIMEOUT_EXCEEDED = 13
 }
 
 /** All the possible states of a TrainedModel. */
@@ -50,8 +52,8 @@ enum TrainedModelState {
     NO_BEST_MODEL_FOUND = 10,
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
     /** This could happen for a serialization error in the Spark job. */
-    MODEL_DUMP_NOT_AVAILABLE = 12
-
+    MODEL_DUMP_NOT_AVAILABLE = 12,
+    TIMEOUT_EXCEEDED = 13
 }
 
 /** Type of molecules input in the Biomarker creation form. */
@@ -375,7 +377,7 @@ enum ActiveBiomarkerMoleculeItemMenu {
 }
 
 /** Django TrainedModel model. */
-interface TrainedModel {
+interface TrainedModelForTable {
     id: number,
     name: string,
     description: string,
@@ -383,6 +385,7 @@ interface TrainedModel {
     fitness_function: FitnessFunction,
     cv_folds_modified: boolean,
     created: string,
+    can_be_deleted: boolean,
     fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
 }
@@ -595,7 +598,7 @@ export {
     ActiveBiomarkerDetailItemMenu,
     ActiveStatValidationsItemMenu,
     ActiveBiomarkerMoleculeItemMenu,
-    TrainedModel,
+    TrainedModelForTable,
     BasicStatisticalValidation,
     StatisticalValidationForTable,
     StatisticalValidation,

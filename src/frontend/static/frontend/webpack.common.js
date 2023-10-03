@@ -65,7 +65,9 @@ module.exports = {
         ]
     },
     plugins: [
-        new CleanWebpackPlugin(),
+        new CleanWebpackPlugin({
+            protectWebpackAssets: false
+        }),
         new MiniCssExtractPlugin({
             filename: '[name]-[hash].css'
         }),

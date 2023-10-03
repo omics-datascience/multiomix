@@ -76,7 +76,8 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                 <Form.Field width='3' className='margin-left-2'>
                     <Statistic size='tiny'>
                         <Statistic.Value id='stats-number-of-combinations'>
-                            <Icon name='dna' /> <span>
+                            <Icon name='dna' />
+                            <span>
                                 {props.numberOfShowingCombinations} / {props.totalNumberOfCombinations}
                             </span>
                         </Statistic.Value>

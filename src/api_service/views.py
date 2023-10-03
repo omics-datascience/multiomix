@@ -1,14 +1,15 @@
 import json
 import logging
 from builtins import map
-from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union
+from celery.contrib.abortable import AbortableAsyncResult
+from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast
 import numpy as np
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpRequest, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
@@ -38,105 +39,114 @@ from .enums import CorrelationType
 from .mrna_service import global_mrna_service
 from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_correlation
 from .permissions import ExperimentIsNotRunning
-from .pipelines import global_pipeline_manager
+import api_service.pipelines as pipelines
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
     ExperimentClinicalSourceSerializer
-from .task_queue import global_task_queue
+from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
 import pandas as pd
 
 
-@login_required
-def mrna_gem_action(request: HttpRequest) -> HttpResponse:
-    """
-    Process the mRNA x miRNA/CNA/Methylation experiments
-    """
-    # Gets general parameters
-    name = request.POST.get('name')
-    description = request.POST.get('description')
+class CorrelationAnalysis(APIView):
+    """Process a correlation analysis between mRNA and miRNA/CNA/Methylation datasets."""
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Gets FileType to set the experiment type and FileType
-    file_type = request.POST.get('fileType')
-    file_type_enum = get_enum_from_value(int(file_type), FileType)
-    experiment_type = file_type_to_experiment_type(file_type_enum)
+    @staticmethod
+    def post(request):
+        # Gets general parameters
+        name = request.POST.get('name')
+        description = request.POST.get('description')
 
-    # CNA/Methylation analysis can select between correlate with all genes or equal only
-    if experiment_type == ExperimentType.MIRNA:
-        correlate_with_all_genes = True
-    else:
-        correlate_with_all_genes = request_bool_to_python_bool(request.POST.get('correlateWithAllGenes'))
+        # Gets FileType to set the experiment type and FileType
+        file_type = request.POST.get('fileType')
+        file_type_enum = get_enum_from_value(int(file_type), FileType)
+        experiment_type = file_type_to_experiment_type(file_type_enum)
 
-    # Gets Tag (if exists)
-    tag_id = request.POST.get('tagId')
-
-    # Get experiment thresholds and params
-    minimum_coefficient_threshold = float(request.POST.get('coefficientThreshold', 0.7))
-    minimum_coefficient_threshold = max(minimum_coefficient_threshold, 0.5)  # Prevents expensive analysis
-    minimum_std_gene = float(request.POST.get('standardDeviationGene', 0.0))
-    minimum_std_gem = float(request.POST.get('standardDeviationGEM', 0.2))
-    correlation_method = request.POST.get('correlationMethod')
-    correlation_method = get_integer_enum_from_value(correlation_method, CorrelationMethod, CorrelationMethod.SPEARMAN)
-    p_values_adjustment_method = request.POST.get('adjustmentMethod')
-    p_values_adjustment_method = get_integer_enum_from_value(
-        p_values_adjustment_method,
-        PValuesAdjustmentMethod,
-        PValuesAdjustmentMethod.BENJAMINI_HOCHBERG
-    )
-
-    # Get source types
-    mrna_source_type = int(request.POST.get('mRNAType'))
-    gem_source_type = int(request.POST.get('gemType'))
-
-    # Instantiates the User's files
-    with transaction.atomic():
-        # mRNA
-        mrna_source, mrna_clinical = get_experiment_source(mrna_source_type, request, FileType.MRNA, 'mRNA')
-        if mrna_source is None:
-            return JsonResponse(get_invalid_format_response(), safe=False)
-
-        # GEM
-        gem_source, gem_clinical = get_experiment_source(gem_source_type, request, file_type_enum, 'gem')
-        if gem_source is None:
-            return JsonResponse(get_invalid_format_response(), safe=False)
-
-        # If selected, gets Tag
-        if tag_id is not None:
-            try:
-                tag = Tag.objects.get(pk=int(tag_id), user=request.user)
-            except Tag.DoesNotExist:
-                tag = None
+        # CNA/Methylation analysis can select between correlate with all genes or equal only
+        if experiment_type == ExperimentType.MIRNA:
+            correlate_with_all_genes = True
         else:
-            tag = None
+            correlate_with_all_genes = request_bool_to_python_bool(request.POST.get('correlateWithAllGenes'))
 
-        # Creates an experiment and saves in DB
-        experiment = Experiment(
-            name=name,
-            description=description,
-            mRNA_source=mrna_source,
-            gem_source=gem_source,
-            clinical_source=mrna_clinical if mrna_clinical is not None else gem_clinical,
-            correlation_method=correlation_method,
-            p_values_adjustment_method=p_values_adjustment_method,
-            minimum_std_gene=minimum_std_gene,
-            minimum_std_gem=minimum_std_gem,
-            minimum_coefficient_threshold=minimum_coefficient_threshold,
-            state=ExperimentState.WAITING_FOR_QUEUE,
-            user=request.user,
-            type=experiment_type,
-            tag=tag,
-            correlate_with_all_genes=correlate_with_all_genes
+        # Gets Tag (if exists)
+        tag_id = request.POST.get('tagId')
+
+        # Get experiment thresholds and params
+        minimum_coefficient_threshold = float(request.POST.get('coefficientThreshold', 0.7))
+        minimum_coefficient_threshold = max(minimum_coefficient_threshold, 0.5)  # Prevents expensive analysis
+        minimum_std_gene = float(request.POST.get('standardDeviationGene', 0.0))
+        minimum_std_gem = float(request.POST.get('standardDeviationGEM', 0.2))
+        correlation_method = request.POST.get('correlationMethod')
+        correlation_method = get_integer_enum_from_value(correlation_method, CorrelationMethod, CorrelationMethod.SPEARMAN)
+        p_values_adjustment_method = request.POST.get('adjustmentMethod')
+        p_values_adjustment_method = get_integer_enum_from_value(
+            p_values_adjustment_method,
+            PValuesAdjustmentMethod,
+            PValuesAdjustmentMethod.BENJAMINI_HOCHBERG
         )
-        experiment.save(force_insert=True)
 
-    # Adds the experiment to the TaskQueue
-    global_task_queue.add_experiment(experiment)
+        # Get source types
+        mrna_source_type = int(request.POST.get('mRNAType'))
+        gem_source_type = int(request.POST.get('gemType'))
 
-    response = {
-        'status': ResponseStatus(ResponseCode.SUCCESS, message='Experiment added to the queue').to_json(),
-    }
+        # Instantiates the User's files
+        with transaction.atomic():
+            # mRNA
+            mrna_source, mrna_clinical = get_experiment_source(mrna_source_type, request, FileType.MRNA, 'mRNA')
+            if mrna_source is None:
+                return JsonResponse(get_invalid_format_response(), safe=False)
 
-    return JsonResponse(response, safe=False)
+            # GEM
+            gem_source, gem_clinical = get_experiment_source(gem_source_type, request, file_type_enum, 'gem')
+            if gem_source is None:
+                return JsonResponse(get_invalid_format_response(), safe=False)
+
+            # If selected, gets Tag
+            if tag_id is not None:
+                try:
+                    tag = Tag.objects.get(pk=int(tag_id), user=request.user)
+                except Tag.DoesNotExist:
+                    tag = None
+            else:
+                tag = None
+
+            # Creates an experiment and saves in DB
+            experiment = Experiment(
+                name=name,
+                description=description,
+                mRNA_source=mrna_source,
+                gem_source=gem_source,
+                clinical_source=mrna_clinical if mrna_clinical is not None else gem_clinical,
+                correlation_method=correlation_method,
+                p_values_adjustment_method=p_values_adjustment_method,
+                minimum_std_gene=minimum_std_gene,
+                minimum_std_gem=minimum_std_gem,
+                minimum_coefficient_threshold=minimum_coefficient_threshold,
+                state=ExperimentState.WAITING_FOR_QUEUE,
+                user=request.user,
+                type=experiment_type,
+                tag=tag,
+                correlate_with_all_genes=correlate_with_all_genes
+            )
+            experiment.save(force_insert=True)
+
+        # Adds the experiment to the TaskQueue and gets Task id
+        async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk, ),
+                                                                               queue='correlation_analysis')
+
+        experiment.task_id = async_res.task_id
+        experiment.save(update_fields=['task_id'])
+
+        # Calls forget to release resources.
+        # Read more in https://docs.celeryq.dev/en/latest/getting-started/first-steps-with-celery.html#keeping-results
+        async_res.forget()
+
+        response = {
+            'status': ResponseStatus(ResponseCode.SUCCESS, message='Experiment added to the queue').to_json(),
+        }
+
+        return Response(response)
 
 
 class ExperimentList(generics.ListAPIView):
@@ -265,7 +275,7 @@ def get_correlation_graph_action(request):
                 clinical_columns = experiment.clinical_source.get_attributes()
 
             try:
-                values = global_pipeline_manager.get_valid_data_from_sources(
+                values = pipelines.get_valid_data_from_sources(
                     experiment,
                     gene,
                     gem,
@@ -280,6 +290,7 @@ def get_correlation_graph_action(request):
                 clinical_values = values[2].tolist() if clinical_attribute is not None else []
 
                 # gem_values has the same length, so it's not necessary to check
+                gene_values = cast(List[float], gene_values)
                 is_data_ok: bool = len(gene_values) > 0
 
                 response = {
@@ -641,6 +652,7 @@ def download_result_with_filters(request):
     combinations = list(map(format_combinations_from_dict, combinations))
     return generate_result_file_response(combinations, experiment.name)
 
+
 @login_required
 def add_clinical_source(request):
     """Adds an Experiment clinical source"""
@@ -739,7 +751,7 @@ class SurvivalDataDetails(APIView):
 
             # Gets Gene and GEM expression with time values
             gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
-            clinical_samples = global_pipeline_manager.get_valid_data_from_sources(
+            clinical_samples = pipelines.get_valid_data_from_sources(
                 experiment,
                 gene,
                 gem,
@@ -757,7 +769,7 @@ class SurvivalDataDetails(APIView):
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'
             clinical_event_values = clinical_event_values.astype(np.object)
-            clinical_event_values = global_pipeline_manager.fill_null_values_with_custom_value(clinical_event_values)
+            clinical_event_values = pipelines.fill_null_values_with_custom_value(clinical_event_values)
 
             # Filters NaNs values in time and event lists
             time_nan_idx = clinical_time_values == settings.NON_DATA_VALUE
@@ -824,7 +836,16 @@ def stop_experiment_action(request):
             experiment_id = int(experiment_id)
             experiment: Experiment = Experiment.objects.get(pk=experiment_id, user=request.user)
 
-            global_task_queue.stop_experiment(experiment)
+            logging.warning(f'Aborting experiment {experiment_id}')
+
+            # Sends the signal to abort it
+            if experiment.task_id:
+                abortable_async_result = AbortableAsyncResult(experiment.task_id)
+                abortable_async_result.abort()
+
+            # Updates state
+            experiment.state = ExperimentState.STOPPED
+            experiment.save(update_fields=['state'])
 
             response = {
                 'status': ResponseStatus(ResponseCode.SUCCESS)

@@ -11,9 +11,9 @@ enum ExperimentState {
     COMPLETED = 3,
     FINISHED_WITH_ERROR = 4,
     NO_SAMPLES_IN_COMMON = 5,
-    STOPPING = 6,
     STOPPED = 7,
     REACHED_ATTEMPTS_LIMIT = 8,
+    TIMEOUT_EXCEEDED = 9,
 }
 
 /**
@@ -27,7 +27,9 @@ enum CGDSStudySynchronizationState {
     FINISHED_WITH_ERROR = 4,
     URL_ERROR = 5,
     CONNECTION_TIMEOUT_ERROR = 6,
-    READ_TIMEOUT_ERROR = 7
+    READ_TIMEOUT_ERROR = 7,
+    TIMEOUT_EXCEEDED = 9,
+    STOPPED = 10
 }
 
 /**

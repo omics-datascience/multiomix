@@ -1,4 +1,5 @@
 from django.urls import path
+import statistical_properties.views
 from . import views
 
 urlpatterns = [
@@ -16,6 +17,5 @@ urlpatterns = [
     path('mirna-codes-finder', views.MiRNACodes.as_view(), name='mirna_codes_finder'),
     path('methylation-sites', views.MethylationSites.as_view(), name='methylation_sites'),
     path('methylation-sites-finder', views.MethylationSites.as_view(), name='methylation_sites_finder'),
-    path('biomarker-trained-models', views.TrainedModelsOfBiomarker.as_view(), name='biomarker_trained_models'),
     path('biomarker-molecules', views.BiomarkerMolecules.as_view(), name='biomarker_molecules'),
 ]

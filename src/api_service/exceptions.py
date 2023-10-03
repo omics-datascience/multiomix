@@ -9,7 +9,7 @@ class NoSamplesInCommon(Exception):
 
 
 class CouldNotDeleteInMongo(Exception):
-    """Raised when could not deleted the associated tuples in MongoDB for a particular experiment's result"""
+    """Raised when could not delete the associated tuples in MongoDB for a particular experiment's result"""
     pass
 
 

@@ -120,9 +120,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         // Generates Experiment's state info
                         const experimentState = getExperimentStateObj(experiment.state)
 
-                        const isFinished = !(experiment.state === ExperimentState.IN_PROCESS ||
-                            experiment.state === ExperimentState.WAITING_FOR_QUEUE ||
-                            experiment.state === ExperimentState.STOPPING)
+                        const isInProcess = experiment.state === ExperimentState.IN_PROCESS ||
+                            experiment.state === ExperimentState.WAITING_FOR_QUEUE
 
                         // Generates ExperimentType info
                         const experimentTypeInfo = getExperimentTypeObj(experiment.type, 'ExperimentType')
@@ -154,7 +153,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     title={
                                         `The result consists of ${finalRowCount} combinations obtained from a total of ${evaluatedRowCount} evaluated combinations`
                                     }
-                                >{finalRowCount} / {evaluatedRowCount}</TableCell>
+                                >{finalRowCount} / {evaluatedRowCount}
+                                </TableCell>
                                 <TableCell textAlign='center'>
                                     <ClinicalSourcePopup
                                         experiment={experiment}
@@ -212,17 +212,17 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     />
 
                                     {/* Stop button */}
-                                    {(!isFinished && experiment.state !== ExperimentState.STOPPING) &&
+                                    {isInProcess &&
                                         <StopExperimentButton
-                                            experiment={experiment}
+                                            title='Stop experiment'
                                             onClick={() => this.props.confirmExperimentStop(experiment)}
                                         />
                                     }
 
                                     {/* Delete button */}
-                                    {isFinished &&
+                                    {!isInProcess &&
                                         <DeleteExperimentButton
-                                            experiment={experiment}
+                                            title='Delete experiment'
                                             onClick={() => this.props.confirmExperimentDeletion(experiment)}
                                         />
                                     }

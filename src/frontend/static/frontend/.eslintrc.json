@@ -59,10 +59,14 @@
         "jsdoc/require-returns-description": 1,
         "jsdoc/valid-types": 1,
         "jsdoc/require-returns": 1,
+        "no-multi-spaces": "error",
         // Hooks plugin config
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": 0,
-        "no-use-before-define": 0
+        "no-use-before-define": 0,
+        "react/jsx-equals-spacing": "error",
+        "react/jsx-closing-bracket-location": "error",
+        "react/jsx-closing-tag-location": "error"
     },
     "settings": {
         "react": {

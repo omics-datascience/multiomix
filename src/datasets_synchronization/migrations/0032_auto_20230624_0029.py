@@ -5,7 +5,7 @@ from django.db import migrations
 from django.db.models import Q
 
 from datasets_synchronization.models import CGDSStudySynchronizationState, CGDSStudy, CGDSDataset
-from datasets_synchronization.synchronization_service import global_synchronization_service
+from datasets_synchronization.synchronization_service import generate_study_new_version
 
 # Old and new cBioPortal URLs to download the datasets
 OLD_URL = 'http://download.cbioportal.org/'
@@ -72,7 +72,7 @@ def copy_cgds_studies(apps, schema_editor):
 
     # Generates a copy of all the studies to prevent errors with already existing experiments
     for cgds_study in CGDSStudy.objects.all():
-        cgds_study_copy = global_synchronization_service.generate_study_new_version(cgds_study)
+        cgds_study_copy = generate_study_new_version(cgds_study)
 
         # Updates the file paths to the new cBioPortal version
         rename_all_datasets_file_path(cgds_study_copy)

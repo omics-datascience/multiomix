@@ -13,6 +13,5 @@ class ExperimentIsNotRunning(permissions.BasePermission):
             return obj.state not in (
                 ExperimentState.IN_PROCESS,
                 ExperimentState.WAITING_FOR_QUEUE,
-                ExperimentState.STOPPING
             )
         return True

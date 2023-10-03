@@ -211,35 +211,43 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow}/>
                 }
 
-                return <CorrelationGraph
-                    chartData={this.state.correlationGraphData}
-                    selectedRow={this.props.selectedRow}
-                    handleGroupByChanges={this.handleGroupByChanges}
-                />
+                return (
+                    <CorrelationGraph
+                        chartData={this.state.correlationGraphData}
+                        selectedRow={this.props.selectedRow}
+                        handleGroupByChanges={this.handleGroupByChanges}
+                    />
+                )
             case ActiveItemMenu.STATISTICAL_PROPERTIES:
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
-                return <StatisticalPropertiesPanel
-                    statisticalProperties={this.state.statisticalProperties}
-                    selectedRow={this.props.selectedRow}
-                    gemDataIsOrdinal={this.state.gemDataIsOrdinal}
-                />
+                return (
+                    <StatisticalPropertiesPanel
+                        statisticalProperties={this.state.statisticalProperties}
+                        selectedRow={this.props.selectedRow}
+                        gemDataIsOrdinal={this.state.gemDataIsOrdinal}
+                    />
+                )
             case ActiveItemMenu.ASSUMPTIONS:
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
-                return <AssumptionsPanel
-                    statisticalProperties={this.state.statisticalProperties}
-                    selectedRow={this.props.selectedRow}
-                    experiment={this.props.experiment}
-                />
+                return (
+                    <AssumptionsPanel
+                        statisticalProperties={this.state.statisticalProperties}
+                        selectedRow={this.props.selectedRow}
+                        experiment={this.props.experiment}
+                    />
+                )
             case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
-                return <MiRNATargetInteractionPanel
-                    miRNAData={this.state.miRNAData}
-                    gene={gene}
-                    miRNA={gem}
-                />
+                return (
+                    <MiRNATargetInteractionPanel
+                        miRNAData={this.state.miRNAData}
+                        gene={gene}
+                        miRNA={gem}
+                    />
+                )
             case ActiveItemMenu.MIRNA_INTERACTION:
                 // NOTE: it's inside a React.Fragment to force componentDidMount execution
                 // in PaginatedTable component. Otherwise, React will see miRNA interaction
@@ -270,10 +278,12 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     )
                 }
 
-                return <KaplanMeierChart
-                    selectedRow={this.props.selectedRow}
-                    experimentId={this.props.experiment.id}
-                />
+                return (
+                    <KaplanMeierChart
+                        selectedRow={this.props.selectedRow}
+                        experimentId={this.props.experiment.id}
+                    />
+                )
         }
     }
 

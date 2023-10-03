@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react'
-import { Biomarker, SourceStateBiomarker, TrainedModel } from '../../types'
+import { Biomarker, SourceStateBiomarker, TrainedModelForTable } from '../../types'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../../utils/util_functions'
 import { Button, Form, Grid, Header, Icon, Modal, Segment, Step } from 'semantic-ui-react'
@@ -26,7 +26,7 @@ type NewStatisticalValidationData = {
     name: string,
     description: Nullable<string>,
     /** TrainedModel instance. */
-    selectedTrainedModel: Nullable<TrainedModel>,
+    selectedTrainedModel: Nullable<TrainedModelForTable>,
     /** Clinical source. */
     clinicalSource: Source,
     /** mRNA source. */
@@ -147,7 +147,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
      * Set a new TrainedModel instance.
      * @param newSelectedTrainedModel New TrainedModel instance
      */
-    const selectTrainedModel = (newSelectedTrainedModel: TrainedModel) => {
+    const selectTrainedModel = (newSelectedTrainedModel: TrainedModelForTable) => {
         setForm({ ...form, selectedTrainedModel: newSelectedTrainedModel })
     }
 

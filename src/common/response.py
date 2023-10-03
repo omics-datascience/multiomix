@@ -5,6 +5,9 @@ from django.http import JsonResponse, Http404
 
 class ResponseStatus:
     """Represents a Response to check its status in frontend"""
+    code: Enum
+    message: str
+    internal_code: Enum
 
     def __init__(self, code: Enum, message: str = '', internal_code: Enum = None):
         self.code = code.value  # Main status code
@@ -13,6 +16,7 @@ class ResponseStatus:
         self.internal_code = internal_code.value if internal_code is not None else None
 
     def to_json(self):
+        """This is useful to return in a JsonResponse."""
         return self.__dict__
 
 

@@ -32,6 +32,8 @@ class CGDSStudySynchronizationState(models.IntegerChoices):
     URL_ERROR = 5
     CONNECTION_TIMEOUT_ERROR = 6
     READ_TIMEOUT_ERROR = 7
+    TIMEOUT_EXCEEDED = 9
+    STOPPED = 10
 
 
 class CGDSDatasetSynchronizationState(models.IntegerChoices):
@@ -265,6 +267,7 @@ class CGDSStudy(models.Model):
         null=True,
         related_name='clinical_sample_dataset'
     )
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     def __str__(self):
         return self.name

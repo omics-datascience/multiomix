@@ -18,9 +18,9 @@ class ExperimentState(models.IntegerChoices):
     COMPLETED = 3
     FINISHED_WITH_ERROR = 4
     NO_SAMPLES_IN_COMMON = 5
-    STOPPING = 6
     STOPPED = 7
     REACHED_ATTEMPTS_LIMIT = 8
+    TIMEOUT_EXCEEDED = 9
 
 
 class CorrelationMethod(models.IntegerChoices):

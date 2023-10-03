@@ -205,14 +205,6 @@ const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
                 title: 'The analysis is being processed'
             }
             break
-        case ExperimentState.STOPPING:
-            stateIcon = {
-                iconName: 'stop',
-                loading: false,
-                title: 'The analysis is being stopped',
-                className: 'experiment-stopping-icon'
-            }
-            break
         case ExperimentState.STOPPED:
             stateIcon = {
                 iconName: 'stop',
@@ -226,7 +218,15 @@ const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
                 iconName: 'undo',
                 color: 'red',
                 loading: false,
-                title: 'The analysis has failed several times. Try changing some parameters and try again.'
+                title: 'The analysis has failed several times. Try changing some parameters and try again'
+            }
+            break
+        case ExperimentState.TIMEOUT_EXCEEDED:
+            stateIcon = {
+                iconName: 'wait',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has reached the timeout limit. Try changing some parameters and try again'
             }
             break
     }

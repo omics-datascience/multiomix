@@ -247,7 +247,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                 </Segment>
 
                 {/* Control Panel */}
-                <Segment textAlign = 'left'>
+                <Segment textAlign='left'>
                     <PipelineAdvancedForm
                         newExperiment={this.props.newExperiment}
                         isEditing={isEditing}

@@ -115,6 +115,11 @@ class FSExperiment(models.Model):
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
 
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+
+    # Number of attempts to prevent a buggy experiment running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
+
     # AWS-EMR fields
     app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results
     emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
@@ -209,6 +214,11 @@ class TrainedModel(models.Model):
                                    related_name='trained_models_as_cna')
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='trained_models_as_methylation')
+
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+
+    # Number of attempts to prevent a buggy model training running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
 
     @property
     def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:

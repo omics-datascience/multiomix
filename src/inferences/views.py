@@ -1,7 +1,9 @@
 import csv
+import logging
 from collections import OrderedDict
 from typing import List
 import pandas as pd
+from celery.contrib.abortable import AbortableAsyncResult
 from django.db import transaction
 from django.db.models import QuerySet, Exists, OuterRef, Q, F
 from django.http import HttpRequest, HttpResponse
@@ -22,11 +24,11 @@ from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
 from common.utils import get_source_pk
 from feature_selection.models import TrainedModel, ClusterLabel, PredictionRangeLabel
-from inferences.inference_service import global_inference_service
 from inferences.models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
 from inferences.serializers import InferenceExperimentSerializer, SampleAndClusterPredictionSerializer, \
     SampleAndTimePredictionSerializer, generate_prediction_condition
 from user_files.models_choices import FileType
+from .tasks import eval_inference_experiment
 
 
 def get_inference_experiments_of_biomarker(request: HttpRequest) -> QuerySet[InferenceExperiment]:
@@ -85,6 +87,7 @@ class InferenceExperimentClinicalAttributes(APIView):
             clinical_attrs = []
         return Response(sorted(clinical_attrs))
 
+
 class PredictionExperimentSubmit(APIView):
     """Endpoint to submit a InferenceExperiment."""
     permission_classes = [permissions.IsAuthenticated]
@@ -134,7 +137,7 @@ class PredictionExperimentSubmit(APIView):
                 name=request.POST.get('name'),
                 description=description,
                 biomarker=biomarker,
-                state=BiomarkerState.IN_PROCESS,
+                state=BiomarkerState.WAITING_FOR_QUEUE,
                 trained_model=trained_model,
                 mrna_source=mrna_source,
                 mirna_source=mirna_source,
@@ -142,10 +145,83 @@ class PredictionExperimentSubmit(APIView):
                 methylation_source=methylation_source,
             )
 
-            # Adds Feature Selection experiment to the ThreadPool
-            global_inference_service.add_inference_experiment(inference_experiment)
+            # Adds the experiment to the TaskQueue and gets Task id
+            async_res: AbortableAsyncResult = eval_inference_experiment.apply_async((inference_experiment.pk,),
+                                                                                    queue='inference')
+
+            inference_experiment.task_id = async_res.task_id
+            inference_experiment.save(update_fields=['task_id'])
+
 
         return Response({'ok': True})
+
+
+class StopInferenceExperiment(APIView):
+    """Stops a InferenceExperiment."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request):
+        inference_experiment_id = request.GET.get('inferenceExperimentId')
+
+        # Check if all the required parameters are in request
+        if inference_experiment_id is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params'
+                )
+            }
+        else:
+            try:
+                # Gets Biomarker and FSExperiment
+                experiment: InferenceExperiment = InferenceExperiment.objects.get(pk=inference_experiment_id,
+                                                                                 biomarker__user=request.user)
+
+                logging.warning(f'Aborting InferenceExperiment {inference_experiment_id}')
+
+                # Sends the signal to abort it
+                if experiment.task_id:
+                    abortable_async_result = AbortableAsyncResult(experiment.task_id)
+                    abortable_async_result.abort()
+
+                # Updates experiment state
+                experiment.state = BiomarkerState.STOPPED
+                experiment.save(update_fields=['state'])
+
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS).to_json()
+                }
+            except ValueError as ex:
+                # Cast errors...
+                logging.exception(ex)
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='Invalid request params type'
+                    ).to_json()
+                }
+            except InferenceExperiment.DoesNotExist:
+                # If the experiment does not exist, returns an error
+                response = {
+                    'status': ResponseStatus(
+                        ResponseCode.ERROR,
+                        message='The InferenceExperiment does not exists'
+                    ).to_json()
+                }
+
+        # Formats to JSON the ResponseStatus object
+        return Response(response)
+
+
+class InferenceExperimentDestroy(generics.DestroyAPIView):
+    """REST endpoint: delete for InferenceExperiment model."""
+
+    def get_queryset(self):
+        return InferenceExperiment.objects.filter(biomarker__user=self.request.user)
+
+    serializer_class = InferenceExperiment
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class SampleAndClusterPredictionSamples(generics.ListAPIView):
