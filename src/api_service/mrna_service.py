@@ -1,6 +1,6 @@
 import logging
 from json.decoder import JSONDecodeError
-from typing import Dict, Optional, Literal
+from typing import Any, Dict, Optional, Literal
 import requests
 from django.conf import settings
 from django.http import QueryDict
@@ -35,7 +35,7 @@ class MRNAService(object):
             url_prefix: str,
             method: Literal['get', 'post'],
             append_slash: bool
-    ) -> Optional[Dict]:
+    ) -> Optional[Any]:
         """
         Generic function to make a request to a Modulector/BioAPI service
         @param service_name: Modulector/BioAPI service to consume
@@ -66,8 +66,16 @@ class MRNAService(object):
                 logging.warning(f'{method.upper()} to {url} returned status_code {data.status_code} and '
                                 f'message: {data.content}')
                 return None
+        
+            content_type = data.headers.get('Content-Type', '')
+            print(content_type)
+            if 'application/json' in content_type:
+                return data.json()
+            elif 'text/plain' in content_type or 'text/html' in content_type:
+                return data.text
+            else:
+                return None
 
-            return data.json()
         except (ConnectionError, JSONDecodeError) as ex:
             logging.error(f'Received data from Modulector/BioAPI: {data}')
             logging.exception(ex)
@@ -105,7 +113,7 @@ class MRNAService(object):
             request_params: QueryDict,
             is_paginated: bool,
             method: Literal['get', 'post'] = 'get'
-    ) -> Optional[Dict]:
+    ) -> Optional[Any]:
         """
         Makes a request to a BioAPI service.
         @param service_name: BioAPI service to consume
