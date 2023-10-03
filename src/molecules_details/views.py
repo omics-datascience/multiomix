@@ -6,7 +6,12 @@ from api_service.mrna_service import global_mrna_service
 
 
 class GeneInformation(APIView):
-    """ Retrieves general data of a gene from BioAPI 'information-of-genes' service. """
+    """
+    Retrieves general data of a gene from BioAPI 'information-of-genes' service.
+    Examples:
+    http://localhost:8000/molecules/gene-information?gene=BRCA1
+    http://localhost:8000/molecules/gene-information?gene=MSH3
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
@@ -27,21 +32,20 @@ class GeneInformation(APIView):
 
 
 class GeneGroups(APIView):
-    """ Gets the identifier of a gene, validates it and then returns the group of genes to which
-    it belongs according to HGNC, and all the other genes that belong to the same group. """
+    """
+    Gets the identifier of a gene, validates it and then returns the group of genes to which
+    it belongs according to HGNC, and all the other genes that belong to the same group.
+    Examples:
+    http://localhost:8000/molecules/gene-groups?gene=LTN1
+    http://localhost:8000/molecules/gene-groups?gene=SACS
+    """
 
     permission_classes = [permissions.IsAuthenticated]
 
-    """
-    Ejemplos:
-    http://localhost:8000/molecules/gene-groups?gene=ALK
-    http://localhost:8000/molecules/gene-groups?gene=BRAF
-    """
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         if not gene:
-            # print("No gene found")
             return Response({})
 
         data = global_mrna_service.get_bioapi_service_content(
@@ -56,18 +60,30 @@ class GeneGroups(APIView):
 
 
 class PathwaysInformation(APIView):
-    """ Retrieves general data of a gene from BioAPI 'pathways-in-common' service.
-    The service is used with a single gene to bring from the databases all the information related to metabolic pathways for it. """
+    """
+    Retrieves general data of a gene from BioAPI 'pathways-in-common' service.
+    The service is used with a single gene to bring from the databases all the information
+    related to metabolic pathways for it.
+    Examples:
+    http://localhost:8000/molecules/pathways-information?gene=ULK4
+    http://localhost:8000/molecules/pathways-information?gene=BRCA1,BRCA2
+    """
 
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
+
+        if gene:
+            gene = gene.split(',')
+        else:
+            return Response({})
+
         data = global_mrna_service.get_bioapi_service_content(
             'pathways-in-common',
             request_params={
-                'gene_ids': [gene]
+                'gene_ids': gene
             },
             is_paginated=False,
             method='post'
@@ -79,15 +95,16 @@ class PathwaysInformation(APIView):
 
 
 class MetabolicPathwaysInformation(APIView):
-    """ Retrieves genes from BioAPI '/pathway-genes/<source>/<external_id>' service.
-    This service gets all genes of a metabolic pathway for a source database and an identifier of it """
+    """
+    Retrieves genes from BioAPI '/pathway-genes/<source>/<external_id>' service.
+    This service gets all genes of a metabolic pathway for a source database and an identifier
+    of it.
+    Examples:
+    http://localhost:8000/molecules/metabolic-pathways-information?source=Reactome&id=R-HSA-5693537
+    http://localhost:8000/molecules/metabolic-pathways-information?source=KEGG&id=hsa05224
+    """
 
     permission_classes = [permissions.IsAuthenticated]
-
-    """
-    correccion de descripciones
-    cambio de gen por id
-    """
 
     @staticmethod
     def get(request: HttpRequest):
@@ -108,14 +125,13 @@ class MetabolicPathwaysInformation(APIView):
 
 
 class GeneOntologyTermsOfGene(APIView):
-    """  Gets the list of related terms for a gene """
-    permission_classes = [permissions.IsAuthenticated]
-
     """
+    Gets the list of related terms for a gene.
     Examples:
     http://localhost:8000/molecules/gene-ontology-gene-terms?gene=TP53&filter_type=enrichment&p_value_threshold=0.09&correction_method=analytical
     http://localhost:8000/molecules/gene-ontology-gene-terms?gene=TP53&filter_type=union&relation_type=enables,involved_in&ontology_type=biological_process,molecular_function
     """
+    permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: HttpRequest):
@@ -126,40 +142,34 @@ class GeneOntologyTermsOfGene(APIView):
         relation_type = request.GET.get('relation_type', '').strip()
         ontology_type = request.GET.get('ontology_type', '').strip()
 
-        if not gene:
-            # print("No gene found")
+        if gene:
+            gene = gene.split(',')
+        else:
             return Response({})
 
         if not filter_type:
-            # print("No filter type found")
             filter_type = 'intersection'
 
         if filter_type not in ["intersection", "union", "enrichment"]:
-            # print("filter_type is invalid. Should be one of this options: ['union', 'intersection', 'enrichment']")
             return Response({})
         else:
             if filter_type == 'enrichment':
                 if not p_value_threshold or not correction_method:
-                    # print("p_value_threshold and correction_method are required if filter_type is 'enrichment'")
                     return Response({})
             else:
                 if not relation_type:
-                    # print("relation_type not specified")
                     relation_type = ["enables", "involved_in", "part_of", "located_in"]
                 else:
                     relation_type = relation_type.split(',')
                     for relation in relation_type:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
-                            # print("relation_type should always be a list containing any permutation of the follow options: 'enables', 'involved_in', 'part_of', or 'located_in'")
                             return Response({})
         if not ontology_type:
-            # print("No ontology type found")
             ontology_type = ["biological_process", "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
                 if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    # print("ontology_type should always be a list containing any permutation of the follow options: 'biological_process', 'molecular_function' or 'cellular_component'")
                     return Response({})
         data = {}
         if filter_type in ["intersection", "union"]:
@@ -178,7 +188,7 @@ class GeneOntologyTermsOfGene(APIView):
             data = global_mrna_service.get_bioapi_service_content(
                 'genes-to-terms',
                 request_params={
-                    'gene_ids': [gene],
+                    'gene_ids': gene,
                     'filter_type': filter_type,
                     'p_value_threshold': p_value_threshold,
                     'correction_method': correction_method,
@@ -194,14 +204,13 @@ class GeneOntologyTermsOfGene(APIView):
 
 
 class GeneOntologyTermsOfTerm(APIView):
-    """  gets the list of related terms to a term """
-    permission_classes = [permissions.IsAuthenticated]
-
     """
+    Gets the list of related terms to a term.
     Examples:
     http://localhost:8000/molecules/gene-ontology-term-terms?term_id=0000122&relations=part_of,regulates&ontology_type=biological_process,molecular_function&general_depth=3&hierarchical_depth_to_children=3&to_root=1
     http://localhost:8000/molecules/gene-ontology-term-terms?term_id=0000122&general_depth=1&hierarchical_depth_to_children=3&to_root=0
     """
+    permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: HttpRequest):
@@ -213,48 +222,37 @@ class GeneOntologyTermsOfTerm(APIView):
         to_root = request.GET.get('to_root', '').strip()
 
         if not term_id:
-            print("No term_id found")
             return Response({})
 
         if not general_depth:
-            print("No general_depth found")
             return Response({})
         if not general_depth.isnumeric():
-            print("general_depth must be a Int")
             return Response({})
 
         if not hierarchical_depth_to_children:
-            print("No hierarchical_depth_to_children found")
             return Response({})
         if not hierarchical_depth_to_children.isnumeric():
-            print("hierarchical_depth_to_children must be a Int")
             return Response({})
 
         if not to_root:
-            print("No to_root found")
             return Response({})
         if to_root not in ["0", "1"]:
-            print("to_root must be 0 or 1")
             return Response({})
 
         if not relations:
-            print("No relations found")
             relations = ["part_of", "regulates", "has_part"]
         else:
             relations = relations.split(',')
             for relation in relations:
                 if relation not in ["part_of", "regulates", "has_part"]:
-                    print(relation + " is not a valid relation")
                     return Response({})
 
         if not ontology_type:
-            print("No ontology type found")
             ontology_type = ["biological_process", "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
                 if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    print(type + " is not a valid ontology_type")
                     return Response({})
 
         data = {}
@@ -278,26 +276,23 @@ class GeneOntologyTermsOfTerm(APIView):
 
 
 class ActionableAndCancerGenes(APIView):
-    """ retrieves information of actionable genes and drugs obtained from the
-    OncoKB database, at a therapeutic, diagnostic and prognostic level"""
-
-    # permission_classes = [permissions.IsAuthenticated]
-
     """
+    Retrieves information of actionable genes and drugs obtained from the
+    OncoKB database, at a therapeutic, diagnostic and prognostic level.
     Examples:
     http://localhost:8000/molecules/actionable-cancer-genes?gene=TP53
     http://localhost:8000/molecules/actionable-cancer-genes?gene=MSH6,EGFR
     """
 
+    permission_classes = [permissions.IsAuthenticated]
+
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         if not gene:
-            print("No gene found")
             return Response({})
         else:
             gene = gene.split(',')
-            print(gene)
         data = global_mrna_service.get_bioapi_service_content(
             'information-of-oncokb',
             request_params={
@@ -312,19 +307,98 @@ class ActionableAndCancerGenes(APIView):
         })
 
 
-"""
-Servicios BIOAPI:
- -  Genes symbols validator --> No Implementar
- -  Genes symbols finder --> No Implementar
- -  Genes information --> HECHO
- -  Gene Groups --> HECHO
- -  Genes of a metabolic pathway --> HECHO
- -  Metabolic pathways from different genes --> HECHO
- -  Gene expression --> No Implementar
- -  Actionable and Cancer genes --> HECHO
- -  Gene Ontology terms related to a list of genes --> HECHO
- -  Gene Ontology terms related to a list of genes --> HECHO
- -  Cancer related drugs (PharmGKB) --> PENDIENTE
- -  Predicted functional associations network (String) --> PENDIENTE
- -  Drugs that regulate a gene  --> CONSULTAR (Retorna solo un link)
-"""
+class DrugsPharmGKB(APIView):
+    """
+    Gets a list of related drugs to a list of genes.
+    Examples:
+    http://localhost:8000/molecules/drugs-pharmgkb?gene=EGFR
+    http://localhost:8000/molecules/drugs-pharmgkb?gene=MSH6,EGFR,TP53,BRAF
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: HttpRequest):
+        gene = request.GET.get('gene', '').strip()
+        if not gene:
+            return Response({})
+        else:
+            gene = gene.split(',')
+
+        data = global_mrna_service.get_bioapi_service_content(
+            'drugs-pharm-gkb',
+            request_params={
+                'gene_ids': gene
+            },
+            is_paginated=False,
+            method='post'
+        )
+
+        return Response({
+            'data': data if data else None
+        })
+
+
+class PredictedFunctionalAssociationsNetwork(APIView):
+    """
+    Gets a list of genes and relations related to a gene.
+    Examples:
+    http://localhost:8000/molecules/predicted-functiona-associations-network?gene=MX2&score=996
+    http://localhost:8000/molecules/predicted-functiona-associations-network?gene=BRCA1&score=995
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: HttpRequest):
+        gene = request.GET.get('gene', '').strip()
+        score = request.GET.get('score', '').strip()
+        if not gene or not score:
+            return Response({})
+
+        if score.isnumeric():
+            if int(score) < 1 or int(score) > 1000:
+                return Response({})
+        else:
+            return Response({})
+
+        data = global_mrna_service.get_bioapi_service_content(
+            'string-relations',
+            request_params={
+                'gene_id': gene,
+                'min_combined_score': int(score)
+            },
+            is_paginated=False,
+            method='post'
+        )
+
+        return Response({
+            'data': data if data else None
+        })
+
+
+class DrugsRegulatingGene(APIView):
+    """
+    Service that takes gene symbol and returns a link to https://go.drugbank.com with
+    all the drugs that upregulate and down regulate its expresion.
+    Examples:
+    http://localhost:8000/molecules/drugs-regulating-gene?gene=TP53
+    http://localhost:8000/molecules/drugs-regulating-gene?gene=EGFR
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: HttpRequest):
+        gene = request.GET.get('gene', '').strip()
+        if not gene:
+            return Response({})
+
+        data = global_mrna_service.get_bioapi_service_content(
+            f'/drugs-regulating-gene/{gene}',
+            request_params={},  # No params needed
+            is_paginated=False,
+            method='get'
+        )
+        return Response({
+            'data': data
+        })
+
