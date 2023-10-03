@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, Any
 import numpy as np
 from django.conf import settings
-from biomarkers.models import BiomarkerState, Biomarker, BiomarkerOrigin, TrainedModelState
+from biomarkers.models import BiomarkerState, TrainedModelState
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, generate_clinical_file, \
     check_sample_classes
 from common.exceptions import ExperimentStopped
@@ -60,7 +60,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
     @param clinical_temp_file_path: Path of the DataFrame with the clinical data.
     @param fit_fun_enum: Selected fitness function to compute.
     @param fitness_function_parameters: Parameters of the fitness function to compute.
-    @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc) to compute.
+    @param algorithm_parameters: Parameters of the FS algorithm (Blind Search, BBHA, PSO, etc.) to compute.
     @param cross_validation_parameters: Parameters of the CrossValidation process.
     @param is_aborted: Method to call to check if the experiment has been stopped.
     @return A flag to indicate whether the experiment is running in spark
