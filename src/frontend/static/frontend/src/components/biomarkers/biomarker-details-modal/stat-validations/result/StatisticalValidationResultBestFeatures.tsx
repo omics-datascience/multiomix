@@ -131,6 +131,9 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
             type: 'category',
             min: Math.ceil(Math.min.apply(Math, coefficients) - EPSILON),
             max: Math.ceil(Math.max.apply(Math, coefficients) + EPSILON)
+        },
+        noData: {
+            text: 'No significant features found for this statistical validation'
         }
     }
 
