@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset
-from common.exceptions import NoValidSamples, NoValidMolecules, ExperimentStopped
+from common.datasets_utils import get_common_samples, generate_molecules_file, clean_dataset, \
+    check_molecules_and_samples_number_or_exception
+from common.exceptions import ExperimentStopped
 from common.functions import check_if_stopped
 from common.typing import AbortEvent
 from common.utils import get_subset_of_features
@@ -38,21 +39,12 @@ def __compute_inference_experiment(experiment: InferenceExperiment, molecules_te
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_df = clean_dataset(molecules_df, axis='index')
 
-    if molecules_df.size == 0:
-        raise NoValidSamples('No valid values in the dataset')
+    # Checks if the number of molecules is valid
+    check_molecules_and_samples_number_or_exception(classifier, molecules_df)
 
     # Gets a list of samples
     check_if_stopped(is_aborted, ExperimentStopped)
     samples = np.array(molecules_df.index.tolist())
-
-    # Gets number of features from the fitted model.
-    # If it's bigger than the number of molecules in the dataset, it's not possible to compute the
-    # experiment (raises NoValidMolecules)
-    n_features_model = classifier.n_features_in_
-    n_features_dataset = molecules_df.shape[1]
-    if n_features_model != n_features_dataset:
-        raise NoValidMolecules(f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
-                               f'{n_features_dataset}')
 
     if is_clustering:
         # Gets the groups
@@ -92,6 +84,7 @@ def __compute_inference_experiment(experiment: InferenceExperiment, molecules_te
         ])
 
     experiment.save()
+
 
 def prepare_and_compute_inference_experiment(experiment: InferenceExperiment, is_aborted: AbortEvent) -> str:
     """

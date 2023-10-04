@@ -24,6 +24,9 @@ from sklearn.exceptions import FitFailedWarning
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+# Number of folds to use in the GridSearch of CoxNetSurvivalAnalysis
+GRID_SEARCH_CV_FOLDS: int = 3
+
 # Negative and positive infinity constants
 NEG_INF: float = float("-inf")
 POS_INF: float = float("inf")
@@ -418,7 +421,7 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
     else:
         estimated_alphas = estimated_alphas_np.tolist()
 
-    cv = StratifiedKFold(n_splits=3, shuffle=True)
+    cv = StratifiedKFold(n_splits=GRID_SEARCH_CV_FOLDS, shuffle=True)
     gcv = GridSearchCV(
         make_pipeline(StandardScaler(), CoxnetSurvivalAnalysis(l1_ratio=0.9)),
         param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},

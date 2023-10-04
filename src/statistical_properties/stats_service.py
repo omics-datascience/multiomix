@@ -7,12 +7,13 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
-    generate_clinical_file, generate_molecules_dataframe, check_sample_classes
-from common.exceptions import ExperimentStopped, NoBestModelFound
+    generate_clinical_file, generate_molecules_dataframe, check_sample_classes, \
+    check_molecules_and_samples_number_or_exception
+from common.exceptions import ExperimentStopped, NoBestModelFound, NumberOfSamplesFewerThanCVFolds
 from common.functions import check_if_stopped
 from common.typing import AbortEvent
 from common.utils import get_subset_of_features
-from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression
+from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression, GRID_SEARCH_CV_FOLDS
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
     RFParameters
@@ -70,8 +71,9 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     """
     check_if_stopped(is_aborted, ExperimentStopped)
     trained_model: TrainedModel = stat_validation.trained_model
-    model: SurvModel = trained_model.get_model_instance()
-    is_clustering = hasattr(model, 'clustering_parameters')
+
+    classifier: SurvModel = trained_model.get_model_instance()
+    is_clustering = hasattr(classifier, 'clustering_parameters')
     is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
 
     # Gets data in the correct format
@@ -79,11 +81,24 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
                                                            is_regression)
 
+    # Checks if there are fewer samples than splits in the CV to prevent ValueError
+    n_samples = clinical_df.shape[0]
+    if n_samples < GRID_SEARCH_CV_FOLDS:
+        raise NumberOfSamplesFewerThanCVFolds(f'Number of samples ({n_samples}) are fewer than CV number of folds '
+                               f'({GRID_SEARCH_CV_FOLDS})')
+
+    # Checks if there are fewer samples than splits in the CV to prevent ValueError
+    check_if_stopped(is_aborted, ExperimentStopped)
+    check_sample_classes(trained_model, clinical_data, GRID_SEARCH_CV_FOLDS)
+
     # Get top features
     check_if_stopped(is_aborted, ExperimentStopped)
     best_features, _, best_features_coeff = select_top_cox_regression(molecules_df, clinical_data,
                                                                       filter_zero_coeff=True,
                                                                       top_n=20)
+
+    print('best_features', best_features)
+    print('best_features_coeff', best_features_coeff)
 
     check_if_stopped(is_aborted, ExperimentStopped)
     __save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
@@ -94,18 +109,19 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_df = get_subset_of_features(molecules_df, molecules_df.index)
 
+    # Checks if the number of molecules is valid
+    check_molecules_and_samples_number_or_exception(classifier, molecules_df)
+
     # Makes predictions
     if is_regression:
-        # FIXME: this is broken as the model expects other data shape. There should be a new state indicating that some features are missing for this
-        # FIXME: TrainedModel and another one should be created
         check_if_stopped(is_aborted, ExperimentStopped)
-        predictions = model.predict(molecules_df)
+        predictions = classifier.predict(molecules_df)
 
         # Gets all the metrics for the SVM or RF
         check_if_stopped(is_aborted, ExperimentStopped)
         y_true = clinical_data['time']
         stat_validation.mean_squared_error = mean_squared_error(y_true, predictions)
-        stat_validation.c_index = model.score(molecules_df, clinical_data)
+        stat_validation.c_index = classifier.score(molecules_df, clinical_data)
         stat_validation.r2_score = r2_score(y_true, predictions)
 
         # TODO: add here all the metrics for every Source type
