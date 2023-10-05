@@ -15,6 +15,6 @@ urlpatterns = [
     path('gene-ontology-term-terms', views.GeneOntologyTermsOfTerm.as_view(), name='gene_ontology_term_terms'),
     path('actionable-cancer-genes', views.ActionableAndCancerGenes.as_view(), name='actionable_cancer_genes'),
     path('drugs-pharmgkb', views.DrugsPharmGKB.as_view(), name='drugs_pharmgkb'),
-    path('predicted-functiona-associations-network', views.PredictedFunctionalAssociationsNetwork.as_view(), name='predicted_functiona_associations_network'),
+    path('predicted-functional-associations-network', views.PredictedFunctionalAssociationsNetwork.as_view(), name='predicted_functional_associations_network'),
     path('drugs-regulating-gene', views.DrugsRegulatingGene.as_view(), name='drugs_regulating_gene')
 ]
