@@ -342,8 +342,8 @@ class PredictedFunctionalAssociationsNetwork(APIView):
     """
     Gets a list of genes and relations related to a gene.
     Examples:
-    http://localhost:8000/molecules/predicted-functiona-associations-network?gene=MX2&score=996
-    http://localhost:8000/molecules/predicted-functiona-associations-network?gene=BRCA1&score=995
+    http://localhost:8000/molecules/predicted-functional-associations-network?gene=MX2&score=996
+    http://localhost:8000/molecules/predicted-functional-associations-network?gene=BRCA1&score=995
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -401,4 +401,3 @@ class DrugsRegulatingGene(APIView):
         return Response({
             'data': data
         })
-
