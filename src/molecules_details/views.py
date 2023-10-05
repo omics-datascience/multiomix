@@ -10,24 +10,30 @@ class GeneInformation(APIView):
     Retrieves general data of a gene from BioAPI 'information-of-genes' service.
     Examples:
     http://localhost:8000/molecules/gene-information?gene=BRCA1
-    http://localhost:8000/molecules/gene-information?gene=MSH3
+    http://localhost:8000/molecules/gene-information?gene=MSH3,BRCA1
     """
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
+
+        if gene:
+            gene = gene.split(',')
+        else:
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
+
         data = global_mrna_service.get_bioapi_service_content(
             'information-of-genes',
             request_params={
-                'gene_ids': [gene]
+                'gene_ids': gene
             },
             is_paginated=False,
             method='post'
         )
 
         return Response({
-            'data': data[gene] if data and gene in data else None
+            'data': data if data else None
         })
 
 
@@ -46,7 +52,7 @@ class GeneGroups(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         if not gene:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
             f'/genes-of-its-group/{gene}',
@@ -78,7 +84,7 @@ class PathwaysInformation(APIView):
         if gene:
             gene = gene.split(',')
         else:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
             'pathways-in-common',
@@ -110,8 +116,10 @@ class MetabolicPathwaysInformation(APIView):
     def get(request: HttpRequest):
         source = request.GET.get('source', '').strip()
         id = request.GET.get('id', '').strip()
-        if not source or not id:
-            return Response({})
+        if not source:
+            return Response(status=400, data={"error": "Param 'source' is mandatory"})
+        if not id:
+            return Response(status=400, data={"error": "Param 'id' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
             f'/pathway-genes/{source}/{id}',
@@ -145,17 +153,19 @@ class GeneOntologyTermsOfGene(APIView):
         if gene:
             gene = gene.split(',')
         else:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
         if not filter_type:
             filter_type = 'intersection'
 
         if filter_type not in ["intersection", "union", "enrichment"]:
-            return Response({})
+            return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following options: 'intersection', 'union' or 'enrichment'"})
         else:
             if filter_type == 'enrichment':
-                if not p_value_threshold or not correction_method:
-                    return Response({})
+                if not p_value_threshold:
+                    return Response(status=400, data={"error": "The 'p_value_threshold' parameter is mandatory if 'filter_type' is 'enrichment'"})
+                if not correction_method:
+                    return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if 'filter_type' is 'enrichment'"})
             else:
                 if not relation_type:
                     relation_type = ["enables", "involved_in", "part_of", "located_in"]
@@ -163,14 +173,14 @@ class GeneOntologyTermsOfGene(APIView):
                     relation_type = relation_type.split(',')
                     for relation in relation_type:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
-                            return Response({})
+                            return Response(status=400, data={"error": "The 'relation_type' parameter must be a combination of the following options: 'enables', 'involved_in', 'part_of' and 'located_in'"})
         if not ontology_type:
             ontology_type = ["biological_process", "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
                 if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response({})
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
         data = {}
         if filter_type in ["intersection", "union"]:
             data = global_mrna_service.get_bioapi_service_content(
@@ -222,22 +232,22 @@ class GeneOntologyTermsOfTerm(APIView):
         to_root = request.GET.get('to_root', '').strip()
 
         if not term_id:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'term_id' is mandatory"})
 
         if not general_depth:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'general_depth' is mandatory"})
         if not general_depth.isnumeric():
-            return Response({})
+            return Response(status=400, data={"error": "Param 'general_depth' must be a numeric value"})
 
         if not hierarchical_depth_to_children:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' is mandatory"})
         if not hierarchical_depth_to_children.isnumeric():
-            return Response({})
+            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a numeric value"})
 
         if not to_root:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'to_root' is mandatory"})
         if to_root not in ["0", "1"]:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
 
         if not relations:
             relations = ["part_of", "regulates", "has_part"]
@@ -245,7 +255,7 @@ class GeneOntologyTermsOfTerm(APIView):
             relations = relations.split(',')
             for relation in relations:
                 if relation not in ["part_of", "regulates", "has_part"]:
-                    return Response({})
+                    return Response(status=400, data={"error": "The 'relations' parameter must be a combination of the following options: 'part_of', 'regulates' and 'has_part'"})
 
         if not ontology_type:
             ontology_type = ["biological_process", "molecular_function", "cellular_component"]
@@ -253,7 +263,7 @@ class GeneOntologyTermsOfTerm(APIView):
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
                 if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response({})
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
 
         data = {}
         data = global_mrna_service.get_bioapi_service_content(
@@ -289,10 +299,12 @@ class ActionableAndCancerGenes(APIView):
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
+
         if not gene:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
         else:
             gene = gene.split(',')
+
         data = global_mrna_service.get_bioapi_service_content(
             'information-of-oncokb',
             request_params={
@@ -320,7 +332,7 @@ class DrugsPharmGKB(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         if not gene:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
         else:
             gene = gene.split(',')
 
@@ -352,14 +364,16 @@ class PredictedFunctionalAssociationsNetwork(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         score = request.GET.get('score', '').strip()
-        if not gene or not score:
-            return Response({})
+        if not gene:
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
+        if not score:
+            return Response(status=400, data={"error": "Param 'score' is mandatory"})
 
         if score.isnumeric():
             if int(score) < 1 or int(score) > 1000:
-                return Response({})
+                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range 1-1000"})
         else:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'score' must be a numeric value"})
 
         data = global_mrna_service.get_bioapi_service_content(
             'string-relations',
@@ -390,7 +404,7 @@ class DrugsRegulatingGene(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
         if not gene:
-            return Response({})
+            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
             f'/drugs-regulating-gene/{gene}',
