@@ -3,7 +3,8 @@ version: '3.3'
 services:
     # PostgreSQL
     db:
-        image: postgres:13
+        image: postgres:16
+        restart: 'always'
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
             # IMPORTANT: these three params must be the same as POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
@@ -23,6 +24,7 @@ services:
     # MongoDB Server
     mongo:
         image: mongo:4.2
+        restart: 'always'
         environment:
             # IMPORTANT: these three params must be the same as MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
             # below in 'web' service respectively
@@ -39,12 +41,14 @@ services:
     # Redis Server for Websockets connections
     redis:
         image: redis:6.0.8
+        restart: 'always'
         volumes:
             - redis_data:/data
 
     # Django Proxy Server
     nginx:
         image: nginx:1.19.3
+        restart: 'always'
         ports:
             - '80:8000'
             # - 443:443 # Uncomment for HTTPS support
@@ -59,6 +63,7 @@ services:
     # Celery worker for correlation analysis
     correlation-analysis-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -75,6 +80,7 @@ services:
     # Celery worker for feature selection experiments
     fs-experiments-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -91,6 +97,7 @@ services:
     # Celery worker for statistical validations and trained models
     stats-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -107,6 +114,7 @@ services:
     # Celery worker for inference experiments
     inference-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -123,6 +131,7 @@ services:
     # Celery worker for sync CGDSStudies
     sync-datasets-worker:
         image: omicsdatascience/multiomix-celery-worker:5.1.0
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -139,6 +148,7 @@ services:
     # Django Backend Server
     web:
         image: omicsdatascience/multiomix:5.1.0
+        restart: 'always'
         # environment:
             # ENABLE_SECURITY: 'true'
             # LISTEN_PORT=8000

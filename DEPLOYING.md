@@ -10,8 +10,18 @@ The following are the steps to perform a deployment in production. In case you w
 
 ## Instructions
 
-1. Copy the file `docker-compose_dist.yml` and paste it with the name `docker-compose.yml`.
-2. Set the environment variables that are empty with the data of the connection to the DB, MongoDB, among others. They
+1. Create the needed volumes:
+   ```bash
+   docker volume create --name=multiomics_intermediate_mongo_data
+   docker volume create --name=multiomics_intermediate_mongo_config
+   docker volume create --name=multiomics_intermediate_postgres_data
+   docker volume create --name=multiomics_intermediate_redis_data
+   docker volume create --name=multiomics_intermediate_static_data
+   docker volume create --name=multiomics_intermediate_media_data
+   docker volume create --name=multiomics_intermediate_logs_data
+   ```
+2. Copy the file `docker-compose_dist.yml` and paste it with the name `docker-compose.yml`.
+3. Set the environment variables that are empty with the data of the connection to the DB, MongoDB, among others. They
    are listed below by category:
     - Django:
         - `DJANGO_SETTINGS_MODULE`: indicates the `settings.py` file to read. In the production case the value `docker-compose_dist.yml` is left in the `docker-compose_dist.yml`: `multiomics_intermediate.settings_prod`.
@@ -87,20 +97,20 @@ The following are the steps to perform a deployment in production. In case you w
         - `REDIS_PORT`: Redis server port. Default `6379`.
     - Celery workers:
       - `CONCURRENCY`: Number of workers to run in parallel.
-3. Return to the root folder of the project and start up all services with:
+4. Return to the root folder of the project and start up all services with:
     - [Docker Compose](https://docs.docker.com/compose/):
         - Start: `docker-compose up -d`. The application will be accessible from the address `127.0.0.1`.
         - Stop: `docker-compose down`.
     - [Docker Swarm][docker-swarm] (For clusters. See the section below to see how to configure one): 
         - Start: `docker stack deploy --compose-file docker-compose.yml multiomix`.
         - Stop: `docker stack rm multiomix`.
-4. (Optional) Create a superuser to be able to access the admin panel (`<URL:port>/admin`).
+5. (Optional) Create a superuser to be able to access the admin panel (`<URL:port>/admin`).
     1. Log in to the container: `docker container exec -it multiomix_backend bash`.
     2. Run: `python3 manage.py createsuperuser`
     3. Exit the container with `exit`
-5. (Optional) Optimize PostgreSQL by changing the settings in the `config/postgres/postgres.conf` file. A good place to calculate parameters from machine performance is [PTune](https://pgtune.leopard.in.ua/#/). The `postgres_dist.conf` file is the template that comes in the container by default, it is left to have the template and the official structure.
+6. (Optional) Optimize PostgreSQL by changing the settings in the `config/postgres/postgres.conf` file. A good place to calculate parameters from machine performance is [PTune](https://pgtune.leopard.in.ua/#/). The `postgres_dist.conf` file is the template that comes in the container by default, it is left to have the template and the official structure.
 **Important:** in case you change the parameters, do not forget to put the `listen_addresses = '*'` statement, otherwise it will not work because the rest of the containers will not be able to access it (more info in [the official Docker image page](https://hub.docker.com/_/postgres)).
-6. (Optional) Optimize Mongo by changing the configuration in the `config/mongo/mongod.conf` file.
+7. (Optional) Optimize Mongo by changing the configuration in the `config/mongo/mongod.conf` file.
 
 
 ## Cluster configuration
@@ -163,7 +173,7 @@ To integrate with [Modulector][modulector] and/or [BioAPI][bioapi] using `docker
            external:
                name: 'multiomix-network'
    ```
-3. Change the Modulector and BioAPI configuration so that it does not conflict with the Multiomix configuration:
+3. The new versions of BioAPI and Modulector already come with service names suitable for integration with Multiomix. But **if you have any old version of those platforms**, change the Modulector and BioAPI configuration so that it does not conflict with the Multiomix configuration:
    1. Rename all the services in the Modulector and BioAPI `docker-compose.yml` files with the suffix `_modulector` and `_bioapi`. **NOTE:** do not forget to rename the `depends_on` parameters, and the database connection parameters to point to the new services names.
    2. Change the following block in the NGINX configuration files. In Modulector it's `config/nginx/conf.d/modulector.conf`, in BioAPI it's `/nginx/conf.d/default.conf`:
    ```

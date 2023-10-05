@@ -3,7 +3,8 @@ version: '3'
 services:
     # PostgreSQL
     db:
-        image: postgres:13
+        image: postgres:16
+        restart: 'always'
         container_name: multiomics_dev_db
         ports:
             - "5432:5432"
@@ -19,6 +20,7 @@ services:
     # MongoDB Server
     mongo:
         image: mongo:4.2
+        restart: 'always'
         container_name: multiomics_dev_mongo_db
         ports:
             - "27017:27017"
@@ -35,6 +37,7 @@ services:
     # Redis Server for Websocket connections
     redis:
         image: redis:6.0.8
+        restart: 'always'
         container_name: multiomics_dev_websocket_channel_redis
         volumes:
             - redis_data:/data
@@ -46,7 +49,8 @@ services:
         image: omicsdatascience/modulector-db:2.0.0
 
     modulector-web:
-        image: omicsdatascience/modulector:2.0.0
+        image: omicsdatascience/modulector:2.0.3
+        restart: 'always'
         depends_on:
             - modulector-db
         environment:
@@ -66,6 +70,7 @@ services:
     # Web-based MongoDB admin interface, written with Node.js and express
     mongo-express:
         image: mongo-express:0.54.0
+        restart: 'always'
         container_name: multiomics_dev_mongo_express
         ports:
             - 8081:8081
