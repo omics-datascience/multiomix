@@ -1,6 +1,6 @@
 import logging
 from json.decoder import JSONDecodeError
-from typing import Any, Dict, Optional, Literal
+from typing import Any, Dict, Optional, Literal, Union
 import requests
 from django.conf import settings
 from django.http import QueryDict
@@ -35,7 +35,7 @@ class MRNAService(object):
             url_prefix: str,
             method: Literal['get', 'post'],
             append_slash: bool
-    ) -> Optional[Any]:
+    ) -> Optional[Union[Dict, str]]:
         """
         Generic function to make a request to a Modulector/BioAPI service
         @param service_name: Modulector/BioAPI service to consume
