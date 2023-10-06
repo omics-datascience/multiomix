@@ -47,7 +47,7 @@ services:
 
     # Django Proxy Server
     nginx:
-        image: nginx:1.19.3
+        image: nginx:1.23.3
         restart: 'always'
         ports:
             - '80:8000'

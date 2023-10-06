@@ -134,7 +134,7 @@ To enable HTTPS, follow the steps below:
    ```yaml
    # ...
    nginx:
-       image: nginx:1.19.3
+       image: nginx:1.23.3
        ports:
            - 80:8000
            - 443:443
@@ -174,7 +174,7 @@ To integrate with [Modulector][modulector] and/or [BioAPI][bioapi] using `docker
                name: 'multiomix-network'
    ```
 3. The new versions of BioAPI and Modulector already come with service names suitable for integration with Multiomix. But **if you have any old version of those platforms**, change the Modulector and BioAPI configuration so that it does not conflict with the Multiomix configuration:
-   1. Rename all the services in the Modulector and BioAPI `docker-compose.yml` files with the suffix `_modulector` and `_bioapi`. **NOTE:** do not forget to rename the `depends_on` parameters, and the database connection parameters to point to the new services names.
+   1. Rename all the services in the Modulector and BioAPI `docker-compose.yml` files with the suffix `_modulector` and `_bioapi`. And rename `web` service to `modulector` or `bioapi` respectively. **NOTE:** do not forget to rename the `depends_on` parameters, and the database connection parameters to point to the new services names.
    2. Change the following block in the NGINX configuration files. In Modulector it's `config/nginx/conf.d/modulector.conf`, in BioAPI it's `/nginx/conf.d/default.conf`:
    ```
    # Old
@@ -186,7 +186,7 @@ To integrate with [Modulector][modulector] and/or [BioAPI][bioapi] using `docker
    # New
    upstream web {
      ip_hash;
-     server web_modulector:8000; # Or web_bioapi, dependening on which config file you're 
+     server modulector:8000; # Or bioapi, dependening on which config file you're 
    }
    ```
 4. Set Multiomix parameters:
