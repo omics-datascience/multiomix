@@ -58,12 +58,12 @@ The following are the steps to perform a deployment in production. In case you w
         - `MONGO_TIMEOUT_MS`: maximum timeout in milliseconds for DB connections. Default `5000` ms.
     - Emailing:
         - `EMAIL_NEW_USER_CONFIRMATION_ENABLED`: set the string `true` to send an email with a confirmation token when a user is created from the Sign-Up panel. Default `false`.
-        - `EMAIL_SERVER`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. SMTP server address to send mails.
-        - `EMAIL_PORT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. SMTP server port to send mails.
-        - `EMAIL_ADDRESS`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Email user of the account with which the e-mails will be sent.
-        - `EMAIL_FROM_ADDRESS`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Alias with which the sender of the mail will appear.
-        - `EMAIL_PASSWORD`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. The password of the mail user with which the mails will be sent.
-        - `EMAIL_MAIL_SUBJECT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Title with which the confirmation emails will be sent. By default `Confirm your email`.
+        - `EMAIL_HOST`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. SMTP host to use for sending email.
+        - `EMAIL_PORT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Port to use for the SMTP server defined in `EMAIL_HOST`.
+        - `EMAIL_HOST_USER`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Username to use for the SMTP server defined in `EMAIL_HOST`. If empty, Django won’t attempt authentication.
+        - `EMAIL_HOST_PASSWORD`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Password to use for the SMTP server defined in `EMAIL_HOST`. This setting is used in conjunction with `EMAIL_HOST_USER` when authenticating to the SMTP server. If either of these settings is empty, Django won’t attempt authentication.
+        - `DEFAULT_FROM_EMAIL`: Default email address to use for various automated correspondence from the site manager(s) (more [here](https://docs.djangoproject.com/en/3.2/ref/settings/#default-from-email)). Default `noreply@multiomix.org`.
+        - `EMAIL_MAIL_SUBJECT`: **Only if `EMAIL_NEW_USER_CONFIRMATION_ENABLED` is set to `true`**. Title of the new account verification email. By default `Confirm your email`.
     - Modulector:
         - `MODULECTOR_HOST`: Modulector connection host. Default `127.0.0.1`.
         - `MODULECTOR_PORT`: Modulector connection port. Default `8001`.
