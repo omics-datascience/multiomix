@@ -62,7 +62,7 @@ services:
 
     # Celery worker for correlation analysis
     correlation-analysis-worker:
-        image: omicsdatascience/multiomix:5.1.1-celery
+        image: omicsdatascience/multiomix:5.1.2-celery
         restart: 'always'
         depends_on:
             - db
@@ -79,7 +79,7 @@ services:
 
     # Celery worker for feature selection experiments
     fs-experiments-worker:
-        image: omicsdatascience/multiomix:5.1.1-celery
+        image: omicsdatascience/multiomix:5.1.2-celery
         restart: 'always'
         depends_on:
             - db
@@ -96,7 +96,7 @@ services:
 
     # Celery worker for statistical validations and trained models
     stats-worker:
-        image: omicsdatascience/multiomix:5.1.1-celery
+        image: omicsdatascience/multiomix:5.1.2-celery
         restart: 'always'
         depends_on:
             - db
@@ -113,7 +113,7 @@ services:
 
     # Celery worker for inference experiments
     inference-worker:
-        image: omicsdatascience/multiomix:5.1.1-celery
+        image: omicsdatascience/multiomix:5.1.2-celery
         restart: 'always'
         depends_on:
             - db
@@ -130,7 +130,7 @@ services:
 
     # Celery worker for sync CGDSStudies
     sync-datasets-worker:
-        image: omicsdatascience/multiomix:5.1.1-celery
+        image: omicsdatascience/multiomix:5.1.2-celery
         restart: 'always'
         depends_on:
             - db
@@ -147,7 +147,7 @@ services:
 
     # Django Backend Server
     web:
-        image: omicsdatascience/multiomix:5.1.1
+        image: omicsdatascience/multiomix:5.1.2
         restart: 'always'
         # environment:
             # ENABLE_SECURITY: 'true'

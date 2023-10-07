@@ -21,7 +21,7 @@ echo "##############################################"
 python3 ${BASE_DIR}/manage.py migrate
 
 echo "##############################################"
-echo "Running multiomics..."
+echo "Running Multiomix..."
 echo "##############################################"
 echo ${LISTEN_IP}
 echo ${LISTEN_PORT}
