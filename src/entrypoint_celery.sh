@@ -1,11 +1,11 @@
 #!/bin/bash
 
 BASE_DIR=/src
-DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-"multiomics_intermediate.settings"}
 echo "##############################################"
 echo "Generate key..."
 echo "##############################################"
-python3 ${BASE_DIR}/manage.py generate_secret_key --settings="${DJANGO_SETTINGS_MODULE}"
+# NOTE: needs to use the settings.py and not the prod file to generate the key
+python3 ${BASE_DIR}/manage.py generate_secret_key --settings="multiomics_intermediate.settings"
 
 # Starts a celery worker for the specific queue
 echo "##############################################"
