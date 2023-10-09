@@ -1,5 +1,6 @@
 #!/bin/bash
 
+BASE_DIR=/src
 DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-"multiomics_intermediate.settings"}
 echo "##############################################"
 echo "Generate key..."
