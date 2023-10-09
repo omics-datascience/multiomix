@@ -413,5 +413,5 @@ class DrugsRegulatingGene(APIView):
             method='get'
         )
         return Response({
-            'data': data
+            'data': data["link"] if data and "link" in data else None
         })
