@@ -242,19 +242,12 @@ That command will create a compressed file with the database dump inside. **Note
 
 ### Import Postgres
 
-1. **Optional but recommended**: due to major changes, it's probably that an import thrown several errors when importing. To prevent that you could do the following steps before doing the importation:
-    1. Drop all the tables from the DB:
-        1. Log into docker container: `docker container exec -it [name of DB container] bash`
-        2. Log into Postgres: `psql -U [username] -d [database]`
-        3. Run to generate a `DELETE CASCADE` query for all
-           tables: `select 'drop table if exists "' || tablename || '" cascade;' from pg_tables where schemaname = 'public';`
-        4. (**Danger, will drop tables**) Run the generated query in previous step to drop all tables
-    2. Run the Django migrations to create the empty tables with the correct structure: `docker exec -i [name of django container] python3 manage.py migrate`
-2. Restore the db running:
-
-`zcat multiomix_postgres_backup.sql.gz | docker exec -i [name of DB container] psql [db name]`
-
-That command will restore the database using a compressed dump as source
+1. Due to major changes, it's probably that an import thrown several errors when importing. To prevent that you could do the following steps before doing the importation:
+    1. Stop all the services using `docker compose down` or removing the Docker Swarm stack.
+    1. Start only the DB with `docker compose up -d db`
+    1. Drop all the tables from the DB: `docker exec -i [name of the DB container] psql postgres -U multiomics -c "DROP DATABASE multiomics;"`
+    1. Create an empty database: `docker exec -i [name of the DB container] psql postgres -U multiomics -c "CREATE DATABASE multiomics;"`
+1. Restore the db: `zcat multiomix_postgres_backup.sql.gz | docker exec -i [name of the DB container] psql multiomics -U multiomics`. This command will restore the database using a compressed dump as source, **keep in mind that could take several minutes to finish the process**.
 
 
 ### Export MongoDB

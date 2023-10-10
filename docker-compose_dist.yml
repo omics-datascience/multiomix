@@ -8,7 +8,7 @@ services:
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
             # IMPORTANT: these three params must be the same as POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
-            # below in 'web' service respectively
+            # below in 'multiomix' service respectively
             POSTGRES_USER: 'multiomics'
             POSTGRES_PASSWORD: 'multiomics'
             POSTGRES_DB: 'multiomics'
@@ -27,7 +27,7 @@ services:
         restart: 'always'
         environment:
             # IMPORTANT: these three params must be the same as MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
-            # below in 'web' service respectively
+            # below in 'multiomix' service respectively
             MONGO_INITDB_ROOT_USERNAME: 'multiomics'
             MONGO_INITDB_ROOT_PASSWORD: 'multiomics'
             MONGO_INITDB_DATABASE: 'multiomics'
@@ -51,14 +51,14 @@ services:
         restart: 'always'
         ports:
             - '80:8000'
-            # - 443:443 # Uncomment for HTTPS support
+            # - '443:443' # Uncomment for HTTPS support
         volumes:
             - ./config/nginx/conf.d:/etc/nginx/conf.d
             - ./config/nginx/certificates:/etc/nginx/certificates
             - static_data:/static
             - media_data:/media
         depends_on:
-            - web
+            - multiomix
 
     # Celery worker for correlation analysis
     correlation-analysis-worker:
@@ -74,7 +74,7 @@ services:
             QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for feature selection experiments
@@ -91,7 +91,7 @@ services:
             QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for statistical validations and trained models
@@ -108,7 +108,7 @@ services:
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for inference experiments
@@ -125,7 +125,7 @@ services:
             QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for sync CGDSStudies
@@ -142,11 +142,11 @@ services:
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Django Backend Server
-    web:
+    multiomix:
         image: omicsdatascience/multiomix:5.1.2
         restart: 'always'
         # environment:
