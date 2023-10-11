@@ -29,6 +29,7 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getPathwaysData(props.selectedMolecule)
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -50,6 +51,7 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting pathways information', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

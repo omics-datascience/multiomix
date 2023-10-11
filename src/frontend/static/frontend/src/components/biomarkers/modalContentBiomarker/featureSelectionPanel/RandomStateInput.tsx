@@ -31,6 +31,7 @@ export const RandomStateInput = (props: RandomStateInputProps) => (
         value={props.value ?? ''}
         onChange={(_, { name, value }) => {
             const numVal = value !== '' ? Number(value) : null
+
             if (numVal !== null && numVal < 0) {
                 props.handleChange(props.parameterKey, name, 0)
             } else {

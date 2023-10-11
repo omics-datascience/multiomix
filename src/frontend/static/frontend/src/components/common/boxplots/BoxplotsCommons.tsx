@@ -47,6 +47,7 @@ const quantile = (data: number[], q: number): number => {
     const pos = (sortedAscendant.length - 1) * q
     const base = Math.floor(pos)
     const rest = pos - base
+
     if (sortedAscendant[base + 1] !== undefined) {
         return sortedAscendant[base] + rest * (sortedAscendant[base + 1] - sortedAscendant[base])
     }

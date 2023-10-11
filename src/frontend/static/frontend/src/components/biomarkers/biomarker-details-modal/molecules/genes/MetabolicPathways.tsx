@@ -47,6 +47,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getMetabolicPathwaysData(props.selectedMolecule)
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -72,6 +73,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting gene information', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

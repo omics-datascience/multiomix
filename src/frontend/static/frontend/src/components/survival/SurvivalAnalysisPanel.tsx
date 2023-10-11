@@ -116,6 +116,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
     getColumnName () {
         this.setState({ columnEventOptions: [] })
         const survivalSource = this.state.survivalSource
+
         switch (survivalSource.type) {
             case SourceType.NEW_DATASET:
                 if (survivalSource.newUploadedFileRef.current.files.length) {
@@ -126,6 +127,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
                             console.log('Error reading CSV column names', ex)
                         })
                 }
+
                 break
             case SourceType.UPLOADED_DATASETS:
                 this.getColumnsNamesFromServer(false)
@@ -169,6 +171,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
             if (!this.abortController.signal.aborted) {
                 this.alertErrorColumnNames()
             }
+
             console.log('Error getting colum names ->', err)
         })
     }

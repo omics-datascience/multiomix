@@ -54,6 +54,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
         ]
 
         const isClinical = props.selectingFileType === FileType.CLINICAL
+
         if (isClinical) {
             headersList.push({ name: 'Number of survival tuples', width: 1 })
         }

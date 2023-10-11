@@ -37,6 +37,7 @@ interface DensityChartProps {
  */
 export const DensityChart = (props: DensityChartProps) => {
     const allDensityChartsAreHidden = props.showDensityChart.every((booleanValue) => !booleanValue)
+
     if (!props.showBars && allDensityChartsAreHidden) {
         return null
     }
@@ -71,6 +72,7 @@ export const DensityChart = (props: DensityChartProps) => {
                 {/* Bar series */}
                 {props.showBars && props.dataObjects.map((dataObj, idx) => {
                     let rawData, binnedData: Nullable<DataUICategoricalBinnedDatumShape[]>
+
                     if (props.xAxisIsOrdinal) {
                         const binData: BinData[] = generateBinData(dataObj.data)
                         const isOrdinalAndCGDSData = binData.length === 5

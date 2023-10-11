@@ -81,6 +81,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
                     // If an error ocurred, sets the selected row to null
                     alertGeneralError()
                 }
+
                 console.log('Error getting miRNA target interactions ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {

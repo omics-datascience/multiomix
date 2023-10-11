@@ -20,6 +20,7 @@ interface MoleculeTypeLabelProps {
 export const MoleculeTypeLabel = (props: MoleculeTypeLabelProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.moleculeType) {
         case MoleculeType.MRNA:
             color = 'blue'

@@ -118,6 +118,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         const fieldsOfInterest: (string | number)[] = []
         eventValues.forEach((eventValue) => {
             const eventValueUpper = eventValue.toString().toUpperCase()
+
             // Usually, the number 1 is used to indicate an event of interest
             if (eventValueUpper === '1' || COMMON_INTEREST_VALUES.find((commonValue) => eventValueUpper.includes(commonValue))) {
                 fieldsOfInterest.push(eventValue)

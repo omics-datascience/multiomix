@@ -18,6 +18,7 @@ interface ClusteringAlgorithmLabelProps {
 export const ClusteringAlgorithmLabel = (props: ClusteringAlgorithmLabelProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.clusteringAlgorithm) {
         case ClusteringAlgorithm.K_MEANS:
             color = 'green'

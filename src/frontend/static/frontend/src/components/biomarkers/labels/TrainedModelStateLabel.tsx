@@ -18,6 +18,7 @@ interface TrainedModelStateLabelProps {
  */
 export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
     let stateIcon: StateIconInfo
+
     switch (props.trainedModelStateState) {
         case TrainedModelState.COMPLETED:
             stateIcon = {

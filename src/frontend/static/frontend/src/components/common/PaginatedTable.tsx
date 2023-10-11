@@ -138,6 +138,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Generates TableControl
         const generalTableControl = getDefaultGeneralTableControl()
+
         if (props.defaultSortProp !== undefined) {
             generalTableControl.sortField = props.defaultSortProp.sortField
             generalTableControl.sortOrderAscendant = props.defaultSortProp.sortOrderAscendant
@@ -197,6 +198,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     /** Retrieves the filters options for all the custom filters that have the parameter `urlToRetrieveOptions` */
     getFiltersOptions = () => {
         const { customFilters } = this.props
+
         if (customFilters) {
             customFilters.forEach((filter) => {
                 if (filter.urlToRetrieveOptions) {
@@ -243,6 +245,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     handleTableControlChanges = (name: string, value: any, resetPagination: boolean = true, isFilter: boolean = false) => {
         // Updates filter information and makes the request again
         const tableControl = this.state.tableControl
+
         if (!isFilter) {
             tableControl[name] = value
         } else {
@@ -307,6 +310,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 if (!this.abortController.signal.aborted) {
                     alertGeneralError()
                 }
+
                 console.log('Error getting data ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
@@ -322,6 +326,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     handleSort (fieldToSort) {
         const tableControl = this.state.tableControl
+
         // If the user has selected other column for sorting...
         if (tableControl.sortField !== fieldToSort) {
             tableControl.sortField = fieldToSort
@@ -341,9 +346,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         const customFiltersArray = this.props.customFilters ?? []
         return customFiltersArray.map((filter) => {
             const filterType = filter.type ?? 'select'
+
             if (filterType === 'select') {
                 // If 'options' is undefined, gets the unique values from data
                 let options: DropdownItemProps[]
+
                 if (filter.options !== undefined) {
                     options = filter.options
                 } else {
@@ -356,6 +363,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                         options = uniqueValues.map((value) => ({ key: value, text: value, value }))
                     }
                 }
+
                 return (
                     <Form.Select
                         key={filter.keyForServer}

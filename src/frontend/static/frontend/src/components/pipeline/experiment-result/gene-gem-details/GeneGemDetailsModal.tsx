@@ -157,6 +157,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      */
     handleGroupByChanges = (value: string) => {
         const correlationGraphData = this.state.correlationGraphData
+
         if (correlationGraphData) {
             correlationGraphData.selectedClinicalGroupBy = value
             this.setState({ correlationGraphData }, this.getCorrelationGraphData)
@@ -200,6 +201,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      */
     getActiveComponent () {
         const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
+
         switch (this.state.activeItem) {
             case ActiveItemMenu.CORRELATION_GRAPH:
                 if (this.state.gettingCorrelationData) {
@@ -222,6 +224,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
+
                 return (
                     <StatisticalPropertiesPanel
                         statisticalProperties={this.state.statisticalProperties}
@@ -233,6 +236,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
+
                 return (
                     <AssumptionsPanel
                         statisticalProperties={this.state.statisticalProperties}
@@ -336,6 +340,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         geneData.forEach((geneValue, idx) => {
             const gemValue = gemData[idx]
             const clinicalValue = clinicalData[idx]
+
             if (!seriesGrouped[clinicalValue]) {
                 seriesGrouped[clinicalValue] = []
             }
@@ -371,9 +376,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         const zippedData: MergedDataBoxplot = {}
         geneData.forEach((geneElem, idx) => {
             const gemKey = gemData[idx] // Gets GEM data for same sample
+
             if (zippedData[gemKey] === undefined) {
                 zippedData[gemKey] = []
             }
+
             zippedData[gemKey].push(geneElem)
         })
 
@@ -422,6 +429,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                         let keyToUpdate: keyof GeneGemDetailsModalState
                         let correlationGraphDataFormatted: CorrelationBoxplotData | CorrelationChartData
+
                         if (gemDataIsOrdinal) {
                             keyToUpdate = 'correlationBoxplotData'
                             const boxplotData: StatChartData[] = this.generateCorrelationBoxplotData(
@@ -478,6 +486,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     // If an error ocurred, sets the selected row to null
                     alertGeneralError()
                 }
+
                 console.log('Error getting correlation graph ->', err)
             })
         })
@@ -517,6 +526,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     // If an error ocurred, sets the selected row to null
                     alertGeneralError()
                 }
+
                 console.log('Error getting correlation graph ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
@@ -543,6 +553,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (!this.state.statisticalProperties) {
                     this.getStatisticalProperties()
                 }
+
                 break
             case ActiveItemMenu.MIRNA_INTERACTION:
             case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
@@ -551,6 +562,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (!this.state.miRNAData) {
                     this.getMiRNAData()
                 }
+
                 break
         }
 

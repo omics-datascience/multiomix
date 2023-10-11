@@ -37,6 +37,7 @@ export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
                 ? 'p < .001'
                 : value.toExponential(3)
         }
+
         return '0.0'
     }
 

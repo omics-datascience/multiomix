@@ -184,6 +184,7 @@ class ChunkFileUploader {
 
                         // To keep track of file ID
                         const uploadId = responseJSON.upload_id
+
                         if (uploadId.length > 0) {
                             formData.append('upload_id', uploadId)
                             this.headers.set('Content-Range', getContentRange(offset))

@@ -135,6 +135,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
     getDisplayInfoForSource () {
         const sourceFilename = this.props.source.filename
         let component
+
         switch (this.props.source.type) {
             case SourceType.NEW_DATASET: {
                 const current = this.props.source.newUploadedFileRef.current
@@ -159,6 +160,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 )
                 break
             }
+
             case SourceType.UPLOADED_DATASETS:
                 component = (
                     <Label
@@ -187,6 +189,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 component = null
                 break
         }
+
         return component
     }
 

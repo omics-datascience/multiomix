@@ -27,6 +27,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     const [showTogether, setShowTogether] = useState(false)
 
     const stats = props.statisticalProperties
+
     if (!stats) {
         return null
     }

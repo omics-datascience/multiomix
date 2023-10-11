@@ -43,6 +43,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting InferenceExperiments clinical attributes', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
@@ -60,6 +61,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
         if (props.selectedInferenceExperiment.id) {
             getInferenceExperimentClinicalAttrs()
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()

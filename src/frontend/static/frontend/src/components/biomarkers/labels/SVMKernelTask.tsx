@@ -18,6 +18,7 @@ interface SVMKernelTaskProps {
 export const SVMKernelTask = (props: SVMKernelTaskProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.task) {
         case SVMTask.REGRESSION:
             color = 'green'

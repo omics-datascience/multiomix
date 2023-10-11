@@ -161,6 +161,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
         // If exists an id then we are editing, otherwise It's a new CGDSStudy
         let addOrEditURL, requestMethod
+
         if (this.state.newCGDSStudy.id) {
             addOrEditURL = `${urlCGDSStudiesCRUD}/${this.state.newCGDSStudy.id}/`
             requestMethod = ky.patch
@@ -183,9 +184,11 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 })
             }).catch((err) => {
                 this.setState({ addingOrEditingCGDSStudy: false })
+
                 if (err.response?.status === 400) {
                     err.response.json().then((errResponse) => {
                         const errData = errResponse.status
+
                         if (errData.internal_code === DjangoCreateCGDSStudyResponseCode.CGDS_WITH_DUPLICATED_COLLECTION_NAME) {
                             alert(errData.message)
                         } else {
@@ -197,6 +200,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 } else {
                     alertGeneralError()
                 }
+
                 console.log('Error adding new CGDSStudy ->', err)
             })
         })
@@ -392,6 +396,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     handleFormDatasetChanges = (datasetName: NameOfCGDSDataset, name: string, value: any) => {
         const newCGDSStudy = this.state.newCGDSStudy
         const dataset = newCGDSStudy[datasetName]
+
         if (dataset !== null) {
             dataset[name] = value
             this.setState({ newCGDSStudy })
@@ -408,9 +413,11 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
         if (dataset !== null) {
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
+
             if (dataset.survival_columns === undefined) {
                 dataset.survival_columns = []
             }
+
             dataset.survival_columns.push(newElement)
             this.setState({ newCGDSStudy })
         }
@@ -424,6 +431,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
         const newCGDSStudy = this.state.newCGDSStudy
         const dataset = newCGDSStudy[datasetName]
+
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns.splice(idxSurvivalTuple, 1)
             this.setState({ newCGDSStudy })
@@ -445,6 +453,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     ) => {
         const newCGDSStudy = this.state.newCGDSStudy
         const dataset = newCGDSStudy[datasetName]
+
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns[idxSurvivalTuple][name] = value
             this.setState({ newCGDSStudy })
@@ -640,6 +649,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     getCGDSDatasetStateObj (CGDSDataset: DjangoCGDSDataset, isClinicalData: boolean): CGDSStudyAndDatasetStateInfo {
         let stateIcon: CGDSStudyAndDatasetStateInfo
+
         switch (CGDSDataset.state) {
             case CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED:
                 stateIcon = {
@@ -651,6 +661,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 break
             case CGDSDatasetSynchronizationState.SUCCESS: {
                 let numberOfRowsAndSamplesMessage: string
+
                 if (isClinicalData) {
                     // Case of clinical data where samples are as rows indexes
                     numberOfRowsAndSamplesMessage = `${CGDSDataset.number_of_rows} samples x ${CGDSDataset.number_of_samples} attributes`
@@ -665,6 +676,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     title: `The dataset was synchronized successfully: ${numberOfRowsAndSamplesMessage}`
                 }
             }
+
                 break
             case CGDSDatasetSynchronizationState.FINISHED_WITH_ERROR:
                 stateIcon = {
@@ -700,6 +712,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 }
                 break
         }
+
         return stateIcon
     }
 
@@ -753,6 +766,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     getStateObj (state: CGDSStudySynchronizationState | undefined): CGDSStudyAndDatasetStateInfo {
         let stateIcon: CGDSStudyAndDatasetStateInfo
+
         switch (state) {
             case CGDSStudySynchronizationState.NOT_SYNCHRONIZED:
                 stateIcon = {
@@ -843,6 +857,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                 }
                 break
         }
+
         return stateIcon
     }
 

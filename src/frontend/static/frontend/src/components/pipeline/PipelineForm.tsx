@@ -89,6 +89,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
         const isEditing = this.isEditing()
 
         let numberSamplesInCommon, numberSamplesMRNA, numberSamplesGEM
+
         if (this.props.gettingCommonSamples) {
             numberSamplesInCommon = numberSamplesMRNA = numberSamplesGEM = <Icon name='sync alternate' loading />
         } else {

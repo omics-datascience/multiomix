@@ -89,6 +89,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
      */
     generateSortingInfoText (): string {
         const tableControl = this.props.tableControl
+
         if (!tableControl.sortFields.length) {
             return ''
         }

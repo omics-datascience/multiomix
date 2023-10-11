@@ -42,6 +42,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
             FeatureSelectionAlgorithm.BLIND_SEARCH
         ].includes(featureSelection.algorithm)
     }
+
     const blindSearchIsDisabled = numberOfMolecules > maxFeaturesBlindSearch
     const metaheuristicsAreDisabled = numberOfMolecules < minFeaturesMetaheuristics
 
@@ -91,6 +92,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 return null
         }
     }
+
     const advanceMode = () => {
         switch (featureSelection.algorithm) {
             case FeatureSelectionAlgorithm.BLIND_SEARCH:

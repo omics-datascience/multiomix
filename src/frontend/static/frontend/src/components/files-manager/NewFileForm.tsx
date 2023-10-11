@@ -77,6 +77,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
     let progressOrButton
+
     if (props.uploadingFile) {
         progressOrButton = (
             <Form.Field width={14}>

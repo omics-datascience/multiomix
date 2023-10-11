@@ -29,7 +29,7 @@ interface FeatureSelectionPanelProps {
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
     cancelForm: () => void,
-    handleChangeAdvanceAlgorithm: (advanceAlgorithm:string, name:string, value:any) => void,
+    handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
 
@@ -106,6 +106,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
         if (!condition) {
             return true
         }
+
         return experimentSourceIsValid(source)
     }
 

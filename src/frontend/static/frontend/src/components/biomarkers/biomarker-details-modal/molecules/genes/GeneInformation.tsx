@@ -28,6 +28,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getMoleculeData(props.selectedMolecule)
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -49,6 +50,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting gene information', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

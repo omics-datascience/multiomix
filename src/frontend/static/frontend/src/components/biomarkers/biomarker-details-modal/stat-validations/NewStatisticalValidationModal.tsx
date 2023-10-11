@@ -195,6 +195,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                 />
             )
         }
+
         return null
     }
 

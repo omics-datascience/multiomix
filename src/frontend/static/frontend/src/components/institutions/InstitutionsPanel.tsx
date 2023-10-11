@@ -85,6 +85,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                 // If it's showing an institution, refresh it's state
                 // For example, in the case of adding or removing a user to/from an Institution
                 let newSelectedInstitution: Nullable<DjangoInstitution> = null
+
                 if (this.state.selectedInstitution !== null) {
                     newSelectedInstitution = institutions.find((institution) => {
                         return institution.id === this.state.selectedInstitution?.id
@@ -119,6 +120,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                 if (!this.abortController.signal.aborted) {
                     this.setState({ isFetchingUsersCandidates: false })
                 }
+
                 console.log("Error getting user's datasets ->", err)
             })
         })
@@ -180,6 +182,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                 this.setState<never>({ [loadingFlag]: false })
                 response.json().then((jsonResponse: DjangoCommonResponse<DjangoAddRemoveUserToInstitutionInternalCode>) => {
                     this.cleanSearchAndCandidates()
+
                     if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                         this.getUserInstitutions()
                         this.handleClose()

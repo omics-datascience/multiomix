@@ -36,6 +36,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
 
     // If the result was truncated due to a larger size than the specified in settings.py, it alerts to the user
     let trunc_alert
+
     if (experiment.result_final_row_count !== experiment.result_total_row_count) {
         const truncTitle = `The result has been truncated due its size. Has ${experiment.result_total_row_count}, truncated to ${experiment.result_final_row_count}`
         trunc_alert = (

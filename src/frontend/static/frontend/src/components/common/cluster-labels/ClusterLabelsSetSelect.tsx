@@ -44,6 +44,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
                 }
             ]
         })
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -66,6 +67,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting model ClusterLabelsSets', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

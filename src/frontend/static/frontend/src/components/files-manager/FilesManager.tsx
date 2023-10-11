@@ -229,6 +229,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
         // If exists an id then we are editing, otherwise It's a new Tag
         let addOrEditURL, requestMethod
+
         if (this.state.newTag.id !== null) {
             addOrEditURL = `${urlTagsCRUD}${this.state.newTag.id}/`
             requestMethod = ky.patch
@@ -456,6 +457,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             const internalCode = errorBody && errorBody.file_obj
                 ? parseInt(errorBody.file_obj.status.internal_code as unknown as string)
                 : null
+
             if (internalCode === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
                 alert('The file has an incorrect format: all columns except the index must be numerical data')
             } else {
@@ -481,6 +483,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         formData.append('description', newFileForm.newFileDescription)
 
         formData.append('file_type', newFileForm.newFileType.toString())
+
         if (newFileForm.newTag) {
             formData.append('tag', newFileForm.newTag.toString())
         }
@@ -497,6 +500,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
         // CpG info
         formData.append('is_cpg_site_id', newFileForm.isCpGSiteId.toString())
+
         if (newFileForm.isCpGSiteId) {
             formData.append('platform', newFileForm.platform.toString())
         }

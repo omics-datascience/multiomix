@@ -127,6 +127,7 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
      */
     getLoginPanel () {
         let message: Nullable<JSX.Element> = null
+
         if (loginError.length > 0) {
             message = (
                 <Message negative>

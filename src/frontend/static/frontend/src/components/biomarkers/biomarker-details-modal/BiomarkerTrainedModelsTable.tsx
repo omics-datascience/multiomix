@@ -167,6 +167,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
     const showOnlyCompleted = props.showOnlyCompleted ?? false
     let stateFilter
     let extraQueryParams
+
     if (showOnlyCompleted) {
         // In case of only showing completed, avoids showing a filter by TrainedModel's state
         stateFilter = []

@@ -46,6 +46,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
      */
     function lastSurvivalTupleIsValid (): boolean {
         const survivalTuples = props.survivalColumns
+
         if (!survivalTuples || !survivalTuples.length) {
             return true
         }
