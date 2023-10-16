@@ -342,7 +342,7 @@ def prepare_and_compute_trained_model(trained_model: TrainedModel, model_paramet
     # Generates needed DataFrames
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(trained_model,
-                                                                                                  samples_in_common)
+                                                                                             samples_in_common)
 
     __compute_trained_model(trained_model, molecules_temp_file_path, clinical_temp_file_path, model_parameters,
                             is_aborted)
