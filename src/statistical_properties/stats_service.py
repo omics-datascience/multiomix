@@ -97,9 +97,6 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
                                                                       filter_zero_coeff=True,
                                                                       top_n=20)
 
-    print('best_features', best_features)
-    print('best_features_coeff', best_features_coeff)
-
     check_if_stopped(is_aborted, ExperimentStopped)
     __save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
 
