@@ -165,6 +165,15 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
 
     def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
                          score_method: ClusteringScoringMethod, penalizer: Optional[float]) -> float:
+        """
+        Scores a clustering model using a Cox Regression model.
+        @param model: Clustering model to be scored.
+        @param subset: Subset of the data to be used for the clustering.
+        @param y: Survival data.
+        @param score_method: Method to be used for scoring the clustering model.
+        @param penalizer: Penalizer to be used for the Cox Regression model.
+        @return: Score of the clustering model.
+        """
         clustering_result = model.fit(subset.values)
 
         # Generates a DataFrame with a column for time, event and the group

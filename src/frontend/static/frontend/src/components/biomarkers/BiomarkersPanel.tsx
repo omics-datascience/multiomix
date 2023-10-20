@@ -1652,8 +1652,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 <TableCellWithTitle value={biomarker.name} />
                                 <TableCellWithTitle value={biomarker.description} />
                                 <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
-                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
-                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
+                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state} /></Table.Cell>
+                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin} /></Table.Cell>
                                 <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
@@ -1822,7 +1822,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     onClose={this.closeBiomarkerDetailsModal}
                     open={this.state.openDetailsModal}
                 >
-                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker}/>
+                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker} />
                 </Modal>
 
                 <Confirm

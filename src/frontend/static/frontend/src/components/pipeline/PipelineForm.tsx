@@ -151,7 +151,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                 {/* Files Panel */}
                 <Segment>
                     <Grid className="padded-left-10 padded-right-10">
-                        <InfoPopup content={<PipelineSourcePopupContent/>}/>
+                        <InfoPopup content={<PipelineSourcePopupContent />} />
 
                         {/* mRNA SourceForm */}
                         <SourceForm
@@ -257,7 +257,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                         handleFormInputsChange={this.props.handleFormInputsChange}
                     />
 
-                    <Icon name='asterisk'/> Required field
+                    <Icon name='asterisk' /> Required field
 
                     <Form>
                         {/* Progress bar or submit analysis run/edition button */}
@@ -278,7 +278,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, {}> {
                             disabled={this.props.noDataEntered()}
                         />
                     </Form>
-                </Segment >
+                </Segment>
             </div>
         )
     }

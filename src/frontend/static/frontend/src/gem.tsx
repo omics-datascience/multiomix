@@ -5,6 +5,6 @@ import './css/gem.css'
 import { Pipeline } from './components/pipeline/Pipeline'
 
 ReactDOM.render(
-    <Pipeline/>,
+    <Pipeline />,
     document.getElementById('gem-app')
 )

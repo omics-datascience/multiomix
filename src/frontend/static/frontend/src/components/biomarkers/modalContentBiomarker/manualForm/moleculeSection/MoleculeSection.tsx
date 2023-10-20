@@ -123,7 +123,7 @@ export const MoleculeSection = ({
                         )
                     }}
                 />
-            </div >
-        </Grid.Column >
+            </div>
+        </Grid.Column>
     )
 }

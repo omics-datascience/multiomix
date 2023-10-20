@@ -129,8 +129,8 @@ export const DensityChart = (props: DensityChartProps) => {
                         rawData={dataObj.data}
                     />
                 ))}
-                <XAxis label='Expression'/>
-                <YAxis label="Density"/>
+                <XAxis label='Expression' />
+                <YAxis label="Density" />
             </ResponsiveHistogram>
         </div>
     )

@@ -69,6 +69,22 @@
         "react/jsx-equals-spacing": "error",
         "react/jsx-closing-bracket-location": "error",
         "react/jsx-closing-tag-location": "error",
+        "react/jsx-curly-spacing": [
+            "error",
+            {
+                "when": "never",
+                "children": true
+            }
+        ],
+        "react/jsx-tag-spacing": [
+            "error",
+            {
+                "afterOpening": "never",
+                "beforeClosing": "never",
+                "beforeSelfClosing": "proportional-always",
+                "closingSlash": "never"
+            }
+        ],
         "padding-line-between-statements": [
             "warn",
             {

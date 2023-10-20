@@ -44,7 +44,7 @@ export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
             <Grid.Column width={6}>
                 <Header as='h3' dividing>Breusch-Pagan test</Header>
 
-                <InfoPopup content=' It evaluates if the random disturbance is different across points in the correlation graph. Thus heteroscedasticity is the absence of homoscedasticity'/>
+                <InfoPopup content=' It evaluates if the random disturbance is different across points in the correlation graph. Thus heteroscedasticity is the absence of homoscedasticity' />
 
                 <Statistic size='tiny'>
                     <Statistic.Value>{bpTest.lagrange_multiplier}</Statistic.Value>

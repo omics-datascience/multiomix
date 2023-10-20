@@ -92,14 +92,14 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
 
     return (
         <Modal size='fullscreen' open={props.showUserDatasetsModal} onClose={props.handleClose} centered={false}>
-            <Header icon='database' content={`Select ${fileType} dataset`}/>
+            <Header icon='database' content={`Select ${fileType} dataset`} />
             <Modal.Content className='align-center'>
                 <PaginatedTable<DjangoUserFile>
                     headers={getDefaultHeaders()}
                     customFilters={getDefaultFilters()}
                     showSearchInput
                     urlToRetrieveData={urlUserFilesCRUD}
-                    queryParams={ { file_type: props.selectingFileType, with_survival_only: props.showOnlyClinicalDataWithSurvivalTuples } }
+                    queryParams={{ file_type: props.selectingFileType, with_survival_only: props.showOnlyClinicalDataWithSurvivalTuples }}
                     mapFunction={(userFile: DjangoUserFile) => {
                         return (
                             <Table.Row
@@ -112,12 +112,12 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                                 <Table.Cell>{userFile.name}</Table.Cell>
                                 <Table.Cell>{userFile.description}</Table.Cell>
                                 {isClinical &&
-                                    <Table.Cell textAlign='center'>{ userFile.survival_columns ? userFile.survival_columns.length : 0 }</Table.Cell>
+                                    <Table.Cell textAlign='center'>{userFile.survival_columns ? userFile.survival_columns.length : 0}</Table.Cell>
                                 }
                                 <Table.Cell collapsing textAlign='center'>
                                     <TagLabel tag={userFile.tag} fluid />
                                 </Table.Cell>
-                                <Table.Cell collapsing>{ userFile.upload_date ? formatDateLocale(userFile.upload_date) : '-' }</Table.Cell>
+                                <Table.Cell collapsing>{userFile.upload_date ? formatDateLocale(userFile.upload_date) : '-'}</Table.Cell>
                                 <Table.Cell collapsing textAlign='center'>
                                     <UserFileTypeLabel dataset={userFile} />
                                 </Table.Cell>

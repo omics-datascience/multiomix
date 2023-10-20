@@ -269,11 +269,11 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     {/* List of institutions */}
                     <Grid.Column width={4} textAlign='left' stretched={true}>
                         <Segment>
-                            <Header textAlign="center" >
+                            <Header textAlign="center">
                                 <Icon name='building' />
                                 <Header.Content className='headerContent'><span>My institutions</span>
                                     <div style={{ float: 'right', height: '10px' }}>
-                                        <InfoPopup onTop={false} extraClassName='questionIcon' content='In this form you can add institutions and colleagues to collaborate sharing datasets (and experiment results in a near future)'/>
+                                        <InfoPopup onTop={false} extraClassName='questionIcon' content='In this form you can add institutions and colleagues to collaborate sharing datasets (and experiment results in a near future)' />
                                     </div>
                                 </Header.Content>
                             </Header>
@@ -289,7 +289,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     {/* Files overview panel */}
                     <Grid.Column width={12}>
                         <Segment>
-                            <Grid stretched={true} >
+                            <Grid stretched={true}>
                                 <Grid.Column width={16} textAlign='left' stretched={true}>
                                     <Header textAlign="center">
                                         <Icon name='key' />
@@ -297,7 +297,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                     </Header>
 
                                     <Form unstackable={true}>
-                                        <Form.Group fluid >
+                                        <Form.Group fluid>
                                             {/* User Search */}
                                             <Form.Dropdown
                                                 fluid

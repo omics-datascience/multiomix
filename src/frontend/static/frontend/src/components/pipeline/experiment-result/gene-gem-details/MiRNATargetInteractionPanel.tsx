@@ -93,7 +93,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
     render () {
         if (this.state.gettingData) {
-            return <LoadingPanel/>
+            return <LoadingPanel />
         }
 
         if (!this.state.data) {

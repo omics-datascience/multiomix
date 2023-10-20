@@ -69,7 +69,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
 
     return (
         <Card.Meta className="margin-top-2">
-            <TagLabel tag={props.experiment.tag} className='margin-bottom-2' size='tiny'/>
+            <TagLabel tag={props.experiment.tag} className='margin-bottom-2' size='tiny' />
 
             <Icon
                 className="clickable margin-left-2"

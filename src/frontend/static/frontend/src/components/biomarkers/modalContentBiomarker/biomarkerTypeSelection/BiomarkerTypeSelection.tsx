@@ -29,7 +29,7 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
                 Create a new Biomarker
             </Header>
 
-            <Grid stackable >
+            <Grid stackable>
                 <Grid.Row columns={3} className='grid--container'>
                     <Grid.Column width={16}>
                         <h2 className='text--subtitle'>Choose type of Biomarker</h2>

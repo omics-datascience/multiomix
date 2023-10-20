@@ -35,7 +35,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     // Error message
     if (!stats.is_data_ok) {
         return (
-            <GeneGEMDataErrorMessage/>
+            <GeneGEMDataErrorMessage />
         )
     }
 

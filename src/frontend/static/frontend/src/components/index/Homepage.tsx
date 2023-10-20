@@ -73,9 +73,9 @@ export const Homepage = () => {
                                         Briefly, Multiomix combines a user-friendly GUI, an integrated set of functions for data retrieval, aggregation, and storage of multi-omics data with three predefined pipelines that allow the identification of:
                                     </p>
                                     <List>
-                                        <List.Item icon='marker' content='Genes post-transcriptionally modulated by microRNAs (miRNA pipeline)'/>
-                                        <List.Item icon='marker' content='Genes transcriptionally silenced by promoter hyper-methylation (Methylation pipeline)'/>
-                                        <List.Item icon='marker' content='Genes/Chromosome regions of potential focal amplification and over-expression (CNA pipeline)'/>
+                                        <List.Item icon='marker' content='Genes post-transcriptionally modulated by microRNAs (miRNA pipeline)' />
+                                        <List.Item icon='marker' content='Genes transcriptionally silenced by promoter hyper-methylation (Methylation pipeline)' />
+                                        <List.Item icon='marker' content='Genes/Chromosome regions of potential focal amplification and over-expression (CNA pipeline)' />
                                     </List>
                                 </div>
                             </Grid.Column>

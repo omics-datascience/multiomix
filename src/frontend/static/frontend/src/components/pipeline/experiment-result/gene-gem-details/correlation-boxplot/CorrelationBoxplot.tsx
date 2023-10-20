@@ -35,7 +35,7 @@ export const CorrelationBoxplot = (props: CorrelationBoxplotProps) => {
     // Error message
     if (!props.boxplotData.isDataOk) {
         return (
-            <GeneGEMDataErrorMessage/>
+            <GeneGEMDataErrorMessage />
         )
     }
 

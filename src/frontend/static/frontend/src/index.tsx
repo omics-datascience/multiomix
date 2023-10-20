@@ -5,6 +5,6 @@ import './css/index.css'
 import { Homepage } from './components/index/Homepage'
 
 ReactDOM.render(
-    <Homepage/>,
+    <Homepage />,
     document.getElementById('main-app')
 )

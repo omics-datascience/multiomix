@@ -921,8 +921,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
                                             return (
                                                 <Table.Row key={CGDSStudyFileRow.id as number}>
-                                                    <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis'/>
-                                                    <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis'/>
+                                                    <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis' />
+                                                    <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis' />
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
                                                         ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)

@@ -210,7 +210,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                 // If the data is ordinal its needed a better chart like Boxplots
                 if (this.state.gemDataIsOrdinal) {
-                    return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow}/>
+                    return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow} />
                 }
 
                 return (
@@ -266,9 +266,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     </React.Fragment>
                 )
             case ActiveItemMenu.DISEASES_ASSOCIATION:
-                return <MiRNADiseasesPanel miRNA={gem} miRNAData={this.state.miRNAData}/>
+                return <MiRNADiseasesPanel miRNA={gem} miRNAData={this.state.miRNAData} />
             case ActiveItemMenu.DRUGS_ASSOCIATION:
-                return <MiRNADrugsPanel miRNA={gem} miRNAData={this.state.miRNAData}/>
+                return <MiRNADrugsPanel miRNA={gem} miRNAData={this.state.miRNAData} />
             case ActiveItemMenu.SURVIVAL_ANALYSIS:
                 if (!this.props.experiment.clinical_source_id) {
                     return (

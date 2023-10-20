@@ -7,7 +7,7 @@ import { Header, Icon } from 'semantic-ui-react'
  */
 export const LoadingPanel = () => (
     <Header size='huge' icon textAlign='center'>
-        <Icon id='loading-panel-icon' name='spinner' loading/>
+        <Icon id='loading-panel-icon' name='spinner' loading />
         Loading
     </Header>
 )

@@ -131,6 +131,6 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                     </Button>
                 </Grid.Column>
             </Grid.Row>
-        </React.Fragment >
+        </React.Fragment>
     )
 }

@@ -105,7 +105,7 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
             {cnaDescription &&
                 <React.Fragment>
                     <strong>{cnaDescription}</strong>
-                    <hr/>
+                    <hr />
                 </React.Fragment>
             }
             <TooltipElement strongTitle='Min' numberToDisplay={min} color={color} fixed={2} />

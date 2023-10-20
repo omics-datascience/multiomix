@@ -63,7 +63,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     }
 
                     {/* See result button */}
-                    <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right'/>
+                    <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right' />
                 </Card.Header>
                 <Card.Meta className='experiment-data-card-submit-date'>
                     {formatDateLocale(experiment.submit_date, 'L')}
@@ -72,7 +72,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     {experiment.description ? experiment.description : '-'}
                 </Card.Meta>
                 <Card.Meta title={experimentState.title}>
-                    State: <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading}/>
+                    State: <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading} />
                 </Card.Meta>
 
                 {/* Truncated label */}

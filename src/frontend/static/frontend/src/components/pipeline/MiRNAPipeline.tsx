@@ -824,7 +824,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     </div>
 
                     {/* Close tab button */}
-                    <Icon name='times' className='clickable margin-left-5' onClick={() => this.closeTab(experimentTabIdInt)}/>
+                    <Icon name='times' className='clickable margin-left-5' onClick={() => this.closeTab(experimentTabIdInt)} />
                 </Menu.Item>
             )
         })
@@ -928,7 +928,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                                 { showLastExperiments: !prev.showLastExperiments }
                                             ))}
                                         >
-                                            <Icon name={this.state.showLastExperiments ? 'chevron right' : 'list ul'}/>
+                                            <Icon name={this.state.showLastExperiments ? 'chevron right' : 'list ul'} />
                                         </Button>
                                     </Grid.Column>
                                 </Grid.Row>

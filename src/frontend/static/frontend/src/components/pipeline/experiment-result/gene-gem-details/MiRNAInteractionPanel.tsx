@@ -51,7 +51,7 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
         },
         {
             name: 'mirDIP score class',
-            infoPopupContent: <InfoPopupScoreClass/>,
+            infoPopupContent: <InfoPopupScoreClass />,
             width: 2
         },
         { name: 'Pubmed' }

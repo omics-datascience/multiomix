@@ -206,7 +206,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
 
     render () {
         if (this.state.gettingSurvivalData) {
-            return <LoadingPanel/>
+            return <LoadingPanel />
         }
 
         const survivalColumnsTupleOptions: DropdownItemProps[] = this.state.survivalColumns.map((survColumn) => {
@@ -311,7 +311,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             yAxisLabel='Probability'
                         />
 
-                        <LogRankTestStats logrankTest={this.state.geneLogrank}/>
+                        <LogRankTestStats logrankTest={this.state.geneLogrank} />
                     </Grid.Column>
                     <Grid.Column>
                         <Header className='survival-header'>{this.props.selectedRow?.gem}</Header>
@@ -323,7 +323,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             yAxisLabel='Probability'
                         />
 
-                        <LogRankTestStats logrankTest={this.state.gemLogrank}/>
+                        <LogRankTestStats logrankTest={this.state.gemLogrank} />
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

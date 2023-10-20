@@ -85,7 +85,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                     percent={props.uploadPercentage}
                     indicating
                 >
-                    <UploadLabel uploadState={props.uploadState}/>
+                    <UploadLabel uploadState={props.uploadState} />
                 </Progress>
             </Form.Field>
         )

@@ -23,8 +23,8 @@ python3 ${BASE_DIR}/manage.py migrate
 echo "##############################################"
 echo "Running Multiomix..."
 echo "##############################################"
-echo ${LISTEN_IP}
-echo ${LISTEN_PORT}
+echo "${LISTEN_IP}"
+echo "${LISTEN_PORT}"
 daphne -b "${LISTEN_IP}" -p "${LISTEN_PORT}" multiomics_intermediate.asgi:application
 
 
