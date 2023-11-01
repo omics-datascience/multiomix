@@ -6,7 +6,7 @@ services:
         image: postgres:13
         container_name: multiomics_dev_db
         ports:
-            - "5432:5432"
+            - "5433:5432"
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
             POSTGRES_USER: root
