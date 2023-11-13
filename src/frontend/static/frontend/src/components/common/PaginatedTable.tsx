@@ -8,6 +8,7 @@ import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
+import './commonStyles.css'
 
 declare const currentUserId: string
 
@@ -449,29 +450,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 onTop={false}
                             />
                         }
-
+                    </Grid.Column>
+                    <Grid.Column width={16}>
                         <Form>
-                            <Form.Group>
+                            <Form.Group className='custom-form'>
                                 {this.props.customElements}
 
                                 {/* Search input */ }
                                 {this.props.showSearchInput &&
-                                    <Form.Input
-                                        width={3}
-                                        icon='search' iconPosition='left'
-                                        label={this.props.searchLabel ?? 'Name/Description'}
-                                        title={this.props.searchPlaceholder}
-                                        placeholder={this.props.searchPlaceholder}
-                                        name='textFilter'
-                                        value={tableControl.textFilter}
-                                        onChange={(_, { name, value }) => {
-                                            this.handleTableControlChanges(name, value)
-                                        }}
-                                    />
+                                        <Form.Input
+                                            width={3}
+                                            icon='search' iconPosition='left'
+                                            label={this.props.searchLabel ?? 'Name/Description'}
+                                            title={this.props.searchPlaceholder}
+                                            placeholder={this.props.searchPlaceholder}
+                                            name='textFilter'
+                                            value={tableControl.textFilter}
+                                            onChange={(_, { name, value }) => {
+                                                this.handleTableControlChanges(name, value)
+                                            }}
+                                        />
                                 }
-
                                 {customFilters}
-
                                 {/* Page size */}
                                 <Form.Select
                                     label='Entries'
@@ -486,7 +486,10 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 />
                             </Form.Group>
                         </Form>
-
+                    </Grid.Column>
+                </Grid.Row>
+                <Grid.Row>
+                    <Grid.Column>
                         {/* Table */}
                         <Table celled sortable>
                             {/* Header */}

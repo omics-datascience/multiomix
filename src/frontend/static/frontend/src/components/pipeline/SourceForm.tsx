@@ -148,7 +148,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                             fileChangeEvent={this.props.selectNewFile}
                         />
 
-                        <Label className="margin-top-2" color="yellow">
+                        <Label style={{ width: '100%' }} className="margin-top-2" color="yellow">
                             The file will be added to "Datasets/Multiomix"
                         </Label>
 
@@ -296,7 +296,12 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 }
                 <Header as='h4' icon={isIcon} image={!isIcon} textAlign="center">
                     {icon}
-                    {this.props.headerTitle}
+                    {this.props.headerTitle.split(' ').map((text, index) => (
+                        <React.Fragment key={index}>
+                            {text}
+                            {index < this.props.headerTitle.split(' ').length - 1 && <br />}
+                        </React.Fragment>
+                    ))}
                 </Header>
 
                 <div className='full-width'>

@@ -252,11 +252,6 @@ h2.menu,
     z-index: 2500 !important;
 }
 
-/* Pulls the entries select in the Paginated table to the right. */
-.entries-select-table {
-    margin-left: auto !important;
-    order: 2;
-}
 
 /* Pulls down the button when set in the `customElements` prop of `PaginatedTable` component */
 .custom-table-field {

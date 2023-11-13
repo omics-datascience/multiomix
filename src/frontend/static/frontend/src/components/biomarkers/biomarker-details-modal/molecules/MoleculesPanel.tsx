@@ -20,7 +20,7 @@ export const MoleculesPanel = (props: MoleculesPanelProps) => {
     const [selectedMolecule, setSelectedMolecule] = React.useState<Nullable<BiomarkerMolecule>>(null)
 
     return (
-        <Grid>
+        <Grid stackable>
             <Grid.Row columns={2} divided>
                 <Grid.Column width={5}>
                     <MoleculesTable selectedBiomarker={props.selectedBiomarker} selectedMolecule={selectedMolecule} openMoleculeDetails={setSelectedMolecule} />
