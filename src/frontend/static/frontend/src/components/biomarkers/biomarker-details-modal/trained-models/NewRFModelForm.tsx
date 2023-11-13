@@ -45,7 +45,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                     type='number'
                     min={3}
                     name='maxDepth'
-                    value={props.parameters.maxDepth}
+                    value={props.parameters.maxDepth ?? ''}
                     onChange={props.handleChangeParams}
                 />
             </Form.Group>
@@ -58,7 +58,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                 step={1}
                 min={0}
                 name='randomState'
-                value={props.parameters.randomState}
+                value={props.parameters.randomState ?? ''}
                 onChange={props.handleChangeParams}
             />
         </>

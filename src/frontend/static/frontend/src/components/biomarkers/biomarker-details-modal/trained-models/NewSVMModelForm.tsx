@@ -31,7 +31,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                     label='Max iterations'
                     placeholder='100-2000'
                     name='maxIterations'
-                    value={props.parameters.maxIterations}
+                    value={props.parameters.maxIterations ?? ''}
                     onChange={props.handleChangeParams}
                 />
 
@@ -43,7 +43,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                     step={1}
                     min={0}
                     name='randomState'
-                    value={props.parameters.randomState}
+                    value={props.parameters.randomState ?? ''}
                     onChange={props.handleChangeParams}
                 />
             </Form.Group>
