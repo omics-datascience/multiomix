@@ -223,6 +223,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
             response.json().then((jsonResponse: OkResponse) => {
                 if (jsonResponse.ok) {
                     props.closeModal()
+                    setForm(getDefaultNewInferenceExperimentData())
                 } else {
                     alertGeneralError()
                 }
