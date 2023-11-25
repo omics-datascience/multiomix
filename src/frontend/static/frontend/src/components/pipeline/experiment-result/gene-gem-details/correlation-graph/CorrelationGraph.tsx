@@ -70,6 +70,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
         if (NAIndex !== -1 && seriesIndex === seriesWithNAInEnd.length - 2) {
             return '#7a7878'
         }
+
         return colors(seriesIndex)
     }
 

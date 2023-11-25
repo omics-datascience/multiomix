@@ -24,7 +24,7 @@ export const ListOfElementsWithHeader = (props: ListOfElementsWithHeaderProps) =
                 <Header.Content>{props.headerTitle}</Header.Content>
             </Header>
 
-            <hr/>
+            <hr />
 
             <List relaxed>
                 {props.children}

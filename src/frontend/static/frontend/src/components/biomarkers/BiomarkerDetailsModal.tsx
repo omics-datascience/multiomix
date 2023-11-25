@@ -36,7 +36,7 @@ export const BiomarkerDetailsModal = (props: BiomarkerDetailsModalProps) => {
 
         switch (activeItem) {
             case ActiveBiomarkerDetailItemMenu.MOLECULES_DETAILS:
-                return <MoleculesPanel selectedBiomarker={props.selectedBiomarker}/>
+                return <MoleculesPanel selectedBiomarker={props.selectedBiomarker} />
             case ActiveBiomarkerDetailItemMenu.MODELS:
                 return <BiomarkerTrainedModelsTable selectedBiomarker={props.selectedBiomarker} allowFullManagement />
             case ActiveBiomarkerDetailItemMenu.STATISTICAL_VALIDATION:

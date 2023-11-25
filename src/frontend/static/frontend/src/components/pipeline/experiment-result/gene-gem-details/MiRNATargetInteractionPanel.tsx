@@ -8,6 +8,7 @@ import { LoadingPanel } from './LoadingPanel'
 import { Grid, Header, Icon, List, Statistic } from 'semantic-ui-react'
 import { ListOfElementsWithHeader } from './ListOfElementsWithHeader'
 import { PubmedButton } from './PubmedButton'
+import { TryAgainSegment } from '../../../common/TryAgainSegment'
 
 declare const urlMiRNAInteraction: string
 
@@ -62,7 +63,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
     /**
      * Retrieves data from server
      */
-    getData () {
+    getData = () => {
         const searchParams: KySearchParams = {
             mirna: this.props.miRNA,
             gene: this.props.gene
@@ -81,6 +82,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
                     // If an error ocurred, sets the selected row to null
                     alertGeneralError()
                 }
+
                 console.log('Error getting miRNA target interactions ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
@@ -92,21 +94,11 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
     render () {
         if (this.state.gettingData) {
-            return <LoadingPanel/>
+            return <LoadingPanel />
         }
 
         if (!this.state.data) {
-            return (
-                <Header size='huge' icon textAlign='center'>
-                    <Icon name='times circle' />
-
-                    No data found
-
-                    <Header.Subheader>
-                        Sorry! Try again later
-                    </Header.Subheader>
-                </Header>
-            )
+            return <TryAgainSegment onTryAgain={this.getData} />
         }
 
         const scoreClassData = getScoreClassData(this.state.data.score_class)

@@ -49,6 +49,7 @@ export const MoleculeSection = ({
 
         const result: MoleculesSectionData[][] = []
         let subArray: MoleculesSectionData[] = []
+
         for (let i = 0; i < data.length; i++) {
             if (Array.isArray(data[i].value)) {
                 rowCount += 1
@@ -63,6 +64,7 @@ export const MoleculeSection = ({
                 }
             }
         }
+
         return result
     }
 
@@ -121,7 +123,7 @@ export const MoleculeSection = ({
                         )
                     }}
                 />
-            </div >
-        </Grid.Column >
+            </div>
+        </Grid.Column>
     )
 }

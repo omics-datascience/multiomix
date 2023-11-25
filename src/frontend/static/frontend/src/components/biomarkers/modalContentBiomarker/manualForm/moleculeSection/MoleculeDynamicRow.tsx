@@ -42,6 +42,6 @@ export const MoleculeDynamicRow = (props: MoleculeDynamicRowProps) => {
                     handleSelectOptionMolecule={handleSelectOptionMolecule}
                 />
             ))}
-        </div >
+        </div>
     )
 }

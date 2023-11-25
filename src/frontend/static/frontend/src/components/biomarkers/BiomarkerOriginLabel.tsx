@@ -16,6 +16,7 @@ interface BiomarkerOriginLabelProps {
 export const BiomarkerOriginLabel = (props: BiomarkerOriginLabelProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.biomarkerOrigin) {
         case BiomarkerOrigin.MANUAL:
             color = 'blue'

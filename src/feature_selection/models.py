@@ -13,16 +13,16 @@ from user_files.models_choices import FileType
 
 class FeatureSelectionAlgorithm(models.IntegerChoices):
     """Available Feature Selection algorithms."""
-    BLIND_SEARCH = 1,
-    COX_REGRESSION = 2,
-    BBHA = 3,
+    BLIND_SEARCH = 1
+    COX_REGRESSION = 2
+    BBHA = 3
     PSO = 4
 
 
 class FitnessFunction(models.IntegerChoices):
     """Available models to execute as the fitness function."""
-    CLUSTERING = 1,
-    SVM = 2,
+    CLUSTERING = 1
+    SVM = 2
     RF = 3  # TODO: implement in backend
 
 
@@ -34,32 +34,32 @@ class ClusteringAlgorithm(models.IntegerChoices):
 
 class ClusteringMetric(models.IntegerChoices):
     """Clustering metric to optimize."""
-    COX_REGRESSION = 1,
+    COX_REGRESSION = 1
     LOG_RANK_TEST = 2
 
 
 class ClusteringScoringMethod(models.IntegerChoices):
     """Clustering scoring method."""
-    C_INDEX = 1,
+    C_INDEX = 1
     LOG_LIKELIHOOD = 2
 
 
 class SVMKernel(models.IntegerChoices):
     """SVM's kernel """
-    LINEAR = 1,
-    POLYNOMIAL = 2,
+    LINEAR = 1
+    POLYNOMIAL = 2
     RBF = 3
 
 
 class SVMTask(models.IntegerChoices):
     """Task to execute with survival SVM."""
-    RANKING = 1,
+    RANKING = 1
     REGRESSION = 2
 
 
 class BBHAVersion(models.IntegerChoices):
     """Version of the BBHA algorithm used."""
-    ORIGINAL = 1,
+    ORIGINAL = 1
     IMPROVED = 2
 
 

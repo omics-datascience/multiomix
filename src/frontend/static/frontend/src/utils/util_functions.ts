@@ -164,6 +164,7 @@ const copyObject = <T>(anObject: T): T => {
  */
 const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
     let stateIcon: StateIconInfo
+
     switch (state) {
         case ExperimentState.COMPLETED:
             stateIcon = {
@@ -230,6 +231,7 @@ const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
             }
             break
     }
+
     return stateIcon
 }
 
@@ -245,6 +247,7 @@ const getExperimentTypeObj = (
 ): GEMImageAndLabelInfo => {
     const enumType = enumClass === 'FileType' ? FileType : ExperimentType
     let state: GEMImageAndLabelInfo
+
     switch (GEMType) {
         case enumType.MIRNA:
             state = {
@@ -274,6 +277,7 @@ const getExperimentTypeObj = (
             }
             break
     }
+
     return state
 }
 
@@ -284,6 +288,7 @@ const getExperimentTypeObj = (
  */
 const getExperimentCorrelationMethodInfo = (correlationMethod: CorrelationMethod): GEMImageAndLabelInfo => {
     let state: GEMImageAndLabelInfo
+
     switch (correlationMethod) {
         case CorrelationMethod.SPEARMAN:
             state = {
@@ -305,6 +310,7 @@ const getExperimentCorrelationMethodInfo = (correlationMethod: CorrelationMethod
             }
             break
     }
+
     return state
 }
 
@@ -370,6 +376,7 @@ const formatDateLocale = (dateToFormat: Nullable<string>, format: string = 'L'):
 
         return date.format(format)
     }
+
     return '-'
 }
 
@@ -398,25 +405,32 @@ const getDefaultSource = (msg: string = DEFAULT_FILENAME): Source => {
  */
 const getFilenameFromSource = (source: Source, defaultFilename: string = DEFAULT_FILENAME): string => {
     let filename: string = defaultFilename
+
     switch (source.type) {
         case SourceType.NEW_DATASET: {
             const sourceCurrent = source.newUploadedFileRef.current
+
             if (sourceCurrent !== null && sourceCurrent.files.length > 0) {
                 filename = sourceCurrent.files[0].name
             }
+
             break
         }
+
         case SourceType.UPLOADED_DATASETS:
             if (source.selectedExistingFile) {
                 filename = source.selectedExistingFile.name
             }
+
             break
         case SourceType.CGDS:
             if (source.CGDSStudy) {
                 filename = source.CGDSStudy.name
             }
+
             break
     }
+
     return filename
 }
 
@@ -454,6 +468,7 @@ const getInputFileCSVColumns = (csvFile: File, separator: string = '\t'): Promis
  */
 const cleanRef = (ref: React.RefObject<any>) => {
     const refCurrent = ref.current
+
     if (refCurrent) {
         refCurrent.value = ''
     }
@@ -478,12 +493,14 @@ const listToDropdownOptions = (listOfElements: string[]): DropdownItemProps[] =>
  */
 const getGemDescription = (GEMType: FileType | ExperimentType, enumClass: 'FileType' | 'ExperimentType'): string => {
     const enumType = enumClass === 'FileType' ? FileType : ExperimentType
+
     switch (GEMType) {
         case enumType.MIRNA:
             return 'miRNA'
         case enumType.CNA:
             return 'CNA'
     }
+
     return 'Methylation'
 }
 
@@ -494,6 +511,7 @@ const getGemDescription = (GEMType: FileType | ExperimentType, enumClass: 'FileT
  */
 const getFileRowDescriptionInPlural = (fileType: FileType): string => {
     let description: string
+
     switch (fileType) {
         case FileType.MRNA:
             description = 'mRNAs'
@@ -505,6 +523,7 @@ const getFileRowDescriptionInPlural = (fileType: FileType): string => {
             description = `${getGemDescription(fileType, 'FileType')}s`
             break
     }
+
     return description
 }
 
@@ -529,6 +548,7 @@ const generatesOrderingQuery = (sortField: string, sortOrderIsAscendant: boolean
     if (sortField) {
         return `${sortOrderIsAscendant ? '' : '-'}${sortField}`
     }
+
     return ''
 }
 
@@ -542,6 +562,7 @@ const generatesOrderingQueryMultiField = (sortFields: SortField<string>[]): stri
         return sortFields.map((sortField) => `${sortField.sortOrderAscendant ? '' : '-'}${sortField.field}`)
             .join(',')
     }
+
     return ''
 }
 
@@ -691,6 +712,7 @@ const generateBinData = (data: number[]): BinData[] => {
  */
 const getFileTypeName = (type: FileType): string => {
     let fileType: string
+
     switch (type) {
         case FileType.MRNA:
             fileType = 'mRNA'
@@ -711,6 +733,7 @@ const getFileTypeName = (type: FileType): string => {
             fileType = ''
             break
     }
+
     return fileType
 }
 

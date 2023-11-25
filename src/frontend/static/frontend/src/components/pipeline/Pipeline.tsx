@@ -240,6 +240,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
                     if (!this.abortController.signal.aborted) {
                         this.setState({ gettingCommonSamples: false })
                     }
+
                     console.log('Error getting user experiments', err)
                 })
             })
@@ -261,6 +262,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
         if (mRNASourceIsInBackend) {
             // If mRNA is in backend, GEM is in frontend
             const idInBackend = this.getIdInBackend(mRNASource)
+
             if (idInBackend === null) {
                 return
             }
@@ -272,6 +274,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             otherSourceType = mRNASource.type
         } else {
             const idInBackend = this.getIdInBackend(gemSource)
+
             if (idInBackend === null) {
                 return
             }
@@ -285,12 +288,14 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
         // We need both datasets!
         const sourceCurrentRef = sourceInFront.newUploadedFileRef.current
+
         if (!sourceCurrentRef || sourceCurrentRef.files.length === 0) {
             this.resetAllNumberOfSamples()
             return
         }
 
         const fileSizeInMB = getFileSizeInMB(sourceInFront.newUploadedFileRef.current.files[0].size)
+
         if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
             const file = sourceInFront.newUploadedFileRef.current.files[0]
             getInputFileCSVColumns(file).then((headersColumnsNames) => {
@@ -462,6 +467,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingAllExperiments: false })
                 }
+
                 // If it's a 404 error, maybe it's getting the wrong page after removing an Experiment
                 // For ex. removes the unique Experiment in the third page, request that page after removing
                 // will return a 404 error si we need to return a page before
@@ -484,6 +490,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
     handleSortAllExperiments = (headerServerCodeToSort: AllExperimentsSortField) => {
         // If the user has selected other column for sorting...
         const tableControl = this.state.allExperimentsTableControl
+
         if (this.state.allExperimentsTableControl.sortField !== headerServerCodeToSort) {
             tableControl.sortField = headerServerCodeToSort
             tableControl.sortOrderAscendant = true
@@ -491,6 +498,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             // If it's the same just change the sort order
             tableControl.sortOrderAscendant = !tableControl.sortOrderAscendant
         }
+
         this.setState({ allExperimentsTableControl: tableControl }, this.getAllUserExperiments)
     }
 
@@ -534,6 +542,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingExperiments: false })
                 }
+
                 console.log('Error getting user experiments', err)
             })
         })
@@ -696,6 +705,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
             axios.post(urlRunExperiment, formData, config)
                 .then((response: AxiosResponse<DjangoCommonResponse<DjangoUserFileUploadErrorInternalCode>>) => {
                     const responseJSON = response.data
+
                     // If everything gone OK, resets the form and refresh the experiments
                     if (responseJSON.status.code === DjangoResponseCode.SUCCESS) {
                         this.resetExperimentForm()

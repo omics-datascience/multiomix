@@ -64,15 +64,18 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting experiment', err)
         })
     }
+
     useEffect(() => {
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
         }
     }, [])
+
     // Shows modal to add a new inference experiment analysis
     if (openModalNewInferenceExperiment) {
         return (

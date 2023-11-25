@@ -5,6 +5,6 @@ import './css/biomarkers.css'
 import { BiomarkersPanel } from './components/biomarkers/BiomarkersPanel'
 
 ReactDOM.render(
-    <BiomarkersPanel/>,
+    <BiomarkersPanel />,
     document.getElementById('biomarkers-app')
 )

@@ -42,14 +42,8 @@ RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev l
     && mkdir /config \
     && mkdir /src
 
-<<<<<<< HEAD
 # Installs Python dependencies
 ADD config/requirements_celery.txt /config/requirements.txt
-=======
-# Installs Python dependencies and compiles the frontend
-# TODO: make a custom requirements.txt for celery workers' image. They don't need Daphne or Flower for example
-ADD config/requirements.txt /config/
->>>>>>> celery-integration
 WORKDIR /src
 ADD src .
 RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt

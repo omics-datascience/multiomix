@@ -58,6 +58,9 @@ def copy_cgds_studies(apps, schema_editor):
     Generates a copy of existing studies to prevent errors with already existing experiments and updates the
     file references for the new cBioPortal versions
     """
+    CGDSDataset = apps.get_model('datasets_synchronization', 'CGDSDataset')
+    CGDSStudy = apps.get_model('datasets_synchronization', 'CGDSStudy')
+
     # Removes all the datasets without study
     for dataset in CGDSDataset.objects.all():
         if dataset.study is None:

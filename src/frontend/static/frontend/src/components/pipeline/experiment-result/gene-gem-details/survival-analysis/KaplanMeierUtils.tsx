@@ -63,6 +63,7 @@ class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, {}> {
             if (disabledGroups[group.label]) {
                 return null
             }
+
             return (
                 <KaplanMeierCurve
                     color={this.props.colors[index]}
@@ -237,9 +238,11 @@ class Legend extends React.Component<LegendProps, {}> {
     buildLabels (labels: string[]) {
         return labels.map((label, index) => {
             let fill = this.props.colors[index]
+
             if (this.props.disabledGroups[label]) {
                 fill = 'transparent'
             }
+
             return (
                 <g
                     className='legend__item clickable'
@@ -361,16 +364,19 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
      */
     _onToggleGroup = (label: string) => {
         const disabledGroups = Object.assign({}, this.state.disabledGroups)
+
         if (disabledGroups[label]) {
             delete disabledGroups[label]
         } else {
             disabledGroups[label] = true
         }
+
         this.setState({ disabledGroups })
     }
 
     render () {
         const { data } = this.props
+
         if (!data) {
             return null
         }

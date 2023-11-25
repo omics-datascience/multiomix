@@ -73,7 +73,7 @@ The `multiomix` template is the most complex one because we are creating extra r
 
 - **Deployment**
 
-    This deployment has two containers inside, one using `nginx:1.19.3` and the other one using `multiomix:4.7.1`. In the specification we define that the pod's template will use three volumes: static data, media data and config.
+    This deployment has two containers inside, one using `nginx` and the other one using `multiomix`. In the specification we define that the pod's template will use three volumes: static data, media data and config.
     We use the static and media data volumes inside `multiomix` container and the config inside `nginx`. Besides the volumes we define the mandatory/needed environment variables and expose two ports, the `TCP 8000` for `multiomix` container and the `TCP 8080` for `nginx`. This last one is the one that the service will use.
     We also reference the secret key in an environment variable pointing to the actual `kubernetes` secret that we'd  created before.
     And for last, we have a reference to the `ConfigMap` that allocates the `nginx` configuration inside the `nginx` container definition.

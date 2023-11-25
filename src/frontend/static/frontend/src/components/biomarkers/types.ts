@@ -125,6 +125,26 @@ interface ValidationSection {
     checkBox: boolean,
 }
 
+/** Represents a section in the form to create a Biomarker. */
+interface MoleculesSectionData {
+    isValid: boolean,
+    value: string | string[],
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
+interface MoleculeSectionItem {
+    isLoading: boolean,
+    data: MoleculesSectionData[]
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
+type MoleculesSection = {
+    [BiomarkerType.CNA]: MoleculeSectionItem,
+    [BiomarkerType.MIRNA]: MoleculeSectionItem,
+    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
+    [BiomarkerType.MRNA]: MoleculeSectionItem,
+}
+
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     id: Nullable<number>,
@@ -163,26 +183,6 @@ interface SaveBiomarkerStructure {
     mirnas: SaveMoleculeStructure[],
     methylations: SaveMoleculeStructure[],
     cnas: SaveMoleculeStructure[],
-}
-
-/** Represents a section in the form to create a Biomarker. */
-interface MoleculesSectionData {
-    isValid: boolean,
-    value: string | string[],
-}
-
-/** Represents the state of a request to get molecules information during Biomarkers creation. */
-interface MoleculeSectionItem {
-    isLoading: boolean,
-    data: MoleculesSectionData[]
-}
-
-/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
-type MoleculesSection = {
-    [BiomarkerType.CNA]: MoleculeSectionItem,
-    [BiomarkerType.MIRNA]: MoleculeSectionItem,
-    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
-    [BiomarkerType.MRNA]: MoleculeSectionItem,
 }
 
 /** Available Feature Selection algorithms. */
@@ -285,9 +285,40 @@ interface FitnessFunctionParameters {
     rfParameters: RFParameters
 }
 
+/** Some common fields to use in the Expert mode. */
+interface AdvancedMode {
+    /** Try to optimize using Spark if the integration is enabled in the backend. */
+    useSpark: boolean
+}
+
+/** Advanced Cox Regression properties */
+interface AdvancedCoxRegression extends AdvancedMode {
+    topN: number
+}
+
+/** Binary Black Hole Algorithm version */
+enum BBHAVersion {
+    ORIGINAL = 1,
+    IMPROVED = 2
+}
+
+/** Advanced BBHA properties */
+interface AdvancedBBHA extends AdvancedMode {
+    numberOfStars: number;
+    numberOfIterations: number;
+    BBHAVersion: BBHAVersion;
+}
+
 /** CV parameters. */
 interface CrossValidationParameters {
     folds: number
+}
+
+/** Advanced algorithm parameters to make Feature selection */
+interface AdvancedAlgorithm {
+    isActive: boolean,
+    BBHA: AdvancedBBHA,
+    coxRegression: AdvancedCoxRegression
 }
 
 /** Structure for the Feature Selection panel. */
@@ -317,37 +348,6 @@ interface FeatureSelectionPanelData {
     /** Parameters of the selected `fitnessFunction`. */
     fitnessFunctionParameters: FitnessFunctionParameters,
     crossValidationParameters: CrossValidationParameters,
-}
-
-/** Advanced algorithm parameters to make Feature selection */
-interface AdvancedAlgorithm {
-    isActive: boolean,
-    BBHA: AdvancedBBHA,
-    coxRegression: AdvancedCoxRegression
-}
-
-/** Some common fields to use in the Expert mode. */
-interface AdvancedMode {
-    /** Try to optimize using Spark if the integration is enabled in the backend. */
-    useSpark: boolean
-}
-
-/** Advanced Cox Regression properties */
-interface AdvancedCoxRegression extends AdvancedMode {
-    topN: number
-}
-
-/** Advanced BBHA properties */
-interface AdvancedBBHA extends AdvancedMode {
-    numberOfStars: number;
-    numberOfIterations: number;
-    BBHAVersion: BBHAVersion;
-}
-
-/** Binary Black Hole Algorithm version */
-enum BBHAVersion {
-    ORIGINAL = 1,
-    IMPROVED = 2
 }
 
 /** Available types of Sources for a Biomarker. */

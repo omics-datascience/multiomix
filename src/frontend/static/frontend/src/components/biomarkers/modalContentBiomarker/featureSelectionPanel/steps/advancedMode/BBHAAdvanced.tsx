@@ -41,9 +41,11 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         value={advancedData.numberOfStars}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
+
                             if (numVal < minStarsBBHA || isNaN(numVal) || numVal > maxStarsBBHA) {
                                 return
                             }
+
                             handleChangeAdvanceAlgorithm('BBHA', name, numVal)
                         }}
                     />
@@ -69,6 +71,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         value={advancedData.numberOfIterations}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
+
                             // Prevents to set a value lower or higher than the limits
                             if (numVal < minIterationsMetaheuristics || isNaN(numVal) || numVal > maxIterationsMetaheuristics) {
                                 return

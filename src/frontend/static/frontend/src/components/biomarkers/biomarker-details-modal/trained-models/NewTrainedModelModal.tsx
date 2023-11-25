@@ -296,20 +296,24 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      */
     const modelParametersAreValid = (): boolean => {
         const modelParameters = form.modelParameters
+
         switch (selectedFitnessFunction) {
             case FitnessFunction.SVM: {
                 const svmParameters = modelParameters.svmParameters
                 return svmParameters.maxIterations >= 100 && svmParameters.maxIterations <= 2000
             }
+
             case FitnessFunction.CLUSTERING: {
                 const clusteringParameters = modelParameters.clusteringParameters
                 return clusteringParameters.nClusters >= 2 && clusteringParameters.nClusters <= 10
             }
+
             case FitnessFunction.RF: {
                 const rfParameters = modelParameters.rfParameters
                 return (rfParameters.nEstimators >= 10 && rfParameters.nEstimators <= 20) &&
                     (rfParameters.maxDepth === null || rfParameters.maxDepth >= 3)
             }
+
             default:
                 return false
         }

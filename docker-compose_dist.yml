@@ -3,11 +3,12 @@ version: '3.3'
 services:
     # PostgreSQL
     db:
-        image: postgres:13
+        image: postgres:16
+        restart: 'always'
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
             # IMPORTANT: these three params must be the same as POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
-            # below in 'web' service respectively
+            # below in 'multiomix' service respectively
             POSTGRES_USER: 'multiomics'
             POSTGRES_PASSWORD: 'multiomics'
             POSTGRES_DB: 'multiomics'
@@ -23,9 +24,10 @@ services:
     # MongoDB Server
     mongo:
         image: mongo:4.2
+        restart: 'always'
         environment:
             # IMPORTANT: these three params must be the same as MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
-            # below in 'web' service respectively
+            # below in 'multiomix' service respectively
             MONGO_INITDB_ROOT_USERNAME: 'multiomics'
             MONGO_INITDB_ROOT_PASSWORD: 'multiomics'
             MONGO_INITDB_DATABASE: 'multiomics'
@@ -39,26 +41,29 @@ services:
     # Redis Server for Websockets connections
     redis:
         image: redis:6.0.8
+        restart: 'always'
         volumes:
             - redis_data:/data
 
     # Django Proxy Server
     nginx:
-        image: nginx:1.19.3
+        image: nginx:1.23.3
+        restart: 'always'
         ports:
             - '80:8000'
-            # - 443:443 # Uncomment for HTTPS support
+            # - '443:443' # Uncomment for HTTPS support
         volumes:
             - ./config/nginx/conf.d:/etc/nginx/conf.d
             - ./config/nginx/certificates:/etc/nginx/certificates
             - static_data:/static
             - media_data:/media
         depends_on:
-            - web
+            - multiomix
 
     # Celery worker for correlation analysis
     correlation-analysis-worker:
-        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        image: omicsdatascience/multiomix:5.1.2-celery
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -69,12 +74,13 @@ services:
             QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for feature selection experiments
     fs-experiments-worker:
-        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        image: omicsdatascience/multiomix:5.1.2-celery
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -85,12 +91,13 @@ services:
             QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for statistical validations and trained models
     stats-worker:
-        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        image: omicsdatascience/multiomix:5.1.2-celery
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -101,12 +108,13 @@ services:
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for inference experiments
     inference-worker:
-        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        image: omicsdatascience/multiomix:5.1.2-celery
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -117,12 +125,13 @@ services:
             QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Celery worker for sync CGDSStudies
     sync-datasets-worker:
-        image: omicsdatascience/multiomix-celery-worker:5.1.0
+        image: omicsdatascience/multiomix:5.1.2-celery
+        restart: 'always'
         depends_on:
             - db
             - mongo
@@ -133,17 +142,18 @@ services:
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
 
-            # NOTE: in case of changes in the 'web', PostgreSQL and/or MongoDB connection parameters, they MUST be
+            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
             # changed here too!
 
     # Django Backend Server
-    web:
-        image: omicsdatascience/multiomix:5.1.0
+    multiomix:
+        image: omicsdatascience/multiomix:5.1.2
+        restart: 'always'
         # environment:
             # ENABLE_SECURITY: 'true'
+            # DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
             # LISTEN_PORT=8000
             # LISTEN_IP=0.0.0.0
-            # DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
             # RESULT_DATAFRAME_LIMIT_ROWS: 300000
             # TABLE_PAGE_SIZE: 10
 

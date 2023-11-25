@@ -97,9 +97,6 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
                                                                       filter_zero_coeff=True,
                                                                       top_n=20)
 
-    print('best_features', best_features)
-    print('best_features_coeff', best_features_coeff)
-
     check_if_stopped(is_aborted, ExperimentStopped)
     __save_molecule_identifiers(stat_validation, best_features, best_features_coeff)
 
@@ -168,6 +165,15 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
 
     def score_clustering(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
                          score_method: ClusteringScoringMethod, penalizer: Optional[float]) -> float:
+        """
+        Scores a clustering model using a Cox Regression model.
+        @param model: Clustering model to be scored.
+        @param subset: Subset of the data to be used for the clustering.
+        @param y: Survival data.
+        @param score_method: Method to be used for scoring the clustering model.
+        @param penalizer: Penalizer to be used for the Cox Regression model.
+        @return: Score of the clustering model.
+        """
         clustering_result = model.fit(subset.values)
 
         # Generates a DataFrame with a column for time, event and the group
@@ -345,7 +351,7 @@ def prepare_and_compute_trained_model(trained_model: TrainedModel, model_paramet
     # Generates needed DataFrames
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(trained_model,
-                                                                                                  samples_in_common)
+                                                                                             samples_in_common)
 
     __compute_trained_model(trained_model, molecules_temp_file_path, clinical_temp_file_path, model_parameters,
                             is_aborted)

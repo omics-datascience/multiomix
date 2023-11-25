@@ -235,6 +235,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     alertGeneralError()
                     this.closePopup()
                 }
+
                 console.log('Error adding new Tag ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
@@ -346,6 +347,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         const showSurvivalTuplesForm = isAnUploadedDataset || isaNewDataset
 
         let clinicalIsDisabled: boolean
+
         if (this.props.experimentType === 'correlation') {
             const correlationExperiment = this.props.experiment as DjangoExperiment
             clinicalIsDisabled = correlationExperiment.result_final_row_count === 0 || correlationExperiment.state !== ExperimentState.COMPLETED

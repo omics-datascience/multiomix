@@ -182,7 +182,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.0.36'
+VERSION: str = '5.1.6'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -273,18 +273,25 @@ if threshold_gem_size_to_collect_str is not None:
 else:
     THRESHOLD_GEM_SIZE_TO_COLLECT = None
 
-# Django email settings. All this settings are got from https://pypi.org/project/django-email-verification/
+# Django email settings (https://docs.djangoproject.com/en/3.2/ref/settings/#email)
 EMAIL_NEW_USER_CONFIRMATION_ENABLED: bool = os.getenv('EMAIL_NEW_USER_CONFIRMATION_ENABLED', 'false') == 'true'
-EMAIL_ACTIVE_FIELD = 'is_active'
-EMAIL_SERVER = os.getenv('EMAIL_SERVER')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT: int = int(os.getenv('EMAIL_PORT', 0))
-EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
-EMAIL_FROM_ADDRESS = os.getenv('EMAIL_FROM_ADDRESS', 'noreply@multiomix.org')
-EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@multiomix.org')
+
+# Django email verification settings (https://pypi.org/project/django-email-verification/0.0.7/)
+EMAIL_ACTIVE_FIELD = 'is_active'
+EMAIL_SERVER = EMAIL_HOST
+EMAIL_ADDRESS = EMAIL_HOST_USER
+EMAIL_FROM_ADDRESS = DEFAULT_FROM_EMAIL
+EMAIL_PASSWORD = EMAIL_HOST_PASSWORD
 EMAIL_MAIL_SUBJECT = os.getenv('EMAIL_MAIL_SUBJECT', 'Confirm your email')
 EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
+
 
 # Modulector settings
 MODULECTOR_SETTINGS = {

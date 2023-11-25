@@ -18,6 +18,7 @@ interface ClusteringScoringMethodLabelProps {
 export const ClusteringScoringMethodLabel = (props: ClusteringScoringMethodLabelProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.scoreMethod) {
         case ClusteringScoringMethod.C_INDEX:
             color = 'green'

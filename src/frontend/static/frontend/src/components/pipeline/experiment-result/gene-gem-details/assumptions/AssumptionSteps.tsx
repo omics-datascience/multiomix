@@ -27,6 +27,7 @@ const AssumptionStep = (props: AssumptionStepProps) => {
 
     let extraDescription: string
     let icon: ReactElement
+
     if (assumptionCompleted) {
         // Both satisfy the condition
         icon = <Icon name='check' color='green' />
@@ -76,6 +77,7 @@ interface AssumptionStepSimpleProps {
 const AssumptionStepSimple = (props: AssumptionStepSimpleProps) => {
     let extraDescription: string
     let icon: ReactElement
+
     if (props.isOk) {
         icon = <Icon name='check' color='green' />
         extraDescription = ''

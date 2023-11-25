@@ -38,9 +38,11 @@ export const CoxRegressionAdvanced = (props: CoxRegressionAdvancedProps) => {
                         value={advanceData.topN}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
+
                             if (numVal < 1 || isNaN(numVal) || numVal > maxFeaturesCoxRegression) {
                                 return
                             }
+
                             handleChangeAdvanceAlgorithm('coxRegression', name, numVal)
                         }}
                     />

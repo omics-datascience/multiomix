@@ -47,6 +47,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
             if (!abortController?.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting model PredictionRangeLabelsSets', err)
         }).finally(() => {
             if (!abortController?.current.signal.aborted) {

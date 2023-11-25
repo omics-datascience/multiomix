@@ -93,7 +93,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 maxLength={300}
             />
 
-            <Divider/>
+            <Divider />
 
             {/* Dataset */}
             <Header textAlign="center">
@@ -177,7 +177,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             />
 
             <div className="margin-top-5">
-                <Icon name='asterisk'/> Required field
+                <Icon name='asterisk' /> Required field
 
                 <Label color='yellow' className='align-center' size='large'>
                     In order to have the data available, you must perform the synchronization at least once

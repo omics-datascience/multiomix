@@ -13,6 +13,7 @@ def set_state_to_studies_with_prefix(apps, schema_editor):
     issue during DataFrame joins.
     """
     # Gets only the last version of each study
+    CGDSStudy = apps.get_model('datasets_synchronization', 'CGDSStudy')
     studies = CGDSStudy.objects.alias(
         max_version=Subquery(
             CGDSStudy.objects.filter(url=OuterRef('url'))

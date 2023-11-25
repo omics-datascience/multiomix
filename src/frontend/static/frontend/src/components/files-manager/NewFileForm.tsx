@@ -77,6 +77,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
     let progressOrButton
+
     if (props.uploadingFile) {
         progressOrButton = (
             <Form.Field width={14}>
@@ -84,7 +85,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                     percent={props.uploadPercentage}
                     indicating
                 >
-                    <UploadLabel uploadState={props.uploadState}/>
+                    <UploadLabel uploadState={props.uploadState} />
                 </Progress>
             </Form.Field>
         )

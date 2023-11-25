@@ -209,7 +209,7 @@ class UserFile(models.Model):
             for current_row in self.__get_reader_from_file(csv_file):
                 if current_row[0] == row:
                     # Removes index column and cast to float
-                    return np.array(current_row[1:], dtype=np.float)
+                    return np.array(current_row[1:], dtype=float)
         return np.array([])
 
     def __get_row_count(self) -> int:

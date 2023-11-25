@@ -62,6 +62,6 @@ export const ManualForm = (props: ManualFormProps) => {
                 handleRemoveInvalidGenes={props.handleRemoveInvalidGenes}
                 handleRestartSection={props.handleRestartSection}
             />
-        </Grid >
+        </Grid>
     )
 }

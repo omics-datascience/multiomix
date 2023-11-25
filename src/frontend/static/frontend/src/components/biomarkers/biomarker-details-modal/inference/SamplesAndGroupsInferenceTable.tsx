@@ -33,9 +33,11 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
     const downloadUrl = useMemo(() => {
         const searchParams = new URLSearchParams()
         searchParams.append('inference_experiment_pk', props.selectedInferenceExperiment.id.toString())
+
         if (selectedClusterSetPk) {
             searchParams.append('cluster_labels_set_pk', selectedClusterSetPk.toString())
         }
+
         return `${urlInferenceExperimentSamplesAndClustersDownload}?${searchParams.toString()}`
     }, [props.selectedInferenceExperiment.id, selectedClusterSetPk])
 
