@@ -143,7 +143,7 @@ def get_valid_data_from_sources(
         # the valid clinical data positions
         if fill_clinical_missing_samples:
             # Generates an empty array with 'NA' values
-            empty = np.full(gene_values.size, settings.NON_DATA_VALUE, dtype=np.object)
+            empty = np.full(gene_values.size, settings.NON_DATA_VALUE, dtype=object)
 
             # Fill only the valid positions (i.e. common samples in clinical dataset)
             for (idx, value) in zip(idx_common_gene_gem_with_clinical, clinical_values):

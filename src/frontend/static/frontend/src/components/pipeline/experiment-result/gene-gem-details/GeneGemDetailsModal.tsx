@@ -4,7 +4,7 @@ import { CorrelationGraph } from './correlation-graph/CorrelationGraph'
 import ky from 'ky'
 import { KySearchParams, Nullable, StatChartData } from '../../../../utils/interfaces'
 import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoMiRNADataJSON, DjangoExperiment } from '../../../../utils/django_interfaces'
-import { alertGeneralError, getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
+import { getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
 import { findLineByLeastSquares } from './correlation-graph/correlationGraphUtils'
 import { MiRNADiseasesPanel } from './MiRNADiseasesPanel'
 import { MiRNAInteractionPanel } from './MiRNAInteractionPanel'
@@ -17,6 +17,7 @@ import { GeneGemModalMenu } from './GeneGemModalMenu'
 import { NoClinicalData } from './survival-analysis/NoClinicalData'
 import { KaplanMeierChart } from './survival-analysis/KaplanMeier'
 import { MiRNATargetInteractionPanel } from './MiRNATargetInteractionPanel'
+import { TryAgainSegment } from '../../../common/TryAgainSegment'
 
 // Defined in gem.html
 declare const urlCorrelationGraph: string
@@ -108,7 +109,11 @@ interface GeneGemDetailsModalState {
     /** Flag of statistical properties request */
     gettingStatisticalProperties: boolean,
     /** To check if needs to show Correlation Graph of Correlation Boxplot */
-    gemDataIsOrdinal: boolean
+    gemDataIsOrdinal: boolean,
+    /** Flag to show an error message */
+    correlationGraphIsError: boolean
+    /** Flag to show an error message */
+    statisticalPropertiesIsError: boolean
 }
 
 /**
@@ -147,7 +152,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             statisticalProperties: null,
             gettingCorrelationData: false,
             gettingStatisticalProperties: false,
-            gemDataIsOrdinal: false
+            gemDataIsOrdinal: false,
+            correlationGraphIsError: false,
+            statisticalPropertiesIsError: false
         }
     }
 
@@ -213,6 +220,10 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow} />
                 }
 
+                if (this.state.correlationGraphIsError) {
+                    return <TryAgainSegment onTryAgain={this.getCorrelationGraphData} />
+                }
+
                 return (
                     <CorrelationGraph
                         chartData={this.state.correlationGraphData}
@@ -223,6 +234,10 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             case ActiveItemMenu.STATISTICAL_PROPERTIES:
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
+                }
+
+                if (this.state.statisticalPropertiesIsError) {
+                    return <TryAgainSegment onTryAgain={this.getStatisticalProperties} />
                 }
 
                 return (
@@ -390,6 +405,16 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         return res
     }
 
+    /** Sets the state to show an error message when Correlation Graph panel is selected. */
+    correlationGraphOnGeneralError = () => {
+        this.setState({ correlationGraphIsError: true })
+    }
+
+    /** Sets the state to show an error message when Statistical Properties panel is selected. */
+    statisticalPropertiesOnGeneralError = () => {
+        this.setState({ statisticalPropertiesIsError: true })
+    }
+
     /**
      * Makes a request and show a correlation graph between a specific
      * gene and GEM
@@ -400,9 +425,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             return
         }
 
-        const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
-
         this.setState({ gettingCorrelationData: true }, () => {
+            const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
+
             const searchParams: KySearchParams = {
                 experimentId: this.props.experiment.id,
                 gene,
@@ -462,7 +487,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         this.setState<never>({
                             [keyToUpdate]: correlationGraphDataFormatted,
                             gemDataIsOrdinal,
-                            gettingCorrelationData: false // Sets at the same time to prevent old chart being showed before new data
+                            gettingCorrelationData: false, // Sets at the same time to prevent old chart being showed before new data
+                            correlationGraphIsError: false
                         })
                     } else {
                         switch (jsonResponse.status.internal_code) {
@@ -470,21 +496,21 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                                 alert('It seems that the experiment does not exist. If you think it\'s an error, please, contact with the administrator')
                                 break
                             default:
-                                alertGeneralError()
+                                this.correlationGraphOnGeneralError()
                                 break
                         }
                     }
                 }).catch((err) => {
                     this.setState({ gettingCorrelationData: false })
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.correlationGraphOnGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingCorrelationData: false })
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.correlationGraphOnGeneralError()
                 }
 
                 console.log('Error getting correlation graph ->', err)
@@ -515,19 +541,23 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
                         : false
 
-                    this.setState({ statisticalProperties, gemDataIsOrdinal })
+                    this.setState({
+                        statisticalProperties,
+                        gemDataIsOrdinal,
+                        statisticalPropertiesIsError: false
+                    })
                 }).catch((err) => {
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.statisticalPropertiesOnGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.statisticalPropertiesOnGeneralError()
                 }
 
-                console.log('Error getting correlation graph ->', err)
+                console.log('Error getting statistical properties ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingStatisticalProperties: false })
