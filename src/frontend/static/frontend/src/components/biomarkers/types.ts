@@ -373,7 +373,10 @@ enum ActiveStatValidationsItemMenu {
 enum ActiveBiomarkerMoleculeItemMenu {
     DETAILS,
     PATHWAYS,
-    GENE_ONTOLOGY
+    GENE_ONTOLOGY,
+    INFERENCE,
+    DISEASES,
+    DRUGS
 }
 
 /** Django TrainedModel model. */

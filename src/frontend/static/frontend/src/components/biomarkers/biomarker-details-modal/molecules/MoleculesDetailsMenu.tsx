@@ -67,6 +67,38 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                     </Menu.Item>
                 </>
             }
+            {[MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type) &&
+                <>
+                    <Menu.Item
+                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DISEASES}
+                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES)}
+                    >
+                        Diseases
+
+                        <InfoPopup
+                            content='ni idea loco'
+                            onTop={false}
+                            onEvent='hover'
+                            extraClassName='margin-left-5'
+                        />
+                    </Menu.Item>
+
+                    <Menu.Item
+                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DRUGS}
+                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS)}
+                    >
+                        Drugs
+
+                        <InfoPopup
+                            content='ni idea loco'
+                            onTop={false}
+                            onEvent='hover'
+                            extraClassName='margin-left-5'
+                        />
+                    </Menu.Item>
+                </>
+            }
+
         </Menu>
     )
 }

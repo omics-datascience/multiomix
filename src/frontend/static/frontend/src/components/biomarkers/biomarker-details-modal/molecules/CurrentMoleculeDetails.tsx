@@ -5,6 +5,8 @@ import { Nullable } from '../../../../utils/interfaces'
 import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
 import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 import { PathwaysInformation } from './genes/PathwaysInformation'
+import { DiseasesPanel } from './diseases/DiseasesPanel'
+import { DrugsPanel } from './drugs/DrugsPanel'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -33,6 +35,12 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
                 return <PathwaysInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
+                return null
+            case ActiveBiomarkerMoleculeItemMenu.DISEASES:
+                return <DiseasesPanel selectedMolecule={selectedMolecule} />
+            case ActiveBiomarkerMoleculeItemMenu.DRUGS:
+                return <DrugsPanel selectedMolecule={selectedMolecule}/>
+            default:
                 return null
         }
     }
