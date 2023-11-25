@@ -1,8 +1,8 @@
 import React from 'react'
 import { DjangoMiRNAGeneInteractionJSON, DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
-import { KySearchParams, Nullable } from '../../../../utils/interfaces'
+import { KySearchParams, Nullable, ResponseRequestWithPagination } from '../../../../utils/interfaces'
 import { MiRNAExtraData } from './MiRNAExtraData'
-import { alertGeneralError, getScoreClassData } from '../../../../utils/util_functions'
+import { getScoreClassData } from '../../../../utils/util_functions'
 import ky from 'ky'
 import { LoadingPanel } from './LoadingPanel'
 import { Grid, Header, Icon, List, Statistic } from 'semantic-ui-react'
@@ -26,7 +26,8 @@ interface MiRNATargetInteractionPanelProps {
  */
 interface MiRNATargetInteractionPanelState {
     data: Nullable<DjangoMiRNAGeneInteractionJSON>,
-    gettingData: boolean
+    gettingData: boolean,
+    isError: boolean
 }
 
 /**
@@ -45,7 +46,8 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
         this.state = {
             data: null,
-            gettingData: false
+            gettingData: false,
+            isError: false
         }
     }
 
@@ -60,6 +62,11 @@ export class MiRNATargetInteractionPanel extends React.Component<
         this.abortController.abort()
     }
 
+    /** Sets the flat to show an error segment. */
+    onGeneralError = () => {
+        this.setState({ isError: true })
+    }
+
     /**
      * Retrieves data from server
      */
@@ -71,16 +78,20 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
         this.setState({ gettingData: true }, () => {
             ky.get(urlMiRNAInteraction, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
-                response.json().then((data: DjangoMiRNAGeneInteractionJSON) => {
-                    this.setState({ data })
+                response.json().then((response: ResponseRequestWithPagination<DjangoMiRNAGeneInteractionJSON>) => {
+                    if (response.results.length === 0) {
+                        this.setState({ data: response.results[0] })
+                    }
+
+                    this.setState({ isError: false })
                 }).catch((err) => {
-                    alertGeneralError()
+                    this.onGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.onGeneralError()
                 }
 
                 console.log('Error getting miRNA target interactions ->', err)
@@ -98,7 +109,24 @@ export class MiRNATargetInteractionPanel extends React.Component<
         }
 
         if (!this.state.data) {
-            return <TryAgainSegment onTryAgain={this.getData} />
+            if (this.state.isError) {
+                return <TryAgainSegment onTryAgain={this.getData} />
+            }
+
+            // Shows a Header indicating that there is no data
+            return (
+                <Grid className='margin-top-2'>
+                    <Grid.Row stretched>
+                        <Grid.Column width={16} textAlign='center'>
+                            <Header size='huge' icon>
+                                <Icon name='folder outline' />
+
+                                No data found for this miRNA and gene
+                            </Header>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            )
         }
 
         const scoreClassData = getScoreClassData(this.state.data.score_class)

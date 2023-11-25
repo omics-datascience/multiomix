@@ -61,48 +61,10 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
         <PubmedButton key={paper} pubmedURL={paper} />
     )
 
-    const mapFunction = (miRNAInteraction: DjangoMiRNAGeneInteractionJSON) => {
-        const firstPubmedPapers = miRNAInteraction.pubmeds.slice(0, NUMBER_OF_ELEMENTS_UNTIL_POPUP)
-        const restOfPubmedPapers = miRNAInteraction.pubmeds.slice(NUMBER_OF_ELEMENTS_UNTIL_POPUP)
-        const scoreClassData = getScoreClassData(miRNAInteraction.score_class)
-
-        return (
-            <Table.Row key={miRNAInteraction.id}>
-                <Table.Cell>{miRNAInteraction.gene}</Table.Cell>
-                <Table.Cell>{miRNAInteraction.source_name}</Table.Cell>
-                <Table.Cell>{miRNAInteraction.score}</Table.Cell>
-                <Table.Cell textAlign='center' className={`cell ${scoreClassData.color}`}>
-                    <strong>{scoreClassData.description}</strong>
-                </Table.Cell>
-                <Table.Cell>
-                    {firstPubmedPapers.map(generatePubmedButton)}
-
-                    {restOfPubmedPapers.length > 0 &&
-                        <Popup
-                            trigger={
-                                <Icon
-                                    title='See more papers'
-                                    name='plus circle'
-                                    color='teal'
-                                    className='clickable'
-                                />
-                            }
-                            on='click'
-                            position='left center'
-                            content={
-                                restOfPubmedPapers.map(generatePubmedButton)
-                            }
-                            size='mini'
-                        />
-                    }
-                </Table.Cell>
-            </Table.Row>
-        )
-    }
-
     return (
         <React.Fragment>
             <MiRNAExtraData miRNA={props.miRNA} miRNAData={props.miRNAData} />
+
             <PaginatedTable<DjangoMiRNAGeneInteractionJSON>
                 headerTitle='Interactions'
                 headers={headers}
@@ -114,8 +76,48 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
                     sortField: 'score',
                     sortOrderAscendant: false
                 }}
+                customFilters={[
+                    { label: 'Include pubmeds', keyForServer: 'include_pubmeds', defaultValue: false, type: 'checkbox' }
+                ]}
                 urlToRetrieveData={urlMiRNAInteraction}
-                mapFunction={mapFunction}
+                mapFunction={(miRNAInteraction: DjangoMiRNAGeneInteractionJSON) => {
+                    const firstPubmedPapers = miRNAInteraction.pubmeds.slice(0, NUMBER_OF_ELEMENTS_UNTIL_POPUP)
+                    const restOfPubmedPapers = miRNAInteraction.pubmeds.slice(NUMBER_OF_ELEMENTS_UNTIL_POPUP)
+                    const scoreClassData = getScoreClassData(miRNAInteraction.score_class)
+
+                    return (
+                        <Table.Row key={miRNAInteraction.id}>
+                            <Table.Cell>{miRNAInteraction.gene}</Table.Cell>
+                            <Table.Cell>{miRNAInteraction.source_name}</Table.Cell>
+                            <Table.Cell>{miRNAInteraction.score}</Table.Cell>
+                            <Table.Cell textAlign='center' className={`cell ${scoreClassData.color}`}>
+                                <strong>{scoreClassData.description}</strong>
+                            </Table.Cell>
+                            <Table.Cell>
+                                {firstPubmedPapers.map(generatePubmedButton)}
+
+                                {restOfPubmedPapers.length > 0 &&
+                                    <Popup
+                                        trigger={
+                                            <Icon
+                                                title='See more papers'
+                                                name='plus circle'
+                                                color='teal'
+                                                className='clickable'
+                                            />
+                                        }
+                                        on='click'
+                                        position='left center'
+                                        content={
+                                            restOfPubmedPapers.map(generatePubmedButton)
+                                        }
+                                        size='mini'
+                                    />
+                                }
+                            </Table.Cell>
+                        </Table.Row>
+                    )
+                }}
             />
         </React.Fragment>
     )

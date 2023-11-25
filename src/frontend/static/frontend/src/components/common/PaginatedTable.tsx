@@ -1,6 +1,6 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { Checkbox, DropdownItemProps, Form, Grid, Header, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
+import { Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, Nullable, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
@@ -274,28 +274,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             return
         }
 
-        const tableControl = this.state.tableControl
-
-        // Appends pagination, sorting and filter parameters
-        const searchParams = {
-            ...this.props.queryParams,
-            search: tableControl.textFilter,
-            page_size: tableControl.pageSize,
-            page: tableControl.pageNumber,
-            ordering: generatesOrderingQuery(tableControl.sortField, tableControl.sortOrderAscendant)
-        }
-
-        // Appends filters to query
-        if (tableControl.filters) {
-            Object.entries(tableControl.filters).forEach(([key, { allowZero, value }]) => {
-                if ((!allowZero && value) ||
-                    ((allowZero && value !== null && value !== undefined && value !== ''))) {
-                    searchParams[key] = value
-                }
-            })
-        }
-
         this.setState({ gettingData: true }, () => {
+            const tableControl = this.state.tableControl
+
+            // Appends pagination, sorting and filter parameters
+            const searchParams = {
+                ...this.props.queryParams,
+                search: tableControl.textFilter,
+                page_size: tableControl.pageSize,
+                page: tableControl.pageNumber,
+                ordering: generatesOrderingQuery(tableControl.sortField, tableControl.sortOrderAscendant)
+            }
+
+            // Appends filters to query
+            if (tableControl.filters) {
+                Object.entries(tableControl.filters).forEach(([key, { allowZero, value }]) => {
+                    if ((!allowZero && value) ||
+                    ((allowZero && value !== null && value !== undefined && value !== ''))) {
+                        searchParams[key] = value
+                    }
+                })
+            }
+
             ky.get(this.props.urlToRetrieveData, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
                     tableControl.totalRowCount = jsonResponse.count
@@ -430,7 +430,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Applies map function
         const tableBody = this.state.elements.length > 0
-            ? this.state.elements.map(this.props.mapFunction)
+            ? (
+                <Table.Body>
+                    {this.state.elements.map(this.props.mapFunction)}
+                </Table.Body>
+            )
             : <NoDataRow colspan={this.props.headers.length} />
 
         // Computes some extra parameters
@@ -439,6 +443,20 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Renders customInputs
         const customFilters = this.generateCustomFiltersForm()
+
+        const bodyContent = this.state.gettingData
+            ? (
+                <Table.Body>
+                    <Table.Row>
+                        <Table.Cell colSpan={this.props.headers.length}>
+                            <Header as='h4' textAlign='center'>
+                                <Icon name='spinner' loading /> Loading...
+                            </Header>
+                        </Table.Cell>
+                    </Table.Row>
+                </Table.Body>
+            )
+            : tableBody
 
         return (
             <Grid padded stackable textAlign='center' divided>
@@ -538,9 +556,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                             </Table.Header>
 
                             {/* Body */}
-                            <Table.Body>
-                                {tableBody}
-                            </Table.Body>
+                            {bodyContent}
                         </Table>
                     </Grid.Column>
                 </Grid.Row>

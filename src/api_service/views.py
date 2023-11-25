@@ -2,14 +2,14 @@ import json
 import logging
 from builtins import map
 from celery.contrib.abortable import AbortableAsyncResult
-from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast
+from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
 import numpy as np
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
@@ -539,11 +539,8 @@ def get_mirna_target_interaction_action(request):
     http://127.0.0.1:8000/api-service/mirna-interaction?gene=BRCA1&score=0.2
     http://127.0.0.1:8000/api-service/mirna-interaction?mirna=hsa-miR-132-3p&score=0.5
     """
-
-    target_url = 'mirna-target-interactions'
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
-    score = request.GET.get('score')
 
     if not gene and not mirna:
         return JsonResponse(data={"error": "Param 'mirna' or 'gene' are mandatory"}, status=400)
@@ -554,10 +551,16 @@ def get_mirna_target_interaction_action(request):
     else:
         params = {'mirna': mirna, 'gene': gene}
 
+    score = request.GET.get('score')
     if score:
         params['score'] = score
 
-    data = global_mrna_service.get_modulector_service_content(target_url,
+    # Gets include_pubmeds flag
+    include_pubmeds = request.GET.get('include_pubmeds') == 'true'
+    if include_pubmeds:
+        params['include_pubmeds'] = 'true'
+
+    data = global_mrna_service.get_modulector_service_content('mirna-target-interactions',
                                                               request_params=params,
                                                               is_paginated=True,
                                                               method='get')
@@ -663,13 +666,15 @@ def download_full_result(request, pk: int):
 
 
 @login_required
-def download_result_with_filters(request):
+def download_result_with_filters(request: Request):
     """Downloads the combinations resulting from an analysis with filters applied"""
     experiment_id = request.GET.get('experiment_id')
-    experiment = get_object_or_404(
-        Experiment, pk=experiment_id, user=request.user)
+    experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)
+
     comb_dict: List[OrderedDict] = ExperimentResultCombinationsDetails.as_view()(
-        request=request).data['results']
+        request=request
+    ).data['results']
+
     if not comb_dict:
         raise Http404("No combinations found")
 
@@ -677,11 +682,11 @@ def download_result_with_filters(request):
 
     def format_combinations_from_dict(combination: Dict) -> Dict:
         """
-        Generates a dict from a GeneGEMCombination dict with ExperimentResultCombinationsDetails returned values
-        @param combination: GeneGEMCombination values dict
-        @return: Dict with the fields to be downloaded
+        Generates a dict from a GeneGEMCombination dict with ExperimentResultCombinationsDetails returned values.
+        @param combination: GeneGEMCombination values dict.
+        @return: Dict with the fields to be downloaded.
         """
-        data = {'gem': combination['gem'], 'gene': combination['gene']}
+        data: Dict[str, Any] = {'gem': combination['gem'], 'gene': combination['gene']}
         if 'gene_extra_data' in combination and combination['gene_extra_data'] is not None:
             gene_data = dict(combination['gene_extra_data'])
             data['chromosome'] = gene_data['chromosome']
@@ -824,7 +829,7 @@ class SurvivalDataDetails(APIView):
             )
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'
-            clinical_event_values = clinical_event_values.astype(np.object)
+            clinical_event_values = clinical_event_values.astype(object)
             clinical_event_values = pipelines.fill_null_values_with_custom_value(
                 clinical_event_values)
 
