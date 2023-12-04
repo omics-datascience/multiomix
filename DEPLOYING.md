@@ -245,9 +245,10 @@ That command will create a compressed file with the database dump inside. **Note
 1. Due to major changes, it's probably that an import thrown several errors when importing. To prevent that you could do the following steps before doing the importation:
     1. Stop all the services using `docker compose down` or removing the Docker Swarm stack.
     1. Start only the DB with `docker compose up -d db`
-    1. Drop all the tables from the DB: `docker exec -i [name of the DB container] psql postgres -U multiomics -c "DROP DATABASE multiomics;"`
-    1. Create an empty database: `docker exec -i [name of the DB container] psql postgres -U multiomics -c "CREATE DATABASE multiomics;"`
+    1. Drop all the tables from the DB: `docker exec -i [name of the DB container] psql postgres -U postgres -c "DROP DATABASE multiomics;"`
+    1. Create an empty database: `docker exec -i [name of the DB container] psql postgres -U postgres -c "CREATE DATABASE multiomics;"`
 1. Restore the db: `zcat multiomix_postgres_backup.sql.gz | docker exec -i [name of the DB container] psql multiomics -U multiomics`. This command will restore the database using a compressed dump as source, **keep in mind that could take several minutes to finish the process**.
+   - **NOTE**: in case you are working on Windows, the command must be executed from [Git Bash][git-bash] or WSL.
 
 
 ### Export MongoDB
@@ -280,3 +281,4 @@ To import a `media` folder backup inside a new environment you must (from the ro
 [cox-net-surv-analysis]: https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.linear_model.CoxnetSurvivalAnalysis.html
 [aws-emr-integration]: https://github.com/omics-datascience/multiomix-aws-emr
 [celery]: https://docs.celeryq.dev/en/stable/getting-started/introduction.html
+[git-bash]: https://git-scm.com/downloads
