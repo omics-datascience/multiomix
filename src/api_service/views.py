@@ -533,17 +533,18 @@ def get_mirna_target_interaction_action(request):
     Searches in papers an specific miRNA interaction.  
 
     Examples:
-    http://127.0.0.1:8000/api-service/mirna-interaction?gene=BRCA1&mirna=hsa-miR-132-3p
-    http://127.0.0.1:8000/api-service/mirna-interaction?mirna=hsa-miR-132-3p
-    http://127.0.0.1:8000/api-service/mirna-interaction?gene=EGFR
-    http://127.0.0.1:8000/api-service/mirna-interaction?gene=BRCA1&score=0.2
-    http://127.0.0.1:8000/api-service/mirna-interaction?mirna=hsa-miR-132-3p&score=0.5
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&mirna=hsa-miR-132-3p&include_pubmeds=true
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?mirna=hsa-miR-132-3p
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=EGFR&include_pubmeds=true
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&score=0.2
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?mirna=hsa-miR-132-3p&score=0.5
     """
 
     target_url = 'mirna-target-interactions'
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
     score = request.GET.get('score')
+    include_pubmeds = request.GET.get('include_pubmeds')
 
     if not gene and not mirna:
         return JsonResponse(data={"error": "Param 'mirna' or 'gene' are mandatory"}, status=400)
@@ -556,6 +557,10 @@ def get_mirna_target_interaction_action(request):
 
     if score:
         params['score'] = score
+    
+    if include_pubmeds:
+        if include_pubmeds.lower() == "true":
+            params['include_pubmeds'] = "true"
 
     data = global_mrna_service.get_modulector_service_content(target_url,
                                                               request_params=params,
