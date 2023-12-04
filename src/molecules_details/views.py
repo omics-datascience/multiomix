@@ -168,14 +168,16 @@ class GeneOntologyTermsOfGene(APIView):
                     return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if 'filter_type' is 'enrichment'"})
             else:
                 if not relation_type:
-                    relation_type = ["enables", "involved_in", "part_of", "located_in"]
+                    relation_type = ["enables", "involved_in",
+                                     "part_of", "located_in"]
                 else:
                     relation_type = relation_type.split(',')
                     for relation in relation_type:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
                             return Response(status=400, data={"error": "The 'relation_type' parameter must be a combination of the following options: 'enables', 'involved_in', 'part_of' and 'located_in'"})
         if not ontology_type:
-            ontology_type = ["biological_process", "molecular_function", "cellular_component"]
+            ontology_type = ["biological_process",
+                             "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
@@ -228,7 +230,8 @@ class GeneOntologyTermsOfTerm(APIView):
         relations = request.GET.get('relations', '').strip()
         ontology_type = request.GET.get('ontology_type', '').strip()
         general_depth = request.GET.get('general_depth', '').strip()
-        hierarchical_depth_to_children = request.GET.get('hierarchical_depth_to_children', '').strip()
+        hierarchical_depth_to_children = request.GET.get(
+            'hierarchical_depth_to_children', '').strip()
         to_root = request.GET.get('to_root', '').strip()
 
         if not term_id:
@@ -258,7 +261,8 @@ class GeneOntologyTermsOfTerm(APIView):
                     return Response(status=400, data={"error": "The 'relations' parameter must be a combination of the following options: 'part_of', 'regulates' and 'has_part'"})
 
         if not ontology_type:
-            ontology_type = ["biological_process", "molecular_function", "cellular_component"]
+            ontology_type = ["biological_process",
+                             "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
             for type in ontology_type:
@@ -292,6 +296,7 @@ class ActionableAndCancerGenes(APIView):
     Examples:
     http://localhost:8000/molecules/actionable-cancer-genes?gene=TP53
     http://localhost:8000/molecules/actionable-cancer-genes?gene=MSH6,EGFR
+    http://localhost:8000/molecules/actionable-cancer-genes?gene=BRCA1,ATM&query=Olaparib
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -299,16 +304,21 @@ class ActionableAndCancerGenes(APIView):
     @staticmethod
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
+        query = request.GET.get('query', '')
 
         if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
         else:
             gene = gene.split(',')
 
+        if not query:
+            query = ""
+
         data = global_mrna_service.get_bioapi_service_content(
             'information-of-oncokb',
             request_params={
-                'gene_ids': gene
+                'gene_ids': gene,
+                'query': query
             },
             is_paginated=False,
             method='post'
