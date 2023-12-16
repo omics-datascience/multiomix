@@ -17,8 +17,8 @@ declare const urlMiRNAInteraction: string
  */
 interface MiRNATargetInteractionPanelProps {
     miRNAData: Nullable<DjangoMiRNADataJSON>,
-    miRNA: string,
-    gene: string,
+    miRNA: Nullable<string>,
+    gene: Nullable<string>,
 }
 
 /**
@@ -72,8 +72,8 @@ export class MiRNATargetInteractionPanel extends React.Component<
      */
     getData = () => {
         const searchParams: KySearchParams = {
-            mirna: this.props.miRNA,
-            gene: this.props.gene
+            mirna: this.props.miRNA as string,
+            gene: this.props.gene as string
         }
 
         this.setState({ gettingData: true }, () => {

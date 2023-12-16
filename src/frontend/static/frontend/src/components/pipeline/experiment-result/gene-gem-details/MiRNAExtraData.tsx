@@ -27,7 +27,7 @@ const LinkOrPlainText = (props: LinkOrPlainTextProps) => {
  * Component's props
  */
 interface MiRNAExtraDataProps {
-    miRNA: string,
+    miRNA: Nullable<string>,
     miRNAData: Nullable<DjangoMiRNADataJSON>
 }
 

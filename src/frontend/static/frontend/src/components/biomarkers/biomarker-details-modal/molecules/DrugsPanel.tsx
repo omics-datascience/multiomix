@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { BiomarkerMolecule } from '../../../types'
-import { MiRNADiseasesPanel } from '../../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
-import { KySearchParams, Nullable } from '../../../../../utils/interfaces'
-import { DjangoMiRNADataJSON } from '../../../../../utils/django_interfaces'
+import { BiomarkerMolecule } from '../../types'
+import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
+import { KySearchParams, Nullable } from '../../../../utils/interfaces'
+import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import ky from 'ky'
 
 interface BiomarkerDiseasesPanelProps {
@@ -10,9 +10,9 @@ interface BiomarkerDiseasesPanelProps {
     selectedMolecule: BiomarkerMolecule,
 
 }
-// declare const urlGetMiRNAData: string
+declare const urlGetMiRNAData: string
 
-export const DiseasesPanel = (props: BiomarkerDiseasesPanelProps) => {
+export const DrugsPanel = (props: BiomarkerDiseasesPanelProps) => {
     const { selectedMolecule } = props
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
     const abortController = useRef(new AbortController())
@@ -22,9 +22,10 @@ export const DiseasesPanel = (props: BiomarkerDiseasesPanelProps) => {
             mirna: selectedMolecule.identifier
         }
 
-        ky.get('urlGetMiRNAData', { signal: abortController.current.signal, searchParams }).then((response) => {
+        ky.get(urlGetMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
             response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
                 setMiRNAData(jsonResponse)
+                console.log(jsonResponse)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -32,8 +33,10 @@ export const DiseasesPanel = (props: BiomarkerDiseasesPanelProps) => {
             console.log('Error getting studies ->', err)
         })
     }
+
     useEffect(() => {
-        //getMiRNAData()
+        getMiRNAData()
+
         return () => {
             abortController.current.abort()
         }
@@ -41,7 +44,13 @@ export const DiseasesPanel = (props: BiomarkerDiseasesPanelProps) => {
 
     return (
         <div>
-            {/*  <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} miRNAData={miRNAData} /> */}
+            <MiRNADrugsPanel miRNA={selectedMolecule.identifier} miRNAData={miRNAData ?? {
+                aliases: [],
+                mirna_sequence: '',
+                mirbase_accession_id: '',
+                links: []
+            }}
+            />
         </div>
     )
 }

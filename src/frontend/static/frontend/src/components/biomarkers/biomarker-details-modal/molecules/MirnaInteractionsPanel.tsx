@@ -1,19 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { BiomarkerMolecule } from '../../../types'
-import { MiRNADrugsPanel } from '../../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
-import { KySearchParams, Nullable } from '../../../../../utils/interfaces'
-import { DjangoMiRNADataJSON } from '../../../../../utils/django_interfaces'
+import { BiomarkerMolecule } from '../../types'
+import { MiRNATargetInteractionPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNATargetInteractionPanel'
+import { KySearchParams, Nullable } from '../../../../utils/interfaces'
 import ky from 'ky'
+import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 
-interface BiomarkerDiseasesPanelProps {
+interface Props {
     /** Selected Biomarker instance to retrieve its TrainedModel instances. */
     selectedMolecule: BiomarkerMolecule,
-
+    gene: Nullable<string>,
+    miRNA: Nullable<string>,
 }
 declare const urlGetMiRNAData: string
 
-export const DrugsPanel = (props: BiomarkerDiseasesPanelProps) => {
-    const { selectedMolecule } = props
+export const MirnaInteractionsPanel = (props: Props) => {
+    const { selectedMolecule, gene, miRNA } = props
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
     const abortController = useRef(new AbortController())
 
@@ -25,7 +26,6 @@ export const DrugsPanel = (props: BiomarkerDiseasesPanelProps) => {
         ky.get(urlGetMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
             response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
                 setMiRNAData(jsonResponse)
-                console.log(jsonResponse)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
             })
@@ -33,16 +33,22 @@ export const DrugsPanel = (props: BiomarkerDiseasesPanelProps) => {
             console.log('Error getting studies ->', err)
         })
     }
+
     useEffect(() => {
         getMiRNAData()
+
         return () => {
             abortController.current.abort()
         }
     }, [])
-
     return (
-        <div>
-            {/*  <MiRNADrugsPanel miRNA={selectedMolecule.identifier} miRNAData={miRNAData}/> */}
-        </div>
+        <>
+            <MiRNATargetInteractionPanel
+                miRNAData={miRNAData}
+                gene={gene} // para mrna y cna se envia el gem
+                miRNA={miRNA} // para los otros 2
+            />
+        </>
+
     )
 }

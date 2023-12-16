@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { Grid, Header, Icon } from 'semantic-ui-react'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
-import { Nullable } from '../../../../utils/interfaces'
+import { MoleculeType, Nullable } from '../../../../utils/interfaces'
 import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
 import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 import { PathwaysInformation } from './genes/PathwaysInformation'
-import { DiseasesPanel } from './diseases/DiseasesPanel'
-import { DrugsPanel } from './drugs/DrugsPanel'
+import { DiseasesPanel } from './DiseasesPanel'
+import { DrugsPanel } from './DrugsPanel'
+import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
+import { ActionableCancerGenesPanel } from './ActionableCancerGenesPanel'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -23,6 +25,7 @@ interface CurrentMoleculeDetailsProps {
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
+
     /**
      * Gets the selected component according to the active item.
      * @param selectedMolecule Selected BiomarkerMolecule instance to show in the selected panel.
@@ -39,7 +42,16 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <DiseasesPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
-                return <DrugsPanel selectedMolecule={selectedMolecule}/>
+                return <DrugsPanel selectedMolecule={selectedMolecule} />
+            case ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS:
+                return (
+                    <MirnaInteractionsPanel
+                        selectedMolecule={selectedMolecule}
+                        gene={[MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule?.type as MoleculeType) ? selectedMolecule.identifier : null}
+                        miRNA={[MoleculeType.MIRNA].includes(props.selectedMolecule?.type as MoleculeType) ? selectedMolecule.identifier : null}
+                    />)
+            case ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES:
+                return <ActionableCancerGenesPanel />
             default:
                 return null
         }
@@ -52,7 +64,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const getPanel = (): JSX.Element => {
         if (props.selectedMolecule !== null) {
             return (
-                <>
+                <div>
                     {/* Menu */}
                     <MoleculesDetailsMenu
                         activeItem={activeItem}
@@ -61,8 +73,10 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                     />
 
                     {/* Selected menu option */}
-                    {getSelectedComponent(props.selectedMolecule)}
-                </>
+                    <div>
+                        {getSelectedComponent(props.selectedMolecule)}
+                    </div>
+                </div>
             )
         }
 

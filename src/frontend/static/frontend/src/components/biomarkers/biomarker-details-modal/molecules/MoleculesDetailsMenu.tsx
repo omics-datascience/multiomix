@@ -21,7 +21,7 @@ interface MoleculesDetailsMenuProps {
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     return (
-        <Menu className='margin-top-0'>
+        <Menu className='margin-top-0' stackable vertical>
             <Menu.Item
                 active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS}
                 onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)}
@@ -65,6 +65,18 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                             extraClassName='margin-left-5'
                         />
                     </Menu.Item>
+                    <Menu.Item
+                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES}
+                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES)}
+                    >
+                        Actionable/Cancer genes
+                        <InfoPopup
+                            content='It shows information from gene ontology related with the genes of this biomarker'
+                            onTop={false}
+                            onEvent='hover'
+                            extraClassName='margin-left-5'
+                        />
+                    </Menu.Item>
                 </>
             }
             {[MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type) &&
@@ -88,6 +100,19 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                         onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS)}
                     >
                         Drugs
+
+                        <InfoPopup
+                            content='ni idea loco'
+                            onTop={false}
+                            onEvent='hover'
+                            extraClassName='margin-left-5'
+                        />
+                    </Menu.Item>
+                    <Menu.Item
+                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS}
+                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS)}
+                    >
+                        miRNA-Gene interactions
 
                         <InfoPopup
                             content='ni idea loco'
