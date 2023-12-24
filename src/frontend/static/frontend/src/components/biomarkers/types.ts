@@ -190,7 +190,8 @@ enum FeatureSelectionAlgorithm {
     BLIND_SEARCH = 1,
     COX_REGRESSION = 2,
     BBHA = 3,
-    PSO = 4
+    PSO = 4,
+    GA = 5
 }
 
 /** Available fitness functions. TODO: rename to ModelUsed */
@@ -309,6 +310,13 @@ interface AdvancedBBHA extends AdvancedMode {
     BBHAVersion: BBHAVersion;
 }
 
+/** Advanced GA properties */
+interface AdvancedGA extends AdvancedMode {
+    numberOfIterations: number;
+    populationSize: number;
+    mutationRate: number;
+}
+
 /** CV parameters. */
 interface CrossValidationParameters {
     folds: number
@@ -318,6 +326,7 @@ interface CrossValidationParameters {
 interface AdvancedAlgorithm {
     isActive: boolean,
     BBHA: AdvancedBBHA,
+    GA: AdvancedGA,
     coxRegression: AdvancedCoxRegression
 }
 
@@ -566,6 +575,7 @@ interface PredictionRangeLabelsSet {
 export {
     AdvancedCoxRegression,
     AdvancedBBHA,
+    AdvancedGA,
     BBHAVersion,
     AdvancedAlgorithm,
     SVMKernel,

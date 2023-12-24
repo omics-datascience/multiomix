@@ -41,7 +41,7 @@ SurvModel = Union[FastKernelSurvivalSVM, RandomSurvivalForest, ClusteringModels]
 FSResult = Tuple[Optional[List[str]], Optional[SurvModel], Optional[float]]
 
 # Result of Cox net analysis
-CoxNetAnalysisResult = Tuple[Optional[List[str]], Optional[SurvModel],List[float]]
+CoxNetAnalysisResult = Tuple[Optional[List[str]], Optional[SurvModel], List[float]]
 
 
 def __all_combinations(any_list: List) -> Iterable[List]:
@@ -228,9 +228,9 @@ def blind_search_sequential(classifier: SurvModel,
     return best_features, best_model, best_score
 
 
-def __compute_bbha_fitness_function(classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray,
-                                    is_clustering: bool, clustering_score_method: Optional[ClusteringScoringMethod],
-                                    cross_validation_folds: int, more_is_better: bool) -> Tuple[float, SurvModel]:
+def __compute_fitness_function(classifier: SurvModel, subset: pd.DataFrame, clinical_data: np.ndarray,
+                               is_clustering: bool, clustering_score_method: Optional[ClusteringScoringMethod],
+                               cross_validation_folds: int, more_is_better: bool) -> Tuple[float, SurvModel]:
     """Computes clustering or CV algorithm depending on the parameters. Return avg fitness value and best model."""
     if is_clustering:
         current_mean_score, current_best_model, _best_score = __compute_clustering_sequential(
@@ -302,10 +302,10 @@ def binary_black_hole_sequential(
         random_features_to_select = get_random_subset_of_features_bbha(n_features)
         stars_subsets[i] = random_features_to_select  # Initialize 'Population'
         subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
-        mean_score, initial_best_model = __compute_bbha_fitness_function(classifier, subset_to_predict,
-                                                                         clinical_data, is_clustering,
-                                                                         clustering_score_method,
-                                                                         cross_validation_folds, more_is_better)
+        mean_score, initial_best_model = __compute_fitness_function(classifier, subset_to_predict,
+                                                                    clinical_data, is_clustering,
+                                                                    clustering_score_method,
+                                                                    cross_validation_folds, more_is_better)
 
         stars_fitness_values[i] = mean_score
         stars_model[i] = initial_best_model
@@ -324,11 +324,11 @@ def binary_black_hole_sequential(
             # Computes the current star fitness
             current_star_combination = stars_subsets[a]
             subset = get_subset_of_features(molecules_df, combination=current_star_combination)
-            current_mean_score, current_best_model = __compute_bbha_fitness_function(classifier, subset, clinical_data,
-                                                                                     is_clustering,
-                                                                                     clustering_score_method,
-                                                                                     cross_validation_folds,
-                                                                                     more_is_better)
+            current_mean_score, current_best_model = __compute_fitness_function(classifier, subset, clinical_data,
+                                                                                is_clustering,
+                                                                                clustering_score_method,
+                                                                                cross_validation_folds,
+                                                                                more_is_better)
 
             # If it's the best fitness, swaps that star with the current black hole
             if (more_is_better and current_mean_score > best_mean_score) or \
@@ -339,8 +339,9 @@ def binary_black_hole_sequential(
                 best_model, current_best_model = current_best_model, best_model
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
-            elif current_mean_score == best_mean_score and np.count_nonzero(current_star_combination) < np.count_nonzero(
-                    best_features):
+            elif current_mean_score == best_mean_score and np.count_nonzero(
+                    current_star_combination) < np.count_nonzero(
+                best_features):
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
@@ -453,3 +454,65 @@ def select_top_cox_regression(molecules_df: pd.DataFrame, clinical_data: np.ndar
         best_features_coeff = best_features_coeff[:top_n]
 
     return best_features, None, best_features_coeff
+
+
+def genetic_algorithms_sequential(
+        classifier: SurvModel,
+        molecules_df: pd.DataFrame,
+        population_size: int,
+        mutation_rate: float,
+        n_iterations: int,
+        clinical_data: np.ndarray,
+        is_clustering: bool,
+        clustering_score_method: Optional[ClusteringScoringMethod],
+        cross_validation_folds: int,
+) -> FSResult:
+    # Even in case of Log-likelihood (only used in clustering) it has to be maximized:
+    # https://github.com/CamDavidsonPilon/lifelines/issues/1545
+    # For the moment there is no model that needs to be minimized
+    more_is_better = True
+
+    # Initialize population randomly
+    n_molecules = molecules_df.shape[1]
+    population = np.random.randint(2, size=(population_size, n_molecules))
+
+    fitness_scores = np.empty((population_size, 2))
+
+    for _iteration in range(n_iterations):
+        # Calculate fitness scores for each solution
+        fitness_scores = np.array([
+            __compute_fitness_function(classifier, solution.reshape(1, -1),
+                                       clinical_data, is_clustering,
+                                       clustering_score_method,
+                                       cross_validation_folds, more_is_better)
+            for solution in population
+        ])
+
+        # Select parents based on fitness scores
+        parents = population[
+            np.random.choice(population_size, size=population_size, p=fitness_scores[:, 0] / fitness_scores[:, 0].sum())
+        ]
+
+        # Crossover (single-point crossover)
+        crossover_point = np.random.randint(1, )
+        offspring = np.empty_like(population)
+        for i in range(population_size // 2):
+            parent1, parent2 = parents[i], parents[population_size - i - 1]
+            offspring[i] = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))
+            offspring[population_size - i - 1] = np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
+
+        # Mutation
+        mask = np.random.rand(population_size, n_molecules) < mutation_rate
+        offspring[mask] = 1 - offspring[mask]
+
+        population = offspring
+
+    # Get the best solution
+    best_idx = np.argmax(fitness_scores[:, 0])
+    best_features = population[best_idx]
+    best_features = best_features.astype(bool)  # Pandas needs a boolean array to select the rows
+    best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()
+
+    best_model = cast(SurvModel, fitness_scores[best_idx][1])
+    best_mean_score = cast(float, fitness_scores[best_idx][0])
+    return best_features_str, best_model, best_mean_score

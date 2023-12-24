@@ -123,7 +123,8 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'example'),
         'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
         'PORT': os.getenv('POSTGRES_PORT', 5432),
-        'NAME': os.getenv('POSTGRES_DB', 'multiomics')  # Keep "multiomics" for backward compatibility
+        # 'NAME': os.getenv('POSTGRES_DB', 'multiomics')  # Keep "multiomics" for backward compatibility
+        'NAME': os.getenv('POSTGRES_DB', 'multiomix-prod')  # Keep "multiomics" for backward compatibility
     }
 }
 
@@ -342,6 +343,10 @@ MAX_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MAX_ITERATIONS_METAHEURISTIC
 # Minimum and maximum number of stars in the BBHA algorithm
 MIN_STARS_BBHA: int = int(os.getenv('MIN_STARS_BBHA', 5))
 MAX_STARS_BBHA: int = int(os.getenv('MAX_STARS_BBHA', 90))
+
+# Minimum and maximum number for population size parameter in the GA algorithm
+MIN_POPULATION_SIZE_GA: int = int(os.getenv('MIN_POPULATION_SIZE_GA', 5))
+MAX_POPULATION_SIZE_GA: int = int(os.getenv('MAX_POPULATION_SIZE_GA', 200))
 
 # Maximum number of features to select in the CoxRegression algorithm
 MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 60))

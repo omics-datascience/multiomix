@@ -8,12 +8,12 @@ from common.exceptions import ExperimentStopped
 from common.functions import check_if_stopped
 from common.typing import AbortEvent
 from common.utils import limit_between_min_max
-from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression
+from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential, select_top_cox_regression, \
+    genetic_algorithms_sequential
 from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, TrainedModel, \
-    BBHAParameters, CoxRegressionParameters
+    BBHAParameters, CoxRegressionParameters, GeneticAlgorithmsParameters
 from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier, save_molecule_identifiers
-
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -47,6 +47,7 @@ def __should_run_in_spark(n_agents: int, n_iterations: int) -> bool:
     @return: True if the number of combinations to be executed is greater than or equal to the threshold.
     """
     return n_agents * n_iterations >= settings.MIN_COMBINATIONS_SPARK
+
 
 def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: str,
                             clinical_temp_file_path: str, fit_fun_enum: FitnessFunction,
@@ -104,7 +105,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
 
         bbha_parameters = algorithm_parameters['BBHA']
         n_stars = int(bbha_parameters['numberOfStars'])
-        n_bbha_iterations = int(bbha_parameters['numberOfIterations'])
+        ga_iterations = int(bbha_parameters['numberOfIterations'])
         bbha_version = int(bbha_parameters['BBHAVersion'])
         use_spark = bbha_parameters['useSpark']
 
@@ -112,12 +113,12 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
         BBHAParameters.objects.create(
             fs_experiment=experiment,
             n_stars=n_stars,
-            n_iterations=n_bbha_iterations,
+            n_iterations=ga_iterations,
             version_used=bbha_version
         )
 
         if settings.ENABLE_AWS_EMR_INTEGRATION and use_spark and \
-                __should_run_in_spark(n_agents=n_stars, n_iterations=n_bbha_iterations):
+                __should_run_in_spark(n_agents=n_stars, n_iterations=ga_iterations):
             check_if_stopped(is_aborted, ExperimentStopped)
 
             app_name = f'BBHA_{experiment.pk}'
@@ -128,7 +129,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
                 clinical_df=clinical_df,
                 trained_model=trained_model,
                 n_stars=n_stars,
-                n_iterations=n_bbha_iterations,
+                n_iterations=ga_iterations,
             )
 
             # Saves the job id in the experiment
@@ -146,7 +147,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
                 classifier,
                 molecules_df,
                 n_stars=n_stars,
-                n_iterations=n_bbha_iterations,
+                n_iterations=ga_iterations,
                 clinical_data=clinical_data,
                 is_clustering=is_clustering,
                 clustering_score_method=clustering_scoring_method,
@@ -171,10 +172,38 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
         best_features, best_model, best_score = select_top_cox_regression(
             molecules_df,
             clinical_data,
-            filter_zero_coeff=True, # Keeps only != 0 coefficient
+            filter_zero_coeff=True,  # Keeps only != 0 coefficient
             top_n=top_n
         )
+    elif experiment.algorithm == FeatureSelectionAlgorithm.GA:
+        # Genetic Algorithms metaheuristic
+        print('Running GA')
+        genetic_algorithms_parameters = algorithm_parameters['GA']
+
+        ga_iterations = int(genetic_algorithms_parameters['numberOfIterations'])
+        population_size = int(genetic_algorithms_parameters['populationSize'])
+        mutation_rate = float(genetic_algorithms_parameters['mutationRate'])
+
+        GeneticAlgorithmsParameters.objects.create(
+            fs_experiment=experiment,
+            n_iterations=ga_iterations,
+            population_size=population_size,
+            mutation_rate=mutation_rate,
+        )
+
+        best_features, best_model, best_score = genetic_algorithms_sequential(
+            classifier,
+            molecules_df,
+            population_size=population_size,
+            mutation_rate=mutation_rate,
+            n_iterations=ga_iterations,
+            clinical_data=clinical_data,
+            is_clustering=is_clustering,
+            clustering_score_method=clustering_scoring_method,
+            cross_validation_folds=trained_model.cross_validation_folds
+        )
     else:
+
         # TODO: implement PSO and GA
         raise Exception('Algorithm not implemented')
 
@@ -197,10 +226,10 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
 
 
 def prepare_and_compute_fs_experiment(experiment: FSExperiment, fit_fun_enum: FitnessFunction,
-                                        fitness_function_parameters: Dict[str, Any],
-                                        algorithm_parameters: Dict[str, Any],
-                                        cross_validation_parameters: Dict[str, Any],
-                                        is_aborted: AbortEvent) -> Tuple[str, str, bool]:
+                                      fitness_function_parameters: Dict[str, Any],
+                                      algorithm_parameters: Dict[str, Any],
+                                      cross_validation_parameters: Dict[str, Any],
+                                      is_aborted: AbortEvent) -> Tuple[str, str, bool]:
     """
     Gets samples in common, generates needed DataFrames and finally computes the Feature Selection experiment.
     @param experiment: FSExperiment instance.
@@ -224,7 +253,7 @@ def prepare_and_compute_fs_experiment(experiment: FSExperiment, fit_fun_enum: Fi
 
     check_if_stopped(is_aborted, ExperimentStopped)
     running_in_spark = __compute_fs_experiment(experiment, molecules_temp_file_path, clinical_temp_file_path,
-                                                    fit_fun_enum, fitness_function_parameters,
-                                                    algorithm_parameters, cross_validation_parameters, is_aborted)
+                                               fit_fun_enum, fitness_function_parameters,
+                                               algorithm_parameters, cross_validation_parameters, is_aborted)
 
     return molecules_temp_file_path, clinical_temp_file_path, running_in_spark
