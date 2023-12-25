@@ -510,7 +510,7 @@ def genetic_algorithms_sequential(
         population = offspring
 
     # Get the best solution
-    best_idx = np.argmax(fitness_scores[:, 0])
+    best_idx = np.argmax(fitness_scores[:, 0]) if more_is_better else np.argmin(fitness_scores[:, 0])
     best_features = population[best_idx]
     best_features = best_features.astype(bool)  # Pandas needs a boolean array to select the rows
     best_features_str: List[str] = molecules_df.iloc[best_features].index.tolist()
