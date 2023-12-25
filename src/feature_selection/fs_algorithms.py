@@ -339,9 +339,8 @@ def binary_black_hole_sequential(
                 best_model, current_best_model = current_best_model, best_model
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
-            elif current_mean_score == best_mean_score and np.count_nonzero(
-                    current_star_combination) < np.count_nonzero(
-                best_features):
+            elif current_mean_score == best_mean_score and \
+                    np.count_nonzero(current_star_combination) < np.count_nonzero(best_features):
                 black_hole_idx = a
                 best_features, current_star_combination = current_star_combination, best_features
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
@@ -473,7 +472,7 @@ def genetic_algorithms_sequential(
     more_is_better = True
 
     # Initialize population randomly
-    n_molecules = molecules_df.shape[1]
+    n_molecules = molecules_df.shape[0]
     population = np.random.randint(2, size=(population_size, n_molecules))
 
     fitness_scores = np.empty((population_size, 2))
@@ -481,16 +480,19 @@ def genetic_algorithms_sequential(
     for _iteration in range(n_iterations):
         # Calculate fitness scores for each solution
         fitness_scores = np.array([
-            __compute_fitness_function(classifier, solution.reshape(1, -1),
+            __compute_fitness_function(classifier, get_subset_of_features(molecules_df, combination=solution),
                                        clinical_data, is_clustering,
                                        clustering_score_method,
                                        cross_validation_folds, more_is_better)
             for solution in population
         ])
 
+        # Gets scores and casts the type to float to prevent errors due to 'safe' option
+        scores = fitness_scores[:, 0].astype(float)
+
         # Select parents based on fitness scores
         parents = population[
-            np.random.choice(population_size, size=population_size, p=fitness_scores[:, 0] / fitness_scores[:, 0].sum())
+            np.random.choice(population_size, size=population_size, p=scores / scores.sum())
         ]
 
         # Crossover (single-point crossover)
