@@ -204,7 +204,7 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
         )
     else:
 
-        # TODO: implement PSO and GA
+        # TODO: implement PSO
         raise Exception('Algorithm not implemented')
 
     if best_features is not None:
