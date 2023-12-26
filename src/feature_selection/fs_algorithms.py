@@ -127,7 +127,12 @@ def __compute_clustering_sequential(classifier: ClusteringModels, subset: pd.Dat
     cloned = clone(classifier)
     cloned = cast(ClusteringModels, cloned)
 
-    clustering_result = cloned.fit(subset.values)
+    # Suppress the warning: "The default value of `n_init` will change from 10 to 'auto' in 1.4. Set the value of
+    # `n_init` explicitly to suppress the warning". See https://github.com/scikit-learn/scikit-learn/discussions/25016
+    # TODO: remove this when scikit-learn 1.4 is released
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        clustering_result = cloned.fit(subset.values)
 
     # Generates a DataFrame with a column for time, event and the group
     labels = clustering_result.labels_
