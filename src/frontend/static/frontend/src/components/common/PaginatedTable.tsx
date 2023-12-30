@@ -8,6 +8,9 @@ import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
+import isEqual from 'lodash/isEqual'
+
+// Styles
 import './commonStyles.css'
 
 declare const currentUserId: string
@@ -189,7 +192,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      * @param prevProps Previous props.
      */
     componentDidUpdate (prevProps: PaginatedTableProps<T>) {
-        if (prevProps.queryParams !== this.props.queryParams) {
+        if (!isEqual(prevProps.queryParams, this.props.queryParams)) {
             this.getData()
 
             this.getFiltersOptions()

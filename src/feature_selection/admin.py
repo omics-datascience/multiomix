@@ -8,7 +8,7 @@ from django_object_actions import DjangoObjectActions
 from biomarkers.models import BiomarkerState
 from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel, ClusterLabelsSet, \
     ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters, CoxRegressionParameters, \
-    BBHAParameters
+    BBHAParameters, GeneticAlgorithmsParameters
 
 
 class Echo:
@@ -16,6 +16,7 @@ class Echo:
     An object that implements just the write method of the file-like interface.
     Taken from https://docs.djangoproject.com/en/4.2/howto/outputting-csv/#streaming-csv-files
     """
+
     def write(self, value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
@@ -39,7 +40,7 @@ class FSExperimentAdmin(admin.ModelAdmin):
 
     list_display = ('pk', 'origin_biomarker', 'target_biomarker', 'target_biomarker_state', 'algorithm', 'app_name',
                     'emr_job_id')
-    list_filter = ('algorithm', )
+    list_filter = ('algorithm',)
     search_fields = ('origin_biomarker__name', 'created_biomarker__name')
 
 
@@ -86,8 +87,7 @@ class SVMTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
             headers={"Content-Disposition": f'attachment; filename="SVMTimesRecord-{today}.csv"'}
         )
 
-    changelist_actions = ('export', )
-
+    changelist_actions = ('export',)
 
 
 class RFTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
@@ -116,7 +116,7 @@ class RFTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
             headers={"Content-Disposition": f'attachment; filename="RFTimesRecord-{today}.csv"'}
         )
 
-    changelist_actions = ('export', )
+    changelist_actions = ('export',)
 
 
 class ClusteringTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
@@ -136,7 +136,7 @@ class ClusteringTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
 
         # Sets CSV header
         header = writer.writerow(('Number of features', 'Number of samples', 'Execution time', 'Fitness',
-             'Train score', 'Number of clusters', 'Algorithm', 'Scoring method'))
+                                  'Train score', 'Number of clusters', 'Algorithm', 'Scoring method'))
 
         # Returns the CSV as a StreamingResponse with the current date (only) in the filename
         today = timezone.now().strftime("%Y-%m-%d")
@@ -146,22 +146,23 @@ class ClusteringTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
             headers={"Content-Disposition": f'attachment; filename="ClusteringTimesRecord-{today}.csv"'}
         )
 
-    changelist_actions = ('export', )
+    changelist_actions = ('export',)
 
 
 class BBHAParametersAdmin(admin.ModelAdmin):
     list_display = ('n_stars', 'n_iterations', 'version_used', 'fs_experiment')
-    list_filter = ('version_used', )
+    list_filter = ('version_used',)
 
 
 class CoxRegressionParametersAdmin(admin.ModelAdmin):
-    list_display = ('top_n', )
+    list_display = ('top_n',)
 
 
 admin.site.register(FSExperiment, FSExperimentAdmin)
 admin.site.register(SVMParameters)
 admin.site.register(RFParameters)
 admin.site.register(ClusteringParameters)
+admin.site.register(GeneticAlgorithmsParameters)
 admin.site.register(TrainedModel, TrainedModelAdmin)
 admin.site.register(ClusterLabelsSet)
 admin.site.register(ClusterLabel)

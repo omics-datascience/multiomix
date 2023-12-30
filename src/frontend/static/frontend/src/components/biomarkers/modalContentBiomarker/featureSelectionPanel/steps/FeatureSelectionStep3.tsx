@@ -6,6 +6,7 @@ import './../featureSelection.css'
 import { BBHAAdvanced } from './advancedMode/BBHAAdvanced'
 import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
 import { getNumberOfMoleculesOfBiomarker } from '../../../utils'
+import { GAAdvanced } from './advancedMode/GAAdvanced'
 
 declare const maxFeaturesBlindSearch: number
 declare const minFeaturesMetaheuristics: number
@@ -61,6 +62,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     />
                 )
             case FeatureSelectionAlgorithm.BBHA:
+            case FeatureSelectionAlgorithm.GA:
                 return (
                     <FeatureSelectionForm
                         fitnessFunction={featureSelection.fitnessFunction}
@@ -74,7 +76,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 )
             case FeatureSelectionAlgorithm.COX_REGRESSION:
                 return (
-                    <></>
+                    null
                 )
             case FeatureSelectionAlgorithm.PSO:
                 return (
@@ -103,6 +105,13 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                 return (
                     <BBHAAdvanced
                         advancedData={featureSelection.advancedAlgorithmParameters.BBHA}
+                        handleChangeAdvanceAlgorithm={handleChangeAdvanceAlgorithm}
+                    />
+                )
+            case FeatureSelectionAlgorithm.GA:
+                return (
+                    <GAAdvanced
+                        advancedData={featureSelection.advancedAlgorithmParameters.GA}
                         handleChangeAdvanceAlgorithm={handleChangeAdvanceAlgorithm}
                     />
                 )
@@ -138,6 +147,12 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                             text: 'Blind Search',
                             value: FeatureSelectionAlgorithm.BLIND_SEARCH,
                             disabled: blindSearchIsDisabled
+                        },
+                        {
+                            key: FeatureSelectionAlgorithm.GA,
+                            text: 'Genetic Algorithms',
+                            value: FeatureSelectionAlgorithm.GA,
+                            disabled: metaheuristicsAreDisabled
                         },
                         {
                             key: FeatureSelectionAlgorithm.BBHA,

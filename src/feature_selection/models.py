@@ -17,6 +17,7 @@ class FeatureSelectionAlgorithm(models.IntegerChoices):
     COX_REGRESSION = 2
     BBHA = 3
     PSO = 4
+    GA = 5
 
 
 class FitnessFunction(models.IntegerChoices):
@@ -81,7 +82,7 @@ class SVMParameters(models.Model):
     task = models.IntegerField(choices=SVMTask.choices)
     max_iterations = models.SmallIntegerField(default=1000,
                                               validators=[MinValueValidator(100), MaxValueValidator(2000)])
-    random_state =  models.SmallIntegerField(null=True, blank=True)
+    random_state = models.SmallIntegerField(null=True, blank=True)
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='svm_parameters')
 
 
@@ -89,7 +90,7 @@ class RFParameters(models.Model):
     """RF fitness function parameters."""
     n_estimators = models.SmallIntegerField(default=10, validators=[MinValueValidator(10), MaxValueValidator(20)])
     max_depth = models.SmallIntegerField(null=True, blank=True, validators=[MinValueValidator(3)])
-    random_state =  models.SmallIntegerField(null=True, blank=True)
+    random_state = models.SmallIntegerField(null=True, blank=True)
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='rf_parameters')
 
 
@@ -169,6 +170,13 @@ class CoxRegressionParameters(AlgorithmParameters):
     top_n = models.PositiveSmallIntegerField()
 
 
+class GeneticAlgorithmsParameters(AlgorithmParameters):
+    """Parameters for the GA FS algorithm."""
+    n_iterations = models.PositiveSmallIntegerField()
+    population_size = models.PositiveSmallIntegerField(default=50)
+    mutation_rate = models.FloatField(default=0.01)
+
+
 def user_directory_path_for_trained_models(instance, filename: str):
     """File will be uploaded to MEDIA_ROOT/uploads/user_<id>/trained_models/<filename>"""
     return f'uploads/user_{instance.biomarker.user.id}/trained_models/{filename}'
@@ -187,7 +195,7 @@ class TrainedModel(models.Model):
     state = models.IntegerField(choices=TrainedModelState.choices)  # Yes, has the same states as a Biomarker
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
-    best_fitness_value =  models.FloatField(null=True, blank=True)
+    best_fitness_value = models.FloatField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     cross_validation_folds = models.PositiveSmallIntegerField(default=10, validators=[MinValueValidator(3),

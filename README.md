@@ -11,10 +11,10 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Pre-requisites
 
-- Python 3.7+
+- Python 3.7+ (tested version: `3.10`)
 - Node JS (tested version: `16.x`)
-- [Modulector][modulector] 2.1.2
-- [BioAPI][bioapi] 1.0.6
+- [Modulector][modulector] 2.1.3
+- [BioAPI][bioapi] 1.1.1
 
 
 ## Installation 
@@ -59,7 +59,7 @@ Every time you want to work with Multiomix, you need to follow the below steps:
         - `npm run dev`: compiles code in development mode.
         - `npm run watch`: compiles code in development mode and re compiles every time a file changes.
         - `npm run prod`: compiles code in production mode.
-1. Run Celery tasks queue to run experiments:
+1. Run Celery tasks queue to run experiments (in Windows add `--pool=solo` to the end of all the Celery commands as proposed [here][windows-celery]):
    1. `cd src`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q feature_selection`
@@ -108,3 +108,4 @@ Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
 [ggca]: https://pypi.org/project/ggca/
 [modulector]: https://github.com/omics-datascience/modulector
 [bioapi]: https://github.com/omics-datascience/BioAPI
+[windows-celery]: https://stackoverflow.com/a/64753882/7058363

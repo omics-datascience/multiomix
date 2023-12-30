@@ -80,6 +80,8 @@ The following are the steps to perform a deployment in production. In case you w
       - `MAX_ITERATIONS_METAHEURISTICS`: Maximum number of iterations user can select to run the BBHA/PSO algorithm. Default `20`.
       - `MIN_STARS_BBHA`: Minimum number of stars in the BBHA algorithm. Default `5`.
       - `MAX_STARS_BBHA`: Maximum number of stars in the BBHA algorithm. Default `90`.
+      - `MIN_POPULATION_SIZE_GA`: Minimum number of population size in the GA algorithm. Default `5`.
+      - `MAX_POPULATION_SIZE_GA`: Maximum number of population size in the GA algorithm. Default `200`.
       - `MAX_FEATURES_COX_REGRESSION`: Maximum number of features to select in the CoxRegression algorithm. Default `60`.
       - `MAX_FEATURES_BLIND_SEARCH`: Maximum number of features to allow to run a Blind Search algorithm (the number of computed combination is _N!_). If the number of features is greater than this value, the algorithm is disabled and only metaheuristic algorithms are allowed. Default `7`.
       - `MIN_FEATURES_METAHEURISTICS`: Minimum number of features to allow the user to run metaheuristics algorithms (>=). This prevents to run metaheuristics on datasets with a small number of features which leads to experiments with more metaheuristics agents than number of total features combinations. We recommend to set this parameter to a value N such that N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations. Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value. Default `7`.

@@ -198,9 +198,9 @@ def clean_dataset(df: pd.DataFrame, axis: Axis) -> pd.DataFrame:
     """
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
 
-    # Taken from https://stackoverflow.com/a/45746209/7058363
-    with pd.option_context('mode.use_inf_as_na', True):
-        df = df.dropna(axis=axis, how='any')
+    # Replaces Inf values with NaNs. Any NaN value will be removed later
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(axis=axis, how='any')
 
     return df
 

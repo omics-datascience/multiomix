@@ -213,6 +213,12 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             numberOfIterations: 10,
             BBHAVersion: BBHAVersion.ORIGINAL
         },
+        GA: {
+            useSpark: true,
+            numberOfIterations: 10,
+            populationSize: 50,
+            mutationRate: 0.01
+        },
         coxRegression: {
             useSpark: true,
             topN: 5
