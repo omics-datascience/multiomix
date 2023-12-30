@@ -32,3 +32,10 @@
 .min-height-50vh {
     min-height: 50vh;
 }
+
+.remove-margin-bottom {
+    margin-bottom: 0.2% !important;
+}
+.remove-margin-top {
+    margin-top: 0 !important;
+}

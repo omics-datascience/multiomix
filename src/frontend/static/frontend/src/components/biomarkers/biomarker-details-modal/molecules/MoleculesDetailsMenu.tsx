@@ -3,6 +3,7 @@ import { Menu } from 'semantic-ui-react'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
+import './../../../../css/biomarkers.css'
 
 /** MoleculesDetailsMenu props. */
 interface MoleculesDetailsMenuProps {
@@ -14,116 +15,143 @@ interface MoleculesDetailsMenuProps {
     setActiveItem: (activeItem: ActiveBiomarkerMoleculeItemMenu) => void,
 }
 
+interface ItemMenuProp {
+    name: string,
+    onClick: () => void,
+    isActive: boolean,
+    popupInfo: string,
+    isVisible: boolean
+}
+
 /**
  * Renders the menu for the modal of a Biomarker's molecule details panel.
  * @param props Component props.
  * @returns Component.
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
+    /**
+     * Array with all the items and conditions
+     */
+    const items: ItemMenuProp[] = [
+        {
+            name: 'Details',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
+            popupInfo: `General details of ${props.selectedMolecule.identifier}`,
+            isVisible: true
+        },
+        {
+            name: 'Pathways',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
+            popupInfo: 'It shows all the biological pathways that include each of the genes of this biomarker',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+        },
+        {
+            name: 'Gene Ontology',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY,
+            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+        },
+        {
+            name: 'Actionable/Cancer genes',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
+            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+        },
+        {
+            name: 'Diseases',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DISEASES,
+            popupInfo: 'Interactions of the molecule with diseases that have been reported in the literature',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
+        },
+        {
+            name: 'Drugs',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DRUGS,
+            popupInfo: 'Interactions of the molecule with drugs that have been reported in the literature',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
+        },
+        {
+            name: 'miRNA-Gene interactions',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS,
+            popupInfo: 'Different miRNA-Gene interactions that have been reported in the literature along with the associated mirDIP score and Pubmed sources',
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
+        }
+    ]
+
+    /**
+     * Function to render menus, every 5 items it will generate a menu in order to keep space
+     * @returns Menus with 5 items stackable
+     */
+    const handleMenuRender = () => {
+        const menuRender: {
+            items: ItemMenuProp[],
+            key: number,
+            className: string
+        }[] = []
+        let itemMenu: ItemMenuProp[] = []
+        let key = 1
+
+        for (const item of items) {
+            if (item.isVisible) {
+                itemMenu.push(item)
+            }
+
+            if (itemMenu.length === 5) {
+                menuRender.push({ items: itemMenu, key, className: 'remove-margin-bottom' })
+                key += 1
+                itemMenu = []
+            }
+        }
+
+        if (itemMenu.length) {
+            menuRender.push({ items: itemMenu, key, className: 'remove-margin-top' })
+        } else {
+            menuRender[menuRender.length - 1].className = 'remove-margin-top'
+        }
+
+        return (
+            <>
+                {
+                    menuRender.map(menu => (
+                        <Menu className={menu.className} stackable key={menu.key}>
+                            {
+                                menu.items.map(item => {
+                                    if (!item.isVisible) return null
+                                    return (
+                                        <Menu.Item
+                                            key={item.name}
+                                            active={item.isActive}
+                                            onClick={item.onClick}
+                                        >
+                                            {item.name}
+
+                                            <InfoPopup
+                                                content={item.popupInfo}
+                                                onTop={false}
+                                                onEvent='hover'
+                                                extraClassName='margin-left-5'
+                                            />
+                                        </Menu.Item>
+                                    )
+                                })
+                            }
+                        </Menu>
+                    ))
+                }
+            </>
+        )
+    }
+
     return (
-        <Menu className='margin-top-0' stackable vertical>
-            <Menu.Item
-                active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS}
-                onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)}
-            >
-                Details
+        <>
+            {handleMenuRender()}
+        </>
 
-                <InfoPopup
-                    content={`General details of ${props.selectedMolecule.identifier}`}
-                    onTop={false}
-                    onEvent='hover'
-                    extraClassName='margin-left-5'
-                />
-            </Menu.Item>
-
-            {[MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type) &&
-                <>
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS)}
-                    >
-                        Pathways
-
-                        <InfoPopup
-                            content='It shows all the biological pathways that include each of the genes of this biomarker'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY)}
-                    >
-                        Gene Ontology
-
-                        <InfoPopup
-                            content='It shows information from gene ontology related with the genes of this biomarker'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES)}
-                    >
-                        Actionable/Cancer genes
-                        <InfoPopup
-                            content='It shows information from gene ontology related with the genes of this biomarker'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-                </>
-            }
-            {[MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type) &&
-                <>
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DISEASES}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES)}
-                    >
-                        Diseases
-
-                        <InfoPopup
-                            content='ni idea loco'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.DRUGS}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS)}
-                    >
-                        Drugs
-
-                        <InfoPopup
-                            content='ni idea loco'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-                    <Menu.Item
-                        active={props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS}
-                        onClick={() => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS)}
-                    >
-                        miRNA-Gene interactions
-
-                        <InfoPopup
-                            content='ni idea loco'
-                            onTop={false}
-                            onEvent='hover'
-                            extraClassName='margin-left-5'
-                        />
-                    </Menu.Item>
-                </>
-            }
-
-        </Menu>
     )
 }

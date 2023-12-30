@@ -485,7 +485,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {/* Search input */}
                                 {this.props.showSearchInput &&
                                         <Form.Input
-                                            width={3}
+                                            width={6}
                                             icon='search' iconPosition='left'
                                             label={this.props.searchLabel ?? 'Name/Description'}
                                             title={this.props.searchPlaceholder}

@@ -17,6 +17,9 @@ export const DiseasesPanel = (props: BiomarkerDiseasesPanelProps) => {
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
     const abortController = useRef(new AbortController())
 
+    /**
+     * Function to get data
+     */
     const getMiRNAData = () => {
         const searchParams: KySearchParams = {
             mirna: selectedMolecule.identifier

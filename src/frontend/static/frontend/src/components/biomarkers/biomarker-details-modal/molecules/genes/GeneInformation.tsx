@@ -56,6 +56,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlGeneInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { data: GeneData }) => {
+                console.log(jsonResponse.data)
                 const moleculeKey = Object.keys(jsonResponse.data)[0]
                 const linksData = [
                     {
@@ -306,7 +307,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     }
                 ]
                 setLinksData(linksData)
-                setGeneData(jsonResponse.data)
+                setGeneData(jsonResponse.data[moleculeKey])
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
@@ -358,14 +359,6 @@ export const GeneInformation = (props: GeneInformationProps) => {
                             header='Summary'
                             content={geneData.refseq_summary}
                         />
-                    </Grid.Column>
-                </Grid.Row>
-                <Grid.Row columns={2} divided stretched>
-                    <Grid.Column width={4}>
-
-                    </Grid.Column>
-                    <Grid.Column width={12}>
-
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
