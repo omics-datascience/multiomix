@@ -49,6 +49,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
     const handleButtonNavigate = (url: string) => {
         window.open(url, '_blank')
     }
+
     const getMoleculeData = (selectedMolecule: BiomarkerMolecule) => {
         setLoadingData(true)
 
@@ -418,7 +419,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     <Accordion.Content active={activeIndex === 1} content={
                         <Grid columns={6} stackable>
                             {linksData.slice(5, linksData.length).map(item => (
-                                <Grid.Column key={item.source} >
+                                <Grid.Column key={item.source}>
                                     <Button
                                         fluid
                                         icon

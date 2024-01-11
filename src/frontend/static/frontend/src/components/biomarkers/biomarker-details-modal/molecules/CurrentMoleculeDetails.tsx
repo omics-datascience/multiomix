@@ -23,6 +23,7 @@ interface CurrentMoleculeDetailsProps {
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
+
     /**
      * Gets the selected component according to the active item.
      * @param selectedMolecule Selected BiomarkerMolecule instance to show in the selected panel.
@@ -39,7 +40,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <DiseasesPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
-                return <DrugsPanel selectedMolecule={selectedMolecule}/>
+                return <DrugsPanel selectedMolecule={selectedMolecule} />
             default:
                 return null
         }

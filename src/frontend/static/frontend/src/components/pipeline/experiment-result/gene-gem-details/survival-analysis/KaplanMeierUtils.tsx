@@ -139,7 +139,7 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
             <g>
                 <path
                     d={lineFunction(data)}
-                    fill={'none'}
+                    fill="none"
                     opacity={0.7}
                     stroke={color}
                     strokeWidth={3}
@@ -175,9 +175,9 @@ const YAxis = (props: AxisProps) => {
         >
             <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
             <text
-                dy={'0.71em'}
+                dy="0.71em"
                 style={{ textAnchor: 'middle' }}
-                transform={'rotate(-90)'}
+                transform="rotate(-90)"
                 x={-props.height / 2}
                 y={6}
             >
@@ -251,7 +251,7 @@ class Legend extends React.Component<LegendProps, {}> {
                     transform={`translate(${0}, ${index * 24})`}
                 >
                     <text
-                        dy={'0.35em'}
+                        dy="0.35em"
                         style={{ textAnchor: 'end', userSelect: 'none' }}
                         // style={{ textAnchor: 'left', userSelect: 'none', textAnchor: 'end' }}
                         y={8}

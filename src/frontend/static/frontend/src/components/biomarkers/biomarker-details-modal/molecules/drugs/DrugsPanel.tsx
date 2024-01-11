@@ -33,8 +33,10 @@ export const DrugsPanel = (props: BiomarkerDiseasesPanelProps) => {
             console.log('Error getting studies ->', err)
         })
     }
+
     useEffect(() => {
         getMiRNAData()
+
         return () => {
             abortController.current.abort()
         }
