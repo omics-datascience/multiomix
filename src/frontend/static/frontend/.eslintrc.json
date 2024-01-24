@@ -46,7 +46,10 @@
         ],
         "no-undef": "off",
         "camelcase": "off",
-        "curly": "error",
+        "curly": [
+            "error",
+            "all"
+        ],
         "react/no-unescaped-entities": "off",
         "jsdoc/check-alignment": 1,
         "jsdoc/check-param-names": 1,
