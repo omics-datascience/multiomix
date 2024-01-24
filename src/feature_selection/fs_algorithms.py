@@ -560,7 +560,7 @@ def genetic_algorithms_sequential(
         ]
 
         # Crossover (single-point crossover)
-        crossover_point = np.random.randint(1, )
+        crossover_point = np.random.randint(1, n_molecules)
         offspring = np.empty_like(population)
         for i in range(population_size // 2):
             parent1, parent2 = parents[i], parents[population_size - i - 1]
