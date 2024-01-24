@@ -376,7 +376,7 @@ def binary_black_hole_sequential(
             if (more_is_better and current_mean_score > best_mean_score) or \
                     (not more_is_better and current_mean_score < best_mean_score):
                 black_hole_idx = a
-                best_features, current_star_combination = current_star_combination, best_features
+                best_features, current_star_combination = current_star_combination.copy(), best_features.copy()
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
                 best_model, current_best_model = current_best_model, best_model
 
@@ -384,7 +384,7 @@ def binary_black_hole_sequential(
             elif current_mean_score == best_mean_score and \
                     np.count_nonzero(current_star_combination) < np.count_nonzero(best_features):
                 black_hole_idx = a
-                best_features, current_star_combination = current_star_combination, best_features
+                best_features, current_star_combination = current_star_combination.copy(), best_features.copy()
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
                 best_model, current_best_model = current_best_model, best_model
 
