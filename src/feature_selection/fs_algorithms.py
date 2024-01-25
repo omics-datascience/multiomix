@@ -16,6 +16,7 @@ from sksurv.ensemble import RandomSurvivalForest
 from sksurv.exceptions import NoComparablePairException
 from sksurv.linear_model import CoxnetSurvivalAnalysis
 from sksurv.svm import FastKernelSurvivalSVM
+from common.exceptions import ExperimentFailed
 from common.utils import get_subset_of_features
 from feature_selection.fs_models import ClusteringModels
 from feature_selection.models import ClusteringScoringMethod
@@ -267,12 +268,18 @@ def binary_black_hole_sequential(
         is_clustering: bool,
         clustering_score_method: Optional[ClusteringScoringMethod],
         cross_validation_folds: int,
-        binary_threshold: Optional[float] = 0.6
+        is_improved_version: bool,
+        binary_threshold: Optional[float] = 0.6,
+        coeff_1: float = 2.2,
+        coeff_2: float = 0.1,
 ) -> FSResult:
     """
     Computes the metaheuristic Binary Black Hole Algorithm. Taken from the paper
     "Binary black hole algorithm for feature selection and classification on biological data"
     Authors: Elnaz Pashaei, Nizamettin Aydin.
+    If is_improved_version is True, it uses the improved version of the algorithm:
+    "Improved black hole and multiverse algorithms for discrete sizing optimization of planar structures"
+    Authors: Saeed Gholizadeh, Navid Razavi & Emad Shojaei.
     @param classifier: Classifier to use in every blind search iteration.
     @param molecules_df: DataFrame with all the molecules' data.
     @param n_stars: Number of stars in the BBHA.
@@ -281,10 +288,27 @@ def binary_black_hole_sequential(
     @param is_clustering: If True, no CV is computed as clustering needs all the samples to make predictions.
     @param clustering_score_method: Clustering scoring method to optimize.
     @param cross_validation_folds: Number of folds in the CrossValidation process.
+    @param is_improved_version: If True, it uses the improved version of the algorithm. False to use the original one.
     @param binary_threshold: Binary threshold to set 1 or 0 the feature. If None it'll be computed randomly.
+    @param coeff_1: Coefficient 1 to compute the new position of the stars. Only used if is_improved_version is True.
+    @param coeff_2: Coefficient 2 to compute the new position of the stars. Only used if is_improved_version is True.
     @return: The combination of features with the highest fitness score and the highest fitness score achieved by
     any combination of features.
     """
+    # Checks if the parameters are valid for the improved version
+    coeff_1_possible_values = [2.2, 2.35]
+    coeff_2_possible_values = [0.1, 0.2, 0.3]
+
+    if is_improved_version and coeff_1 not in coeff_1_possible_values:
+        logging.error(f'The parameter coeff_1 must be one of the following values: {coeff_1_possible_values}. '
+                      f'Received {coeff_1}')
+        raise ExperimentFailed
+
+    if is_improved_version and coeff_2 not in coeff_2_possible_values:
+        logging.error(f'The parameter coeff_2 must be one of the following values: {coeff_2_possible_values}. '
+                      f'Received {coeff_2}')
+        raise ExperimentFailed
+
     # Data structs setup
     n_features = len(molecules_df.index)
 
@@ -294,7 +318,10 @@ def binary_black_hole_sequential(
         n_stars = int(n_possible_combinations)
 
     stars_subsets = np.empty((n_stars, n_features), dtype=int)
+    stars_best_subset = np.empty((n_stars, n_features), dtype=int)
     stars_fitness_values = np.empty((n_stars,), dtype=float)
+    stars_best_fitness_values = np.empty((n_stars,), dtype=float)
+
     stars_model = np.empty((n_stars,), dtype=object)
 
     # Even in case of Log-likelihood (only used in clustering) it has to be maximized:
@@ -306,6 +333,7 @@ def binary_black_hole_sequential(
     for i in range(n_stars):
         random_features_to_select = get_random_subset_of_features_bbha(n_features)
         stars_subsets[i] = random_features_to_select  # Initialize 'Population'
+
         subset_to_predict = get_subset_of_features(molecules_df, combination=stars_subsets[i])
         mean_score, initial_best_model = __compute_fitness_function(classifier, subset_to_predict,
                                                                     clinical_data, is_clustering,
@@ -315,9 +343,13 @@ def binary_black_hole_sequential(
         stars_fitness_values[i] = mean_score
         stars_model[i] = initial_best_model
 
+        # Best fitness and position
+        stars_best_subset[i] = stars_subsets[i]
+        stars_best_fitness_values[i] = stars_fitness_values[i]
+
     # The star with the best fitness is the Black Hole
     black_hole_idx, best_features, best_mean_score = get_best_bbha(stars_subsets, stars_fitness_values, more_is_better)
-    best_model: SurvModel = stars_model[black_hole_idx]
+    best_model: SurvModel = cast(SurvModel, stars_model[black_hole_idx])
 
     # Iterations
     for i in range(n_iterations):
@@ -335,11 +367,16 @@ def binary_black_hole_sequential(
                                                                                 cross_validation_folds,
                                                                                 more_is_better)
 
+            # Sets the best fitness and position (only used in the improved version)
+            if is_improved_version and current_mean_score > stars_best_fitness_values[a]:
+                stars_best_fitness_values[a] = current_mean_score
+                stars_best_subset[a] = current_star_combination
+
             # If it's the best fitness, swaps that star with the current black hole
             if (more_is_better and current_mean_score > best_mean_score) or \
                     (not more_is_better and current_mean_score < best_mean_score):
                 black_hole_idx = a
-                best_features, current_star_combination = current_star_combination, best_features
+                best_features, current_star_combination = current_star_combination.copy(), best_features.copy()
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
                 best_model, current_best_model = current_best_model, best_model
 
@@ -347,17 +384,31 @@ def binary_black_hole_sequential(
             elif current_mean_score == best_mean_score and \
                     np.count_nonzero(current_star_combination) < np.count_nonzero(best_features):
                 black_hole_idx = a
-                best_features, current_star_combination = current_star_combination, best_features
+                best_features, current_star_combination = current_star_combination.copy(), best_features.copy()
                 best_mean_score, current_mean_score = current_mean_score, best_mean_score
                 best_model, current_best_model = current_best_model, best_model
 
             # Computes the event horizon
-            event_horizon = best_mean_score / np.sum(stars_fitness_values)
+            # Improvement 1: new function to define the event horizon
+            if is_improved_version:
+                event_horizon = (1 / best_mean_score) / np.sum(1 / stars_fitness_values)
+            else:
+                event_horizon = best_mean_score / np.sum(stars_fitness_values)
 
             # Checks if the current star falls in the event horizon
             dist_to_black_hole = np.linalg.norm(best_features - current_star_combination)  # Euclidean distance
             if dist_to_black_hole < event_horizon:
-                stars_subsets[a] = get_random_subset_of_features_bbha(n_features)
+                # Improvement 2: only ONE dimension of the feature array is changed
+                if is_improved_version:
+                    random_feature_idx = random.randint(0, n_features - 1)
+                    stars_subsets[a][random_feature_idx] ^= 1  # Toggle 0/1
+                else:
+                    stars_subsets[a] = get_random_subset_of_features_bbha(n_features)
+
+        # Improvement 3: new formula to 'move' the star
+        w = 1 - (i / n_iterations)
+        d1 = coeff_1 + w
+        d2 = coeff_2 + w
 
         # Updates the binary array of the used features
         for a in range(n_stars):
@@ -373,7 +424,15 @@ def binary_black_hole_sequential(
                 for d in range(n_features):
                     x_old = stars_subsets[a][d]
                     threshold = binary_threshold if binary_threshold is not None else random.uniform(0, 1)
-                    x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
+
+                    if is_improved_version:
+                        x_best = stars_best_subset[a][d]
+                        bh_star_diff = best_features[d] - x_old
+                        star_best_fit_diff = x_best - x_old
+                        x_new = x_old + (d1 * random.uniform(0, 1) * bh_star_diff) + (
+                                d2 * random.uniform(0, 1) * star_best_fit_diff)
+                    else:
+                        x_new = x_old + random.uniform(0, 1) * (best_features[d] - x_old)  # Position
                     star_subset_new[d] = 1 if abs(tanh(x_new)) > threshold else 0
 
                 # Checks if all the features are valid (at least one feature has to be 1)
@@ -501,8 +560,8 @@ def genetic_algorithms_sequential(
         ]
 
         # Crossover (single-point crossover)
-        crossover_point = np.random.randint(1, )
-        offspring = np.empty_like(population)
+        crossover_point = np.random.randint(1, n_molecules)
+        offspring = np.zeros_like(population)
         for i in range(population_size // 2):
             parent1, parent2 = parents[i], parents[population_size - i - 1]
             offspring[i] = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))

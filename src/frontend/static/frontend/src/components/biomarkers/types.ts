@@ -308,6 +308,8 @@ interface AdvancedBBHA extends AdvancedMode {
     numberOfStars: number;
     numberOfIterations: number;
     BBHAVersion: BBHAVersion;
+    coeff1: 2.2 | 2.35;
+    coeff2: 0.1 | 0.2 | 0.3;
 }
 
 /** Advanced GA properties */

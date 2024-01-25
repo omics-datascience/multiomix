@@ -372,7 +372,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                 trigger={
                     <Icon
                         title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
-                        name={'file'}
+                        name="file"
                         className={clinicalButtonClassName}
                         color={experiment.clinical_source_id ? 'blue' : 'grey'}
                         disabled={clinicalIsDisabled}

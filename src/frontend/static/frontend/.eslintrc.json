@@ -46,7 +46,10 @@
         ],
         "no-undef": "off",
         "camelcase": "off",
-        "curly": "error",
+        "curly": [
+            "error",
+            "all"
+        ],
         "react/no-unescaped-entities": "off",
         "jsdoc/check-alignment": 1,
         "jsdoc/check-param-names": 1,
@@ -106,6 +109,13 @@
                 "blankLine": "always",
                 "prev": "block-like",
                 "next": "*"
+            }
+        ],
+        "react/jsx-curly-brace-presence": [
+            "error",
+            {
+                "props": "never",
+                "children": "never"
             }
         ]
     },

@@ -5,7 +5,18 @@ import { Nullable } from '../../utils/interfaces'
 /** Available options for BBHA versions */
 const advanceBBHAOptions: DropdownItemProps[] = [
     { key: BBHAVersion.ORIGINAL, text: 'Original', value: BBHAVersion.ORIGINAL },
-    { key: BBHAVersion.IMPROVED, text: 'Version 2', value: BBHAVersion.IMPROVED, disabled: true } // TODO: implement in backend
+    { key: BBHAVersion.IMPROVED, text: 'Version 2', value: BBHAVersion.IMPROVED }
+]
+
+const improvedBBHACoeff1Options: DropdownItemProps[] = [
+    { key: '2.2', text: 2.2, value: 2.2 },
+    { key: '2.35', text: 2.35, value: 2.35 }
+]
+
+const improvedBBHACoeff2Options: DropdownItemProps[] = [
+    { key: '0.1', text: 0.1, value: 0.1 },
+    { key: '0.2', text: 0.2, value: 0.2 },
+    { key: '0.3', text: 0.3, value: 0.3 }
 ]
 
 /** Available fitness functions models to use. */
@@ -110,6 +121,8 @@ const getNumberOfMoleculesOfBiomarker = (biomarker: Nullable<Biomarker>): number
 
 export {
     advanceBBHAOptions,
+    improvedBBHACoeff1Options,
+    improvedBBHACoeff2Options,
     fitnessFunctionsOptions,
     SVMKernelOptions,
     clusteringAlgorithmOptions,

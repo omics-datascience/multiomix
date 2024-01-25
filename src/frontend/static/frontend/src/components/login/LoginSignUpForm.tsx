@@ -153,7 +153,7 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
         }
 
         return (
-            <GeneralForm title={'Log in'} url={urlAuthenticate}>
+            <GeneralForm title="Log in" url={urlAuthenticate}>
                 {message}
 
                 <Form.Input
@@ -222,7 +222,7 @@ export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
         const emailIsNotValid = this.state.email != null && this.state.email.trim().length > 0 && !this.emailIsValid()
 
         return (
-            <GeneralForm title={'Sign Up'} url={urlCreateUser}>
+            <GeneralForm title="Sign Up" url={urlCreateUser}>
                 <Form.Input
                     fluid
                     icon='user'

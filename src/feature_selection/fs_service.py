@@ -12,7 +12,7 @@ from .fs_algorithms import blind_search_sequential, binary_black_hole_sequential
     genetic_algorithms_sequential
 from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, TrainedModel, \
-    BBHAParameters, CoxRegressionParameters, GeneticAlgorithmsParameters
+    BBHAParameters, CoxRegressionParameters, GeneticAlgorithmsParameters, BBHAVersion
 from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier, save_molecule_identifiers
 
 # Common event values
@@ -107,6 +107,8 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
         n_stars = int(bbha_parameters['numberOfStars'])
         ga_iterations = int(bbha_parameters['numberOfIterations'])
         bbha_version = int(bbha_parameters['BBHAVersion'])
+        coeff_1 = float(bbha_parameters['coeff1'])
+        coeff_2 = float(bbha_parameters['coeff2'])
         use_spark = bbha_parameters['useSpark']
 
         # Creates an instance of BBHAParameters
@@ -150,6 +152,9 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
                 n_iterations=ga_iterations,
                 clinical_data=clinical_data,
                 is_clustering=is_clustering,
+                is_improved_version=bbha_version == BBHAVersion.IMPROVED.value,
+                coeff_1=coeff_1,
+                coeff_2=coeff_2,
                 clustering_score_method=clustering_scoring_method,
                 cross_validation_folds=trained_model.cross_validation_folds
             )
