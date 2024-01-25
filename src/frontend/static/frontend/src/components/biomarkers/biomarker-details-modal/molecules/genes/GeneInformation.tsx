@@ -5,8 +5,8 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from '../../stat-validations/result/ResultPlaceholder'
 import { Nullable } from '../../../../../utils/interfaces'
 import { GeneData } from './types'
-import { Accordion, Button, Card, Grid, Icon, Message, Segment } from 'semantic-ui-react'
-
+import { Accordion, Button, Card, Grid, Header, Icon, Message, Segment } from 'semantic-ui-react'
+import _ from 'lodash'
 declare const urlGeneInformation: string
 
 /** GeneInformation props. */
@@ -55,8 +55,11 @@ export const GeneInformation = (props: GeneInformationProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlGeneInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { data: GeneData }) => {
-                console.log(jsonResponse.data)
+            response.json().then((jsonResponse: { data: GeneData | {} }) => {
+                if (_.isEqual(jsonResponse.data, {})) {
+                    return setGeneData(null)
+                }
+
                 const moleculeKey = Object.keys(jsonResponse.data)[0]
                 const linksData = [
                     {
@@ -330,7 +333,21 @@ export const GeneInformation = (props: GeneInformationProps) => {
     }
 
     if (!geneData) {
-        return null
+        return (
+            <Grid padded>
+                <Grid.Row columns={1} className='min-height-50vh' verticalAlign='middle'>
+                    <Grid.Column textAlign='center'>
+                        <Header as='h2' icon>
+                            <Icon name='search minus' />
+                            No Details found
+                            <Header.Subheader>
+                                No Details were found for this gene.
+                            </Header.Subheader>
+                        </Header>
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+        )
     }
 
     return (
@@ -362,10 +379,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
-            <Segment style={{
-                margin: '2rem 6rem'
-            }}
-            >
+            <Segment>
                 <Accordion style={{
                     padding: 0
                 }}

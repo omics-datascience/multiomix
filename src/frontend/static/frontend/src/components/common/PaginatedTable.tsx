@@ -1,6 +1,6 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
+import { Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHS, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, Nullable, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
@@ -44,6 +44,8 @@ type PaginationCustomFilter = {
     defaultValue: any,
     /** Placeholder for select */
     placeholder?: string,
+    /** Width for component */
+    width?: SemanticWIDTHS,
     /** Type of the filter. By default is 'select' */
     type?: 'select' | 'checkbox',
     /** Indicates if 0 as filter value is accepted */
@@ -95,6 +97,8 @@ interface PaginatedTableProps<T> {
     searchLabel?: string,
     /** Search input's placeholder */
     searchPlaceholder?: string,
+    /** Search input's width */
+    searchWidth?: SemanticWIDTHS,
     /**
      * Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private
      * Websocket channel or to the `channelUrl` URL.
@@ -370,6 +374,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
                 return (
                     <Form.Select
+                        width={filter.width ?? 6}
+                        fluid
                         key={filter.keyForServer}
                         label={filter.label}
                         selectOnBlur={false}
@@ -438,7 +444,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     {this.state.elements.map(this.props.mapFunction)}
                 </Table.Body>
             )
-            : <NoDataRow colspan={this.props.headers.length} />
+            : (
+                <Table.Body>
+                    <NoDataRow colspan={this.props.headers.length} />
+                </Table.Body>
+            )
 
         // Computes some extra parameters
         const totalPages = Math.max(1, Math.ceil(tableControl.totalRowCount as number / tableControl.pageSize))
@@ -488,7 +498,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {/* Search input */}
                                 {this.props.showSearchInput &&
                                         <Form.Input
-                                            width={6}
+                                            width={this.props.searchWidth ?? 3}
                                             icon='search' iconPosition='left'
                                             label={this.props.searchLabel ?? 'Name/Description'}
                                             title={this.props.searchPlaceholder}

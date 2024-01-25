@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
-import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
+import { listToDropdownOptions } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from '../../stat-validations/result/ResultPlaceholder'
 import { DropdownItemProps, Grid, Header, Input, List, SearchProps, Select } from 'semantic-ui-react'
 import { InputLabel } from '../../../../common/InputLabel'
@@ -66,15 +66,10 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
             response.json().then((jsonResponse: string[]) => {
                 setListOfGenes(jsonResponse)
             }).catch((err) => {
-                alertGeneralError()
-                console.log('Error parsing JSON ->', err)
+                console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            if (!abortController.current.signal.aborted) {
-                alertGeneralError()
-            }
-
-            console.log('Error getting gene information', err)
+            console.error('Error getting gene information', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
                 setLoadingData(false)

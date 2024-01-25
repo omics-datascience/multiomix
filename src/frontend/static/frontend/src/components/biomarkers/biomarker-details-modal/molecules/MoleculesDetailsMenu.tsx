@@ -37,8 +37,8 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             name: 'Details',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
-            popupInfo: `General details of ${props.selectedMolecule.identifier}`,
-            isVisible: true
+            popupInfo: `Details of ${props.selectedMolecule.identifier} gene obtained from different standardized sources`,
+            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA, MoleculeType.METHYLATION].includes(props.selectedMolecule.type)
         },
         {
             name: 'Pathways',
@@ -66,14 +66,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DISEASES,
             popupInfo: 'Interactions of the molecule with diseases that have been reported in the literature',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
+            isVisible: [MoleculeType.MIRNA].includes(props.selectedMolecule.type)
         },
         {
             name: 'Drugs',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DRUGS,
             popupInfo: 'Interactions of the molecule with drugs that have been reported in the literature',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
+            isVisible: [MoleculeType.MIRNA].includes(props.selectedMolecule.type)
         },
         {
             name: 'miRNA-Gene interactions',
