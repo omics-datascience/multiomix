@@ -16,5 +16,6 @@ urlpatterns = [
     path('actionable-cancer-genes', views.ActionableAndCancerGenes.as_view(), name='actionable_cancer_genes'),
     path('drugs-pharmgkb', views.DrugsPharmGKB.as_view(), name='drugs_pharmgkb'),
     path('predicted-functional-associations-network', views.PredictedFunctionalAssociationsNetwork.as_view(), name='predicted_functional_associations_network'),
-    path('drugs-regulating-gene', views.DrugsRegulatingGene.as_view(), name='drugs_regulating_gene')
+    path('drugs-regulating-gene', views.DrugsRegulatingGene.as_view(), name='drugs_regulating_gene'),
+    path('methylation-site-information', views.MethylationSiteInformation.as_view(), name='methylation_site_information')
 ]

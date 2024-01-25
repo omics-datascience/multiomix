@@ -425,3 +425,32 @@ class DrugsRegulatingGene(APIView):
         return Response({
             'data': data["link"] if data and "link" in data else None
         })
+
+
+class MethylationSiteInformation(APIView):
+    """
+    Retrieves general data of a methylation site from Modulector 'methylation' service.
+    Examples:
+    http://localhost:8000/molecules/methylation-site-information?methylation_site=cg22461615
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: HttpRequest):
+        methylation_site = request.GET.get('methylation_site', '').strip()
+
+        if not methylation_site:
+            return Response(status=400, data={"error": "Param 'methylation_site' is mandatory"})
+
+        data = global_mrna_service.get_modulector_service_content(
+            'methylation',
+            request_params={
+                'methylation_site': methylation_site
+            },
+            is_paginated=False,
+            method='get'
+        )
+
+        return Response({
+            'data': data if data else None
+        })
