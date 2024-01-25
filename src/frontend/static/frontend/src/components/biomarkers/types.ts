@@ -387,7 +387,9 @@ enum ActiveBiomarkerMoleculeItemMenu {
     GENE_ONTOLOGY,
     INFERENCE,
     DISEASES,
-    DRUGS
+    DRUGS,
+    MIRNAGENEINTERACTIONS,
+    ACT_CAN_GENES,
 }
 
 /** Django TrainedModel model. */

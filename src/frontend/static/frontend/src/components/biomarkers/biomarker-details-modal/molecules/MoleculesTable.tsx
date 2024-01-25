@@ -40,7 +40,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             ]}
             queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
             customFilters={[
-                { label: 'Type', keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions }
+                { label: 'Type', keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions, width: 6 }
             ]}
             defaultSortProp={{ sortField: 'identifier', sortOrderAscendant: true }}
             showSearchInput
@@ -48,6 +48,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             searchLabel='Sample'
             searchPlaceholder='Search by identifier'
             urlToRetrieveData={urlBiomarkerMolecules}
+            searchWidth={6}
             mapFunction={(molecule: BiomarkerMolecule) => {
                 return (
                     <Table.Row key={molecule.identifier} active={props.selectedMolecule?.id === molecule.id}>
