@@ -1,9 +1,8 @@
 import React from 'react'
-import { DjangoMiRNADataJSON, DjangoMiRNADrugsJSON, RowHeader } from '../../../../utils/django_interfaces'
+import { DjangoMiRNADrugsJSON, RowHeader } from '../../../../utils/django_interfaces'
 import { Table, Button, Icon } from 'semantic-ui-react'
 import { PaginationCustomFilter, PaginatedTable } from '../../../common/PaginatedTable'
 import { MiRNAExtraData } from './MiRNAExtraData'
-import { Nullable } from '../../../../utils/interfaces'
 
 declare const urlMiRNAeDrugs: string
 
@@ -12,7 +11,7 @@ declare const urlMiRNAeDrugs: string
  */
 interface MiRNADrugsPanelProps {
     miRNA: string,
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
+    identifier: string,
 }
 
 /**
@@ -80,13 +79,13 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} miRNAData={props.miRNAData} />
+            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
             <PaginatedTable<DjangoMiRNADrugsJSON>
                 headerTitle='miRNA drugs associations'
                 headers={headers}
                 customFilters={customInputs}
                 showSearchInput
-                searchLabel='Condition/Small molecule/Exp. Pattern'
+                searchLabel='Condition/Molecule/Pattern'
                 searchPlaceholder='Search by drug, S.M. or Exp. P.'
                 queryParams={{
                     mirna: props.miRNA

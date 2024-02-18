@@ -362,9 +362,13 @@ export const GeneInformation = (props: GeneInformationProps) => {
                             description={geneData.ensembl_gene_id}
                             extra={
                                 <Grid textAlign='center'>
-                                    <Grid.Row columns={2} divided>
-                                        <Grid.Column><strong>Start</strong>: {geneData.start_position}</Grid.Column>
-                                        <Grid.Column><strong>End</strong>: {geneData.end_position}</Grid.Column>
+                                    <Grid.Row columns={1}>
+                                        <Grid.Column><strong>GRCh37:</strong></Grid.Column>
+                                        <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_GRCh37}-{geneData.end_GRCh37}</Grid.Column>
+                                    </Grid.Row>
+                                    <Grid.Row columns={1}>
+                                        <Grid.Column><strong>GRCh38:</strong></Grid.Column>
+                                        <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_position}-{geneData.end_position}</Grid.Column>
                                     </Grid.Row>
                                 </Grid>
                             }

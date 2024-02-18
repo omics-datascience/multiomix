@@ -1,7 +1,6 @@
 import React from 'react'
 import { Icon, List, Popup, Table } from 'semantic-ui-react'
-import { DjangoMiRNAGeneInteractionJSON, RowHeader, DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
-import { Nullable } from '../../../../utils/interfaces'
+import { DjangoMiRNAGeneInteractionJSON, RowHeader } from '../../../../utils/django_interfaces'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { PubmedButton } from './PubmedButton'
 import { MiRNAExtraData } from './MiRNAExtraData'
@@ -29,7 +28,7 @@ const InfoPopupScoreClass = () => (
  * Component's props
  */
 interface MiRNAInteractionPanelProps {
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
+    identifier: string,
     miRNA: string,
     showGeneSearchInput: boolean
 }
@@ -63,7 +62,7 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} miRNAData={props.miRNAData} />
+            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
 
             <PaginatedTable<DjangoMiRNAGeneInteractionJSON>
                 headerTitle='Interactions'

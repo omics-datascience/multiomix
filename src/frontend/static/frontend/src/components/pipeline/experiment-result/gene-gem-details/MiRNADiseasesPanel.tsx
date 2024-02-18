@@ -1,9 +1,8 @@
 import React from 'react'
-import { DjangoMiRNADataJSON, DjangoMiRNADiseasesJSON, RowHeader } from '../../../../utils/django_interfaces'
+import { DjangoMiRNADiseasesJSON, RowHeader } from '../../../../utils/django_interfaces'
 import { Table } from 'semantic-ui-react'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { PubmedButton } from './PubmedButton'
-import { Nullable } from '../../../../utils/interfaces'
 import { MiRNAExtraData } from './MiRNAExtraData'
 
 declare const urlMiRNADiseases: string
@@ -13,7 +12,7 @@ declare const urlMiRNADiseases: string
  */
 interface MiRNADiseasesPanelProps {
     miRNA: string,
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
+    identifier: string
 }
 
 /**
@@ -40,7 +39,7 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} miRNAData={props.miRNAData} />
+            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
             <PaginatedTable<DjangoMiRNADiseasesJSON>
                 headerTitle='miRNA diseases associations'
                 headers={headers}

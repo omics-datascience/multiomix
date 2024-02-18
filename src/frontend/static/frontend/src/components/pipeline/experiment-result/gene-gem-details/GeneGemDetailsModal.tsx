@@ -3,7 +3,7 @@ import { Modal, Header } from 'semantic-ui-react'
 import { CorrelationGraph } from './correlation-graph/CorrelationGraph'
 import ky from 'ky'
 import { KySearchParams, Nullable, StatChartData } from '../../../../utils/interfaces'
-import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoMiRNADataJSON, DjangoExperiment } from '../../../../utils/django_interfaces'
+import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoExperiment } from '../../../../utils/django_interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
 import { findLineByLeastSquares } from './correlation-graph/correlationGraphUtils'
 import { MiRNADiseasesPanel } from './MiRNADiseasesPanel'
@@ -23,7 +23,6 @@ import { TryAgainSegment } from '../../../common/TryAgainSegment'
 declare const urlCorrelationGraph: string
 declare const urlGetStatisticalProperties: string
 declare const thresholdToConsiderOrdinal: number
-declare const urlGetMiRNAData: string
 declare const urlClinicalSourceUserFileCRUD: string
 declare const urlUnlinkClinicalSourceUserFile: string
 
@@ -98,8 +97,6 @@ interface GeneGemDetailsModalState {
     activeItem: Nullable<ActiveItemMenu>,
     /** Correlation Graph data */
     correlationGraphData: CorrelationChartData,
-    /** Data of miRNA */
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
     /** Correlation Boxplot data */
     correlationBoxplotData: CorrelationBoxplotData,
     /** Combination Gene x GEM statistical properties */
@@ -147,7 +144,6 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         return {
             activeItem: null,
             correlationGraphData: null,
-            miRNAData: null,
             correlationBoxplotData: null,
             statisticalProperties: null,
             gettingCorrelationData: false,
@@ -182,25 +178,6 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      * Restart some field before close
      */
     resetFieldsAndClose = () => { this.setState(this.getDefaultState(), this.props.handleClose) }
-
-    /**
-     * Retrieves miRNA data like sequence or accession ID
-     */
-    getMiRNAData () {
-        const searchParams: KySearchParams = {
-            mirna: this.props.selectedRow?.gem as string
-        }
-
-        ky.get(urlGetMiRNAData, { signal: this.abortController.signal, searchParams }).then((response) => {
-            response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
-                this.setState({ miRNAData: jsonResponse })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log('Error getting studies ->', err)
-        })
-    }
 
     /**
      * Gets active menu
@@ -262,7 +239,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
                 return (
                     <MiRNATargetInteractionPanel
-                        miRNAData={this.state.miRNAData}
+                        identifier={this.props.selectedRow?.gem as string}
                         gene={gene}
                         miRNA={gem}
                     />
@@ -274,16 +251,16 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 return (
                     <React.Fragment>
                         <MiRNAInteractionPanel
-                            miRNAData={this.state.miRNAData}
+                            identifier={this.props.selectedRow?.gem as string}
                             miRNA={gem}
                             showGeneSearchInput
                         />
                     </React.Fragment>
                 )
             case ActiveItemMenu.DISEASES_ASSOCIATION:
-                return <MiRNADiseasesPanel miRNA={gem} miRNAData={this.state.miRNAData} />
+                return <MiRNADiseasesPanel miRNA={gem} identifier={this.props.selectedRow?.gem as string} />
             case ActiveItemMenu.DRUGS_ASSOCIATION:
-                return <MiRNADrugsPanel miRNA={gem} miRNAData={this.state.miRNAData} />
+                return <MiRNADrugsPanel miRNA={gem} identifier={this.props.selectedRow?.gem as string} />
             case ActiveItemMenu.SURVIVAL_ANALYSIS:
                 if (!this.props.experiment.clinical_source_id) {
                     return (
@@ -582,15 +559,6 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             case ActiveItemMenu.ASSUMPTIONS: // NOTE: assumptions panels uses the same info
                 if (!this.state.statisticalProperties) {
                     this.getStatisticalProperties()
-                }
-
-                break
-            case ActiveItemMenu.MIRNA_INTERACTION:
-            case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
-            case ActiveItemMenu.DRUGS_ASSOCIATION:
-            case ActiveItemMenu.DISEASES_ASSOCIATION:
-                if (!this.state.miRNAData) {
-                    this.getMiRNAData()
                 }
 
                 break

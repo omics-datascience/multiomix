@@ -1,5 +1,5 @@
 import React from 'react'
-import { DjangoMiRNAGeneInteractionJSON, DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
+import { DjangoMiRNAGeneInteractionJSON } from '../../../../utils/django_interfaces'
 import { KySearchParams, Nullable, ResponseRequestWithPagination } from '../../../../utils/interfaces'
 import { MiRNAExtraData } from './MiRNAExtraData'
 import { getScoreClassData } from '../../../../utils/util_functions'
@@ -16,7 +16,7 @@ declare const urlMiRNAInteraction: string
  * Component's props
  */
 interface MiRNATargetInteractionPanelProps {
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
+    identifier: string,
     miRNA: Nullable<string>,
     gene: Nullable<string>,
 }
@@ -133,7 +133,7 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
         return (
             <React.Fragment>
-                <MiRNAExtraData miRNA={this.props.miRNA} miRNAData={this.props.miRNAData} />
+                <MiRNAExtraData miRNA={this.props.miRNA} identifier={this.props.identifier} />
 
                 <Grid className='margin-top-2'>
                     <Grid.Row stretched>
