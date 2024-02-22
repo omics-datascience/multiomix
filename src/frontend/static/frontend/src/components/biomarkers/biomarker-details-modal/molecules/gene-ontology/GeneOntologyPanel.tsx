@@ -4,7 +4,7 @@ import cytoscape from 'cytoscape'
 import { BiomarkerMolecule } from '../../../types'
 import { Grid } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { GORelationType } from './types'
+import { CytoscapeElements, GORelationType, GoTermToTermSearchParams, OntologyRelationTermToTermFilter, OntologyTypeTermToTermFilter } from './types'
 
 // Styles
 import '../../../../../css/gene-ontology.css'
@@ -23,7 +23,11 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
     const abortController = useRef(new AbortController())
     const abortControllerTerm = useRef(new AbortController())
 
-    const initCytoscape = (elements) => {
+    /**
+     * Initializes the Cytoscape instance with the given elements.
+     * @param elements Cytoscape elements to initialize the instance.
+     */
+    const initCytoscape = (elements: CytoscapeElements) => {
         cytoscape({
             container: document.getElementById('cy'),
             layout: {
@@ -31,7 +35,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                 rows: 2,
                 cols: 2
             },
-            // userZoomingEnabled: false, // Disable zooming
+            // userZoomingEnabled: false, // Disable zooming. TODO: check this
             style: [
                 {
                     selector: 'node[name]',
@@ -65,34 +69,26 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                 }
             ],
             elements
-            // elements: {
-            //     nodes: [
-            //         { data: { id: 'j', name: 'Jerry' } },
-            //         { data: { id: 'e', name: 'Elaine' } },
-            //         { data: { id: 'k', name: 'Kramer' } },
-            //         { data: { id: 'g', name: 'George' } }
-            //     ],
-            //     edges: [
-            //         { data: { source: 'j', target: 'e', relation_type: 'prueba' } },
-            //         { data: { source: 'j', target: 'k' } },
-            //         { data: { source: 'j', target: 'g' } },
-            //         { data: { source: 'e', target: 'j' } },
-            //         { data: { source: 'e', target: 'k' } },
-            //         { data: { source: 'k', target: 'j' } },
-            //         { data: { source: 'k', target: 'e' } },
-            //         { data: { source: 'k', target: 'g' } },
-            //         { data: { source: 'g', target: 'j' } }
-            //     ]
-            // }
         })
     }
 
+    /**
+     * Gets all the related terms to the given GO term.
+     * @param goId GO term identifier.
+     */
     const getTerms = (goId: string) => {
-        // TODO: type request struct
-        const searchParams = { term_id: goId, general_depth: 5 }
+        // TODO: get this values from form
+        const searchParams: GoTermToTermSearchParams = {
+            term_id: goId,
+            relations: [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART],
+            ontology_type: [OntologyTypeTermToTermFilter.BIOLOGICAL_PROCESS, OntologyTypeTermToTermFilter.MOLECULAR_FUNCTION, OntologyTypeTermToTermFilter.CELLULAR_COMPONENT],
+            general_depth: 5,
+            hierarchical_depth_to_children: 0,
+            to_root: 1
+        }
         ky.get(urlGOTermToTerms, { searchParams, signal: abortControllerTerm.current.signal }).then((response) => {
-            response.json().then((data /* TODO: type */) => {
-                console.log('Data ->', data) // TODO: remove
+            response.json().then((data: { go_terms: CytoscapeElements }) => {
+                // The response is a CytoscapeElements object already
                 initCytoscape(data.go_terms)
             }).catch((err) => {
                 alertGeneralError()
@@ -108,7 +104,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
     }
 
     useEffect(() => {
-        // TODO: type request struct
+        // TODO: type request struct and get values from form
         const searchParams = {
             gene: props.selectedMolecule.identifier
             // TODO: implement filters
