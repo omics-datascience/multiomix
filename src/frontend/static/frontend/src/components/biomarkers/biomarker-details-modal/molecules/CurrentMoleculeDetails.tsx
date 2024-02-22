@@ -9,7 +9,7 @@ import { DiseasesPanel } from './DiseasesPanel'
 import { DrugsPanel } from './DrugsPanel'
 import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
 import { ActionableCancerGenesPanel } from './ActionableCancerGenesPanel'
-import { GeneOntologyPanel } from './GeneOntologyPanel'
+import { GeneOntologyPanel } from './gene-ontology/GeneOntologyPanel'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {

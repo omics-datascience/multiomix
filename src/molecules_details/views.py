@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.http import HttpRequest
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -195,11 +197,15 @@ class GeneOntologyTermsOfGene(APIView):
         if filter_type in ["intersection", "union"]:
             data = global_mrna_service.get_bioapi_service_content(
                 'genes-to-terms',
+                # request_params={
+                #     'gene_ids': [gene],
+                #     'filter_type': filter_type,
+                #     'ontology_type': ontology_type,
+                #     'relation_type': relation_type
+                # },
+                # TODO: remove this and uncomment the above code when the bioapi service is fixed
                 request_params={
-                    'gene_ids': [gene],
-                    'filter_type': filter_type,
-                    'ontology_type': ontology_type,
-                    'relation_type': relation_type
+                    "gene_ids": ["TMCO4"], "relation_type": ["enables"], "ontology_type": ["molecular_function"]
                 },
                 is_paginated=False,
                 method='post'
@@ -233,34 +239,67 @@ class GeneOntologyTermsOfTerm(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def get(request: HttpRequest):
-        term_id = request.GET.get('term_id', '').strip()
-        relations = request.GET.get('relations', '').strip()
-        ontology_type = request.GET.get('ontology_type', '').strip()
-        general_depth = request.GET.get('general_depth', '').strip()
-        hierarchical_depth_to_children = request.GET.get(
-            'hierarchical_depth_to_children', '').strip()
-        to_root = request.GET.get('to_root', '').strip()
+    def __process_go_data(go_terms: dict) -> dict:
+        """
+        Generates a structure with the GO terms data in a format ready-to-use for cytoscape frontend lib.
+        @param go_terms: BioAPI GO data.
+        @return: Processed GO data.
+        """
+        res = {'nodes': [], 'edges': []}
+        if not go_terms:
+            return res
 
+        # Iterates over the GO terms and generates the nodes and edges
+        for go_term in go_terms:
+            node = {
+                'data': {
+                    'id': go_term['go_id'],
+                    'name': go_term['name'],
+                    'ontology_type': go_term['ontology_type']
+                }
+            }
+            res['nodes'].append(node)
+
+            for relation, target_go_ids in go_term['relations'].items():
+                relation_type = cast(str, relation)
+
+                for target_go_id in target_go_ids:
+                    edge = {
+                        'data': {
+                            'source': go_term['go_id'],
+                            'target': target_go_id,
+                            'relation_type': relation_type
+                        }
+                    }
+                    res['edges'].append(edge)
+
+        return res
+
+    def get(self, request: HttpRequest):
+        term_id = request.GET.get('term_id', '').strip()
         if not term_id:
             return Response(status=400, data={"error": "Param 'term_id' is mandatory"})
 
+        general_depth = request.GET.get('general_depth', '5').strip()
         if not general_depth:
             return Response(status=400, data={"error": "Param 'general_depth' is mandatory"})
         if not general_depth.isnumeric():
             return Response(status=400, data={"error": "Param 'general_depth' must be a numeric value"})
 
-        if not hierarchical_depth_to_children:
-            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' is mandatory"})
-        if not hierarchical_depth_to_children.isnumeric():
-            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a "
-                                                       "numeric value"})
+        hierarchical_depth_to_children = request.GET.get('hierarchical_depth_to_children', '0').strip()
+        if hierarchical_depth_to_children:
+            if not hierarchical_depth_to_children.isnumeric():
+                return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a "
+                                                           "numeric value"})
+            hierarchical_depth_to_children = int(hierarchical_depth_to_children)
 
-        if not to_root:
-            return Response(status=400, data={"error": "Param 'to_root' is mandatory"})
-        if to_root not in ["0", "1"]:
-            return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
+        to_root = request.GET.get('to_root', '1').strip()
+        if to_root:
+            if to_root not in ["0", "1"]:
+                return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
+            to_root = int(to_root)
 
+        relations = request.GET.get('relations', '').strip()
         if not relations:
             relations = ["part_of", "regulates", "has_part"]
         else:
@@ -271,6 +310,7 @@ class GeneOntologyTermsOfTerm(APIView):
                                                                "the following options: 'part_of', 'regulates' and "
                                                                "'has_part'"})
 
+        ontology_type = request.GET.get('ontology_type', '').strip()
         if not ontology_type:
             ontology_type = ["biological_process",
                              "molecular_function", "cellular_component"]
@@ -289,12 +329,15 @@ class GeneOntologyTermsOfTerm(APIView):
                 'relations': relations,
                 'ontology_type': ontology_type,
                 'general_depth': int(general_depth),
-                'hierarchical_depth_to_children': int(hierarchical_depth_to_children),
-                'to_root': int(to_root)
+                'hierarchical_depth_to_children': hierarchical_depth_to_children,
+                'to_root': to_root
             },
             is_paginated=False,
             method='post'
         )
+
+        # Generates structure for cytoscape in frontend
+        data = self.__process_go_data(data)
 
         return Response({
             'go_terms': data

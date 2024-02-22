@@ -170,8 +170,11 @@ interface MoleculesMultipleSelection {
  * and MethylationIdentifier Django models.
  */
 type BiomarkerMolecule = {
+    /** PK of MRNAIdentifier, MiRNAIdentifier, CNAIdentifier, or MethylationIdentifier. */
     id: number,
+    /** Identifier of the molecule. */
     identifier: string,
+    /** Type of molecule. */
     type: MoleculeType
 }
 

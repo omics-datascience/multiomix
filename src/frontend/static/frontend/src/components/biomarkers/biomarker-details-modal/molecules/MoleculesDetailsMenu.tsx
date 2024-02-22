@@ -122,7 +122,10 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                         <Menu className={menu.className} stackable key={menu.key}>
                             {
                                 menu.items.map(item => {
-                                    if (!item.isVisible) return null
+                                    if (!item.isVisible) {
+                                        return null
+                                    }
+
                                     return (
                                         <Menu.Item
                                             key={item.name}
