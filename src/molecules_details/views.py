@@ -115,14 +115,15 @@ class MetabolicPathwaysInformation(APIView):
     @staticmethod
     def get(request: HttpRequest):
         source = request.GET.get('source', '').strip()
-        id = request.GET.get('id', '').strip()
         if not source:
             return Response(status=400, data={"error": "Param 'source' is mandatory"})
-        if not id:
+
+        pathway_id = request.GET.get('id', '').strip()
+        if not pathway_id:
             return Response(status=400, data={"error": "Param 'id' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
-            f'/pathway-genes/{source}/{id}',
+            f'/pathway-genes/{source}/{pathway_id}',
             request_params={},  # No params needed
             is_paginated=False,
             method='get'
@@ -159,13 +160,16 @@ class GeneOntologyTermsOfGene(APIView):
             filter_type = 'intersection'
 
         if filter_type not in ["intersection", "union", "enrichment"]:
-            return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following options: 'intersection', 'union' or 'enrichment'"})
+            return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following "
+                                                       "options: 'intersection', 'union' or 'enrichment'"})
         else:
             if filter_type == 'enrichment':
                 if not p_value_threshold:
-                    return Response(status=400, data={"error": "The 'p_value_threshold' parameter is mandatory if 'filter_type' is 'enrichment'"})
+                    return Response(status=400, data={"error": "The 'p_value_threshold' parameter is mandatory if "
+                                                               "'filter_type' is 'enrichment'"})
                 if not correction_method:
-                    return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if 'filter_type' is 'enrichment'"})
+                    return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if "
+                                                               "'filter_type' is 'enrichment'"})
             else:
                 if not relation_type:
                     relation_type = ["enables", "involved_in",
@@ -174,16 +178,20 @@ class GeneOntologyTermsOfGene(APIView):
                     relation_type = relation_type.split(',')
                     for relation in relation_type:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
-                            return Response(status=400, data={"error": "The 'relation_type' parameter must be a combination of the following options: 'enables', 'involved_in', 'part_of' and 'located_in'"})
+                            return Response(status=400, data={"error": "The 'relation_type' parameter must be a "
+                                                                       "combination of the following options: "
+                                                                       "'enables', 'involved_in', 'part_of' and "
+                                                                       "'located_in'"})
         if not ontology_type:
             ontology_type = ["biological_process",
                              "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
-            for type in ontology_type:
-                if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
-        data = {}
+            for type_elem in ontology_type:
+                if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of "
+                                                               "the following options: 'biological_process', "
+                                                               "'molecular_function' and 'cellular_component'"})
         if filter_type in ["intersection", "union"]:
             data = global_mrna_service.get_bioapi_service_content(
                 'genes-to-terms',
@@ -245,7 +253,8 @@ class GeneOntologyTermsOfTerm(APIView):
         if not hierarchical_depth_to_children:
             return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' is mandatory"})
         if not hierarchical_depth_to_children.isnumeric():
-            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a numeric value"})
+            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a "
+                                                       "numeric value"})
 
         if not to_root:
             return Response(status=400, data={"error": "Param 'to_root' is mandatory"})
@@ -258,18 +267,21 @@ class GeneOntologyTermsOfTerm(APIView):
             relations = relations.split(',')
             for relation in relations:
                 if relation not in ["part_of", "regulates", "has_part"]:
-                    return Response(status=400, data={"error": "The 'relations' parameter must be a combination of the following options: 'part_of', 'regulates' and 'has_part'"})
+                    return Response(status=400, data={"error": "The 'relations' parameter must be a combination of "
+                                                               "the following options: 'part_of', 'regulates' and "
+                                                               "'has_part'"})
 
         if not ontology_type:
             ontology_type = ["biological_process",
                              "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
-            for type in ontology_type:
-                if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
+            for type_elem in ontology_type:
+                if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination "
+                                                               "of the following options: 'biological_process', "
+                                                               "'molecular_function' and 'cellular_component'"})
 
-        data = {}
         data = global_mrna_service.get_bioapi_service_content(
             'related-terms',
             request_params={
@@ -381,7 +393,8 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 
         if score.isnumeric():
             if int(score) < 1 or int(score) > 1000:
-                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range 1-1000"})
+                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range "
+                                                           "1-1000"})
         else:
             return Response(status=400, data={"error": "Param 'score' must be a numeric value"})
 
@@ -403,7 +416,7 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 class DrugsRegulatingGene(APIView):
     """
     Service that takes gene symbol and returns a link to https://go.drugbank.com with
-    all the drugs that upregulate and down regulate its expresion.
+    all the drugs that up-regulate and down regulate its expression.
     Examples:
     http://localhost:8000/molecules/drugs-regulating-gene?gene=TP53
     http://localhost:8000/molecules/drugs-regulating-gene?gene=EGFR
