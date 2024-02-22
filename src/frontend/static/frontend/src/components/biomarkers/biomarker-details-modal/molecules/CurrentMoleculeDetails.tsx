@@ -9,6 +9,7 @@ import { DiseasesPanel } from './DiseasesPanel'
 import { DrugsPanel } from './DrugsPanel'
 import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
 import { ActionableCancerGenesPanel } from './ActionableCancerGenesPanel'
+import { GeneOntologyPanel } from './GeneOntologyPanel'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -38,12 +39,12 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
                 return <PathwaysInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
-                return null
+                return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <DiseasesPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
                 return <DrugsPanel selectedMolecule={selectedMolecule} />
-            case ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS:
+            case ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS:
                 return (
                     <MirnaInteractionsPanel
                         selectedMolecule={selectedMolecule}

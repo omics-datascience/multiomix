@@ -77,8 +77,8 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
         },
         {
             name: 'miRNA-Gene interactions',
-            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS),
-            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNAGENEINTERACTIONS,
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS,
             popupInfo: 'Different miRNA-Gene interactions that have been reported in the literature along with the associated mirDIP score and Pubmed sources',
             isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA].includes(props.selectedMolecule.type)
         }

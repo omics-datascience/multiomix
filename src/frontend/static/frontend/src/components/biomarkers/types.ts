@@ -388,7 +388,7 @@ enum ActiveBiomarkerMoleculeItemMenu {
     INFERENCE,
     DISEASES,
     DRUGS,
-    MIRNAGENEINTERACTIONS,
+    MIRNA_GENE_INTERACTIONS,
     ACT_CAN_GENES,
 }
 
