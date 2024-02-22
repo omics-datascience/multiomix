@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react'
 import { BiomarkerMolecule } from '../../types'
 import cytoscape from 'cytoscape'
-import edgehandles from 'cytoscape-edgehandles'
+import { Grid } from 'semantic-ui-react'
 
 // Styles
 import '../../../../css/gene-ontology.css'
-import { Grid } from 'semantic-ui-react'
 
 /** GeneInformation props. */
 interface GeneOntologyPanelProps {
@@ -15,9 +14,7 @@ interface GeneOntologyPanelProps {
 
 export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
     useEffect(() => {
-        cytoscape.use(edgehandles)
-
-        const cy = cytoscape({
+        cytoscape({
             container: document.getElementById('cy'),
             layout: {
                 name: 'grid',
@@ -108,10 +105,6 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                     { data: { source: 'g', target: 'j' } }
                 ]
             }
-        })
-
-        cy.edgehandles({
-            snap: false
         })
     }, [])
 
