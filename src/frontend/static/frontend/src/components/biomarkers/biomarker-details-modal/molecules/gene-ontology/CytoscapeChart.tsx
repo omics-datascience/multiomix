@@ -62,7 +62,7 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
     const initCytoscape = (elements: CytoscapeElements) => {
         cytoscape({
             container: document.getElementById('cy'),
-            minZoom: 0.3,
+            minZoom: 0.5,
             maxZoom: 1.5,
             layout: {
                 name: 'grid',
