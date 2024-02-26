@@ -4,6 +4,7 @@ import cytoscape from 'cytoscape'
 
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams } from './types'
+import { Button, Grid } from 'semantic-ui-react'
 
 declare const urlGOTermToTerms: string
 
@@ -12,11 +13,6 @@ const COLORS_BY_ONTOLOGY_RELATION = {
     [OntologyRelationTermToTermFilter.IS_A]: ['Is a', '#999'],
     [OntologyRelationTermToTermFilter.PART_OF]: ['Part of', '#4d25e8'],
     [OntologyRelationTermToTermFilter.REGULATES]: ['Regulates', '#d5ae5d']
-}
-
-interface CytoscapeLegendsProps {
-    /** GO id to get the related terms */
-    termId: string
 }
 
 /**
@@ -35,6 +31,14 @@ const CytoscapeLegends = () => (
         </div>
     </div>
 )
+
+/** CytoscapeLegends props. */
+interface CytoscapeLegendsProps {
+    /** GO id to get the related terms */
+    termId: string,
+    /** Callback to return to the previous panel. */
+    goBack: () => void
+}
 
 /**
  * Renders a Cytoscape chart to show the related terms to a given GO term.
@@ -134,10 +138,15 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
     }, [])
 
     return (
-        <>
-            <CytoscapeLegends />
-            <div id="cy"></div>
-        </>
-
+        <Grid.Row columns={2}>
+            <Grid.Column width={3}>
+                {/* Go back button. */}
+                <Button onClick={props.goBack} icon='arrow left' content='Go back' />
+            </Grid.Column>
+            <Grid.Column width={13}>
+                <CytoscapeLegends />
+                <div id="cy"></div>
+            </Grid.Column>
+        </Grid.Row>
     )
 }
