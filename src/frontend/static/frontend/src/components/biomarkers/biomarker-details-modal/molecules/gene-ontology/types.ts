@@ -38,7 +38,7 @@ type CytoscapeElements = {
 }
 
 /** All possible ontologies types between Gene Ontology terms in the request. */
-enum OntologyTypeTermToTermFilter {
+enum OntologyType {
     BIOLOGICAL_PROCESS = 'biological_process',
     MOLECULAR_FUNCTION = 'molecular_function',
     CELLULAR_COMPONENT = 'cellular_component',
@@ -54,10 +54,40 @@ type GoTermToTermSearchParams = {
     to_root: 0 | 1,
 }
 
+/** Filter type for the "Gene Ontology terms related to a gene" BioAPI service. */
+enum GeneToTermFilterType {
+    INTERSECTION = 'intersection',
+    UNION = 'union',
+    ENRICHMENT = 'enrichment'
+}
+
+/**
+ * Form to filter the "Gene Ontology terms related to a gene" BioAPI service.
+ */
+interface GeneToTermForm {
+    filter_type: GeneToTermFilterType
+    /** Used only if filter_type === 'ENRICHMENT' */
+    p_value_threshold: number,
+    /** Used only if filter_type === 'ENRICHMENT' */
+    correction_method: 'analytical' | 'bonferroni' | 'false_discovery_rate'
+    relation_type: GORelationType[],
+    ontology_type: OntologyType[]
+}
+
+/** Final params for the "Gene Ontology terms related to a gene" BioAPI service. */
+interface GeneToTermSearchParams extends Omit<GeneToTermForm, 'relation_type' | 'ontology_type'> {
+    gene: string,
+    relation_type: string, // Needs to be a string to be sent to the backend
+    ontology_type: string, // Needs to be a string to be sent to the backend
+}
+
 export {
     GORelationType,
     CytoscapeElements,
     OntologyRelationTermToTermFilter,
-    OntologyTypeTermToTermFilter,
-    GoTermToTermSearchParams
+    OntologyType,
+    GoTermToTermSearchParams,
+    GeneToTermFilterType,
+    GeneToTermForm,
+    GeneToTermSearchParams
 }

@@ -1,41 +1,18 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ky from 'ky'
-import cytoscape from 'cytoscape'
 import { BiomarkerMolecule } from '../../../types'
-import { Grid } from 'semantic-ui-react'
+import { Form, Grid } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { CytoscapeElements, GoTermToTermSearchParams, OntologyRelationTermToTermFilter, OntologyTypeTermToTermFilter } from './types'
+import { Nullable } from '../../../../../utils/interfaces'
+import { CytoscapeChart } from './CytoscapeChart'
+import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchParams, OntologyType } from './types'
+import { debounce } from 'lodash'
 
 // Styles
 import '../../../../../css/gene-ontology.css'
 
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
-declare const urlGOTermToTerms: string
-
-const COLORS_BY_ONTOLOGY_RELATION = {
-    [OntologyRelationTermToTermFilter.HAS_PART]: ['Has part', '#e87725'],
-    [OntologyRelationTermToTermFilter.IS_A]: ['Is a', '#999'],
-    [OntologyRelationTermToTermFilter.PART_OF]: ['Part of', '#4d25e8'],
-    [OntologyRelationTermToTermFilter.REGULATES]: ['Regulates', '#d5ae5d']
-}
-
-/**
- * Renders the legends for the Cytoscape instance.
- * @returns Component.
- */
-const CytoscapeLegends = () => (
-    <div className='cytoscape-legends'>
-        <div className='legend-title'>Relations</div>
-        <div className='legend-scale'>
-            <ul className='legend-labels' id="legend">
-                {Object.entries(COLORS_BY_ONTOLOGY_RELATION).map(([_, [relationDescription, color]]) => (
-                    <li key={relationDescription}><span style={{ backgroundColor: color }}></span>{relationDescription}</li>
-                ))}
-            </ul>
-        </div>
-    </div>
-)
 
 /** GeneInformation props. */
 interface GeneOntologyPanelProps {
@@ -45,99 +22,38 @@ interface GeneOntologyPanelProps {
 
 export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
     const abortController = useRef(new AbortController())
-    const abortControllerTerm = useRef(new AbortController())
+    const [term, setTerm] = useState<Nullable<string>>(null)
+    const [termsRelatedToGeneForm, setTermsRelatedToGeneForm] = useState<GeneToTermForm>({
+        filter_type: GeneToTermFilterType.INTERSECTION,
+        p_value_threshold: 0.05,
+        correction_method: 'analytical',
+        relation_type: [GORelationType.ENABLES, GORelationType.INVOLVED_IN, GORelationType.PART_OF, GORelationType.LOCATED_IN],
+        ontology_type: [OntologyType.BIOLOGICAL_PROCESS, OntologyType.MOLECULAR_FUNCTION, OntologyType.CELLULAR_COMPONENT]
+    })
 
     /**
-     * Initializes the Cytoscape instance with the given elements.
-     * @param elements Cytoscape elements to initialize the instance.
+     * Gets all the related terms to the selected gene.
+     * @param formData Form data to send to the backend.
      */
-    const initCytoscape = (elements: CytoscapeElements) => {
-        cytoscape({
-            container: document.getElementById('cy'),
-            minZoom: 0.3,
-            maxZoom: 1.5,
-            layout: {
-                name: 'grid',
-                rows: 2,
-                cols: 2
-            },
-            // userZoomingEnabled: false, // Disable zooming. TODO: check this
-            style: [
-                {
-                    selector: 'node[name]',
-                    style: {
-                        content: 'data(name)'
-                    }
-                },
-                {
-                    selector: 'edge',
-                    style: {
-                        'curve-style': 'bezier',
-                        'target-arrow-shape': 'triangle',
-                        'line-color': function (edge) {
-                            // Sets the color of the edge depending on the relation_type attribute
-                            const relationType: OntologyRelationTermToTermFilter = edge.data('relation_type')
-
-                            // Checks if it's in the dict
-                            if (relationType in COLORS_BY_ONTOLOGY_RELATION) {
-                                return COLORS_BY_ONTOLOGY_RELATION[relationType][1]
-                            }
-                        }
-                    }
-                }
-            ],
-            elements
-        })
-    }
-
-    /**
-     * Gets all the related terms to the given GO term.
-     * @param goId GO term identifier.
-     */
-    const getTerms = (goId: string) => {
-        // TODO: get these values from form
-        const relationsStr = [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART].join(',')
-        const ontologyTypeStr = [OntologyTypeTermToTermFilter.BIOLOGICAL_PROCESS, OntologyTypeTermToTermFilter.MOLECULAR_FUNCTION, OntologyTypeTermToTermFilter.CELLULAR_COMPONENT].join(',')
-
-        const searchParams: GoTermToTermSearchParams = {
-            term_id: goId,
-            relations: relationsStr,
-            ontology_type: ontologyTypeStr,
-            general_depth: 5,
-            hierarchical_depth_to_children: 0,
-            to_root: 1
+    const getAllRelatedTerms = (formData: GeneToTermForm) => {
+        const searchParams: GeneToTermSearchParams = {
+            gene: props.selectedMolecule.identifier,
+            filter_type: formData.filter_type,
+            p_value_threshold: formData.p_value_threshold,
+            correction_method: formData.correction_method,
+            relation_type: formData.relation_type.join(','),
+            ontology_type: formData.ontology_type.join(',')
         }
-        ky.get(urlGOTermToTerms, { searchParams, signal: abortControllerTerm.current.signal }).then((response) => {
-            response.json().then((data: { go_terms: CytoscapeElements }) => {
-                // The response is a CytoscapeElements object already
-                initCytoscape(data.go_terms)
-            }).catch((err) => {
-                alertGeneralError()
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            if (!abortControllerTerm.current.signal.aborted) {
-                alertGeneralError()
-            }
 
-            console.log('Error getting experiment', err)
-        })
-    }
-
-    useEffect(() => {
-        // TODO: type request struct and get values from form
-        const searchParams = {
-            gene: props.selectedMolecule.identifier
-            // TODO: implement filters
-            // filter_type
-            // p_value_threshold
-            // correction_method
-            // relation_type
-            // ontology_type
+        if (searchParams.filter_type === GeneToTermFilterType.ENRICHMENT) {
+            searchParams.p_value_threshold = formData.p_value_threshold
+            searchParams.correction_method = formData.correction_method
         }
-        ky.get(urlGOGeneToTerms, { searchParams, signal: abortController.current.signal }).then((response) => {
+
+        ky.get(urlGOGeneToTerms, { searchParams: searchParams as any, signal: abortController.current.signal }).then((response) => {
             response.json().then((data /* TODO: type */) => {
-                getTerms(data.go_terms[0].go_id) // TODO: implement selection of term in the frontend
+                setTerm(data.go_terms[0].go_id)
+                // getTerms(data.go_terms[0].go_id) // TODO: implement selection of term in the frontend
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
@@ -149,20 +65,178 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
 
             console.log('Error getting experiment', err)
         })
+    }
+
+    useEffect(() => {
+        getAllRelatedTerms(termsRelatedToGeneForm)
 
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
-            abortControllerTerm.current.abort()
         }
     }, [])
 
+    /** Makes the query to Modulector/Bio-API to retrieve terms. */
+    const makeRequestCallback = useCallback(
+        debounce((dataForm: GeneToTermForm) => {
+            getAllRelatedTerms(dataForm)
+        }, 1000),
+        []
+    )
+
+    /**
+     * Handles changes in the form.
+     * @param name Name of the input.
+     * @param value New value.
+     */
+    const handleChangesInForm = (name: string, value: any) => {
+        setTermsRelatedToGeneForm((prev) => {
+            const newState = {
+                ...prev,
+                [name]: value
+            }
+
+            // Makes a debounced request
+            makeRequestCallback(newState)
+            return newState
+        })
+    }
+
+    const handleCheckboxChange = (name: string, value: any) => {
+        setTermsRelatedToGeneForm((prev) => {
+            const newState = {
+                ...prev,
+                [name]: prev[name].includes(value) ? prev[name].filter((v) => v !== value) : [...prev[name], value]
+            }
+
+            // Makes a debounced request
+            makeRequestCallback(newState)
+            return newState
+        })
+    }
+
     return (
         <Grid>
-            <Grid.Row>
-                <Grid.Column width={16}>
-                    <CytoscapeLegends />
-                    <div id="cy"></div>
+            <Grid.Row columns={2}>
+                <Grid.Column width={3}>
+                    {/* Form for termsRelatedToGeneForm */}
+                    <Form>
+                        <Form.Group grouped>
+                            <Form.Field>
+                                <label>Filter type</label>
+                                <Form.Radio
+                                    label='Intersection'
+                                    value={GeneToTermFilterType.INTERSECTION}
+                                    checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.INTERSECTION}
+                                    onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.INTERSECTION)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Radio
+                                    label='Union'
+                                    value={GeneToTermFilterType.UNION}
+                                    checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.UNION}
+                                    onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.UNION)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Radio
+                                    label='Enrichment'
+                                    value={GeneToTermFilterType.ENRICHMENT}
+                                    checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT}
+                                    onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.ENRICHMENT)}
+                                />
+                            </Form.Field>
+                        </Form.Group>
+                        {termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT &&
+                            <>
+                                <Form.Input
+                                    label='P-value threshold'
+                                    type='number'
+                                    value={termsRelatedToGeneForm.p_value_threshold}
+                                    onChange={(_e, { value }) => handleChangesInForm('p_value_threshold', value)}
+                                />
+                                <Form.Select
+                                    label='Correction method'
+                                    options={[
+                                        { key: 'analytical', text: 'Analytical', value: 'analytical' },
+                                        { key: 'bonferroni', text: 'Bonferroni', value: 'bonferroni' },
+                                        { key: 'false_discovery_rate', text: 'False discovery rate', value: 'false_discovery_rate' }
+                                    ]}
+                                    value={termsRelatedToGeneForm.correction_method}
+                                    onChange={(_e, { value }) => handleChangesInForm('correction_method', value)}
+                                />
+                            </>
+                        }
+                        <Form.Group grouped>
+                            <Form.Field>
+                                <label>Relation type</label>
+                                <Form.Checkbox
+                                    label='Enables'
+                                    value={GORelationType.ENABLES}
+                                    checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.ENABLES)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Checkbox
+                                    label='Involved in'
+                                    value={GORelationType.INVOLVED_IN}
+                                    checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.INVOLVED_IN)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Checkbox
+                                    label='Part of'
+                                    value={GORelationType.PART_OF}
+                                    checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.PART_OF)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Checkbox
+                                    label='Located in'
+                                    value={GORelationType.LOCATED_IN}
+                                    checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.LOCATED_IN)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
+                                />
+                            </Form.Field>
+                        </Form.Group>
+                        <Form.Group grouped>
+                            <Form.Field>
+                                <label>Ontology type</label>
+                                <Form.Checkbox
+                                    label='Biological process'
+                                    value={OntologyType.BIOLOGICAL_PROCESS}
+                                    checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.BIOLOGICAL_PROCESS)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Checkbox
+                                    label='Molecular function'
+                                    value={OntologyType.MOLECULAR_FUNCTION}
+                                    checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.MOLECULAR_FUNCTION)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
+                                />
+                            </Form.Field>
+                            <Form.Field>
+                                <Form.Checkbox
+                                    label='Cellular component'
+                                    value={OntologyType.CELLULAR_COMPONENT}
+                                    checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.CELLULAR_COMPONENT)}
+                                    onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
+                                />
+                            </Form.Field>
+                        </Form.Group>
+                    </Form>
+
+                </Grid.Column>
+                <Grid.Column width={13}>
+                    {term &&
+                        <CytoscapeChart termId={term} />
+                    }
                 </Grid.Column>
             </Grid.Row>
         </Grid>
