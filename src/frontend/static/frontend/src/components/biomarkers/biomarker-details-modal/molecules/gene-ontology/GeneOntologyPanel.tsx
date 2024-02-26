@@ -54,6 +54,8 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
     const initCytoscape = (elements: CytoscapeElements) => {
         cytoscape({
             container: document.getElementById('cy'),
+            minZoom: 0.3,
+            maxZoom: 1.5,
             layout: {
                 name: 'grid',
                 rows: 2,
@@ -135,8 +137,6 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
         }
         ky.get(urlGOGeneToTerms, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((data /* TODO: type */) => {
-                console.log('Data ->', data) // TODO: remove
-
                 getTerms(data.go_terms[0].go_id) // TODO: implement selection of term in the frontend
             }).catch((err) => {
                 alertGeneralError()
