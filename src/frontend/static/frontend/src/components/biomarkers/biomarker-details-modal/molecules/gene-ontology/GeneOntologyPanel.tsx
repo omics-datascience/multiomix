@@ -4,7 +4,7 @@ import cytoscape from 'cytoscape'
 import { BiomarkerMolecule } from '../../../types'
 import { Grid } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { CytoscapeElements, GORelationType, GoTermToTermSearchParams, OntologyRelationTermToTermFilter, OntologyTypeTermToTermFilter } from './types'
+import { CytoscapeElements, GoTermToTermSearchParams, OntologyRelationTermToTermFilter, OntologyTypeTermToTermFilter } from './types'
 
 // Styles
 import '../../../../../css/gene-ontology.css'
@@ -12,6 +12,30 @@ import '../../../../../css/gene-ontology.css'
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
 declare const urlGOTermToTerms: string
+
+const COLORS_BY_ONTOLOGY_RELATION = {
+    [OntologyRelationTermToTermFilter.HAS_PART]: ['Has part', '#e87725'],
+    [OntologyRelationTermToTermFilter.IS_A]: ['Is a', '#999'],
+    [OntologyRelationTermToTermFilter.PART_OF]: ['Part of', '#4d25e8'],
+    [OntologyRelationTermToTermFilter.REGULATES]: ['Regulates', '#d5ae5d']
+}
+
+/**
+ * Renders the legends for the Cytoscape instance.
+ * @returns Component.
+ */
+const CytoscapeLegends = () => (
+    <div className='cytoscape-legends'>
+        <div className='legend-title'>Relations</div>
+        <div className='legend-scale'>
+            <ul className='legend-labels' id="legend">
+                {Object.entries(COLORS_BY_ONTOLOGY_RELATION).map(([_, [relationDescription, color]]) => (
+                    <li key={relationDescription}><span style={{ backgroundColor: color }}></span>{relationDescription}</li>
+                ))}
+            </ul>
+        </div>
+    </div>
+)
 
 /** GeneInformation props. */
 interface GeneOntologyPanelProps {
@@ -50,19 +74,11 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                         'target-arrow-shape': 'triangle',
                         'line-color': function (edge) {
                             // Sets the color of the edge depending on the relation_type attribute
-                            const relationType: GORelationType = edge.data('relation_type')
+                            const relationType: OntologyRelationTermToTermFilter = edge.data('relation_type')
 
-                            switch (relationType) {
-                                case GORelationType.ENABLES:
-                                    return 'green'
-                                case GORelationType.INVOLVED_IN:
-                                    return 'blue'
-                                case GORelationType.PART_OF:
-                                    return 'purple'
-                                case GORelationType.LOCATED_IN:
-                                    return 'orange'
-                                default:
-                                    break
+                            // Checks if it's in the dict
+                            if (relationType in COLORS_BY_ONTOLOGY_RELATION) {
+                                return COLORS_BY_ONTOLOGY_RELATION[relationType][1]
                             }
                         }
                     }
@@ -77,11 +93,14 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
      * @param goId GO term identifier.
      */
     const getTerms = (goId: string) => {
-        // TODO: get this values from form
+        // TODO: get these values from form
+        const relationsStr = [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART].join(',')
+        const ontologyTypeStr = [OntologyTypeTermToTermFilter.BIOLOGICAL_PROCESS, OntologyTypeTermToTermFilter.MOLECULAR_FUNCTION, OntologyTypeTermToTermFilter.CELLULAR_COMPONENT].join(',')
+
         const searchParams: GoTermToTermSearchParams = {
             term_id: goId,
-            relations: [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART],
-            ontology_type: [OntologyTypeTermToTermFilter.BIOLOGICAL_PROCESS, OntologyTypeTermToTermFilter.MOLECULAR_FUNCTION, OntologyTypeTermToTermFilter.CELLULAR_COMPONENT],
+            relations: relationsStr,
+            ontology_type: ontologyTypeStr,
             general_depth: 5,
             hierarchical_depth_to_children: 0,
             to_root: 1
@@ -142,6 +161,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
         <Grid>
             <Grid.Row>
                 <Grid.Column width={16}>
+                    <CytoscapeLegends />
                     <div id="cy"></div>
                 </Grid.Column>
             </Grid.Row>

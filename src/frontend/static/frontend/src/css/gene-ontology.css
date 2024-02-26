@@ -8,3 +8,44 @@
 	z-index: 999;
 	width: 100%;
 }
+
+.cytoscape-legends .legend-title {
+	position: absolute;
+	top: 10px;
+	right: 20px;
+	margin-bottom: 5px;
+	margin-right: 5px;
+	font-weight: bold;
+	font-size: 90%;
+}
+
+.cytoscape-legends .legend-scale ul {
+	margin: 0;
+	margin-right: 10px;
+	padding: 0;
+	position: absolute;
+	top: 30px;
+	right: 10px;
+	list-style: none;
+}
+
+.cytoscape-legends .legend-scale ul li {
+	font-size: 80%;
+	list-style: none;
+	margin-left: 0;
+	line-height: 18px;
+	margin-bottom: 2px;
+}
+
+.cytoscape-legends ul.legend-labels li span {
+	float: left;
+	height: 16px;
+	width: 30px;
+	margin-right: 5px;
+	margin-left: 0;
+	border: 1px solid #999;
+}
+
+.cytoscape-legends a {
+	color: #777;
+}
