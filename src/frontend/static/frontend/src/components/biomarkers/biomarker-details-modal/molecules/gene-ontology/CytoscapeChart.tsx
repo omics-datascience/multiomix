@@ -1,10 +1,10 @@
 import ky from 'ky'
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import cytoscape from 'cytoscape'
-
+import { debounce } from 'lodash'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams } from './types'
-import { Button, Grid } from 'semantic-ui-react'
+import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams, GoTermToTermForm } from './types'
+import { Button, Form, Grid } from 'semantic-ui-react'
 
 declare const urlGOTermToTerms: string
 
@@ -47,6 +47,13 @@ interface CytoscapeLegendsProps {
  */
 export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
     const abortControllerTerm = useRef(new AbortController())
+    const [termsRelatedToTermForm, setTermsRelatedToTermForm] = useState<GoTermToTermForm>({
+        relations: [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART],
+        ontology_type: [OntologyType.BIOLOGICAL_PROCESS, OntologyType.MOLECULAR_FUNCTION, OntologyType.CELLULAR_COMPONENT],
+        general_depth: 5,
+        hierarchical_depth_to_children: 0,
+        to_root: 1
+    })
 
     /**
      * Initializes the Cytoscape instance with the given elements.
@@ -93,22 +100,20 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
 
     /**
      * Gets all the related terms to the given GO term.
-     * @param goId GO term identifier.
+     * @param termId GO term identifier.
+     * @param dataForm Form to filter the related terms.
      */
-    const getTerms = (goId: string) => {
-        // TODO: get these values from form
-        const relationsStr = [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART].join(',')
-        const ontologyTypeStr = [OntologyType.BIOLOGICAL_PROCESS, OntologyType.MOLECULAR_FUNCTION, OntologyType.CELLULAR_COMPONENT].join(',')
-
+    const getRelatedTerms = (termId: string, dataForm: GoTermToTermForm) => {
         const searchParams: GoTermToTermSearchParams = {
-            term_id: goId,
-            relations: relationsStr,
-            ontology_type: ontologyTypeStr,
-            general_depth: 5,
-            hierarchical_depth_to_children: 0,
-            to_root: 1
+            term_id: termId,
+            relations: dataForm.relations.join(','),
+            ontology_type: dataForm.ontology_type.join(','),
+            general_depth: dataForm.general_depth,
+            hierarchical_depth_to_children: dataForm.hierarchical_depth_to_children,
+            to_root: dataForm.to_root
         }
-        ky.get(urlGOTermToTerms, { searchParams, signal: abortControllerTerm.current.signal }).then((response) => {
+
+        ky.get(urlGOTermToTerms, { searchParams: searchParams as any, signal: abortControllerTerm.current.signal }).then((response) => {
             response.json().then((data: { go_terms: CytoscapeElements }) => {
                 // The response is a CytoscapeElements object already
                 initCytoscape(data.go_terms)
@@ -125,8 +130,47 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
         })
     }
 
+    /** Makes the query to Modulector/Bio-API to retrieve terms. */
+    const makeRequestCallback = useCallback(
+        debounce((termId: string, dataForm: GoTermToTermForm) => {
+            getRelatedTerms(termId, dataForm)
+        }, 1000),
+        []
+    )
+
+    /**
+     * Handles changes in the form.
+     * @param name Name of the input.
+     * @param value New value.
+     */
+    const handleChangesInForm = (name: string, value: any) => {
+        setTermsRelatedToTermForm((prev) => {
+            const newState = {
+                ...prev,
+                [name]: value
+            }
+
+            // Makes a debounced request
+            makeRequestCallback(props.termId, newState)
+            return newState
+        })
+    }
+
+    const handleCheckboxChange = (name: string, value: any) => {
+        setTermsRelatedToTermForm((prev) => {
+            const newState = {
+                ...prev,
+                [name]: prev[name].includes(value) ? prev[name].filter((v) => v !== value) : [...prev[name], value]
+            }
+
+            // Makes a debounced request
+            makeRequestCallback(props.termId, newState)
+            return newState
+        })
+    }
+
     useEffect(() => {
-        getTerms(props.termId)
+        getRelatedTerms(props.termId, termsRelatedToTermForm)
     }, [props.termId])
 
     /** On unmount, cancels the request */
@@ -142,6 +186,52 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
             <Grid.Column width={3}>
                 {/* Go back button. */}
                 <Button onClick={props.goBack} icon='arrow left' content='Go back' />
+
+                {/* Form for termsRelatedToTermForm */}
+                <Form className='margin-top-5'>
+                    <Form.Field>
+                        <label>Relations</label>
+                        {Object.entries(OntologyRelationTermToTermFilter)
+                            .filter(([_key, value]) => value !== OntologyRelationTermToTermFilter.IS_A)
+                            .map(([key, value]) => (
+                                <Form.Checkbox
+                                    key={key}
+                                    label={value}
+                                    checked={termsRelatedToTermForm.relations.includes(value)}
+                                    onChange={() => handleCheckboxChange('relations', value)}
+                                />
+                            ))
+                        }
+                    </Form.Field>
+                    <Form.Field>
+                        <label>Ontology type</label>
+                        {Object.entries(OntologyType).map(([key, value]) => (
+                            <Form.Checkbox
+                                key={key}
+                                label={value}
+                                checked={termsRelatedToTermForm.ontology_type.includes(value)}
+                                onChange={() => handleCheckboxChange('ontology_type', value)}
+                            />
+                        ))}
+                    </Form.Field>
+                    <Form.Input
+                        label='General depth'
+                        type='number'
+                        value={termsRelatedToTermForm.general_depth}
+                        onChange={(e) => handleChangesInForm('general_depth', parseInt(e.target.value))}
+                    />
+                    <Form.Input
+                        label='Hierarchical depth to children'
+                        type='number'
+                        value={termsRelatedToTermForm.hierarchical_depth_to_children}
+                        onChange={(e) => handleChangesInForm('hierarchical_depth_to_children', parseInt(e.target.value))}
+                    />
+                    <Form.Checkbox
+                        label='To root'
+                        checked={termsRelatedToTermForm.to_root === 1}
+                        onChange={() => handleChangesInForm('to_root', termsRelatedToTermForm.to_root === 1 ? 0 : 1)}
+                    />
+                </Form>
             </Grid.Column>
             <Grid.Column width={13}>
                 <CytoscapeLegends />
