@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.http import HttpRequest
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -115,14 +117,15 @@ class MetabolicPathwaysInformation(APIView):
     @staticmethod
     def get(request: HttpRequest):
         source = request.GET.get('source', '').strip()
-        id = request.GET.get('id', '').strip()
         if not source:
             return Response(status=400, data={"error": "Param 'source' is mandatory"})
-        if not id:
+
+        pathway_id = request.GET.get('id', '').strip()
+        if not pathway_id:
             return Response(status=400, data={"error": "Param 'id' is mandatory"})
 
         data = global_mrna_service.get_bioapi_service_content(
-            f'/pathway-genes/{source}/{id}',
+            f'/pathway-genes/{source}/{pathway_id}',
             request_params={},  # No params needed
             is_paginated=False,
             method='get'
@@ -159,13 +162,16 @@ class GeneOntologyTermsOfGene(APIView):
             filter_type = 'intersection'
 
         if filter_type not in ["intersection", "union", "enrichment"]:
-            return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following options: 'intersection', 'union' or 'enrichment'"})
+            return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following "
+                                                       "options: 'intersection', 'union' or 'enrichment'"})
         else:
             if filter_type == 'enrichment':
                 if not p_value_threshold:
-                    return Response(status=400, data={"error": "The 'p_value_threshold' parameter is mandatory if 'filter_type' is 'enrichment'"})
+                    return Response(status=400, data={"error": "The 'p_value_threshold' parameter is mandatory if "
+                                                               "'filter_type' is 'enrichment'"})
                 if not correction_method:
-                    return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if 'filter_type' is 'enrichment'"})
+                    return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if "
+                                                               "'filter_type' is 'enrichment'"})
             else:
                 if not relation_type:
                     relation_type = ["enables", "involved_in",
@@ -174,24 +180,32 @@ class GeneOntologyTermsOfGene(APIView):
                     relation_type = relation_type.split(',')
                     for relation in relation_type:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
-                            return Response(status=400, data={"error": "The 'relation_type' parameter must be a combination of the following options: 'enables', 'involved_in', 'part_of' and 'located_in'"})
+                            return Response(status=400, data={"error": "The 'relation_type' parameter must be a "
+                                                                       "combination of the following options: "
+                                                                       "'enables', 'involved_in', 'part_of' and "
+                                                                       "'located_in'"})
         if not ontology_type:
             ontology_type = ["biological_process",
                              "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
-            for type in ontology_type:
-                if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
-        data = {}
+            for type_elem in ontology_type:
+                if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of "
+                                                               "the following options: 'biological_process', "
+                                                               "'molecular_function' and 'cellular_component'"})
         if filter_type in ["intersection", "union"]:
             data = global_mrna_service.get_bioapi_service_content(
                 'genes-to-terms',
+                # request_params={
+                #     'gene_ids': [gene],
+                #     'filter_type': filter_type,
+                #     'ontology_type': ontology_type,
+                #     'relation_type': relation_type
+                # },
+                # TODO: remove this and uncomment the above code when the bioapi service is fixed
                 request_params={
-                    'gene_ids': [gene],
-                    'filter_type': filter_type,
-                    'ontology_type': ontology_type,
-                    'relation_type': relation_type
+                    "gene_ids": ["TMCO4"], "relation_type": ["enables"], "ontology_type": ["molecular_function"]
                 },
                 is_paginated=False,
                 method='post'
@@ -225,51 +239,89 @@ class GeneOntologyTermsOfTerm(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def get(request: HttpRequest):
-        term_id = request.GET.get('term_id', '').strip()
-        relations = request.GET.get('relations', '').strip()
-        ontology_type = request.GET.get('ontology_type', '').strip()
-        general_depth = request.GET.get('general_depth', '').strip()
-        hierarchical_depth_to_children = request.GET.get(
-            'hierarchical_depth_to_children', '').strip()
-        to_root = request.GET.get('to_root', '').strip()
+    def __process_go_data(go_terms: dict) -> dict:
+        """
+        Generates a structure with the GO terms data in a format ready-to-use for cytoscape frontend lib.
+        @param go_terms: BioAPI GO data.
+        @return: Processed GO data.
+        """
+        res = {'nodes': [], 'edges': []}
+        if not go_terms:
+            return res
 
+        # Iterates over the GO terms and generates the nodes and edges
+        for go_term in go_terms:
+            node = {
+                'data': {
+                    'id': go_term['go_id'],
+                    'name': go_term['name'],
+                    'ontology_type': go_term['ontology_type']
+                }
+            }
+            res['nodes'].append(node)
+
+            for relation, target_go_ids in go_term['relations'].items():
+                relation_type = cast(str, relation)
+
+                for target_go_id in target_go_ids:
+                    edge = {
+                        'data': {
+                            'source': go_term['go_id'],
+                            'target': target_go_id,
+                            'relation_type': relation_type
+                        }
+                    }
+                    res['edges'].append(edge)
+
+        return res
+
+    def get(self, request: HttpRequest):
+        term_id = request.GET.get('term_id', '').strip()
         if not term_id:
             return Response(status=400, data={"error": "Param 'term_id' is mandatory"})
 
+        general_depth = request.GET.get('general_depth', '5').strip()
         if not general_depth:
             return Response(status=400, data={"error": "Param 'general_depth' is mandatory"})
         if not general_depth.isnumeric():
             return Response(status=400, data={"error": "Param 'general_depth' must be a numeric value"})
 
-        if not hierarchical_depth_to_children:
-            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' is mandatory"})
-        if not hierarchical_depth_to_children.isnumeric():
-            return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a numeric value"})
+        hierarchical_depth_to_children = request.GET.get('hierarchical_depth_to_children', '0').strip()
+        if hierarchical_depth_to_children:
+            if not hierarchical_depth_to_children.isnumeric():
+                return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a "
+                                                           "numeric value"})
+            hierarchical_depth_to_children = int(hierarchical_depth_to_children)
 
-        if not to_root:
-            return Response(status=400, data={"error": "Param 'to_root' is mandatory"})
-        if to_root not in ["0", "1"]:
-            return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
+        to_root = request.GET.get('to_root', '1').strip()
+        if to_root:
+            if to_root not in ["0", "1"]:
+                return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
+            to_root = int(to_root)
 
+        relations = request.GET.get('relations', '').strip()
         if not relations:
             relations = ["part_of", "regulates", "has_part"]
         else:
             relations = relations.split(',')
             for relation in relations:
                 if relation not in ["part_of", "regulates", "has_part"]:
-                    return Response(status=400, data={"error": "The 'relations' parameter must be a combination of the following options: 'part_of', 'regulates' and 'has_part'"})
+                    return Response(status=400, data={"error": "The 'relations' parameter must be a combination of "
+                                                               "the following options: 'part_of', 'regulates' and "
+                                                               "'has_part'"})
 
+        ontology_type = request.GET.get('ontology_type', '').strip()
         if not ontology_type:
             ontology_type = ["biological_process",
                              "molecular_function", "cellular_component"]
         else:
             ontology_type = ontology_type.split(',')
-            for type in ontology_type:
-                if type not in ["biological_process", "molecular_function", "cellular_component"]:
-                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of the following options: 'biological_process', 'molecular_function' and 'cellular_component'"})
+            for type_elem in ontology_type:
+                if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
+                    return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination "
+                                                               "of the following options: 'biological_process', "
+                                                               "'molecular_function' and 'cellular_component'"})
 
-        data = {}
         data = global_mrna_service.get_bioapi_service_content(
             'related-terms',
             request_params={
@@ -277,12 +329,15 @@ class GeneOntologyTermsOfTerm(APIView):
                 'relations': relations,
                 'ontology_type': ontology_type,
                 'general_depth': int(general_depth),
-                'hierarchical_depth_to_children': int(hierarchical_depth_to_children),
-                'to_root': int(to_root)
+                'hierarchical_depth_to_children': hierarchical_depth_to_children,
+                'to_root': to_root
             },
             is_paginated=False,
             method='post'
         )
+
+        # Generates structure for cytoscape in frontend
+        data = self.__process_go_data(data)
 
         return Response({
             'go_terms': data
@@ -381,7 +436,8 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 
         if score.isnumeric():
             if int(score) < 1 or int(score) > 1000:
-                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range 1-1000"})
+                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range "
+                                                           "1-1000"})
         else:
             return Response(status=400, data={"error": "Param 'score' must be a numeric value"})
 
@@ -403,7 +459,7 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 class DrugsRegulatingGene(APIView):
     """
     Service that takes gene symbol and returns a link to https://go.drugbank.com with
-    all the drugs that upregulate and down regulate its expresion.
+    all the drugs that up-regulate and down regulate its expression.
     Examples:
     http://localhost:8000/molecules/drugs-regulating-gene?gene=TP53
     http://localhost:8000/molecules/drugs-regulating-gene?gene=EGFR
