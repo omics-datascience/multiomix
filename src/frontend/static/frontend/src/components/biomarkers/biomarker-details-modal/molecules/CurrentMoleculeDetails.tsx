@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Grid, Header, Icon } from 'semantic-ui-react'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType, Nullable } from '../../../../utils/interfaces'
@@ -16,6 +16,7 @@ interface CurrentMoleculeDetailsProps {
     selectedMolecule: Nullable<BiomarkerMolecule>,
     /** Callback to "close" this panel. */
     closeDetails: () => void
+
 }
 
 /**
@@ -94,6 +95,9 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     }
 
     const moleculeIsNull = props.selectedMolecule === null
+    useEffect(() => {
+        setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)
+    }, [props.selectedMolecule])
 
     return (
         <Grid padded>
