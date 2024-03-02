@@ -93,7 +93,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         }
 
         ky.get(urlChartDataByAttribute, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((kaplanMeierResult/*: TODO: add type */) => {
+            response.json().then((kaplanMeierResult: any/*: TODO: add type */) => {
                 setChartData(kaplanMeierResult)
             }).catch((err) => {
                 alertGeneralError()
