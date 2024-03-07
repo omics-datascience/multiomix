@@ -36,7 +36,7 @@ services:
 
     # Redis Server for Websocket connections
     redis:
-        image: redis:6.0.8
+        image: redis:6.2.14-alpine
         restart: 'always'
         container_name: multiomics_dev_websocket_channel_redis
         volumes:

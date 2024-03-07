@@ -40,7 +40,7 @@ services:
 
     # Redis Server for Websockets connections
     redis:
-        image: redis:6.0.8
+        image: redis:6.2.14-alpine
         restart: 'always'
         volumes:
             - redis_data:/data
