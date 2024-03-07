@@ -50,8 +50,9 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             urlToRetrieveData={urlBiomarkerMolecules}
             searchWidth={6}
             mapFunction={(molecule: BiomarkerMolecule) => {
+                console.log(molecule)
                 return (
-                    <Table.Row key={molecule.identifier} active={props.selectedMolecule?.id === molecule.id}>
+                    <Table.Row key={molecule.identifier} active={props.selectedMolecule?.identifier === molecule.identifier && props.selectedMolecule.type === molecule.type}>
                         <TableCellWithTitle className='align-center' value={molecule.identifier} />
                         <Table.Cell><MoleculeTypeLabel moleculeType={molecule.type} /></Table.Cell>
                         {/* TODO: add dblClick to show its details too */}
