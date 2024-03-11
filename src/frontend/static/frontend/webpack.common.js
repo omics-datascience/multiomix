@@ -10,7 +10,6 @@ const PATHS = {
     src: path.join(__dirname, 'src'),
     output: path.join(__dirname, 'dist')
 }
-
 module.exports = {
     entry: {
         base: `${PATHS.src}/base.tsx`,
@@ -71,6 +70,6 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name]-[hash].css'
         }),
-        new BundleTracker({ filename: './dist/webpack-stats.json' })
+        new BundleTracker({ filename: 'webpack-stats.json' })
     ]
 }
