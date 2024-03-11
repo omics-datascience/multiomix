@@ -3,7 +3,7 @@ const common = require('./webpack.common.js')
 
 // Plugins
 const TerserPlugin = require('terser-webpack-plugin')
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 
 module.exports = merge(common, {
     mode: 'production',
@@ -13,7 +13,7 @@ module.exports = merge(common, {
         minimize: true,
         minimizer: [
             new TerserPlugin({}),
-            new OptimizeCSSAssetsPlugin({
+            new CssMinimizerPlugin({
                 // Safe: true prevents problems with z-index
                 cssProcessorOptions: {
                     safe: true

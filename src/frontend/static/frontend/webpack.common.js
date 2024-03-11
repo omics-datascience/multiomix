@@ -2,6 +2,7 @@ const path = require('path')
 const BundleTracker = require('webpack-bundle-tracker')
 
 // Plugins
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
