@@ -12,9 +12,10 @@ django-generate-secret-key==1.0.2
 django-querysetsequence==0.16
 django-object-actions==4.1.0
 Django==3.2.20
+django-webpack-loader==3.0.1
 djangorestframework==3.12.1
 drf-writable-nested==0.7.0
-lifelines==0.25.8
+ggca==0.4.1
 lifelines==0.25.8
 numpy==1.26.2
 pandas==2.1.3
