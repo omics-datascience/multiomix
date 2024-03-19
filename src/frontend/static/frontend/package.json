@@ -22,7 +22,7 @@
     "@types/validator": "^13.11.9",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
-    "clean-webpack-plugin": "^3.0.0",
+    "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^3.6.0",
     "css-minimizer-webpack-plugin": "^6.0.0",
     "eslint": "^8.57.0",
