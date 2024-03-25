@@ -13,7 +13,7 @@ This document is focused on the **development** of the system. If you are lookin
 
 - Python 3.7+ (tested version: `3.10`)
 - Node JS (tested version: `16.x`)
-- [Modulector][modulector] 2.1.3
+- [Modulector][modulector] 2.1.4
 - [BioAPI][bioapi] 1.2.1
 
 
