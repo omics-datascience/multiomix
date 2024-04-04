@@ -6,9 +6,9 @@ from django.http import StreamingHttpResponse
 from django.utils import timezone
 from django_object_actions import DjangoObjectActions
 from biomarkers.models import BiomarkerState
-from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel, ClusterLabelsSet, \
-    ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters, CoxRegressionParameters, \
-    BBHAParameters, GeneticAlgorithmsParameters
+from feature_selection.models import FSExperiment, SVMParameters, ClusteringParameters, TrainedModel, \
+    ClusterLabelsSet, ClusterLabel, SVMTimesRecord, RFTimesRecord, ClusteringTimesRecord, RFParameters, \
+    CoxRegressionParameters, BBHAParameters, GeneticAlgorithmsParameters
 
 
 class Echo:
@@ -17,7 +17,8 @@ class Echo:
     Taken from https://docs.djangoproject.com/en/4.2/howto/outputting-csv/#streaming-csv-files
     """
 
-    def write(self, value):
+    @staticmethod
+    def write(value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
 
@@ -62,7 +63,8 @@ class SVMTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = common_time_record_fields + ('test_time', 'number_of_iterations', 'time_by_iteration',
                                                 'max_iterations', 'optimizer', 'kernel')
 
-    def export(self, _request, queryset: QuerySet[SVMTimesRecord]):
+    @staticmethod
+    def export(_request, queryset: QuerySet[SVMTimesRecord]):
         """
         Returns the QuerySet data as a CSV in a StreamingResponse.
         Taken from https://docs.djangoproject.com/en/4.2/howto/outputting-csv/#streaming-csv-files
@@ -93,7 +95,8 @@ class SVMTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
 class RFTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = common_time_record_fields + ('test_time', 'number_of_trees')
 
-    def export(self, _request, queryset: QuerySet[RFTimesRecord]):
+    @staticmethod
+    def export(_request, queryset: QuerySet[RFTimesRecord]):
         """
         Returns the QuerySet data as a CSV in a StreamingResponse.
         Taken from https://docs.djangoproject.com/en/4.2/howto/outputting-csv/#streaming-csv-files
@@ -122,7 +125,8 @@ class RFTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
 class ClusteringTimesRecordAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = common_time_record_fields + ('number_of_clusters', 'algorithm', 'scoring_method', 'fs_experiment')
 
-    def export(self, _request, queryset: QuerySet[ClusteringTimesRecord]):
+    @staticmethod
+    def export(_request, queryset: QuerySet[ClusteringTimesRecord]):
         """
         Returns the QuerySet data as a CSV in a StreamingResponse.
         Taken from https://docs.djangoproject.com/en/4.2/howto/outputting-csv/#streaming-csv-files
