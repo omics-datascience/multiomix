@@ -29,6 +29,8 @@ interface ItemMenuProp {
  * @returns Component.
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
+    const isGene = [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+
     /**
      * Array with all the items and conditions
      */
@@ -38,28 +40,35 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
             popupInfo: `Details of ${props.selectedMolecule.identifier} gene obtained from different standardized sources`,
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA, MoleculeType.METHYLATION].includes(props.selectedMolecule.type)
+            isVisible: true // All molecules
         },
         {
             name: 'Pathways',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
             popupInfo: 'It shows all the biological pathways that include each of the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+            isVisible: isGene
+        },
+        {
+            name: 'Gene associations network',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK,
+            popupInfo: 'It shows the network of gene associations of the genes of this biomarker',
+            isVisible: isGene
         },
         {
             name: 'Gene Ontology',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY,
             popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+            isVisible: isGene
         },
         {
             name: 'Actionable/Cancer genes',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
             popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+            isVisible: isGene
         },
         {
             name: 'Diseases',

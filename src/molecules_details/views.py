@@ -427,25 +427,25 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 
     @staticmethod
     def get(request: HttpRequest):
-        gene = request.GET.get('gene', '').strip()
-        score = request.GET.get('score', '').strip()
-        if not gene:
-            return Response(status=400, data={"error": "Param 'gene' is mandatory"})
-        if not score:
-            return Response(status=400, data={"error": "Param 'score' is mandatory"})
+        gene_id = request.GET.get('gene_id', '').strip()
+        min_combined_score = request.GET.get('min_combined_score', '').strip()
+        if not gene_id:
+            return Response(status=400, data={"error": "Param 'gene_id' is mandatory"})
+        if not min_combined_score:
+            return Response(status=400, data={"error": "Param 'min_combined_score' is mandatory"})
 
-        if score.isnumeric():
-            if int(score) < 1 or int(score) > 1000:
-                return Response(status=400, data={"error": "Param 'score' must be a number within the closed range "
-                                                           "1-1000"})
+        if min_combined_score.isnumeric():
+            if int(min_combined_score) < 1 or int(min_combined_score) > 1000:
+                return Response(status=400, data={"error": "Param 'min_combined_score' must be a number within "
+                                                           "the closed range 1-1000"})
         else:
-            return Response(status=400, data={"error": "Param 'score' must be a numeric value"})
+            return Response(status=400, data={"error": "Param 'min_combined_score' must be a numeric value"})
 
         data = global_mrna_service.get_bioapi_service_content(
             'string-relations',
             request_params={
-                'gene_id': gene,
-                'min_combined_score': int(score)
+                'gene_id': gene_id,
+                'min_combined_score': int(min_combined_score)
             },
             is_paginated=False,
             method='post'

@@ -39,6 +39,8 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <MoleculeGeneralInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
                 return <PathwaysInformation selectedMolecule={selectedMolecule} />
+            case ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK:
+                return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
