@@ -9,7 +9,7 @@ import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchP
 import { debounce } from 'lodash'
 
 // Styles
-import '../../../../../css/gene-ontology.css'
+import '../../../../../css/cytoscape.css'
 
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string

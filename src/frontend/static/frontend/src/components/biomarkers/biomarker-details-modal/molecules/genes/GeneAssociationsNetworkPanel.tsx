@@ -4,10 +4,12 @@ import cytoscape from 'cytoscape'
 import { BiomarkerMolecule } from '../../../types'
 import { Form, Grid, Input } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
+import { CytoscapeElements } from '../gene-ontology/types'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { ExternalLink } from '../../../../common/ExternalLink'
 
 // Styles
-import '../../../../../css/gene-ontology.css'
-import { CytoscapeElements } from '../gene-ontology/types'
+import '../../../../../css/cytoscape.css'
 
 // Defined in biomarkers.html
 declare const urlGeneAssociationsNetwork: string
@@ -345,7 +347,18 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                         </Form.Field>
                     </Form>
                 </Grid.Column>
-                <Grid.Column width={13}>
+                <Grid.Column width={1} verticalAlign='middle'>
+                    <InfoPopup
+                        content={
+                            <span>
+                                The combined score is computed by combining the probabilities from the different evidence channels and corrected for the probability of randomly observing an interaction. For a more detailed description please see <ExternalLink href='https://pubmed.ncbi.nlm.nih.gov/15608232/'>von Mering, et al. Nucleic Acids Res. 2005</ExternalLink>
+                            </span>
+                        }
+                        onTop={false}
+                        onEvent='click'
+                    />
+                </Grid.Column>
+                <Grid.Column width={12}>
                     <div id="cy"></div>
                 </Grid.Column>
             </Grid.Row>
