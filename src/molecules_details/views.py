@@ -469,7 +469,8 @@ class PredictedFunctionalAssociationsNetwork(APIView):
                 # TODO: change weight to the neighborhood, fusion, cooccurence, experiments, textmining, database y coexpression value
                 'weight': association['combined_score'],
                 # TODO: compute group by neighborhood, fusion, cooccurence, experiments, textmining, database and
-                #  coexpression fields, the null ocurrence should be ignored
+                # TODO: coexpression fields, the null ocurrence should be ignored. Must match with COLORS_BY_STRING_RELATION
+                # TODO: constant in frontend
                 'group': 'coexp' if randint(0, 10) > 5 else 'coloc',
                 # 'networkId': 1103,
                 # 'networkGroupId': 18,
