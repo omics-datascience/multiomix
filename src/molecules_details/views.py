@@ -466,7 +466,10 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'data': {
                 'source': association[source_key],
                 'target': association[target_key],
+                # TODO: change weight to the neighborhood, fusion, cooccurence, experiments, textmining, database y coexpression value
                 'weight': association['combined_score'],
+                # TODO: compute group by neighborhood, fusion, cooccurence, experiments, textmining, database and
+                #  coexpression fields, the null ocurrence should be ignored
                 'group': 'coexp' if randint(0, 10) > 5 else 'coloc',
                 # 'networkId': 1103,
                 # 'networkGroupId': 18,
@@ -507,10 +510,12 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             if association['gene_2'] not in computed_genes:
                 res.append(self.__generate_node(association, 'gene_2'))
                 computed_genes.add(association['gene_2'])
-            
+
+            # TODO: call __generate_edge for all the neighborhood, fusion, cooccurence, experiments, textmining, database and
+            # coexpression fields, the null occurrences should be ignored
             res.append(self.__generate_edge(association, 'gene_1', 'gene_2'))
 
-        # Returns the list sorted to get the group == 'nodes' first
+        # Returns the list sorted to get the group == 'nodes' first to prevent "missing node" error in the frontend
         return sorted(res, key=lambda x: x['group'] == 'nodes', reverse=True)
 
     def get(self, request: HttpRequest):
