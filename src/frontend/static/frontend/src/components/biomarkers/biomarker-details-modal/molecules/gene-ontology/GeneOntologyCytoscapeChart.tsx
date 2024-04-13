@@ -60,15 +60,10 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
      * @param elements Cytoscape elements to initialize the instance.
      */
     const initCytoscape = (elements: CytoscapeElements) => {
-        cytoscape({
+        const cy = cytoscape({
             container: document.getElementById('cy'),
             minZoom: 0.5,
             maxZoom: 1.5,
-            layout: {
-                name: 'grid',
-                rows: 2,
-                cols: 2
-            },
             // userZoomingEnabled: false, // Disable zooming. TODO: check this
             style: [
                 {
@@ -96,6 +91,13 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
             ],
             elements
         })
+
+        // Randomizes nodes positions
+        const layout = cy.elements().layout({
+            name: 'random'
+        })
+
+        layout.run()
     }
 
     /**
