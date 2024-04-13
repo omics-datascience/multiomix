@@ -16,12 +16,12 @@ declare const urlGeneAssociationsNetwork: string
 /** Colors for the String standard: https://string-db.org/cgi/help ("Network" section). */
 const COLORS_BY_STRING_RELATION = {
     fusion: ['Fusion', '#d90429'],
-    neighborhood: ['Neighborhood', '#999'],
-    coOccurrence: ['Co-occurrence', '#4d25e8'],
-    experimental: ['Experimental', '#d5ae5d'],
+    neighborhood: ['Neighborhood', '#6a994e'],
+    coOccurrence: ['Co-occurrence', '#3a86ff'],
+    experimental: ['Experimental', '#7209b7'],
     textMining: ['Text mining', '#d5ae5d'],
-    database: ['Database', '#d5ae5d'],
-    coExpression: ['Co-expression', '#d0b7d5']
+    database: ['Database', '#4cc9f0'],
+    coExpression: ['Co-expression', '#10002b'] // In the FAQ says 'white', but we have a white background, so it's not visible
 }
 
 /**
@@ -61,6 +61,9 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
             minZoom: 0.5,
             maxZoom: 1.5,
             randomize: true,
+            animate: true,
+            nodeSpacing: 15,
+            edgeLengthVal: 45,
             style: [
                 {
                     selector: 'core',
