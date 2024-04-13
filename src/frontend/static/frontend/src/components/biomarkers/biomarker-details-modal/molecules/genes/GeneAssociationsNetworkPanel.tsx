@@ -4,7 +4,6 @@ import cytoscape from 'cytoscape'
 import { BiomarkerMolecule } from '../../../types'
 import { Form, Grid, Input } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
-import { CytoscapeElements } from '../gene-ontology/types'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ExternalLink } from '../../../../common/ExternalLink'
 
@@ -29,10 +28,11 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
      * @param elements Cytoscape elements to initialize the instance.
      */
     const initCytoscape = (elements: any /* TODO: type */) => {
-        cytoscape({
+        const cy = cytoscape({
             container: document.getElementById('cy'),
             minZoom: 0.5,
             maxZoom: 1.5,
+            randomize: true,
             style: [{
                 selector: 'core',
                 style: {
@@ -179,6 +179,12 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
             }],
             elements
         })
+
+        const layout = cy.elements().layout({
+            name: 'random'
+        })
+
+        layout.run()
     }
 
     /**
@@ -248,6 +254,8 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 </Grid.Column>
                 <Grid.Column width={12}>
                     <div id="cy"></div>
+
+                    {/* TODO: add Legends to follow the indications of String colors: https://string-db.org/cgi/help?sessionId=bEW3ZFlhsLV5 */}
                 </Grid.Column>
             </Grid.Row>
         </Grid>
