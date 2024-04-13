@@ -692,21 +692,22 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             { key: 'private', text: 'Private', value: 'private' }
         ]
 
-        const instsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
+        const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
 
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions },
-            { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', options: selectVisibilityOptions },
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select existing Tag', options: tagOptions, width: 3 },
+            { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', options: selectVisibilityOptions, width: 2 },
             {
                 label: 'Institutions',
                 keyForServer: 'institutions',
                 defaultValue: '',
-                options: instsOptions,
-                disabledFunction: (actualValues) => actualValues.visibility === 'private'
+                options: institutionsOptions,
+                disabledFunction: (actualValues) => actualValues.visibility === 'private',
+                width: 3
             },
-            { label: 'File type', keyForServer: 'file_type', defaultValue: FileType.ALL, options: getFileTypeSelectOptions() }
+            { label: 'File type', keyForServer: 'file_type', defaultValue: FileType.ALL, options: getFileTypeSelectOptions(), width: 2 }
         ]
     }
 

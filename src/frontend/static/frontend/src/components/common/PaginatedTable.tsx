@@ -518,6 +518,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                     selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'
+                                    fluid
+                                    width={1}
                                     value={tableControl.pageSize}
                                     onChange={(_, { name, value }) => {
                                         this.handleTableControlChanges(name, value)

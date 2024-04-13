@@ -259,3 +259,8 @@ h2.menu,
     justify-content: center;
     align-items: flex-end;
 }
+
+/* Pulls the Entries Select to the right. */
+.entries-select-table {
+    margin-left: auto !important;
+}
