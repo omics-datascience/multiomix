@@ -28,16 +28,11 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
      * Initializes the Cytoscape instance with the given elements.
      * @param elements Cytoscape elements to initialize the instance.
      */
-    const initCytoscape = (elements: CytoscapeElements) => {
+    const initCytoscape = (elements: any /* TODO: type */) => {
         cytoscape({
             container: document.getElementById('cy'),
             minZoom: 0.5,
             maxZoom: 1.5,
-            layout: {
-                name: 'grid',
-                rows: 2,
-                cols: 2
-            },
             style: [{
                 selector: 'core',
                 style: {
@@ -182,114 +177,7 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                     'line-color': '#f0ec86'
                 }
             }],
-            elements: [{
-                data: {
-                    id: '605755',
-                    idInt: 605755,
-                    name: 'PCNA',
-                    score: 0.006769776522008331,
-                    query: true,
-                    gene: true
-                },
-                // position: {
-                //     x: 481.0169597039117,
-                //     y: 384.8210888234145
-                // },
-                group: 'nodes',
-                removed: false,
-                selected: false,
-                selectable: true,
-                locked: false,
-                grabbed: false,
-                grabbable: true,
-                classes: 'fn10273 fn6944 fn9471 fn10569 fn8023 fn6956 fn6935 fn8147 fn6939 fn6936 fn6629 fn7928 fn6947 fn8612 fn6957 fn8786 fn6246 fn9367 fn6945 fn6946 fn10024 fn10022 fn6811 fn9361 fn6279 fn6278 fn8569 fn7641 fn8568 fn6943'
-            }, {
-                data: {
-                    id: '611408',
-                    idInt: 611408,
-                    name: 'FEN1',
-                    score: 0.006769776522008331,
-                    query: false,
-                    gene: true
-                },
-                // position: {
-                //     x: 531.9740635094307,
-                //     y: 464.8210898234145
-                // },
-                group: 'nodes',
-                removed: false,
-                selected: false,
-                selectable: true,
-                locked: false,
-                grabbed: false,
-                grabbable: true,
-                classes: 'fn10273 fn6944 fn9471 fn6284 fn6956 fn6935 fn8147 fn6939 fn6936 fn6949 fn6629 fn7952 fn6680 fn6957 fn8786 fn6676 fn10713 fn7495 fn7500 fn9361 fn6279 fn6278 fn8569 fn7641 fn8568'
-            }, {
-                data: {
-                    id: '612341',
-                    idInt: 612341,
-                    name: 'RAD9A',
-                    score: 0.0028974131563619387,
-                    query: false,
-                    gene: true
-                },
-                // position: {
-                //     x: 455.8128125018193,
-                //     y: 555.4591537139819
-                // },
-                group: 'nodes',
-                removed: false,
-                selected: false,
-                selectable: true,
-                locked: false,
-                grabbed: false,
-                grabbable: true,
-                classes: 'fn6935 fn6219 fn6680 fn6676 fn10713 fn7552 fn7495'
-            }, {
-                data: {
-                    id: '608473',
-                    idInt: 608473,
-                    name: 'RAD9B',
-                    score: 0.0026928704785200708,
-                    query: false,
-                    gene: true
-                },
-                // position: {
-                //     x: 363.1144068403203,
-                //     y: 515.7352912086707
-                // },
-                group: 'nodes',
-                removed: false,
-                selected: false,
-                selectable: true,
-                locked: false,
-                grabbed: false,
-                grabbable: true,
-                classes: 'fn6935'
-            },
-            {
-                data: {
-                    source: '608473',
-                    target: '612341',
-                    weight: 0.0054105376,
-                    group: 'coexp',
-                    networkId: 1103,
-                    networkGroupId: 18,
-                    intn: true,
-                    rIntnId: 80,
-                    id: 'e78'
-                },
-                position: {},
-                group: 'edges',
-                removed: false,
-                selected: false,
-                selectable: true,
-                locked: false,
-                grabbed: false,
-                grabbable: true,
-                classes: ''
-            }
-            ]
+            elements
         })
     }
 
@@ -301,9 +189,9 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
         const searchParams = { gene_id: selectedGene.identifier, min_combined_score: minCombinedScore }
 
         ky.get(urlGeneAssociationsNetwork, { searchParams: searchParams as any, signal: abortControllerTerm.current.signal }).then((response) => {
-            response.json().then((data: { go_terms: CytoscapeElements }) => {
+            response.json().then((data: { data: any /* TODO: type */ }) => {
                 // The response is a CytoscapeElements object already
-                initCytoscape(data.go_terms)
+                initCytoscape(data.data)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)

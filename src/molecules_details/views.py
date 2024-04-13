@@ -1,4 +1,5 @@
-from typing import cast
+from random import randint
+from typing import cast, Any
 
 from django.http import HttpRequest
 from rest_framework import permissions
@@ -426,7 +427,93 @@ class PredictedFunctionalAssociationsNetwork(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def get(request: HttpRequest):
+    def __generate_node(association: dict[str, Any], id_key: str) -> dict[str, Any]:
+        """
+        TODO: complete
+        @param association:
+        @param id_key:
+        @return:
+        """
+        return {
+            'data': {
+                'id': association[id_key],
+                'name': association[id_key],
+                'score': association['combined_score'],  # TODO: check, the size should be the same for all
+                'query': True,
+                'gene': True,
+            },
+            'group': 'nodes',
+            'removed': False,
+            'selected': False,
+            'selectable': True,
+            'locked': False,
+            'grabbed': False,
+            'grabbable': True,
+            # TODO: Check if 'classes' can remove
+            'classes': 'fn10273 fn6944 fn9471 fn10569 fn8023 fn6956 fn6935 fn8147 fn6939 fn6936 fn6629 fn7928 fn6947 fn8612 fn6957 fn8786 fn6246 fn9367 fn6945 fn6946 fn10024 fn10022 fn6811 fn9361 fn6279 fn6278 fn8569 fn7641 fn8568 fn6943'
+        }
+
+    @staticmethod
+    def __generate_edge(association: dict[str, Any], source_key: str, target_key: str) -> dict[str, Any]:
+        """
+
+        @param association:
+        @param source_key:
+        @param target_key:
+        @return:
+        """
+        return {
+            'data': {
+                'source': association[source_key],
+                'target': association[target_key],
+                'weight': association['combined_score'],
+                'group': 'coexp' if randint(0, 10) > 5 else 'coloc',
+                # 'networkId': 1103,
+                # 'networkGroupId': 18,
+                # 'intn': True,
+                # 'rIntnId': 80,
+                # 'id': 'e78'
+            },
+            'position': {},
+            'group': 'edges',
+            'removed': False,
+            'selected': False,
+            'selectable': True,
+            'locked': False,
+            'grabbed': False,
+            'grabbable': True,
+            # 'classes': ''
+        }
+
+    def __process_associations_data(self, associations: dict) -> list[dict]:
+        """
+        Generates a structure with the genes associations data in a format ready-to-use for cytoscape frontend lib.
+        @param associations: BioAPI Gene  data.
+        @return: Processed GO data.
+        """
+        if not associations:
+            return []
+
+        # Generates an array of the same length as the associations
+        computed_genes: set[str] = set()
+        res = []  # TODO: use Numpy array of len(associations) * 3
+        # Iterates over the GO terms and generates the nodes and edges
+        for association in associations:
+            # Creates nodes for gene_1 and gene_2 if they are not in the computed_genes set
+            if association['gene_1'] not in computed_genes:
+                res.append(self.__generate_node(association, 'gene_1'))
+                computed_genes.add(association['gene_1'])
+
+            if association['gene_2'] not in computed_genes:
+                res.append(self.__generate_node(association, 'gene_2'))
+                computed_genes.add(association['gene_2'])
+            
+            res.append(self.__generate_edge(association, 'gene_1', 'gene_2'))
+
+        # Returns the list sorted to get the group == 'nodes' first
+        return sorted(res, key=lambda x: x['group'] == 'nodes', reverse=True)
+
+    def get(self, request: HttpRequest):
         gene_id = request.GET.get('gene_id', '').strip()
         min_combined_score = request.GET.get('min_combined_score', '').strip()
         if not gene_id:
@@ -445,15 +532,17 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'string-relations',
             request_params={
                 'gene_id': gene_id,
-                'min_combined_score': int(min_combined_score)
+                # 'min_combined_score': int(min_combined_score)
+                'min_combined_score': 995
             },
             is_paginated=False,
             method='post'
         )
 
-        return Response({
-            'data': data if data else None
-        })
+        # Generates structure for cytoscape in frontend
+        data = self.__process_associations_data(data)
+
+        return Response({'data': data})
 
 
 class DrugsRegulatingGene(APIView):
