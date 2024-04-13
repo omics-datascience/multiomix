@@ -49,6 +49,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             searchPlaceholder='Search by identifier'
             urlToRetrieveData={urlBiomarkerMolecules}
             searchWidth={6}
+            entriesSelectWidth={3}
             mapFunction={(molecule: BiomarkerMolecule) => {
                 console.log(molecule)
                 return (
