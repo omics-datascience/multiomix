@@ -15,7 +15,7 @@ else:
 DEBUG = False
 
 # 'web' is the name of the docker-compose service which serves Django
-ALLOWED_HOSTS = ['web']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'web').split(',')
 
 CHANNEL_LAYERS = {
     'default': {
