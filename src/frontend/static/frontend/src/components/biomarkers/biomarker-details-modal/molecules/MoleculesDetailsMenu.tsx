@@ -94,8 +94,9 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     ]
 
     /**
-     * Function to render menus, every 5 items it will generate a menu in order to keep space
-     * @returns Menus with 5 items stackable
+     * Function to render menus, every 6 items it will generate a menu in order to keep space.
+     * TODO: use CSS flex properties and remove this.
+     * @returns Menus with 6 items stackable
      */
     const handleMenuRender = () => {
         const menuRender: {
@@ -111,7 +112,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                 itemMenu.push(item)
             }
 
-            if (itemMenu.length === 5) {
+            if (itemMenu.length === 6) {
                 menuRender.push({ items: itemMenu, key, className: 'remove-margin-bottom' })
                 key += 1
                 itemMenu = []
