@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Grid, Header, Icon } from 'semantic-ui-react'
+import { Button, Grid, Header, Icon, Placeholder, PlaceholderLine, PlaceholderParagraph } from 'semantic-ui-react'
 import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import { KySearchParams, Nullable } from '../../../../utils/interfaces'
 import { ExternalLink } from '../../../common/ExternalLink'
@@ -35,6 +35,10 @@ const LinkOrPlainText = (props: LinkOrPlainTextProps) => {
 interface MiRNAExtraDataProps {
     /** miRNA identifier to send to the backend. */
     miRNA: string,
+    /** Additional className for the component. */
+    className?: string
+    /** If `true` shows a Header with a message indicating no data. Default `true`. */
+    showNoDataHeader?: boolean
 }
 
 /**
@@ -44,27 +48,32 @@ interface MiRNAExtraDataProps {
  */
 export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
+    const [loading, setLoading] = useState<boolean>(true)
+
     const abortController = useRef(new AbortController())
+    const showNoDataHeader = props.showNoDataHeader ?? true
 
     /**
      * Function to get MiRNA data
      */
     const getMiRNAData = () => {
-        if (!miRNAData) {
-            const searchParams: KySearchParams = {
-                mirna: props.miRNA
-            }
+        setLoading(true)
 
-            ky.get(urlMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
-                response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
-                    setMiRNAData(jsonResponse)
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                console.log('Error getting studies ->', err)
-            })
+        const searchParams: KySearchParams = {
+            mirna: props.miRNA
         }
+
+        ky.get(urlMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
+            response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
+                setMiRNAData(jsonResponse)
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting studies ->', err)
+        }).finally(() => {
+            setLoading(false)
+        })
     }
 
     /**
@@ -79,7 +88,35 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     }, [])
 
     if (!miRNAData) {
-        return null
+        if (!showNoDataHeader) {
+            return null
+        }
+
+        return !loading
+            ? (
+                <Grid className='margin-top-2'>
+                    <Grid.Row stretched>
+                        <Grid.Column width={16} textAlign='center'>
+                            <Header size='huge' icon>
+                                <Icon name='folder outline' />
+
+                                No data found for this miRNA
+                            </Header>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            )
+            : (
+                // Shows a Placeholder while loading
+                <Placeholder fluid>
+                    <PlaceholderParagraph>
+                        <PlaceholderLine />
+                        <PlaceholderLine />
+                        <PlaceholderLine />
+                        <PlaceholderLine />
+                    </PlaceholderParagraph>
+                </Placeholder>
+            )
     }
 
     const mirbaseURL = miRNAData.links.find((link) => link.source === 'mirbase')?.url

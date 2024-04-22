@@ -11,7 +11,8 @@ interface MiRNAInformationProps {
 }
 
 /**
- * Renders a panel with general information of a molecule
+ * Renders a panel with general information of a miRNA molecule. It's a wrapper for the MiRNAExtraData component
+ * (useful to center in the middle of the screen).
  * @param props Component props.
  * @returns Component.
  */
