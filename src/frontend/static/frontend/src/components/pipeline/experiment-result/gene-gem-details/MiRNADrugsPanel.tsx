@@ -10,8 +10,8 @@ declare const urlMiRNAeDrugs: string
  * Component's props
  */
 interface MiRNADrugsPanelProps {
+    /** miRNA identifier to send to the backend. */
     miRNA: string,
-    identifier: string,
 }
 
 /**
@@ -66,9 +66,10 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
 
     const customInputs: PaginationCustomFilter[] = [
         {
-            label: 'FDA Approved',
+            label: 'FDA approved',
             keyForServer: 'fda_approved',
             defaultValue: 0,
+            width: 2,
             options: [
                 { key: 'all', text: 'All', value: 0 },
                 { key: 'yes', text: 'Yes', value: 'true' },
@@ -79,11 +80,14 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
+            <MiRNAExtraData miRNA={props.miRNA} />
+
             <PaginatedTable<DjangoMiRNADrugsJSON>
                 headerTitle='miRNA drugs associations'
                 headers={headers}
                 customFilters={customInputs}
+                searchWidth={4}
+                entriesSelectWidth={2}
                 showSearchInput
                 searchLabel='Condition/Molecule/Pattern'
                 searchPlaceholder='Search by drug, S.M. or Exp. P.'

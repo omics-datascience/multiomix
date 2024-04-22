@@ -479,7 +479,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
                         {this.props.headerTitle &&
-                            <Header as='h4' textAlign='left'>
+                            <Header as='h4' textAlign='left' className='margin-bottom-1'>
                                 {this.props.headerTitle}
                             </Header>
                         }

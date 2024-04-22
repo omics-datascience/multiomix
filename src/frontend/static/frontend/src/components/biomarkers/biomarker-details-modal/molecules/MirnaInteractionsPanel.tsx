@@ -3,14 +3,16 @@ import { BiomarkerMolecule } from '../../types'
 import { MiRNATargetInteractionPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNATargetInteractionPanel'
 import { Nullable } from '../../../../utils/interfaces'
 
-interface Props {
+interface MirnaInteractionsPanelProps {
     /** Selected Biomarker instance to retrieve its TrainedModel instances. */
     selectedMolecule: BiomarkerMolecule,
+    /** Gene identifier. */
     gene: Nullable<string>,
+    /** miRNA identifier. */
     miRNA: Nullable<string>,
 }
 
-export const MirnaInteractionsPanel = (props: Props) => {
+export const MirnaInteractionsPanel = (props: MirnaInteractionsPanelProps) => {
     const { selectedMolecule, gene, miRNA } = props
     return (
         <>

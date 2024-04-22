@@ -28,7 +28,7 @@ const InfoPopupScoreClass = () => (
  * Component's props
  */
 interface MiRNAInteractionPanelProps {
-    identifier: string,
+    /** miRNA identifier to send to the backend. */
     miRNA: string,
     showGeneSearchInput: boolean
 }
@@ -62,7 +62,7 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
+            <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNAGeneInteractionJSON>
                 headerTitle='Interactions'

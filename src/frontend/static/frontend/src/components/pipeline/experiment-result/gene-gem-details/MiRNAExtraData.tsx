@@ -6,12 +6,15 @@ import { ExternalLink } from '../../../common/ExternalLink'
 import ky from 'ky'
 import './../../../../css/base.css'
 
+declare const urlMiRNAData: string
+
 /** LinkOrPlainText props. */
 interface LinkOrPlainTextProps {
-    url: string | undefined,
+    /** Url for the ExternalLink, if `undefined` shows an `span` element. */
+    url?: string,
+    /** Text of the ExternalLink/span. */
     text: string
 }
-declare const urlGetMiRNAData: string
 
 /**
  * Renders a Link to another source if URL is valid. Otherwise, it returns a simple span
@@ -30,8 +33,8 @@ const LinkOrPlainText = (props: LinkOrPlainTextProps) => {
  * Component's props
  */
 interface MiRNAExtraDataProps {
-    miRNA: Nullable<string>,
-    identifier: string,
+    /** miRNA identifier to send to the backend. */
+    miRNA: string,
 }
 
 /**
@@ -49,10 +52,10 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     const getMiRNAData = () => {
         if (!miRNAData) {
             const searchParams: KySearchParams = {
-                mirna: props.identifier
+                mirna: props.miRNA
             }
 
-            ky.get(urlGetMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
+            ky.get(urlMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
                 response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
                     setMiRNAData(jsonResponse)
                 }).catch((err) => {
@@ -101,8 +104,8 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                         </Header>
                     </Grid.Column>
                 }
-                {
-                    othersLinks.length &&
+
+                {(othersLinks.length > 0) &&
                     <Grid.Column width={2} verticalAlign='middle'>
                         {othersLinks.map((link) => (
                             <Button
@@ -119,7 +122,6 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                         ))}
                     </Grid.Column>
                 }
-
             </Grid.Row>
         </Grid>
     )

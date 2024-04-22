@@ -11,8 +11,8 @@ declare const urlMiRNADiseases: string
  * Component's props
  */
 interface MiRNADiseasesPanelProps {
+    /** miRNA identifier to send to the backend. */
     miRNA: string,
-    identifier: string
 }
 
 /**
@@ -39,11 +39,13 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
 
     return (
         <React.Fragment>
-            <MiRNAExtraData miRNA={props.miRNA} identifier={props.identifier} />
+            <MiRNAExtraData miRNA={props.miRNA} />
+
             <PaginatedTable<DjangoMiRNADiseasesJSON>
                 headerTitle='miRNA diseases associations'
                 headers={headers}
                 showSearchInput
+                entriesSelectWidth={2}
                 searchLabel='Disease'
                 searchPlaceholder='Search by disease'
                 queryParams={{

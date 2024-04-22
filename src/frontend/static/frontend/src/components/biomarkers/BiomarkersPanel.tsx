@@ -1629,7 +1629,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
-                        { name: 'Actions' }
+                        { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                     customFilters={this.getDefaultFilters()}
