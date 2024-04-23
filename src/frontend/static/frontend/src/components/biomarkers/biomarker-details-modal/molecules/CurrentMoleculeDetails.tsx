@@ -6,11 +6,11 @@ import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
 import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 import { PathwaysInformation } from './genes/PathwaysInformation'
 import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
-import { ActionableCancerGenesPanel } from './ActionableCancerGenesPanel'
 import { GeneOntologyPanel } from './gene-ontology/GeneOntologyPanel'
 import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPanel'
 import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
+import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -27,8 +27,7 @@ interface CurrentMoleculeDetailsProps {
  * @returns Component.
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
-    // const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS) // TODO: use this
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK) // TODO: remove
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
 
     /**
      * Gets the selected component according to the active item.
@@ -99,16 +98,15 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
         )
     }
 
-    const moleculeIsNull = props.selectedMolecule === null
+    /** Effect to set the active item to DETAILS when the selected molecule changes. */
     useEffect(() => {
-        // setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS) // TODO: use this
-        setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK) // TODO: remove
+        setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)
     }, [props.selectedMolecule])
 
     return (
         <Grid padded>
-            <Grid.Row className='min-height-50vh' columns={1} verticalAlign={moleculeIsNull ? 'middle' : undefined}>
-                <Grid.Column textAlign={moleculeIsNull ? 'center' : undefined}>
+            <Grid.Row className='min-height-50vh' columns={1}>
+                <Grid.Column textAlign='center'>
                     {getPanel()}
                 </Grid.Column>
             </Grid.Row>

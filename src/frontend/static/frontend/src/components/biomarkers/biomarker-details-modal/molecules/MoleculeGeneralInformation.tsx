@@ -3,6 +3,7 @@ import { BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
 import { GeneInformation } from './genes/GeneInformation'
 import { MiRNAInformation } from './mirnas/MiRNAInformation'
+import { MethylationInformation } from './methylation/MethylationInformation'
 
 /** MoleculeGeneralInformation props. */
 interface MoleculeGeneralInformationProps {
@@ -25,8 +26,5 @@ export const MoleculeGeneralInformation = (props: MoleculeGeneralInformationProp
         return <MiRNAInformation selectedMiRNA={props.selectedMolecule.identifier} />
     }
 
-    // TODO: implement Methylation
-    return (
-        null
-    )
+    return <MethylationInformation selectedMethylation={props.selectedMolecule.identifier} />
 }

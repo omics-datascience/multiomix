@@ -1,33 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ky from 'ky'
 import { Button, Grid, Header, Icon, Placeholder, PlaceholderLine, PlaceholderParagraph } from 'semantic-ui-react'
 import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import { KySearchParams, Nullable } from '../../../../utils/interfaces'
-import { ExternalLink } from '../../../common/ExternalLink'
-import ky from 'ky'
+import { LinkOrPlainText } from '../../../common/LinkOrPlainText'
+
+// Styles
 import './../../../../css/base.css'
 
 declare const urlMiRNAData: string
-
-/** LinkOrPlainText props. */
-interface LinkOrPlainTextProps {
-    /** Url for the ExternalLink, if `undefined` shows an `span` element. */
-    url?: string,
-    /** Text of the ExternalLink/span. */
-    text: string
-}
-
-/**
- * Renders a Link to another source if URL is valid. Otherwise, it returns a simple span
- * @param props Component's props
- * @returns Component
- */
-const LinkOrPlainText = (props: LinkOrPlainTextProps) => {
-    if (props.url) {
-        return <ExternalLink href={props.url}>{props.text}</ExternalLink>
-    }
-
-    return <span>{props.text}</span>
-}
 
 /**
  * Component's props
@@ -100,7 +81,7 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                             <Header size='huge' icon>
                                 <Icon name='folder outline' />
 
-                                No data found for this miRNA
+                                No details found for this miRNA
                             </Header>
                         </Grid.Column>
                     </Grid.Row>

@@ -66,5 +66,6 @@ urlpatterns = [
     path('survival-data', views.SurvivalDataDetails.as_view(),
          name='survival_data'),
     path('mirna-data', views.mirna_data_action, name='mirna_data'),
+    path('methylation-data', views.methylation_data_action, name='methylation_data'),
     path('stop-experiment', views.stop_experiment_action, name='stop_experiment')
 ]
