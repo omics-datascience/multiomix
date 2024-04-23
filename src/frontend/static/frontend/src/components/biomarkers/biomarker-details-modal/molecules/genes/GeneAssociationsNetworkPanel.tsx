@@ -16,7 +16,6 @@ declare const urlGeneAssociationsNetwork: string
 /** Colors for the String standard: https://string-db.org/cgi/help ("Network" section). */
 const COLORS_BY_STRING_RELATION = {
     fusion: ['Fusion', '#d90429'],
-    neighborhood: ['Neighborhood', '#6a994e'],
     coOccurrence: ['Co-occurrence', '#3a86ff'],
     experimental: ['Experimental', '#7209b7'],
     textMining: ['Text mining', '#d5ae5d'],
@@ -172,12 +171,6 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                     }
                 },
                 {
-                    selector: 'edge[group="neighborhood"]',
-                    style: {
-                        'line-color': COLORS_BY_STRING_RELATION.neighborhood[1]
-                    }
-                },
-                {
                     selector: 'edge[group="coOccurrence"]',
                     style: {
                         'line-color': COLORS_BY_STRING_RELATION.coOccurrence[1]
@@ -264,7 +257,7 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                             <Input
                                 type='number'
                                 value={minCombinedScore}
-                                min={1}
+                                min={900}
                                 max={1000}
                                 // TODO: implement with debounce
                                 onChange={(_e, { value }) => setMinCombinedScore(Number(value))}

@@ -1,4 +1,3 @@
-from random import randint
 from typing import cast, Any
 
 from django.http import HttpRequest
@@ -448,30 +447,32 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'selectable': True,
             'locked': False,
             'grabbed': False,
-            'grabbable': True,
-            # TODO: Check if 'classes' can remove
-            'classes': 'fn10273 fn6944 fn9471 fn10569 fn8023 fn6956 fn6935 fn8147 fn6939 fn6936 fn6629 fn7928 fn6947 fn8612 fn6957 fn8786 fn6246 fn9367 fn6945 fn6946 fn10024 fn10022 fn6811 fn9361 fn6279 fn6278 fn8569 fn7641 fn8568 fn6943'
+            'grabbable': True
         }
 
     @staticmethod
-    def __generate_edge(association: dict[str, Any], source_key: str, target_key: str) -> dict[str, Any]:
+    def __generate_edge(association: dict[str, Any], source_key: str, target_key: str, relationship: str,
+                        group: str) -> dict[str, Any] | None:
         """
+        Generates an edge structure to be used in the cytoscape frontend lib to show a relation between genes.
+        @param association: Association data.
+        @param source_key: Key of the source gene.
+        @param target_key: Key of the target gene.
+        @param relationship: Relationship key in the association data to get the weight of the edge.
+        @param group: Group to match with COLORS_BY_STRING_RELATION constant in frontend.
+        @return: Edge structure. None if the value is 0 or null in the association data.
+        """
+        value = association[relationship]
+        if not value:
+            return None
 
-        @param association:
-        @param source_key:
-        @param target_key:
-        @return:
-        """
         return {
             'data': {
                 'source': association[source_key],
                 'target': association[target_key],
-                # TODO: change weight to the neighborhood, fusion, cooccurence, experiments, textmining, database y coexpression value
-                'weight': association['combined_score'],
-                # TODO: compute group by neighborhood, fusion, cooccurence, experiments, textmining, database and
-                # TODO: coexpression fields, the null ocurrence should be ignored. Must match with COLORS_BY_STRING_RELATION
-                # TODO: constant in frontend
-                'group': 'coexp' if randint(0, 10) > 5 else 'coloc',
+                'weight': association[relationship],
+                'group': group,
+                # TODO: remove if not used
                 # 'networkId': 1103,
                 # 'networkGroupId': 18,
                 # 'intn': True,
@@ -486,7 +487,6 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'locked': False,
             'grabbed': False,
             'grabbable': True,
-            # 'classes': ''
         }
 
     def __process_associations_data(self, associations: dict) -> list[dict]:
@@ -500,7 +500,7 @@ class PredictedFunctionalAssociationsNetwork(APIView):
 
         # Generates an array of the same length as the associations
         computed_genes: set[str] = set()
-        res = []  # TODO: use Numpy array of len(associations) * 3
+        res = []
         # Iterates over the GO terms and generates the nodes and edges
         for association in associations:
             # Creates nodes for gene_1 and gene_2 if they are not in the computed_genes set
@@ -512,9 +512,11 @@ class PredictedFunctionalAssociationsNetwork(APIView):
                 res.append(self.__generate_node(association, 'gene_2'))
                 computed_genes.add(association['gene_2'])
 
-            # TODO: call __generate_edge for all the neighborhood, fusion, cooccurence, experiments, textmining, database and
-            # coexpression fields, the null occurrences should be ignored
-            res.append(self.__generate_edge(association, 'gene_1', 'gene_2'))
+            for group in ['fusion', 'coOccurence', 'experiments', 'textMining', 'database', 'coExpression']:
+                relationship = group.lower()
+                new_edge = self.__generate_edge(association, 'gene_1', 'gene_2', relationship, group)
+                if new_edge:
+                    res.append(new_edge)
 
         # Returns the list sorted to get the group == 'nodes' first to prevent "missing node" error in the frontend
         return sorted(res, key=lambda x: x['group'] == 'nodes', reverse=True)
@@ -538,8 +540,7 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'string-relations',
             request_params={
                 'gene_id': gene_id,
-                # 'min_combined_score': int(min_combined_score)
-                'min_combined_score': 995
+                'min_combined_score': max(900, int(min_combined_score))
             },
             is_paginated=False,
             method='post'
