@@ -148,8 +148,18 @@ services:
         image: omicsdatascience/multiomix:5.1.6
         restart: 'always'
         # environment:
-            # ENABLE_SECURITY: 'true'
             # DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
+            # ENABLE_SECURITY: 'true'
+
+            # CSRF. Django 4.x need this.
+            # Hosts separated by comma ('http://', 'https://' prefixes are mandatory)
+            # Example: CSRF_TRUSTED_ORIGINS: 'http://127.0.0.1', 'http://127.0.0.1,https://127.0.0.1:8000', etc
+            # CSRF_TRUSTED_ORIGINS: ''
+
+            # Set this equal to the upstream server name in the NGINX config file in sites-available in case of
+            # using HTTPS
+            # ALLOWED_HOSTS: '*'  # Needed to make websockets work
+
             # LISTEN_PORT=8000
             # LISTEN_IP=0.0.0.0
             # RESULT_DATAFRAME_LIMIT_ROWS: 300000

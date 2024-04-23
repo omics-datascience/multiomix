@@ -1,14 +1,14 @@
 celery==5.3.6
 channels-redis==4.2.0
-channels==4.1.0
-daphne==4.1.2
+channels==3.0.5  # This version is required. Channels 4 doesn't work with Django 4
+daphne==3.0.2  # This is the needed version to run channels and channels-redis
 django-chunked-upload==2.0.0
 django-email-verification==0.0.7
 django-filter==23.5
 django-generate-secret-key==1.0.2
 django-object-actions==4.2.0
 django-querysetsequence==0.16
-django-webpack-loader==3.0.0
+django-webpack-loader==0.7.0
 django==4.2.11
 djangorestframework==3.14.0
 drf-writable-nested==0.7.0
@@ -21,5 +21,5 @@ pymongo==4.6.3
 redis==5.0.3
 requests==2.31.0
 scikit-survival==0.22.2
-scipy==1.26.2
+scipy==1.13.0
 statsmodels==0.14.2
