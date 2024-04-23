@@ -1,3 +1,4 @@
+# TODO: upgrade to 3.12 when GGCA support is available
 FROM python:3.10-slim-bookworm
 
 # Docker Files Vars
