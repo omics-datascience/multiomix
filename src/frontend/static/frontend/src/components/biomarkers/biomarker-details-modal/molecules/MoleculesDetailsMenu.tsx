@@ -42,13 +42,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             popupInfo: `Details of ${props.selectedMolecule.identifier} obtained from different standardized sources`,
             isVisible: true // All molecules
         },
-        {
-            name: 'Pathways',
-            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
-            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
-            popupInfo: 'Allows to explore the specific pathways associated with a particular gene, shedding light on the interconnected processes within a biological system',
-            isVisible: isGene
-        },
+        // TODO: implement
+        // {
+        //     name: 'Pathways',
+        //     onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
+        //     isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
+        //     popupInfo: 'Allows to explore the specific pathways associated with a particular gene, shedding light on the interconnected processes within a biological system',
+        //     isVisible: isGene
+        // },
         {
             name: 'Gene associations network',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK),
@@ -63,13 +64,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             popupInfo: 'Gene Ontology (GO) is a powerful tool for understanding the biological processes, molecular functions, and cellular components associated with a gene',
             isVisible: isGene
         },
-        {
-            name: 'Actionable/Cancer genes',
-            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
-            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
-            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
-            isVisible: isGene
-        },
+        // TODO: implement
+        // {
+        //     name: 'Actionable/Cancer genes',
+        //     onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
+        //     isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
+        //     popupInfo: 'Information on FDA-approved precision oncology therapies, actionable genes, and drugs obtained from the OncoKB database, at a therapeutic, diagnostic, and prognostic level',
+        //     isVisible: isGene
+        // },
         {
             name: 'Diseases',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES),

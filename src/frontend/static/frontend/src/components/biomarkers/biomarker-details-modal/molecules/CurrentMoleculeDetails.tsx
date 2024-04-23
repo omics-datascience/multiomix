@@ -12,6 +12,9 @@ import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-de
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
 import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
 
+// const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
+const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS
+
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
     /** Selected BiomarkerMolecule instance to show the options. */
@@ -27,7 +30,12 @@ interface CurrentMoleculeDetailsProps {
  * @returns Component.
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(MENU_DEFAULT)
+
+    /** Effect to set the active item to DETAILS when the selected molecule changes. */
+    useEffect(() => {
+        setActiveItem(MENU_DEFAULT)
+    }, [props.selectedMolecule])
 
     /**
      * Gets the selected component according to the active item.
@@ -97,11 +105,6 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             </Header>
         )
     }
-
-    /** Effect to set the active item to DETAILS when the selected molecule changes. */
-    useEffect(() => {
-        setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)
-    }, [props.selectedMolecule])
 
     return (
         <Grid padded>
