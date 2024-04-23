@@ -1,4 +1,4 @@
-FROM python:3.10.13-slim-bullseye
+FROM python:3.10-slim-bookworm
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 

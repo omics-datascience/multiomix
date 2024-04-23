@@ -14,8 +14,12 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# 'web' is the name of the docker-compose service which serves Django
+# 'multiomix' is the name of the docker-compose service which serves Django
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'multiomix').split(',')
+
+# From Django 4 this needs to be set to prevent issue with NGINX
+csrf_trusted_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = csrf_trusted_origins_env.split(',')
 
 CHANNEL_LAYERS = {
     'default': {
