@@ -39,14 +39,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             name: 'Details',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
-            popupInfo: `Details of ${props.selectedMolecule.identifier} gene obtained from different standardized sources`,
+            popupInfo: `Details of ${props.selectedMolecule.identifier} obtained from different standardized sources`,
             isVisible: true // All molecules
         },
         {
             name: 'Pathways',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
-            popupInfo: 'It shows all the biological pathways that include each of the genes of this biomarker',
+            popupInfo: 'Allows to explore the specific pathways associated with a particular gene, shedding light on the interconnected processes within a biological system',
             isVisible: isGene
         },
         {
@@ -60,7 +60,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             name: 'Gene Ontology',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY,
-            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
+            popupInfo: 'Gene Ontology (GO) is a powerful tool for understanding the biological processes, molecular functions, and cellular components associated with a gene',
             isVisible: isGene
         },
         {
