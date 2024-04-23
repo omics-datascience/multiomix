@@ -278,9 +278,8 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 </Grid.Column>
                 <Grid.Column width={12}>
                     <CytoscapeLegends />
-                    <div id="cy"></div>
 
-                    {/* TODO: add Legends to follow the indications of String colors: https://string-db.org/cgi/help?sessionId=bEW3ZFlhsLV5 */}
+                    <div id="cy"></div>
                 </Grid.Column>
             </Grid.Row>
         </Grid>
