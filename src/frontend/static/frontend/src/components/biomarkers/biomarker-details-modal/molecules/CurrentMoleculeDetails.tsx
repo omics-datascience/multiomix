@@ -109,7 +109,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     return (
         <Grid padded>
             <Grid.Row className='min-height-50vh' columns={1}>
-                <Grid.Column textAlign='center'>
+                <Grid.Column>
                     {getPanel()}
                 </Grid.Column>
             </Grid.Row>

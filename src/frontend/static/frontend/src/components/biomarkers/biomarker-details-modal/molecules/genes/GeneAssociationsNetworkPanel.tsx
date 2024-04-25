@@ -48,7 +48,7 @@ interface GeneAssociationsNetworkPanelProps {
 
 export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanelProps) => {
     const abortControllerTerm = useRef(new AbortController())
-    const [minCombinedScore, setMinCombinedScore] = React.useState(500)
+    const [minCombinedScore, setMinCombinedScore] = React.useState(950)
 
     /**
      * Initializes the Cytoscape instance with the given elements.
@@ -253,7 +253,7 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 <Grid.Column width={3}>
                     <Form>
                         <Form.Field>
-                            <label>Min Combined Score</label>
+                            <label>Min combined score</label>
                             <Input
                                 type='number'
                                 value={minCombinedScore}
