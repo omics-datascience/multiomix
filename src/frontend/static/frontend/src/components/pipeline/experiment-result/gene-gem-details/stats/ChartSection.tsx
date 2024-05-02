@@ -1,12 +1,12 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Divider, Grid, Header, Segment, Statistic } from 'semantic-ui-react'
 import { DjangoMRNAxGEMResultRow, SourceDataStatisticalPropertiesResponse, DjangoNormalityTest, DjangoSourceDataOutliersBasic } from '../../../../../utils/django_interfaces'
 import { Nullable } from '../../../../../utils/interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../InfoPopup'
 import { BoxPlotChart } from './BoxPlotChart'
-import { DensityChart } from './DensityChart'
-
+import BoxPlotChart2 from './BloxPlotChart2'
+import { DensityChart, DensityChart2 } from './DensityChart'
 /** MeanAndStdStats props. */
 interface MeanAndStdStatsProps {
     mean: number;
@@ -91,41 +91,80 @@ interface StatsSectionProps {
  * @param props Component's props
  * @returns Component
  */
-const StatsSection = (props: StatsSectionProps) => (
-    <React.Fragment>
-        <Header className='stats-header' dividing style={{ color: props.titleColor }}>{props.title}</Header>
-        <MeanAndStdStats mean={props.mean} standardDeviation={props.standardDeviation} />
+const StatsSection = (props: StatsSectionProps) => {
+    const componentRef = useRef<any>(null)
+    const [width, setWidth] = useState(0) // Initial width state
 
-        <Divider />
+    const getComponentWidth = () => {
+        if (componentRef.current) {
+            const newWidth = componentRef.current.offsetWidth
+            setWidth(newWidth)
+        }
+    }
+    // Call getComponentWidth after rendering (e.g., in useEffect)
 
-        <Grid.Row>
-            <Grid.Column width={12} className='stats-column'>
-                <NormalityStats geneOrGem={props.title} normality={props.normality} />
-            </Grid.Column>
-        </Grid.Row>
+    useEffect(() => {
+        getComponentWidth()
+    }, [])
 
-        <DensityChart
-            dataObjects={[{
-                data: props.allData,
-                fillColor: props.densityColor,
-                strokeColor: props.strokeColor
-            }]}
-            xAxisIsOrdinal={props.dataIsOrdinal}
-            showBars={props.showBars}
-            showDensityChart={[!props.dataIsOrdinal]}
-        />
+    return (
+        <div ref={componentRef}>
+            <Header className='stats-header' dividing style={{ color: props.titleColor }}>{props.title}</Header>
+            <MeanAndStdStats mean={props.mean} standardDeviation={props.standardDeviation} />
 
-        <BoxPlotChart
-            boxplotKey='correlation-boxplot'
-            dataObjects={[{
-                data: props.allData,
-                outliers: props.outliers,
-                fillColor: props.densityColor,
-                strokeColor: props.strokeColor
-            }]}
-        />
-    </React.Fragment>
-)
+            <Divider />
+
+            <Grid.Row>
+                <Grid.Column width={12} className='stats-column'>
+                    <NormalityStats geneOrGem={props.title} normality={props.normality} />
+                </Grid.Column>
+            </Grid.Row>
+
+            <DensityChart
+                dataObjects={[{
+                    data: props.allData,
+                    fillColor: props.densityColor,
+                    strokeColor: props.strokeColor
+                }]}
+                xAxisIsOrdinal={props.dataIsOrdinal}
+                showBars={props.showBars}
+                showDensityChart={[!props.dataIsOrdinal]}
+            />
+
+            <BoxPlotChart
+                boxplotKey='correlation-boxplot'
+                dataObjects={[{
+                    data: props.allData,
+                    outliers: props.outliers,
+                    fillColor: props.densityColor,
+                    strokeColor: props.strokeColor
+                }]}
+            />
+            <DensityChart2
+                dataObjects={[{
+                    data: props.allData,
+                    fillColor: props.densityColor,
+                    strokeColor: props.strokeColor
+                }]}
+                xAxisIsOrdinal={props.dataIsOrdinal}
+                showBars={props.showBars}
+                showDensityChart={[!props.dataIsOrdinal]}
+            />
+            <BoxPlotChart2
+                width={width}
+                dataObjects={[{
+                    height: 200,
+                    data: props.allData,
+                    outliers: props.outliers,
+                    fillColor: props.densityColor,
+                    strokeColor: props.strokeColor,
+                    x: props.title
+                }]}
+
+            />
+        </div>
+    )
+}
 
 /**
  * ChartSection's props
@@ -157,22 +196,7 @@ export const ChartSection = (props: ChartSectionProps) => {
             <React.Fragment>
                 {/* Gene stats */}
                 <Grid.Column textAlign='center'>
-                    <StatsSection
-                        title={gene}
-                        mean={props.stats.gene_mean}
-                        standardDeviation={props.stats.gene_standard_deviation}
-                        allData={props.stats.gene_data}
-                        outliers={props.stats.gene_outliers}
-                        normality={props.stats.gene_normality}
-                        showBars={props.showBars}
-                        titleColor={geneStrokeColor}
-                        strokeColor={geneStrokeColor}
-                        dataIsOrdinal={false}
-                    />
-                </Grid.Column>
 
-                {/* GEM stats */}
-                <Grid.Column textAlign='center'>
                     <StatsSection
                         title={gem}
                         mean={props.stats.gem_mean}
@@ -185,6 +209,21 @@ export const ChartSection = (props: ChartSectionProps) => {
                         densityColor={gemDensityColor}
                         strokeColor={gemStrokeColor}
                         dataIsOrdinal={props.gemDataIsOrdinal}
+                    />
+                </Grid.Column>
+                {/* GEM stats */}
+                <Grid.Column textAlign='center'>
+                    <StatsSection
+                        title={gene}
+                        mean={props.stats.gene_mean}
+                        standardDeviation={props.stats.gene_standard_deviation}
+                        allData={props.stats.gene_data}
+                        outliers={props.stats.gene_outliers}
+                        normality={props.stats.gene_normality}
+                        showBars={props.showBars}
+                        titleColor={geneStrokeColor}
+                        strokeColor={geneStrokeColor}
+                        dataIsOrdinal={false}
                     />
                 </Grid.Column>
             </React.Fragment>

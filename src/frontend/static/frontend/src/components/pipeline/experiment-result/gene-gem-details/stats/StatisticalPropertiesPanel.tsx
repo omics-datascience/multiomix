@@ -69,7 +69,6 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                                 <Icon name={showTogether ? 'arrows alternate horizontal' : 'compress'} />
                             </Button>
                         </Grid.Column>
-
                         <ChartSection
                             selectedRow={props.selectedRow}
                             stats={stats}

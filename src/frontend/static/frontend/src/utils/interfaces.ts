@@ -255,6 +255,7 @@ interface StatChartData {
 
 interface StatChartDataWithOutliers extends StatChartData {
     outliers: DjangoSourceDataOutliersBasic[]
+    height?: number
 }
 
 /** Structure of a Reference card in assumption panel */

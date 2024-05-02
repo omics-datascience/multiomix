@@ -38,7 +38,6 @@ export const BoxPlotChart = (props: BoxPlotChartProps) => {
             outliers: dataObj.outliers.map((outlier) => outlier.expression),
             outliersObjects: dataObj.outliers.sort((a, b) => a.expression - b.expression)
         }
-
         return (
             <BoxPlotSeries
                 key={idx}
