@@ -142,7 +142,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         <div style={{ height: 500 }}>
             <ResponsiveXYChart
                 key="boxplot_chart"
-                ariaLabel="Correlation Boxplot"
+                ariaLabel="Time inference"
                 xScale={{
                     type: 'band',
                     paddingInner: 0.15,
