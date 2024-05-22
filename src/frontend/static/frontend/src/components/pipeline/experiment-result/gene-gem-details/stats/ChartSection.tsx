@@ -4,9 +4,8 @@ import { DjangoMRNAxGEMResultRow, SourceDataStatisticalPropertiesResponse, Djang
 import { Nullable } from '../../../../../utils/interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../InfoPopup'
-import { BoxPlotChart } from './BoxPlotChart'
-import BoxPlotChart2 from './BloxPlotChart2'
-import { DensityChart, DensityChart2 } from './DensityChart'
+import BoxPlotChart from './BloxPlotChart'
+import { DensityChart, DensityChartMix } from './DensityChart'
 /** MeanAndStdStats props. */
 interface MeanAndStdStatsProps {
     mean: number;
@@ -130,27 +129,7 @@ const StatsSection = (props: StatsSectionProps) => {
                 showBars={props.showBars}
                 showDensityChart={[!props.dataIsOrdinal]}
             />
-
             <BoxPlotChart
-                boxplotKey='correlation-boxplot'
-                dataObjects={[{
-                    data: props.allData,
-                    outliers: props.outliers,
-                    fillColor: props.densityColor,
-                    strokeColor: props.strokeColor
-                }]}
-            />
-            <DensityChart2
-                dataObjects={[{
-                    data: props.allData,
-                    fillColor: props.densityColor,
-                    strokeColor: props.strokeColor
-                }]}
-                xAxisIsOrdinal={props.dataIsOrdinal}
-                showBars={props.showBars}
-                showDensityChart={[!props.dataIsOrdinal]}
-            />
-            <BoxPlotChart2
                 width={width}
                 dataObjects={[{
                     height: 200,
@@ -160,7 +139,6 @@ const StatsSection = (props: StatsSectionProps) => {
                     strokeColor: props.strokeColor,
                     x: props.title
                 }]}
-
             />
         </div>
     )
@@ -190,6 +168,20 @@ export const ChartSection = (props: ChartSectionProps) => {
     const geneStrokeColor = '#1e72b1'
     const gemDensityColor = '#ffc400'
     const gemStrokeColor = '#a97f00'
+    const componentRef = useRef<any>(null)
+    const [width, setWidth] = useState(0) // Initial width state
+
+    const getComponentWidth = () => {
+        if (componentRef.current) {
+            const newWidth = componentRef.current.offsetWidth
+            setWidth(newWidth)
+        }
+    }
+    // Call getComponentWidth after rendering (e.g., in useEffect)
+
+    useEffect(() => {
+        getComponentWidth()
+    }, [props.showTogether])
 
     if (!props.showTogether) {
         return (
@@ -234,7 +226,7 @@ export const ChartSection = (props: ChartSectionProps) => {
     return (
         <Grid.Column textAlign='center'>
             <Header className='stats-header' dividing>
-                <span style={{ color: geneStrokeColor }}>{gene}</span> x <span style={{ color: gemStrokeColor }}>{gem}</span>
+                <span style={{ color: gemStrokeColor }}>{gem}</span> x <span style={{ color: geneStrokeColor }}>{gene}</span>
             </Header>
 
             <Grid>
@@ -265,8 +257,8 @@ export const ChartSection = (props: ChartSectionProps) => {
                 </Grid.Row>
             </Grid>
 
-            <DensityChart
-                dataObjects={[
+            <div ref={componentRef}>
+                <DensityChartMix dataObjects={[
                     {
                         data: props.stats.gene_data,
                         strokeColor: geneStrokeColor
@@ -277,27 +269,27 @@ export const ChartSection = (props: ChartSectionProps) => {
                         strokeColor: gemStrokeColor
                     }
                 ]}
-                xAxisIsOrdinal={false}
                 showBars={props.showBars}
                 showDensityChart={[true, !props.gemDataIsOrdinal]}
-            />
-
-            <BoxPlotChart
-                boxplotKey='boxplot-gene-gem'
-                dataObjects={[
-                    {
-                        data: props.stats.gene_data,
-                        outliers: props.stats.gene_outliers,
-                        strokeColor: geneStrokeColor
-                    },
-                    {
+                />
+                <BoxPlotChart
+                    width={width}
+                    dataObjects={[{
+                        height: 100,
                         data: props.stats.gem_data,
                         outliers: props.stats.gem_outliers,
-                        fillColor: gemDensityColor,
-                        strokeColor: gemStrokeColor
-                    }
-                ]}
-            />
+                        fillColor: gemStrokeColor,
+                        strokeColor: gemStrokeColor,
+                        x: gem
+                    }, {
+                        height: 100,
+                        data: props.stats.gene_data,
+                        outliers: props.stats.gene_outliers,
+                        strokeColor: geneStrokeColor,
+                        x: gene
+                    }]}
+                />
+            </div>
         </Grid.Column>
     )
 }

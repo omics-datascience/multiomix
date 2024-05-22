@@ -26,6 +26,9 @@ export default withTooltip<StatsPlotProps, TooltipData>(
     }: StatsPlotProps & WithTooltipProvidedProps<TooltipData>) => {
         const height = 500
         const newData = useMemo(() => {
+            /**
+             Create array object with map structure for multiple graphs
+             */
             const newData = dataObjects.map(dataObj => {
                 const dataArray = dataObj.data
                 // Data for Tooltip

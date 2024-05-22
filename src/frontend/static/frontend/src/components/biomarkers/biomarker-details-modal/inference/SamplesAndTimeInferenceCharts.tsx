@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { BoxPlotSeries, XAxis, YAxis, PatternLines } from '@data-ui/xy-chart'
+/* import { BoxPlotSeries, XAxis, YAxis, PatternLines } from '@data-ui/xy-chart' */
 import { InferenceExperimentForTable } from '../../types'
 import { NoClinicalData } from '../../../pipeline/experiment-result/gene-gem-details/survival-analysis/NoClinicalData'
 import { Header, Icon } from 'semantic-ui-react'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
 import { ResultPlaceholder } from '../stat-validations/result/ResultPlaceholder'
-import { BoxplotDatum, ResponsiveXYChart, renderBoxPlotTooltip, boxPlotThemeColors } from '../../../common/boxplots/BoxplotsCommons'
+import { BoxplotDatum /* ResponsiveXYChart, renderBoxPlotTooltip, boxPlotThemeColors */ } from '../../../common/boxplots/BoxplotsCommons'
 
 declare const urlClinicalSourceAddOrEditInferenceExperiment: string
 declare const urlUnlinkClinicalSourceInferenceExperiment: string
@@ -137,45 +137,47 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
     ]
 
     // TODO: change colors depending on selected RangeSet
+    return null
+    /*  return (
+         <div style={{ height: 500 }}>
+             <ResponsiveXYChart
+                 key="boxplot_chart"
+                 ariaLabel="Correlation Boxplot"
+                 xScale={{
+                     type: 'band',
+                     paddingInner: 0.15,
+                     paddingOuter: 0.3
+                 }}
+                 yScale={{
+                     type: 'linear',
+                     domain: valueDomain
+                 }}
+                 renderTooltip={renderBoxPlotTooltip}
+                 margin={{ right: 16, left: 80, top: 16 }}
+                 showYGrid
+             >
+                 <PatternLines
+                     id="boxplot_lines_pattern"
+                     height={4}
+                     width={4}
+                     stroke={boxPlotThemeColors.categories[4]}
+                     strokeWidth={1}
+                     orientation={['diagonal']}
+                 />
 
-    return (
-        <div style={{ height: 500 }}>
-            <ResponsiveXYChart
-                key="boxplot_chart"
-                ariaLabel="Correlation Boxplot"
-                xScale={{
-                    type: 'band',
-                    paddingInner: 0.15,
-                    paddingOuter: 0.3
-                }}
-                yScale={{
-                    type: 'linear',
-                    domain: valueDomain
-                }}
-                renderTooltip={renderBoxPlotTooltip}
-                margin={{ right: 16, left: 80, top: 16 }}
-                showYGrid
-            >
-                <PatternLines
-                    id="boxplot_lines_pattern"
-                    height={4}
-                    width={4}
-                    stroke={boxPlotThemeColors.categories[4]}
-                    strokeWidth={1}
-                    orientation={['diagonal']}
-                />
-
-                <BoxPlotSeries
-                    data={data}
-                    fill="url(#boxplot_lines_pattern)"
-                    stroke='black'
-                    strokeWidth={2}
-                    widthRatio={1}
-                    horizontal={false}
-                />
-                <XAxis label='Category' />
-                <YAxis label='Time' numTicks={10} orientation="left" />
-            </ResponsiveXYChart>
-        </div>
-    )
+                 <BoxPlotSeries
+                     data={data}
+                     fill="url(#boxplot_lines_pattern)"
+                     stroke='black'
+                     strokeWidth={2}
+                     widthRatio={1}
+                     horizontal={false}
+                 />
+                 <XAxis label='Category' />
+                 <YAxis label='Time' numTicks={10} orientation="left" />
+             </ResponsiveXYChart>
+         </div>
+     )
+     */
 }
+
