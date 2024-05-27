@@ -331,4 +331,4 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
     }
 }
 
-export { KaplanMeierChart, KaplanMeierData }
+export { KaplanMeierChart }

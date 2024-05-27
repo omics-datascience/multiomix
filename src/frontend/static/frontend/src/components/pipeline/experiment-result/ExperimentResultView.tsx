@@ -235,4 +235,4 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
     }
 }
 
-export { ExperimentResultView, ExperimentInfo }
+export { ExperimentResultView }
