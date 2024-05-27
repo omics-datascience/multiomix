@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ky from 'ky'
 import { BiomarkerMolecule } from '../../../types'
-import { alertGeneralError } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from '../../stat-validations/result/ResultPlaceholder'
 import { Nullable } from '../../../../../utils/interfaces'
 import { GeneData } from './types'
@@ -29,28 +28,31 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
     /** Every time the selected molecule changes, retrieves its data from the backend. */
     useEffect(() => {
         getPathwaysData(props.selectedMolecule)
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
         }
     }, [props.selectedMolecule.id])
 
+    /**
+     * function to get pathways data
+     * @param selectedMolecule BiomarkerMolecule search pathway
+     */
     const getPathwaysData = (selectedMolecule: BiomarkerMolecule) => {
         setLoadingData(true)
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlPathwaysInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { data: GeneData }) => {
-                setPathwaysData(jsonResponse.data)
+            response.json().then((jsonResponse: { data: GeneData[] }) => {
+                if (jsonResponse.data.length) {
+                    setPathwaysData(jsonResponse.data[0])
+                }
             }).catch((err) => {
-                alertGeneralError()
-                console.log('Error parsing JSON ->', err)
+                console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            if (!abortController.current.signal.aborted) {
-                alertGeneralError()
-            }
-            console.log('Error getting pathways information', err)
+            console.error('Error getting pathways information', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
                 setLoadingData(false)
@@ -62,6 +64,10 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
         return <ResultPlaceholder numberOfCards={1} fluid rectangular />
     }
 
+    /**
+     * Function to check any pathways was found
+     * @returns component if not found
+     */
     const getPathwaysDataPanel = () => {
         if (!pathwaysData) {
             return (
@@ -79,9 +85,9 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
                     </Grid.Row>
                 </Grid>
             )
+        } else {
+            return null
         }
-
-        return null // TODO: implement
     }
 
     return (

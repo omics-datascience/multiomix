@@ -198,9 +198,9 @@ def clean_dataset(df: pd.DataFrame, axis: Axis) -> pd.DataFrame:
     """
     assert isinstance(df, pd.DataFrame), "df needs to be a pd.DataFrame"
 
-    # Taken from https://stackoverflow.com/a/45746209/7058363
-    with pd.option_context('mode.use_inf_as_na', True):
-        df = df.dropna(axis=axis, how='any')
+    # Replaces Inf values with NaNs. Any NaN value will be removed later
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(axis=axis, how='any')
 
     return df
 
@@ -219,10 +219,13 @@ def clinical_df_to_struct_array(clinical_df: pd.DataFrame) -> np.ndarray:
 def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
                 is_regression: bool) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray]:
     """
-    Reads both molecules and clinical data and formats them to be used in the models.
+    Reads both molecules and clinical data and formats them to be used in the models: replaces NaNs values, removes
+    0 values (if needed), and removes inconsistencies where the event occurred but there's no time data. Always keeping
+    the samples in common after filtering.
     @param molecules_temp_file_path: Molecular data file path.
     @param clinical_temp_file_path: Clinical data file path.
-    @param is_regression: Whether the experiment is a regression or not.
+    @param is_regression: Whether the experiment is a regression or not. In case it's a regression task, removes the
+    samples with time == 0.
     @return: Molecules as Pandas DataFrame and the clinical data as a Pandas DataFrame and as a Numpy structured array.
     """
     # Gets molecules and clinical DataFrames
@@ -236,7 +239,7 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     if is_regression:
         clinical_df = clinical_df[clinical_df[time_column] > 0]
 
-    # Replaces NaN values
+    # Removes NaN values from clinical dataset
     clinical_df = clean_dataset(clinical_df, axis='index')
 
     # Removes also inconsistencies in cBioPortal datasets where the event is 1 and the time value is 0

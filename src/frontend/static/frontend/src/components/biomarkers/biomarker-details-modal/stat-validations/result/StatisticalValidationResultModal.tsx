@@ -30,9 +30,11 @@ export const StatisticalValidationResultModal = (props: StatisticalValidationRes
         switch (activeItem) {
             case ActiveStatValidationsItemMenu.BEST_FEATURES:
                 return <StatisticalValidationResultBestFeatures selectedStatisticalValidation={props.selectedStatisticalValidation} />
+
             case ActiveStatValidationsItemMenu.KAPLAN_MEIER: {
                 return <StatisticalValidationResultKaplanMeier selectedStatisticalValidation={props.selectedStatisticalValidation} />
             }
+
             case ActiveStatValidationsItemMenu.HEATMAP:
                 return <StatisticalValidationResultHeatMap selectedStatisticalValidation={props.selectedStatisticalValidation} />
         }

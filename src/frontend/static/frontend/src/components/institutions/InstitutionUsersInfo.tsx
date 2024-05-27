@@ -52,7 +52,7 @@ export const InstitutionUsersInfo = (props: InstitutionUsersInfoProps) => {
                                     />
                                 }
                             </List.Content>
-                            <ListContent floated='left'><Avatar name={institutionUser.username as string} size="16px"/></ListContent>
+                            <ListContent floated='left'><Avatar name={institutionUser.username as string} size="16px" /></ListContent>
                             <List.Content>
                                 <List.Header>{institutionUser.username}</List.Header>
                             </List.Content>

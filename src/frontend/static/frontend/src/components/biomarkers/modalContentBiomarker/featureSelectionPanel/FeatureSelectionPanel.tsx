@@ -29,7 +29,7 @@ interface FeatureSelectionPanelProps {
     handleGoBackStep2: () => void,
     submitFeatureSelectionExperiment: () => void,
     cancelForm: () => void,
-    handleChangeAdvanceAlgorithm: (advanceAlgorithm:string, name:string, value:any) => void,
+    handleChangeAdvanceAlgorithm: (advanceAlgorithm: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }
 
@@ -106,6 +106,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
         if (!condition) {
             return true
         }
+
         return experimentSourceIsValid(source)
     }
 
@@ -178,7 +179,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
             <Modal.Content>
                 <Grid verticalAlign='middle'>
                     <Grid.Row columns={1}>
-                        <Grid.Column >
+                        <Grid.Column>
                             <Step.Group widths={3}>
                                 <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} onClick={() => handleGoBackPanel(props.handleGoBackStep1, props.featureSelection.step > 1)}>
                                     <Icon name='list' />

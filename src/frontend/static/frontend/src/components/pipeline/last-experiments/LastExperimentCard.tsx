@@ -36,6 +36,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
 
     // If the result was truncated due to a larger size than the specified in settings.py, it alerts to the user
     let trunc_alert
+
     if (experiment.result_final_row_count !== experiment.result_total_row_count) {
         const truncTitle = `The result has been truncated due its size. Has ${experiment.result_total_row_count}, truncated to ${experiment.result_final_row_count}`
         trunc_alert = (
@@ -62,7 +63,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     }
 
                     {/* See result button */}
-                    <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right'/>
+                    <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right' />
                 </Card.Header>
                 <Card.Meta className='experiment-data-card-submit-date'>
                     {formatDateLocale(experiment.submit_date, 'L')}
@@ -71,7 +72,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     {experiment.description ? experiment.description : '-'}
                 </Card.Meta>
                 <Card.Meta title={experimentState.title}>
-                    State: <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading}/>
+                    State: <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading} />
                 </Card.Meta>
 
                 {/* Truncated label */}

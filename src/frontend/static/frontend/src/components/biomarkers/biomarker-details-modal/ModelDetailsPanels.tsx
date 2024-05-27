@@ -184,6 +184,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
 
     useEffect(() => {
         getModelDetails()
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -206,6 +207,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting model details data', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
@@ -241,6 +243,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
         }
 
         const { model } = modelDetails
+
         switch (model) {
             case FitnessFunction.CLUSTERING:
                 return (

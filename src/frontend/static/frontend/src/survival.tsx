@@ -4,6 +4,6 @@ import './css/survival.css'
 import { SurvivalAnalysisPanel } from './components/survival/SurvivalAnalysisPanel'
 
 ReactDOM.render(
-    <SurvivalAnalysisPanel/>,
+    <SurvivalAnalysisPanel />,
     document.getElementById('survival-app')
 )

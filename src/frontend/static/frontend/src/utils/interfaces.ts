@@ -2,30 +2,6 @@ import { DjangoUserFile, DjangoCGDSStudy, DjangoMRNAxGEMResultRow, ExperimentTyp
 import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
 
 /**
- * Common interfaces/types for better maintainability
- */
-type Nullable<T> = T | null
-
-/**
- * New mRNA x GEM experiment structure.
- * Used in the new experiment form
- */
-interface NewExperiment {
-    id?: number,
-    name: string,
-    description: string,
-    correlationCoefficient: number,
-    standardDeviationGene: number,
-    standardDeviationGEM: number,
-    mRNASource: Source,
-    gemSource: Source,
-    correlationMethod: CorrelationMethod,
-    adjustmentMethod: PValuesAdjustmentMethod,
-    correlateWithAllGenes: boolean,
-    tag: DjangoTag
-}
-
-/**
  * Possible types of files
  */
 enum FileType {
@@ -57,6 +33,48 @@ enum SourceType {
     UPLOADED_DATASETS = 1,
     CGDS = 2,
     NEW_DATASET = 3
+}
+
+/**
+ * Common interfaces/types for better maintainability
+ */
+type Nullable<T> = T | null
+
+/**
+ * A pipeline's source
+ */
+interface Source {
+    /** Id of the source, useful to edit */
+    id?: number,
+    /** Source type: Own dataset, new dataset, CGDS, etc */
+    type: Nullable<SourceType>,
+    /** Filename to display */
+    filename: string,
+    /** Reference to a file that is being uploaded by the user (used in case type === SourceType.NEW_DATASET) */
+    newUploadedFileRef: React.RefObject<any>,
+    /** A file that has been uploaded previously by the user (used in case type === SourceType.UPLOADED_DATASETS) */
+    selectedExistingFile: Nullable<DjangoUserFile>,
+    /** A synchronized CGDS Study (used in case type === SourceType.CGDS) */
+    CGDSStudy: Nullable<DjangoCGDSStudy>
+}
+
+/**
+ * New mRNA x GEM experiment structure.
+ * Used in the new experiment form
+ */
+interface NewExperiment {
+    id?: number,
+    name: string,
+    description: string,
+    correlationCoefficient: number,
+    standardDeviationGene: number,
+    standardDeviationGEM: number,
+    mRNASource: Source,
+    gemSource: Source,
+    correlationMethod: CorrelationMethod,
+    adjustmentMethod: PValuesAdjustmentMethod,
+    correlateWithAllGenes: boolean,
+    tag: DjangoTag
 }
 
 /**
@@ -158,24 +176,6 @@ interface DatasetModalUserFileTableControl<T = string> extends GeneralTableContr
     tagId: Nullable<number>,
     /** Id of institution to filter */
     visibility: 'all' | 'private' | 'public' | number
-}
-
-/**
- * A pipeline's source
- */
-interface Source {
-    /** Id of the source, useful to edit */
-    id?: number,
-    /** Source type: Own dataset, new dataset, CGDS, etc */
-    type: Nullable<SourceType>,
-    /** Filename to display */
-    filename: string,
-    /** Reference to a file that is being uploaded by the user (used in case type === SourceType.NEW_DATASET) */
-    newUploadedFileRef: React.RefObject<any>,
-    /** A file that has been uploaded previously by the user (used in case type === SourceType.UPLOADED_DATASETS) */
-    selectedExistingFile: Nullable<DjangoUserFile>,
-    /** A synchronized CGDS Study (used in case type === SourceType.CGDS) */
-    CGDSStudy: Nullable<DjangoCGDSStudy>
 }
 
 /**

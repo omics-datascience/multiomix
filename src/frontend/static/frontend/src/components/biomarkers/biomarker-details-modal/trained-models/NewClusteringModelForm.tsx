@@ -103,7 +103,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     min={0}
                     max={0.99}
                     name='penalizer'
-                    value={props.parameters.penalizer}
+                    value={props.parameters.penalizer ?? ''}
                     onChange={props.handleChangeParams}
                 />
             </Form.Group>

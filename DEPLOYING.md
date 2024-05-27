@@ -25,7 +25,10 @@ The following are the steps to perform a deployment in production. In case you w
    are listed below by category:
     - Django:
         - `DJANGO_SETTINGS_MODULE`: indicates the `settings.py` file to read. In the production case the value `docker-compose_dist.yml` is left in the `docker-compose_dist.yml`: `multiomics_intermediate.settings_prod`.
+        - `ENABLE_SECURITY`: set the string `true` to enable Django's security mechanisms. In addition to this parameter, to have a secure site you must configure the HTTPS server, for more information on the latter see the section [Enable SSL/HTTPS](#enable-sslhttps). Default `false`.
+        - `CSRF_TRUSTED_ORIGINS`: in Django >= 4.x, it's mandatory to define this in production when you are using Daphne through NGINX. The value is a single host or list of hosts separated by comma. 'http://', 'https://' prefixes are mandatory. Examples of values: 'http://127.0.0.1', 'http://127.0.0.1,https://127.0.0.1:8000', etc. You can read more [here][csrf-trusted-issue].
         - `SECRET_KEY`: secret key used by Django. If not specified one is generated with [generate-secret-key application](https://github.com/MickaelBergem/django-generate-secret-key) automatically.
+        - `ALLOWED_HOSTS`: list of allowed host. Default `multiomix`.
         - `COR_ANALYSIS_SOFT_TIME_LIMIT`: Time limit in seconds for a correlation analysis to be computed. If the experiment is not finished in this time, it is marked as `TIMEOUT_EXCEEDED`. Default to `10800` (3 hours).
         - `FS_SOFT_TIME_LIMIT`: Time limit in seconds for a Feature Selection experiment to be computed. If the experiment is not finished in this time, it is marked as `TIMEOUT_EXCEEDED`. Default to `10800` (3 hours).
         - `STAT_VALIDATION_SOFT_TIME_LIMIT`: Time limit in seconds for a StatisticalValidation to be computed. If It's not finished in this time, it is marked as `TIMEOUT_EXCEEDED`. Default to `10800` (3 hours).
@@ -42,7 +45,6 @@ The following are the steps to perform a deployment in production. In case you w
         - `CGDS_CHUNK_SIZE`: size **in bytes** of the chunk in which the files of a CGDS study are downloaded, the bigger it is, the faster the download is, but the more server memory it consumes. Default `2097152`, i.e. 2MB.
         - `THRESHOLD_ORDINAL`: number of different values for the GEM (CNA) information to be considered ordinal, if the number is <= to this value then it is considered categorical/ordinal and a boxplot is displayed, otherwise, it is considered continuous and the common correlation graph is displayed. Default `5`.
         - `THRESHOLD_GEM_SIZE_TO_COLLECT`: GEM file size threshold (in MB) for the GEM dataset to be available in memory. This has a HUGE impact on the performance of the analysis. If the size is less than or equal to this threshold, it is allocated in memory, otherwise, it will be read lazily from the disk. If None GGCA automatically allocates in memory when the GEM dataset size is small (<= 100MB). Therefore, if you want to force to always use RAM to improve performance you should set a very high threshold, on the contrary, if you want a minimum memory usage at the cost of poor performance, set it to `0`. Default `None`.
-        - `ENABLE_SECURITY`: set the string `true` to enable Django's security mechanisms. In addition to this parameter, to have a secure site you must configure the HTTPS server, for more information on the latter see the section [Enable SSL/HTTPS](#enable-sslhttps). Default `false`.
     - PostgreSQL:
         - `POSTGRES_USERNAME`: PostgreSQL connection username. **Must be equal to** `POSTGRES_USER`.
         - `POSTGRES_PASSWORD`: PostgreSQL connection password. **Must be equal to** `POSTGRES_PASSWORD`.
@@ -80,6 +82,8 @@ The following are the steps to perform a deployment in production. In case you w
       - `MAX_ITERATIONS_METAHEURISTICS`: Maximum number of iterations user can select to run the BBHA/PSO algorithm. Default `20`.
       - `MIN_STARS_BBHA`: Minimum number of stars in the BBHA algorithm. Default `5`.
       - `MAX_STARS_BBHA`: Maximum number of stars in the BBHA algorithm. Default `90`.
+      - `MIN_POPULATION_SIZE_GA`: Minimum number of population size in the GA algorithm. Default `5`.
+      - `MAX_POPULATION_SIZE_GA`: Maximum number of population size in the GA algorithm. Default `200`.
       - `MAX_FEATURES_COX_REGRESSION`: Maximum number of features to select in the CoxRegression algorithm. Default `60`.
       - `MAX_FEATURES_BLIND_SEARCH`: Maximum number of features to allow to run a Blind Search algorithm (the number of computed combination is _N!_). If the number of features is greater than this value, the algorithm is disabled and only metaheuristic algorithms are allowed. Default `7`.
       - `MIN_FEATURES_METAHEURISTICS`: Minimum number of features to allow the user to run metaheuristics algorithms (>=). This prevents to run metaheuristics on datasets with a small number of features which leads to experiments with more metaheuristics agents than number of total features combinations. We recommend to set this parameter to a value N such that N! > maxNumberOfAgents * maxNumberMetaheuristicsIterations. Also, this must be less than or equal to the MAX_FEATURES_BLIND_SEARCH value. Default `7`.
@@ -243,19 +247,13 @@ That command will create a compressed file with the database dump inside. **Note
 
 ### Import Postgres
 
-1. **Optional but recommended**: due to major changes, it's probably that an import thrown several errors when importing. To prevent that you could do the following steps before doing the importation:
-    1. Drop all the tables from the DB:
-        1. Log into docker container: `docker container exec -it [name of DB container] bash`
-        2. Log into Postgres: `psql -U [username] -d [database]`
-        3. Run to generate a `DELETE CASCADE` query for all
-           tables: `select 'drop table if exists "' || tablename || '" cascade;' from pg_tables where schemaname = 'public';`
-        4. (**Danger, will drop tables**) Run the generated query in previous step to drop all tables
-    2. Run the Django migrations to create the empty tables with the correct structure: `docker exec -i [name of django container] python3 manage.py migrate`
-2. Restore the db running:
-
-`zcat multiomix_postgres_backup.sql.gz | docker exec -i [name of DB container] psql [db name]`
-
-That command will restore the database using a compressed dump as source
+1. Due to major changes, it's probably that an import thrown several errors when importing. To prevent that you could do the following steps before doing the importation:
+    1. Stop all the services using `docker compose down` or removing the Docker Swarm stack.
+    1. Start only the DB with `docker compose up -d db`
+    1. Drop all the tables from the DB: `docker exec -i [name of the DB container] psql postgres -U postgres -c "DROP DATABASE multiomics;"`
+    1. Create an empty database: `docker exec -i [name of the DB container] psql postgres -U postgres -c "CREATE DATABASE multiomics;"`
+1. Restore the db: `zcat multiomix_postgres_backup.sql.gz | docker exec -i [name of the DB container] psql multiomics -U multiomics`. This command will restore the database using a compressed dump as source, **keep in mind that could take several minutes to finish the process**.
+   - **NOTE**: in case you are working on Windows, the command must be executed from [Git Bash][git-bash] or WSL.
 
 
 ### Export MongoDB
@@ -288,3 +286,5 @@ To import a `media` folder backup inside a new environment you must (from the ro
 [cox-net-surv-analysis]: https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.linear_model.CoxnetSurvivalAnalysis.html
 [aws-emr-integration]: https://github.com/omics-datascience/multiomix-aws-emr
 [celery]: https://docs.celeryq.dev/en/stable/getting-started/introduction.html
+[git-bash]: https://git-scm.com/downloads
+[csrf-trusted-issue]: https://stackoverflow.com/q/70285834/7058363

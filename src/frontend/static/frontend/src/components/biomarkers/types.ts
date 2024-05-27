@@ -125,6 +125,26 @@ interface ValidationSection {
     checkBox: boolean,
 }
 
+/** Represents a section in the form to create a Biomarker. */
+interface MoleculesSectionData {
+    isValid: boolean,
+    value: string | string[],
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation. */
+interface MoleculeSectionItem {
+    isLoading: boolean,
+    data: MoleculesSectionData[]
+}
+
+/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
+type MoleculesSection = {
+    [BiomarkerType.CNA]: MoleculeSectionItem,
+    [BiomarkerType.MIRNA]: MoleculeSectionItem,
+    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
+    [BiomarkerType.MRNA]: MoleculeSectionItem,
+}
+
 /** Structure to handle the new Biomarker form. */
 interface FormBiomarkerData {
     id: Nullable<number>,
@@ -150,8 +170,11 @@ interface MoleculesMultipleSelection {
  * and MethylationIdentifier Django models.
  */
 type BiomarkerMolecule = {
+    /** PK of MRNAIdentifier, MiRNAIdentifier, CNAIdentifier, or MethylationIdentifier. */
     id: number,
+    /** Identifier of the molecule. */
     identifier: string,
+    /** Type of molecule. */
     type: MoleculeType
 }
 
@@ -165,32 +188,13 @@ interface SaveBiomarkerStructure {
     cnas: SaveMoleculeStructure[],
 }
 
-/** Represents a section in the form to create a Biomarker. */
-interface MoleculesSectionData {
-    isValid: boolean,
-    value: string | string[],
-}
-
-/** Represents the state of a request to get molecules information during Biomarkers creation. */
-interface MoleculeSectionItem {
-    isLoading: boolean,
-    data: MoleculesSectionData[]
-}
-
-/** Represents the state of a request to get molecules information during Biomarkers creation for all the types of molecules. */
-type MoleculesSection = {
-    [BiomarkerType.CNA]: MoleculeSectionItem,
-    [BiomarkerType.MIRNA]: MoleculeSectionItem,
-    [BiomarkerType.METHYLATION]: MoleculeSectionItem,
-    [BiomarkerType.MRNA]: MoleculeSectionItem,
-}
-
 /** Available Feature Selection algorithms. */
 enum FeatureSelectionAlgorithm {
     BLIND_SEARCH = 1,
     COX_REGRESSION = 2,
     BBHA = 3,
-    PSO = 4
+    PSO = 4,
+    GA = 5
 }
 
 /** Available fitness functions. TODO: rename to ModelUsed */
@@ -285,9 +289,50 @@ interface FitnessFunctionParameters {
     rfParameters: RFParameters
 }
 
+/** Some common fields to use in the Expert mode. */
+interface AdvancedMode {
+    /** Try to optimize using Spark if the integration is enabled in the backend. */
+    useSpark: boolean
+}
+
+/** Advanced Cox Regression properties */
+interface AdvancedCoxRegression extends AdvancedMode {
+    topN: number
+}
+
+/** Binary Black Hole Algorithm version */
+enum BBHAVersion {
+    ORIGINAL = 1,
+    IMPROVED = 2
+}
+
+/** Advanced BBHA properties */
+interface AdvancedBBHA extends AdvancedMode {
+    numberOfStars: number;
+    numberOfIterations: number;
+    BBHAVersion: BBHAVersion;
+    coeff1: 2.2 | 2.35;
+    coeff2: 0.1 | 0.2 | 0.3;
+}
+
+/** Advanced GA properties */
+interface AdvancedGA extends AdvancedMode {
+    numberOfIterations: number;
+    populationSize: number;
+    mutationRate: number;
+}
+
 /** CV parameters. */
 interface CrossValidationParameters {
     folds: number
+}
+
+/** Advanced algorithm parameters to make Feature selection */
+interface AdvancedAlgorithm {
+    isActive: boolean,
+    BBHA: AdvancedBBHA,
+    GA: AdvancedGA,
+    coxRegression: AdvancedCoxRegression
 }
 
 /** Structure for the Feature Selection panel. */
@@ -319,37 +364,6 @@ interface FeatureSelectionPanelData {
     crossValidationParameters: CrossValidationParameters,
 }
 
-/** Advanced algorithm parameters to make Feature selection */
-interface AdvancedAlgorithm {
-    isActive: boolean,
-    BBHA: AdvancedBBHA,
-    coxRegression: AdvancedCoxRegression
-}
-
-/** Some common fields to use in the Expert mode. */
-interface AdvancedMode {
-    /** Try to optimize using Spark if the integration is enabled in the backend. */
-    useSpark: boolean
-}
-
-/** Advanced Cox Regression properties */
-interface AdvancedCoxRegression extends AdvancedMode {
-    topN: number
-}
-
-/** Advanced BBHA properties */
-interface AdvancedBBHA extends AdvancedMode {
-    numberOfStars: number;
-    numberOfIterations: number;
-    BBHAVersion: BBHAVersion;
-}
-
-/** Binary Black Hole Algorithm version */
-enum BBHAVersion {
-    ORIGINAL = 1,
-    IMPROVED = 2
-}
-
 /** Available types of Sources for a Biomarker. */
 type SourceStateBiomarker = 'clinicalSource' | 'mRNASource' | 'mirnaSource' | 'methylationSource' | 'cnaSource'
 
@@ -373,7 +387,13 @@ enum ActiveStatValidationsItemMenu {
 enum ActiveBiomarkerMoleculeItemMenu {
     DETAILS,
     PATHWAYS,
-    GENE_ONTOLOGY
+    GENE_ASSOCIATIONS_NETWORK,
+    GENE_ONTOLOGY,
+    INFERENCE,
+    DISEASES,
+    DRUGS,
+    MIRNA_GENE_INTERACTIONS,
+    ACT_CAN_GENES,
 }
 
 /** Django TrainedModel model. */
@@ -563,6 +583,7 @@ interface PredictionRangeLabelsSet {
 export {
     AdvancedCoxRegression,
     AdvancedBBHA,
+    AdvancedGA,
     BBHAVersion,
     AdvancedAlgorithm,
     SVMKernel,

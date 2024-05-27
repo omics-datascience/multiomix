@@ -231,6 +231,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
 
         // If exists an id then we are editing, otherwise It's a new Tag
         let addOrEditURL, requestMethod
+
         if (this.state.newTagForLastExperiment.id !== null) {
             addOrEditURL = `${urlTagsCRUD}${this.state.newTagForLastExperiment.id}/`
             requestMethod = ky.patch
@@ -376,6 +377,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                 alertGeneralError()
                 this.closeTab(experimentId)
             }
+
             console.log('Error getting experiment data', err)
         })
     }
@@ -409,6 +411,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
             })
         } else {
             const fieldSorted = tableControl.sortFields[idxColumn]
+
             if (!fieldSorted.sortOrderAscendant) {
                 // If it's the same just change the sort order
                 fieldSorted.sortOrderAscendant = !fieldSorted.sortOrderAscendant
@@ -528,6 +531,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
             if (!this.abortController.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting experiment', err)
         })
     }
@@ -697,6 +701,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     this.setState({ stoppingExperiment: false })
                     alertGeneralError()
                 }
+
                 console.log('Error deleting experiment ->', err)
             })
         })
@@ -819,7 +824,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     </div>
 
                     {/* Close tab button */}
-                    <Icon name='times' className='clickable margin-left-5' onClick={() => this.closeTab(experimentTabIdInt)}/>
+                    <Icon name='times' className='clickable margin-left-5' onClick={() => this.closeTab(experimentTabIdInt)} />
                 </Menu.Item>
             )
         })
@@ -923,7 +928,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                                 { showLastExperiments: !prev.showLastExperiments }
                                             ))}
                                         >
-                                            <Icon name={this.state.showLastExperiments ? 'chevron right' : 'list ul'}/>
+                                            <Icon name={this.state.showLastExperiments ? 'chevron right' : 'list ul'} />
                                         </Button>
                                     </Grid.Column>
                                 </Grid.Row>

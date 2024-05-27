@@ -35,6 +35,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
         if (props.selectedStatisticalValidation.id) {
             getStatValidationData()
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -62,6 +63,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting StatisticalValidation data', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

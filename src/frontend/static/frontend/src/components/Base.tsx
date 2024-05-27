@@ -36,6 +36,7 @@ const Base = (props: BaseProps) => {
      */
     useEffect(() => {
         getCurrentUser()
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()

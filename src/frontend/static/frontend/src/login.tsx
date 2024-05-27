@@ -5,6 +5,6 @@ import './css/login.css'
 import { LoginSignUpForm } from './components/login/LoginSignUpForm'
 
 ReactDOM.render(
-    <LoginSignUpForm/>,
+    <LoginSignUpForm />,
     document.getElementById('login-form')
 )

@@ -22,6 +22,7 @@ interface HugeFileAdviceProps {
  */
 export const HugeFileAdvice = (props: HugeFileAdviceProps) => {
     const sizeInMB = getFileSizeInMB(props.fileSize)
+
     if (sizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
         return null
     }

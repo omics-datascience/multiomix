@@ -27,6 +27,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     const [showTogether, setShowTogether] = useState(false)
 
     const stats = props.statisticalProperties
+
     if (!stats) {
         return null
     }
@@ -34,7 +35,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     // Error message
     if (!stats.is_data_ok) {
         return (
-            <GeneGEMDataErrorMessage/>
+            <GeneGEMDataErrorMessage />
         )
     }
 

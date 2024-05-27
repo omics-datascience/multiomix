@@ -1,5 +1,4 @@
 from typing import Optional
-from channels.http import AsgiRequest
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -28,7 +27,7 @@ class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
     do_md5_check = True
     raised_exception: Optional[ValidationError] = None  # To use in the get_response_data
 
-    def on_completion(self, uploaded_file: UploadedFile, request: AsgiRequest):
+    def on_completion(self, uploaded_file: UploadedFile, request):
         """Callback when the upload is complete"""
         data = request.POST.dict()
         data['file_obj'] = uploaded_file  # Assigns the uploaded file to the new object
@@ -39,7 +38,7 @@ class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
         except ValidationError as ex:
             self.raised_exception = ex
 
-    def get_response_data(self, chunked_upload: ChunkedUpload, request: AsgiRequest):
+    def get_response_data(self, chunked_upload: ChunkedUpload, request):
         """Final response, returns the created UserFile object"""
         if self.raised_exception is None:
             return { 'ok': True }

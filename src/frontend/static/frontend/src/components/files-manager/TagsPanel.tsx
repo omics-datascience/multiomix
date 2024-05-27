@@ -74,7 +74,7 @@ export const TagsPanel = (props: TagsPanelProps) => {
     return (
         <Segment>
             <Header textAlign="center">
-                <Icon name='tags'/>
+                <Icon name='tags' />
                 <Header.Content>My Tags</Header.Content>
             </Header>
 

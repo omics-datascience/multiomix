@@ -5,6 +5,6 @@ import './css/institutions.css'
 import { InstitutionsPanel } from './components/institutions/InstitutionsPanel'
 
 ReactDOM.render(
-    <InstitutionsPanel/>,
+    <InstitutionsPanel />,
     document.getElementById('institutions-app')
 )

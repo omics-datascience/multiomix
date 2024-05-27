@@ -21,6 +21,7 @@ export const FitnessFunctionLabel = (props: FitnessFunctionLabelProps) => {
     let color: SemanticCOLORS
     let description: string
     let title: string
+
     switch (props.fitnessFunction) {
         case FitnessFunction.CLUSTERING:
             color = 'olive'

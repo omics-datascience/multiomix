@@ -171,7 +171,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                             centered
                         />
 
-                        <SingleRangeSlider {...correlationSliderSettings}/>
+                        <SingleRangeSlider {...correlationSliderSettings} />
 
                         <Label color="blue">{MIN_VALUE_CORRELATION}</Label>
                         <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>

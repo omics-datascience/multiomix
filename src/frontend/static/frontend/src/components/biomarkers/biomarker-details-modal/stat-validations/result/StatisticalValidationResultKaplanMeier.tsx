@@ -52,6 +52,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 getStatValidationKaplanMeierByClusteringModel()
             }
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -74,6 +75,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
         if (selectedClinicalAttribute !== undefined) {
             makeKaplanMeierRequestByAttrs(selectedClinicalAttribute)
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -96,6 +98,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting StatisticalValidation clinical attributes data', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
@@ -121,6 +124,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting StatisticalValidation KaplanMeier by clustering model', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
@@ -152,6 +156,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting StatisticalValidation KaplanMeier by clinical attribute', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

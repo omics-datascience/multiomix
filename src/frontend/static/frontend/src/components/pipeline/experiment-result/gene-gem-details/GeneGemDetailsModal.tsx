@@ -3,8 +3,8 @@ import { Modal, Header } from 'semantic-ui-react'
 import { CorrelationGraph } from './correlation-graph/CorrelationGraph'
 import ky from 'ky'
 import { KySearchParams, Nullable, StatChartData } from '../../../../utils/interfaces'
-import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoMiRNADataJSON, DjangoExperiment } from '../../../../utils/django_interfaces'
-import { alertGeneralError, getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
+import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoExperiment } from '../../../../utils/django_interfaces'
+import { getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
 import { findLineByLeastSquares } from './correlation-graph/correlationGraphUtils'
 import { MiRNADiseasesPanel } from './MiRNADiseasesPanel'
 import { MiRNAInteractionPanel } from './MiRNAInteractionPanel'
@@ -17,12 +17,12 @@ import { GeneGemModalMenu } from './GeneGemModalMenu'
 import { NoClinicalData } from './survival-analysis/NoClinicalData'
 import { KaplanMeierChart } from './survival-analysis/KaplanMeier'
 import { MiRNATargetInteractionPanel } from './MiRNATargetInteractionPanel'
+import { TryAgainSegment } from '../../../common/TryAgainSegment'
 
 // Defined in gem.html
 declare const urlCorrelationGraph: string
 declare const urlGetStatisticalProperties: string
 declare const thresholdToConsiderOrdinal: number
-declare const urlGetMiRNAData: string
 declare const urlClinicalSourceUserFileCRUD: string
 declare const urlUnlinkClinicalSourceUserFile: string
 
@@ -97,8 +97,6 @@ interface GeneGemDetailsModalState {
     activeItem: Nullable<ActiveItemMenu>,
     /** Correlation Graph data */
     correlationGraphData: CorrelationChartData,
-    /** Data of miRNA */
-    miRNAData: Nullable<DjangoMiRNADataJSON>,
     /** Correlation Boxplot data */
     correlationBoxplotData: CorrelationBoxplotData,
     /** Combination Gene x GEM statistical properties */
@@ -108,7 +106,11 @@ interface GeneGemDetailsModalState {
     /** Flag of statistical properties request */
     gettingStatisticalProperties: boolean,
     /** To check if needs to show Correlation Graph of Correlation Boxplot */
-    gemDataIsOrdinal: boolean
+    gemDataIsOrdinal: boolean,
+    /** Flag to show an error message */
+    correlationGraphIsError: boolean
+    /** Flag to show an error message */
+    statisticalPropertiesIsError: boolean
 }
 
 /**
@@ -142,12 +144,13 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         return {
             activeItem: null,
             correlationGraphData: null,
-            miRNAData: null,
             correlationBoxplotData: null,
             statisticalProperties: null,
             gettingCorrelationData: false,
             gettingStatisticalProperties: false,
-            gemDataIsOrdinal: false
+            gemDataIsOrdinal: false,
+            correlationGraphIsError: false,
+            statisticalPropertiesIsError: false
         }
     }
 
@@ -157,6 +160,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      */
     handleGroupByChanges = (value: string) => {
         const correlationGraphData = this.state.correlationGraphData
+
         if (correlationGraphData) {
             correlationGraphData.selectedClinicalGroupBy = value
             this.setState({ correlationGraphData }, this.getCorrelationGraphData)
@@ -176,30 +180,12 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
     resetFieldsAndClose = () => { this.setState(this.getDefaultState(), this.props.handleClose) }
 
     /**
-     * Retrieves miRNA data like sequence or accession ID
-     */
-    getMiRNAData () {
-        const searchParams: KySearchParams = {
-            mirna: this.props.selectedRow?.gem as string
-        }
-
-        ky.get(urlGetMiRNAData, { signal: this.abortController.signal, searchParams }).then((response) => {
-            response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
-                this.setState({ miRNAData: jsonResponse })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log('Error getting studies ->', err)
-        })
-    }
-
-    /**
      * Gets active menu
      * @returns Component
      */
     getActiveComponent () {
         const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
+
         switch (this.state.activeItem) {
             case ActiveItemMenu.CORRELATION_GRAPH:
                 if (this.state.gettingCorrelationData) {
@@ -208,7 +194,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                 // If the data is ordinal its needed a better chart like Boxplots
                 if (this.state.gemDataIsOrdinal) {
-                    return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow}/>
+                    return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow} />
+                }
+
+                if (this.state.correlationGraphIsError) {
+                    return <TryAgainSegment onTryAgain={this.getCorrelationGraphData} />
                 }
 
                 return (
@@ -222,6 +212,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
+
+                if (this.state.statisticalPropertiesIsError) {
+                    return <TryAgainSegment onTryAgain={this.getStatisticalProperties} />
+                }
+
                 return (
                     <StatisticalPropertiesPanel
                         statisticalProperties={this.state.statisticalProperties}
@@ -233,6 +228,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (this.state.gettingStatisticalProperties) {
                     return this.loadingComponent
                 }
+
                 return (
                     <AssumptionsPanel
                         statisticalProperties={this.state.statisticalProperties}
@@ -243,7 +239,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
                 return (
                     <MiRNATargetInteractionPanel
-                        miRNAData={this.state.miRNAData}
+                        identifier={this.props.selectedRow?.gem as string}
                         gene={gene}
                         miRNA={gem}
                     />
@@ -255,16 +251,15 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 return (
                     <React.Fragment>
                         <MiRNAInteractionPanel
-                            miRNAData={this.state.miRNAData}
                             miRNA={gem}
                             showGeneSearchInput
                         />
                     </React.Fragment>
                 )
             case ActiveItemMenu.DISEASES_ASSOCIATION:
-                return <MiRNADiseasesPanel miRNA={gem} miRNAData={this.state.miRNAData}/>
+                return <MiRNADiseasesPanel miRNA={gem} />
             case ActiveItemMenu.DRUGS_ASSOCIATION:
-                return <MiRNADrugsPanel miRNA={gem} miRNAData={this.state.miRNAData}/>
+                return <MiRNADrugsPanel miRNA={gem} />
             case ActiveItemMenu.SURVIVAL_ANALYSIS:
                 if (!this.props.experiment.clinical_source_id) {
                     return (
@@ -336,6 +331,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         geneData.forEach((geneValue, idx) => {
             const gemValue = gemData[idx]
             const clinicalValue = clinicalData[idx]
+
             if (!seriesGrouped[clinicalValue]) {
                 seriesGrouped[clinicalValue] = []
             }
@@ -371,9 +367,11 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         const zippedData: MergedDataBoxplot = {}
         geneData.forEach((geneElem, idx) => {
             const gemKey = gemData[idx] // Gets GEM data for same sample
+
             if (zippedData[gemKey] === undefined) {
                 zippedData[gemKey] = []
             }
+
             zippedData[gemKey].push(geneElem)
         })
 
@@ -381,6 +379,16 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             return { x: entry[0], data: entry[1], strokeColor: '#a97f00' }
         })
         return res
+    }
+
+    /** Sets the state to show an error message when Correlation Graph panel is selected. */
+    correlationGraphOnGeneralError = () => {
+        this.setState({ correlationGraphIsError: true })
+    }
+
+    /** Sets the state to show an error message when Statistical Properties panel is selected. */
+    statisticalPropertiesOnGeneralError = () => {
+        this.setState({ statisticalPropertiesIsError: true })
     }
 
     /**
@@ -393,9 +401,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             return
         }
 
-        const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
-
         this.setState({ gettingCorrelationData: true }, () => {
+            const [gene, gem] = getGeneAndGEMFromSelectedRow(this.props.selectedRow)
+
             const searchParams: KySearchParams = {
                 experimentId: this.props.experiment.id,
                 gene,
@@ -422,6 +430,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                         let keyToUpdate: keyof GeneGemDetailsModalState
                         let correlationGraphDataFormatted: CorrelationBoxplotData | CorrelationChartData
+
                         if (gemDataIsOrdinal) {
                             keyToUpdate = 'correlationBoxplotData'
                             const boxplotData: StatChartData[] = this.generateCorrelationBoxplotData(
@@ -454,7 +463,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         this.setState<never>({
                             [keyToUpdate]: correlationGraphDataFormatted,
                             gemDataIsOrdinal,
-                            gettingCorrelationData: false // Sets at the same time to prevent old chart being showed before new data
+                            gettingCorrelationData: false, // Sets at the same time to prevent old chart being showed before new data
+                            correlationGraphIsError: false
                         })
                     } else {
                         switch (jsonResponse.status.internal_code) {
@@ -462,22 +472,23 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                                 alert('It seems that the experiment does not exist. If you think it\'s an error, please, contact with the administrator')
                                 break
                             default:
-                                alertGeneralError()
+                                this.correlationGraphOnGeneralError()
                                 break
                         }
                     }
                 }).catch((err) => {
                     this.setState({ gettingCorrelationData: false })
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.correlationGraphOnGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingCorrelationData: false })
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.correlationGraphOnGeneralError()
                 }
+
                 console.log('Error getting correlation graph ->', err)
             })
         })
@@ -506,18 +517,23 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
                         : false
 
-                    this.setState({ statisticalProperties, gemDataIsOrdinal })
+                    this.setState({
+                        statisticalProperties,
+                        gemDataIsOrdinal,
+                        statisticalPropertiesIsError: false
+                    })
                 }).catch((err) => {
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.statisticalPropertiesOnGeneralError()
                     console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
                 if (!this.abortController.signal.aborted) {
                     // If an error ocurred, sets the selected row to null
-                    alertGeneralError()
+                    this.statisticalPropertiesOnGeneralError()
                 }
-                console.log('Error getting correlation graph ->', err)
+
+                console.log('Error getting statistical properties ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
                     this.setState({ gettingStatisticalProperties: false })
@@ -543,14 +559,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 if (!this.state.statisticalProperties) {
                     this.getStatisticalProperties()
                 }
-                break
-            case ActiveItemMenu.MIRNA_INTERACTION:
-            case ActiveItemMenu.MIRNA_TARGET_INTERACTION:
-            case ActiveItemMenu.DRUGS_ASSOCIATION:
-            case ActiveItemMenu.DISEASES_ASSOCIATION:
-                if (!this.state.miRNAData) {
-                    this.getMiRNAData()
-                }
+
                 break
         }
 

@@ -31,7 +31,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     if (props.currentUser === null) {
         return (
             <Menu.Item>
-                <Icon name='spinner' loading/>
+                <Icon name='spinner' loading />
             </Menu.Item>
         )
     }
@@ -184,7 +184,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
             {/* LogIn/LogOut panel */}
             <Menu.Menu as='h3' position='right'>
-                <LogInLogOutPanel currentUser={currentUser}/>
+                <LogInLogOutPanel currentUser={currentUser} />
             </Menu.Menu>
         </Menu>
     )

@@ -1,5 +1,5 @@
 .wrapper {
-    min-height: 100%;
+    min-height: 85vh;
 }
 
 .margin-left-1 {
@@ -36,6 +36,10 @@
 
 .margin-bottom-0 {
     margin-bottom: 0 !important;
+}
+
+.margin-bottom-1 {
+    margin-bottom: 1% !important;
 }
 
 .margin-bottom-2 {
@@ -252,15 +256,15 @@ h2.menu,
     z-index: 2500 !important;
 }
 
-/* Pulls the entries select in the Paginated table to the right. */
-.entries-select-table {
-    margin-left: auto !important;
-    order: 2;
-}
 
 /* Pulls down the button when set in the `customElements` prop of `PaginatedTable` component */
 .custom-table-field {
     display: flex;
     justify-content: center;
     align-items: flex-end;
+}
+
+/* Pulls the Entries Select to the right. */
+.entries-select-table {
+    margin-left: auto !important;
 }

@@ -23,8 +23,7 @@ python3 ${BASE_DIR}/manage.py migrate
 echo "##############################################"
 echo "Running Multiomix..."
 echo "##############################################"
-echo ${LISTEN_IP}
-echo ${LISTEN_PORT}
+echo "Listening on ${LISTEN_IP}: ${LISTEN_PORT} (using ${DJANGO_SETTINGS_MODULE})"
 daphne -b "${LISTEN_IP}" -p "${LISTEN_PORT}" multiomics_intermediate.asgi:application
 
 

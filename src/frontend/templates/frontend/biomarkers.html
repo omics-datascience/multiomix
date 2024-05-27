@@ -19,6 +19,8 @@
                 const maxIterationsMetaheuristics = {{ max_iterations_metaheuristics }}
                 const minStarsBBHA = {{ min_stars_bbha }}
                 const maxStarsBBHA = {{ max_stars_bbha }}
+                const minPopulationSizeGA = {{ min_population_size_ga }}
+                const maxPopulationSizeGA = {{ max_population_size_ga }}
                 const maxFeaturesCoxRegression = {{ max_features_cox_regression }}
                 const maxFeaturesBlindSearch = {{ max_features_blind_search }}
                 const minFeaturesMetaheuristics = {{ min_features_metaheuristics }}
@@ -65,10 +67,18 @@
                 const urlGeneInformation = "{% url 'gene_information' %}"
                 const urlPathwaysInformation = "{% url 'pathways_information' %}"
                 const urlMetabolicPathways = "{% url 'metabolic_pathways_information' %}"
+                const urlGOGeneToTerms = "{% url 'gene_ontology_gene_terms' %}"
+                const urlGOTermToTerms = "{% url 'gene_ontology_term_terms' %}"
+                const urlGeneAssociationsNetwork = "{% url 'predicted_functional_associations_network' %}"
                 const urlStopFSExperiment = "{% url 'stop_fs_experiment' %}"
                 const urlStopStatisticalValidation = "{% url 'stop_statistical_validation' %}"
                 const urlStopTrainedModel = "{% url 'stop_trained_model' %}"
                 const urlStopInferenceExperiment = "{% url 'stop_inference_experiment' %}"
+                const urlMiRNAData = "{% url 'mirna_data' %}"
+                const urlMethylationData = "{% url 'methylation_data' %}"
+                const urlMiRNAeDrugs = "{% url 'mirna_drugs' %}"
+                const urlMiRNADiseases = "{% url 'mirna_diseases' %}"
+                const urlMiRNAInteraction = "{% url 'mirna_target_interaction' %}"
         </script>
         {% render_bundle 'biomarkers' 'js' %}
 {% endblock %}

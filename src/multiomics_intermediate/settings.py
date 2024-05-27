@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 from typing import Optional
 
+# Temporal fixing for the translation issue in django-chunked-upload when using Django 4.x.
+# See more in https://github.com/juliomalegria/django-chunked-upload/issues/68#issuecomment-1903413512
+import django
+from django.utils.translation import gettext
+django.utils.translation.ugettext = gettext
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -94,7 +100,7 @@ REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.getenv('REDIS_PORT', 6379)
 
 # Channels
-ASGI_APPLICATION = "multiomics_intermediate.routing.application"
+ASGI_APPLICATION = "multiomics_intermediate.asgi.application"
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -154,8 +160,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -182,7 +186,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.1.6'
+VERSION: str = '5.2.0'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -342,6 +346,10 @@ MAX_ITERATIONS_METAHEURISTICS: int = int(os.getenv('MAX_ITERATIONS_METAHEURISTIC
 # Minimum and maximum number of stars in the BBHA algorithm
 MIN_STARS_BBHA: int = int(os.getenv('MIN_STARS_BBHA', 5))
 MAX_STARS_BBHA: int = int(os.getenv('MAX_STARS_BBHA', 90))
+
+# Minimum and maximum number for population size parameter in the GA algorithm
+MIN_POPULATION_SIZE_GA: int = int(os.getenv('MIN_POPULATION_SIZE_GA', 5))
+MAX_POPULATION_SIZE_GA: int = int(os.getenv('MAX_POPULATION_SIZE_GA', 200))
 
 # Maximum number of features to select in the CoxRegression algorithm
 MAX_FEATURES_COX_REGRESSION: int = int(os.getenv('MAX_FEATURES_COX_REGRESSION', 60))

@@ -296,20 +296,24 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      */
     const modelParametersAreValid = (): boolean => {
         const modelParameters = form.modelParameters
+
         switch (selectedFitnessFunction) {
             case FitnessFunction.SVM: {
                 const svmParameters = modelParameters.svmParameters
                 return svmParameters.maxIterations >= 100 && svmParameters.maxIterations <= 2000
             }
+
             case FitnessFunction.CLUSTERING: {
                 const clusteringParameters = modelParameters.clusteringParameters
                 return clusteringParameters.nClusters >= 2 && clusteringParameters.nClusters <= 10
             }
+
             case FitnessFunction.RF: {
                 const rfParameters = modelParameters.rfParameters
                 return (rfParameters.nEstimators >= 10 && rfParameters.nEstimators <= 20) &&
                     (rfParameters.maxDepth === null || rfParameters.maxDepth >= 3)
             }
+
             default:
                 return false
         }
@@ -359,11 +363,14 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         makeSourceAndAppend(form.clinicalSource, formData, 'clinical')
 
         const headers = getDjangoHeader()
-
         ky.post(urlNewTrainedModel, { headers, body: formData }).then((response) => {
             response.json().then((jsonResponse: OkResponse) => {
                 if (jsonResponse.ok) {
                     props.setShowNewTrainedModelModal(false)
+
+                    // Resets the form and the step
+                    setForm(getDefaultNewTrainedModelData())
+                    setCurrentStep(1)
                 } else {
                     alertGeneralError()
                 }
@@ -498,7 +505,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         >
             <Modal.Header>
                 <Icon name='code branch' />
-                    Create new trained model
+                Create new trained model
             </Modal.Header>
             <Modal.Content>
                 <Grid>

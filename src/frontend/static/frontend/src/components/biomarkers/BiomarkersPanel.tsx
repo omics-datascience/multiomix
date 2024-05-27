@@ -211,7 +211,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             useSpark: true,
             numberOfStars: 60,
             numberOfIterations: 10,
-            BBHAVersion: BBHAVersion.ORIGINAL
+            BBHAVersion: BBHAVersion.ORIGINAL,
+            coeff1: 2.2,
+            coeff2: 0.1
+        },
+        GA: {
+            useSpark: true,
+            numberOfIterations: 10,
+            populationSize: 50,
+            mutationRate: 0.01
         },
         coxRegression: {
             useSpark: true,
@@ -265,6 +273,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getExperimentStopConfirmModals () {
         const biomarkerToStop = this.state.biomarkerToStop
+
         if (!biomarkerToStop) {
             return null
         }
@@ -483,6 +492,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const exists = formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
         const data: MoleculesSectionData[] = formBiomarker.moleculesSection[section].data
         data.splice(indexToSelect, 1)
+
         if (!exists) {
             data.push({
                 isValid: true,
@@ -525,6 +535,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 })
             }).catch((err) => {
                 console.error('Error getting Biomarker:', err)
+
                 if (!this.abortController.signal.aborted) {
                     reject(err)
                 }
@@ -629,6 +640,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         const formBiomarkerPreLoad = this.state.formBiomarker
         formBiomarkerPreLoad.moleculesSymbolsFinder.isLoading = true
         let urlToFind = urlGeneSymbolsFinder
+
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
                 urlToFind = urlMiRNACodesFinder
@@ -639,6 +651,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             default:
                 break
         }
+
         this.setState({ formBiomarker: formBiomarkerPreLoad })
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
@@ -719,9 +732,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     orderData = (data: MoleculesSectionData[]): MoleculesSectionData[] => {
         return data.sort((a, b) => {
             const cond = Number(a.isValid) - Number(b.isValid)
+
             if (cond !== 0) {
                 return cond
             }
+
             return Array.isArray(a.value) ? 1 : -1
         })
     }
@@ -751,6 +766,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         let urlToFind: string
         let json: {[key: string]: string[]}
         let keyMolecules: string
+
         switch (this.state.formBiomarker.moleculeSelected) {
             case BiomarkerType.MIRNA:
                 urlToFind = urlMiRNACodes
@@ -768,41 +784,50 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 keyMolecules = 'gene_ids'
                 break
         }
+
         const genesArray: MoleculesSectionData[] = []
         ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: { [key: string]: string[] }) => {
                 const genes = Object.entries(jsonResponse)
+
                 for (const gene of genes) {
                     let condition
+
                     switch (gene[1].length) {
                         case 0:
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(item => item.value === gene[0])
+
                             if (!condition.length) {
                                 genesArray.push({
                                     isValid: false,
                                     value: gene[0]
                                 })
                             }
+
                             break
                         case 1:
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(item => item.value === gene[1][0])
+
                             if (!condition.length) {
                                 genesArray.push({
                                     isValid: true,
                                     value: gene[1][0]
                                 })
                             }
+
                             break
                         default:
                             condition = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.concat(genesArray).filter(
                                 item => isEqual(item.value, gene[1])
                             )
+
                             if (!condition.length) {
                                 genesArray.push({
                                     isValid: false,
                                     value: gene[1]
                                 })
                             }
+
                             break
                     }
                 }
@@ -928,12 +953,15 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         for (const option of Object.values(BiomarkerType)) {
             if (!haveAmbiguous) {
                 const indexOfAmbiguous = this.state.formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && Array.isArray(item.value))
+
                 if (indexOfAmbiguous >= 0) {
                     haveAmbiguous = true
                 }
             }
+
             if (!haveInvalid && !this.state.formBiomarker.validation.checkBox) {
                 const indexOfInvalid = this.state.formBiomarker.moleculesSection[option].data.findIndex(item => !item.isValid && !Array.isArray(item.value))
+
                 if (indexOfInvalid >= 0) {
                     haveInvalid = true
                 }
@@ -970,6 +998,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      */
     getMoleculesData = (molecules: MoleculesSectionData[]): SaveMoleculeStructure[] => {
         const ignoreErrors = this.state.formBiomarker.validation.checkBox
+
         if (ignoreErrors) {
             return molecules.map(this.moleculeIdentified)
         } else {
@@ -1101,9 +1130,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
         })
 
         const sectionFound = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.find((item: MoleculesSectionData) => value.value === item.value)
+
         if (sectionFound !== undefined) {
             return
         }
+
         const moleculesSection = {
             ...this.state.formBiomarker.moleculesSection,
             [this.state.formBiomarker.moleculeSelected]: {
@@ -1264,9 +1295,11 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         if (dataset !== null) {
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
+
             if (dataset.survival_columns === undefined) {
                 dataset.survival_columns = []
             }
+
             dataset.survival_columns.push(newElement)
             this.setState({ newBiomarker })
         }
@@ -1281,6 +1314,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
         const newBiomarker = this.state.newBiomarker
         const dataset = newBiomarker[datasetName]
+
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns.splice(idxSurvivalTuple, 1)
             this.setState({ newBiomarker })
@@ -1303,6 +1337,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     ) => {
         const newBiomarker = this.state.newBiomarker
         const dataset = newBiomarker[datasetName]
+
         if (dataset !== null && dataset.survival_columns !== undefined) {
             dataset.survival_columns[idxSurvivalTuple][name] = value
             this.setState({ newBiomarker })
@@ -1424,6 +1459,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             })
         }).catch((err) => {
             console.error('Error cloning Biomarker ->', err)
+
             if (!this.abortController.signal.aborted) {
                 alertGeneralError()
             }
@@ -1468,6 +1504,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     submitFeatureSelectionExperiment = () => {
         // For short...
         const fsSettings = this.state.featureSelection
+
         if (!fsSettings.biomarker || this.state.submittingFSExperiment) {
             return
         }
@@ -1517,7 +1554,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates default table's Filters
+     * Generates default table's Filters.
      * @returns Default object for table's Filters
      */
     getDefaultFilters (): PaginationCustomFilter[] {
@@ -1528,8 +1565,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
 
+        // TODO: refactor Tag key as it's the same as AllExperimentsView.tsx and UserFilesView.tsx
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', options: tagOptions }
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 }
         ]
     }
 
@@ -1591,7 +1629,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
-                        { name: 'Actions' }
+                        { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                     customFilters={this.getDefaultFilters()}
@@ -1623,8 +1661,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                 <TableCellWithTitle value={biomarker.name} />
                                 <TableCellWithTitle value={biomarker.description} />
                                 <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
-                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state}/></Table.Cell>
-                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin}/></Table.Cell>
+                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state} /></Table.Cell>
+                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin} /></Table.Cell>
                                 <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
@@ -1793,7 +1831,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     onClose={this.closeBiomarkerDetailsModal}
                     open={this.state.openDetailsModal}
                 >
-                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker}/>
+                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker} />
                 </Modal>
 
                 <Confirm

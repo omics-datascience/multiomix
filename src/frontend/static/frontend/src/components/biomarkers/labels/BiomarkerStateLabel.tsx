@@ -16,6 +16,7 @@ interface BiomarkerStateLabelProps {
  */
 export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
     let stateIcon: StateIconInfo
+
     switch (props.biomarkerState) {
         case BiomarkerState.COMPLETED:
             stateIcon = {

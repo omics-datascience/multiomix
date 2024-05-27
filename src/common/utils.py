@@ -48,7 +48,9 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
     subset = subset.transpose()
     return subset
 
+
 IntOrFloat = Union[int, float]
+
 
 def limit_between_min_max(number: IntOrFloat, min_value: IntOrFloat, max_value: IntOrFloat) -> IntOrFloat:
     """Limits a number between a min and max values."""
@@ -56,5 +58,5 @@ def limit_between_min_max(number: IntOrFloat, min_value: IntOrFloat, max_value: 
 
 
 def remove_non_alphanumeric_chars(string: str) -> str:
-    """Replaces all the non-alphanumeric chars from the job name to respect the [\.\-_/#A-Za-z0-9]+ regex"""
+    """Replaces all the non-alphanumeric chars from the job name to respect the [\\.\\-_/#A-Za-z0-9]+ regex"""
     return ''.join(e for e in string if e.isalnum() or e in ['.', '-', '_', '/', '#'])

@@ -11,8 +11,10 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Pre-requisites
 
-- Python 3.7 or Python 3.8 (newer Python versions present [a bug with processes][process-bug])
+- Python `3.7`, `3.8`, `3.9` or `3.10` (tested version: `3.10`, no support for GGCA on Python `3.11+` yet)
 - Node JS (tested version: `16.x`)
+- [Modulector][modulector] `2.2.0`
+- [BioAPI][bioapi] `1.2.1`
 
 
 ## Installation 
@@ -22,25 +24,26 @@ This document is focused on the **development** of the system. If you are lookin
     1. `python3 -m venv venv`
     1. `source venv/bin/activate` (run only when you need to work)
     1. `pip install -r ../config/requirements.txt`. Maybe you need to run `python3.exe -m pip install -r ../config/requirements.txt` in Windows instead.
-2. Install Node JS dependencies:
+1. Install Node JS dependencies:
     1. `cd frontend/static/frontend`
-    2. `npm i`
-    3. `npm run dev` (only run once, during development we recommend running the `watch` script instead)
-3. Multiomix needs a SQL DB, a MongoDB and a Redis DB to work properly. You can install all three on your machine, or you can choose to use the Docker configuration already available (recommended). For the latter solution follow the steps below on the project root folder:
+    1. `npm i`
+    1. `npm run dev` (only run once, during development we recommend running the `watch` script instead)
+1. Multiomix needs a SQL DB, a MongoDB and a Redis DB to work properly. You can install all three on your machine, or you can choose to use the Docker configuration already available (recommended). For the latter solution follow the steps below on the project root folder:
     1. Create the needed volumes:
        1. `docker volume create --name=multiomics_intermediate_mongo_data`
-       2. `docker volume create --name=multiomics_intermediate_mongo_config`
-       3. `docker volume create --name=multiomics_intermediate_postgres_data`
-       3. `docker volume create --name=multiomics_intermediate_redis_data`
-       3. `docker volume create --name=multiomics_intermediate_static_data`
-       3. `docker volume create --name=multiomics_intermediate_media_data`
-       3. `docker volume create --name=multiomics_intermediate_logs_data`
-    2. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
-4. Go back to the `src` folder to create the DB and an admin user: 
+       1. `docker volume create --name=multiomics_intermediate_mongo_config`
+       1. `docker volume create --name=multiomics_intermediate_postgres_data`
+       1. `docker volume create --name=multiomics_intermediate_redis_data`
+       1. `docker volume create --name=multiomics_intermediate_static_data`
+       1. `docker volume create --name=multiomics_intermediate_media_data`
+       1. `docker volume create --name=multiomics_intermediate_logs_data`
+    1. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
+1. Go back to the `src` folder to create the DB and an admin user: 
     1. `python3 manage.py makemigrations`
     1. `python3 manage.py migrate`
     1. `python3 manage.py createsuperuser`
     1. Now you can access to `\<URL:port\>/admin` panel
+1. The platform needs [Modulector][modulector] and [BioAPI][bioapi] platforms for some functionalities. Please, follow the instructions in the [DEPLOYING.md](DEPLOYING.md#modulector-and-bioapi-integration) file to install them.
 
 
 ## Development
@@ -56,7 +59,7 @@ Every time you want to work with Multiomix, you need to follow the below steps:
         - `npm run dev`: compiles code in development mode.
         - `npm run watch`: compiles code in development mode and re compiles every time a file changes.
         - `npm run prod`: compiles code in production mode.
-1. Run Celery tasks queue to run experiments:
+1. Run Celery tasks queue to run experiments (in Windows add `--pool=solo` to the end of all the Celery commands as proposed [here][windows-celery]):
    1. `cd src`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q feature_selection`
@@ -102,5 +105,7 @@ If you use any part of our code, or Multiomix is useful for your research, pleas
 Multiomix uses [GGCA][ggca], therefore inherits the GPL license.
 
 
-[process-bug]: https://bugs.python.org/issue43944
 [ggca]: https://pypi.org/project/ggca/
+[modulector]: https://github.com/omics-datascience/modulector
+[bioapi]: https://github.com/omics-datascience/BioAPI
+[windows-celery]: https://stackoverflow.com/a/64753882/7058363

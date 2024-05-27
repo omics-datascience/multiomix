@@ -98,7 +98,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                 </Grid>
             </Segment>
 
-            {/* Survival columns of interest */ }
+            {/* Survival columns of interest */}
             <Segment>
                 {/* Event time */}
                 <div className='full-width'>

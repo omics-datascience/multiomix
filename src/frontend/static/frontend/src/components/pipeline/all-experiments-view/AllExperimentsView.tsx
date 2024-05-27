@@ -76,9 +76,15 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         const selectCorrelationMethodsOptions = getCorrelationMethodSelectOptions()
 
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions },
-            { label: 'Experiment type', keyForServer: 'type', defaultValue: ExperimentType.ALL, options: experimentTypeOptions },
-            { label: 'Correlation method', keyForServer: 'correlation_method', defaultValue: CorrelationMethod.ALL, options: selectCorrelationMethodsOptions }
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 },
+            { label: 'Experiment type', keyForServer: 'type', defaultValue: ExperimentType.ALL, options: experimentTypeOptions, width: 2 },
+            {
+                label: 'Correlation method',
+                keyForServer: 'correlation_method',
+                defaultValue: CorrelationMethod.ALL,
+                options: selectCorrelationMethodsOptions,
+                width: 2
+            }
         ]
     }
 

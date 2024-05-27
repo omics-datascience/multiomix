@@ -2,7 +2,7 @@ import json
 import logging
 from builtins import map
 from celery.contrib.abortable import AbortableAsyncResult
-from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast
+from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
 import numpy as np
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -67,18 +67,23 @@ class CorrelationAnalysis(APIView):
         if experiment_type == ExperimentType.MIRNA:
             correlate_with_all_genes = True
         else:
-            correlate_with_all_genes = request_bool_to_python_bool(request.POST.get('correlateWithAllGenes'))
+            correlate_with_all_genes = request_bool_to_python_bool(
+                request.POST.get('correlateWithAllGenes'))
 
         # Gets Tag (if exists)
         tag_id = request.POST.get('tagId')
 
         # Get experiment thresholds and params
-        minimum_coefficient_threshold = float(request.POST.get('coefficientThreshold', 0.7))
-        minimum_coefficient_threshold = max(minimum_coefficient_threshold, 0.5)  # Prevents expensive analysis
-        minimum_std_gene = float(request.POST.get('standardDeviationGene', 0.0))
+        minimum_coefficient_threshold = float(
+            request.POST.get('coefficientThreshold', 0.7))
+        minimum_coefficient_threshold = max(
+            minimum_coefficient_threshold, 0.5)  # Prevents expensive analysis
+        minimum_std_gene = float(
+            request.POST.get('standardDeviationGene', 0.0))
         minimum_std_gem = float(request.POST.get('standardDeviationGEM', 0.2))
         correlation_method = request.POST.get('correlationMethod')
-        correlation_method = get_integer_enum_from_value(correlation_method, CorrelationMethod, CorrelationMethod.SPEARMAN)
+        correlation_method = get_integer_enum_from_value(
+            correlation_method, CorrelationMethod, CorrelationMethod.SPEARMAN)
         p_values_adjustment_method = request.POST.get('adjustmentMethod')
         p_values_adjustment_method = get_integer_enum_from_value(
             p_values_adjustment_method,
@@ -93,12 +98,14 @@ class CorrelationAnalysis(APIView):
         # Instantiates the User's files
         with transaction.atomic():
             # mRNA
-            mrna_source, mrna_clinical = get_experiment_source(mrna_source_type, request, FileType.MRNA, 'mRNA')
+            mrna_source, mrna_clinical = get_experiment_source(
+                mrna_source_type, request, FileType.MRNA, 'mRNA')
             if mrna_source is None:
                 return JsonResponse(get_invalid_format_response(), safe=False)
 
             # GEM
-            gem_source, gem_clinical = get_experiment_source(gem_source_type, request, file_type_enum, 'gem')
+            gem_source, gem_clinical = get_experiment_source(
+                gem_source_type, request, file_type_enum, 'gem')
             if gem_source is None:
                 return JsonResponse(get_invalid_format_response(), safe=False)
 
@@ -158,7 +165,8 @@ class ExperimentList(generics.ListAPIView):
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filter_backends = [filters.OrderingFilter,
+                       filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['tag', 'correlation_method', 'type']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'submit_date', 'state', 'type', 'correlation_method',
@@ -167,14 +175,17 @@ class ExperimentList(generics.ListAPIView):
 
 class ExperimentResultCombinationsDetails(generics.ListAPIView):
     """REST endpoint: list for GeneGEMCombinations model with pagination"""
+
     def get_queryset(self):
         experiment_id = self.request.GET.get('experiment_id')
         try:
-            experiment: Experiment = Experiment.objects.get(pk=experiment_id, user=self.request.user)
+            experiment: Experiment = Experiment.objects.get(
+                pk=experiment_id, user=self.request.user)
             combinations_queryset = experiment.combinations
 
             # Applies the filters
-            coefficient_threshold = self.request.GET.get('coefficientThreshold')
+            coefficient_threshold = self.request.GET.get(
+                'coefficientThreshold')
             if coefficient_threshold:
                 coefficient_threshold = float(coefficient_threshold)
                 combinations_queryset = annotate_by_correlation(
@@ -183,11 +194,14 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
             correlation_type = self.request.GET.get('correlationType')
             if correlation_type:
-                correlation_type = get_enum_from_value(int(correlation_type), CorrelationType)
+                correlation_type = get_enum_from_value(
+                    int(correlation_type), CorrelationType)
                 if correlation_type == CorrelationType.POSITIVE:
-                    combinations_queryset = combinations_queryset.filter(correlation__gte=0)
+                    combinations_queryset = combinations_queryset.filter(
+                        correlation__gte=0)
                 elif correlation_type == CorrelationType.NEGATIVE:
-                    combinations_queryset = combinations_queryset.filter(correlation__lte=0)
+                    combinations_queryset = combinations_queryset.filter(
+                        correlation__lte=0)
 
         except Experiment.DoesNotExist:
             combinations_queryset = GeneMiRNACombination.objects.none()
@@ -207,7 +221,8 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [CustomExperimentResultCombinationsOrdering, filters.SearchFilter]
+    filter_backends = [
+        CustomExperimentResultCombinationsOrdering, filters.SearchFilter]
     search_fields = ['gene__name', 'gem']
     ordering_fields = ['gene', 'gem', 'correlation', 'p_value', 'adjusted_p_value', 'gene__chromosome',
                        'gene__start', 'gene__end', 'gene__type', 'gene__description']
@@ -264,7 +279,8 @@ def get_correlation_graph_action(request):
         try:
             # Gets experiment
             experiment_id = int(experiment_id)
-            experiment: Experiment = Experiment.objects.get(pk=experiment_id, user=request.user)
+            experiment: Experiment = Experiment.objects.get(
+                pk=experiment_id, user=request.user)
 
             # Clinical source stuff
             clinical_attribute = request.GET.get('selectedClinicalGroupBy')
@@ -287,7 +303,8 @@ def get_correlation_graph_action(request):
 
                 gene_values = values[0].tolist()
                 gem_values = values[1].tolist()
-                clinical_values = values[2].tolist() if clinical_attribute is not None else []
+                clinical_values = values[2].tolist(
+                ) if clinical_attribute is not None else []
 
                 # gem_values has the same length, so it's not necessary to check
                 gene_values = cast(List[float], gene_values)
@@ -413,7 +430,8 @@ def get_number_samples_in_common_action(request):
     else:
         # Cast parameters
         mrna_source_id = int(mrna_source_id)
-        mrna_source_type = get_enum_from_value(int(mrna_source_type), SourceType)
+        mrna_source_type = get_enum_from_value(
+            int(mrna_source_type), SourceType)
 
         gem_source_id = int(gem_source_id)
         gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
@@ -437,7 +455,8 @@ def get_number_samples_in_common_action(request):
             )
 
             # Gets intersection
-            intersection = get_intersection(samples_list_mrna, samples_list_gem)
+            intersection = get_intersection(
+                samples_list_mrna, samples_list_gem)
 
             if response is None:
                 response = {
@@ -457,7 +476,8 @@ def get_number_samples_in_common_action(request):
 def get_number_samples_in_common_action_one_front(request):
     """Gets the number of in common samples between two datasets"""
     json_request_data = json.loads(request.body)
-    headers_in_front: Optional[List[str]] = json_request_data.get('headersColumnsNames')
+    headers_in_front: Optional[List[str]
+                               ] = json_request_data.get('headersColumnsNames')
     other_source_id = json_request_data.get('otherSourceId')
     other_source_type = json_request_data.get('otherSourceType')
 
@@ -472,7 +492,8 @@ def get_number_samples_in_common_action_one_front(request):
     else:
         # Cast parameters
         other_source_id = int(other_source_id)
-        other_source_type = get_enum_from_value(int(other_source_type), SourceType)
+        other_source_type = get_enum_from_value(
+            int(other_source_type), SourceType)
 
         # Gets df
         samples_list_1, response = get_samples_list(
@@ -484,7 +505,8 @@ def get_number_samples_in_common_action_one_front(request):
 
         # Response will be != None if an error occurred
         if response is None:
-            intersection: np.ndarray = get_intersection(samples_list_1, headers_in_front)
+            intersection: np.ndarray = get_intersection(
+                samples_list_1, headers_in_front)
             response = {
                 'status': ResponseStatus(ResponseCode.SUCCESS),
                 'data': {
@@ -498,24 +520,63 @@ def get_number_samples_in_common_action_one_front(request):
 
 
 @login_required
-def get_mirna_data_action(request):
+def mirna_data_action(request):
     """Gets miRNA data from Modulector"""
     data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
     return generate_json_response_or_404(data)
 
 
 @login_required
-def get_mirna_interaction_action(request):
-    """Searches in papers an specific miRNA interaction"""
-    if 'gene' in request.GET:
-        target_url = 'mirna-target-interactions'
-        is_paginated = False
+def methylation_data_action(request):
+    """Gets Methylation site data from Modulector"""
+    data = global_mrna_service.get_modulector_service_content('methylation', request.GET, is_paginated=False)
+    return generate_json_response_or_404(data)
+
+
+@login_required
+def get_mirna_target_interaction_action(request):
+    """
+    Searches in papers an specific miRNA interaction.  
+
+    Examples:
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&mirna=hsa-miR-132-3p&include_pubmeds=true
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?mirna=hsa-miR-132-3p
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=EGFR&include_pubmeds=true
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&score=0.2
+    http://127.0.0.1:8000/api-service/mirna-target-interaction?mirna=hsa-miR-132-3p&score=0.5
+    """
+    gene = request.GET.get('gene')
+    mirna = request.GET.get('mirna')
+    score = request.GET.get('score')
+    include_pubmeds = request.GET.get('include_pubmeds')
+
+    if not gene and not mirna:
+        return JsonResponse(data={"error": "Param 'mirna' or 'gene' are mandatory"}, status=400)
+    if gene and not mirna:
+        params = {'gene': gene}
+    elif not gene and mirna:
+        params = {'mirna': mirna}
     else:
-        target_url = 'mirna-interactions'
-        is_paginated = True
-    data = global_mrna_service.get_modulector_service_content(target_url, request.GET, is_paginated)
-    # Special case: prefer None instead of 404 error to show "No data found message"
-    return JsonResponse(data, safe=False)
+        params = {'mirna': mirna, 'gene': gene}
+
+    score = request.GET.get('score')
+    if score:
+        params['score'] = score
+    
+    if include_pubmeds:
+        if include_pubmeds.lower() == "true":
+            params['include_pubmeds'] = "true"
+
+    # Gets include_pubmeds flag
+    include_pubmeds = request.GET.get('include_pubmeds') == 'true'
+    if include_pubmeds:
+        params['include_pubmeds'] = 'true'
+
+    data = global_mrna_service.get_modulector_service_content('mirna-target-interactions',
+                                                              request_params=params,
+                                                              is_paginated=True,
+                                                              method='get')
+    return JsonResponse(data)
 
 
 @login_required
@@ -609,16 +670,21 @@ def download_full_result(request, pk: int):
         data['adjusted_p_value'] = combination.adjusted_p_value
         return data
 
-    combinations = list(map(format_combination_object, experiment.combinations))
+    combinations = list(
+        map(format_combination_object, experiment.combinations))
     return generate_result_file_response(combinations, experiment.name)
 
 
 @login_required
-def download_result_with_filters(request):
+def download_result_with_filters(request: Request):
     """Downloads the combinations resulting from an analysis with filters applied"""
     experiment_id = request.GET.get('experiment_id')
     experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)
-    comb_dict: List[OrderedDict] = ExperimentResultCombinationsDetails.as_view()(request=request).data['results']
+
+    comb_dict: List[OrderedDict] = ExperimentResultCombinationsDetails.as_view()(
+        request=request
+    ).data['results']
+
     if not comb_dict:
         raise Http404("No combinations found")
 
@@ -626,11 +692,11 @@ def download_result_with_filters(request):
 
     def format_combinations_from_dict(combination: Dict) -> Dict:
         """
-        Generates a dict from a GeneGEMCombination dict with ExperimentResultCombinationsDetails returned values
-        @param combination: GeneGEMCombination values dict
-        @return: Dict with the fields to be downloaded
+        Generates a dict from a GeneGEMCombination dict with ExperimentResultCombinationsDetails returned values.
+        @param combination: GeneGEMCombination values dict.
+        @return: Dict with the fields to be downloaded.
         """
-        data = {'gem': combination['gem'], 'gene': combination['gene']}
+        data: Dict[str, Any] = {'gem': combination['gem'], 'gene': combination['gene']}
         if 'gene_extra_data' in combination and combination['gene_extra_data'] is not None:
             gene_data = dict(combination['gene_extra_data'])
             data['chromosome'] = gene_data['chromosome']
@@ -658,18 +724,21 @@ def add_clinical_source(request):
     """Adds an Experiment clinical source"""
     # Gets experiment
     experiment_id = request.POST.get('experimentPk')
-    experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)
+    experiment = get_object_or_404(
+        Experiment, pk=experiment_id, user=request.user)
 
     with transaction.atomic():
         # Creates and assign ExperimentClinicalSource instance to experiment
         clinical_source_type = int(request.POST.get('clinicalType'))
         if clinical_source_type == SourceType.CGDS:
             return HttpResponse('Unauthorized', status=401)
-        clinical_source, _ = get_experiment_source(clinical_source_type, request, FileType.CLINICAL, 'clinical')
+        clinical_source, _ = get_experiment_source(
+            clinical_source_type, request, FileType.CLINICAL, 'clinical')
 
         # Creates Survival Tuples for clinical source
         survival_columns_str = request.POST.get('survival_columns', '[]')
-        create_survival_columns_from_json(survival_columns_str, clinical_source.user_file)
+        create_survival_columns_from_json(
+            survival_columns_str, clinical_source.user_file)
 
         # Assigns to experiment and saves
         experiment.clinical_source = clinical_source
@@ -687,7 +756,8 @@ class ExperimentClinicalSourceDetail(generics.RetrieveAPIView):
         # User can only retrieve its UserFile (or public ones), not CGDSDatasets nor other users' datasets instances
         is_public = Q(user_file__is_public=True)
         return ExperimentClinicalSource.objects.filter(
-            (is_public | (~is_public & Q(user_file__user=self.request.user))) & Q(cgds_dataset__isnull=True)
+            (is_public | (~is_public & Q(user_file__user=self.request.user))) & Q(
+                cgds_dataset__isnull=True)
         )
 
     serializer_class = ExperimentClinicalSourceSerializer
@@ -714,7 +784,8 @@ class SurvivalDataDetails(APIView):
     @staticmethod
     def post(request: Request):
         # Gets the specific experiment to extract gene, GEM and clinical information
-        experiment = get_object_or_404(Experiment, pk=request.data.get('experimentId'))
+        experiment = get_object_or_404(
+            Experiment, pk=request.data.get('experimentId'))
 
         survival_column_id = request.data.get('survivalColumnId')
 
@@ -751,15 +822,15 @@ class SurvivalDataDetails(APIView):
 
             # Gets Gene and GEM expression with time values
             gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
-            clinical_samples = pipelines.get_valid_data_from_sources(
-                experiment,
-                gene,
-                gem,
-                round_values=False,
-                return_samples_identifiers=True,
-                clinical_attribute=time_attribute,
-                fill_clinical_missing_samples=False
-            )
+                clinical_samples = pipelines.get_valid_data_from_sources(
+                    experiment,
+                    gene,
+                    gem,
+                    round_values=False,
+                    return_samples_identifiers=True,
+                    clinical_attribute=time_attribute,
+                    fill_clinical_missing_samples=False
+                )
 
             # Gets event values
             clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(
@@ -768,8 +839,9 @@ class SurvivalDataDetails(APIView):
             )
 
             # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'
-            clinical_event_values = clinical_event_values.astype(np.object)
-            clinical_event_values = pipelines.fill_null_values_with_custom_value(clinical_event_values)
+            clinical_event_values = clinical_event_values.astype(object)
+            clinical_event_values = pipelines.fill_null_values_with_custom_value(
+                clinical_event_values)
 
             # Filters NaNs values in time and event lists
             time_nan_idx = clinical_time_values == settings.NON_DATA_VALUE
@@ -809,7 +881,8 @@ class SurvivalDataDetails(APIView):
                     'log_rank': logrank_gem
                 }
             response['event_values_distinct'] = list(set(
-                clinical_event_values[~pd.isnull(clinical_event_values)].tolist()
+                clinical_event_values[~pd.isnull(
+                    clinical_event_values)].tolist()
             ))
 
         return Response(response)
@@ -834,13 +907,15 @@ def stop_experiment_action(request):
         try:
             # Gets experiment
             experiment_id = int(experiment_id)
-            experiment: Experiment = Experiment.objects.get(pk=experiment_id, user=request.user)
+            experiment: Experiment = Experiment.objects.get(
+                pk=experiment_id, user=request.user)
 
             logging.warning(f'Aborting experiment {experiment_id}')
 
             # Sends the signal to abort it
             if experiment.task_id:
-                abortable_async_result = AbortableAsyncResult(experiment.task_id)
+                abortable_async_result = AbortableAsyncResult(
+                    experiment.task_id)
                 abortable_async_result.abort()
 
             # Updates state

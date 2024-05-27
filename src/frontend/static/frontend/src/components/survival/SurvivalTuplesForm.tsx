@@ -46,6 +46,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
      */
     function lastSurvivalTupleIsValid (): boolean {
         const survivalTuples = props.survivalColumns
+
         if (!survivalTuples || !survivalTuples.length) {
             return true
         }
@@ -130,6 +131,6 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                     </Button>
                 </Grid.Column>
             </Grid.Row>
-        </React.Fragment >
+        </React.Fragment>
     )
 }

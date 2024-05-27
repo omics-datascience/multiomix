@@ -1,9 +1,3 @@
-.selections-grid-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-}
-
 .selection-step-container {
     min-height: 400px;
 }

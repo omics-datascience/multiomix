@@ -1,6 +1,6 @@
 /** Data struct retrieve from BioAPI 'information-of-genes' service. */
 type GeneData = {
-    alias_symbol: string;
+    alias_symbol?: string[];
     band: string;
     chromosome: string;
     end_GRCh37: number;
@@ -17,6 +17,7 @@ type GeneData = {
     start_position: number;
     strand: number;
     uniprot_ids: string;
+    civic_description: string;
 }
 
 export {

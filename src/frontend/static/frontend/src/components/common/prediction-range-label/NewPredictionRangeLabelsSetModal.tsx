@@ -133,17 +133,20 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
     const errorMessages: ErrorMsg[] = newPredictionRangeLabelsSet.labels.map((label) => {
         let msg: Nullable<string> = null
         let input: Input = null
+
         if (label.max_value !== null && label.max_value <= label.min_value) {
             msg = 'Max value must be greater than min value'
             input = 'max_value'
         } else {
             const overlapIdx = newPredictionRangeLabelsSet.labels.findIndex((label2) => label2 !== label && (label.max_value === null || (label.max_value !== null && label2.min_value <= label.max_value && label2.max_value as number >= label.min_value)))
+
             if (overlapIdx !== -1) {
                 const overlapObject = newPredictionRangeLabelsSet.labels[overlapIdx]
                 msg = `Ranges overlaps with label "${overlapObject.label}" (position ${overlapIdx + 1})`
                 input = 'label'
             }
         }
+
         return { msg, input }
     })
 
@@ -258,7 +261,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                     <Grid.Column width={8}>
                                                         <InputLabel label='Color' />
 
-                                                        <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) } } />
+                                                        <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) }} />
                                                     </Grid.Column>
                                                 </Grid.Row>
                                             </Grid>

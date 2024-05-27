@@ -5,6 +5,6 @@ import './css/files.css'
 import { FilesManager } from './components/files-manager/FilesManager'
 
 ReactDOM.render(
-    <FilesManager/>,
+    <FilesManager />,
     document.getElementById('files-app')
 )

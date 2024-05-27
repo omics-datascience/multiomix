@@ -137,13 +137,13 @@ def get_valid_data_from_sources(
         )
 
         # Cast all to str type (object type in Numpy) to prevent some issues setting values like 'NA'
-        clinical_values = clinical_values.astype(np.object)
+        clinical_values = clinical_values.astype(object)
 
         # If fill missing samples option was selected generates an array of the same length as genes/GEMs and fills
         # the valid clinical data positions
         if fill_clinical_missing_samples:
             # Generates an empty array with 'NA' values
-            empty = np.full(gene_values.size, settings.NON_DATA_VALUE, dtype=np.object)
+            empty = np.full(gene_values.size, settings.NON_DATA_VALUE, dtype=object)
 
             # Fill only the valid positions (i.e. common samples in clinical dataset)
             for (idx, value) in zip(idx_common_gene_gem_with_clinical, clinical_values):
@@ -191,7 +191,7 @@ def get_valid_data_from_sources(
 def fill_null_values_with_custom_value(clinical_values: np.ndarray) -> np.ndarray:
     """
     Fills None, empty and nan value with settings.NON_DATA_VALUE to make a generic filter by invalid values.
-    The clinical data MUST be a 'np.object' type.
+    The clinical data MUST be a 'object' type.
     @param clinical_values: Numpy array with clinical data to fill.
     @return: Clinical data with the empty values filled.
     """

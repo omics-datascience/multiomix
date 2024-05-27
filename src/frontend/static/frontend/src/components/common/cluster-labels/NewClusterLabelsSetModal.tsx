@@ -215,7 +215,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                                 <Grid.Column width={8}>
                                                     <InputLabel label='Color' />
 
-                                                    <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) } } />
+                                                    <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) }} />
                                                 </Grid.Column>
                                             </Grid.Row>
                                         </Grid>

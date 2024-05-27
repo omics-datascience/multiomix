@@ -125,6 +125,8 @@ def biomarkers_action(request):
         'max_iterations_metaheuristics': settings.MAX_ITERATIONS_METAHEURISTICS,
         'min_stars_bbha': settings.MIN_STARS_BBHA,
         'max_stars_bbha': settings.MAX_STARS_BBHA,
+        'min_population_size_ga': settings.MIN_POPULATION_SIZE_GA,
+        'max_population_size_ga': settings.MAX_POPULATION_SIZE_GA,
         'max_features_cox_regression': settings.MAX_FEATURES_COX_REGRESSION,
         'max_features_blind_search': settings.MAX_FEATURES_BLIND_SEARCH,
         'min_features_metaheuristics': settings.MIN_FEATURES_METAHEURISTICS

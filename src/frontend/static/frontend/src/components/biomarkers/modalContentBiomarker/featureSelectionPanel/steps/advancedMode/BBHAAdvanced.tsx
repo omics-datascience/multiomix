@@ -1,9 +1,9 @@
 import React from 'react'
-import { Checkbox, Grid, Input, Select } from 'semantic-ui-react'
+import { Checkbox, Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import './../../featureSelection.css'
-import { advanceBBHAOptions } from '../../../../utils'
-import { AdvancedBBHA } from '../../../../types'
+import { advanceBBHAOptions, improvedBBHACoeff1Options, improvedBBHACoeff2Options } from '../../../../utils'
+import { AdvancedBBHA, BBHAVersion } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
 
 declare const sparkIntegrationIsEnabled: boolean
@@ -19,6 +19,17 @@ interface BBHAAdvancedProps {
 }
 
 /**
+ * Simple component for explanation over coeff1 and coeff2 parameters
+ * @returns Component.
+ */
+const CoeffExplanation = () => (
+    <p>
+        Coefficient specified in the
+        <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>improved Binary Black Hole Algorithm</ExternalLink>
+    </p>
+)
+
+/**
  * Renders a form to set some advanced parameters for the BBHA algorithm.
  * @param props Component props.
  * @returns Component.
@@ -29,7 +40,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
         <Grid>
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
-                    <Input
+                    <Form.Input
                         fluid
                         label='Number of stars'
                         placeholder='An integer number'
@@ -41,9 +52,11 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         value={advancedData.numberOfStars}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
+
                             if (numVal < minStarsBBHA || isNaN(numVal) || numVal > maxStarsBBHA) {
                                 return
                             }
+
                             handleChangeAdvanceAlgorithm('BBHA', name, numVal)
                         }}
                     />
@@ -57,7 +70,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
             </Grid.Row>
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
-                    <Input
+                    <Form.Input
                         fluid
                         label='Number of iterations'
                         placeholder='An integer number'
@@ -69,6 +82,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         value={advancedData.numberOfIterations}
                         onChange={(_, { name, value }) => {
                             const numVal = Number(value)
+
                             // Prevents to set a value lower or higher than the limits
                             if (numVal < minIterationsMetaheuristics || isNaN(numVal) || numVal > maxIterationsMetaheuristics) {
                                 return
@@ -87,10 +101,9 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
             </Grid.Row>
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
-                    <Select
-                        label='BBHAVersion'
+                    <Form.Select
+                        label='BBHA Version'
                         className='selection-select'
-                        placeholder='Fitness function'
                         options={advanceBBHAOptions}
                         value={advancedData.BBHAVersion}
                         onChange={(_, { value }) => handleChangeAdvanceAlgorithm('BBHA', 'BBHAVersion', Number(value))}
@@ -112,6 +125,46 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     />
                 </Grid.Column>
             </Grid.Row>
+
+            {/* Improved BBHA version parameters */}
+            {(advancedData.BBHAVersion === BBHAVersion.IMPROVED) &&
+                <>
+                    <Grid.Row columns={2}>
+                        <Grid.Column width={14}>
+                            <Form.Select
+                                label='Coefficient 1'
+                                className='selection-select'
+                                options={improvedBBHACoeff1Options}
+                                value={advancedData.coeff1}
+                                onChange={(_, { value }) => handleChangeAdvanceAlgorithm('BBHA', 'coeff1', Number(value))}
+                            />
+                        </Grid.Column>
+                        <Grid.Column width={2} className='advance-center-container'>
+                            <InfoPopup
+                                content={CoeffExplanation}
+                                onTop={false}
+                            />
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row columns={2}>
+                        <Grid.Column width={14}>
+                            <Form.Select
+                                label='Coefficient 2'
+                                className='selection-select'
+                                options={improvedBBHACoeff2Options}
+                                value={advancedData.coeff2}
+                                onChange={(_, { value }) => handleChangeAdvanceAlgorithm('BBHA', 'coeff2', Number(value))}
+                            />
+                        </Grid.Column>
+                        <Grid.Column width={2} className='advance-center-container'>
+                            <InfoPopup
+                                content={CoeffExplanation}
+                                onTop={false}
+                            />
+                        </Grid.Column>
+                    </Grid.Row>
+                </>
+            }
 
             {/* Apache Spark optimization */}
             {sparkIntegrationIsEnabled &&

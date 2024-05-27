@@ -47,6 +47,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         if (props.selectedClinicalAttribute) {
             getStatValidationKaplanMeierByAttr(props.selectedClinicalAttribute)
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -102,6 +103,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting InferenceExperiment data grouped by a clinical attribute', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {
@@ -140,7 +142,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         <div style={{ height: 500 }}>
             <ResponsiveXYChart
                 key="boxplot_chart"
-                ariaLabel="Correlation Boxplot"
+                ariaLabel="Time inference"
                 xScale={{
                     type: 'band',
                     paddingInner: 0.15,

@@ -53,7 +53,7 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
                             Log-Rank test
                         </Button>
                     </Button.Group>
-                </Segment >
+                </Segment>
 
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>

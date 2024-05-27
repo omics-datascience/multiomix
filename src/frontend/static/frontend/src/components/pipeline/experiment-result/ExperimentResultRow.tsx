@@ -37,6 +37,7 @@ export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
                 ? 'p < .001'
                 : value.toExponential(3)
         }
+
         return '0.0'
     }
 
@@ -53,10 +54,10 @@ export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
             <Table.Cell width={4}>{props.row.gem}</Table.Cell>
             <Table.Cell width={4}>{props.row.gene}</Table.Cell>
             <Table.Cell width={2}>{props.row.gene_extra_data?.chromosome ?? '-'}</Table.Cell>
-            <Table.Cell >{props.row.gene_extra_data?.start ?? '-'}</Table.Cell>
-            <Table.Cell >{props.row.gene_extra_data?.end ?? '-'}</Table.Cell>
-            <TableCellWithTitle value={props.row.gene_extra_data?.type ?? '-'}/>
-            <TableCellWithTitle value={props.row.gene_extra_data?.description ?? '-'}/>
+            <Table.Cell>{props.row.gene_extra_data?.start ?? '-'}</Table.Cell>
+            <Table.Cell>{props.row.gene_extra_data?.end ?? '-'}</Table.Cell>
+            <TableCellWithTitle value={props.row.gene_extra_data?.type ?? '-'} />
+            <TableCellWithTitle value={props.row.gene_extra_data?.description ?? '-'} />
             <Table.Cell width={2}>{props.row.correlation.toFixed(4)}</Table.Cell>
             <Table.Cell width={2}>{pValueDisplay}</Table.Cell>
             <Table.Cell width={2}>{adjustedPValueDisplay}</Table.Cell>

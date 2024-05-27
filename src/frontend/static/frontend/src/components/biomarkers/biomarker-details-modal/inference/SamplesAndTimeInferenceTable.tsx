@@ -178,6 +178,5 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 </Grid.Column>
             </Grid.Row>
         </Grid>
-
     )
 }

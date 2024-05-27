@@ -1,6 +1,6 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { Checkbox, DropdownItemProps, Form, Grid, Header, Pagination, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
+import { Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHS, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, Nullable, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
@@ -8,6 +8,10 @@ import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
+import isEqual from 'lodash/isEqual'
+
+// Styles
+import './commonStyles.css'
 
 declare const currentUserId: string
 
@@ -40,6 +44,8 @@ type PaginationCustomFilter = {
     defaultValue: any,
     /** Placeholder for select */
     placeholder?: string,
+    /** Width for component */
+    width?: SemanticWIDTHS,
     /** Type of the filter. By default is 'select' */
     type?: 'select' | 'checkbox',
     /** Indicates if 0 as filter value is accepted */
@@ -91,6 +97,8 @@ interface PaginatedTableProps<T> {
     searchLabel?: string,
     /** Search input's placeholder */
     searchPlaceholder?: string,
+    /** Search input's width */
+    searchWidth?: SemanticWIDTHS,
     /**
      * Websocket key to listen and refresh the table's data. This key must be sent from the backend to the current user's private
      * Websocket channel or to the `channelUrl` URL.
@@ -100,6 +108,8 @@ interface PaginatedTableProps<T> {
     wsChannelUrl?: string,
     /** If specified, an Information popup will be displayed on the top-right corner of the table */
     infoPopupContent?: string,
+    /** `width` prop of Form.Item of the _Entries_ select. */
+    entriesSelectWidth?: SemanticWIDTHS,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
 }
@@ -138,6 +148,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Generates TableControl
         const generalTableControl = getDefaultGeneralTableControl()
+
         if (props.defaultSortProp !== undefined) {
             generalTableControl.sortField = props.defaultSortProp.sortField
             generalTableControl.sortOrderAscendant = props.defaultSortProp.sortOrderAscendant
@@ -187,7 +198,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      * @param prevProps Previous props.
      */
     componentDidUpdate (prevProps: PaginatedTableProps<T>) {
-        if (prevProps.queryParams !== this.props.queryParams) {
+        if (!isEqual(prevProps.queryParams, this.props.queryParams)) {
             this.getData()
 
             this.getFiltersOptions()
@@ -197,6 +208,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     /** Retrieves the filters options for all the custom filters that have the parameter `urlToRetrieveOptions` */
     getFiltersOptions = () => {
         const { customFilters } = this.props
+
         if (customFilters) {
             customFilters.forEach((filter) => {
                 if (filter.urlToRetrieveOptions) {
@@ -243,6 +255,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     handleTableControlChanges = (name: string, value: any, resetPagination: boolean = true, isFilter: boolean = false) => {
         // Updates filter information and makes the request again
         const tableControl = this.state.tableControl
+
         if (!isFilter) {
             tableControl[name] = value
         } else {
@@ -270,28 +283,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             return
         }
 
-        const tableControl = this.state.tableControl
-
-        // Appends pagination, sorting and filter parameters
-        const searchParams = {
-            ...this.props.queryParams,
-            search: tableControl.textFilter,
-            page_size: tableControl.pageSize,
-            page: tableControl.pageNumber,
-            ordering: generatesOrderingQuery(tableControl.sortField, tableControl.sortOrderAscendant)
-        }
-
-        // Appends filters to query
-        if (tableControl.filters) {
-            Object.entries(tableControl.filters).forEach(([key, { allowZero, value }]) => {
-                if ((!allowZero && value) ||
-                    ((allowZero && value !== null && value !== undefined && value !== ''))) {
-                    searchParams[key] = value
-                }
-            })
-        }
-
         this.setState({ gettingData: true }, () => {
+            const tableControl = this.state.tableControl
+
+            // Appends pagination, sorting and filter parameters
+            const searchParams = {
+                ...this.props.queryParams,
+                search: tableControl.textFilter,
+                page_size: tableControl.pageSize,
+                page: tableControl.pageNumber,
+                ordering: generatesOrderingQuery(tableControl.sortField, tableControl.sortOrderAscendant)
+            }
+
+            // Appends filters to query
+            if (tableControl.filters) {
+                Object.entries(tableControl.filters).forEach(([key, { allowZero, value }]) => {
+                    if ((!allowZero && value) ||
+                    ((allowZero && value !== null && value !== undefined && value !== ''))) {
+                        searchParams[key] = value
+                    }
+                })
+            }
+
             ky.get(this.props.urlToRetrieveData, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
                 response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
                     tableControl.totalRowCount = jsonResponse.count
@@ -307,6 +320,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 if (!this.abortController.signal.aborted) {
                     alertGeneralError()
                 }
+
                 console.log('Error getting data ->', err)
             }).finally(() => {
                 if (!this.abortController.signal.aborted) {
@@ -322,6 +336,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
      */
     handleSort (fieldToSort) {
         const tableControl = this.state.tableControl
+
         // If the user has selected other column for sorting...
         if (tableControl.sortField !== fieldToSort) {
             tableControl.sortField = fieldToSort
@@ -341,9 +356,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         const customFiltersArray = this.props.customFilters ?? []
         return customFiltersArray.map((filter) => {
             const filterType = filter.type ?? 'select'
+
             if (filterType === 'select') {
                 // If 'options' is undefined, gets the unique values from data
                 let options: DropdownItemProps[]
+
                 if (filter.options !== undefined) {
                     options = filter.options
                 } else {
@@ -356,8 +373,11 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                         options = uniqueValues.map((value) => ({ key: value, text: value, value }))
                     }
                 }
+
                 return (
                     <Form.Select
+                        width={filter.width ?? 6}
+                        fluid
                         key={filter.keyForServer}
                         label={filter.label}
                         selectOnBlur={false}
@@ -421,8 +441,16 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
 
         // Applies map function
         const tableBody = this.state.elements.length > 0
-            ? this.state.elements.map(this.props.mapFunction)
-            : <NoDataRow colspan={this.props.headers.length} />
+            ? (
+                <Table.Body>
+                    {this.state.elements.map(this.props.mapFunction)}
+                </Table.Body>
+            )
+            : (
+                <Table.Body>
+                    <NoDataRow colspan={this.props.headers.length} />
+                </Table.Body>
+            )
 
         // Computes some extra parameters
         const totalPages = Math.max(1, Math.ceil(tableControl.totalRowCount as number / tableControl.pageSize))
@@ -431,13 +459,27 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
         // Renders customInputs
         const customFilters = this.generateCustomFiltersForm()
 
+        const bodyContent = this.state.gettingData
+            ? (
+                <Table.Body>
+                    <Table.Row>
+                        <Table.Cell colSpan={this.props.headers.length}>
+                            <Header as='h4' textAlign='center'>
+                                <Icon name='spinner' loading /> Loading...
+                            </Header>
+                        </Table.Cell>
+                    </Table.Row>
+                </Table.Body>
+            )
+            : tableBody
+
         return (
             <Grid padded stackable textAlign='center' divided>
                 <Grid.Row>
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
                         {this.props.headerTitle &&
-                            <Header as='h4' textAlign='left'>
+                            <Header as='h4' textAlign='left' className='margin-bottom-1'>
                                 {this.props.headerTitle}
                             </Header>
                         }
@@ -449,29 +491,28 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 onTop={false}
                             />
                         }
-
+                    </Grid.Column>
+                    <Grid.Column width={16}>
                         <Form>
-                            <Form.Group>
+                            <Form.Group className='custom-form'>
                                 {this.props.customElements}
 
-                                {/* Search input */ }
+                                {/* Search input */}
                                 {this.props.showSearchInput &&
-                                    <Form.Input
-                                        width={3}
-                                        icon='search' iconPosition='left'
-                                        label={this.props.searchLabel ?? 'Name/Description'}
-                                        title={this.props.searchPlaceholder}
-                                        placeholder={this.props.searchPlaceholder}
-                                        name='textFilter'
-                                        value={tableControl.textFilter}
-                                        onChange={(_, { name, value }) => {
-                                            this.handleTableControlChanges(name, value)
-                                        }}
-                                    />
+                                        <Form.Input
+                                            width={this.props.searchWidth ?? 3}
+                                            icon='search' iconPosition='left'
+                                            label={this.props.searchLabel ?? 'Name/Description'}
+                                            title={this.props.searchPlaceholder}
+                                            placeholder={this.props.searchPlaceholder}
+                                            name='textFilter'
+                                            value={tableControl.textFilter}
+                                            onChange={(_, { name, value }) => {
+                                                this.handleTableControlChanges(name, value)
+                                            }}
+                                        />
                                 }
-
                                 {customFilters}
-
                                 {/* Page size */}
                                 <Form.Select
                                     label='Entries'
@@ -479,6 +520,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                     selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'
+                                    fluid
+                                    width={this.props.entriesSelectWidth ?? 1}
                                     value={tableControl.pageSize}
                                     onChange={(_, { name, value }) => {
                                         this.handleTableControlChanges(name, value)
@@ -486,7 +529,10 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 />
                             </Form.Group>
                         </Form>
-
+                    </Grid.Column>
+                </Grid.Row>
+                <Grid.Row>
+                    <Grid.Column>
                         {/* Table */}
                         <Table celled sortable>
                             {/* Header */}
@@ -527,9 +573,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                             </Table.Header>
 
                             {/* Body */}
-                            <Table.Body>
-                                {tableBody}
-                            </Table.Body>
+                            {bodyContent}
                         </Table>
                     </Grid.Column>
                 </Grid.Row>

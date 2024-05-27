@@ -118,6 +118,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         const fieldsOfInterest: (string | number)[] = []
         eventValues.forEach((eventValue) => {
             const eventValueUpper = eventValue.toString().toUpperCase()
+
             // Usually, the number 1 is used to indicate an event of interest
             if (eventValueUpper === '1' || COMMON_INTEREST_VALUES.find((commonValue) => eventValueUpper.includes(commonValue))) {
                 fieldsOfInterest.push(eventValue)
@@ -205,7 +206,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
 
     render () {
         if (this.state.gettingSurvivalData) {
-            return <LoadingPanel/>
+            return <LoadingPanel />
         }
 
         const survivalColumnsTupleOptions: DropdownItemProps[] = this.state.survivalColumns.map((survColumn) => {
@@ -252,7 +253,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     selection
                                     clearable
                                     multiple
-                                    name={'fieldsInterest'}
+                                    name="fieldsInterest"
                                     value={this.state.fieldsInterest}
                                     onChange={(_, { name, value }) => this.handleChange(name, value)}
                                     placeholder='Select some fields'
@@ -310,7 +311,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             yAxisLabel='Probability'
                         />
 
-                        <LogRankTestStats logrankTest={this.state.geneLogrank}/>
+                        <LogRankTestStats logrankTest={this.state.geneLogrank} />
                     </Grid.Column>
                     <Grid.Column>
                         <Header className='survival-header'>{this.props.selectedRow?.gem}</Header>
@@ -322,7 +323,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             yAxisLabel='Probability'
                         />
 
-                        <LogRankTestStats logrankTest={this.state.gemLogrank}/>
+                        <LogRankTestStats logrankTest={this.state.gemLogrank} />
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

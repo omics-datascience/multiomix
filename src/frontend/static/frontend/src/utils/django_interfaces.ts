@@ -64,6 +64,51 @@ enum PValuesAdjustmentMethod {
 }
 
 /**
+ * Possible states when retrieving an experiment result
+ */
+enum DjangoExperimentResultInternalCode {
+    DOES_NOT_EXIST = 1,
+    CONNECTION_TIMEOUT = 2,
+    INVALID_PARAMS = 3
+}
+
+/**
+ * Possible states when gets the number of sample in common between
+ * two datasets. Same as CommonSamplesStatusErrorCode Enum in the Python code
+ */
+enum DjangoSamplesInCommonResultInternalCode {
+    DATASET_DOES_NOT_EXISTS = 1,
+    SOURCE_TYPE_DOES_NOT_EXISTS = 2,
+    INVALID_PARAMS = 3
+}
+
+/**
+ * Possible states when retrieve data for a correlation graph
+ */
+enum DjangoCorrelationGraphInternalCode {
+    INVALID_GENE_OR_GEM_NAMES = 1,
+    EXPERIMENT_DOES_NOT_EXISTS = 2,
+    INVALID_PARAMS = 3
+}
+
+/**
+ * Possible states when adds/removes an User to/from an Institution
+ */
+enum DjangoAddRemoveUserToInstitutionInternalCode {
+    USER_DOES_NOT_EXIST = 1,
+    INSTITUTION_DOES_NOT_EXIST = 2,
+    INVALID_PARAMS = 3,
+    CANNOT_REMOVE_YOURSELF = 4
+}
+
+/**
+ * Possible states when uploads a file in the Datasets/Multiomix menu
+ */
+enum DjangoUserFileUploadErrorInternalCode {
+    INVALID_FORMAT_NON_NUMERIC = 1
+}
+
+/**
  * A simple structure Experiment's source's CGDSDataset info
  */
 interface SourceSimpleCGDSDataset {
@@ -132,6 +177,64 @@ interface DjangoUser {
 }
 
 /**
+ * Django Institution model interface
+ * but with only some fields
+ */
+interface DjangoInstitutionSimple {
+    id: number,
+    name: string
+}
+
+/**
+ * Tags are different for Files and Experiments
+ */
+enum TagType {
+    FILE = 1,
+    EXPERIMENT = 2
+}
+
+/**
+ * Django Tag model interface
+ */
+interface DjangoTag {
+    id: Nullable<number>,
+    name: string,
+    description: string,
+    parent_tag: Nullable<DjangoTag>,
+    type: TagType
+}
+
+/**
+ * A simple structure of UserFile model
+ */
+interface DjangoSimpleUserFile {
+    id?: number
+    name: string,
+    description: Nullable<string>,
+    file_type: FileType,
+}
+
+/**
+ * Django UserFile model interface
+ */
+interface DjangoUserFile extends DjangoSimpleUserFile {
+    id?: number,
+    tag: DjangoTag,
+    upload_date?: string,
+    institutions: DjangoInstitutionSimple[],
+    is_private_or_institution_admin: boolean,
+    number_of_rows: number,
+    number_of_samples: number,
+    contains_nan_values: boolean,
+    column_used_as_index: string,
+    is_cpg_site_id: boolean,
+    platform: DjangoMethylationPlatform,
+    user: DjangoUserSimple,
+    survival_columns?: DjangoSurvivalColumnsTupleSimple[],
+    is_public: boolean
+}
+
+/**
  * Django Model api_service.ExperimentSource
  */
 interface DjangoExperimentSource {
@@ -148,6 +251,16 @@ interface DjangoExperimentSource {
 interface DjangoExperimentClinicalSource extends DjangoExperimentSource {
     user_file: DjangoUserFile
     extra_cgds_dataset: SourceSimpleCGDSDataset
+}
+
+/**
+ * Possible types of an experiment to differentiate the pipeline
+ */
+enum ExperimentType {
+    ALL = 0,
+    MIRNA = 1,
+    CNA = 2,
+    METHYLATION = 3
 }
 
 /**
@@ -272,13 +385,30 @@ interface DjangoMiRNAGeneInteractionJSON {
 type ModulectorSourceLink = { source: string, url: string }
 
 /**
- * JSON Structure of miRNA data info
+ * JSON Structure of miRNA data from Modulector.
  */
 interface DjangoMiRNADataJSON {
     aliases: string[],
     mirna_sequence: string,
     mirbase_accession_id: string,
     links: ModulectorSourceLink[],
+}
+
+/** Structure of `ucsc_cpg_islands` field in methylation data from Modulector */
+type UCSCCpGIsland = {
+    cpg_island: string,
+    relation: string
+}
+
+/**
+ * JSON Structure of methylation data from Modulector.
+ */
+interface DjangoMethylationDataJSON {
+    name: string,
+    aliases: string[],
+    chromosome_position: string,
+    ucsc_cpg_islands: UCSCCpGIsland[],
+    genes: { [gene: string]: string[] }
 }
 
 /**
@@ -308,47 +438,6 @@ interface DjangoMiRNADrugsJSON {
 }
 
 /**
- * Django Tag model interface
- */
-interface DjangoTag {
-    id: Nullable<number>,
-    name: string,
-    description: string,
-    parent_tag: Nullable<DjangoTag>,
-    type: TagType
-}
-
-/**
- * A simple structure of UserFile model
- */
-interface DjangoSimpleUserFile {
-    id?: number
-    name: string,
-    description: Nullable<string>,
-    file_type: FileType,
-}
-
-/**
- * Django UserFile model interface
- */
-interface DjangoUserFile extends DjangoSimpleUserFile {
-    id?: number,
-    tag: DjangoTag,
-    upload_date?: string,
-    institutions: DjangoInstitutionSimple[],
-    is_private_or_institution_admin: boolean,
-    number_of_rows: number,
-    number_of_samples: number,
-    contains_nan_values: boolean,
-    column_used_as_index: string,
-    is_cpg_site_id: boolean,
-    platform: DjangoMethylationPlatform,
-    user: DjangoUserSimple,
-    survival_columns?: DjangoSurvivalColumnsTupleSimple[],
-    is_public: boolean
-}
-
-/**
  * Django Institution model interface
  */
 interface DjangoInstitution {
@@ -358,15 +447,6 @@ interface DjangoInstitution {
     email: string,
     telephone_number: string,
     users: DjangoUser[]
-}
-
-/**
- * Django Institution model interface
- * but with only some fields
- */
-interface DjangoInstitutionSimple {
-    id: number,
-    name: string
 }
 
 /**
@@ -466,51 +546,6 @@ interface DjangoResponseGetCorrelationGraph extends DjangoCommonResponse<DjangoC
 }
 
 /**
- * Possible states when retrieving an experiment result
- */
-enum DjangoExperimentResultInternalCode {
-    DOES_NOT_EXIST = 1,
-    CONNECTION_TIMEOUT = 2,
-    INVALID_PARAMS = 3
-}
-
-/**
- * Possible states when gets the number of sample in common between
- * two datasets. Same as CommonSamplesStatusErrorCode Enum in the Python code
- */
-enum DjangoSamplesInCommonResultInternalCode {
-    DATASET_DOES_NOT_EXISTS = 1,
-    SOURCE_TYPE_DOES_NOT_EXISTS = 2,
-    INVALID_PARAMS = 3
-}
-
-/**
- * Possible states when retrieve data for a correlation graph
- */
-enum DjangoCorrelationGraphInternalCode {
-    INVALID_GENE_OR_GEM_NAMES = 1,
-    EXPERIMENT_DOES_NOT_EXISTS = 2,
-    INVALID_PARAMS = 3
-}
-
-/**
- * Possible states when adds/removes an User to/from an Institution
- */
-enum DjangoAddRemoveUserToInstitutionInternalCode {
-    USER_DOES_NOT_EXIST = 1,
-    INSTITUTION_DOES_NOT_EXIST = 2,
-    INVALID_PARAMS = 3,
-    CANNOT_REMOVE_YOURSELF = 4
-}
-
-/**
- * Possible states when uploads a file in the Datasets/Multiomix menu
- */
-enum DjangoUserFileUploadErrorInternalCode {
-    INVALID_FORMAT_NON_NUMERIC = 1
-}
-
-/**
  * Django error response when uploads a file in the Datasets/Multiomix menu
  */
 interface DjangoResponseUploadUserFileError {
@@ -526,24 +561,6 @@ interface DjangoResponseSyncCGDSStudyResult {
         code: DjangoSyncCGDSStudyResponseCode,
         message: string
     }
-}
-
-/**
- * Possible types of an experiment to differentiate the pipeline
- */
-enum ExperimentType {
-    ALL = 0,
-    MIRNA = 1,
-    CNA = 2,
-    METHYLATION = 3
-}
-
-/**
- * Tags are different for Files and Experiments
- */
-enum TagType {
-    FILE = 1,
-    EXPERIMENT = 2
 }
 
 /** Django BreuschPaganTest model */
@@ -654,6 +671,7 @@ export {
     DjangoGoldfeldQuandtTest,
     DjangoLinearityTest,
     DjangoMiRNADataJSON,
+    DjangoMethylationDataJSON,
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
     DjangoSurvivalColumnsTupleSimple

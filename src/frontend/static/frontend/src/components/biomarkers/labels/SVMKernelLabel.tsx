@@ -18,6 +18,7 @@ interface SVMKernelLabelProps {
 export const SVMKernelLabel = (props: SVMKernelLabelProps) => {
     let color: SemanticCOLORS
     let description: string
+
     switch (props.kernel) {
         case SVMKernel.LINEAR:
             color = 'green'

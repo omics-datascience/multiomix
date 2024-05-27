@@ -36,6 +36,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         if (props.selectedStatisticalValidation.id) {
             getStatValidationBestFeatures()
         }
+
         return () => {
             // Cleanup: cancel the ongoing request when component unmounts
             abortController.current.abort()
@@ -58,6 +59,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
             if (!abortController.current.signal.aborted) {
                 alertGeneralError()
             }
+
             console.log('Error getting StatisticalValidation best features', err)
         }).finally(() => {
             if (!abortController.current.signal.aborted) {

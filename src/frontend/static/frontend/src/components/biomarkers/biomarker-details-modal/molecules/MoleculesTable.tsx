@@ -40,7 +40,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             ]}
             queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
             customFilters={[
-                { label: 'Type', keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions }
+                { label: 'Type', keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions, width: 6 }
             ]}
             defaultSortProp={{ sortField: 'identifier', sortOrderAscendant: true }}
             showSearchInput
@@ -48,25 +48,25 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             searchLabel='Sample'
             searchPlaceholder='Search by identifier'
             urlToRetrieveData={urlBiomarkerMolecules}
-            mapFunction={(molecule: BiomarkerMolecule) => {
-                return (
-                    <Table.Row key={molecule.identifier} active={props.selectedMolecule?.id === molecule.id}>
-                        <TableCellWithTitle className='align-center' value={molecule.identifier} />
-                        <Table.Cell><MoleculeTypeLabel moleculeType={molecule.type} /></Table.Cell>
-                        {/* TODO: add dblClick to show its details too */}
-                        <Table.Cell width={1}>
-                            {/* Details button */}
-                            <Icon
-                                name='chart bar'
-                                className='clickable'
-                                color='blue'
-                                title='Details'
-                                onClick={() => props.openMoleculeDetails(molecule)}
-                            />
-                        </Table.Cell>
-                    </Table.Row>
-                )
-            }}
+            searchWidth={6}
+            entriesSelectWidth={3}
+            mapFunction={(molecule: BiomarkerMolecule) => (
+                <Table.Row key={molecule.identifier} active={props.selectedMolecule?.identifier === molecule.identifier && props.selectedMolecule.type === molecule.type}>
+                    <TableCellWithTitle className='align-center' value={molecule.identifier} />
+                    <Table.Cell><MoleculeTypeLabel moleculeType={molecule.type} /></Table.Cell>
+                    {/* TODO: add dblClick to show its details too */}
+                    <Table.Cell width={1}>
+                        {/* Details button */}
+                        <Icon
+                            name='chart bar'
+                            className='clickable'
+                            color='blue'
+                            title='Details'
+                            onClick={() => props.openMoleculeDetails(molecule)}
+                        />
+                    </Table.Cell>
+                </Table.Row>
+            )}
         />
     )
 }

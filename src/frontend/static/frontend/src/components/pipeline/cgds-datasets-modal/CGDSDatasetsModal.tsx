@@ -53,7 +53,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
 
     return (
         <Modal size='fullscreen' open={props.showCGDSDatasetsModal} onClose={props.handleClose} centered={false}>
-            <Header icon='cloud' content='Select dataset from cBioPortal'/>
+            <Header icon='cloud' content='Select dataset from cBioPortal' />
             <Modal.Content className='align-center'>
                 <PaginatedTable<DjangoCGDSStudy>
                     headers={getDefaultHeaders()}
@@ -62,7 +62,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                     customFilters={[
                         { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                     ]}
-                    queryParams={{ file_type: props.selectingFileType } }
+                    queryParams={{ file_type: props.selectingFileType }}
                     mapFunction={(CGDSStudy: DjangoCGDSStudy) => {
                         return (
                             <Table.Row key={CGDSStudy.id as number}

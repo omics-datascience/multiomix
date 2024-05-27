@@ -5,6 +5,6 @@ import './css/site-policy.css'
 import { SitePolicy } from './components/site-policy/SitePolicy'
 
 ReactDOM.render(
-    <SitePolicy/>,
+    <SitePolicy />,
     document.getElementById('site-policy-app')
 )

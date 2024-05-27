@@ -66,6 +66,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                                     value={fitnessFunctionParameters.clusteringParameters.nClusters}
                                     onChange={(_, { name, value }) => {
                                         const numVal = Number(value)
+
                                         if (numVal < 2) {
                                             handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
                                         } else if (numVal > 10) {
@@ -135,6 +136,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                 )
         }
     }
+
     return (
         <>
             <Form.Select

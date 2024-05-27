@@ -108,6 +108,7 @@ export const Renderer = (props: RendererProps) => {
 
     const yLabels = allYGroups.map((name, i) => {
         const yPos = yScale(name)
+
         if (yPos && i % 2 === 0) {
             return (
                 <text
