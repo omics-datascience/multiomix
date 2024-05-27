@@ -49,4 +49,7 @@ WORKDIR /src
 ADD src .
 RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt
 
+# Adds execution permission to src/tools scripts
+RUN chmod +x /src/tools/*.sh
+
 ENTRYPOINT ["/bin/bash", "-c", "/src/entrypoint_celery.sh"]

@@ -50,6 +50,9 @@ ADD src .
 RUN pip3 install -r /config/requirements.txt && npm --prefix /src/frontend/static/frontend i \
     && npm --prefix /src/frontend/static/frontend run prod
 
+# Adds execution permission to src/tools scripts
+RUN chmod +x /src/tools/*.sh
+
 # Media folder
 VOLUME /src/media
 
