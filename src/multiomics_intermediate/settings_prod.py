@@ -32,7 +32,8 @@ CHANNEL_LAYERS = {
 
 # +++++ Custom settings +++++
 
-# MongoDB's credentials (should be set as ENV vars)
+# MongoDB's credentials (should be set as ENV vars). This is different from the settings.py as here the parameters
+# are mandatory (will raise an error if not defined)
 MONGO_SETTINGS = {
     'username': os.environ['MONGO_USERNAME'],
     'password': os.environ['MONGO_PASSWORD'],
