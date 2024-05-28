@@ -707,7 +707,14 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                 disabledFunction: (actualValues) => actualValues.visibility === 'private',
                 width: 3
             },
-            { label: 'File type', keyForServer: 'file_type', defaultValue: FileType.ALL, options: getFileTypeSelectOptions(), width: 2 }
+            {
+                label: 'File type',
+                keyForServer: 'file_type',
+                defaultValue: FileType.ALL,
+                options: getFileTypeSelectOptions(),
+                clearable: false,
+                width: 2
+            }
         ]
     }
 
