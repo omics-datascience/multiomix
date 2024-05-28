@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { PaginatedTable } from '../../common/PaginatedTable'
+import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
 import { Biomarker, BiomarkerState, TrainedModelForTable, TrainedModelState } from '../types'
 import { Button, Form, Header, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
@@ -173,7 +173,15 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
         stateFilter = []
         extraQueryParams = { state: BiomarkerState.COMPLETED }
     } else {
-        stateFilter = [{ label: 'State', keyForServer: 'state', defaultValue: '', placeholder: 'State', options: biomarkerStateOptions }]
+        const stateOption: PaginationCustomFilter = {
+            label: 'State',
+            keyForServer: 'state',
+            defaultValue: '',
+            placeholder: 'State',
+            options: biomarkerStateOptions,
+            width: 3
+        }
+        stateFilter = [stateOption]
         extraQueryParams = {}
     }
 
@@ -210,7 +218,14 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
                 customFilters={[
-                    { label: 'Model type', keyForServer: 'fitness_function', defaultValue: '', placeholder: 'Model type', options: fitnessFunctionsOptions },
+                    {
+                        label: 'Model type',
+                        keyForServer: 'fitness_function',
+                        defaultValue: '',
+                        placeholder: 'Model type',
+                        options: fitnessFunctionsOptions,
+                        width: 3
+                    },
                     ...stateFilter
                 ]}
                 customElements={

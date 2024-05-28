@@ -77,12 +77,20 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
 
         return [
             { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 },
-            { label: 'Experiment type', keyForServer: 'type', defaultValue: ExperimentType.ALL, options: experimentTypeOptions, width: 2 },
+            {
+                label: 'Experiment type',
+                keyForServer: 'type',
+                defaultValue: ExperimentType.ALL,
+                options: experimentTypeOptions,
+                clearable: false,
+                width: 2
+            },
             {
                 label: 'Correlation method',
                 keyForServer: 'correlation_method',
                 defaultValue: CorrelationMethod.ALL,
                 options: selectCorrelationMethodsOptions,
+                clearable: false,
                 width: 2
             }
         ]
