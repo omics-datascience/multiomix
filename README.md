@@ -68,6 +68,9 @@ Every time you want to work with Multiomix, you need to follow the below steps:
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q sync_datasets`
    1. If you want to check Task in the GUI you can run [Flower](https://flower.readthedocs.io/en/latest/index.html) `python3 -m celery -A multiomics_intermediate flower`
 
+    **NOTE:** maybe in Windows is needed to add `--pool=solo` to the previous commands. Example: `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis --concurrency 1 --pool=solo`
+
+
 ### Linter and Typescript
 
 All the scripts mentioned below must be run inside the `src/frontend/static/frontend` folder.
