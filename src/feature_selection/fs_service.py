@@ -182,7 +182,6 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
         )
     elif experiment.algorithm == FeatureSelectionAlgorithm.GA:
         # Genetic Algorithms metaheuristic
-        print('Running GA')
         genetic_algorithms_parameters = algorithm_parameters['GA']
 
         ga_iterations = int(genetic_algorithms_parameters['numberOfIterations'])
