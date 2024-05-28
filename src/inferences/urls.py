@@ -9,7 +9,12 @@ urlpatterns = [
     ),
     path('biomarker-inference-experiments/<int:pk>/', views.InferenceExperimentDestroy.as_view()),
     path(
-        'biomarker-inference-experiments/<int:pk>/',
+        'biomarker-inference-experiments-details',
+        views.BiomarkerStatisticalInferenceExperimentsDetails.as_view(),
+        name='biomarker_inference_experiments_details'
+    ),
+    path(
+        'biomarker-inference-experiments-details/<int:pk>/',
         views.BiomarkerStatisticalInferenceExperimentsDetails.as_view()
     ),
     path(
