@@ -60,6 +60,7 @@ def __save_molecule_identifiers(created_stat_validation: StatisticalValidation,
             statistical_validation=created_stat_validation
         )
 
+
 def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_temp_file_path: str,
                               clinical_temp_file_path: str, is_aborted: AbortEvent):
     """
@@ -85,7 +86,7 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     n_samples = clinical_df.shape[0]
     if n_samples < GRID_SEARCH_CV_FOLDS:
         raise NumberOfSamplesFewerThanCVFolds(f'Number of samples ({n_samples}) are fewer than CV number of folds '
-                               f'({GRID_SEARCH_CV_FOLDS})')
+                                              f'({GRID_SEARCH_CV_FOLDS})')
 
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
     check_if_stopped(is_aborted, ExperimentStopped)
@@ -126,6 +127,7 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
         check_if_stopped(is_aborted, ExperimentStopped)
         stat_validation.save()
 
+
 def prepare_and_compute_stat_validation(stat_validation: StatisticalValidation,
                                         is_aborted: AbortEvent) -> Tuple[str, str]:
     """
@@ -140,7 +142,7 @@ def prepare_and_compute_stat_validation(stat_validation: StatisticalValidation,
     # Generates needed DataFrames
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(stat_validation,
-                                                                                            samples_in_common)
+                                                                                             samples_in_common)
 
     __compute_stat_validation(stat_validation, molecules_temp_file_path, clinical_temp_file_path, is_aborted)
 
@@ -157,6 +159,7 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
     @param model_parameters: A dict with all the model parameters.
     @param is_aborted: Method to call to check if the experiment has been stopped.
     """
+
     def score_svm_rf(model: SurvModel, x: pd.DataFrame, y: np.ndarray) -> float:
         """Gets the C-Index for an SVM/RF regression prediction."""
         prediction = model.predict(x)
@@ -326,7 +329,7 @@ def get_molecules_and_clinical_df(stat_validation: StatisticalValidation) -> Tup
 
     # Generates needed DataFrames
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(stat_validation,
-                                                                                                  samples_in_common)
+                                                                                             samples_in_common)
 
     # Gets both DataFrames without NaNs values
     molecules_df, _clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
@@ -335,9 +338,8 @@ def get_molecules_and_clinical_df(stat_validation: StatisticalValidation) -> Tup
     return molecules_df, clinical_data
 
 
-
 def prepare_and_compute_trained_model(trained_model: TrainedModel, model_parameters: Dict,
-                                        is_aborted: AbortEvent) -> Tuple[str, str]:
+                                      is_aborted: AbortEvent) -> Tuple[str, str]:
     """
     Gets samples in common, generates needed DataFrames and finally computes the TrainedModel's training process.
     @param trained_model: TrainedModel instance.
@@ -357,6 +359,3 @@ def prepare_and_compute_trained_model(trained_model: TrainedModel, model_paramet
                             is_aborted)
 
     return molecules_temp_file_path, clinical_temp_file_path
-
-
-
