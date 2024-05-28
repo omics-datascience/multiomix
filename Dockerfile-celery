@@ -45,8 +45,10 @@ RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev l
 
 # Installs Python dependencies
 ADD config/requirements_celery.txt /config/requirements.txt
+RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt
+
+# Adds source
 WORKDIR /src
 ADD src .
-RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt
 
 ENTRYPOINT ["/bin/bash", "-c", "/src/entrypoint_celery.sh"]
