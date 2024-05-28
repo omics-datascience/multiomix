@@ -210,9 +210,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
 
             console.log('Error getting model details data', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingModelDetails(false)
-            }
+            setLoadingModelDetails(false)
         })
     }
 

@@ -62,9 +62,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
 
             console.log('Error getting StatisticalValidation best features', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoading(false)
-            }
+            setLoading(false)
         })
     }
 

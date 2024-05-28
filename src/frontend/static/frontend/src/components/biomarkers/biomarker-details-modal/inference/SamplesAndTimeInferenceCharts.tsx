@@ -106,9 +106,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
 
             console.log('Error getting InferenceExperiment data grouped by a clinical attribute', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingChartData(false)
-            }
+            setLoadingChartData(false)
         })
     }
 

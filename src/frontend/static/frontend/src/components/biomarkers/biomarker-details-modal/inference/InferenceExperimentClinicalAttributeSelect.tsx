@@ -46,9 +46,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
 
             console.log('Error getting InferenceExperiments clinical attributes', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingClinicalAttributes(false)
-            }
+            setLoadingClinicalAttributes(false)
         })
     }
 

@@ -101,9 +101,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
             console.log('Error getting StatisticalValidation clinical attributes data', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingClinicalAttributes(false)
-            }
+            setLoadingClinicalAttributes(false)
         })
     }
 
@@ -127,9 +125,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
             console.log('Error getting StatisticalValidation KaplanMeier by clustering model', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingKaplanMeier(false)
-            }
+            setLoadingKaplanMeier(false)
         })
     }
 
@@ -159,9 +155,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
             console.log('Error getting StatisticalValidation KaplanMeier by clinical attribute', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingKaplanMeier(false)
-            }
+            setLoadingKaplanMeier(false)
         })
     }
 
@@ -269,7 +263,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                         >
                             <Modal.Header>
                                 <Icon name='users' />
-                                        Samples and clusters
+                                Samples and clusters
                             </Modal.Header>
                             <Modal.Content>
                                 <SamplesAndGroupsTable selectedStatisticalValidation={props.selectedStatisticalValidation} />
