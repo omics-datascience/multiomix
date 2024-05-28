@@ -242,6 +242,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 showSearchInput
                 searchLabel='Name'
                 searchPlaceholder='Search by name or description'
+                searchWidth={4}
+                entriesSelectWidth={2}
                 urlToRetrieveData={urlBiomarkerTrainedModels}
                 updateWSKey='update_trained_models'
                 mapFunction={(trainedModel: TrainedModelForTable) => {
