@@ -126,7 +126,7 @@ def eval_trained_model(self, trained_model_pk: int, model_parameters: Dict) -> N
     # Due to Celery getting old jobs from the queue, we need to check if the experiment still exists
     try:
         trained_model: TrainedModel = TrainedModel.objects.get(pk=trained_model_pk)
-    except StatisticalValidation.DoesNotExist:
+    except TrainedModel.DoesNotExist:
         logging.error(f'TrainedModel {trained_model_pk} does not exist')
         return
 

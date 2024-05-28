@@ -727,14 +727,14 @@ class BiomarkerNewTrainedModel(APIView):
                 cross_validation_folds=cross_validation_folds,
             )
 
-            # Adds the experiment to the TaskQueue and gets Task id
-            async_res: AbortableAsyncResult = eval_trained_model.apply_async(
-                (trained_model.pk, model_parameters),
-                queue='stats'
-            )
+        # Adds the experiment to the TaskQueue and gets Task id
+        async_res: AbortableAsyncResult = eval_trained_model.apply_async(
+            (trained_model.pk, model_parameters),
+            queue='stats'
+        )
 
-            trained_model.task_id = async_res.task_id
-            trained_model.save(update_fields=['task_id'])
+        trained_model.task_id = async_res.task_id
+        trained_model.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 

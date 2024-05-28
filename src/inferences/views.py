@@ -125,7 +125,7 @@ class PredictionExperimentSubmit(APIView):
             # Methylation source
             methylation_source_type = get_source_pk(request.POST, 'methylationType')
             methylation_source, _methylation_clinical = get_experiment_source(methylation_source_type, request,
-                                                                             FileType.METHYLATION, 'methylation')
+                                                                              FileType.METHYLATION, 'methylation')
             if biomarker.number_of_methylations > 0 and methylation_source is None:
                 raise ValidationError('Invalid Methylation source')
 
@@ -145,13 +145,12 @@ class PredictionExperimentSubmit(APIView):
                 methylation_source=methylation_source,
             )
 
-            # Adds the experiment to the TaskQueue and gets Task id
-            async_res: AbortableAsyncResult = eval_inference_experiment.apply_async((inference_experiment.pk,),
-                                                                                    queue='inference')
+        # Adds the experiment to the TaskQueue and gets Task id
+        async_res: AbortableAsyncResult = eval_inference_experiment.apply_async((inference_experiment.pk,),
+                                                                                queue='inference')
 
-            inference_experiment.task_id = async_res.task_id
-            inference_experiment.save(update_fields=['task_id'])
-
+        inference_experiment.task_id = async_res.task_id
+        inference_experiment.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 
@@ -176,7 +175,7 @@ class StopInferenceExperiment(APIView):
             try:
                 # Gets Biomarker and FSExperiment
                 experiment: InferenceExperiment = InferenceExperiment.objects.get(pk=inference_experiment_id,
-                                                                                 biomarker__user=request.user)
+                                                                                  biomarker__user=request.user)
 
                 logging.warning(f'Aborting InferenceExperiment {inference_experiment_id}')
 
@@ -226,6 +225,7 @@ class InferenceExperimentDestroy(generics.DestroyAPIView):
 
 class SampleAndClusterPredictionSamples(generics.ListAPIView):
     """Gets all the pairs of samples and cluster for a specific inference experiment (that used a clustering model)."""
+
     @staticmethod
     def __filter_by_cluster(samples_and_clusters: QuerySet[SampleAndClusterPrediction], request: HttpRequest):
         """

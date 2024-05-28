@@ -153,12 +153,12 @@ class FeatureSelectionSubmit(APIView):
             # Adds Feature Selection experiment to the ThreadPool
             self.__create_target_biomarker(fs_experiment)
 
-            async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
-                (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
-                 cross_validation_parameters), queue='feature_selection')
+        async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
+            (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
+             cross_validation_parameters), queue='feature_selection')
 
-            fs_experiment.task_id = async_res.task_id
-            fs_experiment.save(update_fields=['task_id'])
+        fs_experiment.task_id = async_res.task_id
+        fs_experiment.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 
