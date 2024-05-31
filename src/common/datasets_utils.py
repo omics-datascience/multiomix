@@ -328,6 +328,13 @@ def check_sample_classes(trained_model: TrainedModel, clinical_data: np.ndarray,
         trained_model.save(update_fields=['cross_validation_folds', 'cv_folds_modified'])
 
 
+def check_empty_dataframe_or_exception(molecules_df: pd.DataFrame):
+    """Checks if the DataFrame is empty and raises an EmptyDataset if so."""
+    if molecules_df.size == 0:
+        raise EmptyDataset('The dataset is empty, maybe the requested molecules don\'t exist in the dataset or all '
+                           'the samples where removed during the filtering process (to remove NaN/Inf values).')
+
+
 def check_molecules_and_samples_number_or_exception(classifier: SurvModel, molecules_df: pd.DataFrame):
     """
     First, checks if the number of samples is bigger than 0. Then checks if the number of features used to train the
@@ -338,9 +345,7 @@ def check_molecules_and_samples_number_or_exception(classifier: SurvModel, molec
     @raise NoValidSamples: If the number of samples is 0.
     @raise NoValidMolecules: If the number of features used to train the model is bigger than the number of molecules.
     """
-    if molecules_df.size == 0:
-        raise EmptyDataset('The dataset is empty, maybe the requested molecules don\'t exist in the dataset or all '
-                           'the samples where removed during the filtering process (to remove NaN/Inf values).')
+    check_empty_dataframe_or_exception(molecules_df)
 
     # Gets number of features from the fitted model
     n_features_model = classifier.n_features_in_
