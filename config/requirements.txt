@@ -18,7 +18,7 @@ requests==2.23.0
 django-stubs==1.11.0
 psycopg2-binary==2.9.9
 statsmodels==0.14.0
-django-webpack-loader==0.7.0
+django-webpack-loader==3.0.0
 django-email-verification==0.0.7
 lifelines==0.27.8
 ggca==0.4.1
