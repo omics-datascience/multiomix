@@ -4,7 +4,7 @@ import numpy as np
 from typing import Union, Optional, cast, List, Literal, Tuple, Any
 import pandas as pd
 from api_service.models import ExperimentSource
-from common.exceptions import NoSamplesInCommon, NumberOfSamplesFewerThanCVFolds, NoValidMolecules, NoValidSamples
+from common.exceptions import NoSamplesInCommon, NumberOfSamplesFewerThanCVFolds, NoValidMoleculesForModel, EmptyDataset
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.fs_algorithms import SurvModel
 from feature_selection.models import FSExperiment, TrainedModel
@@ -339,7 +339,8 @@ def check_molecules_and_samples_number_or_exception(classifier: SurvModel, molec
     @raise NoValidMolecules: If the number of features used to train the model is bigger than the number of molecules.
     """
     if molecules_df.size == 0:
-        raise NoValidSamples('No valid samples in the dataset')
+        raise EmptyDataset('The dataset is empty, maybe the requested molecules don\'t exist in the dataset or all '
+                           'the samples where removed during the filtering process (to remove NaN/Inf values).')
 
     # Gets number of features from the fitted model
     n_features_model = classifier.n_features_in_
@@ -347,5 +348,6 @@ def check_molecules_and_samples_number_or_exception(classifier: SurvModel, molec
     # Gets number of features from the dataset
     n_features_dataset = molecules_df.shape[1]
     if n_features_model != n_features_dataset:
-        raise NoValidMolecules(f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
-                               f'{n_features_dataset}')
+        raise NoValidMoleculesForModel(
+            f'Not valid molecules to compute the experiment. Expected {n_features_model}, got '
+            f'{n_features_dataset}')

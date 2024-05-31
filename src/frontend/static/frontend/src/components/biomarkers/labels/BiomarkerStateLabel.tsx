@@ -90,12 +90,12 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 title: 'No features were found. Try changing some parameters and try again'
             }
             break
-        case BiomarkerState.NO_VALID_SAMPLES:
+        case BiomarkerState.EMPTY_DATASET:
             stateIcon = {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'After filtering invalid values as NaN or inf, there were no samples to make the inference. Try changing the used dataset or fix your data and try again'
+                title: 'After filtering out invalid values such as NaN or inf, there were no molecules or samples to make inference. Perhaps the requested molecules do not exist in the dataset, or all patients contain NaN or inf data. Try changing the dataset used or correct your data and try again.'
             }
             break
         case BiomarkerState.NO_VALID_MOLECULES:
@@ -103,7 +103,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'browser',
                 color: 'red',
                 loading: false,
-                title: 'The dataset used has not enough molecules to compute the experiment (i.e.: has less molecules than the specified in the Biomarker). Select other dataset and try again'
+                title: 'The dataset used has not enough molecules to compute the experiment (i.e.: has different molecules than the specified in the Biomarker). Select other dataset and try again'
             }
             break
         case BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:

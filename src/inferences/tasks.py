@@ -9,7 +9,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from inferences.inference_service import prepare_and_compute_inference_experiment
 from multiomics_intermediate.celery import app
 from biomarkers.models import BiomarkerState
-from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoValidSamples, NoValidMolecules
+from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, EmptyDataset, NoValidMoleculesForModel
 from inferences.models import InferenceExperiment
 
 
@@ -61,10 +61,10 @@ def eval_inference_experiment(self, experiment_pk: int):
     except NoSamplesInCommon:
         logging.error('No samples in common')
         experiment.state = BiomarkerState.NO_SAMPLES_IN_COMMON
-    except NoValidSamples:
-        logging.error(f'InferenceExperiment {experiment.pk} has no valid samples')
-        experiment.state = BiomarkerState.NO_VALID_SAMPLES
-    except NoValidMolecules as ex:
+    except EmptyDataset:
+        logging.error(f'InferenceExperiment {experiment.pk} has no valid samples/molecules')
+        experiment.state = BiomarkerState.EMPTY_DATASET
+    except NoValidMoleculesForModel as ex:
         logging.error(f'InferenceExperiment {experiment.pk} has no valid molecules: {ex}')
         experiment.state = BiomarkerState.NO_VALID_MOLECULES
     except ExperimentFailed:
