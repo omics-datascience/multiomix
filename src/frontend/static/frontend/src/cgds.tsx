@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import './css/files.css'
+import './css/cgds.css'
 
 import { CGDSPanel } from './components/cgds-panel/CGDSPanel'
 
