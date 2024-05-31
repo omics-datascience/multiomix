@@ -5,11 +5,15 @@ import { MoleculeType, Nullable } from '../../../../utils/interfaces'
 import { MoleculesDetailsMenu } from './MoleculesDetailsMenu'
 import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 import { PathwaysInformation } from './genes/PathwaysInformation'
-import { DiseasesPanel } from './DiseasesPanel'
-import { DrugsPanel } from './DrugsPanel'
 import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
-import { ActionableCancerGenesPanel } from './ActionableCancerGenesPanel'
 import { GeneOntologyPanel } from './gene-ontology/GeneOntologyPanel'
+import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPanel'
+import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
+import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
+import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
+
+// const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
+const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS
 
 /** CurrentMoleculeDetails props. */
 interface CurrentMoleculeDetailsProps {
@@ -26,7 +30,12 @@ interface CurrentMoleculeDetailsProps {
  * @returns Component.
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
-    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(ActiveBiomarkerMoleculeItemMenu.DETAILS)
+    const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(MENU_DEFAULT)
+
+    /** Effect to set the active item to DETAILS when the selected molecule changes. */
+    useEffect(() => {
+        setActiveItem(MENU_DEFAULT)
+    }, [props.selectedMolecule])
 
     /**
      * Gets the selected component according to the active item.
@@ -39,12 +48,14 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <MoleculeGeneralInformation selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.PATHWAYS:
                 return <PathwaysInformation selectedMolecule={selectedMolecule} />
+            case ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK:
+                return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
-                return <DiseasesPanel selectedMolecule={selectedMolecule} />
+                return <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
-                return <DrugsPanel selectedMolecule={selectedMolecule} />
+                return <MiRNADrugsPanel miRNA={selectedMolecule.identifier} />
             case ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS:
                 return (
                     <MirnaInteractionsPanel
@@ -95,15 +106,10 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
         )
     }
 
-    const moleculeIsNull = props.selectedMolecule === null
-    useEffect(() => {
-        setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS)
-    }, [props.selectedMolecule])
-
     return (
         <Grid padded>
-            <Grid.Row className='min-height-50vh' columns={1} verticalAlign={moleculeIsNull ? 'middle' : undefined}>
-                <Grid.Column textAlign={moleculeIsNull ? 'center' : undefined}>
+            <Grid.Row className='min-height-50vh' columns={1}>
+                <Grid.Column>
                     {getPanel()}
                 </Grid.Column>
             </Grid.Row>

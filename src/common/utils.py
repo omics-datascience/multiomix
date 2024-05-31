@@ -38,7 +38,7 @@ def get_subset_of_features(molecules_df: pd.DataFrame, combination: Union[List[s
         subset: pd.DataFrame = molecules_df.iloc[combination]
     else:
         # In this case it's a list of columns names (used in Blind Search)
-        molecules_to_extract = np.intersect1d(molecules_df.index, combination)
+        molecules_to_extract = np.intersect1d(molecules_df.index.tolist(), combination)
         subset: pd.DataFrame = molecules_df.loc[molecules_to_extract]
 
     # Discards NaN values
@@ -58,5 +58,5 @@ def limit_between_min_max(number: IntOrFloat, min_value: IntOrFloat, max_value: 
 
 
 def remove_non_alphanumeric_chars(string: str) -> str:
-    """Replaces all the non-alphanumeric chars from the job name to respect the [\.\-_/#A-Za-z0-9]+ regex"""
+    """Replaces all the non-alphanumeric chars from the job name to respect the [\\.\\-_/#A-Za-z0-9]+ regex"""
     return ''.join(e for e in string if e.isalnum() or e in ['.', '-', '_', '/', '#'])

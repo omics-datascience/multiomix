@@ -69,6 +69,8 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                         defaultPageSize={25}
                         searchLabel='Sample'
                         searchPlaceholder='Search by sample'
+                        searchWidth={5}
+                        entriesSelectWidth={3}
                         urlToRetrieveData={urlInferenceExperimentSamplesAndTime}
                         mapFunction={(sampleAndTime: SampleAndTime) => {
                             return (
@@ -178,6 +180,5 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 </Grid.Column>
             </Grid.Row>
         </Grid>
-
     )
 }

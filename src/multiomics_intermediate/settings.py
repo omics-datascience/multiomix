@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 from typing import Optional
 
+# Temporal fixing for the translation issue in django-chunked-upload when using Django 4.x.
+# See more in https://github.com/juliomalegria/django-chunked-upload/issues/68#issuecomment-1903413512
+import django
+from django.utils.translation import gettext
+django.utils.translation.ugettext = gettext
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -94,7 +100,7 @@ REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.getenv('REDIS_PORT', 6379)
 
 # Channels
-ASGI_APPLICATION = "multiomics_intermediate.routing.application"
+ASGI_APPLICATION = "multiomics_intermediate.asgi.application"
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -123,8 +129,7 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'example'),
         'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
         'PORT': os.getenv('POSTGRES_PORT', 5432),
-        # 'NAME': os.getenv('POSTGRES_DB', 'multiomics')  # Keep "multiomics" for backward compatibility
-        'NAME': os.getenv('POSTGRES_DB', 'multiomix-prod')  # Keep "multiomics" for backward compatibility
+        'NAME': os.getenv('POSTGRES_DB', 'multiomics')  # Keep "multiomics" for backward compatibility
     }
 }
 
@@ -155,8 +160,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -183,7 +186,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.1.6'
+VERSION: str = '5.2.3'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -222,8 +225,8 @@ SORT_BUFFER_SIZE: int = int(os.getenv('SORT_BUFFER_SIZE', 2_000_000))
 # marked as TIMEOUT_EXCEEDED
 COR_ANALYSIS_SOFT_TIME_LIMIT: int = int(os.getenv('COR_ANALYSIS_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
-# Time limit in seconds for a Feature Selectio experiment to be computed. If the experiment is not finished in this time, it is
-# marked as TIMEOUT_EXCEEDED
+# Time limit in seconds for a Feature Selection experiment to be computed. If the experiment is not finished in
+# this time, it is marked as TIMEOUT_EXCEEDED
 FS_SOFT_TIME_LIMIT: int = int(os.getenv('FS_SOFT_TIME_LIMIT', 10800))  # 3 hours
 
 # Time limit in seconds for a StatisticalValidation to be computed. If It's not finished in this time, it is

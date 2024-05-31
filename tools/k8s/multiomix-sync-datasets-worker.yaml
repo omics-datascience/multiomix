@@ -1,0 +1,72 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: multiomix-sync-datasets-worker
+  name: multiomix-sync-datasets-worker
+  namespace: your_namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multiomix-sync-datasets-worker
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: multiomix-sync-datasets-worker
+    spec:
+      # Atention:
+      # ---------
+      #
+      # This volumes are non persistent after pod reboot. This is configure to be able to start the application in the cluster
+      # if you want to have persistent volumes need to change this and fit it to your k8s specific.
+      #
+      # - /src/media is shared between all the multiomix microservices.
+      #
+      volumes:
+      - name: static-data
+        emptyDir: {}           
+      - name: media-data
+        emptyDir: {} 
+      - name: logs-data
+        emptyDir: {}
+      containers:
+      - image: omicsdatascience/multiomix:5.1.2-celery
+        name: sync-datasets-worker
+        env:
+        - name: QUEUE_NAME
+          value: "sync_datasets"
+        - name: CONCURRENCY
+          value: 2          
+        volumeMounts:
+        - name: static-data
+          mountPath: /src/static
+        - name: media-data
+          mountPath: /src/media # This one must be the same as multiomix main microservice.
+        - name: logs-data
+          mountPath: /logs          
+        resources: {}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8000 
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: multiomix-sync-datasets-worker
+spec:
+  type: NodePort
+  selector:
+    app: multiomix-sync-datasets-worker
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

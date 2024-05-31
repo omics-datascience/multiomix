@@ -8,7 +8,7 @@ import { InferenceExperimentResultModal } from './InferenceExperimentResultModal
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
 
-declare const urlBiomarkerInferenceExperiments: string
+declare const urlBiomarkerInferenceExperimentsDetails: string
 
 /** BiomarkerInferenceExperimentsPanel props. */
 interface BiomarkerInferenceExperimentsPanelProps {
@@ -51,7 +51,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
             return
         }
 
-        const url = `${urlBiomarkerInferenceExperiments}/${selectedInferenceExperiment.id}/`
+        const url = `${urlBiomarkerInferenceExperimentsDetails}/${selectedInferenceExperiment.id}/`
         const searchParams = { biomarker_pk: props.selectedBiomarker.id as number }
         ky.get(url, { searchParams, signal: abortController.current.signal }).then((response) => {
             response.json().then((experiment: InferenceExperimentForTable) => {

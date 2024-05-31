@@ -1,4 +1,5 @@
-FROM python:3.10.13-slim-bullseye
+# TODO: upgrade to 3.12 when GGCA support is available
+FROM python:3.10-slim-bookworm
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 

@@ -71,9 +71,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
         }).catch((err) => {
             console.error('Error getting gene information', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingData(false)
-            }
+            setLoadingData(false)
         })
     }
 

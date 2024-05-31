@@ -385,13 +385,30 @@ interface DjangoMiRNAGeneInteractionJSON {
 type ModulectorSourceLink = { source: string, url: string }
 
 /**
- * JSON Structure of miRNA data info
+ * JSON Structure of miRNA data from Modulector.
  */
 interface DjangoMiRNADataJSON {
     aliases: string[],
     mirna_sequence: string,
     mirbase_accession_id: string,
     links: ModulectorSourceLink[],
+}
+
+/** Structure of `ucsc_cpg_islands` field in methylation data from Modulector */
+type UCSCCpGIsland = {
+    cpg_island: string,
+    relation: string
+}
+
+/**
+ * JSON Structure of methylation data from Modulector.
+ */
+interface DjangoMethylationDataJSON {
+    name: string,
+    aliases: string[],
+    chromosome_position: string,
+    ucsc_cpg_islands: UCSCCpGIsland[],
+    genes: { [gene: string]: string[] }
 }
 
 /**
@@ -654,6 +671,7 @@ export {
     DjangoGoldfeldQuandtTest,
     DjangoLinearityTest,
     DjangoMiRNADataJSON,
+    DjangoMethylationDataJSON,
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
     DjangoSurvivalColumnsTupleSimple

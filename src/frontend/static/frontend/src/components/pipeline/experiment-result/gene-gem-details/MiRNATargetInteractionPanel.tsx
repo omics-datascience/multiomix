@@ -35,10 +35,7 @@ interface MiRNATargetInteractionPanelState {
  * @param props Component's props
  * @returns Component
  */
-export class MiRNATargetInteractionPanel extends React.Component<
-    MiRNATargetInteractionPanelProps,
-    MiRNATargetInteractionPanelState
-> {
+export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInteractionPanelProps, MiRNATargetInteractionPanelState> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -133,7 +130,9 @@ export class MiRNATargetInteractionPanel extends React.Component<
 
         return (
             <React.Fragment>
-                <MiRNAExtraData miRNA={this.props.miRNA} identifier={this.props.identifier} />
+                {this.props.miRNA &&
+                    <MiRNAExtraData miRNA={this.props.miRNA} />
+                }
 
                 <Grid className='margin-top-2'>
                     <Grid.Row stretched>

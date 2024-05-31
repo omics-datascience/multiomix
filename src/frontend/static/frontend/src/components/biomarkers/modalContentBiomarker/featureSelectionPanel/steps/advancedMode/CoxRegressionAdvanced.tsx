@@ -52,7 +52,6 @@ export const CoxRegressionAdvanced = (props: CoxRegressionAdvancedProps) => {
                         content='Maximum number of features to be retained after processing. The features are ordered in descending order by their coefficients, keeping the most significant ones first. If this value is left empty, all those whose coefficients are different from 0 will be retained'
                         onTop={false}
                         onEvent='hover'
-                        extraClassName=''
                     />
                 </Grid.Column>
             </Grid.Row>

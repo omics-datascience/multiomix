@@ -520,10 +520,16 @@ def get_number_samples_in_common_action_one_front(request):
 
 
 @login_required
-def get_mirna_data_action(request):
+def mirna_data_action(request):
     """Gets miRNA data from Modulector"""
-    data = global_mrna_service.get_modulector_service_content(
-        'mirna', request.GET, is_paginated=False)
+    data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
+    return generate_json_response_or_404(data)
+
+
+@login_required
+def methylation_data_action(request):
+    """Gets Methylation site data from Modulector"""
+    data = global_mrna_service.get_modulector_service_content('methylation', request.GET, is_paginated=False)
     return generate_json_response_or_404(data)
 
 
@@ -576,16 +582,14 @@ def get_mirna_target_interaction_action(request):
 @login_required
 def get_mirna_diseases_action(request):
     """Searches in papers miRNA associations with diseases"""
-    data = global_mrna_service.get_modulector_service_content(
-        'diseases', request.GET, is_paginated=True)
+    data = global_mrna_service.get_modulector_service_content('diseases', request.GET, is_paginated=True)
     return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_drugs_action(request):
     """Searches in papers miRNA associations with drugs"""
-    data = global_mrna_service.get_modulector_service_content(
-        'drugs', request.GET, is_paginated=True)
+    data = global_mrna_service.get_modulector_service_content('drugs', request.GET, is_paginated=True)
     return generate_json_response_or_404(data)
 
 

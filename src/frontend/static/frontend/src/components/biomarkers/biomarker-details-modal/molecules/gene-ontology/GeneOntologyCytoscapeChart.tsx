@@ -32,8 +32,8 @@ const CytoscapeLegends = () => (
     </div>
 )
 
-/** CytoscapeLegends props. */
-interface CytoscapeLegendsProps {
+/** GeneOntologyCytoscapeChart props. */
+interface GeneOntologyCytoscapeChartProps {
     /** GO id to get the related terms */
     termId: string,
     /** Callback to return to the previous panel. */
@@ -45,7 +45,7 @@ interface CytoscapeLegendsProps {
  * @param props Component's props.
  * @returns Component.
  */
-export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
+export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProps) => {
     const abortControllerTerm = useRef(new AbortController())
     const [termsRelatedToTermForm, setTermsRelatedToTermForm] = useState<GoTermToTermForm>({
         relations: [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART],
@@ -60,15 +60,10 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
      * @param elements Cytoscape elements to initialize the instance.
      */
     const initCytoscape = (elements: CytoscapeElements) => {
-        cytoscape({
+        const cy = cytoscape({
             container: document.getElementById('cy'),
             minZoom: 0.5,
             maxZoom: 1.5,
-            layout: {
-                name: 'grid',
-                rows: 2,
-                cols: 2
-            },
             // userZoomingEnabled: false, // Disable zooming. TODO: check this
             style: [
                 {
@@ -96,6 +91,13 @@ export const CytoscapeChart = (props: CytoscapeLegendsProps) => {
             ],
             elements
         })
+
+        // Randomizes nodes positions
+        const layout = cy.elements().layout({
+            name: 'random'
+        })
+
+        layout.run()
     }
 
     /**

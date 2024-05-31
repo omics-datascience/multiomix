@@ -29,6 +29,8 @@ interface ItemMenuProp {
  * @returns Component.
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
+    const isGene = [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+
     /**
      * Array with all the items and conditions
      */
@@ -37,30 +39,39 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             name: 'Details',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
-            popupInfo: `Details of ${props.selectedMolecule.identifier} gene obtained from different standardized sources`,
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA, MoleculeType.MIRNA, MoleculeType.METHYLATION].includes(props.selectedMolecule.type)
+            popupInfo: `Details of ${props.selectedMolecule.identifier} obtained from different standardized sources`,
+            isVisible: true // All molecules
         },
+        // TODO: implement
+        // {
+        //     name: 'Pathways',
+        //     onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
+        //     isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
+        //     popupInfo: 'Allows to explore the specific pathways associated with a particular gene, shedding light on the interconnected processes within a biological system',
+        //     isVisible: isGene
+        // },
         {
-            name: 'Pathways',
-            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.PATHWAYS),
-            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.PATHWAYS,
-            popupInfo: 'It shows all the biological pathways that include each of the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+            name: 'Gene associations network',
+            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK),
+            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK,
+            popupInfo: 'It shows the network of gene associations of the genes of this biomarker',
+            isVisible: isGene
         },
         {
             name: 'Gene Ontology',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY,
-            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
+            popupInfo: 'Gene Ontology (GO) is a powerful tool for understanding the biological processes, molecular functions, and cellular components associated with a gene',
+            isVisible: isGene
         },
-        {
-            name: 'Actionable/Cancer genes',
-            onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
-            isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
-            popupInfo: 'It shows information from gene ontology related with the genes of this biomarker',
-            isVisible: [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
-        },
+        // TODO: implement
+        // {
+        //     name: 'Actionable/Cancer genes',
+        //     onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES),
+        //     isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES,
+        //     popupInfo: 'Information on FDA-approved precision oncology therapies, actionable genes, and drugs obtained from the OncoKB database, at a therapeutic, diagnostic, and prognostic level',
+        //     isVisible: isGene
+        // },
         {
             name: 'Diseases',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES),
@@ -85,8 +96,9 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     ]
 
     /**
-     * Function to render menus, every 5 items it will generate a menu in order to keep space
-     * @returns Menus with 5 items stackable
+     * Function to render menus, every 6 items it will generate a menu in order to keep space.
+     * TODO: use CSS flex properties and remove this.
+     * @returns Menus with 6 items stackable
      */
     const handleMenuRender = () => {
         const menuRender: {
@@ -102,7 +114,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
                 itemMenu.push(item)
             }
 
-            if (itemMenu.length === 5) {
+            if (itemMenu.length === 6) {
                 menuRender.push({ items: itemMenu, key, className: 'remove-margin-bottom' })
                 key += 1
                 itemMenu = []

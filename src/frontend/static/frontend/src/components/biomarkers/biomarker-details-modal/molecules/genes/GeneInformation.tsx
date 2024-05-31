@@ -322,9 +322,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
 
             console.log('Error getting gene information', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingData(false)
-            }
+            setLoadingData(false)
         })
     }
 

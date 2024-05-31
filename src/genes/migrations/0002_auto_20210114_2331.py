@@ -15,7 +15,7 @@ def forwards_func(apps, schema_editor):
     # Imports all the genes info
     current_file_path = pathlib.Path(__file__).parent.absolute()
     gene_data_path = os.path.join(current_file_path, 'Ensemble_GRCh37.p13_for_multiomics.tar.gz')
-    genes_df: pd.DataFrame = pd.read_json(gene_data_path)
+    genes_df: pd.DataFrame = pd.read_json(gene_data_path, compression='gzip')
     genes_to_insert = [
         Gene(
             name=elem.name,

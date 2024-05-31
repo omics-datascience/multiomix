@@ -66,9 +66,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
 
             console.log('Error getting StatisticalValidation data', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoadingMetrics(false)
-            }
+            setLoadingMetrics(false)
         })
     }
 

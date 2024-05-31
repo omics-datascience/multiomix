@@ -86,3 +86,10 @@ The `multiomix` template is the most complex one because we are creating extra r
 
     Because the main goal is have a `multiomix` application working for the users, if we don't expose our `service`, this will be only available from inside the cluster. So, for exposing it, we create an ingress in which we set the url  that this will be resolving in the entry point to the cluster.
     The ingress class is out of the scope of this document, but because we try to keep evertyhing free and open, we are using an `nginx` ingressClass because we define an `nginx` ingress controller. To know more about defining an ingress controller inside your cluster you can take a look at [this](https://kubernetes.github.io/ingress-nginx/deploy/).
+
+### Workers (multiomix-*-workers.yaml)
+
+The worker are deployments that run pods with multiomix-celery image. They depend on the following:
+- Postgres DB
+- Mongo DB
+- Shared volume /src/media (This is not described in the templates because we focus in vanilla k8s)

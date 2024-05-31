@@ -2,6 +2,8 @@ import React from 'react'
 import { BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
 import { GeneInformation } from './genes/GeneInformation'
+import { MiRNAInformation } from './mirnas/MiRNAInformation'
+import { MethylationInformation } from './methylation/MethylationInformation'
 
 /** MoleculeGeneralInformation props. */
 interface MoleculeGeneralInformationProps {
@@ -20,8 +22,9 @@ export const MoleculeGeneralInformation = (props: MoleculeGeneralInformationProp
         return <GeneInformation selectedMolecule={props.selectedMolecule} />
     }
 
-    // TODO: implement miRNA and Methylation
-    return (
-        null
-    )
+    if (props.selectedMolecule.type === MoleculeType.MIRNA) {
+        return <MiRNAInformation selectedMiRNA={props.selectedMolecule.identifier} />
+    }
+
+    return <MethylationInformation selectedMethylation={props.selectedMolecule.identifier} />
 }

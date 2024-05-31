@@ -59,9 +59,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
 
             console.log('Error getting StatisticalValidation heatmap', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoading(false)
-            }
+            setLoading(false)
         })
     }
 

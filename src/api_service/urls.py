@@ -63,8 +63,9 @@ urlpatterns = [
         'clinical-source-user-file-unlink/<int:pk>/',
         views.unlink_clinical_source_user_file
     ),
-    path('get-survival-data', views.SurvivalDataDetails.as_view(),
-         name='get_survival_data'),
-    path('get-mirna-data', views.get_mirna_data_action, name='get_mirna_data'),
+    path('survival-data', views.SurvivalDataDetails.as_view(),
+         name='survival_data'),
+    path('mirna-data', views.mirna_data_action, name='mirna_data'),
+    path('methylation-data', views.methylation_data_action, name='methylation_data'),
     path('stop-experiment', views.stop_experiment_action, name='stop_experiment')
 ]

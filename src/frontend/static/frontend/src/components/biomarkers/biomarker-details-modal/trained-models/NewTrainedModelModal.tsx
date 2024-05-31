@@ -363,12 +363,14 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         makeSourceAndAppend(form.clinicalSource, formData, 'clinical')
 
         const headers = getDjangoHeader()
-        setForm(getDefaultNewTrainedModelData())
         ky.post(urlNewTrainedModel, { headers, body: formData }).then((response) => {
             response.json().then((jsonResponse: OkResponse) => {
                 if (jsonResponse.ok) {
                     props.setShowNewTrainedModelModal(false)
+
+                    // Resets the form and the step
                     setForm(getDefaultNewTrainedModelData())
+                    setCurrentStep(1)
                 } else {
                     alertGeneralError()
                 }

@@ -230,7 +230,10 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
             response.json().then((jsonResponse: OkResponse) => {
                 if (jsonResponse.ok) {
                     props.closeModal()
+
+                    // Resets the form and the step
                     setForm(getDefaultNewStatisticalValidationData())
+                    setCurrentStep(1)
                 } else {
                     alertGeneralError()
                 }

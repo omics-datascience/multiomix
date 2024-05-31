@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 from sklearn.preprocessing import OrdinalEncoder
 from api_service.models import get_combination_class, GeneGEMCombination, ExperimentSource
 from api_service.models_choices import ExperimentType
-import api_service.pipelines as pipelines 
+import api_service.pipelines as pipelines
 from api_service.utils import get_experiment_source
 from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.datasets_utils import clinical_df_to_struct_array, clean_dataset
@@ -54,7 +54,7 @@ NUMBER_OF_NEEDED_SAMPLES: int = 3
 
 
 def get_cluster_labels_set_instances(trained_model_id: Optional[int],
-                                user: AbstractBaseUser) -> QuerySet[ClusterLabelsSet]:
+                                     user: AbstractBaseUser) -> QuerySet[ClusterLabelsSet]:
     """Gets the ClusterLabelsSet instances for the given TrainedModel id and user."""
     if not trained_model_id:
         raise ValidationError('Invalid trained model id')
@@ -64,14 +64,13 @@ def get_cluster_labels_set_instances(trained_model_id: Optional[int],
 
 
 def get_prediction_range_labels_set_instances(trained_model_id: Optional[int],
-                                     user: AbstractBaseUser) -> QuerySet[PredictionRangeLabelsSet]:
+                                              user: AbstractBaseUser) -> QuerySet[PredictionRangeLabelsSet]:
     """Gets the PredictionRangeLabelsSet instances for the given TrainedModel id and user."""
     if not trained_model_id:
         raise ValidationError('Invalid trained model id')
 
     trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
     return trained_model.prediction_ranges_labels.all()
-
 
 
 def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> StatisticalValidation:
@@ -83,11 +82,12 @@ def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> Statis
     """
     statistical_validation_pk = request.GET.get('statistical_validation_pk')
     return get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                                        biomarker__user=request.user)
+                             biomarker__user=request.user)
 
 
 class CombinationSourceDataStatisticalPropertiesDetails(APIView):
     """REST endpoint: get for a Gene x GEM SourceDataStatisticalProperties model"""
+
     @staticmethod
     def get(request, pk=None):
         combination_type = request.GET.get('experiment_type', None)
@@ -196,6 +196,7 @@ class StatisticalValidationBestFeatures(generics.ListAPIView):
 
 class StatisticalValidationHeatMap(APIView):
     """Gets the expressions of all the molecules of a Biomarker for all the samples."""
+
     @staticmethod
     def __remove_suffix(df: pd.DataFrame) -> pd.DataFrame:
         """Removes the molecule type suffix from the index of a DataFrame."""
@@ -218,7 +219,6 @@ class StatisticalValidationHeatMap(APIView):
         except NoSamplesInCommon:
             return Response({'data': [], 'min': 0.0, 'max': 0.0})
 
-
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -227,6 +227,7 @@ class StatisticalValidationKaplanMeierClustering(APIView):
     Gets survival KaplanMeier data using a clustering trained model from a specific
     StatisticalValidation instance.
     """
+
     @staticmethod
     def get(request: Request):
         stat_validation = get_stat_validation_instance(request)
@@ -271,7 +272,7 @@ class ClustersUniqueStatValidation(APIView):
     @staticmethod
     def get(request: Request, pk: int):
         stat_validation = get_object_or_404(StatisticalValidation, pk=pk,
-                                        biomarker__user=request.user)
+                                            biomarker__user=request.user)
         samples_and_clusters = stat_validation.samples_and_clusters.values(text=F('cluster'),
                                                                            value=F('cluster')).distinct()
         return Response(samples_and_clusters)
@@ -295,6 +296,7 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
     """
     Gets survival KaplanMeier data grouping by a clinical attribute from a specific StatisticalValidation instance.
     """
+
     @staticmethod
     def get(request: Request):
         stat_validation = get_stat_validation_instance(request)
@@ -727,14 +729,14 @@ class BiomarkerNewTrainedModel(APIView):
                 cross_validation_folds=cross_validation_folds,
             )
 
-            # Adds the experiment to the TaskQueue and gets Task id
-            async_res: AbortableAsyncResult = eval_trained_model.apply_async(
-                (trained_model.pk, model_parameters),
-                queue='stats'
-            )
+        # Adds the experiment to the TaskQueue and gets Task id
+        async_res: AbortableAsyncResult = eval_trained_model.apply_async(
+            (trained_model.pk, model_parameters),
+            queue='stats'
+        )
 
-            trained_model.task_id = async_res.task_id
-            trained_model.save(update_fields=['task_id'])
+        trained_model.task_id = async_res.task_id
+        trained_model.save(update_fields=['task_id'])
 
         return Response({'ok': True})
 
@@ -772,7 +774,7 @@ class StopTrainedModel(APIView):
             try:
                 # Gets TrainedModel instance
                 trained_model: TrainedModel = TrainedModel.objects.get(pk=trained_model_id,
-                                                                         biomarker__user=request.user)
+                                                                       biomarker__user=request.user)
 
                 logging.warning(f'Aborting TrainedModel {trained_model_id}')
 
@@ -838,6 +840,7 @@ class ClusterLabelsSetsListPaginated(generics.ListAPIView):
 
 class ClusterLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
     """REST endpoint: get, modify or delete  for ClusterLabelsSet model"""
+
     # TODO: use this from frontend!
 
     def get_queryset(self):
@@ -876,6 +879,7 @@ class PredictionRangeLabelsSetsListPaginated(generics.ListAPIView):
 
 class PredictionRangeLabelsSetsDetail(generics.RetrieveUpdateDestroyAPIView):
     """REST endpoint: get, modify or delete  for PredictionRangeLabelsSet model"""
+
     # TODO: use this from frontend!
 
     def get_queryset(self):

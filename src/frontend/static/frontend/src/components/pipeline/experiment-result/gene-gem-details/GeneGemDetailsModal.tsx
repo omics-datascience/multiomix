@@ -251,16 +251,15 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 return (
                     <React.Fragment>
                         <MiRNAInteractionPanel
-                            identifier={this.props.selectedRow?.gem as string}
                             miRNA={gem}
                             showGeneSearchInput
                         />
                     </React.Fragment>
                 )
             case ActiveItemMenu.DISEASES_ASSOCIATION:
-                return <MiRNADiseasesPanel miRNA={gem} identifier={this.props.selectedRow?.gem as string} />
+                return <MiRNADiseasesPanel miRNA={gem} />
             case ActiveItemMenu.DRUGS_ASSOCIATION:
-                return <MiRNADrugsPanel miRNA={gem} identifier={this.props.selectedRow?.gem as string} />
+                return <MiRNADrugsPanel miRNA={gem} />
             case ActiveItemMenu.SURVIVAL_ANALYSIS:
                 if (!this.props.experiment.clinical_source_id) {
                     return (

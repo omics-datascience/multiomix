@@ -108,6 +108,8 @@ interface PaginatedTableProps<T> {
     wsChannelUrl?: string,
     /** If specified, an Information popup will be displayed on the top-right corner of the table */
     infoPopupContent?: string,
+    /** `width` prop of Form.Item of the _Entries_ select. */
+    entriesSelectWidth?: SemanticWIDTHS,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
 }
@@ -477,7 +479,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
                         {this.props.headerTitle &&
-                            <Header as='h4' textAlign='left'>
+                            <Header as='h4' textAlign='left' className='margin-bottom-1'>
                                 {this.props.headerTitle}
                             </Header>
                         }
@@ -518,6 +520,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                     selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
                                     name='pageSize'
+                                    fluid
+                                    width={this.props.entriesSelectWidth ?? 1}
                                     value={tableControl.pageSize}
                                     onChange={(_, { name, value }) => {
                                         this.handleTableControlChanges(name, value)

@@ -70,9 +70,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
 
             console.log('Error getting model ClusterLabelsSets', err)
         }).finally(() => {
-            if (!abortController.current.signal.aborted) {
-                setLoading(false)
-            }
+            setLoading(false)
         })
     }
 

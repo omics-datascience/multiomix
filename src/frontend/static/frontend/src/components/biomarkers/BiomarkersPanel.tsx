@@ -1554,7 +1554,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
     }
 
     /**
-     * Generates default table's Filters
+     * Generates default table's Filters.
      * @returns Default object for table's Filters
      */
     getDefaultFilters (): PaginationCustomFilter[] {
@@ -1565,8 +1565,9 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
 
         tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
 
+        // TODO: refactor Tag key as it's the same as AllExperimentsView.tsx and UserFilesView.tsx
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', options: tagOptions }
+            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 }
         ]
     }
 
@@ -1628,7 +1629,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
-                        { name: 'Actions' }
+                        { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                     customFilters={this.getDefaultFilters()}

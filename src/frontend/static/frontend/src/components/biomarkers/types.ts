@@ -387,6 +387,7 @@ enum ActiveStatValidationsItemMenu {
 enum ActiveBiomarkerMoleculeItemMenu {
     DETAILS,
     PATHWAYS,
+    GENE_ASSOCIATIONS_NETWORK,
     GENE_ONTOLOGY,
     INFERENCE,
     DISEASES,

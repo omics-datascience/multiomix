@@ -4,17 +4,17 @@ import { BiomarkerMolecule } from '../../../types'
 import { Form, Grid, Table } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Nullable } from '../../../../../utils/interfaces'
-import { CytoscapeChart } from './CytoscapeChart'
+import { GeneOntologyCytoscapeChart } from './GeneOntologyCytoscapeChart'
 import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchParams, GoTerm, OntologyType, TermsRelatedToGene } from './types'
 import { debounce } from 'lodash'
 
 // Styles
-import '../../../../../css/gene-ontology.css'
+import '../../../../../css/cytoscape.css'
 
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
 
-/** GeneInformation props. */
+/** GeneOntologyPanel props. */
 interface GeneOntologyPanelProps {
     /** Selected BiomarkerMolecule instance to show the options. */
     selectedMolecule: BiomarkerMolecule,
@@ -261,7 +261,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
 
             {/* Selected Term */}
             {selectedTerm &&
-                <CytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />
+                <GeneOntologyCytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />
             }
         </Grid>
     )

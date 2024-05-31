@@ -2,7 +2,9 @@ import React from 'react'
 
 /** ExternalLink props. */
 interface ExternalLinkProps {
+    /** `href` of the <a> tag. */
     href: string,
+    /** Content of the link. */
     children: React.ReactNode
 }
 

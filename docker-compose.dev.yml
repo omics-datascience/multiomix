@@ -1,5 +1,3 @@
-version: '3'
-
 services:
     # PostgreSQL
     db:
@@ -36,7 +34,7 @@ services:
 
     # Redis Server for Websocket connections
     redis:
-        image: redis:6.0.8
+        image: redis:6.2.14-alpine
         restart: 'always'
         container_name: multiomics_dev_websocket_channel_redis
         volumes:
@@ -45,16 +43,49 @@ services:
             - "6379:6379"
 
 
+    # Celery worker (useful for Windows until GGCA is supported in that OS)
+    # dev-correlation-analysis-worker:
+    #     # Builds from the Dockerfile-celery
+    #     build:
+    #         context: .
+    #         dockerfile: Dockerfile-celery
+    #     restart: always
+    #     depends_on:
+    #         - db
+    #         - redis
+    #     volumes:
+    #         - ./src/media:/src/media
+    #         # The volume below are mandatory as Pagedjs-cli needs to access to static files (css and fonts)
+    #         - ./src/static:/src/static
+    #     environment:
+    #         # Celery parameters
+    #         QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
+    #         CONCURRENCY: 1
+
+    #         # NOTE: in case of changes in the 'web' and/or PostgreSQL connection parameters, they MUST be
+    #         # changed here too!
+    #         # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+    #         POSTGRES_USERNAME: 'root'
+    #         POSTGRES_PASSWORD: 'example'
+    #         POSTGRES_HOST: 'db'
+    #         POSTGRES_PORT: 5432
+    #         POSTGRES_DB: 'multiomics'
+
+    #         # Redis
+    #         REDIS_HOST: 'redis'
+    #         REDIS_PORT: 6379
+
+
 volumes:
     mongo_data:
-        external:
-            name: 'multiomics_intermediate_mongo_data'
+        external: true
+        name: 'multiomics_intermediate_mongo_data'
     mongo_config:
-        external:
-            name: 'multiomics_intermediate_mongo_config'
+        external: true
+        name: 'multiomics_intermediate_mongo_config'
     postgres_data:
-        external:
-            name: 'multiomics_intermediate_postgres_data'
+        external: true
+        name: 'multiomics_intermediate_postgres_data'
     redis_data:
-        external:
-            name: 'multiomics_intermediate_redis_data'
+        external: true
+        name: 'multiomics_intermediate_redis_data'

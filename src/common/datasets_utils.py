@@ -83,7 +83,8 @@ def __process_chunk(chunk: pd.DataFrame, file_type: FileType, molecules: List[st
     chunk = chunk[samples_in_common]
 
     # Keeps only existing molecules in the current chunk
-    molecules_to_extract = np.intersect1d(chunk.index, molecules)
+    # NOTE: tolist() is needed to prevent'>' not supported between instances of 'float' and 'str' error
+    molecules_to_extract = np.intersect1d(chunk.index.tolist(), molecules)
     chunk = chunk.loc[molecules_to_extract]
 
     # Adds type to disambiguate between genes of 'mRNA' type and 'CNA' type
