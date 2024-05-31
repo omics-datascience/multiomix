@@ -1,4 +1,5 @@
 import logging
+import os
 import tarfile
 import tempfile
 import requests
@@ -40,9 +41,11 @@ def sync_study(self, cgds_study_pk: int, only_failed: bool):
         # Downloads the file in a temporary file
         logging.warning(f'Starting {cgds_study.name} downloading')
         check_if_stopped(self.is_aborted, ExperimentStopped)
-        with tempfile.NamedTemporaryFile(mode='wb') as out_file:
-            downloaded_path = out_file.name
 
+        # Creates a temporary file to store the downloaded file. Uses this instead of NamedTemporaryFile
+        # to prevent issues on Windows (read more at https://stackoverflow.com/q/23212435/7058363)
+        downloaded_path = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+        with open(downloaded_path, mode='wb') as out_file:
             # Sets the variables to logs the download progress
             check_if_stopped(self.is_aborted, ExperimentStopped)
             connection_timeout = float(settings.CGDS_CONNECTION_TIMEOUT)
