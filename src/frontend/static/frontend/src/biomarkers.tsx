@@ -1,10 +1,10 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
+
 import './css/biomarkers.css'
 
 import { BiomarkersPanel } from './components/biomarkers/BiomarkersPanel'
 
-ReactDOM.render(
-    <BiomarkersPanel />,
-    document.getElementById('biomarkers-app')
-)
+const container = document.getElementById('biomarkers-app')
+const root = createRoot(container!)
+root.render(<BiomarkersPanel />)

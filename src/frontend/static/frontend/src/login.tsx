@@ -1,10 +1,9 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import './css/login.css'
 
 import { LoginSignUpForm } from './components/login/LoginSignUpForm'
 
-ReactDOM.render(
-    <LoginSignUpForm />,
-    document.getElementById('login-form')
-)
+const container = document.getElementById('login-form')
+const root = createRoot(container!)
+root.render(<LoginSignUpForm />)

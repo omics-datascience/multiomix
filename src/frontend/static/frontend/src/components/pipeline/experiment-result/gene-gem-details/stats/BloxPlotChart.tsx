@@ -152,7 +152,7 @@ export default withTooltip<StatsPlotProps, TooltipData>(
                                 boxProps={{
                                     onMouseOver: () => {
                                         showTooltip({
-                                            tooltipLeft: xScale(d.boxPlot.min) ?? 0 + 40,
+                                            tooltipLeft: xScale(d.boxPlot.min) ?? 0 + 80,
                                             tooltipTop: yScale(d.boxPlot.x)! + constrainedWidth + 20,
                                             tooltipData: { ...d.boxPlot }
                                         })

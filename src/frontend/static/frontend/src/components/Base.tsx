@@ -30,6 +30,7 @@ const CurrentUserContext = React.createContext<Nullable<DjangoUser>>(null)
 const Base = (props: BaseProps) => {
     const abortController = useRef(new AbortController())
     const [currentUser, setUser] = useState<Nullable<DjangoUser>>(null)
+    const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState<boolean>(true)
 
     /**
      * Method which is executed when the component has mounted
@@ -47,26 +48,51 @@ const Base = (props: BaseProps) => {
      * Fetches logged User data
      */
     function getCurrentUser () {
-        ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
-            response.json().then((currentUser: DjangoUser) => {
-                setUser(currentUser)
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            if (err.response.status === 403 && !abortController.current.signal.aborted) {
-                // It's an anonymous user
-                setUser({
-                    id: null,
-                    username: null,
-                    is_anonymous: true,
-                    is_superuser: false,
-                    is_institution_admin: false
+        setTimeout(() => {
+            ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
+                response.json().then((currentUser: DjangoUser) => {
+                    setUser(currentUser)
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
                 })
-            } else {
-                console.log('Error getting current User ->', err)
-            }
-        })
+            }).catch((err) => {
+                if (err.response.status === 403 && !abortController.current.signal.aborted) {
+                    // It's an anonymous user
+                    setUser({
+                        id: null,
+                        username: null,
+                        is_anonymous: true,
+                        is_superuser: false,
+                        is_institution_admin: false
+
+                    })
+                } else {
+                    console.log('Error getting current User ->', err)
+                }
+            }).finally(() => {
+                setIsLoadingCurrentUser(false)
+            })
+        }, 200)
+        /*  ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
+             response.json().then((currentUser: DjangoUser) => {
+                 setUser(currentUser)
+             }).catch((err) => {
+                 console.log('Error parsing JSON ->', err)
+             })
+         }).catch((err) => {
+             if (err.response.status === 403 && !abortController.current.signal.aborted) {
+                 // It's an anonymous user
+                 setUser({
+                     id: null,
+                     username: null,
+                     is_anonymous: true,
+                     is_superuser: false,
+                     is_institution_admin: false
+                 })
+             } else {
+                 console.log('Error getting current User ->', err)
+             }
+         }) */
     }
 
     const sitePolicyLink = <a id='site-policy-link' href={urlSitePolicy}>Terms and privacy policy</a>
@@ -74,7 +100,7 @@ const Base = (props: BaseProps) => {
     return (
         <CurrentUserContext.Provider value={currentUser}>
             {/* Navbar */}
-            <MainNavbar activeItem={props.activeItem} />
+            <MainNavbar activeItem={props.activeItem} isLoadingUser={isLoadingCurrentUser} />
 
             {/* Composition part */}
             <div className={props.wrapperClass}>
