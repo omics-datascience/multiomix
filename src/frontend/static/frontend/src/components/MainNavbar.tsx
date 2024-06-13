@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { Dropdown, Menu, Image, Icon } from 'semantic-ui-react'
+import { Dropdown, Menu, Image, Icon, Loader } from 'semantic-ui-react'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { CurrentUserContext } from './Base'
@@ -60,7 +60,8 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
 type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers'
 
 interface MainNavbarProps {
-    activeItem?: ActiveItemOptions
+    activeItem?: ActiveItemOptions,
+    isLoadingUser: boolean,
 }
 
 /**
@@ -88,6 +89,20 @@ const MainNavbar = (props: MainNavbarProps) => {
                 <Image size='tiny' src='/static/frontend/img/logo.png' />
             </Menu.Item>
 
+            {/* Loading spinners while user is fetch */}
+            {props.isLoadingUser &&
+                <Menu.Menu>
+                    <Menu.Item style={{ padding: '0 1.72rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.72rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.7rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                </Menu.Menu>
+            }
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous &&
                 <React.Fragment>
@@ -177,7 +192,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
             {/* About us */}
             <Menu.Menu as='h2'>
-                <Menu.Item as='a' href={urlAboutUs}>
+                <Menu.Item as='a' href={urlAboutUs} className='link item' style={{ fontSize: '1rem' }}>
                     About us
                 </Menu.Item>
             </Menu.Menu>

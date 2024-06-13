@@ -1,3 +1,3 @@
 // Common dependencies for all the pages
-import 'semantic-ui-css/semantic.min.css'
+import 'fomantic-ui-css/semantic.css'
 import './css/base.css'

@@ -94,7 +94,7 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
         }
 
         return (
-            <Header size='huge' icon textAlign='center'>
+            <Header size='huge' icon textAlign='center' style={{ alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Icon name='dna' />
 
                 No molecule selected

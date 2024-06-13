@@ -1753,7 +1753,8 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : { width: '92%', minHeight: '92%', display: 'flex' }}
+                    className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
+                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
                     onClose={() => {
                         this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
                             ? this.handleChangeConfirmModalState(
@@ -1835,7 +1836,6 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                 </Modal>
 
                 <Confirm
-                    className='biomarkers--confirm--modal'
                     open={this.state.confirmModal.confirmModal}
                     header={this.state.confirmModal.headerText}
                     content={this.state.confirmModal.contentText}
