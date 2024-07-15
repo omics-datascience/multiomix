@@ -272,11 +272,16 @@ In order to create a database dump you can execute the following command **insid
 That command will restore the database using a compressed dump as source. You can use the flags `--numInsertionWorkersPerCollection [number of workers]` to increase importing speed or `-vvvv` to check importing status.
 
 
+### Exporting _media_ folder
+
+To export Docker media volume run the following command: `./tools/export_media.sh`. This will create a _tar.gz_ file with the current datetime in the `media_backups` folder.
+
+
 ### Importing _media_ folder
 
 To import a `media` folder backup inside a new environment you must (from the root project folder):
 
-1. Extract the `media` folder inside `src` folder
+1. Extract the `media` file inside `src/media` folder
 2. Run the script `./tools/import_media.sh`.
 
 
