@@ -281,7 +281,7 @@ To export Docker media volume run the following command: `./tools/export_media.s
 
 To import a `media` folder backup inside a new environment you must (from the root project folder):
 
-1. Extract the `media` file inside `src/media` folder
+1. Extract the `media` file inside `src/media` folder: `tar -zxf backup.tar.gz --directory ./src/media`
 2. Run the script `./tools/import_media.sh`.
 
 
