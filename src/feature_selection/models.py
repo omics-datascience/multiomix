@@ -31,6 +31,7 @@ class ClusteringAlgorithm(models.IntegerChoices):
     """Clustering algorithm."""
     K_MEANS = 1
     SPECTRAL = 2  # TODO: implement in backend
+    BK_MEANS = 3
 
 
 class ClusteringMetric(models.IntegerChoices):

@@ -36,7 +36,8 @@ const SVMKernelOptions: DropdownItemProps[] = [
 /** Available options for a Clustering algorithm. */
 const clusteringAlgorithmOptions: DropdownItemProps[] = [
     { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS },
-    { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL }
+    { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL },
+    { key: ClusteringAlgorithm.BK_MEANS, text: 'BK-Means', value: ClusteringAlgorithm.BK_MEANS }
 ]
 
 /** Available options for a Clustering metric to optimize. */

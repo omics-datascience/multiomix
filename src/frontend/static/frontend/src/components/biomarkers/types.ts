@@ -208,7 +208,8 @@ enum FitnessFunction {
 /** Clustering algorithm. */
 enum ClusteringAlgorithm {
     K_MEANS = 1,
-    SPECTRAL = 2
+    SPECTRAL = 2,
+    BK_MEANS = 3
 }
 
 /** Clustering metric to optimize. */

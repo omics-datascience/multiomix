@@ -210,7 +210,13 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         number_of_clusters, algorithm_description, scoring_method = params[0], params[2], params[4]
-        algorithm = ClusteringAlgorithm.K_MEANS if algorithm_description == 'k-means' else ClusteringAlgorithm.SPECTRAL
+        # algorithm = ClusteringAlgorithm.K_MEANS if algorithm_description == 'k-means' else ClusteringAlgorithm.SPECTRAL
+        if algorithm_description == 'k-means':
+            algorithm = ClusteringAlgorithm.K_MEANS
+        elif algorithm_description == 'spectral':
+            algorithm = ClusteringAlgorithm.SPECTRAL
+        else:
+            algorithm = ClusteringAlgorithm.BK_MEANS
         scoring = ClusteringScoringMethod.C_INDEX if scoring_method == 'concordance-index' \
             else ClusteringScoringMethod.LOG_LIKELIHOOD
         return number_of_clusters, algorithm, scoring
