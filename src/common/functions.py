@@ -55,7 +55,6 @@ def request_bool_to_python_bool(value: str) -> bool:
 # get_intersection() params type
 IntersectionArrayType = Union[np.ndarray, Iterable, int, float]
 
-
 def get_intersection(array_1: IntersectionArrayType, array_2: IntersectionArrayType) -> np.ndarray:
     """
     Gets the intersection between two arrays and cast the type to prevent Mypy warnings
@@ -64,7 +63,17 @@ def get_intersection(array_1: IntersectionArrayType, array_2: IntersectionArrayT
     @return: Numpy Ndarray with the intersecting elements
     """
     return cast(np.ndarray, np.intersect1d(array_1, array_2))
-
+def get_intersection_clinical(array_1: IntersectionArrayType, array_2: IntersectionArrayType, array_3: IntersectionArrayType) -> np.ndarray:
+    """
+    Gets the intersection between two arrays and cast the type to prevent Mypy warnings
+    @param array_1: Array 1
+    @param array_2: Array 2
+    @param array_2: Array 3
+    @return: Numpy Ndarray with the intersecting elements
+    """
+    ar3 = ["TCGA-C8-A8HR-01", "TCGA-BH-A6R9-01", "TCGA-JL-A3YW-01", "TCGA-C8-A8HP-01", "TCGA-AR-A24X-01", "TCGA-AR-A24U-01", "TCGA-A1-A0SB-01", "TCGA-D8-A1Y0-01", "TCGA-A2-A3XU-01"]
+    intersection_array = cast(np.ndarray, np.intersect1d(array_1, array_2))
+    return cast(np.ndarray, np.intersect1d(intersection_array, ar3))
 
 def create_survival_columns_from_json(survival_columns_json: str, user_file: UserFile):
     """

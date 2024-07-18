@@ -1,14 +1,25 @@
 import ky from 'ky'
 import React from 'react'
 import { Button, Grid, Icon, Label, Popup } from 'semantic-ui-react'
-import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
-import { FileType, Nullable, Source, SourceType } from '../../../utils/interfaces'
-import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../utils/util_functions'
+import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoExperimentSource, DjangoNumberSamplesInCommonClinicalValidationResult, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
+import { FileType, KySearchParams, Nullable, Source, SourceType } from '../../../utils/interfaces'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns, makeSourceAndAppend } from '../../../utils/util_functions'
 import { SurvivalTuplesForm } from '../../survival/SurvivalTuplesForm'
 import { SourceForm } from '../SourceForm'
 import { BiomarkerState, InferenceExperimentForTable } from '../../biomarkers/types'
+import { MAX_FILE_SIZE_IN_MB_WARN } from '../../../utils/constants'
 
 declare const urlClinicalSourceUserFileCRUD: string
+declare const urlGetCommonSamplesClinical: string
+declare const urlGetCommonSamplesClinicalSource: string
+
+/**
+ * ValidationSource to add clinical source
+ */
+export interface ValidationSource {
+    gem_source: DjangoExperimentSource,
+    mRNA_source: DjangoExperimentSource,
+}
 
 /**
  * Component's props
@@ -36,6 +47,8 @@ interface PopupClinicalSourceProps {
     closePopup: () => void,
     /** After add/edit a clinical source popup callback */
     onSuccessCallback: (retryIfNotFound?: boolean) => void,
+    /** validation source to add clinical */
+    validationSource: Nullable<ValidationSource>,
 }
 
 /**
@@ -138,7 +151,44 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      * (input type=file)
      */
     selectNewFile = () => {
-        this.updateSourceFilenames()
+        const clinicalSource = this.state.clinicalSource
+
+        if (this.props.validationSource !== null) {
+            const { mRNA_source, gem_source } = this.props.validationSource
+            const mRNASourceId = mRNA_source.user_file.id
+            const gemSourceId = gem_source.user_file.id
+            clinicalSource.filename = getFilenameFromSource(clinicalSource)
+            const fileSizeInMB = getFileSizeInMB(clinicalSource.newUploadedFileRef.current.files[0].size)
+
+            if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
+                const file = clinicalSource.newUploadedFileRef.current.files[0]
+                getInputFileCSVColumns(file).then((headersColumnsNames) => {
+                    // Sets the Request's Headers
+                    const myHeaders = getDjangoHeader()
+                    // Sends an array of headers to compare in server
+                    const jsonData = {
+                        headersColumnsNames,
+                        mRNASourceId,
+                        mRNASourceType: SourceType.UPLOADED_DATASETS,
+                        gemSourceId,
+                        gemSourceType: SourceType.UPLOADED_DATASETS
+                    }
+                    ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
+                        response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                            if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                                if (jsonResponse.data.number_samples_in_common > 0) {
+                                    this.setState({ clinicalSource })
+                                }
+                            }
+                        }).catch((err) => {
+                            console.log('Error parsing JSON ->', err)
+                        })
+                    }).catch((err) => {
+                        console.log('Error getting user experiments', err)
+                    })
+                })
+            }
+        }
     }
 
     /**
@@ -148,11 +198,40 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     selectUploadedFile = (selectedFile: DjangoUserFile) => {
         const clinicalSource = this.state.clinicalSource
 
-        clinicalSource.type = SourceType.UPLOADED_DATASETS
-        clinicalSource.selectedExistingFile = selectedFile
+        if (this.props.validationSource !== null) {
+            const { mRNA_source, gem_source } = this.props.validationSource
+            clinicalSource.type = SourceType.UPLOADED_DATASETS
+            clinicalSource.selectedExistingFile = selectedFile
+            const mRNASourceId = mRNA_source.user_file.id
+            const gemSourceId = gem_source.user_file.id
 
-        // After update state
-        this.setState({ clinicalSource }, this.updateSourceFilenames)
+            if (mRNASourceId !== null && gemSourceId !== null) {
+                const searchParams = {
+                    mRNASourceId,
+                    mRNASourceType: SourceType.UPLOADED_DATASETS,
+                    gemSourceId,
+                    gemSourceType: SourceType.UPLOADED_DATASETS,
+                    gemFileType: FileType.MIRNA,
+                    clinicalSourceId: clinicalSource.selectedExistingFile.id,
+                    clinicalSourceType: SourceType.UPLOADED_DATASETS
+                }
+                ky.get(urlGetCommonSamplesClinical, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
+                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                        if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                            if (jsonResponse.data.number_samples_in_common > 0) {
+                                clinicalSource.type = SourceType.UPLOADED_DATASETS
+                                clinicalSource.selectedExistingFile = selectedFile
+                                this.setState({ clinicalSource }, this.updateSourceFilenames)
+                            }
+                        }
+                    }).catch((err) => {
+                        console.log('Error parsing JSON ->', err)
+                    })
+                }).catch((err) => {
+                    console.log('Error getting user experiments', err)
+                })
+            }
+        }
     }
 
     /**
@@ -258,10 +337,13 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      * Submits selected clinical source
      */
     addOrEdit = () => {
+        // Todo: verificar que sea compatible agregar
         if (!this.canAddOrEdit()) {
             return
         }
-
+        console.log(this.props.validationSource, this.state.clinicalSource, 'ss')
+        return
+        console.log(this.props.experiment)
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
 

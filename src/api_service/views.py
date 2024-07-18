@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_integer_enum_from_value, encode_json_response_status, \
-    request_bool_to_python_bool, get_intersection, create_survival_columns_from_json
+    request_bool_to_python_bool, get_intersection, create_survival_columns_from_json, get_intersection_clinical
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus, generate_json_response_or_404
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
@@ -410,6 +410,19 @@ def get_samples_list(
     return list_of_samples, response
 
 
+# Metho to analize
+
+
+
+
+
+
+
+
+
+
+
+
 @login_required
 def get_number_samples_in_common_action(request):
     """Gets the number of in common samples between two datasets"""
@@ -417,7 +430,7 @@ def get_number_samples_in_common_action(request):
     mrna_source_type = request.GET.get('mRNASourceType')
     gem_source_id = request.GET.get('gemSourceId')
     gem_source_type = request.GET.get('gemSourceType')
-    gem_file_type = request.GET.get('gemFileType')
+    gem_file_type = request.GET.get('gemFileType') #Todo: remover y usar el enum directamente.
 
     if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, gem_file_type]:
         response = {
@@ -431,7 +444,7 @@ def get_number_samples_in_common_action(request):
         # Cast parameters
         mrna_source_id = int(mrna_source_id)
         mrna_source_type = get_enum_from_value(
-            int(mrna_source_type), SourceType)
+            int(mrna_source_type), SourceType) 
 
         gem_source_id = int(gem_source_id)
         gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
@@ -455,8 +468,7 @@ def get_number_samples_in_common_action(request):
             )
 
             # Gets intersection
-            intersection = get_intersection(
-                samples_list_mrna, samples_list_gem)
+            intersection = get_intersection(samples_list_mrna, samples_list_gem)
 
             if response is None:
                 response = {
@@ -467,6 +479,135 @@ def get_number_samples_in_common_action(request):
                         'number_samples_in_common': intersection.size
                     }
                 }
+
+    # Formats to JSON the ResponseStatus object
+    return encode_json_response_status(response)
+
+
+
+#asd
+@login_required
+def get_number_samples_in_common_clinical_validation_source(request):
+    json_request_data = json.loads(request.body)
+    headers_in_front: Optional[List[str]
+                               ] = json_request_data.get('headersColumnsNames')
+    mrna_source_id = json_request_data.get('mRNASourceId')
+    mrna_source_type = json_request_data.get('mRNASourceType')
+
+    gem_source_id = json_request_data.get('gemSourceId')
+    gem_source_type = json_request_data.get('gemSourceType')
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, json_request_data, headers_in_front]:
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message='Invalid request params',
+                internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+            ),
+        }
+    else:
+        # Cast parameters
+        mrna_source_id = int(mrna_source_id)
+        mrna_source_type = get_enum_from_value(
+            int(mrna_source_type), SourceType) 
+
+        gem_source_id = int(gem_source_id)
+        gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
+        #Gets df
+        samples_list_mrna, response = get_samples_list(
+            mrna_source_id,
+            mrna_source_type,
+            FileType.MRNA,
+            request.user
+        )
+
+        # Response will be != None if an error occurred
+        if response is None:
+            samples_list_gem, response = get_samples_list(
+                gem_source_id,
+                gem_source_type,
+                FileType.MIRNA,
+                request.user
+            )
+            # Gets intersection
+            if response is None:
+                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, headers_in_front)
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS),
+                    'data': {
+                        'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
+                        'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
+                        'number_samples_clinical': len(headers_in_front) if headers_in_front is not None else 0,
+                        'number_samples_in_common': intersection.size
+                    }
+                }
+
+    # Formats to JSON the ResponseStatus object
+    return encode_json_response_status(response)
+@login_required
+def get_number_samples_in_common_clinical_validation(request):
+    mrna_source_id = request.GET.get('mRNASourceId')
+    mrna_source_type = request.GET.get('mRNASourceType')
+    gem_source_id = request.GET.get('gemSourceId')
+    gem_source_type = request.GET.get('gemSourceType')
+    clinical_source_id = request.GET.get('clinicalSourceId')
+    clinical_source_type = request.GET.get('clinicalSourceType')
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id, clinical_source_type]:## or (headers_in_front is None and (clinical_source_id is None or clinical_source_type is None)):
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message='Invalid request params',
+                internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+            ),
+        }
+    else:
+        # Cast parameters
+        mrna_source_id = int(mrna_source_id)
+        mrna_source_type = get_enum_from_value(
+            int(mrna_source_type), SourceType) 
+
+        gem_source_id = int(gem_source_id)
+        gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
+
+
+        clinical_source_id = int(clinical_source_id)
+        clinical_source_type = get_enum_from_value(int(clinical_source_type), SourceType)
+
+        # Gets df
+        samples_list_mrna, response = get_samples_list(
+            mrna_source_id,
+            mrna_source_type,
+            FileType.MRNA,
+            request.user
+        )
+
+        # Response will be != None if an error occurred
+        if response is None:
+            samples_list_gem, response = get_samples_list(
+                gem_source_id,
+                gem_source_type,
+                FileType.MIRNA,
+                request.user
+            )
+            if response is None:
+                samples_list_clinical, response = get_samples_list(
+                    clinical_source_id,
+                    clinical_source_type,
+                    FileType.CLINICAL,
+                    request.user
+                )
+                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, samples_list_clinical)
+                # Gets intersection
+
+                if response is None:
+                    response = {
+                        'status': ResponseStatus(ResponseCode.SUCCESS),
+                        'data': {
+                            'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
+                            'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
+                            'number_samples_clinical': len(samples_list_clinical) if samples_list_clinical is not None else 0,
+                            'number_samples_in_common': intersection.size
+                        }
+                    }
 
     # Formats to JSON the ResponseStatus object
     return encode_json_response_status(response)

@@ -157,6 +157,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         openPopup={() => setShowPopup(true)}
                                         closePopup={() => setShowPopup(false)}
                                         onSuccessCallback={props.refreshExperimentInfo}
+                                        validationSource={null}
                                     />
 
                                     <InferenceExperimentClinicalAttributeSelect
