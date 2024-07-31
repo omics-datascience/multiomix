@@ -71,9 +71,8 @@ def get_intersection_clinical(array_1: IntersectionArrayType, array_2: Intersect
     @param array_2: Array 3
     @return: Numpy Ndarray with the intersecting elements
     """
-    ar3 = ["TCGA-C8-A8HR-01", "TCGA-BH-A6R9-01", "TCGA-JL-A3YW-01", "TCGA-C8-A8HP-01", "TCGA-AR-A24X-01", "TCGA-AR-A24U-01", "TCGA-A1-A0SB-01", "TCGA-D8-A1Y0-01", "TCGA-A2-A3XU-01"]
     intersection_array = cast(np.ndarray, np.intersect1d(array_1, array_2))
-    return cast(np.ndarray, np.intersect1d(intersection_array, ar3))
+    return cast(np.ndarray, np.intersect1d(intersection_array, array_3))
 
 def create_survival_columns_from_json(survival_columns_json: str, user_file: UserFile):
     """
