@@ -300,6 +300,7 @@ interface CustomAlert {
     isOpen: boolean,
     type: CustomAlertTypes,
     duration: number,
+    position?: 'top' | 'bottom',
 }
 
 /** Just a simple response from the server. */
