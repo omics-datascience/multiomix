@@ -13,7 +13,6 @@ django-webpack-loader==3.0.0
 django==4.2.11
 djangorestframework==3.14.0
 drf-writable-nested==0.7.0
-ggca==0.4.1
 lifelines==0.27.8
 mypy-extensions==1.0.0
 mypy==1.9.0

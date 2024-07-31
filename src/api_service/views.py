@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from builtins import map
@@ -380,7 +381,10 @@ def get_samples_list(
     elif type_source == SourceType.UPLOADED_DATASETS:
         try:
             user_file = get_an_user_file(user=user, user_file_pk=id_source)
-            list_of_samples = user_file.get_column_names()
+            if file_type == FileType.CLINICAL:
+                list_of_samples = user_file.get_first_column_of_all_rows()
+            else:
+                list_of_samples = user_file.get_column_names()
         except UserFile.DoesNotExist:
             response = {
                 'status': ResponseStatus(
@@ -408,20 +412,6 @@ def get_samples_list(
             }
 
     return list_of_samples, response
-
-
-# Metho to analize
-
-
-
-
-
-
-
-
-
-
-
 
 @login_required
 def get_number_samples_in_common_action(request):
@@ -551,7 +541,7 @@ def get_number_samples_in_common_clinical_validation(request):
     gem_source_type = request.GET.get('gemSourceType')
     clinical_source_id = request.GET.get('clinicalSourceId')
     clinical_source_type = request.GET.get('clinicalSourceType')
-    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id, clinical_source_type]:## or (headers_in_front is None and (clinical_source_id is None or clinical_source_type is None)):
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id, clinical_source_type]:
         response = {
             'status': ResponseStatus(
                 ResponseCode.ERROR,

@@ -12,7 +12,6 @@ django-webpack-loader==3.0.0
 django==4.2.11
 djangorestframework==3.14.0
 drf-writable-nested==0.7.0
-ggca==0.4.1
 lifelines==0.25.8
 numpy==1.26.2
 pandas==2.2.1
