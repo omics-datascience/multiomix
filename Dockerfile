@@ -1,5 +1,4 @@
-# TODO: upgrade to 3.12 when GGCA support is available
-FROM python:3.10-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 
@@ -38,9 +37,9 @@ ENV MONGO_DB "multiomics"
 ENV REDIS_HOST "redis"
 ENV REDIS_PORT 6379
 
-# Installs system dependencies
-RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs && mkdir /config \
+# Installs system dependencies and Node.js
+RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs && mkdir /config \
     && mkdir /src
 
 # Installs Python dependencies and compiles the frontend

@@ -1,5 +1,4 @@
-# TODO: upgrade to 3.12 when GGCA support is available
-FROM python:3.10-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 # Docker Files Vars
 ARG LISTEN_PORT=8000 
@@ -39,7 +38,7 @@ ENV REDIS_HOST "redis"
 ENV REDIS_PORT 6379
 
 # Installs system dependencies
-RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev libgsl0-dev \
+RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev \
     && mkdir /config \
     && mkdir /src
 
