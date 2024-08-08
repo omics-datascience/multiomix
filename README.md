@@ -11,7 +11,7 @@ This document is focused on the **development** of the system. If you are lookin
 
 ## Pre-requisites
 
-- Python >= `3.7` (tested version: `3.10`)
+- Python >= `3.7` (tested version: `3.12`)
 - Node JS (tested version: `20.x`)
 - [Modulector][modulector] `2.2.0`
 - [BioAPI][bioapi] `1.2.1`
