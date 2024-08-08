@@ -1,14 +1,26 @@
 import ky from 'ky'
 import React from 'react'
 import { Button, Grid, Icon, Label, Popup } from 'semantic-ui-react'
-import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
-import { FileType, Nullable, Source, SourceType } from '../../../utils/interfaces'
-import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, makeSourceAndAppend } from '../../../utils/util_functions'
+import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoExperimentSource, DjangoNumberSamplesInCommonClinicalValidationResult, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
+import { CustomAlert, CustomAlertTypes, FileType, KySearchParams, Nullable, Source, SourceType } from '../../../utils/interfaces'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns, makeSourceAndAppend } from '../../../utils/util_functions'
 import { SurvivalTuplesForm } from '../../survival/SurvivalTuplesForm'
 import { SourceForm } from '../SourceForm'
 import { BiomarkerState, InferenceExperimentForTable } from '../../biomarkers/types'
+import { MAX_FILE_SIZE_IN_MB_WARN } from '../../../utils/constants'
+import { Alert } from '../../common/Alert'
 
 declare const urlClinicalSourceUserFileCRUD: string
+declare const urlGetCommonSamplesClinical: string
+declare const urlGetCommonSamplesClinicalSource: string
+
+/**
+ * ValidationSource to add clinical source
+ */
+export interface ValidationSource {
+    gem_source: DjangoExperimentSource,
+    mRNA_source: DjangoExperimentSource,
+}
 
 /**
  * Component's props
@@ -36,6 +48,8 @@ interface PopupClinicalSourceProps {
     closePopup: () => void,
     /** After add/edit a clinical source popup callback */
     onSuccessCallback: (retryIfNotFound?: boolean) => void,
+    /** validation source to add clinical */
+    validationSource: Nullable<ValidationSource>,
 }
 
 /**
@@ -53,6 +67,8 @@ interface ClinicalSourceState {
     gettingSourceData: boolean,
     /** To check if it's a CGDSDataset as a clinical value */
     cgdsStudyName: Nullable<string>
+    /** alert interface */
+    alert: CustomAlert,
 }
 
 /**
@@ -70,7 +86,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             addingOrEditingSource: false,
             gettingSourceData: false,
             unlinkingSource: false,
-            cgdsStudyName: null
+            cgdsStudyName: null,
+            alert: this.getDefaultAlertProps()
         }
     }
 
@@ -138,7 +155,47 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      * (input type=file)
      */
     selectNewFile = () => {
-        this.updateSourceFilenames()
+        const clinicalSource = this.state.clinicalSource
+
+        if (this.props.validationSource !== null) {
+            const { mRNA_source, gem_source } = this.props.validationSource
+            const mRNASourceId = mRNA_source.user_file.id
+            const gemSourceId = gem_source.user_file.id
+            clinicalSource.filename = getFilenameFromSource(clinicalSource)
+            const fileSizeInMB = getFileSizeInMB(clinicalSource.newUploadedFileRef.current.files[0].size)
+
+            if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
+                const file = clinicalSource.newUploadedFileRef.current.files[0]
+                getInputFileCSVColumns(file, undefined, FileType.CLINICAL).then((headersColumnsNames) => {
+                    // Sets the Request's Headers
+                    const myHeaders = getDjangoHeader()
+                    // Sends an array of headers to compare in server
+                    const jsonData = {
+                        headersColumnsNames,
+                        mRNASourceId,
+                        mRNASourceType: SourceType.UPLOADED_DATASETS,
+                        gemSourceId,
+                        gemSourceType: SourceType.UPLOADED_DATASETS
+                    }
+
+                    ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
+                        response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                            if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                                if (jsonResponse.data.number_samples_in_common > 0) {
+                                    this.setState({ clinicalSource })
+                                } else {
+                                    this.clinicalSourceVoid()
+                                }
+                            }
+                        }).catch((err) => {
+                            console.log('Error parsing JSON ->', err)
+                        })
+                    }).catch((err) => {
+                        console.log('Error getting user experiments', err)
+                    })
+                })
+            }
+        }
     }
 
     /**
@@ -148,11 +205,67 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     selectUploadedFile = (selectedFile: DjangoUserFile) => {
         const clinicalSource = this.state.clinicalSource
 
-        clinicalSource.type = SourceType.UPLOADED_DATASETS
-        clinicalSource.selectedExistingFile = selectedFile
+        if (this.props.validationSource !== null) {
+            const { mRNA_source, gem_source } = this.props.validationSource
+            clinicalSource.type = SourceType.UPLOADED_DATASETS
+            clinicalSource.selectedExistingFile = selectedFile
+            const mRNASourceId = mRNA_source.user_file.id
+            const gemSourceId = gem_source.user_file.id
 
-        // After update state
-        this.setState({ clinicalSource }, this.updateSourceFilenames)
+            if (mRNASourceId !== null && gemSourceId !== null) {
+                const searchParams = {
+                    mRNASourceId,
+                    mRNASourceType: SourceType.UPLOADED_DATASETS,
+                    gemSourceId,
+                    gemSourceType: SourceType.UPLOADED_DATASETS,
+                    gemFileType: FileType.MIRNA,
+                    clinicalSourceId: clinicalSource.selectedExistingFile.id,
+                    clinicalSourceType: SourceType.UPLOADED_DATASETS
+                }
+                ky.get(urlGetCommonSamplesClinical, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
+                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                        if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                            if (jsonResponse.data.number_samples_in_common > 0) {
+                                clinicalSource.type = SourceType.UPLOADED_DATASETS
+                                clinicalSource.selectedExistingFile = selectedFile
+                                this.setState({ clinicalSource }, this.updateSourceFilenames)
+                            } else {
+                                this.clinicalSourceVoid()
+                            }
+                        }
+                    }).catch((err) => {
+                        console.log('Error parsing JSON ->', err)
+                    })
+                }).catch((err) => {
+                    console.log('Error getting user experiments', err)
+                })
+            }
+        }
+    }
+
+    /**
+     * Clean clinicalSource and alert
+     */
+    clinicalSourceVoid () {
+        const alert = {
+            message: 'No samples in common',
+            isOpen: true,
+            type: CustomAlertTypes.WARNING,
+            duration: 500
+        }
+        const clinicalSource = {
+            type: 0,
+            filename: 'Choose File',
+            newUploadedFileRef: {
+                current: null
+            },
+            selectedExistingFile: null,
+            CGDSStudy: null
+        }
+        this.setState({
+            alert,
+            clinicalSource
+        })
     }
 
     /**
@@ -258,6 +371,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      * Submits selected clinical source
      */
     addOrEdit = () => {
+        // Todo: verificar que sea compatible agregar
         if (!this.canAddOrEdit()) {
             return
         }
@@ -335,6 +449,28 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         this.setState({ survivalColumns })
     }
 
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCloseAlert = () => {
+        const alert = this.state.alert
+        alert.isOpen = false
+        this.setState({ alert })
+    }
+
+    /**
+     * Generates a default alert structure
+     * @returns Default the default Alert
+     */
+    getDefaultAlertProps = (): CustomAlert => {
+        return {
+            message: '', // This have to change during cycle of component
+            isOpen: false,
+            type: CustomAlertTypes.SUCCESS,
+            duration: 500
+        }
+    }
+
     render () {
         const experiment = this.props.experiment // For short
 
@@ -361,105 +497,114 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             : 'clickable ' + iconExtraClassNames
 
         return (
-            <Popup
-                id='clinical-source-popup'
-                on='click'
-                position={this.props.position ?? 'left center'}
-                wide='very'
-                size='large'
-                open={this.props.showPopup}
-                onOpen={this.openPopup}
-                trigger={
-                    <Icon
-                        title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
-                        name="file"
-                        className={clinicalButtonClassName}
-                        color={experiment.clinical_source_id ? 'blue' : 'grey'}
-                        disabled={clinicalIsDisabled}
-                    />
-                }
-            >
-                <React.Fragment>
-                    {/* If it's a CGDSDataset as clinical source it can't be edited */}
-                    {this.state.cgdsStudyName
-                        ? <Label color='green'>{this.state.cgdsStudyName}</Label>
-                        : (
-                            <Grid divided columns='equal'>
-                                <Grid.Column>
-                                    <SourceForm
-                                        source={this.state.clinicalSource}
-                                        showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples}
-                                        headerTitle='Clinical Data'
-                                        headerIcon={{
-                                            type: 'icon',
-                                            src: 'file'
-                                        }}
-                                        disabled={isProcessing}
-                                        fileType={FileType.CLINICAL}
-                                        showCBioPortalOption={false}
-                                        tagOptions={[]}
-                                        handleChangeSourceType={this.handleChangeSourceType}
-                                        selectNewFile={this.selectNewFile}
-                                        selectUploadedFile={this.selectUploadedFile}
-                                        selectStudy={this.selectStudy}
-                                    />
-
-                                    <Button
-                                        color='green'
-                                        fluid
-                                        className='margin-top-2'
-                                        loading={this.state.addingOrEditingSource}
-                                        onClick={this.addOrEdit}
-                                        disabled={isProcessing || !this.canAddOrEdit()}
-                                    >
-                                    Submit
-                                    </Button>
-                                </Grid.Column>
-
-                                {/* If it's a New Dataset, we give the opportunity to add Survival columns too */}
-                                {showSurvivalTuplesForm &&
+            <>
+                <Popup
+                    id='clinical-source-popup'
+                    on='click'
+                    position={this.props.position ?? 'left center'}
+                    wide='very'
+                    size='large'
+                    open={this.props.showPopup}
+                    onOpen={this.openPopup}
+                    trigger={
+                        <Icon
+                            title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
+                            name="file"
+                            className={clinicalButtonClassName}
+                            color={experiment.clinical_source_id ? 'blue' : 'grey'}
+                            disabled={clinicalIsDisabled}
+                        />
+                    }
+                >
+                    <React.Fragment>
+                        {/* If it's a CGDSDataset as clinical source it can't be edited */}
+                        {this.state.cgdsStudyName
+                            ? <Label color='green'>{this.state.cgdsStudyName}</Label>
+                            : (
+                                <Grid divided columns='equal'>
                                     <Grid.Column>
-                                        <SurvivalTuplesForm
-                                            survivalColumns={isaNewDataset
-                                                ? this.state.survivalColumns
-                                                : this.state.clinicalSource.selectedExistingFile?.survival_columns as DjangoSurvivalColumnsTupleSimple[]}
-                                            disabled={isAnUploadedDataset || this.state.addingOrEditingSource}
-                                            loading={this.state.addingOrEditingSource}
-                                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                            addSurvivalFormTuple={this.addSurvivalFormTuple}
-                                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                        <SourceForm
+                                            source={this.state.clinicalSource}
+                                            showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples}
+                                            headerTitle='Clinical Data'
+                                            headerIcon={{
+                                                type: 'icon',
+                                                src: 'file'
+                                            }}
+                                            disabled={isProcessing}
+                                            fileType={FileType.CLINICAL}
+                                            showCBioPortalOption={false}
+                                            tagOptions={[]}
+                                            handleChangeSourceType={this.handleChangeSourceType}
+                                            selectNewFile={this.selectNewFile}
+                                            selectUploadedFile={this.selectUploadedFile}
+                                            selectStudy={this.selectStudy}
                                         />
+
+                                        <Button
+                                            color='green'
+                                            fluid
+                                            className='margin-top-2'
+                                            loading={this.state.addingOrEditingSource}
+                                            onClick={this.addOrEdit}
+                                            disabled={isProcessing || !this.canAddOrEdit()}
+                                        >
+                                        Submit
+                                        </Button>
                                     </Grid.Column>
-                                }
-                            </Grid>
-                        )}
 
-                    <Button
-                        color='red'
-                        fluid
-                        className='margin-top-2'
-                        onClick={this.closePopup}
-                        disabled={isProcessing}
-                    >
-                        {this.state.cgdsStudyName ? 'Close' : 'Cancel'}
-                    </Button>
+                                    {/* If it's a New Dataset, we give the opportunity to add Survival columns too */}
+                                    {showSurvivalTuplesForm &&
+                                        <Grid.Column>
+                                            <SurvivalTuplesForm
+                                                survivalColumns={isaNewDataset
+                                                    ? this.state.survivalColumns
+                                                    : this.state.clinicalSource.selectedExistingFile?.survival_columns as DjangoSurvivalColumnsTupleSimple[]}
+                                                disabled={isAnUploadedDataset || this.state.addingOrEditingSource}
+                                                loading={this.state.addingOrEditingSource}
+                                                handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                                addSurvivalFormTuple={this.addSurvivalFormTuple}
+                                                removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                            />
+                                        </Grid.Column>
+                                    }
+                                </Grid>
+                            )}
 
-                    {/* Unlink button (only for UserFiles) */}
-                    {this.state.clinicalSource.id && !this.state.cgdsStudyName &&
                         <Button
-                            color='orange'
+                            color='red'
                             fluid
-                            title='Unlink clinical dataset from this experiment'
                             className='margin-top-2'
-                            loading={this.state.unlinkingSource}
-                            onClick={this.unlinkClinicalSource}
+                            onClick={this.closePopup}
                             disabled={isProcessing}
                         >
-                            Unlink
+                            {this.state.cgdsStudyName ? 'Close' : 'Cancel'}
                         </Button>
-                    }
-                </React.Fragment>
-            </Popup>
+
+                        {/* Unlink button (only for UserFiles) */}
+                        {this.state.clinicalSource.id && !this.state.cgdsStudyName &&
+                            <Button
+                                color='orange'
+                                fluid
+                                title='Unlink clinical dataset from this experiment'
+                                className='margin-top-2'
+                                loading={this.state.unlinkingSource}
+                                onClick={this.unlinkClinicalSource}
+                                disabled={isProcessing}
+                            >
+                                Unlink
+                            </Button>
+                        }
+                    </React.Fragment>
+                </Popup>
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
+            </>
         )
     }
 }

@@ -530,6 +530,14 @@ interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoS
     data: DjangoSamplesInCommonResultJSON
 }
 
+interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON{
+    number_samples_clinical: number
+}
+
+interface DjangoNumberSamplesInCommonClinicalValidationResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
+    data: DjangoSamplesInCommonResultClinicalValidationJSON
+}
+
 /**
  * Django samples in common service Response with one Source in frontend
  */
@@ -674,5 +682,6 @@ export {
     DjangoMethylationDataJSON,
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
-    DjangoSurvivalColumnsTupleSimple
+    DjangoSurvivalColumnsTupleSimple,
+    DjangoNumberSamplesInCommonClinicalValidationResult
 }

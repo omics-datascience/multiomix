@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { Header, Icon } from 'semantic-ui-react'
 import { DjangoExperiment } from '../../../../../utils/django_interfaces'
-import { ClinicalSourcePopup } from '../../../all-experiments-view/ClinicalSourcePopup'
+import { ClinicalSourcePopup, ValidationSource } from '../../../all-experiments-view/ClinicalSourcePopup'
 import { InferenceExperimentForTable } from '../../../../biomarkers/types'
+import { Nullable } from '../../../../../utils/interfaces'
 
 /**
  * Component's props
@@ -22,6 +23,14 @@ interface NoClinicalDataProps {
 
 export const NoClinicalData = (props: NoClinicalDataProps) => {
     const [showPopup, setShowPopup] = useState(false)
+    let validationSource: Nullable<ValidationSource> = null
+
+    if ((props.experiment as DjangoExperiment).gem_source && (props.experiment as DjangoExperiment).mRNA_source) {
+        validationSource = {
+            gem_source: (props.experiment as DjangoExperiment).gem_source,
+            mRNA_source: (props.experiment as DjangoExperiment).mRNA_source
+        }
+    }
 
     return (
         <Header size='huge' icon textAlign='center'>
@@ -45,6 +54,7 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
                     openPopup={() => setShowPopup(true)}
                     closePopup={() => setShowPopup(false)}
                     onSuccessCallback={() => props.refreshExperimentInfo(props.experiment.id)}
+                    validationSource={validationSource}
                 />
             </Header.Subheader>
         </Header>

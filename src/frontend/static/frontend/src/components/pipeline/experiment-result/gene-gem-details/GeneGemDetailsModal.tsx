@@ -2,7 +2,7 @@ import React from 'react'
 import { Modal, Header } from 'semantic-ui-react'
 import { CorrelationGraph } from './correlation-graph/CorrelationGraph'
 import ky from 'ky'
-import { KySearchParams, Nullable, StatChartData } from '../../../../utils/interfaces'
+import { KySearchParams, Nullable, Source, StatChartData } from '../../../../utils/interfaces'
 import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoExperiment } from '../../../../utils/django_interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
 import { findLineByLeastSquares } from './correlation-graph/correlationGraphUtils'
@@ -277,6 +277,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     <KaplanMeierChart
                         selectedRow={this.props.selectedRow}
                         experimentId={this.props.experiment.id}
+                        gem_source={this.props.experiment.gem_source}
+                        mRNA_source={this.props.experiment.mRNA_source}
                     />
                 )
         }
