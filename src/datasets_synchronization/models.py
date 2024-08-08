@@ -48,6 +48,8 @@ class CGDSDatasetSynchronizationState(models.IntegerChoices):
 
 class CGDSDataset(models.Model):
     """A CGDS Study dataset (mRNA, miRNA, CNA, Methylation, Follow-up/Survival)"""
+    mrna_dataset: 'CGDSStudy'
+
     file_path = models.CharField(max_length=150)  # File name inside extracted study folder
     observation = models.CharField(max_length=300, blank=True, null=True)
     separator = models.CharField(max_length=1, choices=DatasetSeparator.choices, default=DatasetSeparator.TAB)
@@ -282,7 +284,7 @@ class CGDSStudy(models.Model):
     def get_all_valid_datasets(self) -> List[CGDSDataset]:
         """Returns a list of all the associated CGDSDataset (excluding None)"""
         datasets = [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
-                self.clinical_sample_dataset, self.clinical_patient_dataset]
+                    self.clinical_sample_dataset, self.clinical_patient_dataset]
         return [cast(CGDSDataset, dataset) for dataset in datasets if dataset is not None]
 
     def get_last_version(self) -> int:
