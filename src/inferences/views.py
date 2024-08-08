@@ -357,7 +357,11 @@ class AddEditClinicalSourceInferenceExperiment(APIView):
         with transaction.atomic():
             # Creates and assign ExperimentClinicalSource instance to experiment
             clinical_source_type = int(request.POST.get('clinicalType'))
-            clinical_source, _ = get_experiment_source(clinical_source_type, request, FileType.CLINICAL, 'clinical')
+            clinical_source, clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
+                                                                  'clinical')
+
+            # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
+            clinical_source = clinical_aux if clinical_aux is not None else clinical_source
 
             # Creates Survival Tuples for clinical source (only if it's a new dataset)
             if clinical_source_type == SourceType.NEW_DATASET.value:
