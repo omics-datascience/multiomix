@@ -2,7 +2,7 @@ import React from 'react'
 import { Modal, Header } from 'semantic-ui-react'
 import { CorrelationGraph } from './correlation-graph/CorrelationGraph'
 import ky from 'ky'
-import { KySearchParams, Nullable, Source, StatChartData } from '../../../../utils/interfaces'
+import { KySearchParams, Nullable, StatChartData } from '../../../../utils/interfaces'
 import { DjangoResponseGetCorrelationGraph, DjangoResponseCode, DjangoCorrelationGraphInternalCode, SourceDataStatisticalPropertiesResponse, DjangoMRNAxGEMResultRow, ExperimentType, DjangoExperiment } from '../../../../utils/django_interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../utils/util_functions'
 import { findLineByLeastSquares } from './correlation-graph/correlationGraphUtils'
@@ -377,10 +377,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             zippedData[gemKey].push(geneElem)
         })
 
-        const res: StatChartData[] = Object.entries(zippedData).map(entry => {
-            return { x: entry[0], data: entry[1], strokeColor: '#a97f00' }
+        return Object.entries(zippedData).map(entry => {
+            return { x: entry[0], data: entry[1], fillColor: '#ffc400', strokeColor: '#a97f00' }
         })
-        return res
     }
 
     /** Sets the state to show an error message when Correlation Graph panel is selected. */

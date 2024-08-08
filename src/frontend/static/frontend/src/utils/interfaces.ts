@@ -249,8 +249,8 @@ type ScoreClassData = {
 interface StatChartData {
     data: number[],
     x?: string, // Useful for vertical Boxplots
-    fillColor?: string,
-    strokeColor?: string
+    fillColor: string,
+    strokeColor: string
 }
 
 interface StatChartDataWithOutliers extends StatChartData {

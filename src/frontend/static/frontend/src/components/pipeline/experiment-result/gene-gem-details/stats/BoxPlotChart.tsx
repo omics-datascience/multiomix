@@ -61,14 +61,17 @@ export default withTooltip<StatsPlotProps, TooltipData>(
             })
             return newData
         }, [])
+
         // bounds
         const xMax = width - 20
         const yMax = height - 120
+
         // scales
         const values = newData.reduce((allValues, { boxPlot }) => {
             allValues.push(boxPlot.min, boxPlot.max)
             return allValues
         }, [] as number[])
+
         const minYValue = Math.min(...values)
         const maxYValue = Math.max(...values)
 
@@ -89,16 +92,6 @@ export default withTooltip<StatsPlotProps, TooltipData>(
                 {newData.map((d, i) => (
                     <div key={i} style={{ position: 'relative' }}>
                         <svg width={width - 100} height={d.height}>
-                            {/*                             <rect x={0} y={0} width={width} height={height} fill="url(#statsplot)" rx={14} /> Todo: check ViolinPlot
- */}
-                            {/*  <ViolinPlot
-                                data={d.binData}
-                                stroke={d.strokeColor}
-                                left={xScale(d.boxPlot.x)!}
-                                width={constrainedWidth}
-                                valueScale={yScale}
-                                fill="url(#hViolinLines)"
-                            /> */}
                             <BoxPlot
                                 min={d.boxPlot.min}
                                 max={d.boxPlot.max}
@@ -110,7 +103,7 @@ export default withTooltip<StatsPlotProps, TooltipData>(
                                 fill={d.fillColor}
                                 fillOpacity={0.3}
                                 stroke={d.strokeColor}
-                                strokeWidth={2}
+                                strokeWidth={1}
                                 valueScale={xScale}
                                 outliers={d.boxPlot.outliers}
                                 outlierProps={{
