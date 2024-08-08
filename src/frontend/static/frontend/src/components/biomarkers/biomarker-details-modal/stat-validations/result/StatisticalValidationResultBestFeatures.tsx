@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react'
 import { MoleculeWithCoefficient, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'

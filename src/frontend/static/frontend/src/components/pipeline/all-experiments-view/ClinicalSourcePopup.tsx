@@ -1,7 +1,7 @@
 import ky from 'ky'
 import React from 'react'
 import { Button, Grid, Icon, Label, Popup } from 'semantic-ui-react'
-import { DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoExperimentSource, DjangoNumberSamplesInCommonClinicalValidationResult, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoExperimentSource, DjangoNumberSamplesInCommonClinicalValidationResult, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
 import { CustomAlert, CustomAlertTypes, FileType, KySearchParams, Nullable, Source, SourceType } from '../../../utils/interfaces'
 import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns, makeSourceAndAppend } from '../../../utils/util_functions'
 import { SurvivalTuplesForm } from '../../survival/SurvivalTuplesForm'
@@ -42,6 +42,8 @@ interface PopupClinicalSourceProps {
     urlClinicalSourceAddOrEdit: string,
     /** URL to unlink the clinical dataset. */
     urlUnlinkClinicalSource: string,
+    /** If false it doesn't show the option to select a cBioPortal study (false by default) */
+    showCBioPortalOption?: boolean,
     /** Open popup callback */
     openPopup: (experimentId: number) => void,
     /** Close popup callback */
@@ -66,7 +68,7 @@ interface ClinicalSourceState {
     /** State to indicate that it's retrieving the clinical source */
     gettingSourceData: boolean,
     /** To check if it's a CGDSDataset as a clinical value */
-    cgdsStudyName: Nullable<string>
+    cgdsStudyName: Nullable<string>,
     /** alert interface */
     alert: CustomAlert,
 }
@@ -207,8 +209,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
 
         if (this.props.validationSource !== null) {
             const { mRNA_source, gem_source } = this.props.validationSource
-            clinicalSource.type = SourceType.UPLOADED_DATASETS
-            clinicalSource.selectedExistingFile = selectedFile
+
             const mRNASourceId = mRNA_source.user_file.id
             const gemSourceId = gem_source.user_file.id
 
@@ -219,16 +220,19 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     gemSourceId,
                     gemSourceType: SourceType.UPLOADED_DATASETS,
                     gemFileType: FileType.MIRNA,
-                    clinicalSourceId: clinicalSource.selectedExistingFile.id,
+                    clinicalSourceId: selectedFile.id,
                     clinicalSourceType: SourceType.UPLOADED_DATASETS
                 }
+
                 ky.get(urlGetCommonSamplesClinical, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                     response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                             if (jsonResponse.data.number_samples_in_common > 0) {
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
                                 clinicalSource.selectedExistingFile = selectedFile
-                                this.setState({ clinicalSource }, this.updateSourceFilenames)
+
+                                const survivalColumns = selectedFile.survival_columns ?? []
+                                this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
                             } else {
                                 this.clinicalSourceVoid()
                             }
@@ -240,6 +244,13 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     console.log('Error getting user experiments', err)
                 })
             }
+        } else {
+            // If there's no validation source, we just set the selected file
+            clinicalSource.type = SourceType.UPLOADED_DATASETS
+            clinicalSource.selectedExistingFile = selectedFile
+
+            const survivalColumns = selectedFile.survival_columns ?? []
+            this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
         }
     }
 
@@ -413,9 +424,15 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     }
 
     /**
-     * This is not needed for clinical data
+     * Handles CGDS Dataset selection.
+     * @param selectedStudy Selected CGDS Study
      */
-    selectStudy () { }
+    selectStudy = (selectedStudy: DjangoCGDSStudy) => {
+        const clinicalSource = this.state.clinicalSource
+        clinicalSource.CGDSStudy = selectedStudy
+        clinicalSource.type = SourceType.CGDS
+        this.setState({ clinicalSource }, this.updateSourceFilenames)
+    }
 
     /**
      * Handles CGDS Dataset form changes in fields of Survival data tuples
@@ -533,7 +550,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             }}
                                             disabled={isProcessing}
                                             fileType={FileType.CLINICAL}
-                                            showCBioPortalOption={false}
+                                            showCBioPortalOption={this.props.showCBioPortalOption ?? false}
                                             tagOptions={[]}
                                             handleChangeSourceType={this.handleChangeSourceType}
                                             selectNewFile={this.selectNewFile}
@@ -549,7 +566,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             onClick={this.addOrEdit}
                                             disabled={isProcessing || !this.canAddOrEdit()}
                                         >
-                                        Submit
+                                            Submit
                                         </Button>
                                     </Grid.Column>
 

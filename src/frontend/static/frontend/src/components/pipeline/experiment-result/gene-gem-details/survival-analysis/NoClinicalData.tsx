@@ -17,6 +17,8 @@ interface NoClinicalDataProps {
     urlClinicalSourceAddOrEdit: string,
     /** URL to unlink the clinical dataset. */
     urlUnlinkClinicalSource: string,
+    /** If false it doesn't show the option to select a cBioPortal study (true by default) */
+    showCBioPortalOption?: boolean,
     /** Callback to refresh experiment info on clinical source changes */
     refreshExperimentInfo: (experimentId: number) => void
 }
@@ -44,6 +46,7 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
                 <ClinicalSourcePopup
                     experiment={props.experiment}
                     experimentType={props.experimentType}
+                    showCBioPortalOption={props.showCBioPortalOption}
                     // In survival analysis tabs is necessary to have survival tuples
                     showOnlyClinicalDataWithSurvivalTuples
                     showPopup={showPopup}
