@@ -1,8 +1,8 @@
 FROM python:3.12-slim-bookworm
 
 # Docker Files Vars
-ARG LISTEN_PORT=8000 
-ARG LISTEN_IP="0.0.0.0"
+ARG LISTEN_PORT 8000
+ARG LISTEN_IP "0.0.0.0"
 
 # Default values for deploying with multiomix image
 ENV LISTEN_PORT $LISTEN_PORT
