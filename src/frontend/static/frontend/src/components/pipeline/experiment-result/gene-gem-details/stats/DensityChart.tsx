@@ -101,7 +101,6 @@ export const DensityChart = (props: DensityChartProps) => {
                         {/* <Area type="monotone" dataKey="density" fill={data.strokeColor} stroke={data.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                         <Area type="monotone" dataKey="density2" fill="#000" stroke="#000" /> */}
                     </BarChart>
-
                 </ResponsiveContainer>
             ))}
         </>
@@ -223,9 +222,9 @@ export const DensityChartMix = (props: DensityChartMixProps) => {
 }
 
 /**
- * create new arrays from array of number to handle components data
- * @param dataObjects structure that have numbers and color configurations
- * @returns new array of new objects
+ * Creates new arrays from array of number to handle components data.
+ * @param dataObjects Structure that have numbers and color configurations.
+ * @returns New array of new objects.
  */
 const generateNewData = (dataObjects: StatChartData[]) => {
     const newData: BarData[] = []

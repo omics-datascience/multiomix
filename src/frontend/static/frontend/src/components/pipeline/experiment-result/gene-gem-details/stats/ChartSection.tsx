@@ -276,6 +276,8 @@ export const ChartSection = (props: ChartSectionProps) => {
                     showBars={props.showBars}
                     showDensityChart={[true, !props.gemDataIsOrdinal]}
                 />
+
+                {/* Boxplots. */}
                 <BoxPlotChart
                     width={width}
                     dataObjects={[
