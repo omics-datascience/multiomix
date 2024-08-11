@@ -3,7 +3,7 @@ const common = require('./webpack.common.js')
 
 // Plugins
 const TerserPlugin = require('terser-webpack-plugin')
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const MiniCssExtractPlugin = require('css-minimizer-webpack-plugin')
 const LightningCSS = require('lightningcss')
 const browsersList = require('browserslist')
 
@@ -24,17 +24,9 @@ module.exports = merge(common, {
                             type: 'es6',
                             strict: false
                         },
-                        minify: true,
+                        minify: false,
                         isModule: true,
                         jsc: {
-                            minify: {
-                                compress: true,
-                                mangle: true,
-                                format: {
-                                    asciiOnly: true,
-                                    comments: /^ webpack/
-                                }
-                            },
                             target: 'es2016',
                             parser: {
                                 syntax: 'typescript',
@@ -58,14 +50,10 @@ module.exports = merge(common, {
             new TerserPlugin({
                 minify: TerserPlugin.swcMinify
             }),
-            new CssMinimizerPlugin({
+            new MiniCssExtractPlugin({
+                minify: MiniCssExtractPlugin.lightningCssMinify,
+                // Safe: true prevents problems with z-index
                 minimizerOptions: {
-                    preset: [
-                        'default',
-                        {
-                            discardComments: { removeAll: true }
-                        }
-                    ],
                     safe: true,
                     targets: LightningCSS.browserslistToTargets(browsersList('>= 0.25%'))
                 }

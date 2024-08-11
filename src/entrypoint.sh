@@ -13,7 +13,7 @@ python3 ${BASE_DIR}/manage.py generate_secret_key --settings="multiomics_interme
 echo "##############################################"
 echo "Collect static..."
 echo "##############################################"
-python3 ${BASE_DIR}/manage.py collectstatic --no-input
+python3 ${BASE_DIR}/manage.py collectstatic --verbosity 2 --clear --no-input --ignore node_modules --ignore src
 
 echo "##############################################"
 echo "Migrate..."
