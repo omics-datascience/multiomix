@@ -407,24 +407,16 @@ class InferenceExperimentChartDataByAttribute(APIView):
         samples_and_times_df = samples_and_times_df.set_index('sample_id')
         clinical_df = clinical_df.join(samples_and_times_df, how='inner')
 
-        # Groups by the clinical attribute generating a list of dicts with the group and the 'time' column. The 'time'
-        # column must be a list with the minimum value, the Q1 value, the median, the Q3 value, and the maximum value
-        # TODO: change the structure as this one was used by ApexCharts which was discarded.
-        response = []
-        for group, group_df in clinical_df.groupby(clinical_attribute):
-            # group_df = group_df['time']
-            # group_dict = {'group': group}
-            # print(group_df)  # TODO: remove
-            # print(group_dict)  # TODO: remove
-            # group_dict.update(group_df.describe().to_dict())
-            response.append({
+        # Groups by the clinical attribute generating a list of dicts with the group and the 'time' column
+        response_data = [
+            {
                 'x': group,
                 'y': group_df['time'].values
-                # 'y': [group_dict['min'], group_dict['25%'], group_dict['50%'], group_dict['75%'], group_dict['max']],
-                # 'mean': round(group_dict['mean'], 4)
-            })
+            }
+            for group, group_df in clinical_df.groupby(clinical_attribute)
+        ]
 
-        return Response(response)
+        return Response(response_data)
 
 
 class UnlinkClinicalSourceInferenceExperiment(APIView):
