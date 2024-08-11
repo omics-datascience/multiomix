@@ -412,13 +412,16 @@ class InferenceExperimentChartDataByAttribute(APIView):
         # TODO: change the structure as this one was used by ApexCharts which was discarded.
         response = []
         for group, group_df in clinical_df.groupby(clinical_attribute):
-            group_df = group_df['time']
-            group_dict = {'group': group}
-            group_dict.update(group_df.describe().to_dict())
+            # group_df = group_df['time']
+            # group_dict = {'group': group}
+            # print(group_df)  # TODO: remove
+            # print(group_dict)  # TODO: remove
+            # group_dict.update(group_df.describe().to_dict())
             response.append({
-                'x': group_dict['group'],
-                'y': [group_dict['min'], group_dict['25%'], group_dict['50%'], group_dict['75%'], group_dict['max']],
-                'mean': round(group_dict['mean'], 4)
+                'x': group,
+                'y': group_df['time'].values
+                # 'y': [group_dict['min'], group_dict['25%'], group_dict['50%'], group_dict['75%'], group_dict['max']],
+                # 'mean': round(group_dict['mean'], 4)
             })
 
         return Response(response)

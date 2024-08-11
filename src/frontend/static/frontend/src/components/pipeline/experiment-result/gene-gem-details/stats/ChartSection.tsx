@@ -4,7 +4,7 @@ import { DjangoMRNAxGEMResultRow, SourceDataStatisticalPropertiesResponse, Djang
 import { Nullable } from '../../../../../utils/interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../InfoPopup'
-import BoxPlotChart from './BoxPlotChart'
+import { BoxPlotChart } from './BoxPlotChart'
 import { DensityChart, DensityChartMix } from './DensityChart'
 
 /** MeanAndStdStats props. */
@@ -87,7 +87,7 @@ interface StatsSectionProps {
 }
 
 /**
- * Renders a section with all the data
+ * Renders a section with all the data.
  * @param props Component's props
  * @returns Component
  */
@@ -95,17 +95,13 @@ const StatsSection = (props: StatsSectionProps) => {
     const componentRef = useRef<any>(null)
     const [width, setWidth] = useState(0) // Initial width state
 
-    const getComponentWidth = () => {
+    /** Gets the div with to refresh with of the Boxplot. */
+    useEffect(() => {
         if (componentRef.current) {
             const newWidth = componentRef.current.offsetWidth
             setWidth(newWidth)
         }
-    }
-    // Call getComponentWidth after rendering (e.g., in useEffect)
-
-    useEffect(() => {
-        getComponentWidth()
-    }, [])
+    }, [componentRef.current])
 
     return (
         <div ref={componentRef}>
@@ -120,6 +116,7 @@ const StatsSection = (props: StatsSectionProps) => {
                 </Grid.Column>
             </Grid.Row>
 
+            {/* Density chart for a simple molecule. */}
             <DensityChart
                 dataObjects={[{
                     data: props.allData,
@@ -130,6 +127,8 @@ const StatsSection = (props: StatsSectionProps) => {
                 showBars={props.showBars}
                 showDensityChart={[!props.dataIsOrdinal]}
             />
+
+            {/* Boxplot for a simple molecule. */}
             <BoxPlotChart
                 width={width}
                 dataObjects={[{
@@ -158,9 +157,9 @@ interface ChartSectionProps {
 }
 
 /**
- * Renders Gene and GEM Density charts and some extra stats
- * @param props Component's props
- * @returns Component
+ * Renders Gene and GEM Density charts and some extra stats.
+ * @param props Component's props.
+ * @returns Component.
  */
 export const ChartSection = (props: ChartSectionProps) => {
     const [gene, gem] = getGeneAndGEMFromSelectedRow(props.selectedRow)
@@ -173,17 +172,13 @@ export const ChartSection = (props: ChartSectionProps) => {
     const componentRef = useRef<any>(null)
     const [width, setWidth] = useState(0) // Initial width state
 
-    const getComponentWidth = () => {
+    /** Gets the div with to refresh with of the Boxplot. */
+    useEffect(() => {
         if (componentRef.current) {
             const newWidth = componentRef.current.offsetWidth
             setWidth(newWidth)
         }
-    }
-    // Call getComponentWidth after rendering (e.g., in useEffect)
-
-    useEffect(() => {
-        getComponentWidth()
-    }, [props.showTogether])
+    }, [props.showTogether, componentRef.current])
 
     if (!props.showTogether) {
         return (
@@ -277,7 +272,7 @@ export const ChartSection = (props: ChartSectionProps) => {
                     showDensityChart={[true, !props.gemDataIsOrdinal]}
                 />
 
-                {/* Boxplots. */}
+                {/* Boxplots for both gene and GEM molecules. */}
                 <BoxPlotChart
                     width={width}
                     dataObjects={[

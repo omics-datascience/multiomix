@@ -27,7 +27,7 @@ module.exports = {
     },
     output: {
         path: PATHS.output,
-        filename: '[name]-[hash].js'
+        filename: '[name]-[contenthash].js'
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
