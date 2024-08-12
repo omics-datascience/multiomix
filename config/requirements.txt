@@ -1,4 +1,4 @@
-celery==5.3.6
+celery==5.4.0
 channels-redis==4.2.0
 channels==3.0.5  # This version is required. Channels 4 doesn't work with Django 4
 daphne==3.0.2  # This is the needed version to run channels and channels-redis
