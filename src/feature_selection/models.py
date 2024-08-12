@@ -1,13 +1,15 @@
 import os
 import pickle
-from typing import List, Optional, Tuple, Union, Any
+from typing import Optional, Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from api_service.websocket_functions import send_update_trained_models_command, send_update_cluster_label_set_command
+from django.db.models import QuerySet
 from biomarkers.models import TrainedModelState
-from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
+from api_service.websocket_functions import send_update_trained_models_command, send_update_cluster_label_set_command
+from inferences.models import InferenceExperiment
+from statistical_properties.models import StatisticalValidation
 from user_files.models_choices import FileType
 
 
@@ -96,6 +98,10 @@ class RFParameters(models.Model):
 
 class FSExperiment(models.Model):
     """Represents a Feature Selection experiment."""
+    clustering_times_records: QuerySet['ClusteringTimesRecord']
+    rf_times_records: QuerySet['RFTimesRecord']
+    svm_times_records: QuerySet['SVMTimesRecord']
+    best_model: 'TrainedModel'
     origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
                                          related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
@@ -125,7 +131,7 @@ class FSExperiment(models.Model):
     app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results
     emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
 
-    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
+    def get_all_sources(self):
         """Returns a list with all the sources."""
         return [
             self.clinical_source,
@@ -135,7 +141,7 @@ class FSExperiment(models.Model):
             self.methylation_source,
         ]
 
-    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
+    def get_sources_and_molecules(self):
         """Returns a list with all the sources (except clinical), the selected molecules and type."""
         biomarker = self.origin_biomarker
         return [
@@ -187,12 +193,18 @@ TrainedModelParameters = Union[SVMParameters, RFParameters, ClusteringParameters
 
 class TrainedModel(models.Model):
     """Represents a Model to validate or make inference with a Biomarker."""
+    statistical_validations: QuerySet['StatisticalValidation']
+    inference_experiments: QuerySet['InferenceExperiment']
+    prediction_ranges_labels: QuerySet['PredictionRangeLabelsSet']
+    cluster_labels: QuerySet['ClusterLabelsSet']
     name = models.CharField(max_length=300)
     description = models.TextField(blank=True, null=True)
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='trained_models')
     fs_experiment = models.OneToOneField(FSExperiment, on_delete=models.SET_NULL, related_name='best_model',
                                          null=True, blank=True)
-    state = models.IntegerField(choices=TrainedModelState.choices)  # Yes, has the same states as a Biomarker
+    state = models.IntegerField(choices=TrainedModelState.choices)  # Yes, has the
+    # same states as a
+    # Biomarker
     fitness_function = models.IntegerField(choices=FitnessFunction.choices)
     model_dump = models.FileField(upload_to=user_directory_path_for_trained_models)
     best_fitness_value = models.FloatField(null=True, blank=True)
@@ -208,9 +220,9 @@ class TrainedModel(models.Model):
                                         blank=True, related_name='trained_models_as_clinical')
 
     # Clinical source's survival tuple
-    survival_column_tuple_user_file = models.ForeignKey(SurvivalColumnsTupleUserFile, on_delete=models.SET_NULL,
+    survival_column_tuple_user_file = models.ForeignKey('datasets_synchronization.SurvivalColumnsTupleUserFile', on_delete=models.SET_NULL,
                                                         related_name='trained_models', null=True, blank=True)
-    survival_column_tuple_cgds = models.ForeignKey(SurvivalColumnsTupleCGDSDataset, on_delete=models.SET_NULL,
+    survival_column_tuple_cgds = models.ForeignKey('datasets_synchronization.SurvivalColumnsTupleCGDSDataset', on_delete=models.SET_NULL,
                                                    related_name='trained_models', null=True, blank=True)
 
     # Sources
@@ -229,14 +241,14 @@ class TrainedModel(models.Model):
     attempt = models.PositiveSmallIntegerField(default=0)
 
     @property
-    def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:
+    def survival_column_tuple(self):
         """Gets valid SurvivalColumnTuple"""
         if self.survival_column_tuple_user_file:
             return self.survival_column_tuple_user_file
 
         return self.survival_column_tuple_cgds
 
-    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
+    def get_all_sources(self):
         """Returns a list with all the sources."""
         res = [self.clinical_source]
         if self.mrna_source:
@@ -253,7 +265,7 @@ class TrainedModel(models.Model):
 
         return res
 
-    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
+    def get_sources_and_molecules(self):
         """Returns a list with all the sources (except clinical), the selected molecules and type."""
         biomarker = self.biomarker
         res = []
@@ -290,7 +302,7 @@ class TrainedModel(models.Model):
     def __str__(self):
         return f'Trained model ({self.pk}) for Biomarker "{self.biomarker.name}"'
 
-    def get_model_instance(self) -> Optional[Any]:
+    def get_model_instance(self):
         """Deserializes the model dump and return the model instance (SurvModel)."""
         # Prevents OS error for non-existing file
         if not self.model_dump:
@@ -328,6 +340,7 @@ class TrainedModel(models.Model):
 
 class ClusterLabelsSet(models.Model):
     """Represents a set of labels for cluster IDs in a trained model."""
+    labels: QuerySet['ClusterLabel']
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='cluster_labels')
@@ -354,6 +367,7 @@ class ClusterLabel(models.Model):
 
 class PredictionRangeLabelsSet(models.Model):
     """Represents a set of labels for cluster IDs in a trained model."""
+    labels: QuerySet['PredictionRangeLabel']
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='prediction_ranges_labels')
@@ -361,6 +375,7 @@ class PredictionRangeLabelsSet(models.Model):
 
 class PredictionRangeLabel(models.Model):
     """Represents a label for a prediction range."""
+
     label = models.CharField(max_length=50)
     color = models.CharField(max_length=9, null=True, blank=True)  # 8 digits for color + 1 for '#'
     min_value = models.FloatField(validators=[MinValueValidator(0)])

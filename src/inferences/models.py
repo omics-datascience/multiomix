@@ -1,31 +1,36 @@
-from typing import List, Optional, Tuple
 from django.db import models
-from api_service.models import ExperimentClinicalSource, ExperimentSource
+from django.db.models import QuerySet
 from api_service.websocket_functions import send_update_prediction_experiment_command
-from biomarkers.models import BiomarkerState, Biomarker
-from feature_selection.models import TrainedModel
+from biomarkers.models import BiomarkerState
 from user_files.models_choices import FileType
 
 
 class InferenceExperiment(models.Model):
     """Represents an inference experiment from test sources using a TrainedModel"""
+    samples_and_time: QuerySet['SampleAndTimePrediction']
+    samples_and_clusters: QuerySet['SampleAndClusterPrediction']
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='inference_experiments')
-    trained_model = models.ForeignKey(TrainedModel, on_delete=models.CASCADE, related_name='inference_experiments')
-    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker. TODO: rename here and everywhere to GeneralExperimentState
+    biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
+                                  related_name='inference_experiments')
+    trained_model = models.ForeignKey('feature_selection.TrainedModel', on_delete=models.CASCADE, related_name='inference_experiments')
+
+    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a
+    # Biomarker.
+    # TODO:
+    # rename here and everywhere to GeneralExperimentState
     created = models.DateTimeField(auto_now_add=True)
 
     # Sources
-    clinical_source = models.ForeignKey(ExperimentClinicalSource, on_delete=models.SET_NULL,
+    clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.SET_NULL,
                                         related_name='inference_experiments', blank=True, null=True)
-    mrna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    mrna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                     related_name='inference_experiments_as_mrna')
-    mirna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    mirna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                      related_name='inference_experiments_as_mirna')
-    cna_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True, blank=True,
+    cna_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                    related_name='inference_experiments_as_cna')
-    methylation_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, null=True,
+    methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='inference_experiments_as_methylation')
 
     task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
@@ -33,7 +38,7 @@ class InferenceExperiment(models.Model):
     # Number of attempts to prevent a buggy experiment running forever
     attempt = models.PositiveSmallIntegerField(default=0)
 
-    def get_all_sources(self) -> List[Optional[ExperimentSource]]:
+    def get_all_sources(self):
         """Returns a list with all the sources."""
         res = []
         if self.mrna_source:
@@ -50,7 +55,7 @@ class InferenceExperiment(models.Model):
 
         return res
 
-    def get_sources_and_molecules(self) -> List[Tuple[Optional[ExperimentSource], List[str], FileType]]:
+    def get_sources_and_molecules(self):
         """Returns a list with all the sources (except clinical), the selected molecules and type."""
         biomarker = self.biomarker
         res = []

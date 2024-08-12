@@ -1,10 +1,9 @@
-from typing import List, Union, Tuple, Optional
-from django.db import models
+from typing import List
+from django.db.models import QuerySet
 from api_service.websocket_functions import send_update_stat_validations_command
-from biomarkers.models import Biomarker, BiomarkerState
-from datasets_synchronization.models import SurvivalColumnsTupleUserFile, SurvivalColumnsTupleCGDSDataset
-from feature_selection.models import TrainedModel
+from biomarkers.models import BiomarkerState
 from user_files.models_choices import FileType, MoleculeType
+from django.db import models
 
 
 # Create your models here.
@@ -21,6 +20,8 @@ class CommonStatisticalTest(models.Model):
 
 class NormalityTest(CommonStatisticalTest):
     """Represents a Shapiro-Wilk test for normality"""
+    gene_normality: 'SourceDataStatisticalProperties'
+    gem_normality: 'SourceDataStatisticalProperties'
 
 
 class GoldfeldQuandtTest(CommonStatisticalTest):
@@ -49,6 +50,7 @@ class SourceDataStatisticalProperties(models.Model):
     """
     Stores statistical info about Experiment's source data
     """
+    outliers: QuerySet['SourceDataOutliers']
     gene_mean = models.FloatField()
     gem_mean = models.FloatField()
     gene_standard_deviation = models.FloatField()
@@ -97,6 +99,10 @@ class StatisticalValidationSourceResult(models.Model):
     Represents a connection between a source and a statistical validation result. Useful to show a result for
     every type of molecule in a Biomarker.
     """
+    statistical_validations_as_methylation: 'StatisticalValidation'
+    statistical_validations_as_cna: 'StatisticalValidation'
+    statistical_validations_as_mirna: 'StatisticalValidation'
+    statistical_validations_as_mrna: 'StatisticalValidation'
     mean_squared_error = models.FloatField(null=True, blank=True)  # MSE of the prediction
     c_index = models.FloatField(null=True, blank=True)  # C-Index from regression models (SVM/RF)
 
@@ -111,10 +117,14 @@ class StatisticalValidationSourceResult(models.Model):
 
 class StatisticalValidation(models.Model):
     """A Biomarker statistical validation"""
+    samples_and_clusters: QuerySet['SampleAndCluster']
+    molecules_with_coefficients: QuerySet['MoleculeWithCoefficient']
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='statistical_validations')
-    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a Biomarker
+    biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE, related_name='statistical_validations')
+
+    state = models.IntegerField(choices=BiomarkerState.choices)  # Yes, has the same states as a
+    # Biomarker
     created = models.DateTimeField(auto_now_add=True)
 
     # General results using all the molecules
@@ -125,26 +135,26 @@ class StatisticalValidation(models.Model):
     cox_log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression (clustering)
     r2_score = models.FloatField(null=True, blank=True)  # R2 from regression models (SVM/RF)
 
-    trained_model = models.ForeignKey(TrainedModel, on_delete=models.SET_NULL, related_name='statistical_validations',
+    trained_model = models.ForeignKey('feature_selection.TrainedModel', on_delete=models.SET_NULL, related_name='statistical_validations',
                                       null=True, blank=True)
 
     # Clinical source
     clinical_source = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
                                         blank=True, related_name='statistical_validations_as_clinical')
     # Clinical source's survival tuple
-    survival_column_tuple_user_file = models.ForeignKey(SurvivalColumnsTupleUserFile, on_delete=models.SET_NULL,
+    survival_column_tuple_user_file = models.ForeignKey('datasets_synchronization.SurvivalColumnsTupleUserFile', on_delete=models.SET_NULL,
                                                         related_name='statistical_validations', null=True, blank=True)
-    survival_column_tuple_cgds = models.ForeignKey(SurvivalColumnsTupleCGDSDataset, on_delete=models.SET_NULL,
+    survival_column_tuple_cgds = models.ForeignKey('datasets_synchronization.SurvivalColumnsTupleCGDSDataset', on_delete=models.SET_NULL,
                                                    related_name='statistical_validations', null=True, blank=True)
 
     # Sources
-    mrna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+    mrna_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE, null=True,
                                               blank=True, related_name='statistical_validations_as_mrna')
     mirna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
-                                              blank=True, related_name='statistical_validations_as_mirna')
+                                               blank=True, related_name='statistical_validations_as_mirna')
     cna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
                                              blank=True, related_name='statistical_validations_as_cna')
-    methylation_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE,
+    methylation_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE,
                                                      null=True, blank=True,
                                                      related_name='statistical_validations_as_methylation')
     # Number of attempts to prevent a buggy statistical validation running forever
@@ -153,15 +163,14 @@ class StatisticalValidation(models.Model):
     task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     @property
-    def survival_column_tuple(self) -> Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]:
+    def survival_column_tuple(self):
         """Gets valid SurvivalColumnTuple"""
         if self.survival_column_tuple_user_file:
             return self.survival_column_tuple_user_file
 
         return self.survival_column_tuple_cgds
 
-
-    def get_all_sources(self) -> List[Optional['api_service.ExperimentSource']]:
+    def get_all_sources(self):
         """Returns a list with all the sources."""
         res = [self.clinical_source]
         if self.mrna_source_result and self.mrna_source_result.source:
@@ -178,7 +187,7 @@ class StatisticalValidation(models.Model):
 
         return res
 
-    def get_sources_and_molecules(self) -> List[Tuple[Optional['api_service.ExperimentSource'], List[str], FileType]]:
+    def get_sources_and_molecules(self):
         """Returns a list with all the sources (except clinical), the selected molecules and type."""
         biomarker = self.biomarker
         res = []
@@ -232,7 +241,7 @@ class MoleculeWithCoefficient(models.Model):
     identifier = models.CharField(max_length=50)
     coeff = models.FloatField()
     type = models.IntegerField(choices=MoleculeType.choices)
-    statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
+    statistical_validation = models.ForeignKey('StatisticalValidation', on_delete=models.CASCADE,
                                                related_name='molecules_with_coefficients')
 
 
@@ -240,5 +249,5 @@ class SampleAndCluster(models.Model):
     """Represents a sample with his assigned cluster inferred by a clustering algorithm."""
     sample = models.CharField(max_length=100)
     cluster = models.IntegerField()
-    statistical_validation = models.ForeignKey(StatisticalValidation, on_delete=models.CASCADE,
+    statistical_validation = models.ForeignKey('StatisticalValidation', on_delete=models.CASCADE,
                                                related_name='samples_and_clusters')

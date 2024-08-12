@@ -1,17 +1,18 @@
-from typing import Iterable, List, Optional, Union
+import datetime
+from typing import Iterable, List, Optional, Type, Set, Any
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
 from genes.models import Gene
-from statistical_properties.models import SourceDataStatisticalProperties
+from inferences.models import InferenceExperiment
 from tags.models import Tag
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
 from .websocket_functions import send_update_experiments_command
-from datasets_synchronization.models import CGDSDataset, SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
+from datasets_synchronization.models import CGDSDataset
 import pandas as pd
 import numpy as np
 
@@ -34,10 +35,18 @@ class ExperimentSource(models.Model):
     Represents a Pipeline source. A source could be a file (new or previously uploaded by
     the user), or a CGDS Dataset
     """
-    user_file = models.ForeignKey(UserFile, on_delete=models.CASCADE, blank=True, null=True)
-    cgds_dataset = models.ForeignKey(CGDSDataset, on_delete=models.CASCADE, blank=True, null=True)
+    inference_experiments_as_methylation: QuerySet['InferenceExperiment']
+    inference_experiments_as_cna: QuerySet['InferenceExperiment']
+    inference_experiments_as_mirna: QuerySet['InferenceExperiment']
+    inference_experiments_as_mrna: QuerySet['InferenceExperiment']
+    gem_source: QuerySet['Experiment']
+    mrna_source: QuerySet['Experiment']
+    user_file = models.ForeignKey(UserFile, on_delete=models.CASCADE, blank=True, null=True,
+                                  related_name='user_file')
+    cgds_dataset: CGDSDataset = models.ForeignKey(CGDSDataset, on_delete=models.CASCADE, blank=True,
+                                                  null=True, related_name='cgds_dataset')
 
-    def get_valid_source(self) -> Union[UserFile, CGDSDataset]:
+    def get_valid_source(self) -> UserFile | CGDSDataset:
         """
         Gets the valid source depending on which has been uploaded by the user
         @return: Valid source: a UserFile or a CGDSDataset
@@ -49,7 +58,7 @@ class ExperimentSource(models.Model):
         Gets (if corresponds) the Methylation CpG platform
         @return: List with the samples
         """
-        valid_source = self.get_valid_source()
+        valid_source: Optional[UserFile] | QuerySet[CGDSDataset] = self.get_valid_source()
         if valid_source.file_type == FileType.METHYLATION and valid_source.is_cpg_site_id:
             return get_methylation_platform_dataframe(valid_source.platform)
 
@@ -90,7 +99,8 @@ class ExperimentSource(models.Model):
     def get_df_in_chunks(self, only_matching: bool = False) -> Iterable[pd.DataFrame]:
         """
         Returns an Iterator of a DataFrame in divided in chunks from an experiment source.
-        @param only_matching: @param only_matching: If True only returns the molecules that are equal in both columns MOLECULE_SYMBOL and
+        @param only_matching: @param only_matching: If True only returns the molecules that are equal in both columns
+        MOLECULE_SYMBOL and
         STANDARD_SYMBOL (only used for CGDSDatasets).
         @return: A DataFrame Iterator with the data to work.
         """
@@ -118,9 +128,12 @@ class ExperimentClinicalSource(ExperimentSource):
     For clinical source of an experiment. Needs an extra CGDSDataset field as cBioPortal has two clinical datasets:
     patients data and samples data
     """
-    extra_cgds_dataset = models.ForeignKey(CGDSDataset, on_delete=models.CASCADE, blank=True, null=True)
+    inference_experiments: QuerySet['InferenceExperiment']
+    clinical_source: QuerySet['Experiment']
+    extra_cgds_dataset: CGDSDataset = models.ForeignKey('datasets_synchronization.CGDSDataset', on_delete=models.CASCADE, blank=True,
+                                                        null=True)
 
-    def get_methylation_platform_df(self) -> Optional[pd.DataFrame]:
+    def get_methylation_platform_df(self):
         """
         Clinical source doesn't have Methylation Platform.
         @return: None.
@@ -153,7 +166,7 @@ class ExperimentClinicalSource(ExperimentSource):
         # IMPORTANT: samples are in rows and attributes are in columns
         first_clinical_source_columns: List[str] = self.cgds_dataset.get_column_names()
         second_clinical_source_columns: List[str] = self.extra_cgds_dataset.get_column_names()
-        columns_distinct = set(first_clinical_source_columns + second_clinical_source_columns)
+        columns_distinct: Set[str] = set(first_clinical_source_columns + second_clinical_source_columns)
         for column_to_remove in [SAMPLE_ID_COLUMN, PATIENT_ID_COLUMN]:
             if column_to_remove in columns_distinct:
                 columns_distinct.remove(column_to_remove)
@@ -181,9 +194,9 @@ class ExperimentClinicalSource(ExperimentSource):
         return row_data
 
     def __get_specific_samples_and_attributes(
-        self,
-        samples: Optional[List[str]],
-        clinical_attributes: List[str]
+            self,
+            samples: Optional[List[str]],
+            clinical_attributes: List[str]
     ) -> pd.Series:
         """
         Gets specific samples and an attribute values from the source.
@@ -227,9 +240,9 @@ class ExperimentClinicalSource(ExperimentSource):
         return row_data[clinical_attributes]
 
     def get_specific_samples_and_attributes(
-        self,
-        samples: Optional[List[str]],
-        clinical_attributes: List[str]
+            self,
+            samples: Optional[List[str]],
+            clinical_attributes: List[str]
     ) -> np.ndarray:
         """
         Gets specific samples and an attribute values from the source as a numpy array.
@@ -242,9 +255,9 @@ class ExperimentClinicalSource(ExperimentSource):
         return res if len(clinical_attributes) > 1 else res[:, 0]  # If only one attribute, returns a 1D array
 
     def get_specific_samples_and_attributes_df(
-        self,
-        samples: Optional[List[str]],
-        clinical_attributes: List[str]
+            self,
+            samples: Optional[List[str]],
+            clinical_attributes: List[str]
     ) -> pd.Series:
         """
         Gets specific samples and an attribute values from the source as a Pandas DataFrame.
@@ -288,7 +301,7 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         return self.get_df()
 
-    def get_survival_columns(self) -> QuerySet[Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]]:
+    def get_survival_columns(self):
         """
         Gets the related survival columns tuples to the UserFile or CGDSDataset
         @return:
@@ -318,68 +331,79 @@ class ExperimentClinicalSource(ExperimentSource):
 
 class Experiment(models.Model):
     """Base Class for common Correlation experiment's fields"""
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    mRNA_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, related_name='mrna_source')
-    gem_source = models.ForeignKey(ExperimentSource, on_delete=models.CASCADE, related_name='gem_source')
-    clinical_source = models.ForeignKey(ExperimentClinicalSource, on_delete=models.SET_NULL,
-                                        related_name='clinical_source', blank=True, null=True)
-    submit_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
-    minimum_coefficient_threshold = models.FloatField(default=0.7)
-    minimum_std_gene = models.FloatField(default=0.0)
-    minimum_std_gem = models.FloatField(default=0.2)
-    state = models.IntegerField(choices=ExperimentState.choices)
-    correlation_method = models.IntegerField(choices=CorrelationMethod.choices)
-    p_values_adjustment_method = models.IntegerField(choices=PValuesAdjustmentMethod.choices)
-    evaluated_row_count = models.PositiveIntegerField(blank=True, null=True)  # Row count evaluated during experiment
-    result_total_row_count = models.PositiveIntegerField(blank=True, null=True)  # Row count resulting of the experiment
-    result_final_row_count = models.PositiveIntegerField(blank=True, null=True)  # Row count after truncating
+    name: str = models.CharField(max_length=100)
+    description: Optional[str] = models.TextField(blank=True, null=True)
+    mRNA_source = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
+                                    related_name='mrna_source')
+    gem_source: ExperimentSource = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
+                                                     related_name='gem_source')
+    clinical_source: ExperimentClinicalSource = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.SET_NULL,
+                                                                  related_name='clinical_source', blank=True,
+                                                                  null=True)
+    submit_date: datetime.datetime = models.DateTimeField(auto_now_add=True, blank=False, null=True)
+    minimum_coefficient_threshold: float = models.FloatField(default=0.7)
+    minimum_std_gene: float = models.FloatField(default=0.0)
+    minimum_std_gem: float = models.FloatField(default=0.2)
+    state: int = models.IntegerField(choices=ExperimentState.choices)
+    correlation_method: int = models.IntegerField(choices=CorrelationMethod.choices)
+    p_values_adjustment_method: int = models.IntegerField(choices=PValuesAdjustmentMethod.choices)
+    evaluated_row_count: Optional[int] = models.PositiveIntegerField(blank=True,
+                                                                     null=True)  # Row count evaluated during experiment
+    result_total_row_count: Optional[int] = models.PositiveIntegerField(blank=True,
+                                                                        null=True)  # Row count resulting of the
+    # experiment
+    result_final_row_count: Optional[int] = models.PositiveIntegerField(blank=True,
+                                                                        null=True)  # Row count after truncating
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, default=None)
-    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
-    type = models.IntegerField(choices=ExperimentType.choices)
+    tag: Optional[Tag] = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
+    type: int = models.IntegerField(choices=ExperimentType.choices)
     # Number of attempts to prevent a buggy experiment running forever
-    attempt = models.PositiveSmallIntegerField(default=0)
-    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
-    execution_time = models.FloatField(blank=True, null=True)  # Execution time in seconds
+    attempt: int = models.PositiveSmallIntegerField(default=0)
+    task_id: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+    execution_time: Optional[float] = models.FloatField(blank=True, null=True)  # Execution time in seconds
 
     # TODO: analyze if this go here, maybe when refactor the GEM type for UserFile and CGDSDataset
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema
-    correlate_with_all_genes = models.BooleanField(blank=False, null=False, default=True)
+    correlate_with_all_genes: bool = models.BooleanField(blank=False, null=False, default=True)
 
     @property
-    def combinations(self):
+    def combinations(self) -> Type[Gene | UserFile] | Any:
         """Returns all the result of the experiment combinations"""
         # TODO: check if it could be more simpler getting fields 'genecnacombination', 'genemethylationcombination' or
         # TODO: 'genemirnacombination' depending of the experiment type (maybe change the relate_name to be prettier)
+
         model_class = self.get_combination_class()
         return model_class.objects.filter(experiment=self)
 
-    def get_combination_class(self):
-        """Gets the corresponding Combination class depending on the Experiment's type."""
+        def get_combination_class(self):
+            """
+            Gets the corresponding Combination class depending on the Experiment's type.
+            """
+
         return get_combination_class(self.type)
 
-    def get_clinical_columns(self) -> List[str]:
+    def get_clinical_columns(self):
         """
         Gets a list of columns from the clinical data
         @return: List of fields in clinical data
         """
         return self.clinical_source.get_samples()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Every time the experiment status changes, uses websockets to update state in the frontend"""
         super().save(*args, **kwargs)
 
         # Sends a websockets message to update the experiment state in the frontend
         send_update_experiments_command(self.user.id)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs) -> None:
         """Deletes the instance and sends a websockets message to update state in the frontend"""
         super().delete(*args, **kwargs)
 
         # Sends a websockets message to update the experiment state in the frontend
         send_update_experiments_command(self.user.id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.pk} | {self.name}'
 
 
@@ -394,8 +418,9 @@ class GeneGEMCombination(models.Model):
     p_value = models.FloatField()
     adjusted_p_value = models.FloatField(blank=True, null=True)
     experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+
     source_statistical_data = models.OneToOneField(
-        SourceDataStatisticalProperties,
+        'statistical_properties.SourceDataStatisticalProperties',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -405,6 +430,10 @@ class GeneGEMCombination(models.Model):
     class Meta:
         abstract = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.gene_id = None
+
     @property
     def gene_name(self) -> str:
         """
@@ -413,20 +442,20 @@ class GeneGEMCombination(models.Model):
         """
         return self.gene_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.gene_name} | {self.gem}'
 
 
 class GeneMiRNACombination(GeneGEMCombination):
     class Meta:
-        db_table = 'gene_mirna_combination'
+        db_table: str = 'gene_mirna_combination'
 
 
 class GeneCNACombination(GeneGEMCombination):
     class Meta:
-        db_table = 'gene_cna_combination'
+        db_table: str = 'gene_cna_combination'
 
 
 class GeneMethylationCombination(GeneGEMCombination):
     class Meta:
-        db_table = 'gene_methylation_combination'
+        db_table: str = 'gene_methylation_combination'

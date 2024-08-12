@@ -1,13 +1,16 @@
 import logging
-from typing import List, Iterable, cast
+from typing import List, Iterable, cast, Optional
 from django.conf import settings
 from django.db import models, transaction
 import numpy as np
-from django.db.models import Max
+from django.db.models import Max, QuerySet
 from api_service.exceptions import CouldNotDeleteInMongo
+#from api_service.models import ExperimentSource
 from api_service.mongo_service import global_mongo_service
 from api_service.websocket_functions import send_update_cgds_studies_command
 from common.methylation import MethylationPlatform
+from feature_selection.models import TrainedModel
+from statistical_properties.models import StatisticalValidation
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from pandas import DataFrame
@@ -48,23 +51,32 @@ class CGDSDatasetSynchronizationState(models.IntegerChoices):
 
 class CGDSDataset(models.Model):
     """A CGDS Study dataset (mRNA, miRNA, CNA, Methylation, Follow-up/Survival)"""
-    file_path = models.CharField(max_length=150)  # File name inside extracted study folder
-    observation = models.CharField(max_length=300, blank=True, null=True)
-    separator = models.CharField(max_length=1, choices=DatasetSeparator.choices, default=DatasetSeparator.TAB)
-    header_row_index = models.PositiveSmallIntegerField(default=0)
-    date_last_synchronization = models.DateTimeField(blank=True, null=True)
-    state = models.IntegerField(
+    clinical_sample_dataset: 'ExperimentSource'
+    clinical_patient_dataset: 'ExperimentSource'
+    methylation_dataset: 'ExperimentSource'
+    cna_dataset: 'ExperimentSource'
+    mirna_dataset: 'ExperimentSource'
+    mrna_dataset: 'ExperimentSource'
+    survival_columns: QuerySet['ExperimentSource']
+    cgds_dataset: QuerySet['ExperimentSource']
+    file_path: str = models.CharField(max_length=150)  # File name inside extracted study folder
+    observation: Optional[str] = models.CharField(max_length=300, blank=True, null=True)
+    separator: str = models.CharField(max_length=1, choices=DatasetSeparator.choices, default=DatasetSeparator.TAB)
+    header_row_index: int = models.PositiveSmallIntegerField(default=0)
+    date_last_synchronization: Optional[models.DateTimeField] = models.DateTimeField(blank=True, null=True)
+    state: int = models.IntegerField(
         choices=CGDSDatasetSynchronizationState.choices,
         default=CGDSDatasetSynchronizationState.NOT_SYNCHRONIZED
     )
-    number_of_rows = models.PositiveIntegerField(blank=True, null=False, default=0)
-    number_of_samples = models.PositiveIntegerField(blank=True, null=False, default=0)
-    mongo_collection_name = models.CharField(max_length=100, blank=True, null=True)  # Collection where will be saved
+    number_of_rows: int = models.PositiveIntegerField(blank=True, null=False, default=0)
+    number_of_samples: int = models.PositiveIntegerField(blank=True, null=False, default=0)
+    mongo_collection_name: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Collection
+    # where will be saved
 
     # TODO: move both fields to a general structure in the future in Methylation type entity
     # TODO: Don't forget to set the corresponding nullity in the new schema
-    is_cpg_site_id = models.BooleanField(blank=False, null=False, default=True)
-    platform = models.IntegerField(choices=MethylationPlatform.choices, blank=True, null=True)
+    is_cpg_site_id: bool = models.BooleanField(blank=False, null=False, default=True)
+    platform: Optional[int] = models.IntegerField(choices=MethylationPlatform.choices, blank=True, null=True)
 
     @property
     def file_type(self) -> FileType:
@@ -78,30 +90,30 @@ class CGDSDataset(models.Model):
             return FileType.METHYLATION
         return FileType.CLINICAL
 
-    def __get_reverse_study(self):
+    def __get_reverse_study(self) -> Optional['CGDSDataset']:
         """Gets the related study model's name"""
         if hasattr(self, 'mrna_dataset'):
-            return self.mrna_dataset
+            return cast(Optional['CGDSDataset'], self.mrna_dataset)
         elif hasattr(self, 'mirna_dataset'):
-            return self.mirna_dataset
+            return cast(Optional['CGDSDataset'], self.mirna_dataset)
         elif hasattr(self, 'cna_dataset'):
-            return self.cna_dataset
+            return cast(Optional['CGDSDataset'], self.cna_dataset)
         elif hasattr(self, 'methylation_dataset'):
-            return self.methylation_dataset
+            return cast(Optional['CGDSDataset'], self.methylation_dataset)
         elif hasattr(self, 'clinical_patient_dataset'):
-            return self.clinical_patient_dataset
+            return cast(Optional['CGDSDataset'], self.clinical_patient_dataset)
         elif hasattr(self, 'clinical_sample_dataset'):
-            return self.clinical_sample_dataset
+            return cast(Optional['CGDSDataset'], self.clinical_sample_dataset)
 
     @property
-    def study(self):
+    def study(self) -> Optional['CGDSDataset']:
         return self.__get_reverse_study()
 
-    def __str__(self):
+    def __str__(self) -> str:
         study_name = self.study.name if self.study else '-'
         return f'File: {self.file_path} | Col: {self.mongo_collection_name} | Assigned to study: {study_name}'
 
-    def __compute_number_of_row_and_samples_and_save(self):
+    def __compute_number_of_row_and_samples_and_save(self) -> None:
         """
         Computes the number of rows and samples and makes the update
         """
@@ -142,7 +154,7 @@ class CGDSDataset(models.Model):
             rows_indexes += chunk[''].values.tolist()
         return rows_indexes
 
-    def compute_post_saved_field(self):
+    def compute_post_saved_field(self) -> None:
         """Computes fields that need the instance to be saved in the DB before be computed, such as number of
         row, columns etc"""
         # Computed number of rows and samples
@@ -174,7 +186,7 @@ class CGDSDataset(models.Model):
         """
         return global_mongo_service.get_collection_row_count(self.mongo_collection_name)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs) -> None:
         """Deletes the instance and its related MongoDB result (if exists)"""
         try:
             with transaction.atomic():
@@ -193,35 +205,43 @@ class CGDSDataset(models.Model):
 
 class SurvivalColumnsTuple(models.Model):
     """Represents a tuple of survival time and event"""
-    time_column = models.CharField(max_length=30)
-    event_column = models.CharField(max_length=30)
+    time_column: str = models.CharField(max_length=30)
+    event_column: str = models.CharField(max_length=30)
 
     class Meta:
         abstract = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Time column: "{self.time_column}" | Event column: "{self.event_column}"'
 
 
 class SurvivalColumnsTupleCGDSDataset(SurvivalColumnsTuple):
     """Survival tuple for a CGDSDataset"""
+    statistical_validations: QuerySet['StatisticalValidation']
+    trained_models: QuerySet['TrainedModel']
+    DoesNotExist = None
     clinical_dataset = models.ForeignKey(CGDSDataset, on_delete=models.CASCADE, related_name='survival_columns')
 
 
 class SurvivalColumnsTupleUserFile(SurvivalColumnsTuple):
     """Survival tuple for a UserFile"""
+    statistical_validations: QuerySet['StatisticalValidation']
+    trained_models: QuerySet['TrainedModel']
+    DoesNotExist = None
     clinical_dataset = models.ForeignKey(UserFile, on_delete=models.CASCADE, related_name='survival_columns')
 
 
 class CGDSStudy(models.Model):
     """A CGDS Study with its datasets synchronized from https://www.cbioportal.org/datasets"""
-    name = models.CharField(max_length=150)
-    description = models.TextField(blank=True, null=True)
-    date_last_synchronization = models.DateTimeField(blank=True, null=True)  # General last sync date
-    url = models.CharField(max_length=300)
-    version = models.PositiveSmallIntegerField(default=1)
-    url_study_info = models.CharField(max_length=300, blank=True, null=True)  # Link to the paper of the study/site/etc
-    state = models.IntegerField(
+    objects = None
+    name: str = models.CharField(max_length=150)
+    description: Optional[str] = models.TextField(blank=True, null=True)
+    date_last_synchronization: Optional[str] = models.DateTimeField(blank=True, null=True)  # General last sync date
+    url: str = models.CharField(max_length=300)
+    version: int = models.PositiveSmallIntegerField(default=1)
+    url_study_info: Optional[str] = models.CharField(max_length=300, blank=True, null=True)  # Link to the paper of
+    # the study/site/etc
+    state: int = models.IntegerField(
         choices=CGDSStudySynchronizationState.choices,
         default=CGDSStudySynchronizationState.NOT_SYNCHRONIZED
     )
@@ -267,9 +287,9 @@ class CGDSStudy(models.Model):
         null=True,
         related_name='clinical_sample_dataset'
     )
-    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+    task_id: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def has_at_least_one_dataset_synchronized(self) -> bool:
@@ -282,21 +302,21 @@ class CGDSStudy(models.Model):
     def get_all_valid_datasets(self) -> List[CGDSDataset]:
         """Returns a list of all the associated CGDSDataset (excluding None)"""
         datasets = [self.mrna_dataset, self.mirna_dataset, self.cna_dataset, self.methylation_dataset,
-                self.clinical_sample_dataset, self.clinical_patient_dataset]
+                    self.clinical_sample_dataset, self.clinical_patient_dataset]
         return [cast(CGDSDataset, dataset) for dataset in datasets if dataset is not None]
 
     def get_last_version(self) -> int:
         """Gets the maximum version of this CGDSStudy with the same URL."""
         return CGDSStudy.objects.filter(url=self.url).aggregate(Max('version'))['version__max']
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Everytime the CGDSStudy status changes, uses websocket to update state in the frontend"""
         super().save(*args, **kwargs)
 
         # Sends a websocket message to update the state in the frontend
         send_update_cgds_studies_command()
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs) -> None:
         """Deletes the instance and its related MongoDB result (if exists)"""
         with transaction.atomic():
             super().delete(*args, **kwargs)
