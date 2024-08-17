@@ -8,7 +8,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sksurv.metrics import concordance_index_censored
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
     generate_clinical_file, generate_molecules_dataframe, check_sample_classes, \
-    check_molecules_and_samples_number_or_exception
+    check_molecules_and_samples_number_or_exception, check_empty_dataframe_or_exception
 from common.exceptions import ExperimentStopped, NoBestModelFound, NumberOfSamplesFewerThanCVFolds
 from common.functions import check_if_stopped
 from common.typing import AbortEvent
@@ -200,7 +200,8 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
     # Gets model instance and stores its parameters
     check_if_stopped(is_aborted, ExperimentStopped)
     classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
-        trained_model, model_parameters)
+        trained_model, model_parameters
+    )
 
     # Gets data in the correct format
     check_if_stopped(is_aborted, ExperimentStopped)
@@ -233,8 +234,8 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
         rf_parameters: RFParameters = trained_model.rf_parameters
 
         # Checks if it needs to compute a range of n_clusters or a fixed value
-        look_optimal_n_estimators = is_clustering and \
-                                    model_parameters['rfParameters']['lookForOptimalNEstimators']
+        look_optimal_n_estimators = (is_clustering and
+                                     model_parameters['rfParameters']['lookForOptimalNEstimators'])
 
         if look_optimal_n_estimators:
             # Tries n_estimators from 10 to 20 jumping by 2
@@ -255,8 +256,8 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
         clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
 
         # Checks if it needs to compute a range of n_clusters or a fixed value
-        look_optimal_n_clusters = is_clustering and \
-                                  model_parameters['clusteringParameters']['lookForOptimalNClusters']
+        look_optimal_n_clusters = (is_clustering and
+                                   model_parameters['clusteringParameters']['lookForOptimalNClusters'])
 
         if look_optimal_n_clusters:
             param_grid = {'n_clusters': range(2, 11)}
@@ -282,6 +283,9 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
     check_if_stopped(is_aborted, ExperimentStopped)
     check_sample_classes(trained_model, clinical_data, cross_validation_folds)
+
+    # Checks if the number of molecules is valid
+    check_empty_dataframe_or_exception(molecules_df)
 
     # Trains the model
     check_if_stopped(is_aborted, ExperimentStopped)

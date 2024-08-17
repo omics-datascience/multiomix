@@ -124,6 +124,14 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 title: 'The training process has reached the timeout limit. Try changing some parameters and try again'
             }
             break
+        case TrainedModelState.EMPTY_DATASET:
+            stateIcon = {
+                iconName: 'user times',
+                color: 'red',
+                loading: false,
+                title: 'After filtering out invalid values such as NaN or inf, there were no molecules or samples to train the model. Perhaps the requested molecules do not exist in the dataset, or all patients contain NaN or inf data. Try changing the dataset used or correct your data and try again.'
+            }
+            break
     }
 
     return (

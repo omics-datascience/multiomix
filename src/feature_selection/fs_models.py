@@ -25,7 +25,7 @@ def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
     @return: a clustering model instance.
     """
     if clustering_algorithm == ClusteringAlgorithm.K_MEANS:
-        return KMeans(n_clusters=number_of_clusters, random_state=random_state)
+        return KMeans(n_clusters=number_of_clusters, random_state=random_state, n_init='auto')
     elif clustering_algorithm == ClusteringAlgorithm.SPECTRAL:
         return SpectralClustering(n_clusters=number_of_clusters, random_state=random_state)
 
