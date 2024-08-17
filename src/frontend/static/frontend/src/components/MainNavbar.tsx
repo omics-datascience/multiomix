@@ -30,7 +30,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // In case it's loading the user, shows a placeholder
     if (props.currentUser === null) {
         return (
-            <Menu.Item>
+            <Menu.Item style={{ fontSize: '1rem' }}>
                 <Icon name='spinner' loading />
             </Menu.Item>
         )
@@ -39,11 +39,9 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // Anonymous user
     if (props.currentUser.is_anonymous) {
         return (
-            <Menu.Menu as='h2'>
-                <Menu.Item as='a' href={urlLogin}>
-                    Log in
-                </Menu.Item>
-            </Menu.Menu>
+            <Menu.Item as='a' href={urlLogin} style={{ fontSize: '1rem' }}>
+                Log in
+            </Menu.Item>
         )
     }
 
@@ -192,13 +190,13 @@ const MainNavbar = (props: MainNavbarProps) => {
 
             {/* About us */}
             <Menu.Menu as='h2'>
-                <Menu.Item as='a' href={urlAboutUs} className='link item' style={{ fontSize: '1rem' }}>
+                <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
                     About us
                 </Menu.Item>
             </Menu.Menu>
 
             {/* LogIn/LogOut panel */}
-            <Menu.Menu as='h3' position='right'>
+            <Menu.Menu as='h2' position='right'>
                 <LogInLogOutPanel currentUser={currentUser} />
             </Menu.Menu>
         </Menu>

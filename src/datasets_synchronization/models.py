@@ -59,6 +59,7 @@ class CGDSDataset(models.Model):
     mrna_dataset: 'ExperimentSource'
     survival_columns: QuerySet['ExperimentSource']
     cgds_dataset: QuerySet['ExperimentSource']
+
     file_path: str = models.CharField(max_length=150)  # File name inside extracted study folder
     observation: Optional[str] = models.CharField(max_length=300, blank=True, null=True)
     separator: str = models.CharField(max_length=1, choices=DatasetSeparator.choices, default=DatasetSeparator.TAB)

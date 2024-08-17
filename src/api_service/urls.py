@@ -21,6 +21,10 @@ urlpatterns = [
     # Common samples
     path('number-samples-in-common', views.get_number_samples_in_common_action,
          name='get_number_samples_in_common'),
+    path('number-samples-in-common-clinical-validation', views.get_number_samples_in_common_clinical_validation,
+         name='get_number_samples_in_common_clinical_validation'),
+    path('number-samples-in-common-clinical-validation-source', views.get_number_samples_in_common_clinical_validation_source,
+         name='get_number_samples_in_common_clinical_validation_source'),
     path(
         'number-samples-in-common-one-front',
         views.get_number_samples_in_common_action_one_front,

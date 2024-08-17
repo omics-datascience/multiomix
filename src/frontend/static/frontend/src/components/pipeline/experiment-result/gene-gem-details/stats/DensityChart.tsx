@@ -2,14 +2,14 @@ import React, { useMemo } from 'react'
 import { StatChartData } from '../../../../../utils/interfaces'
 import {
     ComposedChart,
-    Area,
     Bar,
     XAxis as XAxis2,
     YAxis as YAxis2,
     CartesianGrid,
     Tooltip,
     Legend,
-    ResponsiveContainer
+    ResponsiveContainer,
+    BarChart
 } from 'recharts'
 
 /**
@@ -31,7 +31,7 @@ interface DensityChartProps {
 /**
  * Object to render in chart
  */
-interface ChartData {
+type ChartData = {
     /** Color for tooltip title column */
     color: string | undefined,
     /** Start measure range */
@@ -40,17 +40,24 @@ interface ChartData {
     bin1: number,
     /** Count of measure items */
     count: number,
-    /** Acumulative of total of measure items */
+    /** Accumulative of total of measure items */
     cumulative: number,
-    /** Acumulative of total density of measure items */
+    /** Accumulative of total density of measure items */
     cumulativeDensity: number,
     /** Data of measure */
     data: number[],
     /** Density of the item */
     density: number,
-    /** id for render, it generate by count of items, it cant be reapeated */
+    /** id for render, it generate by count of items, it cant be repeated */
     id: number,
     density2?: number
+}
+
+/** Data for a Bar component. */
+type BarData = {
+    strokeColor: string | undefined,
+    fillColor: string | undefined,
+    data: ChartData[]
 }
 
 /**
@@ -62,7 +69,7 @@ export const DensityChart = (props: DensityChartProps) => {
     const allDensityChartsAreHidden = props.showDensityChart.every((booleanValue) => !booleanValue)
 
     const newData = useMemo(() => {
-        const newData: { strokeColor: string | undefined; fillColor: string | undefined; data: ChartData[]; }[] = generateNewData(props.dataObjects)
+        const newData: BarData[] = generateNewData(props.dataObjects)
         return newData
     }, [])
 
@@ -72,31 +79,30 @@ export const DensityChart = (props: DensityChartProps) => {
 
     return (
         <>
-            {
-                newData.map((data, i) => (
-                    <ResponsiveContainer width='100%' height={400} key={i}>
-                        <ComposedChart
-                            data={data.data}
-                            margin={{
-                                top: 20,
-                                right: 20,
-                                bottom: 20,
-                                left: 20
-                            }}
-                        >
-                            <CartesianGrid stroke="#f5f5f5" />
-                            <XAxis2 dataKey="bin0" />
-                            <YAxis2 />
-                            <Tooltip content={<CustomTooltip color={data.strokeColor} color2={null} />} />
-                            <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
-                            <Bar dataKey="density" fill={data.strokeColor} />
-                            <Area type="monotone" dataKey="density" fill={data.strokeColor} stroke={data.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
-                            <Area type="monotone" dataKey="density2" fill="#000" stroke="#000" />
-                        </ComposedChart>
-
-                    </ResponsiveContainer>
-                ))
-            }
+            {newData.map((data, i) => (
+                <ResponsiveContainer width='100%' height={400} key={i}>
+                    <BarChart
+                        data={data.data}
+                        margin={{
+                            top: 20,
+                            right: 20,
+                            bottom: 20,
+                            left: 20
+                        }}
+                        barCategoryGap={0}
+                    >
+                        <CartesianGrid stroke="#f5f5f5" />
+                        <XAxis2 dataKey="bin0" />
+                        <YAxis2 />
+                        <Tooltip content={<CustomTooltip color={data.strokeColor} color2={null} />} />
+                        <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
+                        <Bar dataKey="density" fill={data.fillColor} stroke={data.strokeColor} strokeWidth={1} />
+                        {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}
+                        {/* <Area type="monotone" dataKey="density" fill={data.strokeColor} stroke={data.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
+                        <Area type="monotone" dataKey="density2" fill="#000" stroke="#000" /> */}
+                    </BarChart>
+                </ResponsiveContainer>
+            ))}
         </>
     )
 }
@@ -151,15 +157,15 @@ interface DensityChartMixProps {
 }
 
 /**
- * Density chart to watch multiple gene information
- * @param props props to create component
- * @returns component
+ * Density chart with both gene and GEM data.
+ * @param props Component props.
+ * @returns Component.
  */
 export const DensityChartMix = (props: DensityChartMixProps) => {
     const allDensityChartsAreHidden = props.showDensityChart.every((booleanValue) => !booleanValue)
 
     const newData = useMemo(() => {
-        const newData: { strokeColor: string | undefined; fillColor: string | undefined; data: ChartData[]; }[] = generateNewData(props.dataObjects)
+        const newData: BarData[] = generateNewData(props.dataObjects)
         const mergedObjects: any = []
 
         const obj = newData[0].data.length > newData[1].data.length ? newData[0].data : newData[1].data
@@ -196,6 +202,7 @@ export const DensityChartMix = (props: DensityChartMixProps) => {
                         bottom: 20,
                         left: 20
                     }}
+                    barGap={0}
                 >
                     <CartesianGrid stroke="#f5f5f5" />
                     <XAxis2 dataKey="bin0" tickCount={4} />
@@ -204,29 +211,30 @@ export const DensityChartMix = (props: DensityChartMixProps) => {
                     <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
                     <Bar dataKey="density" fill={newData.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                     <Bar dataKey="density2" fill={newData.strokeColor2} activeBar={!props.showBars} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
-                    <Area type="monotone" dataKey="density" fill={newData.strokeColor} stroke={newData.strokeColor} />
-                    <Area type="monotone" dataKey="density2" fill={newData.strokeColor2} stroke={newData.strokeColor2} />
+                    {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}
+                    {/* <Area type="monotone" dataKey="density" fill={newData.strokeColor} stroke={newData.strokeColor} />
+                    <Area type="monotone" dataKey="density2" fill={newData.strokeColor2} stroke={newData.strokeColor2} /> */}
                 </ComposedChart>
 
             </ResponsiveContainer>
         </>
     )
 }
-/**
- * create new arrays from array of number to handle components data
- * @param dataObjects structure that have numbers and color configurations
- * @returns new array of new objects
- */
 
+/**
+ * Creates new arrays from array of number to handle components data.
+ * @param dataObjects Structure that have numbers and color configurations.
+ * @returns New array of new objects.
+ */
 const generateNewData = (dataObjects: StatChartData[]) => {
-    const newData: { strokeColor: string | undefined; fillColor: string | undefined; data: ChartData[]; }[] = []
+    const newData: BarData[] = []
 
     /**
      * take all objects and declare  to create multiple data for multiple graphs
      */
     for (const dataObj of dataObjects) {
-        const dataObjectsToAnalize = dataObj.data
-        dataObjectsToAnalize.sort((a, b) => a - b)
+        const dataObjectsToAnalyze = dataObj.data
+        dataObjectsToAnalyze.sort((a, b) => a - b)
         const datumF: ChartData[] = []
         let bin0 = 0
         let bin1 = 0.5
@@ -234,11 +242,11 @@ const generateNewData = (dataObjects: StatChartData[]) => {
         let id = 1
         let cumulativeDensity = 0
 
-        for (let i = 0; i < dataObjectsToAnalize.length; i++) {
-            if (dataObjectsToAnalize[i] >= bin0 && dataObjectsToAnalize[i] < bin1) {
-                data.push(dataObjectsToAnalize[i])
-            } else if (dataObjectsToAnalize[i] >= bin1) {
-                const density = data.length ? ((data.length * 100) / dataObjectsToAnalize.length) * 0.01 : 0.00
+        for (let i = 0; i < dataObjectsToAnalyze.length; i++) {
+            if (dataObjectsToAnalyze[i] >= bin0 && dataObjectsToAnalyze[i] < bin1) {
+                data.push(dataObjectsToAnalyze[i])
+            } else if (dataObjectsToAnalyze[i] >= bin1) {
+                const density = data.length ? ((data.length * 100) / dataObjectsToAnalyze.length) * 0.01 : 0.00
                 cumulativeDensity += density
                 datumF.push({
                     color: dataObjects[0].strokeColor,
@@ -258,8 +266,8 @@ const generateNewData = (dataObjects: StatChartData[]) => {
                 data = []
             }
 
-            if (data.length && i === dataObjectsToAnalize.length - 1) {
-                const density = data.length ? ((data.length * 100) / dataObjectsToAnalize.length) * 0.01 : 0.00
+            if (data.length && i === dataObjectsToAnalyze.length - 1) {
+                const density = data.length ? ((data.length * 100) / dataObjectsToAnalyze.length) * 0.01 : 0.00
                 cumulativeDensity += density
                 datumF.push({
                     color: dataObjects[0].strokeColor,

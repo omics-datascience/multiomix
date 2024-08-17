@@ -130,7 +130,6 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
 
         // Calculates total pages
         const totalPages = Math.max(1, Math.ceil(this.props.experimentInfo.totalRowCount / this.props.tableControl.pageSize))
-
         return (
             <React.Fragment>
                 {/* NOTE: this conditional ensures that componentDidMount fires when selectedRow is set avoiding errors */}

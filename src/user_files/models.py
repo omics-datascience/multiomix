@@ -201,6 +201,22 @@ class UserFile(models.Model):
 
         # If needed, removes the first column as it's the index (gene or gem name)
         return list(fieldnames[1:] if not include_first_column else fieldnames)
+    def get_first_column_of_all_rows(self, include_first_column: Optional[bool] = False) -> List[str]:
+        """
+        Gets the first element of each row in the CSV file, excluding the first row.
+        @return: List of first elements from each row.
+        """
+        first_elements = []
+        with open(self.file_obj.file.name, 'r') as csv_file:
+            reader = self.__get_reader_from_file(csv_file)
+            if reader is None:
+                return []
+            # skip first line (have titles)
+            next(reader)
+            for row in reader:
+                if row:
+                    first_elements.append(row[0])
+        return list(first_elements)
 
     def get_specific_row(self, row: str) -> np.ndarray:
         """

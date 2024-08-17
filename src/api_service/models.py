@@ -435,12 +435,15 @@ class GeneGEMCombination(models.Model):
         self.gene_id = None
 
     @property
-    def gene_name(self) -> str:
+    def gene_name(self) -> str | None:
         """
         Gets the foreign key plain value (the name of the gene)
         @return: Name of the Gene
         """
-        return self.gene_id
+        try:
+            return self.gene.name
+        except Gene.DoesNotExist:
+            return None
 
     def __str__(self) -> str:
         return f'{self.gene_name} | {self.gem}'

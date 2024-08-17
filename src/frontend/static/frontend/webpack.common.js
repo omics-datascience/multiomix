@@ -27,7 +27,7 @@ module.exports = {
     },
     output: {
         path: PATHS.output,
-        filename: '[name]-[hash].js'
+        filename: '[name]-[contenthash].js'
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
@@ -60,7 +60,7 @@ module.exports = {
             protectWebpackAssets: false
         }),
         new MiniCssExtractPlugin({
-            filename: '[name]-[hash].css'
+            filename: '[name]-[contenthash].css'
         }),
         new BundleTracker({ filename: 'webpack-stats.json' })
     ]

@@ -55,19 +55,6 @@ const quantile = (data: number[], q: number): number => {
     return sortedAscendant[base]
 }
 
-// Chart with theme
-/* const XYChartWithTheme = withTheme(theme)(XYChart)
-const ResponsiveXYChart = withParentSize(({ parentWidth, parentHeight, renderTooltip, children, ...rest }) => (
-    <XYChartWithTheme
-        width={parentWidth}
-        height={parentHeight}
-        renderTooltip={renderTooltip}
-        {...rest}
-    >
-        {children}
-    </XYChartWithTheme>
-)) */
-
 /**
  * Component's props
  */
@@ -137,9 +124,7 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
 export {
     mean,
     quantile,
-    /*   ResponsiveXYChart, */
     BoxPlotTooltipProps,
     renderBoxPlotTooltip,
     BoxplotDatum
-    /* colors as boxPlotThemeColors */
 }

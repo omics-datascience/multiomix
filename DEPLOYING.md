@@ -140,7 +140,7 @@ To enable HTTPS, follow the steps below:
    ```yaml
    # ...
    nginx:
-       image: nginx:1.23.3
+       image: nginx:1.27
        ports:
            - 80:8000
            - 443:443
