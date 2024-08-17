@@ -209,7 +209,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
         return combinations_queryset
 
     def get_serializer_class(self):
-        """Gets the Serializer class depending of the Experiment's type"""
+        """Gets the Serializer class depending on the Experiment's type"""
         queryset = self.get_queryset()
         if not queryset:
             return GeneMiRNACombinationSerializer

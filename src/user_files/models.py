@@ -1,6 +1,7 @@
 import os
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import QuerySet
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from common.methylation import MethylationPlatform
@@ -23,6 +24,8 @@ def user_directory_path(instance, filename: str):
 
 class UserFile(models.Model):
     """User Files to submit experiments: mRNA and Gene Expression Modulators (GEM) file (miRNA, CNA or Methylation)"""
+    survival_columns: QuerySet['SurvivalColumnsTupleUserFile']
+    user_file: QuerySet['ExperimentSource']
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=300, blank=True, null=True)
     file_obj = models.FileField(upload_to=user_directory_path)
