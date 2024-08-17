@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { Biomarker, SourceStateBiomarker, TrainedModelForTable } from '../../types'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
-import { AllExperimentsTableControl, Nullable, Source } from '../../../utils/interfaces'
+import { AllExperimentsTableControl, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
 import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'

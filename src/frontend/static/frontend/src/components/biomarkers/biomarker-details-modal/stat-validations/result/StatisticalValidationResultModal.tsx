@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../../types'
 import { StatisticalValidationMenu } from '../StatisticalValidationMenu'
