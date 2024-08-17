@@ -1,22 +1,24 @@
+import concurrent
+import logging
 import os
 import tempfile
 import time
-import pandas as pd
+from concurrent.futures import ThreadPoolExecutor
+from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO
+
+import ggca
 import numpy as np
-from billiard.pool import Pool
+import pandas as pd
+from django.conf import settings
+from django.db import connection
+
 from common.constants import GEM_INDEX_NAME
 from common.functions import check_if_stopped
 from common.methylation import get_cpg_from_cpg_format_gem, get_gene_from_cpg_format_gem, \
     map_cpg_to_genes_df
 from common.typing import AbortEvent
 from .exceptions import NoSamplesInCommon, ExperimentStopped, ExperimentFailed
-from django.conf import settings
-from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO
 from .models import ExperimentSource, Experiment, GeneGEMCombination
-from django.db import connection
-import ggca
-import logging
-
 from .models_choices import CorrelationMethod, PValuesAdjustmentMethod
 
 
@@ -454,18 +456,23 @@ def __compute_correlation_and_p_values(
     check_if_stopped(is_aborted, ExperimentStopped)
 
     # Runs GGCA correlation in a Process to allow user stopping
-    with Pool(processes=1) as pool:
-        cor_process = pool.apply_async(func=__run_ggca, args=(mrna_file_path, gem_file_path,
-                                                              experiment, collect_gem_dataset,
-                                                              is_cpg_analysis, result_limit_row_count))
-        while not cor_process.ready():
-            cor_process.wait(timeout=1)
-            if is_aborted():
-                pool.terminate()
-                raise ExperimentStopped
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(__run_ggca, mrna_file_path, gem_file_path,
+                                 experiment, collect_gem_dataset,
+                                 is_cpg_analysis, result_limit_row_count)
 
+        # Checks if the experiment has been stopped every second
+        while not future.done():
+            try:
+                future.result(timeout=1)
+            except concurrent.futures.TimeoutError:
+                if is_aborted():
+                    future.cancel()
+                    raise ExperimentStopped
+
+        # Gets the result
         try:
-            analysis_result = cor_process.get()
+            analysis_result = future.result()
         except Exception as ex:
             logging.error('Correlation process has raised an exception')
             logging.exception(ex)
