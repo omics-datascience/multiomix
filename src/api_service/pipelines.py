@@ -379,7 +379,7 @@ def __generate_clean_temp_file(
         if gem_platform_df is not None:
             chunk = map_cpg_to_genes_df(chunk, gem_platform_df)
 
-        chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.', lineterminator='\n')
         number_of_rows += chunk.shape[0]
 
     temp_file.close()
