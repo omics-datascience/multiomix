@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from api_service.websocket_functions import send_update_user_file_command
 
+
 class TagType(models.IntegerChoices):
     """Tags are different for Files and Experiments"""
     FILE = 1

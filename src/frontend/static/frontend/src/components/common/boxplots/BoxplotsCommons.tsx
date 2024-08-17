@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYChart, theme, withParentSize, withTheme } from '@data-ui/xy-chart'
+/* import { XYChart, theme, withParentSize, withTheme } from '@data-ui/xy-chart' */
 import { DjangoSourceDataOutliersBasic } from '../../../utils/django_interfaces'
 
 /** Type of BoxPlot datum field */
@@ -54,19 +54,6 @@ const quantile = (data: number[], q: number): number => {
 
     return sortedAscendant[base]
 }
-
-// Chart with theme
-const XYChartWithTheme = withTheme(theme)(XYChart)
-const ResponsiveXYChart = withParentSize(({ parentWidth, parentHeight, renderTooltip, children, ...rest }) => (
-    <XYChartWithTheme
-        width={parentWidth}
-        height={parentHeight}
-        renderTooltip={renderTooltip}
-        {...rest}
-    >
-        {children}
-    </XYChartWithTheme>
-))
 
 /**
  * Component's props
@@ -132,14 +119,12 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
     )
 }
 
-const { colors } = theme
+/* const { colors } = theme */
 
 export {
     mean,
     quantile,
-    ResponsiveXYChart,
     BoxPlotTooltipProps,
     renderBoxPlotTooltip,
-    BoxplotDatum,
-    colors as boxPlotThemeColors
+    BoxplotDatum
 }

@@ -2,6 +2,7 @@ const path = require('path')
 const BundleTracker = require('webpack-bundle-tracker')
 
 // Plugins
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
@@ -10,7 +11,6 @@ const PATHS = {
     src: path.join(__dirname, 'src'),
     output: path.join(__dirname, 'dist')
 }
-
 module.exports = {
     entry: {
         base: `${PATHS.src}/base.tsx`,
@@ -27,7 +27,7 @@ module.exports = {
     },
     output: {
         path: PATHS.output,
-        filename: '[name]-[hash].js'
+        filename: '[name]-[contenthash].js'
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
@@ -35,15 +35,6 @@ module.exports = {
     },
     module: {
         rules: [
-            {
-                test: /\.ts(x?)$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader'
-                    }
-                ]
-            },
             {
                 test: /\.css$/,
                 use: [
@@ -69,8 +60,8 @@ module.exports = {
             protectWebpackAssets: false
         }),
         new MiniCssExtractPlugin({
-            filename: '[name]-[hash].css'
+            filename: '[name]-[contenthash].css'
         }),
-        new BundleTracker({ filename: './dist/webpack-stats.json' })
+        new BundleTracker({ filename: 'webpack-stats.json' })
     ]
 }

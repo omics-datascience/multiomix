@@ -114,7 +114,7 @@ const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
             <GeneralMetrics {...props} />
 
             <List.Item>
-                <List.Icon name='chart line' size='large' verticalAlign='middle' />
+                <List.Icon name='microchip' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
                         Kernel:

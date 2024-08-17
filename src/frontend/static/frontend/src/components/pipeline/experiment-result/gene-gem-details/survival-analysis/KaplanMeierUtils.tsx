@@ -25,7 +25,8 @@ type KaplanMeierData = Nullable<KaplanMeierGroup[]>
  */
 class Base extends React.Component<{
     width: number,
-    height: number
+    height: number,
+    children: any
 }, {}> {
     render () {
         return (

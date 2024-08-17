@@ -146,7 +146,6 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         // Number of combinations
                         const finalRowCount = experiment.result_final_row_count ?? '-'
                         const evaluatedRowCount = experiment.evaluated_row_count ?? finalRowCount
-
                         return (
                             <Table.Row key={experiment.id as number}>
                                 <TableCellWithTitle value={experiment.name} />
@@ -181,6 +180,10 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                         openPopup={this.openPopup}
                                         closePopup={this.closePopup}
                                         onSuccessCallback={this.props.getAllUserExperiments}
+                                        validationSource={{
+                                            gem_source: experiment.gem_source,
+                                            mRNA_source: experiment.mRNA_source
+                                        }}
                                     />
                                 </TableCell>
                                 <TableCell>{experiment.tag ? experiment.tag.name : '-'}</TableCell>

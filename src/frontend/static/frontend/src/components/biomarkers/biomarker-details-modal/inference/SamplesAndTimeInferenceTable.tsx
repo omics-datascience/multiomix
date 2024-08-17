@@ -149,6 +149,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         experimentType='inference'
                                         // In survival analysis tabs is necessary to have survival tuples
                                         showOnlyClinicalDataWithSurvivalTuples
+                                        showCBioPortalOption
                                         showPopup={showPopup}
                                         urlClinicalSourceAddOrEdit={urlClinicalSourceAddOrEditInferenceExperiment}
                                         urlUnlinkClinicalSource={urlUnlinkClinicalSourceInferenceExperiment}
@@ -157,6 +158,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         openPopup={() => setShowPopup(true)}
                                         closePopup={() => setShowPopup(false)}
                                         onSuccessCallback={props.refreshExperimentInfo}
+                                        validationSource={null}
                                     />
 
                                     <InferenceExperimentClinicalAttributeSelect

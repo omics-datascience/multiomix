@@ -23,7 +23,6 @@ export const UploadButton = (props: UploadButtonProps) => {
     return (
         <Button
             icon
-            labelPosition="left"
             fluid
             title={props.title}
             className="ellipsis"

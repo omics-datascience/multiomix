@@ -1,10 +1,9 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import './css/site-policy.css'
 
 import { SitePolicy } from './components/site-policy/SitePolicy'
 
-ReactDOM.render(
-    <SitePolicy />,
-    document.getElementById('site-policy-app')
-)
+const container = document.getElementById('site-policy-app')
+const root = createRoot(container!)
+root.render(<SitePolicy />)

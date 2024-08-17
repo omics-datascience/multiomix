@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { Dropdown, Menu, Image, Icon } from 'semantic-ui-react'
+import { Dropdown, Menu, Image, Icon, Loader } from 'semantic-ui-react'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { CurrentUserContext } from './Base'
@@ -30,7 +30,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // In case it's loading the user, shows a placeholder
     if (props.currentUser === null) {
         return (
-            <Menu.Item>
+            <Menu.Item style={{ fontSize: '1rem' }}>
                 <Icon name='spinner' loading />
             </Menu.Item>
         )
@@ -39,11 +39,9 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // Anonymous user
     if (props.currentUser.is_anonymous) {
         return (
-            <Menu.Menu as='h2'>
-                <Menu.Item as='a' href={urlLogin}>
-                    Log in
-                </Menu.Item>
-            </Menu.Menu>
+            <Menu.Item as='a' href={urlLogin} style={{ fontSize: '1rem' }}>
+                Log in
+            </Menu.Item>
         )
     }
 
@@ -60,7 +58,8 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
 type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers'
 
 interface MainNavbarProps {
-    activeItem?: ActiveItemOptions
+    activeItem?: ActiveItemOptions,
+    isLoadingUser: boolean,
 }
 
 /**
@@ -88,6 +87,20 @@ const MainNavbar = (props: MainNavbarProps) => {
                 <Image size='tiny' src='/static/frontend/img/logo.png' />
             </Menu.Item>
 
+            {/* Loading spinners while user is fetch */}
+            {props.isLoadingUser &&
+                <Menu.Menu>
+                    <Menu.Item style={{ padding: '0 1.72rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.72rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.7rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
+                </Menu.Menu>
+            }
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous &&
                 <React.Fragment>
@@ -177,13 +190,13 @@ const MainNavbar = (props: MainNavbarProps) => {
 
             {/* About us */}
             <Menu.Menu as='h2'>
-                <Menu.Item as='a' href={urlAboutUs}>
+                <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
                     About us
                 </Menu.Item>
             </Menu.Menu>
 
             {/* LogIn/LogOut panel */}
-            <Menu.Menu as='h3' position='right'>
+            <Menu.Menu as='h2' position='right'>
                 <LogInLogOutPanel currentUser={currentUser} />
             </Menu.Menu>
         </Menu>

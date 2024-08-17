@@ -1,30 +1,68 @@
+import concurrent
+import logging
 import os
 import tempfile
 import time
-import pandas as pd
+from concurrent.futures import ThreadPoolExecutor
+from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO
+
+import ggca
 import numpy as np
-from billiard.pool import Pool
+import pandas as pd
+from django.conf import settings
+from django.db import connection
+
 from common.constants import GEM_INDEX_NAME
 from common.functions import check_if_stopped
 from common.methylation import get_cpg_from_cpg_format_gem, get_gene_from_cpg_format_gem, \
     map_cpg_to_genes_df
 from common.typing import AbortEvent
 from .exceptions import NoSamplesInCommon, ExperimentStopped, ExperimentFailed
-from django.conf import settings
-from typing import Tuple, Type, List, cast, Optional, Union, Iterator, IO
 from .models import ExperimentSource, Experiment, GeneGEMCombination
-from django.db import connection
-import ggca
-import logging
+from .models_choices import CorrelationMethod, PValuesAdjustmentMethod
+
+
+def __get_correlation_method(value: CorrelationMethod) -> ggca.CorrelationMethod:
+    """
+    Gets the corresponding ggca.CorrelationMethod object from the CorrelationMethod enum. This is needed until
+    PyO3 supports constructors for enums.
+    @param value: CorrelationMethod enum value from the Experiment.
+    @return: ggca.CorrelationMethod object.
+    """
+    if value == CorrelationMethod.PEARSON:
+        return ggca.CorrelationMethod.Pearson
+    elif value == CorrelationMethod.SPEARMAN:
+        return ggca.CorrelationMethod.Spearman
+    elif value == CorrelationMethod.KENDALL:
+        return ggca.CorrelationMethod.Kendall
+    else:
+        raise ValueError(f'CorrelationMethod {value} is not supported.')
+
+
+def __get_adjustment_method(value: PValuesAdjustmentMethod) -> ggca.AdjustmentMethod:
+    """
+    Gets the corresponding ggca.AdjustmentMethod object from the PValuesAdjustmentMethod enum. This is needed until
+    PyO3 supports constructors for enums.
+    @param value: PValuesAdjustmentMethod enum value from the Experiment.
+    @return: ggca.AdjustmentMethod object.
+    """
+    if value == PValuesAdjustmentMethod.BENJAMINI_HOCHBERG:
+        return ggca.AdjustmentMethod.BenjaminiHochberg
+    elif value == PValuesAdjustmentMethod.BENJAMINI_YEKUTIELI:
+        return ggca.AdjustmentMethod.BenjaminiYekutieli
+    elif value == PValuesAdjustmentMethod.BONFERRONI:
+        return ggca.AdjustmentMethod.Bonferroni
+    else:
+        raise ValueError(f'PValuesAdjustmentMethod {value} is not supported.')
 
 
 def __run_ggca(
-    mrna_file_path: str,
-    gem_file_path: str,
-    experiment: Experiment,
-    collect_gem_dataset: bool,
-    is_cpg_analysis: bool,
-    keep_top_n: Optional[int]
+        mrna_file_path: str,
+        gem_file_path: str,
+        experiment: Experiment,
+        collect_gem_dataset: bool,
+        is_cpg_analysis: bool,
+        keep_top_n: Optional[int]
 ) -> Tuple[List[ggca.CorResult], int, int]:
     """
     Runs GGCA correlation analysis.
@@ -37,13 +75,17 @@ def __run_ggca(
     @return: A tuple with a vec of CorResult, the number of combinations before truncating by 'keep_top_n' parameter
     and the number of combinations evaluated.
     """
+    # Instantiates enum objects
+    correlation_method = __get_correlation_method(experiment.correlation_method)
+    p_values_adjustment_method = __get_adjustment_method(experiment.p_values_adjustment_method)
+
     return ggca.correlate(
         mrna_file_path,
         gem_file_path,
-        correlation_method=experiment.correlation_method,
+        correlation_method=correlation_method,
         correlation_threshold=experiment.minimum_coefficient_threshold,
         sort_buf_size=settings.SORT_BUFFER_SIZE,
-        adjustment_method=experiment.p_values_adjustment_method,
+        adjustment_method=p_values_adjustment_method,
         is_all_vs_all=experiment.correlate_with_all_genes,
         gem_contains_cpg=is_cpg_analysis,
         collect_gem_dataset=collect_gem_dataset,
@@ -52,13 +94,13 @@ def __run_ggca(
 
 
 def get_valid_data_from_sources(
-    experiment: Experiment,
-    gene_index: str,
-    gem_index: str,
-    round_values: bool,
-    clinical_attribute: Optional[str] = None,
-    return_samples_identifiers: bool = False,
-    fill_clinical_missing_samples: bool = True
+        experiment: Experiment,
+        gene_index: str,
+        gem_index: str,
+        round_values: bool,
+        clinical_attribute: Optional[str] = None,
+        return_samples_identifiers: bool = False,
+        fill_clinical_missing_samples: bool = True
 ) -> Union[
     Tuple[np.ndarray, np.ndarray],
     Tuple[np.ndarray, np.ndarray, np.ndarray],
@@ -339,7 +381,7 @@ def __generate_clean_temp_file(
         if gem_platform_df is not None:
             chunk = map_cpg_to_genes_df(chunk, gem_platform_df)
 
-        chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+        chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.', lineterminator='\n')
         number_of_rows += chunk.shape[0]
 
     temp_file.close()
@@ -372,6 +414,7 @@ def __should_collect_gem_dataset(gem_file_path: str) -> Optional[bool]:
     size_in_mb = size_in_bytes / 1048576  # 1024 * 1024
     return size_in_mb <= size_threshold_mb
 
+
 def __compute_correlation_and_p_values(
         experiment: Experiment,
         common_samples: np.ndarray,
@@ -394,8 +437,8 @@ def __compute_correlation_and_p_values(
     # Generates temp files to be consumed by Rust
     check_if_stopped(is_aborted, ExperimentStopped)
     mrna_temp_file, mrna_number_of_rows, _ = __generate_clean_temp_file(experiment.mRNA_source, common_samples,
-                                                                             experiment, 'geneID',
-                                                                             check_cpg_platform=False)
+                                                                        experiment, 'geneID',
+                                                                        check_cpg_platform=False)
     gem_temp_file, gem_number_of_rows, is_cpg_analysis = __generate_clean_temp_file(
         experiment.gem_source,
         common_samples,
@@ -413,18 +456,23 @@ def __compute_correlation_and_p_values(
     check_if_stopped(is_aborted, ExperimentStopped)
 
     # Runs GGCA correlation in a Process to allow user stopping
-    with Pool(processes=1) as pool:
-        cor_process = pool.apply_async(func=__run_ggca, args=(mrna_file_path, gem_file_path,
-                                                              experiment, collect_gem_dataset,
-                                                              is_cpg_analysis, result_limit_row_count))
-        while not cor_process.ready():
-            cor_process.wait(timeout=1)
-            if is_aborted():
-                pool.terminate()
-                raise ExperimentStopped
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(__run_ggca, mrna_file_path, gem_file_path,
+                                 experiment, collect_gem_dataset,
+                                 is_cpg_analysis, result_limit_row_count)
 
+        # Checks if the experiment has been stopped every second
+        while not future.done():
+            try:
+                future.result(timeout=1)
+            except concurrent.futures.TimeoutError:
+                if is_aborted():
+                    future.cancel()
+                    raise ExperimentStopped
+
+        # Gets the result
         try:
-            analysis_result = cor_process.get()
+            analysis_result = future.result()
         except Exception as ex:
             logging.error('Correlation process has raised an exception')
             logging.exception(ex)

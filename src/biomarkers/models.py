@@ -1,7 +1,8 @@
 from typing import Optional
-from queryset_sequence import QuerySetSequence
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import QuerySet
+from queryset_sequence import QuerySetSequence
 from tags.models import Tag
 from api_service.websocket_functions import send_update_biomarkers_command
 from user_files.models_choices import MoleculeType
@@ -53,15 +54,31 @@ class TrainedModelState(models.IntegerChoices):
 
 class Biomarker(models.Model):
     """Represents a biomarker"""
-    name = models.CharField(max_length=300)
-    description = models.TextField(null=True, blank=True)
-    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
-    upload_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
-    origin = models.IntegerField(choices=BiomarkerOrigin.choices)
-    state = models.IntegerField(choices=BiomarkerState.choices)
+    statistical_validations: QuerySet['statistical_properties.StatisticalValidation']
+    inference_experiments: QuerySet['inferences.InferenceExperiment']
+    methylations: QuerySet['MethylationIdentifier']
+    cnas: QuerySet['CNAIdentifier']
+    mirnas: QuerySet['MiRNAIdentifier']
+    mrnas: QuerySet['MRNAIdentifier']
+    name: str = models.CharField(max_length=300)
+    description: Optional[str] = models.TextField(null=True, blank=True)
+    tag: Optional[Tag] = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
+    upload_date: Optional[models.DateTimeField] = models.DateTimeField(auto_now_add=True, blank=False, null=True)
+    origin: int = models.IntegerField(choices=BiomarkerOrigin.choices)
+    state: int = models.IntegerField(choices=BiomarkerState.choices)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.statistical_validations = None
+        self.inference_experiments = None
+        self.trained_models = None
+        self.methylations = None
+        self.cnas = None
+        self.mirnas = None
+        self.mrnas = None
+
+    def __str__(self) -> str:
         return self.name
 
     @property
@@ -109,7 +126,6 @@ class Biomarker(models.Model):
         """Returns True if this Biomarker was created from a Feature Selection experiment"""
         return hasattr(self, 'fs_experiment')
 
-
     @property
     def was_already_used(self) -> bool:
         """
@@ -119,25 +135,24 @@ class Biomarker(models.Model):
         return self.trained_models.exists() or self.inference_experiments.exists() or \
             self.statistical_validations.exists()
 
-
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs) -> None:
         """Deletes the instance and sends a websockets message to update state in the frontend"""
         super().delete(*args, **kwargs)
 
         # Sends a websockets message to update the biomarker state in the frontend
         send_update_biomarkers_command(self.user.id)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Everytime the biomarker status changes, uses websocket to update state in the frontend"""
         super().save(*args, **kwargs)
-
+        biomarker: QuerySet['Biomarker']
         # Sends a websocket message to update the state in the frontend
         send_update_biomarkers_command(self.user.id)
 
 
 class MoleculeIdentifier(models.Model):
     """Common fields for a Biomarker's molecule"""
-    identifier = models.CharField(max_length=50)
+    identifier: str = models.CharField(max_length=50)
 
     class Meta:
         abstract = True
@@ -147,13 +162,16 @@ class MRNAIdentifier(MoleculeIdentifier):
     """Genes in a Biomarker"""
     biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='mrnas')
 
+
 class MiRNAIdentifier(MoleculeIdentifier):
     """miRNAs in a Biomarker"""
     biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='mirnas')
 
+
 class CNAIdentifier(MoleculeIdentifier):
     """CNA in a Biomarker"""
     biomarker = models.ForeignKey(Biomarker, on_delete=models.CASCADE, related_name='cnas')
+
 
 class MethylationIdentifier(MoleculeIdentifier):
     """Methylation in a Biomarker"""

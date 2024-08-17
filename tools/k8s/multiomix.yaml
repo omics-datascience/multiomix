@@ -165,7 +165,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8000 
-      - image: nginx:1.23.3
+      - image: nginx:1.27
         name: nginx
         volumeMounts:
         - name: static-data
