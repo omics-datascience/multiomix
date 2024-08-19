@@ -35,10 +35,10 @@ class ExperimentSource(models.Model):
     Represents a Pipeline source. A source could be a file (new or previously uploaded by
     the user), or a CGDS Dataset
     """
-    inference_experiments_as_methylation: QuerySet['InferenceExperiment']
-    inference_experiments_as_cna: QuerySet['InferenceExperiment']
-    inference_experiments_as_mirna: QuerySet['InferenceExperiment']
-    inference_experiments_as_mrna: QuerySet['InferenceExperiment']
+    inference_experiments_as_methylation: QuerySet[InferenceExperiment]
+    inference_experiments_as_cna: QuerySet[InferenceExperiment]
+    inference_experiments_as_mirna: QuerySet[InferenceExperiment]
+    inference_experiments_as_mrna: QuerySet[InferenceExperiment]
     gem_source: QuerySet['Experiment']
     mrna_source: QuerySet['Experiment']
     user_file = models.ForeignKey(UserFile, on_delete=models.CASCADE, blank=True, null=True,
@@ -128,10 +128,10 @@ class ExperimentClinicalSource(ExperimentSource):
     For clinical source of an experiment. Needs an extra CGDSDataset field as cBioPortal has two clinical datasets:
     patients data and samples data
     """
-    inference_experiments: QuerySet['InferenceExperiment']
+    inference_experiments: QuerySet[InferenceExperiment]
     clinical_source: QuerySet['Experiment']
-    extra_cgds_dataset: CGDSDataset = models.ForeignKey('datasets_synchronization.CGDSDataset', on_delete=models.CASCADE, blank=True,
-                                                        null=True)
+    extra_cgds_dataset: CGDSDataset = models.ForeignKey('datasets_synchronization.CGDSDataset',
+                                                        on_delete=models.CASCADE, blank=True, null=True)
 
     def get_methylation_platform_df(self):
         """
@@ -337,7 +337,8 @@ class Experiment(models.Model):
                                     related_name='mrna_source')
     gem_source: ExperimentSource = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
                                                      related_name='gem_source')
-    clinical_source: ExperimentClinicalSource = models.ForeignKey('api_service.ExperimentClinicalSource', on_delete=models.SET_NULL,
+    clinical_source: ExperimentClinicalSource = models.ForeignKey('api_service.ExperimentClinicalSource',
+                                                                  on_delete=models.SET_NULL,
                                                                   related_name='clinical_source', blank=True,
                                                                   null=True)
     submit_date: datetime.datetime = models.DateTimeField(auto_now_add=True, blank=False, null=True)
@@ -375,11 +376,10 @@ class Experiment(models.Model):
         model_class = self.get_combination_class()
         return model_class.objects.filter(experiment=self)
 
-        def get_combination_class(self):
-            """
-            Gets the corresponding Combination class depending on the Experiment's type.
-            """
-
+    def get_combination_class(self):
+        """
+        Gets the corresponding Combination class depending on the Experiment's type.
+        """
         return get_combination_class(self.type)
 
     def get_clinical_columns(self):
