@@ -49,28 +49,21 @@ class ExperimentSerializerDetail(serializers.ModelSerializer):
 
 class ExperimentSourceSerializer(serializers.ModelSerializer):
     """ExperimentSource serializer"""
+    number_of_rows = serializers.IntegerField()
+    number_of_samples = serializers.IntegerField()
+    user_file = SimpleUserFileSerializer()
+    cgds_dataset = SimpleCGDSDatasetSerializer()
+
     class Meta:
         model = ExperimentSource
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super(ExperimentSourceSerializer, self).to_representation(instance)
-
-        # Adds number of rows and samples
-        data['number_of_rows'] = instance.number_of_rows
-        data['number_of_samples'] = instance.number_of_samples
-
-        # If it's a UserFile, sets the file's URL
-        if instance.user_file:
-            data['user_file'] = SimpleUserFileSerializer(instance.user_file).data
-        else:
-            data['cgds_dataset'] = SimpleCGDSDatasetSerializer(instance.cgds_dataset).data
-
-        return data
-
 
 class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
+    mRNA_source = ExperimentSourceSerializer()
+    gem_source = ExperimentSourceSerializer()
+    tag = TagSerializer()
 
     class Meta:
         model = Experiment
@@ -89,41 +82,19 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'result_final_row_count',
             'p_values_adjustment_method',
             'type',
+            'tag',
             'clinical_source_id'
         ]
-
-    def to_representation(self, instance):
-        # IMPORTANT: makes a nested representation of the UserFile's file path only
-        # when it gets, but we can still sending only the UserFile's id when creating
-        data = super(ExperimentSerializer, self).to_representation(instance)
-        data['mRNA_source'] = ExperimentSourceSerializer(instance.mRNA_source).data
-        data['gem_source'] = ExperimentSourceSerializer(instance.gem_source).data
-
-        # Also, parses tag
-        if instance.tag:
-            data['tag'] = TagSerializer(instance.tag).data
-        return data
 
 
 class ExperimentClinicalSourceSerializer(serializers.ModelSerializer):
     """ExperimentClinicalSource serializer"""
+    number_of_rows = serializers.IntegerField()
+    number_of_samples = serializers.IntegerField()
+    user_file = UserFileSerializer()
+    cgds_dataset = SimpleCGDSDatasetSerializer()
+    extra_cgds_dataset = SimpleCGDSDatasetSerializer()
+
     class Meta:
         model = ExperimentClinicalSource
         fields = '__all__'
-
-    def to_representation(self, instance):
-        data = super(ExperimentClinicalSourceSerializer, self).to_representation(instance)
-
-        # Adds number of rows and samples
-        data['number_of_rows'] = instance.number_of_rows
-        data['number_of_samples'] = instance.number_of_samples
-
-        # If it's a UserFile, sets the file's URL
-        if instance.user_file:
-            # For clinical file it's needed complete UserFile serializer, not simple
-            data['user_file'] = UserFileSerializer(instance.user_file).data
-        else:
-            data['cgds_dataset'] = SimpleCGDSDatasetSerializer(instance.cgds_dataset).data
-            data['extra_cgds_dataset'] = SimpleCGDSDatasetSerializer(instance.extra_cgds_dataset).data
-
-        return data

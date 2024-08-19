@@ -11,6 +11,7 @@ from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, Lin
 
 class NormalityTestSerializer(serializers.ModelSerializer):
     """NormalityTest serializer"""
+
     class Meta:
         model = NormalityTest
         exclude = ['id']
@@ -18,6 +19,7 @@ class NormalityTestSerializer(serializers.ModelSerializer):
 
 class BreuschPaganTestSerializer(serializers.ModelSerializer):
     """BreuschPaganTest serializer"""
+
     class Meta:
         model = BreuschPaganTest
         exclude = ['id']
@@ -25,6 +27,7 @@ class BreuschPaganTestSerializer(serializers.ModelSerializer):
 
 class GoldfeldQuandtTestSerializer(serializers.ModelSerializer):
     """GoldfeldQuandtTest serializer"""
+
     class Meta:
         model = GoldfeldQuandtTest
         exclude = ['id']
@@ -32,6 +35,7 @@ class GoldfeldQuandtTestSerializer(serializers.ModelSerializer):
 
 class LinearityTestSerializer(serializers.ModelSerializer):
     """LinearityTest serializer"""
+
     class Meta:
         model = LinearityTest
         exclude = ['id']
@@ -39,6 +43,7 @@ class LinearityTestSerializer(serializers.ModelSerializer):
 
 class MonotonicTestSerializer(serializers.ModelSerializer):
     """LinearityTest serializer"""
+
     class Meta:
         model = MonotonicTest
         exclude = ['id']
@@ -46,6 +51,7 @@ class MonotonicTestSerializer(serializers.ModelSerializer):
 
 class SourceDataOutliersSerializer(serializers.ModelSerializer):
     """SourceDataOutliers serializer"""
+
     class Meta:
         model = SourceDataOutliers
         fields = ['sample_identifier', 'expression']
@@ -115,6 +121,7 @@ class StatisticalValidationSerializer(serializers.ModelSerializer):
             'cox_log_likelihood',
             'r2_score'
         ]
+
 
 class StatisticalValidationCompleteSerializer(serializers.ModelSerializer):
     """StatisticalValidation serializer with all the sources. TODO: check if used"""
