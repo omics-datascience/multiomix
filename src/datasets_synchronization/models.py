@@ -5,7 +5,6 @@ from django.db import models, transaction
 import numpy as np
 from django.db.models import Max, QuerySet
 from api_service.exceptions import CouldNotDeleteInMongo
-#from api_service.models import ExperimentSource
 from api_service.mongo_service import global_mongo_service
 from api_service.websocket_functions import send_update_cgds_studies_command
 from common.methylation import MethylationPlatform

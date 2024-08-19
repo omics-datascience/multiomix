@@ -65,19 +65,12 @@ class SourceDataStatisticalPropertiesSerializer(serializers.ModelSerializer):
     homoscedasticity_goldfeld_quandt = GoldfeldQuandtTestSerializer(read_only=True)
     linearity = LinearityTestSerializer(read_only=True)
     monotonicity = MonotonicTestSerializer(read_only=True)
+    gene_outliers = SourceDataOutliersSerializer(read_only=True, many=True)
+    gem_outliers = SourceDataOutliersSerializer(read_only=True, many=True)
 
     class Meta:
         model = SourceDataStatisticalProperties
         fields = '__all__'
-
-    def to_representation(self, instance):
-        data = super(SourceDataStatisticalPropertiesSerializer, self).to_representation(instance)
-
-        # Adds gene/GEM outliers
-        data['gene_outliers'] = SourceDataOutliersSerializer(instance.gene_outliers, read_only=True, many=True).data
-        data['gem_outliers'] = SourceDataOutliersSerializer(instance.gem_outliers, read_only=True, many=True).data
-
-        return data
 
 
 class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):

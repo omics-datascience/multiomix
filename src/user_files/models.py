@@ -83,7 +83,8 @@ class UserFile(models.Model):
     def __compute_decimal_separator(self):
         """Computes the UserFile decimal_separator field"""
         # This shouldn't fail as it was checked on upload
-        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file.name, seek_beginning=False, all_rows=False)
+        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file.name, seek_beginning=False,
+                                                                     all_rows=False)
         self.decimal_separator = decimal_separator if decimal_separator is not None else FileDecimalSeparator.DOT
 
     def compute_post_saved_field(self):
@@ -147,8 +148,8 @@ class UserFile(models.Model):
         return csv.reader(csv_file, dialect=dialect)
 
     def __get_dataframe(
-        self,
-        chunk_size: Optional[int] = None
+            self,
+            chunk_size: Optional[int] = None
     ) -> Union[pd.DataFrame, Iterable[pd.DataFrame]]:
         """
         Returns a DataFrame (entirely or in chunks).
@@ -188,7 +189,7 @@ class UserFile(models.Model):
         IMPORTANT: it's not using Pandas as it is extremely slow in comparison with this method (see times below)
         Pandas -> Takes 15.22 sec to finish 100 iterations
         CSV -> Takes 1.61 sec to finish 10000 iterations
-        @param include_first_column: If True, includes the firts column (the index)
+        @param include_first_column: If True, includes the first column (the index)
         @return: List of columns' names
         """
         with open(self.file_obj.file.name, 'r') as csv_file:
@@ -201,7 +202,8 @@ class UserFile(models.Model):
 
         # If needed, removes the first column as it's the index (gene or gem name)
         return list(fieldnames[1:] if not include_first_column else fieldnames)
-    def get_first_column_of_all_rows(self, include_first_column: Optional[bool] = False) -> List[str]:
+
+    def get_first_column_of_all_rows(self) -> List[str]:
         """
         Gets the first element of each row in the CSV file, excluding the first row.
         @return: List of first elements from each row.
@@ -211,12 +213,14 @@ class UserFile(models.Model):
             reader = self.__get_reader_from_file(csv_file)
             if reader is None:
                 return []
-            # skip first line (have titles)
+
+            # Skips first line (have titles)
             next(reader)
             for row in reader:
                 if row:
                     first_elements.append(row[0])
-        return list(first_elements)
+
+        return first_elements
 
     def get_specific_row(self, row: str) -> np.ndarray:
         """
@@ -258,6 +262,7 @@ class UserFile(models.Model):
 
     class Meta:
         ordering = ['-id']
+
 
 @receiver(post_delete, sender=UserFile)
 def user_file_post_delete(sender, instance, **kwargs):

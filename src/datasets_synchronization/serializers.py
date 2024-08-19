@@ -45,7 +45,7 @@ class CGDSDatasetWithSurvivalDataSerializer(serializers.ModelSerializer):
 
 class CGDSStudySerializer(serializers.ModelSerializer):
     # Generate a Nested relationships.
-    # See https://www.django-rest-framework.org/api-guide/relations/#nested-relationships)
+    # See https://www.django-rest-framework.org/api-guide/relations/#nested-relationships
     mrna_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     mirna_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     cna_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
@@ -65,9 +65,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
 
     def __create_cgds_dataset(self, validated_data_pop: OrderedDict) -> Optional[CGDSDataset]:
         """
-        Creates a CGDSDataset instance from a request data
-        @param validated_data_pop: Data extracted from request
-        @return: A CGDSDataset instance if validated_data_pop is not None. None otherwise
+        Creates a CGDSDataset instance from a request data.
+        @param validated_data_pop: Data extracted from request.
+        @return: A CGDSDataset instance if validated_data_pop is not None. None otherwise.
         """
         if not validated_data_pop:
             return None
@@ -111,6 +111,7 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             cgds_dataset_with_original_name = CGDSDataset.objects.get(condition)
         except CGDSDataset.DoesNotExist:
             cgds_dataset_with_original_name = None
+
         if cgds_dataset_with_original_name is not None:
             raise serializers.ValidationError({
                 'status': ResponseStatus(
