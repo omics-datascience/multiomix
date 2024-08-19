@@ -68,16 +68,6 @@ class Biomarker(models.Model):
     state: int = models.IntegerField(choices=BiomarkerState.choices)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(args, kwargs)
-        self.statistical_validations = None
-        self.inference_experiments = None
-        self.trained_models = None
-        self.methylations = None
-        self.cnas = None
-        self.mirnas = None
-        self.mrnas = None
-
     def __str__(self) -> str:
         return self.name
 

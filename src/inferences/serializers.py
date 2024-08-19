@@ -13,6 +13,7 @@ def generate_prediction_condition(predicted_time: Union[float, OuterRef]) -> Q:
             Q(max_value__isnull=True) | (Q(max_value__isnull=False) & Q(max_value__gte=predicted_time))
     )
 
+
 class InferenceExperimentSerializer(serializers.ModelSerializer):
     """Serializer for InferenceExperiment model."""
     model = serializers.SerializerMethodField(method_name='get_model')
