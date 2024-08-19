@@ -1,10 +1,10 @@
-import os
 import json
 import logging
-from builtins import map
-from celery.contrib.abortable import AbortableAsyncResult
 from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
+
 import numpy as np
+import pandas as pd
+from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
@@ -18,6 +18,8 @@ from rest_framework import generics, permissions, filters
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+import api_service.pipelines as pipelines
 from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_integer_enum_from_value, encode_json_response_status, \
     request_bool_to_python_bool, get_intersection, create_survival_columns_from_json, get_intersection_clinical
@@ -33,20 +35,18 @@ from user_files.models_choices import FileType
 from user_files.serializers import SurvivalColumnsTupleUserFileSimpleSerializer
 from user_files.utils import get_invalid_format_response
 from user_files.views import get_an_user_file
+from .enums import CorrelationType
 from .enums import SourceType, CorrelationGraphStatusErrorCode, CommonSamplesStatusErrorCode
 from .models import Experiment, GeneMiRNACombination, GeneGEMCombination, ExperimentClinicalSource
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
-from .enums import CorrelationType
 from .mrna_service import global_mrna_service
 from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_correlation
 from .permissions import ExperimentIsNotRunning
-import api_service.pipelines as pipelines
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
     ExperimentClinicalSourceSerializer
 from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
-import pandas as pd
 
 
 class CorrelationAnalysis(APIView):
@@ -140,7 +140,7 @@ class CorrelationAnalysis(APIView):
             experiment.save(force_insert=True)
 
         # Adds the experiment to the TaskQueue and gets Task id
-        async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk, ),
+        async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk,),
                                                                                queue='correlation_analysis')
 
         experiment.task_id = async_res.task_id
@@ -413,6 +413,7 @@ def get_samples_list(
 
     return list_of_samples, response
 
+
 @login_required
 def get_number_samples_in_common_action(request):
     """Gets the number of in common samples between two datasets"""
@@ -420,7 +421,7 @@ def get_number_samples_in_common_action(request):
     mrna_source_type = request.GET.get('mRNASourceType')
     gem_source_id = request.GET.get('gemSourceId')
     gem_source_type = request.GET.get('gemSourceType')
-    gem_file_type = request.GET.get('gemFileType') #Todo: remover y usar el enum directamente.
+    gem_file_type = request.GET.get('gemFileType')  # TODO: remover y usar el enum directamente.
 
     if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, gem_file_type]:
         response = {
@@ -434,7 +435,7 @@ def get_number_samples_in_common_action(request):
         # Cast parameters
         mrna_source_id = int(mrna_source_id)
         mrna_source_type = get_enum_from_value(
-            int(mrna_source_type), SourceType) 
+            int(mrna_source_type), SourceType)
 
         gem_source_id = int(gem_source_id)
         gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
@@ -474,13 +475,10 @@ def get_number_samples_in_common_action(request):
     return encode_json_response_status(response)
 
 
-
-#asd
 @login_required
 def get_number_samples_in_common_clinical_validation_source(request):
     json_request_data = json.loads(request.body)
-    headers_in_front: Optional[List[str]
-                               ] = json_request_data.get('headersColumnsNames')
+    headers_in_front: Optional[List[str]] = json_request_data.get('headersColumnsNames')
     mrna_source_id = json_request_data.get('mRNASourceId')
     mrna_source_type = json_request_data.get('mRNASourceType')
 
@@ -498,11 +496,11 @@ def get_number_samples_in_common_clinical_validation_source(request):
         # Cast parameters
         mrna_source_id = int(mrna_source_id)
         mrna_source_type = get_enum_from_value(
-            int(mrna_source_type), SourceType) 
+            int(mrna_source_type), SourceType)
 
         gem_source_id = int(gem_source_id)
         gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
-        #Gets df
+        # Gets df
         samples_list_mrna, response = get_samples_list(
             mrna_source_id,
             mrna_source_type,
@@ -533,6 +531,8 @@ def get_number_samples_in_common_clinical_validation_source(request):
 
     # Formats to JSON the ResponseStatus object
     return encode_json_response_status(response)
+
+
 @login_required
 def get_number_samples_in_common_clinical_validation(request):
     mrna_source_id = request.GET.get('mRNASourceId')
@@ -541,7 +541,8 @@ def get_number_samples_in_common_clinical_validation(request):
     gem_source_type = request.GET.get('gemSourceType')
     clinical_source_id = request.GET.get('clinicalSourceId')
     clinical_source_type = request.GET.get('clinicalSourceType')
-    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id, clinical_source_type]:
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id,
+                clinical_source_type]:
         response = {
             'status': ResponseStatus(
                 ResponseCode.ERROR,
@@ -553,11 +554,10 @@ def get_number_samples_in_common_clinical_validation(request):
         # Cast parameters
         mrna_source_id = int(mrna_source_id)
         mrna_source_type = get_enum_from_value(
-            int(mrna_source_type), SourceType) 
+            int(mrna_source_type), SourceType)
 
         gem_source_id = int(gem_source_id)
         gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
-
 
         clinical_source_id = int(clinical_source_id)
         clinical_source_type = get_enum_from_value(int(clinical_source_type), SourceType)
@@ -594,7 +594,8 @@ def get_number_samples_in_common_clinical_validation(request):
                         'data': {
                             'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
                             'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
-                            'number_samples_clinical': len(samples_list_clinical) if samples_list_clinical is not None else 0,
+                            'number_samples_clinical': len(
+                                samples_list_clinical) if samples_list_clinical is not None else 0,
                             'number_samples_in_common': intersection.size
                         }
                     }
@@ -607,8 +608,7 @@ def get_number_samples_in_common_clinical_validation(request):
 def get_number_samples_in_common_action_one_front(request):
     """Gets the number of in common samples between two datasets"""
     json_request_data = json.loads(request.body)
-    headers_in_front: Optional[List[str]
-                               ] = json_request_data.get('headersColumnsNames')
+    headers_in_front: Optional[List[str]] = json_request_data.get('headersColumnsNames')
     other_source_id = json_request_data.get('otherSourceId')
     other_source_type = json_request_data.get('otherSourceType')
 
@@ -678,7 +678,6 @@ def get_mirna_target_interaction_action(request):
     """
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
-    score = request.GET.get('score')
     include_pubmeds = request.GET.get('include_pubmeds')
 
     if not gene and not mirna:
@@ -693,7 +692,7 @@ def get_mirna_target_interaction_action(request):
     score = request.GET.get('score')
     if score:
         params['score'] = score
-    
+
     if include_pubmeds:
         if include_pubmeds.lower() == "true":
             params['include_pubmeds'] = "true"
@@ -753,8 +752,8 @@ def get_dataset_columns_name_action(request):
 
 
 def generate_result_file_response(
-    combinations: List[Dict],
-    experiment_name: str
+        combinations: List[Dict],
+        experiment_name: str
 ) -> HttpResponse:
     """
     Generates a HttpResponse to force an experiment result file download
@@ -777,9 +776,9 @@ def download_full_result(request, pk: int):
 
     def format_combination_object(combination: Type[GeneGEMCombination]) -> Dict:
         """
-        Generates a dict from a GeneGEMCombination
-        @param combination: GeneGEMCombination instance
-        @return: Dict with the fields
+        Generates a dict from a GeneGEMCombination.
+        @param combination: GeneGEMCombination instance.
+        @return: Dict with the fields.
         """
         data = {'gem': combination.gem, 'gene': combination.gene_name}
         try:
@@ -912,6 +911,7 @@ def unlink_clinical_source_user_file(request, pk: int):
 
 class SurvivalDataDetails(APIView):
     """REST endpoint: Gene and GEM survival data"""
+
     @staticmethod
     def post(request: Request):
         # Gets the specific experiment to extract gene, GEM and clinical information
