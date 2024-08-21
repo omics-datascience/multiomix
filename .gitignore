@@ -12,3 +12,4 @@ src/api_service/experiments/venv
 docker-compose.yml
 src/secretkey.txt
 docker-compose.mauri_dev.yml
+venv
