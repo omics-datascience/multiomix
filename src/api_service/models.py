@@ -430,10 +430,6 @@ class GeneGEMCombination(models.Model):
     class Meta:
         abstract = True
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(args, kwargs)
-        self.gene_id = None
-
     @property
     def gene_name(self) -> str | None:
         """
@@ -452,13 +448,16 @@ class GeneGEMCombination(models.Model):
 class GeneMiRNACombination(GeneGEMCombination):
     class Meta:
         db_table: str = 'gene_mirna_combination'
+        verbose_name = 'Gene MiRNA Combination'
 
 
 class GeneCNACombination(GeneGEMCombination):
     class Meta:
         db_table: str = 'gene_cna_combination'
+        verbose_name = 'Gene CNA Combination'
 
 
 class GeneMethylationCombination(GeneGEMCombination):
     class Meta:
         db_table: str = 'gene_methylation_combination'
+        verbose_name = 'Gene Methylation Combination'
