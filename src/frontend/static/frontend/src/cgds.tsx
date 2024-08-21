@@ -1,9 +1,10 @@
 import React from 'react'
-import { createRoot } from 'react-dom/client'
-
-import './css/files.css'
+import ReactDOM from 'react-dom'
+import './css/cgds.css'
 
 import { CGDSPanel } from './components/cgds-panel/CGDSPanel'
-const container = document.getElementById('cgds-app')
-const root = createRoot(container!)
-root.render(<CGDSPanel />)
+
+ReactDOM.render(
+    <CGDSPanel />,
+    document.getElementById('cgds-app')
+)

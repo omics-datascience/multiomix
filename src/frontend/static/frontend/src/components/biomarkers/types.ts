@@ -31,7 +31,7 @@ enum BiomarkerState {
     STOPPED = 7,
     REACHED_ATTEMPTS_LIMIT = 8,
     NO_FEATURES_FOUND = 9,
-    NO_VALID_SAMPLES = 10,
+    EMPTY_DATASET = 10,
     NO_VALID_MOLECULES = 11,
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12,
     /** This could happen for a timeout in the Celery job. */
@@ -53,7 +53,8 @@ enum TrainedModelState {
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
     /** This could happen for a serialization error in the Spark job. */
     MODEL_DUMP_NOT_AVAILABLE = 12,
-    TIMEOUT_EXCEEDED = 13
+    TIMEOUT_EXCEEDED = 13,
+    EMPTY_DATASET = 14
 }
 
 /** Type of molecules input in the Biomarker creation form. */

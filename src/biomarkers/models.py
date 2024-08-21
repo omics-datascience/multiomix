@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from queryset_sequence import QuerySetSequence
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -24,9 +24,9 @@ class BiomarkerState(models.IntegerChoices):
     NO_SAMPLES_IN_COMMON = 5
     STOPPING = 6
     STOPPED = 7
-    REACHED_ATTEMPTS_LIMIT = 8,
-    NO_FEATURES_FOUND = 9,
-    NO_VALID_SAMPLES = 10,
+    REACHED_ATTEMPTS_LIMIT = 8
+    NO_FEATURES_FOUND = 9
+    EMPTY_DATASET = 10
     NO_VALID_MOLECULES = 11
     NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 12
     TIMEOUT_EXCEEDED = 13
@@ -44,10 +44,11 @@ class TrainedModelState(models.IntegerChoices):
     REACHED_ATTEMPTS_LIMIT = 8
     NO_FEATURES_FOUND = 9
     NO_BEST_MODEL_FOUND = 10
-    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11,
+    NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS = 11
     # This could happen for a serialization error in the Spark job
     MODEL_DUMP_NOT_AVAILABLE = 12
     TIMEOUT_EXCEEDED = 13
+    EMPTY_DATASET = 14
 
 
 class Biomarker(models.Model):

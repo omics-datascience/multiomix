@@ -74,6 +74,11 @@
     padding-right: 0 !important;
 }
 
+.no-padding {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 .pull-left {
     float: left;
 }

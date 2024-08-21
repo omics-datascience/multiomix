@@ -10,7 +10,7 @@ from sksurv.exceptions import NoComparablePairException
 
 from biomarkers.models import Biomarker, BiomarkerState, TrainedModelState
 from common.exceptions import ExperimentStopped, NoSamplesInCommon, ExperimentFailed, NoBestModelFound, \
-    NumberOfSamplesFewerThanCVFolds, NoValidMolecules, NoValidSamples
+    NumberOfSamplesFewerThanCVFolds, NoValidMoleculesForModel, EmptyDataset
 from feature_selection.models import TrainedModel
 from multiomics_intermediate.celery import app
 from statistical_properties.models import StatisticalValidation
@@ -76,10 +76,10 @@ def eval_statistical_validation(self, stat_validation_pk: int) -> None:
         logging.error(f'ValueError raised due to number of member of each class being fewer than number '
                       f'of CV folds: {ex}')
         stat_validation.state = BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS
-    except NoValidSamples:
-        logging.error(f'StatisticalValidation {stat_validation.pk} has no valid samples')
-        stat_validation.state = BiomarkerState.NO_VALID_SAMPLES
-    except NoValidMolecules as ex:
+    except EmptyDataset:
+        logging.error(f'StatisticalValidation {stat_validation.pk} has no valid samples/molecules')
+        stat_validation.state = BiomarkerState.EMPTY_DATASET
+    except NoValidMoleculesForModel as ex:
         logging.error(f'StatisticalValidation {stat_validation.pk} has no valid molecules: {ex}')
         stat_validation.state = BiomarkerState.NO_VALID_MOLECULES
     except ExperimentFailed:
@@ -168,6 +168,9 @@ def eval_trained_model(self, trained_model_pk: int, model_parameters: Dict) -> N
     except NoSamplesInCommon:
         logging.error('No samples in common')
         trained_model.state = TrainedModelState.NO_SAMPLES_IN_COMMON
+    except EmptyDataset:
+        logging.error(f'TrainedModel {trained_model.pk} has no valid samples/molecules')
+        trained_model.state = TrainedModelState.EMPTY_DATASET
     except (NoBestModelFound, NoComparablePairException) as ex:
         logging.error(f'No best model found: {ex}')
         trained_model.state = TrainedModelState.NO_BEST_MODEL_FOUND

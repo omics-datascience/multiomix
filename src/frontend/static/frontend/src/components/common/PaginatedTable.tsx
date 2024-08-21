@@ -532,7 +532,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     </Grid.Column>
                 </Grid.Row>
                 <Grid.Row>
-                    <Grid.Column>
+                    <Grid.Column style={{ overflowX: 'auto' }}>
                         {/* Table */}
                         <Table celled sortable>
                             {/* Header */}

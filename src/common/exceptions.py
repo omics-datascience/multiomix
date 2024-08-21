@@ -26,11 +26,12 @@ class NumberOfSamplesFewerThanCVFolds(Exception):
     pass
 
 
-class NoValidSamples(Exception):
+class EmptyDataset(Exception):
     """Raised when there are no samples after filtering invalid values (NaN, Inf, etc.)."""
     pass
 
 
-class NoValidMolecules(Exception):
-    """Raised when there is at least one missing molecule in the used dataset."""
+class NoValidMoleculesForModel(Exception):
+    """Raised when number of molecules in the dataset for inference is different from the number of molecules
+    used when training the model."""
     pass
