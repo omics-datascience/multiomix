@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Experiment, ExperimentSource, ExperimentClinicalSource, GeneMiRNACombination, GeneCNACombination, \
-    GeneMethylationCombination
+    GeneMethylationCombination, GeneGEMCombination
 
 
 class ExperimentAdmin(admin.ModelAdmin):
@@ -11,7 +11,16 @@ class ExperimentAdmin(admin.ModelAdmin):
 
 class GeneGEMCombinationAdmin(admin.ModelAdmin):
     """Admin view for all GeneMiRNACombination, GeneCNACombination and GeneMethylationCombination models"""
-    list_display = ('gene', 'gem', 'correlation', 'p_value', 'adjusted_p_value', 'experiment')
+
+    @admin.display(description='P-value')
+    def p_value_rounded(self, obj: GeneGEMCombination):
+        return round(obj.p_value, 4)
+
+    @admin.display(description='Adjusted p-value')
+    def adjusted_p_value_rounded(self, obj: GeneGEMCombination):
+        return round(obj.adjusted_p_value, 4)
+
+    list_display = ('id', 'gene', 'gem', 'correlation', 'p_value_rounded', 'adjusted_p_value_rounded', 'experiment')
     search_fields = ('gene__name', 'gem__name', 'experiment__name')
     ordering = ('-experiment__submit_date', 'gene', 'gem')
 
