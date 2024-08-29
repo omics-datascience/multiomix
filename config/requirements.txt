@@ -18,6 +18,7 @@ lifelines==0.27.8
 mypy-extensions==1.0.0
 mypy==1.11.1
 pandas==2.2.2
+psutil==6.0.0
 psycopg2-binary==2.9.9
 pymongo==4.6.3
 redis==5.0.3
