@@ -1,5 +1,5 @@
 /** Accepted file types for a dataset. */
-const ACCEPTED_FILE_TYPES: string = '.csv,.tsv,.txt'
+const ACCEPTED_FILE_TYPES: string = '.csv,.tsv,.txt,.xlsx,.xls'
 
 /** Maximum file size to show a warning of possible slow upload. */
 const MAX_FILE_SIZE_IN_MB_WARN: number = 25
