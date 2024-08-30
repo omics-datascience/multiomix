@@ -382,19 +382,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      * Validate survivals columns are corrected formatted.
      * @returns boolean validation return true if correct
      */
-
-    validateSurvivalsColumnsComplete () {
-        if (this.state.survivalColumns.length > 0) {
-            for (const item of this.state.survivalColumns) {
-                if (item.event_column.trim().length === 0 || item.time_column.trim().length === 0) {
-                    return false
-                }
-            }
-
-            return true
-        } else {
-            return false
-        }
+    validateSurvivalsColumnsComplete (): boolean {
+        return !this.state.survivalColumns.some((item) => item.event_column.trim().length === 0 || item.time_column.trim().length === 0)
     }
 
     /**
@@ -521,7 +510,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         } else {
             clinicalIsDisabled = experiment.state !== BiomarkerState.COMPLETED
         }
-
+        const survColumnsAreComplete = !this.validateSurvivalsColumnsComplete()
         const iconExtraClassNames = this.props.iconExtraClassNames ?? ''
         const clinicalButtonClassName = clinicalIsDisabled
             ? iconExtraClassNames
@@ -577,7 +566,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             className='margin-top-2'
                                             loading={this.state.addingOrEditingSource}
                                             onClick={this.addOrEdit}
-                                            disabled={isProcessing || !this.canAddOrEdit() || !this.validateSurvivalsColumnsComplete()}
+                                            disabled={isProcessing || !this.canAddOrEdit() || survColumnsAreComplete}
                                         >
                                             Submit
                                         </Button>
