@@ -379,11 +379,19 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
     }
 
     /**
+     * Validate survivals columns are corrected formatted.
+     * @returns boolean validation return true if correct
+     */
+    validateSurvivalsColumnsComplete (): boolean {
+        return !this.state.survivalColumns.some((item) => item.event_column.trim().length === 0 || item.time_column.trim().length === 0)
+    }
+
+    /**
      * Submits selected clinical source
      */
     addOrEdit = () => {
-        // Todo: verificar que sea compatible agregar
-        if (!this.canAddOrEdit()) {
+        // Check the survival columns tuples.
+        if (!this.canAddOrEdit() || !this.validateSurvivalsColumnsComplete()) {
             return
         }
 
@@ -393,11 +401,6 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         // Request needs the experiment id to associate it with the new clinical source
         const formData = new FormData()
         formData.append('experimentPk', this.props.experiment.id.toString())
-
-        // Adds the survival columns tuples, if needed
-        if (this.state.survivalColumns.length > 0) {
-            formData.append('survival_columns', JSON.stringify(this.state.survivalColumns))
-        }
 
         // Appends Source data to FormData
         makeSourceAndAppend(this.state.clinicalSource, formData, 'clinical')
@@ -507,12 +510,11 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         } else {
             clinicalIsDisabled = experiment.state !== BiomarkerState.COMPLETED
         }
-
+        const survColumnsAreComplete = !this.validateSurvivalsColumnsComplete()
         const iconExtraClassNames = this.props.iconExtraClassNames ?? ''
         const clinicalButtonClassName = clinicalIsDisabled
             ? iconExtraClassNames
             : 'clickable ' + iconExtraClassNames
-
         return (
             <>
                 <Popup
@@ -564,7 +566,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             className='margin-top-2'
                                             loading={this.state.addingOrEditingSource}
                                             onClick={this.addOrEdit}
-                                            disabled={isProcessing || !this.canAddOrEdit()}
+                                            disabled={isProcessing || !this.canAddOrEdit() || survColumnsAreComplete}
                                         >
                                             Submit
                                         </Button>
