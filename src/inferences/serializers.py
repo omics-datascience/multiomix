@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 from feature_selection.fs_algorithms import FitnessFunction
 from feature_selection.models import ClusterLabelsSet, ClusterLabel, PredictionRangeLabelsSet, PredictionRangeLabel
 from .models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
+from api_service.models import ExperimentClinicalSource, ExperimentSource
 
 
 def generate_prediction_condition(predicted_time: Union[float, OuterRef]) -> Q:
@@ -19,9 +20,16 @@ class InferenceExperimentSerializer(serializers.ModelSerializer):
     model = serializers.SerializerMethodField(method_name='get_model')
     trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    clinical_source = ExperimentClinicalSource()
+    mrna_source = ExperimentSource()
+    mirna_source = ExperimentSource()
+    cna_source = ExperimentSource()
+    methylation_source = ExperimentSource()
+
     class Meta:
         model = InferenceExperiment
-        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model', 'clinical_source_id']
+        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model', 'clinical_source_id',
+                  'clinical_source', 'mrna_source', 'mirna_source', 'cna_source', 'methylation_source']
 
     @staticmethod
     def get_model(ins: InferenceExperiment) -> FitnessFunction:
