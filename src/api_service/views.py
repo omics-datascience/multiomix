@@ -478,13 +478,13 @@ def get_number_samples_in_common_action(request):
 @login_required
 def get_number_samples_in_common_clinical_validation_source(request):
     json_request_data = json.loads(request.body)
-    headers_in_front: Optional[List[str]] = json_request_data.get('headersColumnsNames')
+    clinical_data: Optional[List[str]] = json_request_data.get('clinicalData')
     mrna_source_id = json_request_data.get('mRNASourceId')
     mrna_source_type = json_request_data.get('mRNASourceType')
 
     gem_source_id = json_request_data.get('gemSourceId')
     gem_source_type = json_request_data.get('gemSourceType')
-    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, json_request_data, headers_in_front]:
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, json_request_data, clinical_data]:
         response = {
             'status': ResponseStatus(
                 ResponseCode.ERROR,
@@ -518,13 +518,13 @@ def get_number_samples_in_common_clinical_validation_source(request):
             )
             # Gets intersection
             if response is None:
-                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, headers_in_front)
+                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, clinical_data)
                 response = {
                     'status': ResponseStatus(ResponseCode.SUCCESS),
                     'data': {
                         'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
                         'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
-                        'number_samples_clinical': len(headers_in_front) if headers_in_front is not None else 0,
+                        'number_samples_clinical': len(clinical_data) if clinical_data is not None else 0,
                         'number_samples_in_common': intersection.size
                     }
                 }
