@@ -438,33 +438,9 @@ const getFilenameFromSource = (source: Source, defaultFilename: string = DEFAULT
  * Gets the columns' name of an specific CSV file
  * @param csvFile CSV file to parse
  * @param separator Columns separator
- * @param {FileType} type  Filetype to treat data indidually, default all.
  * @returns A Promise with an array of columns o a rejection with the event
  */
-const getInputFileCSVColumns = (csvFile: File, separator: string = '\t', type: FileType = FileType.ALL): Promise<string[]> => {
-    if (type === FileType.CLINICAL) {
-        return new Promise<string[]>((resolve, reject) => {
-            const fileReader = new FileReader()
-
-            fileReader.onload = (event) => {
-                if (event?.target) {
-                    const fileContent = event.target.result as string
-                    const lines = fileContent.split('\n')
-                    const clinicalData = lines.slice(1).map(line => line.split(separator)[0])
-
-                    if (clinicalData) {
-                        resolve(clinicalData)
-                    }
-                }
-
-                resolve([])
-            }
-
-            fileReader.onerror = (event) => reject(event)
-            fileReader.readAsText(csvFile)
-        })
-    }
-
+const getInputFileCSVColumns = (csvFile: File, separator: string = '\t'): Promise<string[]> => {
     return new Promise<string[]>((resolve, reject) => {
         const fileReader = new FileReader()
 
@@ -475,6 +451,36 @@ const getInputFileCSVColumns = (csvFile: File, separator: string = '\t', type: F
 
                 if (firstLine) {
                     resolve(firstLine.split(separator))
+                }
+            }
+
+            resolve([])
+        }
+
+        fileReader.onerror = (event) => reject(event)
+        fileReader.readAsText(csvFile)
+    })
+}
+
+/**
+ * Gets the columns' name of an specific CSV file
+ * @param csvFile CSV file to parse
+ * @param separator Columns separator
+ * @returns A Promise with an array of all first column all rows o a rejection with the event
+ */
+const getInputFileCSVFirstColumnAllRows = (csvFile: File, separator: string = '\t'): Promise<string[]> => {
+    // Todo Send number of column to search
+    return new Promise<string[]>((resolve, reject) => {
+        const fileReader = new FileReader()
+
+        fileReader.onload = (event) => {
+            if (event?.target) {
+                const fileContent = event.target.result as string
+                const lines = fileContent.split('\n')
+                const clinicalData = lines.slice(1).map(line => line.split(separator)[0])
+
+                if (clinicalData) {
+                    resolve(clinicalData)
                 }
             }
 
@@ -796,5 +802,6 @@ export {
     getFileSizeInMB,
     getScoreClassData,
     generateBinData,
-    getFileTypeName
+    getFileTypeName,
+    getInputFileCSVFirstColumnAllRows
 }
