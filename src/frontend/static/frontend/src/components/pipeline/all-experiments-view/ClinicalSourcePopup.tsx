@@ -50,7 +50,7 @@ interface PopupClinicalSourceProps {
     closePopup: () => void,
     /** After add/edit a clinical source popup callback */
     onSuccessCallback: (retryIfNotFound?: boolean) => void,
-    /** validation source to add clinical */
+    /** Validation source to add clinical */
     validationSource: Nullable<ValidationSource>,
 }
 
@@ -69,9 +69,9 @@ interface ClinicalSourceState {
     gettingSourceData: boolean,
     /** To check if it's a CGDSDataset as a clinical value */
     cgdsStudyName: Nullable<string>,
-    /** alert interface */
+    /** Alert interface */
     alert: CustomAlert,
-    /** posibles values for survival tuple */
+    /** Posibles values for survival tuple */
     survivalTuplesPossiblesValues: string[],
 }
 
@@ -197,7 +197,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                     }
                                 }
                             }).catch((err) => {
-                                console.log('Error parsing JSON ->', err)
+                                console.log('Error getting user experiments', err)
                             })
                         }).catch((err) => {
                             console.log('Error getting user experiments', err)

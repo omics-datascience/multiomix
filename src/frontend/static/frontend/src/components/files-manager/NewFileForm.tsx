@@ -60,7 +60,7 @@ interface NewFileFormProps {
     isEditing: boolean,
     uploadState: Nullable<UploadState>
     uploadFile: () => void,
-    fileChange: any, // (e: any) => void
+    fileChange: (e: any) => void
     handleAddFileInputsChange: (name: string, value: any) => void,
     resetNewFileForm: () => void,
     handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,

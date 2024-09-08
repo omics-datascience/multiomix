@@ -457,7 +457,7 @@ const getInputFileCSVColumns = (csvFile: File, separator: string = '\t'): Promis
             resolve([])
         }
 
-        fileReader.onerror = (event) => reject(event)
+        fileReader.onerror = reject
         fileReader.readAsText(csvFile)
     })
 }
@@ -481,13 +481,15 @@ const getInputFileCSVFirstColumnAllRows = (csvFile: File, separator: string = '\
 
                 if (clinicalData) {
                     resolve(clinicalData)
+                } else {
+                    resolve([])
                 }
             }
 
             resolve([])
         }
 
-        fileReader.onerror = (event) => reject(event)
+        fileReader.onerror = reject
         fileReader.readAsText(csvFile)
     })
 }

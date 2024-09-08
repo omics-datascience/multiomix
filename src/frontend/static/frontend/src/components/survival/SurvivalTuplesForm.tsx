@@ -20,7 +20,7 @@ interface SurvivalTuplesFormProps {
     handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,
     addSurvivalFormTuple: () => void,
     removeSurvivalFormTuple: (idx: number) => void
-    /** posibles values for survival tuple if undefined allows the users to write their own text */
+    /** Posibles values for survival tuple if undefined allows the users to write their own text */
     survivalTuplesPossiblesValues?: string[],
 }
 
@@ -60,7 +60,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
     const addSurvivalFormTuple = props.addSurvivalFormTuple
 
     /**
-     * method to handle select change.
+     * Method to handle select change.
      * @param idx id of tuple.
      * @param name name of field.
      * @param value value.
