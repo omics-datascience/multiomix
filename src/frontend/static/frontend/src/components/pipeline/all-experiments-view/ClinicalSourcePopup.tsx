@@ -197,10 +197,10 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                     }
                                 }
                             }).catch((err) => {
-                                console.log('Error getting user experiments', err)
+                                console.log('Error parsing JSON ->', err)
                             })
                         }).catch((err) => {
-                            console.log('Error getting user experiments', err)
+                            console.log('Error getting samples in common', err)
                         })
                     })
                 })
