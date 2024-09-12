@@ -3,7 +3,7 @@ import React from 'react'
 import { Button, Grid, Icon, Label, Popup } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoCommonResponse, DjangoExperiment, DjangoExperimentClinicalSource, DjangoExperimentSource, DjangoNumberSamplesInCommonClinicalValidationResult, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple, DjangoUserFile, ExperimentState } from '../../../utils/django_interfaces'
 import { CustomAlert, CustomAlertTypes, FileType, KySearchParams, Nullable, Source, SourceType } from '../../../utils/interfaces'
-import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns, makeSourceAndAppend } from '../../../utils/util_functions'
+import { alertGeneralError, cleanRef, experimentSourceIsValid, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns, getInputFileCSVFirstColumnAllRows, makeSourceAndAppend } from '../../../utils/util_functions'
 import { SurvivalTuplesForm } from '../../survival/SurvivalTuplesForm'
 import { SourceForm } from '../SourceForm'
 import { BiomarkerState, InferenceExperimentForTable } from '../../biomarkers/types'
@@ -50,7 +50,7 @@ interface PopupClinicalSourceProps {
     closePopup: () => void,
     /** After add/edit a clinical source popup callback */
     onSuccessCallback: (retryIfNotFound?: boolean) => void,
-    /** validation source to add clinical */
+    /** Validation source to add clinical */
     validationSource: Nullable<ValidationSource>,
 }
 
@@ -69,8 +69,10 @@ interface ClinicalSourceState {
     gettingSourceData: boolean,
     /** To check if it's a CGDSDataset as a clinical value */
     cgdsStudyName: Nullable<string>,
-    /** alert interface */
+    /** Alert interface */
     alert: CustomAlert,
+    /** Posibles values for survival tuple */
+    survivalTuplesPossiblesValues: string[],
 }
 
 /**
@@ -89,7 +91,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             gettingSourceData: false,
             unlinkingSource: false,
             cgdsStudyName: null,
-            alert: this.getDefaultAlertProps()
+            alert: this.getDefaultAlertProps(),
+            survivalTuplesPossiblesValues: []
         }
     }
 
@@ -168,32 +171,37 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
 
             if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
                 const file = clinicalSource.newUploadedFileRef.current.files[0]
-                getInputFileCSVColumns(file, undefined, FileType.CLINICAL).then((headersColumnsNames) => {
-                    // Sets the Request's Headers
-                    const myHeaders = getDjangoHeader()
-                    // Sends an array of headers to compare in server
-                    const jsonData = {
-                        headersColumnsNames,
-                        mRNASourceId,
-                        mRNASourceType: SourceType.UPLOADED_DATASETS,
-                        gemSourceId,
-                        gemSourceType: SourceType.UPLOADED_DATASETS
-                    }
+                getInputFileCSVFirstColumnAllRows(file, undefined).then((firstColumnAllRows) => {
+                    getInputFileCSVColumns(file, undefined).then((headersColumnsNames) => {
+                        // Sets the Request's Headers
+                        const myHeaders = getDjangoHeader()
+                        // Sends an array of headers to compare in server
+                        const jsonData = {
+                            clinicalData: firstColumnAllRows,
+                            mRNASourceId,
+                            mRNASourceType: SourceType.UPLOADED_DATASETS,
+                            gemSourceId,
+                            gemSourceType: SourceType.UPLOADED_DATASETS
+                        }
 
-                    ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
-                        response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
-                            if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
-                                if (jsonResponse.data.number_samples_in_common > 0) {
-                                    this.setState({ clinicalSource })
-                                } else {
-                                    this.clinicalSourceVoid()
+                        ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
+                            response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                                if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                                    if (jsonResponse.data.number_samples_in_common > 0) {
+                                        this.setState({
+                                            clinicalSource,
+                                            survivalTuplesPossiblesValues: headersColumnsNames
+                                        })
+                                    } else {
+                                        this.clinicalSourceVoid()
+                                    }
                                 }
-                            }
+                            }).catch((err) => {
+                                console.log('Error parsing JSON ->', err)
+                            })
                         }).catch((err) => {
-                            console.log('Error parsing JSON ->', err)
+                            console.log('Error getting samples in common', err)
                         })
-                    }).catch((err) => {
-                        console.log('Error getting user experiments', err)
                     })
                 })
             }
@@ -510,6 +518,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         } else {
             clinicalIsDisabled = experiment.state !== BiomarkerState.COMPLETED
         }
+
         const survColumnsAreComplete = !this.validateSurvivalsColumnsComplete()
         const iconExtraClassNames = this.props.iconExtraClassNames ?? ''
         const clinicalButtonClassName = clinicalIsDisabled
@@ -584,6 +593,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                                 handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                                                 addSurvivalFormTuple={this.addSurvivalFormTuple}
                                                 removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                                survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
                                             />
                                         </Grid.Column>
                                     }
