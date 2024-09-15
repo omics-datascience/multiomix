@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { Grid, Header, Statistic } from 'semantic-ui-react'
 import { DjangoBreuschPaganTest, DjangoGoldfeldQuandtTest, DjangoLinearityTest, DjangoMonotonicityTest, DjangoMRNAxGEMResultRow } from '../../../../../utils/django_interfaces'
 import { Nullable } from '../../../../../utils/interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../InfoPopup'
+import { COMMON_DECIMAL_PLACES } from '../../../../../utils/constants'
 
 /**
  * Component's props
@@ -22,7 +23,7 @@ interface GeneAndGEMSectionProps {
  * @param props Component's props
  * @returns Component
  */
-export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
+export const GeneAndGEMSection = memo((props: GeneAndGEMSectionProps) => {
     // For short...
     const [gene, gem] = getGeneAndGEMFromSelectedRow(props.selectedRow)
     const bpTest = props.heteroscedasticityBreuschPagan
@@ -47,19 +48,19 @@ export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
                 <InfoPopup content=' It evaluates if the random disturbance is different across points in the correlation graph. Thus heteroscedasticity is the absence of homoscedasticity' />
 
                 <Statistic size='tiny'>
-                    <Statistic.Value>{bpTest.lagrange_multiplier}</Statistic.Value>
+                    <Statistic.Value>{bpTest.lagrange_multiplier.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>Lagrange Mult.</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{bpTest.p_value}</Statistic.Value>
+                    <Statistic.Value>{bpTest.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>P-Value</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{bpTest.f_value}</Statistic.Value>
+                    <Statistic.Value>{bpTest.f_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>F Value</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{bpTest.f_p_value}</Statistic.Value>
+                    <Statistic.Value>{bpTest.f_p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>F P-Value</Statistic.Label>
                 </Statistic>
             </Grid.Column>
@@ -71,11 +72,11 @@ export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
                 <InfoPopup content='It tests the homoscedasticity of the correlation. Homoscedasticity essentially means that the relationship between the two variables we are correlating stays the same at all points, with the scores evenly spread along and around the regression line' />
 
                 <Statistic size='tiny'>
-                    <Statistic.Value>{gqTest.statistic}</Statistic.Value>
+                    <Statistic.Value>{gqTest.statistic.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>Statistic</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{gqTest.p_value}</Statistic.Value>
+                    <Statistic.Value>{gqTest.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>P-Value</Statistic.Label>
                 </Statistic>
             </Grid.Column>
@@ -87,11 +88,11 @@ export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
                 <InfoPopup content={`A relationship (correlation in this case) is linear if one variable (${gene}) increases by approximately the same rate as the other variables ${gem} changes by one unit`} />
 
                 <Statistic size='tiny'>
-                    <Statistic.Value>{props.linearity.statistic}</Statistic.Value>
+                    <Statistic.Value>{props.linearity.statistic.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>Statistic</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{props.linearity.p_value}</Statistic.Value>
+                    <Statistic.Value>{props.linearity.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>P-Value</Statistic.Label>
                 </Statistic>
             </Grid.Column>
@@ -103,14 +104,14 @@ export const GeneAndGEMSection = (props: GeneAndGEMSectionProps) => {
                 <InfoPopup content={`It evaluates if ${gene} expressión presents a monotonic relationship with ${gem} values. They are monotonic if when ${gene} increases ${gem} increases or when ${gene} decreases ${gem} decreases`} />
 
                 <Statistic size='tiny'>
-                    <Statistic.Value>{props.monotonicity.statistic}</Statistic.Value>
+                    <Statistic.Value>{props.monotonicity.statistic.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>Statistic</Statistic.Label>
                 </Statistic>
                 <Statistic size='tiny'>
-                    <Statistic.Value>{props.monotonicity.p_value}</Statistic.Value>
+                    <Statistic.Value>{props.monotonicity.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                     <Statistic.Label>P-Value</Statistic.Label>
                 </Statistic>
             </Grid.Column>
         </Grid>
     )
-}
+})
