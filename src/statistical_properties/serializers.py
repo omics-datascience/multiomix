@@ -89,11 +89,11 @@ class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
     fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
     trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
-    clinical_source = ExperimentClinicalSource()
-    mrna_source_result = ExperimentSource()
-    mirna_source_result = ExperimentSource()
-    cna_source_result = ExperimentSource()
-    methylation_source_result = ExperimentSource()
+    clinical_source = ExperimentClinicalSourceSerializer()
+    mrna_source_result = ExperimentSourceSerializer()
+    mirna_source_result = ExperimentSourceSerializer()
+    cna_source_result = ExperimentSourceSerializer()
+    methylation_source_result = ExperimentSourceSerializer()
 
     class Meta:
         model = StatisticalValidation

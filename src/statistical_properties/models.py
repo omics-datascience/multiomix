@@ -148,13 +148,13 @@ class StatisticalValidation(models.Model):
                                                    related_name='statistical_validations', null=True, blank=True)
 
     # Sources
-    mrna_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE, null=True,
+    mrna_source_result = models.OneToOneField('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
                                               blank=True, related_name='statistical_validations_as_mrna')
-    mirna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+    mirna_source_result = models.OneToOneField('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
                                                blank=True, related_name='statistical_validations_as_mirna')
-    cna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+    cna_source_result = models.OneToOneField('api_service.ExperimentClinicalSource', on_delete=models.CASCADE, null=True,
                                              blank=True, related_name='statistical_validations_as_cna')
-    methylation_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE,
+    methylation_source_result = models.OneToOneField('api_service.ExperimentClinicalSource', on_delete=models.CASCADE,
                                                      null=True, blank=True,
                                                      related_name='statistical_validations_as_methylation')
     # Number of attempts to prevent a buggy statistical validation running forever
