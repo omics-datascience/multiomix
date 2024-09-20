@@ -60,12 +60,13 @@ interface NewFileFormProps {
     isEditing: boolean,
     uploadState: Nullable<UploadState>
     uploadFile: () => void,
-    fileChange: (e: any) => void,
+    fileChange: (e: any) => void
     handleAddFileInputsChange: (name: string, value: any) => void,
     resetNewFileForm: () => void,
     handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,
     addSurvivalFormTuple: () => void,
-    removeSurvivalFormTuple: (idx: number) => void
+    removeSurvivalFormTuple: (idx: number) => void,
+    survivalTuplesPossiblesValues: string[],
 }
 
 /**
@@ -297,6 +298,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 addSurvivalFormTuple={props.addSurvivalFormTuple}
                                 removeSurvivalFormTuple={props.removeSurvivalFormTuple}
                                 disabled={props.uploadingFile}
+                                survivalTuplesPossiblesValues={props.survivalTuplesPossiblesValues}
                             />
                         }
                     </Grid>

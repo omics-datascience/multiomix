@@ -3,7 +3,7 @@ import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
@@ -65,6 +65,8 @@ interface FilesManagerState {
     addingTag: boolean,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
+    /** posibles values for survival tuple */
+    survivalTuplesPossiblesValues: string[],
 }
 
 /**
@@ -94,7 +96,8 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             newFile: this.getDefaultNewFile(),
             addingTag: false,
             uploadPercentage: 0,
-            uploadState: null
+            uploadState: null,
+            survivalTuplesPossiblesValues: []
         }
     }
 
@@ -121,19 +124,18 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      */
     fileChange = () => {
         const newFileForm = this.state.newFile
-
         // Get Filename if file was selected
         const newFile = this.newFileInputRef.current
         const newFileName = (newFile && newFile.files.length > 0) ? newFile.files[0].name : FILE_INPUT_LABEL
 
         // If there wasn't a File name written by the user, loads the filename in the input
         const newFileNameUser = (newFileForm.newFileNameUser.trim().length > 0) ? newFileForm.newFileNameUser : newFileName
-
         // Sets the new field values
         newFileForm.newFileName = newFileName
         newFileForm.newFileNameUser = newFileNameUser
-
-        this.setState({ newFile: newFileForm })
+        getInputFileCSVColumns(newFile.files[0]).then((headersColumnsNames) => {
+            this.setState({ newFile: newFileForm, survivalTuplesPossiblesValues: headersColumnsNames })
+        })
     }
 
     /**
@@ -764,6 +766,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                             handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                             addSurvivalFormTuple={this.addSurvivalFormTuple}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                            survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
                         />
 
                         <TagsPanel

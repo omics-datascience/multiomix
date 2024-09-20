@@ -1,5 +1,5 @@
-import React from 'react'
-import { Button, Grid, Header, Icon, Input, Segment } from 'semantic-ui-react'
+import React, { useMemo } from 'react'
+import { Button, Grid, Header, Icon, Input, Segment, Select } from 'semantic-ui-react'
 import { DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { survivalTupleIsValid } from './utils'
@@ -20,6 +20,8 @@ interface SurvivalTuplesFormProps {
     handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,
     addSurvivalFormTuple: () => void,
     removeSurvivalFormTuple: (idx: number) => void
+    /** Posibles values for survival tuple if undefined allows the users to write their own text */
+    survivalTuplesPossiblesValues?: string[],
 }
 
 const ContainerNoInline = (props: { children: JSX.Element, noPadding?: boolean }) => {
@@ -57,12 +59,31 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
 
     const addSurvivalFormTuple = props.addSurvivalFormTuple
 
+    /**
+     * Method to handle select change.
+     * @param idx id of tuple.
+     * @param name name of field.
+     * @param value value.
+     */
+    const handleChangeValueTuple = (idx: number, name: string, value: any) => {
+        props.handleSurvivalFormDatasetChanges(idx, name, value)
+    }
+
+    /**
+     * Value memorize to handle array of string to Selector data model.
+     * Initial if to handle if value is an array or a undefined, undefined is declared to handle if it will be a input or a selector.
+     * Selector is when an string array is passed by props.
+     * Input is when undefined is passed by props.
+     */
+    const posiblesValues = useMemo(() => props.survivalTuplesPossiblesValues === undefined ? undefined : props.survivalTuplesPossiblesValues.map(item => ({ key: item, value: item, text: item })), [props.survivalTuplesPossiblesValues])
+
     return (
         <React.Fragment>
             <React.Fragment>
                 {props.survivalColumns?.map((survivalColumn, idx) => {
                     const checkedHandleSurvivalFormChanges = checkedValidityCallback(
                         (name, value) => {
+                            console.log(name, value)
                             const callback = props.handleSurvivalFormDatasetChanges
                             return callback(idx, name, value)
                         }
@@ -84,31 +105,66 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                         onClick={() => removeSurvivalFormTuple(idx)}
                                     />
                                 </Header>
-                                <Input
-                                    icon='asterisk'
-                                    fluid
-                                    name='event_column'
-                                    className="margin-top-2"
-                                    value={survivalColumn.event_column}
-                                    onChange={checkedHandleSurvivalFormChanges}
-                                    loading={props.loading}
-                                    disabled={props.disabled}
-                                    placeholder='Column of event'
-                                    maxLength={30}
-                                />
-
-                                <Input
-                                    icon='asterisk'
-                                    fluid
-                                    name='time_column'
-                                    className="margin-top-2"
-                                    value={survivalColumn.time_column}
-                                    onChange={checkedHandleSurvivalFormChanges}
-                                    loading={props.loading}
-                                    disabled={props.disabled}
-                                    placeholder='Column of time'
-                                    maxLength={30}
-                                />
+                                {
+                                    posiblesValues === undefined
+                                        ? (
+                                            <Input
+                                                icon='asterisk'
+                                                fluid
+                                                name='event_column'
+                                                className="margin-top-2"
+                                                value={survivalColumn.event_column}
+                                                onChange={checkedHandleSurvivalFormChanges}
+                                                loading={props.loading}
+                                                disabled={props.disabled}
+                                                placeholder='Column of event'
+                                                maxLength={30}
+                                            />
+                                        )
+                                        : (
+                                            <Select
+                                                placeholder='Column of event'
+                                                name='event_column'
+                                                fluid
+                                                className="margin-top-2"
+                                                loading={props.loading}
+                                                disabled={props.disabled}
+                                                options={posiblesValues.filter(value => value.key !== survivalColumn.time_column)}
+                                                value={survivalColumn.event_column}
+                                                onChange={(_, { name, value }) => handleChangeValueTuple(idx, name, value)}
+                                            />
+                                        )
+                                }
+                                {
+                                    posiblesValues === undefined
+                                        ? (
+                                            <Input
+                                                icon='asterisk'
+                                                fluid
+                                                name='time_column'
+                                                className="margin-top-2"
+                                                value={survivalColumn.time_column}
+                                                onChange={checkedHandleSurvivalFormChanges}
+                                                loading={props.loading}
+                                                disabled={props.disabled}
+                                                placeholder='Column of time'
+                                                maxLength={30}
+                                            />
+                                        )
+                                        : (
+                                            <Select
+                                                options={posiblesValues.filter(value => value.key !== survivalColumn.event_column)}
+                                                fluid
+                                                name='time_column'
+                                                className="margin-top-2"
+                                                value={survivalColumn.time_column}
+                                                loading={props.loading}
+                                                disabled={props.disabled}
+                                                placeholder='Column of time'
+                                                onChange={(_, { name, value }) => handleChangeValueTuple(idx, name, value)}
+                                            />
+                                        )
+                                }
                             </Segment>
                         </ContainerNoInline>
                     )
