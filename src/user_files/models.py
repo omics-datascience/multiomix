@@ -10,7 +10,6 @@ from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-
 from api_service.websocket_functions import send_update_user_file_command
 from common.methylation import MethylationPlatform
 from institutions.models import Institution

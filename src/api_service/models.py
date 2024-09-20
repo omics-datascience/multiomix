@@ -331,6 +331,7 @@ class ExperimentClinicalSource(ExperimentSource):
 
 class Experiment(models.Model):
     """Base Class for common Correlation experiment's fields"""
+
     name: str = models.CharField(max_length=100)
     description: Optional[str] = models.TextField(blank=True, null=True)
     mRNA_source = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
@@ -366,6 +367,8 @@ class Experiment(models.Model):
     # TODO: analyze if this go here, maybe when refactor the GEM type for UserFile and CGDSDataset
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema
     correlate_with_all_genes: bool = models.BooleanField(blank=False, null=False, default=True)
+
+    is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property
     def combinations(self) -> Type[Gene | UserFile] | Any:
