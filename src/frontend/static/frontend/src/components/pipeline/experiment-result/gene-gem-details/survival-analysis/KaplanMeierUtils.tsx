@@ -176,7 +176,7 @@ const YAxis = (props: AxisProps) => {
         >
             <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
             <text
-                dy="0.71em"
+                dy="1.50em"
                 style={{ textAnchor: 'middle' }}
                 transform="rotate(-90)"
                 x={-props.height / 2}
@@ -405,7 +405,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
                     domain={yDomain}
                     height={seriesHeight}
                     label={this.props.yAxisLabel}
-                    left={32}
+                    left={48}
                     top={16}
                     width={32}
                 />
