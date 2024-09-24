@@ -9,6 +9,7 @@ class InferenceExperiment(models.Model):
     """Represents an inference experiment from test sources using a TrainedModel"""
     samples_and_time: QuerySet['SampleAndTimePrediction']
     samples_and_clusters: QuerySet['SampleAndClusterPrediction']
+
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
