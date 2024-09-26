@@ -89,11 +89,11 @@ class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
     fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
     trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
-    clinical_source = ExperimentClinicalSource()
-    mrna_source_result = ExperimentSource()
-    mirna_source_result = ExperimentSource()
-    cna_source_result = ExperimentSource()
-    methylation_source_result = ExperimentSource()
+    clinical_source = ExperimentClinicalSourceSerializer()
+    mrna_source_result = ExperimentSourceSerializer()
+    mirna_source_result = ExperimentSourceSerializer()
+    cna_source_result = ExperimentSourceSerializer()
+    methylation_source_result = ExperimentSourceSerializer()
 
     class Meta:
         model = StatisticalValidation
@@ -201,7 +201,7 @@ class TrainedModelForTableSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
                   'fitness_metric', 'cv_folds_modified', 'can_be_deleted', 'clinical_source', 'mrna_source',
                   'mirna_source', 'cna_source',
-                  'methylation_source', ]
+                  'methylation_source']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:

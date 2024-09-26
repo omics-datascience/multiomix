@@ -7,6 +7,7 @@ class ExperimentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'type', 'submit_date', 'state', 'user')
     list_filter = ('state', 'submit_date')
     search_fields = ('name', 'description', 'user__username')
+    filter_horizontal = ('shared_institutions', 'shared_users')
 
 
 class GeneGEMCombinationAdmin(admin.ModelAdmin):
