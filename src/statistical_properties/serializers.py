@@ -201,7 +201,7 @@ class TrainedModelForTableSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
                   'fitness_metric', 'cv_folds_modified', 'can_be_deleted', 'clinical_source', 'mrna_source',
                   'mirna_source', 'cna_source',
-                  'methylation_source', ]
+                  'methylation_source']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:

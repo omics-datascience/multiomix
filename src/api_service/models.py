@@ -1,12 +1,16 @@
 import datetime
 from typing import Iterable, List, Optional, Type, Set, Any
+
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
 from genes.models import Gene
 from inferences.models import InferenceExperiment
+from institutions.models import Institution
 from tags.models import Tag
 from user_files.models import UserFile
 from user_files.models_choices import FileType
@@ -368,6 +372,10 @@ class Experiment(models.Model):
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema
     correlate_with_all_genes: bool = models.BooleanField(blank=False, null=False, default=True)
 
+    shared_institutions = models.ManyToManyField(Institution, blank=True,
+                                                 related_name='shared_correlation_analysis')
+    shared_users = models.ManyToManyField(User, blank=True,
+                                                 related_name='shared_users_correlation_analysis')
     is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property
