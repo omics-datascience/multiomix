@@ -83,7 +83,6 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                 {props.survivalColumns?.map((survivalColumn, idx) => {
                     const checkedHandleSurvivalFormChanges = checkedValidityCallback(
                         (name, value) => {
-                            console.log(name, value)
                             const callback = props.handleSurvivalFormDatasetChanges
                             return callback(idx, name, value)
                         }

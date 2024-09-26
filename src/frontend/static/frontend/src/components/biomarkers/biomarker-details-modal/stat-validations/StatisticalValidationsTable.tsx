@@ -10,6 +10,7 @@ import ky from 'ky'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
 import { Nullable } from '../../../../utils/interfaces'
 import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerStatisticalValidations: string
 declare const urlStopStatisticalValidation: string
@@ -173,6 +174,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                     { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
                     { name: 'Model', textAlign: 'center', width: 2 },
                     { name: 'Date', serverCodeToSort: 'created' },
+                    { name: 'Datasets' },
                     { name: 'Actions' }
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
@@ -205,6 +207,16 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 <FitnessFunctionLabel fitnessFunction={statisticalValidation.fitness_function} />
                             </Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'L')} />
+                            <Table.Cell>
+                                {/*   <TableCellSources
+                                    clinical_source={statisticalValidation.clinical_source}
+                                    methylation_source={statisticalValidation.mrna_source}
+                                    mrna_source={statisticalValidation.mirna_source}
+                                    cna_source={statisticalValidation.cna_source}
+                                    mirna_source={statisticalValidation.methylation_source}
+                                /> */}
+                                datasetsss
+                            </Table.Cell>
                             <Table.Cell width={1}>
                                 {statisticalValidation.state === BiomarkerState.COMPLETED &&
                                     <Icon
