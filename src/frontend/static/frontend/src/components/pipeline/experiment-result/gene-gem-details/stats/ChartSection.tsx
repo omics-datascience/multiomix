@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 import { Divider, Grid, Header, Segment, Statistic } from 'semantic-ui-react'
 import { DjangoMRNAxGEMResultRow, SourceDataStatisticalPropertiesResponse, DjangoNormalityTest, DjangoSourceDataOutliersBasic } from '../../../../../utils/django_interfaces'
 import { Nullable } from '../../../../../utils/interfaces'
@@ -6,6 +6,7 @@ import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_function
 import { InfoPopup } from '../InfoPopup'
 import { BoxPlotChart } from './BoxPlotChart'
 import { DensityChart, DensityChartMix } from './DensityChart'
+import { COMMON_DECIMAL_PLACES } from '../../../../../utils/constants'
 
 /** MeanAndStdStats props. */
 interface MeanAndStdStatsProps {
@@ -18,14 +19,14 @@ interface MeanAndStdStatsProps {
  * @param props Component's props
  * @returns Component
  */
-const MeanAndStdStats = (props: MeanAndStdStatsProps) => {
+const MeanAndStdStats = memo((props: MeanAndStdStatsProps) => {
     const log2 = Math.log2(props.mean)
-    const log2Display = isNaN(log2) ? '-' : log2.toFixed(3)
+    const log2Display = isNaN(log2) ? '-' : log2.toFixed(COMMON_DECIMAL_PLACES)
 
     return (
         <React.Fragment>
             <Statistic size='small'>
-                <Statistic.Value>{props.mean}</Statistic.Value>
+                <Statistic.Value>{props.mean.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                 <Statistic.Label>Average</Statistic.Label>
             </Statistic>
             <Statistic size='small'>
@@ -33,12 +34,12 @@ const MeanAndStdStats = (props: MeanAndStdStatsProps) => {
                 <Statistic.Label>Average (Log2)</Statistic.Label>
             </Statistic>
             <Statistic size='small'>
-                <Statistic.Value>{props.standardDeviation}</Statistic.Value>
+                <Statistic.Value>{props.standardDeviation.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                 <Statistic.Label>Standard deviation</Statistic.Label>
             </Statistic>
         </React.Fragment>
     )
-}
+})
 
 /**
  * Component's props
@@ -53,20 +54,20 @@ interface NormalityStatsProps {
  * @param props Component's props
  * @returns Component
  */
-const NormalityStats = (props: NormalityStatsProps) => (
+const NormalityStats = memo((props: NormalityStatsProps) => (
     <React.Fragment>
         <InfoPopup content={`It tests if the ${props.geneOrGem} vector follows a normal distribution`} />
 
         <Statistic size='tiny'>
-            <Statistic.Value>{props.normality.statistic}</Statistic.Value>
+            <Statistic.Value>{props.normality.statistic.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
             <Statistic.Label>Shapiro test</Statistic.Label>
         </Statistic>
         <Statistic size='tiny'>
-            <Statistic.Value>{props.normality.p_value}</Statistic.Value>
+            <Statistic.Value>{props.normality.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
             <Statistic.Label>P-Value</Statistic.Label>
         </Statistic>
     </React.Fragment>
-)
+))
 
 /**
  * StatsSection's props

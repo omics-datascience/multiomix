@@ -108,8 +108,8 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
         return data.filter(({ status }) => !status)
     }
 
-    generateLineFunction (xScale, yScale) {
-        return d3.line().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).curve(d3.curveStepAfter)
+    generateLineFunction (xScale: d3.ScaleLinear<KaplanMeierSample, number>, yScale: d3.ScaleLinear<KaplanMeierSample, number>) {
+        return d3.line<KaplanMeierSample>().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).curve(d3.curveStepAfter)
     }
 
     buildCensorMarks (censorPoints, xScale, yScale, color) {
@@ -139,7 +139,7 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
         return (
             <g>
                 <path
-                    d={lineFunction(data)}
+                    d={lineFunction(data) ?? undefined}
                     fill="none"
                     opacity={0.7}
                     stroke={color}
@@ -176,7 +176,7 @@ const YAxis = (props: AxisProps) => {
         >
             <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
             <text
-                dy="0.71em"
+                dy="1.50em"
                 style={{ textAnchor: 'middle' }}
                 transform="rotate(-90)"
                 x={-props.height / 2}
@@ -302,8 +302,8 @@ const d3Utils = {
         }
     },
 
-    createLinearScale: (range, domain) => {
-        return d3.scaleLinear().range(range).domain(domain)
+    createLinearScale: (range, domain): d3.ScaleLinear<KaplanMeierSample, number> => {
+        return d3.scaleLinear<KaplanMeierSample, number>().range(range).domain(domain)
     },
 
     createAxisMarkup: (axis, width: number, height: number) => { // refactor, this is an insane hack
@@ -313,7 +313,7 @@ const d3Utils = {
         svg.attr('height', height)
         const g = svg.append('g')
         g.call(axis)
-        const html = g.node().innerHTML
+        const html = g.node()?.innerHTML ?? ''
         return { __html: html }
     }
 }
@@ -405,7 +405,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
                     domain={yDomain}
                     height={seriesHeight}
                     label={this.props.yAxisLabel}
-                    left={32}
+                    left={48}
                     top={16}
                     width={32}
                 />

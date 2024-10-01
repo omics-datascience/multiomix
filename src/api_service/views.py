@@ -161,7 +161,28 @@ class ExperimentList(generics.ListAPIView):
     """REST endpoint: list for Experiment model with pagination"""
 
     def get_queryset(self):
-        return Experiment.objects.filter(user=self.request.user)
+        # User can only retrieve their own experiments (UserFile) or those marked as public.
+        user = self.request.user
+        queryset = self.get_experiments_shared_with_user(user)
+        return queryset
+
+    @staticmethod
+    def get_experiments_shared_with_user(user):
+        """
+        Retrieves experiments associated with the user, including:
+        - Experiments uploaded by the user.
+        - Public experiments.
+        - Experiments shared through institutions the user manages.
+        - Experiments explicitly shared with the user.
+        @param user: The user for whom the experiments are retrieved.
+        @return: Queryset of experiments visible to the user.
+        """
+        return Experiment.objects.filter(
+            Q(user=user) |
+            Q(is_public=True) |
+            Q(shared_institutions__institutionadministration__user=user) |
+            Q(shared_users=user)
+        ).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -954,14 +975,14 @@ class SurvivalDataDetails(APIView):
             # Gets Gene and GEM expression with time values
             gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
                 clinical_samples = pipelines.get_valid_data_from_sources(
-                    experiment,
-                    gene,
-                    gem,
-                    round_values=False,
-                    return_samples_identifiers=True,
-                    clinical_attribute=time_attribute,
-                    fill_clinical_missing_samples=False
-                )
+                experiment,
+                gene,
+                gem,
+                round_values=False,
+                return_samples_identifiers=True,
+                clinical_attribute=time_attribute,
+                fill_clinical_missing_samples=False
+            )
 
             # Gets event values
             clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(

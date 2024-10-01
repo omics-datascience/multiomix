@@ -161,22 +161,22 @@
 
 .cell.red {
     background-color: #db2828 !important;
-    color: #fff;
+    color: #fff !important;
 }
 
 .cell.orange {
     background-color: #f2711c !important;
-    color: #fff;
+    color: #fff !important;
 }
 
 .cell.yellow {
     background-color: #fbbd08 !important;
-    color: #fff;
+    color: #fff !important;
 }
 
 .cell.olive {
     background-color: #b5cc18 !important;
-    color: #fff;
+    color: #fff !important;
 }
 
 /* TODO: remove if not used */

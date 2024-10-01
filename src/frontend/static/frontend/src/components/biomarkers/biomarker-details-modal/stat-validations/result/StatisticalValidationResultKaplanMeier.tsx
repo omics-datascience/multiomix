@@ -188,10 +188,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
     return (
         <Grid>
             <Grid.Row columns={2} divided textAlign='center'>
-                <Grid.Column textAlign='center'>
+                <Grid.Column textAlign='center' width={11}>
                     {getKaplanMeierPanel()}
                 </Grid.Column>
-                <Grid.Column textAlign='center'>
+                <Grid.Column textAlign='center' width={5}>
                     {/* Clustering metrics. */}
                     <InfoPopup
                         content='This metrics are computed using Cox-Regression'

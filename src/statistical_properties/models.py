@@ -109,10 +109,41 @@ class StatisticalValidationSourceResult(models.Model):
     cox_c_index = models.FloatField(null=True, blank=True)  # C-Index from Cox Regression (clustering)
     cox_log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression (clustering)
     r2_score = models.FloatField(null=True, blank=True)  # R2 from regression models (SVM/RF)
-
     # Source
     source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='statistical_validations_result')
+
+    @property
+    def number_of_rows(self) -> int:
+        """
+        Gets the row count of the Source
+        @return: Number of rows in the source
+        """
+        return self.source.get_valid_source().number_of_rows
+
+    @property
+    def number_of_samples(self) -> int:
+        """
+        Gets the samples count of the Source
+        @return: Number of samples in the source
+        """
+        return self.source.get_valid_source().number_of_samples
+
+    @property
+    def user_file(self) -> int:
+        """
+        Gets the ID of the UserFile associated with the Source.
+        @return: ID of the UserFile.
+        """
+        return self.source.user_file
+
+    @property
+    def cgds_dataset(self) -> int:
+        """
+        Gets the ID of the CGDSDataset associated with the Source.
+        @return: ID of the CGDSDataset.
+        """
+        return self.source.cgds_dataset
 
 
 class StatisticalValidation(models.Model):
@@ -150,9 +181,9 @@ class StatisticalValidation(models.Model):
     # Sources
     mrna_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE, null=True,
                                               blank=True, related_name='statistical_validations_as_mrna')
-    mirna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+    mirna_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE, null=True,
                                                blank=True, related_name='statistical_validations_as_mirna')
-    cna_source_result = models.OneToOneField(StatisticalValidationSourceResult, on_delete=models.CASCADE, null=True,
+    cna_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE, null=True,
                                              blank=True, related_name='statistical_validations_as_cna')
     methylation_source_result = models.OneToOneField('StatisticalValidationSourceResult', on_delete=models.CASCADE,
                                                      null=True, blank=True,
