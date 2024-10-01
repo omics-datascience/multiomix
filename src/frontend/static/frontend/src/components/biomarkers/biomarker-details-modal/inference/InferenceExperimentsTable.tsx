@@ -204,14 +204,13 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={inferenceExperiment.model} /></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'L')} />
                             <Table.Cell>
-                                {/*  <TableCellSources
+                                <TableCellSources
                                     clinical_source={inferenceExperiment.clinical_source}
                                     methylation_source={inferenceExperiment.mrna_source}
                                     mrna_source={inferenceExperiment.mirna_source}
                                     cna_source={inferenceExperiment.cna_source}
                                     mirna_source={inferenceExperiment.methylation_source}
-                                />  */}
-                                datasetsaqq
+                                />
                             </Table.Cell>
                             <Table.Cell width={1}>
                                 {inferenceExperiment.state === BiomarkerState.COMPLETED &&

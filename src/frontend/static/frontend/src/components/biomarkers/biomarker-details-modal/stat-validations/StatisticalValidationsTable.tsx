@@ -208,14 +208,13 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                             </Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(statisticalValidation.created as string, 'L')} />
                             <Table.Cell>
-                                {/*   <TableCellSources
+                                <TableCellSources
                                     clinical_source={statisticalValidation.clinical_source}
                                     methylation_source={statisticalValidation.mrna_source}
                                     mrna_source={statisticalValidation.mirna_source}
                                     cna_source={statisticalValidation.cna_source}
                                     mirna_source={statisticalValidation.methylation_source}
-                                /> */}
-                                datasetsss
+                                />
                             </Table.Cell>
                             <Table.Cell width={1}>
                                 {statisticalValidation.state === BiomarkerState.COMPLETED &&

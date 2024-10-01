@@ -122,7 +122,7 @@ class UserFileHeaders(APIView):
         Returns the User's files headers from DB
         @param user: User to retrieve his Datasets
         @param pk: Id from file
-        @return: File´s headers
+        @return: File's headers
         """
         user = request.user
         user_file = get_an_user_file(user=user, user_file_pk=pk)
