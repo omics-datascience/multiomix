@@ -613,33 +613,49 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * @param fileToEdit Selected file to edit
      */
     editFile = (fileToEdit: DjangoUserFile) => {
-        // Download file.
-        ky.get(`${downloadFileHeaders}/${fileToEdit.id}`, { signal: this.abortController.signal }).then((response) => {
-            response.text().then((tsv: string) => {
-                // Recieve file separates by jump line, then takes first row that have titles. Separates by tabs to have all titles in an array.
-                const survivalTuplesPossiblesValues = tsv.split('\n')[0].split('\t')
-                this.setState({
-                    survivalTuplesPossiblesValues,
-                    newFile: {
-                        id: fileToEdit.id,
-                        newFileName: fileToEdit.name,
-                        newFileNameUser: fileToEdit.name,
-                        newFileType: fileToEdit.file_type,
-                        newFileDescription: fileToEdit.description ?? '',
-                        newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
-                        isCpGSiteId: fileToEdit.is_cpg_site_id,
-                        platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
-                        // We only need the IDs
-                        institutions: fileToEdit.institutions.map((institution) => institution.id),
-                        survivalColumns: fileToEdit.survival_columns ?? []
-                    }
+        if (fileToEdit.file_type === FileType.CLINICAL) {
+            ky.get(`${downloadFileHeaders}${fileToEdit.id}`, { signal: this.abortController.signal }).then((response) => {
+                response.json().then((fileHeaders: string[]) => {
+                    // Recieve file separates by , to get array of headers
+                    const survivalTuplesPossiblesValues = fileHeaders
+                    this.setState({
+                        survivalTuplesPossiblesValues,
+                        newFile: {
+                            id: fileToEdit.id,
+                            newFileName: fileToEdit.name,
+                            newFileNameUser: fileToEdit.name,
+                            newFileType: fileToEdit.file_type,
+                            newFileDescription: fileToEdit.description ?? '',
+                            newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                            isCpGSiteId: fileToEdit.is_cpg_site_id,
+                            platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                            institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            survivalColumns: fileToEdit.survival_columns ?? []
+                        }
+                    })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.log('Error getting file content ->', err)
             })
-        }).catch((err) => {
-            console.log('Error getting file content ->', err)
-        })
+        } else {
+            this.setState({
+                survivalTuplesPossiblesValues: [],
+                newFile: {
+                    id: fileToEdit.id,
+                    newFileName: fileToEdit.name,
+                    newFileNameUser: fileToEdit.name,
+                    newFileType: fileToEdit.file_type,
+                    newFileDescription: fileToEdit.description ?? '',
+                    newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                    isCpGSiteId: fileToEdit.is_cpg_site_id,
+                    platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                    institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    survivalColumns: fileToEdit.survival_columns ?? []
+                }
+            })
+        }
     }
 
     /**

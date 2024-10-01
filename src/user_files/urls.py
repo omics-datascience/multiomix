@@ -12,5 +12,6 @@ urlpatterns = [
         views.UserFileChunkedUploadCompleteView.as_view(),
         name='api_chunked_upload_complete'
     ),
-    path('file-header/<int:pk>/', views.get_user_file_headers, name='user_file_headers')
+   path('file-header/', views.UserFileHeaders.as_view(), name='user_file_headers'),
+   path('file-header/<int:pk>/', views.UserFileHeaders.as_view())
 ]
