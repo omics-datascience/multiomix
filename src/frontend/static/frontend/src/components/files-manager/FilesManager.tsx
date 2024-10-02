@@ -29,6 +29,7 @@ declare const urlUserInstitutions: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
+declare const downloadFileHeaders: string
 
 /**
  * New File Form fields
@@ -612,21 +613,49 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * @param fileToEdit Selected file to edit
      */
     editFile = (fileToEdit: DjangoUserFile) => {
-        this.setState({
-            newFile: {
-                id: fileToEdit.id,
-                newFileName: fileToEdit.name,
-                newFileNameUser: fileToEdit.name,
-                newFileType: fileToEdit.file_type,
-                newFileDescription: fileToEdit.description ?? '',
-                newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
-                isCpGSiteId: fileToEdit.is_cpg_site_id,
-                platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
-                // We only need the IDs
-                institutions: fileToEdit.institutions.map((institution) => institution.id),
-                survivalColumns: fileToEdit.survival_columns ?? []
-            }
-        })
+        if (fileToEdit.file_type === FileType.CLINICAL) {
+            ky.get(`${downloadFileHeaders}${fileToEdit.id}`, { signal: this.abortController.signal }).then((response) => {
+                response.json().then((fileHeaders: string[]) => {
+                    // Recieve file separates by , to get array of headers
+                    const survivalTuplesPossiblesValues = fileHeaders
+                    this.setState({
+                        survivalTuplesPossiblesValues,
+                        newFile: {
+                            id: fileToEdit.id,
+                            newFileName: fileToEdit.name,
+                            newFileNameUser: fileToEdit.name,
+                            newFileType: fileToEdit.file_type,
+                            newFileDescription: fileToEdit.description ?? '',
+                            newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                            isCpGSiteId: fileToEdit.is_cpg_site_id,
+                            platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                            institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            survivalColumns: fileToEdit.survival_columns ?? []
+                        }
+                    })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                console.log('Error getting file content ->', err)
+            })
+        } else {
+            this.setState({
+                survivalTuplesPossiblesValues: [],
+                newFile: {
+                    id: fileToEdit.id,
+                    newFileName: fileToEdit.name,
+                    newFileNameUser: fileToEdit.name,
+                    newFileType: fileToEdit.file_type,
+                    newFileDescription: fileToEdit.description ?? '',
+                    newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                    isCpGSiteId: fileToEdit.is_cpg_site_id,
+                    platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                    institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    survivalColumns: fileToEdit.survival_columns ?? []
+                }
+            })
+        }
     }
 
     /**
@@ -726,7 +755,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
 
         const fileTypeOptions = getFileTypeSelectOptions(false)
-
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }

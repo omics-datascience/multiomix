@@ -1,6 +1,6 @@
 import React from 'react'
 import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
-import { AllExperimentsTableControl, Nullable } from '../../../utils/interfaces'
+import { AllExperimentsTableControl, GenesColors, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
 import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
@@ -192,7 +192,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SourcePopup
                                         source={experiment.mRNA_source}
                                         iconName='file'
-                                        iconColor='blue'
+                                        iconColor={GenesColors.MRNA}
                                         downloadButtonTitle='Download source mRNA file'
                                     />
 
@@ -200,7 +200,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SourcePopup
                                         source={experiment.gem_source}
                                         iconName='file alternate'
-                                        iconColor='teal'
+                                        iconColor={GenesColors.MIRNA}
                                         downloadButtonTitle={`Download ${getExperimentTypeObj(experiment.type, 'ExperimentType').description} source file`}
                                     />
                                 </TableCell>

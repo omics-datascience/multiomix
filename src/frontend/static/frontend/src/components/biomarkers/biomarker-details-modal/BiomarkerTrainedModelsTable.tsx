@@ -12,6 +12,7 @@ import { TrainedModelStateLabel } from '../labels/TrainedModelStateLabel'
 import ky from 'ky'
 import { StopExperimentButton } from '../../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteExperimentButton } from '../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { TableCellSources } from '../../common/TableCellSources'
 
 declare const urlBiomarkerTrainedModels: string
 declare const urlStopTrainedModel: string
@@ -213,6 +214,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: 'Date', serverCodeToSort: 'created' },
                     { name: 'Metric', serverCodeToSort: 'fitness_metric' },
                     { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' },
+                    { name: 'Datasets' },
                     ...actionColumn
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
@@ -271,6 +273,15 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
                             <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
                             <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
+                            <Table.Cell>
+                                <TableCellSources
+                                    clinical_source={trainedModel.clinical_source}
+                                    methylation_source={trainedModel.mrna_source}
+                                    mrna_source={trainedModel.mirna_source}
+                                    cna_source={trainedModel.cna_source}
+                                    mirna_source={trainedModel.methylation_source}
+                                />
+                            </Table.Cell>
 
                             {/* Actions column */}
                             {props.allowFullManagement &&

@@ -1,4 +1,4 @@
-import { DjangoTag } from '../../utils/django_interfaces'
+import { DjangoExperimentSource, DjangoTag } from '../../utils/django_interfaces'
 import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
 import { KaplanMeierData } from '../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
@@ -407,6 +407,11 @@ interface TrainedModelForTable {
     cv_folds_modified: boolean,
     created: string,
     can_be_deleted: boolean,
+    clinical_source: DjangoExperimentSource,
+    methylation_source: Nullable<DjangoExperimentSource>,
+    mrna_source: Nullable<DjangoExperimentSource>,
+    cna_source: Nullable<DjangoExperimentSource>,
+    mirna_source: Nullable<DjangoExperimentSource>,
     fitness_metric: Nullable<string>,
     best_fitness_value: Nullable<number>
 }
@@ -437,6 +442,11 @@ interface BasicStatisticalValidation {
 interface StatisticalValidationForTable extends BasicStatisticalValidation {
     fitness_function: FitnessFunction,
     trained_model: Nullable<number>,
+    clinical_source: Nullable<DjangoExperimentSource>,
+    methylation_source: Nullable<DjangoExperimentSource>,
+    mrna_source: Nullable<DjangoExperimentSource>,
+    cna_source: Nullable<DjangoExperimentSource>,
+    mirna_source: Nullable<DjangoExperimentSource>,
 }
 
 /** A statistical validation of a Biomarker. */
@@ -467,6 +477,11 @@ interface InferenceExperimentForTable {
     trained_model: Nullable<number>,
     clinical_source_id: Nullable<number>
     created: string
+    clinical_source: Nullable<DjangoExperimentSource>,
+    methylation_source: Nullable<DjangoExperimentSource>,
+    mrna_source: Nullable<DjangoExperimentSource>,
+    cna_source: Nullable<DjangoExperimentSource>,
+    mirna_source: Nullable<DjangoExperimentSource>,
 }
 
 /** Django MoleculeWithCoefficient model. */

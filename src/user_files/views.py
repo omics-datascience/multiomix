@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
+from rest_framework.response import Response
 
 
 class UserFileChunkedUploadView(ChunkedUploadView):
@@ -111,6 +112,22 @@ def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool
 
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
+class UserFileHeaders(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    """REST endpoint: list for UserFile header. """
+
+    @staticmethod
+    def get(request, pk: int) -> QuerySet:
+        """
+        Returns the User's files headers from DB
+        @param user: User to retrieve his Datasets
+        @param pk: Id from file
+        @return: File's headers
+        """
+        user = request.user
+        user_file = get_an_user_file(user=user, user_file_pk=pk)
+        list_of_header = user_file.get_column_names()
+        return Response(list_of_header)
 
 class UserFileList(generics.ListAPIView):
     """REST endpoint: list for UserFile model. """

@@ -122,11 +122,13 @@ interface GeneralTableControlWithoutSorting {
     // TODO: after big refactoring using only PaginatedTable.tsx, check if totalRowCount is optional
     totalRowCount?: number,
     // TODO: after big refactoring using only PaginatedTable.tsx, check if filters is optional
-    filters: { [key: string]: {
-        value: any,
-        /** Indicates if 0 as filter value is accepted */
-        allowZero?: boolean
-    } },
+    filters: {
+        [key: string]: {
+            value: any,
+            /** Indicates if 0 as filter value is accepted */
+            allowZero?: boolean
+        }
+    },
 }
 
 /**
@@ -308,7 +310,17 @@ type OkResponse = {
     ok: boolean
 }
 
+/** Types for genes colors */
+enum GenesColors {
+    MRNA = 'blue',
+    MIRNA = 'orange',
+    CNA = 'yellow',
+    METHYLATION = 'olive',
+    CLINICAL = 'teal'
+}
+
 export {
+    GenesColors,
     CustomAlertTypes,
     CustomAlert,
     Nullable,
