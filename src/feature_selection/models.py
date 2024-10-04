@@ -48,7 +48,7 @@ class ClusteringScoringMethod(models.IntegerChoices):
 
 
 class SVMKernel(models.IntegerChoices):
-    """SVM's kernel """
+    """SVM kernel """
     LINEAR = 1
     POLYNOMIAL = 2
     RBF = 3
@@ -102,10 +102,11 @@ class FSExperiment(models.Model):
     rf_times_records: QuerySet['RFTimesRecord']
     svm_times_records: QuerySet['SVMTimesRecord']
     best_model: 'TrainedModel'
+
     origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
                                          related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
-    execution_time = models.PositiveIntegerField(default=0)  # Execution time in seconds
+    execution_time = models.PositiveIntegerField(default=0, help_text='Execution time in seconds')
     created_biomarker = models.OneToOneField('biomarkers.Biomarker', on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='fs_experiment')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -122,14 +123,14 @@ class FSExperiment(models.Model):
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
 
-    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
+    task_id = models.CharField(max_length=100, blank=True, null=True, help_text='Celery Task ID')
 
-    # Number of attempts to prevent a buggy experiment running forever
-    attempt = models.PositiveSmallIntegerField(default=0)
+    attempt = models.PositiveSmallIntegerField(default=0, help_text='Number of attempts to prevent a buggy experiment '
+                                                                    'running forever')
 
     # AWS-EMR fields
-    app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results
-    emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
+    app_name = models.CharField(max_length=100, null=True, blank=True, help_text='Spark app name to get the results')
+    emr_job_id = models.CharField(max_length=100, null=True, blank=True, help_text='Job ID in the Spark cluster')
 
     def get_all_sources(self):
         """Returns a list with all the sources."""
