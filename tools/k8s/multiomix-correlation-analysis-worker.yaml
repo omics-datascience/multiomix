@@ -36,7 +36,7 @@ spec:
       - name: logs-data
         emptyDir: {}
       containers:
-      - image: omicsdatascience/multiomix:5.1.2-celery
+      - image: omicsdatascience/multiomix:5.4.0-celery
         name: correlation-analysis-worker
         env:
         - name: QUEUE_NAME
