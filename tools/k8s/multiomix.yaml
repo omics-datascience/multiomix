@@ -126,7 +126,7 @@ spec:
           - key: "multiomics_intermediate.conf"
             path: "multiomics_intermediate.conf"          
       containers:
-      - image: omicsdatascience/multiomix:4.7.1
+      - image: omicsdatascience/multiomix:5.4.0
         name: multiomix
         env:
         - name: POSTGRES_USERNAME
@@ -165,7 +165,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8000 
-      - image: nginx:1.23.3
+      - image: nginx:1.27
         name: nginx
         volumeMounts:
         - name: static-data

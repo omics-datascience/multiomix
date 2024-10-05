@@ -2,10 +2,6 @@
     margin: 1rem 0;
 }
 
-.biomarkers--confirm--modal {
-    margin-top: 40vh !important;
-}
-
 .biomarkers--side--bar--buttons-group {
     width: 100%;
 }
@@ -25,8 +21,8 @@
 }
 
 .large-modal {
-    min-height: 80% !important;
-    width: 95% !important;
+    min-height: 92% !important;
+    width: 92% !important;
 }
 
 .min-height-50vh {
@@ -38,4 +34,9 @@
 }
 .remove-margin-top {
     margin-top: 0 !important;
+}
+.space-modal:nth-child(1) {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
 }

@@ -1,15 +1,16 @@
 import React from 'react'
 import { LogRankStatistic, Nullable } from '../../../../../utils/interfaces'
-import { DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple } from '../../../../../utils/django_interfaces'
+import { DjangoCommonResponse, DjangoExperimentSource, DjangoMRNAxGEMResultRow, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple } from '../../../../../utils/django_interfaces'
 import { alertGeneralError, getDjangoHeader, getGeneAndGEMFromSelectedRow, listToDropdownOptions } from '../../../../../utils/util_functions'
 import ky from 'ky'
-import { DropdownItemProps, Form, Grid, Header, Label, Select } from 'semantic-ui-react'
+import { Button, DropdownItemProps, Form, Grid, Header, Label, Select } from 'semantic-ui-react'
 import { KaplanMeier, KaplanMeierData, KaplanMeierSample } from './KaplanMeierUtils'
 import { LogRankTestStats } from './LogRankTestStats'
 import { LoadingPanel } from '../LoadingPanel'
 
 declare const urlSurvivalData: string
-
+// Defined in gem.html
+declare const urlUnlinkClinicalSourceUserFile: string
 /** Common interest values */
 const COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
@@ -36,6 +37,8 @@ type SurvivalDataResponse = {
 interface KaplanMeierChartProps {
     experimentId: number,
     selectedRow: Nullable<DjangoMRNAxGEMResultRow>,
+    gem_source: DjangoExperimentSource,
+    mRNA_source: DjangoExperimentSource,
 }
 
 /**
@@ -204,6 +207,27 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         })
     }
 
+    handleUnlinkClinicalSource () {
+        const myHeaders = getDjangoHeader()
+
+        const url = `${urlUnlinkClinicalSourceUserFile}/${this.props.experimentId}/`
+        ky.patch(url, { headers: myHeaders }).then((response) => {
+            response.json().then((response: DjangoCommonResponse) => {
+                if (response.status.code === DjangoResponseCode.SUCCESS) {
+                    // Todo: callback para success
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error adding new Tag ->', err)
+        })
+    }
+
     render () {
         if (this.state.gettingSurvivalData) {
             return <LoadingPanel />
@@ -293,11 +317,26 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             <Grid>
                 {selectSurvivalColumns}
 
-                <Grid.Row className='no-padding-top'>
+                <Grid.Row className='no-padding-top' columns={2}>
                     <Grid.Column>
                         <Label color='orange' size='large'>
                             Samples with empty values (i.e. blank values) will be ignored in survival analysis
                         </Label>
+                    </Grid.Column>
+                    <Grid.Column style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ margin: '0 2rem 0 0' }}>
+                            <Button
+                                color='orange'
+                                fluid
+                                title='Unlink clinical dataset from this experiment'
+                                onClick={() => this.handleUnlinkClinicalSource()}
+                            /*     loading={this.state.unlinkingSource}
+                                onClick={this.unlinkClinicalSource}
+                                disabled={isProcessing} */
+                            >
+                                Unlink DataSet
+                            </Button>
+                        </div>
                     </Grid.Column>
                 </Grid.Row>
                 <Grid.Row columns={2} divided textAlign='center'>
@@ -331,4 +370,4 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
     }
 }
 
-export { KaplanMeierChart, KaplanMeierData }
+export { KaplanMeierChart }

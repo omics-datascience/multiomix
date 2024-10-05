@@ -1,6 +1,6 @@
 import React from 'react'
 import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
-import { AllExperimentsTableControl, Nullable } from '../../../utils/interfaces'
+import { AllExperimentsTableControl, GenesColors, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
 import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
@@ -146,7 +146,6 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         // Number of combinations
                         const finalRowCount = experiment.result_final_row_count ?? '-'
                         const evaluatedRowCount = experiment.evaluated_row_count ?? finalRowCount
-
                         return (
                             <Table.Row key={experiment.id as number}>
                                 <TableCellWithTitle value={experiment.name} />
@@ -181,6 +180,10 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                         openPopup={this.openPopup}
                                         closePopup={this.closePopup}
                                         onSuccessCallback={this.props.getAllUserExperiments}
+                                        validationSource={{
+                                            gem_source: experiment.gem_source,
+                                            mRNA_source: experiment.mRNA_source
+                                        }}
                                     />
                                 </TableCell>
                                 <TableCell>{experiment.tag ? experiment.tag.name : '-'}</TableCell>
@@ -189,7 +192,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SourcePopup
                                         source={experiment.mRNA_source}
                                         iconName='file'
-                                        iconColor='blue'
+                                        iconColor={GenesColors.MRNA}
                                         downloadButtonTitle='Download source mRNA file'
                                     />
 
@@ -197,7 +200,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SourcePopup
                                         source={experiment.gem_source}
                                         iconName='file alternate'
-                                        iconColor='teal'
+                                        iconColor={GenesColors.MIRNA}
                                         downloadButtonTitle={`Download ${getExperimentTypeObj(experiment.type, 'ExperimentType').description} source file`}
                                     />
                                 </TableCell>

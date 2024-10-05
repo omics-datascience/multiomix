@@ -35,6 +35,7 @@ def __get_files_of_directory(dir_path: str) -> List[str]:
     """
     return sorted([filename for filename in listdir(dir_path) if isfile(os.path.join(dir_path, filename))])
 
+
 def __sync_dataset(dataset: CGDSDataset, extract_path: str, only_failed: bool,
                    check_patient_column: bool, is_aborted: AbortEvent):
     """
@@ -216,7 +217,7 @@ def __copy_dataset(dataset: Optional[CGDSDataset], new_version: int,
 
         # If there's an old version tag in the collection name, replaces it with the new version
         if old_version_tag.isnumeric():
-             mongo_collection_name = f"{mongo_collection_without_version}{VERSION_PREFIX}{new_version}"
+            mongo_collection_name = f"{mongo_collection_without_version}{VERSION_PREFIX}{new_version}"
         else:
             # Otherwise, adds the new version to the original name
             mongo_collection_name = f"{original_mongo_collection}{VERSION_PREFIX}{new_version}"
@@ -256,7 +257,7 @@ def generate_study_new_version(study: CGDSStudy) -> CGDSStudy:
     study_copy.cna_dataset = __copy_dataset(study.cna_dataset, new_version)
     study_copy.methylation_dataset = __copy_dataset(study.methylation_dataset, new_version)
     study_copy.clinical_patient_dataset = __copy_dataset(study.clinical_patient_dataset, new_version,
-                                                              copy_survival_tuples=True)
+                                                         copy_survival_tuples=True)
     study_copy.clinical_sample_dataset = __copy_dataset(study.clinical_sample_dataset, new_version)
 
     # Saves changes
@@ -304,9 +305,9 @@ def extract_file_and_sync_datasets(cgds_study: CGDSStudy, tar_file_path: str, on
         __sync_dataset(cgds_study.methylation_dataset, extract_path, only_failed, check_patient_column=False,
                        is_aborted=is_aborted)
         __sync_dataset(cgds_study.clinical_patient_dataset, extract_path, only_failed,
-                            check_patient_column=True, is_aborted=is_aborted)
+                       check_patient_column=True, is_aborted=is_aborted)
         __sync_dataset(cgds_study.clinical_sample_dataset, extract_path, only_failed,
-                            check_patient_column=True, is_aborted=is_aborted)
+                       check_patient_column=True, is_aborted=is_aborted)
 
 
 def all_dataset_finished_correctly(cgds_study: CGDSStudy) -> bool:

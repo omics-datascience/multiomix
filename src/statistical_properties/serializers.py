@@ -8,9 +8,12 @@ from statistical_properties.models import NormalityTest, GoldfeldQuandtTest, Lin
     BreuschPaganTest, SourceDataStatisticalProperties, SourceDataOutliers, StatisticalValidationSourceResult, \
     StatisticalValidation, MoleculeWithCoefficient, SampleAndCluster
 
+from api_service.models import ExperimentClinicalSource, ExperimentSource
+
 
 class NormalityTestSerializer(serializers.ModelSerializer):
     """NormalityTest serializer"""
+
     class Meta:
         model = NormalityTest
         exclude = ['id']
@@ -18,6 +21,7 @@ class NormalityTestSerializer(serializers.ModelSerializer):
 
 class BreuschPaganTestSerializer(serializers.ModelSerializer):
     """BreuschPaganTest serializer"""
+
     class Meta:
         model = BreuschPaganTest
         exclude = ['id']
@@ -25,6 +29,7 @@ class BreuschPaganTestSerializer(serializers.ModelSerializer):
 
 class GoldfeldQuandtTestSerializer(serializers.ModelSerializer):
     """GoldfeldQuandtTest serializer"""
+
     class Meta:
         model = GoldfeldQuandtTest
         exclude = ['id']
@@ -32,6 +37,7 @@ class GoldfeldQuandtTestSerializer(serializers.ModelSerializer):
 
 class LinearityTestSerializer(serializers.ModelSerializer):
     """LinearityTest serializer"""
+
     class Meta:
         model = LinearityTest
         exclude = ['id']
@@ -39,6 +45,7 @@ class LinearityTestSerializer(serializers.ModelSerializer):
 
 class MonotonicTestSerializer(serializers.ModelSerializer):
     """LinearityTest serializer"""
+
     class Meta:
         model = MonotonicTest
         exclude = ['id']
@@ -46,6 +53,7 @@ class MonotonicTestSerializer(serializers.ModelSerializer):
 
 class SourceDataOutliersSerializer(serializers.ModelSerializer):
     """SourceDataOutliers serializer"""
+
     class Meta:
         model = SourceDataOutliers
         fields = ['sample_identifier', 'expression']
@@ -59,19 +67,12 @@ class SourceDataStatisticalPropertiesSerializer(serializers.ModelSerializer):
     homoscedasticity_goldfeld_quandt = GoldfeldQuandtTestSerializer(read_only=True)
     linearity = LinearityTestSerializer(read_only=True)
     monotonicity = MonotonicTestSerializer(read_only=True)
+    gene_outliers = SourceDataOutliersSerializer(read_only=True, many=True)
+    gem_outliers = SourceDataOutliersSerializer(read_only=True, many=True)
 
     class Meta:
         model = SourceDataStatisticalProperties
         fields = '__all__'
-
-    def to_representation(self, instance):
-        data = super(SourceDataStatisticalPropertiesSerializer, self).to_representation(instance)
-
-        # Adds gene/GEM outliers
-        data['gene_outliers'] = SourceDataOutliersSerializer(instance.gene_outliers, read_only=True, many=True).data
-        data['gem_outliers'] = SourceDataOutliersSerializer(instance.gem_outliers, read_only=True, many=True).data
-
-        return data
 
 
 class StatisticalValidationSourceResultSerializer(serializers.ModelSerializer):
@@ -88,9 +89,17 @@ class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
     fitness_function = serializers.SerializerMethodField(method_name='get_fitness_function')
     trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    clinical_source = ExperimentClinicalSourceSerializer()
+    mrna_source_result = ExperimentSourceSerializer()
+    mirna_source_result = ExperimentSourceSerializer()
+    cna_source_result = ExperimentSourceSerializer()
+    methylation_source_result = ExperimentSourceSerializer()
+
     class Meta:
         model = StatisticalValidation
-        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function', 'trained_model']
+        fields = ['id', 'name', 'description', 'state', 'created', 'fitness_function', 'trained_model',
+                  'clinical_source', 'mrna_source_result', 'mirna_source_result', 'cna_source_result',
+                  'methylation_source_result']
 
     @staticmethod
     def get_fitness_function(ins: StatisticalValidation) -> FitnessFunction:
@@ -100,6 +109,12 @@ class StatisticalValidationSimpleSerializer(serializers.ModelSerializer):
 
 class StatisticalValidationSerializer(serializers.ModelSerializer):
     """StatisticalValidation serializer with only the metrics."""
+
+    clinical_source = ExperimentSourceSerializer()
+    mrna_source_result = ExperimentSourceSerializer()
+    mirna_source_result = ExperimentSourceSerializer()
+    cna_source_result = ExperimentSourceSerializer()
+    methylation_source_result = ExperimentSourceSerializer()
 
     class Meta:
         model = StatisticalValidation
@@ -113,8 +128,14 @@ class StatisticalValidationSerializer(serializers.ModelSerializer):
             'c_index',
             'cox_c_index',
             'cox_log_likelihood',
-            'r2_score'
+            'r2_score',
+            'clinical_source',
+            'mrna_source_result',
+            'mirna_source_result',
+            'cna_source_result',
+            'methylation_source_result'
         ]
+
 
 class StatisticalValidationCompleteSerializer(serializers.ModelSerializer):
     """StatisticalValidation serializer with all the sources. TODO: check if used"""
@@ -169,10 +190,18 @@ class TrainedModelForTableSerializer(serializers.ModelSerializer):
     fitness_metric = serializers.SerializerMethodField(method_name='get_fitness_metric')
     can_be_deleted = serializers.SerializerMethodField(method_name='get_can_be_deleted')
 
+    clinical_source = ExperimentSourceSerializer()
+    mrna_source = ExperimentSourceSerializer()
+    mirna_source = ExperimentSourceSerializer()
+    cna_source = ExperimentSourceSerializer()
+    methylation_source = ExperimentSourceSerializer()
+
     class Meta:
         model = TrainedModel
         fields = ['id', 'name', 'fitness_function', 'description', 'state', 'created', 'best_fitness_value',
-                  'fitness_metric', 'cv_folds_modified', 'can_be_deleted']
+                  'fitness_metric', 'cv_folds_modified', 'can_be_deleted', 'clinical_source', 'mrna_source',
+                  'mirna_source', 'cna_source',
+                  'methylation_source']
 
     @staticmethod
     def get_best_fitness_value(instance: TrainedModel) -> Optional[float]:

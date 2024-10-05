@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { Header, Icon } from 'semantic-ui-react'
 import { DjangoExperiment } from '../../../../../utils/django_interfaces'
-import { ClinicalSourcePopup } from '../../../all-experiments-view/ClinicalSourcePopup'
+import { ClinicalSourcePopup, ValidationSource } from '../../../all-experiments-view/ClinicalSourcePopup'
 import { InferenceExperimentForTable } from '../../../../biomarkers/types'
+import { Nullable } from '../../../../../utils/interfaces'
 
 /**
  * Component's props
@@ -16,12 +17,22 @@ interface NoClinicalDataProps {
     urlClinicalSourceAddOrEdit: string,
     /** URL to unlink the clinical dataset. */
     urlUnlinkClinicalSource: string,
+    /** If false it doesn't show the option to select a cBioPortal study (true by default) */
+    showCBioPortalOption?: boolean,
     /** Callback to refresh experiment info on clinical source changes */
     refreshExperimentInfo: (experimentId: number) => void
 }
 
 export const NoClinicalData = (props: NoClinicalDataProps) => {
     const [showPopup, setShowPopup] = useState(false)
+    let validationSource: Nullable<ValidationSource> = null
+
+    if ((props.experiment as DjangoExperiment).gem_source && (props.experiment as DjangoExperiment).mRNA_source) {
+        validationSource = {
+            gem_source: (props.experiment as DjangoExperiment).gem_source,
+            mRNA_source: (props.experiment as DjangoExperiment).mRNA_source
+        }
+    }
 
     return (
         <Header size='huge' icon textAlign='center'>
@@ -35,6 +46,7 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
                 <ClinicalSourcePopup
                     experiment={props.experiment}
                     experimentType={props.experimentType}
+                    showCBioPortalOption={props.showCBioPortalOption}
                     // In survival analysis tabs is necessary to have survival tuples
                     showOnlyClinicalDataWithSurvivalTuples
                     showPopup={showPopup}
@@ -45,6 +57,7 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
                     openPopup={() => setShowPopup(true)}
                     closePopup={() => setShowPopup(false)}
                     onSuccessCallback={() => props.refreshExperimentInfo(props.experiment.id)}
+                    validationSource={validationSource}
                 />
             </Header.Subheader>
         </Header>

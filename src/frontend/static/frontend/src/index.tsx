@@ -1,10 +1,9 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import './css/index.css'
 
 import { Homepage } from './components/index/Homepage'
 
-ReactDOM.render(
-    <Homepage />,
-    document.getElementById('main-app')
-)
+const container = document.getElementById('main-app')
+const root = createRoot(container!)
+root.render(<Homepage />)

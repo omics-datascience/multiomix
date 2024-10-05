@@ -104,7 +104,7 @@ def generate_survival_groups_by_median_expression(
 def compute_c_index_and_log_likelihood(df: pd.DataFrame) -> Tuple[float, float]:
     """
     Computes the C-Index and the partial Log-Likelihood from a DataFrame.
-    @param df: Pandas DataFrame. IMPORTANT: has to have 3 colunms: 'E' (event), 'T' (time), and 'group' (group in which
+    @param df: Pandas DataFrame. IMPORTANT: has to have 3 columns: 'E' (event), 'T' (time), and 'group' (group in which
     the sample is).
     @return: A tuple with the C-Index and the partial Log-Likelihood.
     """

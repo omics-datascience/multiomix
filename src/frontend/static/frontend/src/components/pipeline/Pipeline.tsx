@@ -159,6 +159,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
      * to show in the new experiment form
      */
     checkCommonSamples () {
+        // funcion que me ayuda
         const newExperiment = this.state.newExperiment
 
         // It needs both sources!
@@ -696,7 +697,8 @@ class Pipeline extends React.Component<{}, PipelineState> {
         const config: AxiosRequestConfig = {
             headers: axiosHeaders,
             onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                const total = progressEvent.total as number
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / total)
                 this.setState({ uploadPercentage: percentCompleted })
             }
         }

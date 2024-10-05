@@ -1,25 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { BoxPlotSeries, XAxis, YAxis, PatternLines } from '@data-ui/xy-chart'
+/* import { BoxPlotSeries, XAxis, YAxis, PatternLines } from '@data-ui/xy-chart' */
 import { InferenceExperimentForTable } from '../../types'
 import { NoClinicalData } from '../../../pipeline/experiment-result/gene-gem-details/survival-analysis/NoClinicalData'
 import { Header, Icon } from 'semantic-ui-react'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
 import { ResultPlaceholder } from '../stat-validations/result/ResultPlaceholder'
-import { BoxplotDatum, ResponsiveXYChart, renderBoxPlotTooltip, boxPlotThemeColors } from '../../../common/boxplots/BoxplotsCommons'
+import { BoxPlotChart } from '../../../pipeline/experiment-result/gene-gem-details/stats/BoxPlotChart'
+import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
 
 declare const urlClinicalSourceAddOrEditInferenceExperiment: string
 declare const urlUnlinkClinicalSourceInferenceExperiment: string
 declare const urlChartDataByAttribute: string
 
-const DOMAIN_MARGIN: number = 0.05
-
 // TODO: change the structure as this one was used by ApexCharts which was discarded.
 /** Data retrieved from the  */
 type ChartData = {
     x: string,
-    y: [number, number, number, number, number],
-    mean: number,
+    y: number[]
 }
 
 /** SamplesAndTimeInferenceCharts props. */
@@ -40,7 +38,18 @@ interface SamplesAndTimeInferenceChartsProps {
 export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChartsProps) => {
     const abortController = useRef(new AbortController())
     const [loadingChartData, setLoadingChartData] = useState(false)
-    const [chartData, setChartData] = useState<ChartData[]>([]) // TODO: type
+    const [chartData, setChartData] = useState<ChartData[]>([])
+
+    const componentRef = useRef<any>(null)
+    const [width, setWidth] = useState(0) // Initial width state
+
+    useEffect(() => {
+        // Gets the div with to refresh with of the Boxplot. */
+        if (componentRef.current) {
+            const newWidth = componentRef.current.offsetWidth
+            setWidth(newWidth)
+        }
+    }, [componentRef.current])
 
     /** Fetches the data for the chart(s) every time the clinical attribute changes. */
     useEffect(() => {
@@ -93,11 +102,13 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         }
 
         ky.get(urlChartDataByAttribute, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((kaplanMeierResult/*: TODO: add type */) => {
-                setChartData(kaplanMeierResult)
+            response.json().then((groupedDataByAttribute: ChartData[]) => {
+                setChartData(groupedDataByAttribute)
+                setLoadingChartData(false)
             }).catch((err) => {
                 alertGeneralError()
                 console.log('Error parsing JSON ->', err)
+                setLoadingChartData(false)
             })
         }).catch((err) => {
             if (!abortController.current.signal.aborted) {
@@ -105,7 +116,6 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
             }
 
             console.log('Error getting InferenceExperiment data grouped by a clinical attribute', err)
-        }).finally(() => {
             setLoadingChartData(false)
         })
     }
@@ -114,66 +124,21 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         return <ResultPlaceholder />
     }
 
-    const data: BoxplotDatum[] = chartData.map((dataObj: any) => ({
-        x: dataObj.x,
-        min: dataObj.y[0],
-        firstQuartile: dataObj.y[1],
-        median: dataObj.y[2],
-        thirdQuartile: dataObj.y[3],
-        max: dataObj.y[4],
-        mean: dataObj.mean,
-        outliers: [],
-        outliersObjects: []
-    }))
-
-    const allBoxPlotValues = data.map((dataObj: any) => dataObj.min).concat(data.map((dataObj: any) => dataObj.max))
-    const minBoxPlotValue = Math.min.apply(Math, allBoxPlotValues)
-    const maxBoxPlotValue = Math.max.apply(Math, allBoxPlotValues)
-    const valueDomain = [
-        minBoxPlotValue - DOMAIN_MARGIN,
-        maxBoxPlotValue + DOMAIN_MARGIN
-    ]
-
-    // TODO: change colors depending on selected RangeSet
-
     return (
-        <div style={{ height: 500 }}>
-            <ResponsiveXYChart
-                key="boxplot_chart"
-                ariaLabel="Time inference"
-                xScale={{
-                    type: 'band',
-                    paddingInner: 0.15,
-                    paddingOuter: 0.3
-                }}
-                yScale={{
-                    type: 'linear',
-                    domain: valueDomain
-                }}
-                renderTooltip={renderBoxPlotTooltip}
-                margin={{ right: 16, left: 80, top: 16 }}
-                showYGrid
-            >
-                <PatternLines
-                    id="boxplot_lines_pattern"
-                    height={4}
-                    width={4}
-                    stroke={boxPlotThemeColors.categories[4]}
-                    strokeWidth={1}
-                    orientation={['diagonal']}
-                />
-
-                <BoxPlotSeries
-                    data={data}
-                    fill="url(#boxplot_lines_pattern)"
-                    stroke='black'
-                    strokeWidth={2}
-                    widthRatio={1}
-                    horizontal={false}
-                />
-                <XAxis label='Category' />
-                <YAxis label='Time' numTicks={10} orientation="left" />
-            </ResponsiveXYChart>
+        <div ref={componentRef} className='align-center'>
+            <BoxPlotChart
+                width={width}
+                dataObjects={chartData.map((dataObj: ChartData) => (
+                    {
+                        height: 100,
+                        data: dataObj.y,
+                        outliers: [],
+                        fillColor: COLOR_YELLOW_FILL,
+                        strokeColor: COLOR_YELLOW_STROKE,
+                        x: dataObj.x
+                    }
+                ))}
+            />
         </div>
     )
 }

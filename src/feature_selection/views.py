@@ -34,7 +34,7 @@ class CouldNotSaveTimesRecord(Exception):
 
 # Keys to keep from the Spark result JSONs
 JSON_KEYS = ['number_of_features', 'execution_times', 'fitness', 'times_by_iteration',
-                         'test_times', 'train_scores', 'number_of_iterations', 'number_of_samples', 'parameters']
+             'test_times', 'train_scores', 'number_of_iterations', 'number_of_samples', 'parameters']
 
 
 class FeatureSelectionSubmit(APIView):
@@ -52,7 +52,7 @@ class FeatureSelectionSubmit(APIView):
         if value_int == FitnessFunction.CLUSTERING.value:
             return FitnessFunction.CLUSTERING
         elif value_int == FitnessFunction.SVM.value:
-            return  FitnessFunction.SVM
+            return FitnessFunction.SVM
         elif value_int == FitnessFunction.RF.value:
             return FitnessFunction.RF
         else:
@@ -81,11 +81,10 @@ class FeatureSelectionSubmit(APIView):
             # Clinical source
             clinical_source_type = get_source_pk(request.POST, 'clinicalType')
             clinical_source, clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
-                                                                   'clinical')
+                                                                  'clinical')
 
             # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
             clinical_source = clinical_aux if clinical_aux is not None else clinical_source
-
 
             if clinical_source is None:
                 raise ValidationError('Invalid clinical source')
@@ -111,7 +110,7 @@ class FeatureSelectionSubmit(APIView):
             # Methylation source
             methylation_source_type = get_source_pk(request.POST, 'methylationType')
             methylation_source, _methylation_clinical = get_experiment_source(methylation_source_type, request,
-                                                                             FileType.METHYLATION, 'methylation')
+                                                                              FileType.METHYLATION, 'methylation')
             if biomarker.number_of_methylations > 0 and methylation_source is None:
                 raise ValidationError('Invalid Methylation source')
 
@@ -227,7 +226,7 @@ class FeatureSelectionExperimentAWSNotification(APIView):
         parameters_desc = row['parameters']
         params = parameters_desc.split('_')
         number_of_trees = params[0]
-        return (number_of_trees, )  #  NOTE: must be a tuple or the setting of columns names won't work in Pandas
+        return (number_of_trees,)  #  NOTE: must be a tuple or the setting of columns names won't work in Pandas
 
     def __save_svm_times_data(self, fs_experiment: FSExperiment, times_df: pd.DataFrame):
         """Saves all the data about times from the Spark job for an SVM model."""

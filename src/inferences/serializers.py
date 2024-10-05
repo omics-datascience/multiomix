@@ -2,6 +2,8 @@ from typing import Union
 from django.db.models import Q, OuterRef
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+
+from api_service.serializers import ExperimentSourceSerializer
 from feature_selection.fs_algorithms import FitnessFunction
 from feature_selection.models import ClusterLabelsSet, ClusterLabel, PredictionRangeLabelsSet, PredictionRangeLabel
 from .models import InferenceExperiment, SampleAndClusterPrediction, SampleAndTimePrediction
@@ -13,14 +15,22 @@ def generate_prediction_condition(predicted_time: Union[float, OuterRef]) -> Q:
             Q(max_value__isnull=True) | (Q(max_value__isnull=False) & Q(max_value__gte=predicted_time))
     )
 
+
 class InferenceExperimentSerializer(serializers.ModelSerializer):
     """Serializer for InferenceExperiment model."""
     model = serializers.SerializerMethodField(method_name='get_model')
     trained_model = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    clinical_source = ExperimentSourceSerializer()
+    mrna_source = ExperimentSourceSerializer()
+    mirna_source = ExperimentSourceSerializer()
+    cna_source = ExperimentSourceSerializer()
+    methylation_source = ExperimentSourceSerializer()
+
     class Meta:
         model = InferenceExperiment
-        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model', 'clinical_source_id']
+        fields = ['id', 'name', 'description', 'created', 'model', 'state', 'trained_model',
+                  'clinical_source', 'mrna_source', 'mirna_source', 'cna_source', 'methylation_source']
 
     @staticmethod
     def get_model(ins: InferenceExperiment) -> FitnessFunction:

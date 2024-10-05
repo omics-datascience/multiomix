@@ -12,12 +12,12 @@ import { LoadingPanel } from './LoadingPanel'
 import { StatisticalPropertiesPanel } from './stats/StatisticalPropertiesPanel'
 import { AssumptionsPanel } from './assumptions/AssumptionsPanel'
 import { MiRNADrugsPanel } from './MiRNADrugsPanel'
-import { CorrelationBoxplot } from './correlation-boxplot/CorrelationBoxplot'
 import { GeneGemModalMenu } from './GeneGemModalMenu'
 import { NoClinicalData } from './survival-analysis/NoClinicalData'
 import { KaplanMeierChart } from './survival-analysis/KaplanMeier'
 import { MiRNATargetInteractionPanel } from './MiRNATargetInteractionPanel'
 import { TryAgainSegment } from '../../../common/TryAgainSegment'
+import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
 
 // Defined in gem.html
 declare const urlCorrelationGraph: string
@@ -97,7 +97,6 @@ interface GeneGemDetailsModalState {
     activeItem: Nullable<ActiveItemMenu>,
     /** Correlation Graph data */
     correlationGraphData: CorrelationChartData,
-    /** Correlation Boxplot data */
     correlationBoxplotData: CorrelationBoxplotData,
     /** Combination Gene x GEM statistical properties */
     statisticalProperties: Nullable<SourceDataStatisticalPropertiesResponse>,
@@ -194,7 +193,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
 
                 // If the data is ordinal its needed a better chart like Boxplots
                 if (this.state.gemDataIsOrdinal) {
-                    return <CorrelationBoxplot boxplotData={this.state.correlationBoxplotData} selectedRow={this.props.selectedRow} />
+                    return null // TODO: implement
                 }
 
                 if (this.state.correlationGraphIsError) {
@@ -277,6 +276,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     <KaplanMeierChart
                         selectedRow={this.props.selectedRow}
                         experimentId={this.props.experiment.id}
+                        gem_source={this.props.experiment.gem_source}
+                        mRNA_source={this.props.experiment.mRNA_source}
                     />
                 )
         }
@@ -375,10 +376,9 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             zippedData[gemKey].push(geneElem)
         })
 
-        const res: StatChartData[] = Object.entries(zippedData).map(entry => {
-            return { x: entry[0], data: entry[1], strokeColor: '#a97f00' }
+        return Object.entries(zippedData).map(entry => {
+            return { x: entry[0], data: entry[1], fillColor: COLOR_YELLOW_FILL, strokeColor: COLOR_YELLOW_STROKE }
         })
-        return res
     }
 
     /** Sets the state to show an error message when Correlation Graph panel is selected. */

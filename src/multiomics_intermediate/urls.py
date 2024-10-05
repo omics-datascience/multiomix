@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django_email_verification import urls as mail_urls
 
-# NOTE: the static path to MEDIA_URL should not be setted in production it.
+# NOTE: the static path to MEDIA_URL should not be set in production it.
 # See: https://docs.djangoproject.com/en/3.0/howto/static-files/deployment/
 
 urlpatterns = [
