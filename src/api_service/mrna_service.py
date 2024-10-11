@@ -13,10 +13,20 @@ class MRNAService(object):
 
     def __init__(self):
         modulector_settings = settings.MODULECTOR_SETTINGS
-        self.url_modulector_prefix = f"http://{modulector_settings['host']}:{modulector_settings['port']}"
+        if modulector_settings['protocol'] == 'http' and modulector_settings['port'] == 80:
+            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}"
+        elif modulector_settings['protocol'] == 'https' and modulector_settings['port'] == 443:
+            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}"
+        else:
+            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}:{modulector_settings['port']}"
 
         bioapi_settings = settings.BIOAPI_SETTINGS
-        self.url_bioapi_prefix = f"http://{bioapi_settings['host']}:{bioapi_settings['port']}"
+        if bioapi_settings['protocol'] == 'http' and bioapi_settings['port'] == 80:
+            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}"
+        elif bioapi_settings['protocol'] == 'https' and bioapi_settings['port'] == 443:
+            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}"
+        else:
+            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}:{bioapi_settings['port']}"
 
     @staticmethod
     def __generate_rest_query_params(get_request: QueryDict) -> str:
