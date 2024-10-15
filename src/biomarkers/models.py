@@ -60,6 +60,7 @@ class Biomarker(models.Model):
     cnas: QuerySet['CNAIdentifier']
     mirnas: QuerySet['MiRNAIdentifier']
     mrnas: QuerySet['MRNAIdentifier']
+
     name: str = models.CharField(max_length=300)
     description: Optional[str] = models.TextField(null=True, blank=True)
     tag: Optional[Tag] = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
