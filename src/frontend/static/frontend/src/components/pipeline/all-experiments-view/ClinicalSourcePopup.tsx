@@ -138,8 +138,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         clinicalSource.CGDSStudy = null
         cleanRef(clinicalSource.newUploadedFileRef)
         const survivalColumns = []
-
-        this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
+        const survivalTuplesPossiblesValues = []
+        this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
     }
 
     /**
