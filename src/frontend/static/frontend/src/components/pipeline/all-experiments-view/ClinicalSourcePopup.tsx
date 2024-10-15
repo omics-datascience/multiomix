@@ -72,7 +72,7 @@ interface ClinicalSourceState {
     /** Alert interface */
     alert: CustomAlert,
     /** Posibles values for survival tuple */
-    survivalTuplesPossiblesValues: string[],
+    survivalTuplesPossiblesValues: string[] | undefined,
 }
 
 /**
@@ -137,8 +137,9 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         clinicalSource.selectedExistingFile = null
         clinicalSource.CGDSStudy = null
         cleanRef(clinicalSource.newUploadedFileRef)
+        const survivalColumns = []
 
-        this.setState({ clinicalSource }, this.updateSourceFilenames)
+        this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
     }
 
     /**
@@ -238,9 +239,9 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                             if (jsonResponse.data.number_samples_in_common > 0) {
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
                                 clinicalSource.selectedExistingFile = selectedFile
-
-                                const survivalColumns = selectedFile.survival_columns ?? []
-                                this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
+                                const survivalColumns = selectedFile.survival_columns || []
+                                const survivalTuplesPossiblesValues = undefined
+                                this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
                             } else {
                                 this.clinicalSourceVoid()
                             }
