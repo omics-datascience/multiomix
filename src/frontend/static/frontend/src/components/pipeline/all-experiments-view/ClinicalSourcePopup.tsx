@@ -71,7 +71,7 @@ interface ClinicalSourceState {
     cgdsStudyName: Nullable<string>,
     /** Alert interface */
     alert: CustomAlert,
-    /** Posibles values for survival tuple */
+    /** Posibles values for survival tuple, undefined prevents rendering an empty Select for CGDS Datasets or user Datasets */
     survivalTuplesPossiblesValues: string[] | undefined,
 }
 
@@ -137,7 +137,9 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         clinicalSource.selectedExistingFile = null
         clinicalSource.CGDSStudy = null
         cleanRef(clinicalSource.newUploadedFileRef)
+        // Clean survival columns
         const survivalColumns = []
+        // Clean possibles values
         const survivalTuplesPossiblesValues = []
         this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
     }
@@ -240,6 +242,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
                                 clinicalSource.selectedExistingFile = selectedFile
                                 const survivalColumns = selectedFile.survival_columns || []
+                                // set undefined to set values for tuple
                                 const survivalTuplesPossiblesValues = undefined
                                 this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
                             } else {
