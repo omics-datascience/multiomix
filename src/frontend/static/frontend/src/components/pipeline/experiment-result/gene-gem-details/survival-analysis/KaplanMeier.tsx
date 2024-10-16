@@ -65,6 +65,8 @@ interface KaplanMeierChartState {
     selectedSurvivalColumnId: Nullable<number>,
     /** Flag of survival data request */
     gettingSurvivalData: boolean,
+    /** Flag to check if source is being unlink */
+    unlinkingSource: boolean,
 }
 
 /**
@@ -83,7 +85,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             couldInferFieldsOfInterest: false,
             survivalColumns: [],
             selectedSurvivalColumnId: null,
-            gettingSurvivalData: false
+            gettingSurvivalData: false,
+            unlinkingSource: false
         }
     }
 
@@ -207,14 +210,24 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         })
     }
 
+    /**
+     * Unlink dataset if experiment is not created by cBioportal datasets
+     */
     handleUnlinkClinicalSource () {
-        const myHeaders = getDjangoHeader()
+        // validate if is dataset from cBioportal
+        if (this.props.gem_source.cgds_dataset || this.props.mRNA_source.cgds_dataset) {
+            return
+        }
 
+        const myHeaders = getDjangoHeader()
+        let unlinkingSource = true
+        this.setState({ unlinkingSource })
         const url = `${urlUnlinkClinicalSourceUserFile}/${this.props.experimentId}/`
         ky.patch(url, { headers: myHeaders }).then((response) => {
             response.json().then((response: DjangoCommonResponse) => {
                 if (response.status.code === DjangoResponseCode.SUCCESS) {
-                    // Todo: callback para success
+                    unlinkingSource = false
+                    this.setState({ unlinkingSource })
                 } else {
                     alertGeneralError()
                 }
@@ -324,15 +337,14 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                         </Label>
                     </Grid.Column>
                     <Grid.Column style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <div style={{ margin: '0 2rem 0 0' }}>
+                        <div style={{ margin: '0 2rem 0 0', display: this.props.gem_source.cgds_dataset || this.props.mRNA_source.cgds_dataset ? 'none' : 'normal' }}>
                             <Button
                                 color='orange'
                                 fluid
                                 title='Unlink clinical dataset from this experiment'
                                 onClick={() => this.handleUnlinkClinicalSource()}
-                            /*     loading={this.state.unlinkingSource}
-                                onClick={this.unlinkClinicalSource}
-                                disabled={isProcessing} */
+                                loading={this.state.unlinkingSource}
+                                disabled={this.state.unlinkingSource}
                             >
                                 Unlink DataSet
                             </Button>
