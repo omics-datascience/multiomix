@@ -28,6 +28,10 @@ export const ClusteringAlgorithmLabel = (props: ClusteringAlgorithmLabelProps) =
             color = 'blue'
             description = 'Spectral'
             break
+        case ClusteringAlgorithm.BK_MEANS:
+            color = 'blue'
+            description = 'Bisecting KMeans'
+            break
         default:
             color = 'blue'
             description = ''

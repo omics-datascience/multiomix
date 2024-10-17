@@ -300,13 +300,15 @@ EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 # Modulector settings
 MODULECTOR_SETTINGS = {
     'host': os.getenv('MODULECTOR_HOST', '127.0.0.1'),
-    'port': os.getenv('MODULECTOR_PORT', '8001')
+    'port': os.getenv('MODULECTOR_PORT', '8001'),
+    'protocol': os.getenv('BIOAPI_PROTOCOL', 'http')
 }
 
 # BioAPI settings
 BIOAPI_SETTINGS = {
     'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
-    'port': os.getenv('BIOAPI_PORT', '8002')
+    'port': os.getenv('BIOAPI_PORT', '8002'),
+    'protocol': os.getenv('BIOAPI_PROTOCOL', 'http')
 }
 
 # Multiomix-aws-emr
