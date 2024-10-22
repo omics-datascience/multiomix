@@ -1,7 +1,7 @@
 import React from 'react'
 import * as d3 from 'd3'
 import { Nullable } from '../../../../../utils/interfaces'
-
+import './kaplanMeier.css'
 /** Needed structure for KaplanMeier chart */
 type KaplanMeierSample = {
     time: number,
@@ -174,7 +174,14 @@ const YAxis = (props: AxisProps) => {
             className='axis axis-y'
             transform={`translate(${props.left}, ${props.top})`}
         >
-            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
+            {
+                /**
+                 * g tag generate the dom structure of <g> <g> <text> ... </g> </g>
+                 * The idea es usign the first g wrapp the inside g tag and text to move it a few px to prevents being overwrite by Y axis.
+                 * If the Dom change in the future, open the navigator inspect then verify the Dom and fix the new structure.
+                 */
+            }
+            <g className='g-wrapper' dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
             <text
                 dy="1.50em"
                 style={{ textAnchor: 'middle' }}
@@ -388,7 +395,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
         const colors = d3.scaleOrdinal(d3.schemeCategory10).range()
         const yDomain = [1, 0]
 
-        const seriesWidth = this.props.width - 64
+        const seriesWidth = this.props.width
         const seriesHeight = this.props.height - 64
 
         return (

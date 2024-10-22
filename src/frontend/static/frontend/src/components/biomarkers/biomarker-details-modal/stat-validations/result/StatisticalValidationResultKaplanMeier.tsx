@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ky from 'ky'
-import { Button, Form, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
+import { Button, Form, Grid, Header, Icon, Modal, Statistic, GridColumn } from 'semantic-ui-react'
 import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
 import { StatisticalValidationForTable, KaplanMeierResultData, FitnessFunction } from '../../../types'
 import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
@@ -188,10 +188,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
     return (
         <Grid>
             <Grid.Row columns={2} divided textAlign='center'>
-                <Grid.Column textAlign='center' width={11}>
+                <GridColumn textAlign='center' mobile={16} tablet={16} computer={12}>
                     {getKaplanMeierPanel()}
-                </Grid.Column>
-                <Grid.Column textAlign='center' width={5}>
+                </GridColumn>
+                <GridColumn textAlign='center' mobile={16} tablet={16} computer={4}>
                     {/* Clustering metrics. */}
                     <InfoPopup
                         content='This metrics are computed using Cox-Regression'
@@ -273,7 +273,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             </Modal.Actions>
                         </Modal>
                     }
-                </Grid.Column>
+                </GridColumn>
             </Grid.Row>
         </Grid>
     )
