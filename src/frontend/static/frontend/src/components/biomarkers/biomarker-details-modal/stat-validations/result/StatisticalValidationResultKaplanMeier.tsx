@@ -188,9 +188,6 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
     return (
         <Grid>
             <Grid.Row columns={2} divided textAlign='center'>
-                {/*  <Grid.Column textAlign='center' width={11}>
-                    {getKaplanMeierPanel()}
-                </Grid.Column> */}
                 <GridColumn textAlign='center' mobile={16} tablet={16} computer={12}>
                     {getKaplanMeierPanel()}
                 </GridColumn>

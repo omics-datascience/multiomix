@@ -176,8 +176,9 @@ const YAxis = (props: AxisProps) => {
         >
             {
                 /**
-                 * g tag generate a structure of <g> <g> <text> ... </g> </g>
-                 * the idea es usign the first g wrapp the inside g tag and text to move it a few px to prevents being overwrite by Y axis
+                 * g tag generate the dom structure of <g> <g> <text> ... </g> </g>
+                 * The idea es usign the first g wrapp the inside g tag and text to move it a few px to prevents being overwrite by Y axis.
+                 * If the Dom change in the future, open the navigator inspect then verify the Dom and fix the new structure.
                  */
             }
             <g className='g-wrapper' dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
