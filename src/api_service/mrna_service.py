@@ -13,20 +13,28 @@ class MRNAService(object):
 
     def __init__(self):
         modulector_settings = settings.MODULECTOR_SETTINGS
-        if modulector_settings['protocol'] == 'http' and modulector_settings['port'] == 80:
-            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}"
-        elif modulector_settings['protocol'] == 'https' and modulector_settings['port'] == 443:
-            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}"
-        else:
-            self.url_modulector_prefix = f"{modulector_settings['protocol']}://{modulector_settings['host']}:{modulector_settings['port']}"
+        self.url_modulector_prefix = self.__build_url(modulector_settings)
 
         bioapi_settings = settings.BIOAPI_SETTINGS
-        if bioapi_settings['protocol'] == 'http' and bioapi_settings['port'] == 80:
-            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}"
-        elif bioapi_settings['protocol'] == 'https' and bioapi_settings['port'] == 443:
-            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}"
+        self.url_bioapi_prefix = self.__build_url(bioapi_settings)
+
+    @staticmethod
+    def __build_url(settings: Dict[str, Any]) -> str:
+        """
+        Constructs the URL based on the settings provided.
+        If the port is the default for the protocol (80 for http, 443 for https), it is omitted.
+        Otherwise, the port is included in the URL.
+        @param settings: Dictionary containing protocol, host, and port information.
+        @return: Constructed URL as a string.
+        """
+        protocol = settings['protocol']
+        host = settings['host']
+        port = settings['port']
+
+        if (protocol == 'http' and port == 80) or (protocol == 'https' and port == 443):
+            return f"{protocol}://{host}"
         else:
-            self.url_bioapi_prefix = f"{bioapi_settings['protocol']}://{bioapi_settings['host']}:{bioapi_settings['port']}"
+            return f"{protocol}://{host}:{port}"
 
     @staticmethod
     def __generate_rest_query_params(get_request: QueryDict) -> str:
