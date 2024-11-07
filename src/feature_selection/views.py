@@ -214,8 +214,10 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             algorithm = ClusteringAlgorithm.K_MEANS
         elif algorithm_description == 'spectral':
             algorithm = ClusteringAlgorithm.SPECTRAL
-        else:
+        elif algorithm_description == 'bk-means':
             algorithm = ClusteringAlgorithm.BK_MEANS
+        else:
+            algorithm = ClusteringAlgorithm.DBSCAN
         scoring = ClusteringScoringMethod.C_INDEX if scoring_method == 'concordance-index' \
             else ClusteringScoringMethod.LOG_LIKELIHOOD
         return number_of_clusters, algorithm, scoring

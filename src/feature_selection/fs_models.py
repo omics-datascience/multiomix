@@ -1,6 +1,6 @@
 from typing import Literal, Union, Optional
 from django.conf import settings
-from sklearn.cluster import KMeans, SpectralClustering, BisectingKMeans
+from sklearn.cluster import KMeans, SpectralClustering, BisectingKMeans, DBSCAN
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 from .models import ClusteringAlgorithm
@@ -12,24 +12,24 @@ SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precom
 SVMOptimizerOptions = Literal["avltree", "rbtree"]
 
 # Available models for clustering
-ClusteringModels = Union[KMeans, SpectralClustering, BisectingKMeans]
+ClusteringModels = Union[KMeans, SpectralClustering, BisectingKMeans, DBSCAN]
 
 
-def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
-                         number_of_clusters: int, random_state: Optional[float]) -> ClusteringModels:
+def get_clustering_model(clustering_algorithm: ClusteringAlgorithm, parameters) -> ClusteringModels:
     """
     Generates a clustering model with some specific parameters.
     @param clustering_algorithm: ClusteringAlgorithm enum value.
-    @param number_of_clusters: Number of clusters to generate.
-    @param random_state: Random state to use.
+    @param parameters: Dictionary with the parameters for the clustering model.
     @return: a clustering model instance.
     """
     if clustering_algorithm == ClusteringAlgorithm.K_MEANS:
-        return KMeans(n_clusters=number_of_clusters, random_state=random_state, n_init='auto')
+        return KMeans(n_clusters=parameters['number_of_clusters'], random_state=parameters['random_state'], n_init='auto')
     elif clustering_algorithm == ClusteringAlgorithm.SPECTRAL:
-        return SpectralClustering(n_clusters=number_of_clusters, random_state=random_state)
+        return SpectralClustering(n_clusters=parameters['number_of_clusters'], random_state=parameters['random_state'])
     elif clustering_algorithm == ClusteringAlgorithm.BK_MEANS:
-        return BisectingKMeans(n_clusters=number_of_clusters, random_state=random_state)
+        return BisectingKMeans(n_clusters=parameters['number_of_clusters'], random_state=parameters['random_state'])
+    elif clustering_algorithm == ClusteringAlgorithm.DBSCAN:
+        return DBSCAN(eps=parameters['eps'], min_samples=parameters['min_samples'])
 
     raise Exception(f'Invalid clustering_algorithm parameter: {clustering_algorithm}')
 

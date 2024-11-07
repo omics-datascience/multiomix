@@ -34,6 +34,8 @@ def __get_clustering_algorithm_value(cluster_algorithm: ClusteringAlgorithm) -> 
         return 'spectral'
     if cluster_algorithm == ClusteringAlgorithm.BK_MEANS:
         return 'bk_means'
+    if cluster_algorithm == ClusteringAlgorithm.DBSCAN:
+        return 'dbscan'
     return 'k_means'  # Default is kmeans
 
 
@@ -96,10 +98,6 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
                 'value': __get_clustering_algorithm_value(models_parameters.algorithm),
             },
             {
-                'name': 'number-of-clusters',
-                'value': str(models_parameters.n_clusters),
-            },
-            {
                 'name': 'clustering-scoring-method',
                 'value': __get_clustering_scoring_value(models_parameters.scoring_method),
             }
@@ -112,6 +110,12 @@ def __create_models_parameters_for_request(trained_model: TrainedModel) -> List[
         result.append({
             'name': 'random-state',
             'value': str(models_parameters.random_state)
+        })
+
+    if models_parameters.n_clusters is not None:
+        result.append({
+            'name': 'number-of-clusters',
+            'value': str(models_parameters.n_clusters)
         })
 
     return result

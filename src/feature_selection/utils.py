@@ -8,7 +8,7 @@ from biomarkers.models import Biomarker, MRNAIdentifier, MiRNAIdentifier, CNAIde
 from common.utils import limit_between_min_max
 from feature_selection.fs_models import SVMKernelOptions, get_survival_svm_model, get_rf_model, get_clustering_model
 from feature_selection.models import SVMKernel, TrainedModel, FitnessFunction, ClusteringScoringMethod, SVMParameters, \
-    SVMTask, ClusteringParameters, RFParameters
+    SVMTask, ClusteringParameters, RFParameters, ClusteringAlgorithm
 from user_files.models_choices import FileType
 
 
@@ -130,26 +130,47 @@ def create_models_parameters_and_classifier(
 
         # Creates ClusteringParameters instance
         models_parameters = models_parameters['clusteringParameters']
-        n_clusters = int(models_parameters['nClusters'])
-        n_clusters = limit_between_min_max(n_clusters, min_value=2, max_value=10)
-        random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
+        n_clusters = None
+        random_state = None
+        eps = None
+        min_samples = None
+
+        cluster_parameters = {}
+
+        if int(models_parameters['algorithm']) in [ClusteringAlgorithm.K_MEANS, ClusteringAlgorithm.BK_MEANS,
+                                                       ClusteringAlgorithm.SPECTRAL]:
+            if models_parameters['nClusters'] is not None:
+                n_clusters = int(models_parameters['nClusters'])
+                n_clusters = limit_between_min_max(n_clusters, min_value=2, max_value=10)
+            random_state = int(models_parameters['randomState']) if models_parameters['randomState'] else None
+            cluster_parameters['number_of_clusters'] = n_clusters
+            cluster_parameters['random_state'] = random_state
+        elif int(models_parameters['algorithm']) == ClusteringAlgorithm.DBSCAN:
+            eps = float(models_parameters['eps']) if models_parameters['eps'] is not None else 0.5
+            eps = limit_between_min_max(eps, min_value=0.0, max_value=1.0)
+            min_samples = int(models_parameters['minSamples']) if models_parameters['minSamples'] is not None else 5
+            min_samples = limit_between_min_max(min_samples, min_value=3, max_value=10)
+            cluster_parameters['eps'] = eps
+            cluster_parameters['min_samples'] = min_samples
+
         penalizer = float(models_parameters['penalizer']) if models_parameters['penalizer'] is not None else 0.0
-        penalizer = limit_between_min_max(penalizer, min_value=0.0, max_value=1.0)
+        penalizer = limit_between_min_max(penalizer, min_value=0.0, max_value=0.9)
 
         clustering_parameters: ClusteringParameters = ClusteringParameters.objects.create(
             algorithm=int(models_parameters['algorithm']),
             metric=int(models_parameters['metric']),
             penalizer=penalizer,
-            n_clusters=n_clusters,
+            trained_model=trained_model,
             scoring_method=int(models_parameters['scoringMethod']),
+            n_clusters=n_clusters,
             random_state=random_state,
-            trained_model=trained_model
+            eps=eps,
+            min_samples=min_samples,
         )
 
         clustering_scoring_method = clustering_parameters.scoring_method
-        classifier = get_clustering_model(clustering_parameters.algorithm,
-                                          number_of_clusters=clustering_parameters.n_clusters,
-                                          random_state=clustering_parameters.random_state)
+        classifier = get_clustering_model(clustering_parameters.algorithm, cluster_parameters)
+
     else:
         raise ValidationError(f'Parameter fitness_function invalid: {fitness_function} ({type(fitness_function)})')
 

@@ -32,7 +32,7 @@ from common.response import ResponseStatus
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters, \
-    ClusterLabelsSet, PredictionRangeLabelsSet
+    ClusterLabelsSet, PredictionRangeLabelsSet, ClusteringAlgorithm
 from feature_selection.serializers import ClusterLabelsSetSerializer, PredictionRangeLabelsSetSerializer
 from statistical_properties.models import StatisticalValidation, StatisticalValidationSourceResult, SampleAndCluster
 from statistical_properties.serializers import SourceDataStatisticalPropertiesSerializer, \
@@ -622,7 +622,12 @@ class BiomarkerNewTrainedModel(APIView):
 
         if fitness_function == FitnessFunction.CLUSTERING:
             clustering_parameters = model_parameters['clusteringParameters']
-            return 2 <= int(clustering_parameters['nClusters']) <= 10
+            if int(clustering_parameters['algorithm']) in [ClusteringAlgorithm.K_MEANS, ClusteringAlgorithm.BK_MEANS,
+                                                           ClusteringAlgorithm.SPECTRAL]:
+                return 2 <= int(clustering_parameters['nClusters']) <= 10
+            elif int(clustering_parameters['algorithm']) == ClusteringAlgorithm.DBSCAN:
+                if 0.0 <= float(clustering_parameters['eps']) <= 1.0 and 3 <= int(clustering_parameters['minSamples']) <= 10:
+                    return True
 
         if fitness_function == FitnessFunction.RF:
             random_forest_parameters = model_parameters['rfParameters']
@@ -730,10 +735,14 @@ class BiomarkerNewTrainedModel(APIView):
             )
 
         # Adds the experiment to the TaskQueue and gets Task id
-        async_res: AbortableAsyncResult = eval_trained_model.apply_async(
+        async_res: AbortableAsyncResult = eval_trained_model.apply(
             (trained_model.pk, model_parameters),
             queue='stats'
         )
+        # async_res: AbortableAsyncResult = eval_trained_model.apply_async(
+        #     (trained_model.pk, model_parameters),
+        #     queue='stats'
+        # )
 
         trained_model.task_id = async_res.task_id
         trained_model.save(update_fields=['task_id'])

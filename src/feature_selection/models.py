@@ -34,6 +34,7 @@ class ClusteringAlgorithm(models.IntegerChoices):
     K_MEANS = 1
     SPECTRAL = 2  # TODO: implement in backend
     BK_MEANS = 3
+    DBSCAN = 4
 
 
 class ClusteringMetric(models.IntegerChoices):
@@ -49,7 +50,7 @@ class ClusteringScoringMethod(models.IntegerChoices):
 
 
 class SVMKernel(models.IntegerChoices):
-    """SVM kernel """
+    """SVM's kernel """
     LINEAR = 1
     POLYNOMIAL = 2
     RBF = 3
@@ -73,10 +74,32 @@ class ClusteringParameters(models.Model):
     metric = models.IntegerField(choices=ClusteringMetric.choices, default=ClusteringMetric.COX_REGRESSION)
     scoring_method = models.IntegerField(choices=ClusteringScoringMethod.choices,
                                          default=ClusteringScoringMethod.C_INDEX)
-    penalizer = models.FloatField(default=0.0)
-    random_state = models.SmallIntegerField(null=True, blank=True)
-    n_clusters = models.SmallIntegerField(default=2, validators=[MinValueValidator(2), MaxValueValidator(10)])
+    penalizer = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(1.0)])
     trained_model = models.OneToOneField('TrainedModel', on_delete=models.CASCADE, related_name='clustering_parameters')
+
+    # Custom parameters for each algorithm
+    n_clusters = models.SmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(10)],
+                                          null=True, blank=True)
+    random_state = models.SmallIntegerField(null=True, blank=True)
+    eps = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0.0), MaxValueValidator(1.0)])
+    min_samples = models.SmallIntegerField(null=True, blank=True, validators=[MinValueValidator(3), MaxValueValidator(10)])
+
+    @property
+    def custom_clustering_parameters(self):
+        """Returns the custom parameters for the clustering algorithm."""
+        if self.algorithm in [ClusteringAlgorithm.K_MEANS, ClusteringAlgorithm.BK_MEANS, ClusteringAlgorithm.SPECTRAL]:
+            return {
+                'n_clusters': self.n_clusters,
+                'random_state': self.random_state
+            }
+
+        elif self.algorithm == ClusteringAlgorithm.DBSCAN:
+            return {
+                'eps': self.eps,
+                'min_sample': self.min_sample
+            }
+
+        return {}  # Default case
 
 
 class SVMParameters(models.Model):
@@ -103,11 +126,10 @@ class FSExperiment(models.Model):
     rf_times_records: QuerySet['RFTimesRecord']
     svm_times_records: QuerySet['SVMTimesRecord']
     best_model: 'TrainedModel'
-
     origin_biomarker = models.ForeignKey('biomarkers.Biomarker', on_delete=models.CASCADE,
                                          related_name='fs_experiments_as_origin')
     algorithm = models.IntegerField(choices=FeatureSelectionAlgorithm.choices)
-    execution_time = models.PositiveIntegerField(default=0, help_text='Execution time in seconds')
+    execution_time = models.PositiveIntegerField(default=0)  # Execution time in seconds
     created_biomarker = models.OneToOneField('biomarkers.Biomarker', on_delete=models.SET_NULL, null=True, blank=True,
                                              related_name='fs_experiment')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -124,14 +146,14 @@ class FSExperiment(models.Model):
     methylation_source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True,
                                            blank=True, related_name='fs_experiments_as_methylation')
 
-    task_id = models.CharField(max_length=100, blank=True, null=True, help_text='Celery Task ID')
+    task_id = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
-    attempt = models.PositiveSmallIntegerField(default=0, help_text='Number of attempts to prevent a buggy experiment '
-                                                                    'running forever')
+    # Number of attempts to prevent a buggy experiment running forever
+    attempt = models.PositiveSmallIntegerField(default=0)
 
     # AWS-EMR fields
-    app_name = models.CharField(max_length=100, null=True, blank=True, help_text='Spark app name to get the results')
-    emr_job_id = models.CharField(max_length=100, null=True, blank=True, help_text='Job ID in the Spark cluster')
+    app_name = models.CharField(max_length=100, null=True, blank=True)  # Spark app name to get the results
+    emr_job_id = models.CharField(max_length=100, null=True, blank=True)  # Job ID in the Spark cluster
 
     def get_all_sources(self):
         """Returns a list with all the sources."""

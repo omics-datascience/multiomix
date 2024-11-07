@@ -14,7 +14,7 @@ from common.functions import check_if_stopped
 from common.typing import AbortEvent
 from common.utils import get_subset_of_features
 from feature_selection.fs_algorithms import SurvModel, select_top_cox_regression, GRID_SEARCH_CV_FOLDS
-from feature_selection.fs_models import ClusteringModels
+from feature_selection.fs_models import ClusteringModels, ClusteringAlgorithm
 from feature_selection.models import TrainedModel, ClusteringScoringMethod, ClusteringParameters, FitnessFunction, \
     RFParameters
 from feature_selection.utils import create_models_parameters_and_classifier, save_model_dump_and_best_score
@@ -178,12 +178,12 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
         @return: Score of the clustering model.
         """
         clustering_result = model.fit(subset.values)
-
+        n_clusters = 2
         # Generates a DataFrame with a column for time, event and the group
         labels = clustering_result.labels_
         dfs: List[pd.DataFrame] = []
-        for cluster_id in range(model.n_clusters):
-            current_group_y = y[np.where(labels == cluster_id)]
+        for cluster_id in np.linspace(int(-1), int(1), num=2):
+            current_group_y = y[np.where(labels == int(cluster_id))]
             dfs.append(
                 pd.DataFrame({'E': current_group_y['event'], 'T': current_group_y['time'], 'group': cluster_id})
             )
@@ -256,13 +256,20 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
         clustering_parameters: ClusteringParameters = trained_model.clustering_parameters
 
         # Checks if it needs to compute a range of n_clusters or a fixed value
-        look_optimal_n_clusters = (is_clustering and
-                                   model_parameters['clusteringParameters']['lookForOptimalNClusters'])
+        if model_parameters['clusteringParameters']['algorithm'] in [ClusteringAlgorithm.K_MEANS, ClusteringAlgorithm.BK_MEANS,
+                                                                     ClusteringAlgorithm.SPECTRAL]:
+            look_optimal_n_clusters = (is_clustering and
+                                       model_parameters['clusteringParameters']['lookForOptimalNClusters'])
 
-        if look_optimal_n_clusters:
-            param_grid = {'n_clusters': range(2, 11)}
-        else:
-            param_grid = {'n_clusters': [clustering_parameters.n_clusters]}
+            if look_optimal_n_clusters:
+                param_grid = {'n_clusters': range(2, 11)}
+            else:
+                param_grid = {'n_clusters': [clustering_parameters.n_clusters]}
+
+        elif model_parameters['clusteringParameters']['algorithm'] == ClusteringAlgorithm.DBSCAN:
+            # param_grid = {'eps': np.arange(0.1, 1.1, 0.1), 'min_samples': range(3, 11)}
+            param_grid = {'eps': np.arange(0.1, 1.1, 0.1)}
+            # param_grid = {}
 
         gcv = GridSearchCV(
             classifier,
@@ -292,6 +299,7 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
         gcv = gcv.fit(molecules_df, clinical_data)
+
 
     best_score = gcv.best_score_
     if not best_score or np.isnan(best_score):
