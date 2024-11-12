@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
 import json
 from common.enums import ResponseCode
 from common.functions import encode_json_response_status
@@ -9,6 +9,8 @@ from .enums import AddRemoveUserToInstitutionStatusErrorCode
 from .models import Institution
 from .serializers import InstitutionSerializer, UserCandidateSerializer
 from django.contrib.auth.models import User
+from common.pagination import StandardResultsSetPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class InstitutionAsAdminList(generics.ListAPIView):
@@ -22,6 +24,11 @@ class InstitutionAsAdminList(generics.ListAPIView):
 
     serializer_class = InstitutionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = []
+    search_fields = ['name']
+    ordering_fields = ['name', 'location']
 
 
 class InstitutionList(generics.ListAPIView):
@@ -50,6 +57,12 @@ class UserCandidatesList(generics.ListAPIView):
 
     serializer_class = UserCandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = []
+    search_fields = ['name']
+    ordering_fields = ['name']
 
 
 @login_required

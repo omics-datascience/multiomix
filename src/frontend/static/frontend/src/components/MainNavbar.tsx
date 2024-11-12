@@ -99,6 +99,9 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item style={{ padding: '0 1.7rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.7rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
                 </Menu.Menu>
             }
             {/* Analysis menu */}
@@ -186,6 +189,16 @@ const MainNavbar = (props: MainNavbarProps) => {
                         </Dropdown.Menu>
                     </Dropdown>
                 </Menu.Menu>
+            }
+
+            {/* Institutions */}
+            {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) &&
+                <Menu.Menu as='h2'>
+                    <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
+                        Institutions
+                    </Menu.Item>
+                </Menu.Menu>
+
             }
 
             {/* About us */}

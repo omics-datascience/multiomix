@@ -1,18 +1,21 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Icon, Segment, Header, Form, DropdownItemProps } from 'semantic-ui-react'
+import { Grid, Icon, Segment, Header, Table } from 'semantic-ui-react'
 import { DjangoInstitution, DjangoUserCandidates, DjangoCommonResponse, DjangoAddRemoveUserToInstitutionInternalCode, DjangoResponseCode, DjangoUser } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { alertGeneralError, getDjangoHeader } from '../../utils/util_functions'
-import { InstitutionsList } from './InstitutionsList'
-import { InstitutionUsersInfo } from './InstitutionUsersInfo'
+/* import { InstitutionsList } from './InstitutionsList'
+import { InstitutionUsersInfo } from './InstitutionUsersInfo' */
 import { RemoveUserFromInstitutionModal } from './RemoveUserFromInstitutionModal'
 import { Nullable } from '../../utils/interfaces'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { PaginatedTable } from '../common/PaginatedTable'
+import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import InstitutionForm from './InstitutionForm'
+import { InstitutionModal, InstitutionModalActions, InstitutionModalState } from './InstitutionModal'
 
 // URLs defined in files.html
 declare const urlUserInstitutionsAsAdmin: string
-declare const urlGetUsersCandidates: string
 declare const urlAddRemoveUserToInstitution: string
 
 /**
@@ -29,6 +32,7 @@ interface InstitutionsPanelState {
     removingUserFromInstitution: boolean,
     selectedUserToRemove: Nullable<DjangoUser>,
     showRemoveUserFromInstitutionModal: boolean,
+    modalState: InstitutionModalState,
 }
 
 /**
@@ -52,7 +56,8 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             addingRemovingUserToInstitution: false,
             removingUserFromInstitution: false,
             selectedUserToRemove: null,
-            showRemoveUserFromInstitutionModal: false
+            showRemoveUserFromInstitutionModal: false,
+            modalState: this.defaultModalState()
         }
     }
 
@@ -66,7 +71,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * When the component has been mounted, It requests for
      * tags and files
      */
-    componentDidMount () { this.getUserInstitutions() }
+    componentDidMount () { /* this.getUserInstitutions() */ }
 
     /**
      * Abort controller if component unmount
@@ -74,6 +79,39 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * Default modal attributes
+     * @returns {InstitutionModalState} Default modal
+     */
+    defaultModalState (): InstitutionModalState {
+        return {
+            isOpen: false,
+            action: InstitutionModalActions.READ,
+            institution: null
+        }
+    }
+
+    /**
+     * Close modal
+     */
+    handleCloseModal () {
+        this.setState({ modalState: this.defaultModalState() })
+    }
+
+    /**
+     * Open modal
+     * @param {InstitutionModalActions} action action type for modal.
+     * @param {DjangoInstitution} institution institution for modal.
+     */
+    handleOpenModal (action: InstitutionModalActions, institution: DjangoInstitution) {
+        const modalState = {
+            isOpen: true,
+            action,
+            institution
+        }
+        this.setState({ modalState })
     }
 
     /**
@@ -98,42 +136,6 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             })
         }).catch((err) => {
             console.log("Error getting user's datasets ->", err)
-        })
-    }
-
-    /**
-     * Fetches the User's uploaded files
-     */
-    searchUsers = () => {
-        this.setState({ isFetchingUsersCandidates: true }, () => {
-            const searchParams = {
-                querySearch: this.state.searchUserText
-            }
-            ky.get(urlGetUsersCandidates, { searchParams, signal: this.abortController.signal }).then((response) => {
-                this.setState({ isFetchingUsersCandidates: false })
-                response.json().then((userCandidates: DjangoUserCandidates[]) => {
-                    this.setState({ userCandidates })
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ isFetchingUsersCandidates: false })
-                }
-
-                console.log("Error getting user's datasets ->", err)
-            })
-        })
-    }
-
-    /**
-     * Handles search user input changes
-     * @param value Value to assign to the specified field
-     */
-    handleInputChange = (value: string) => {
-        this.setState({ searchUserText: value }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout(this.searchUsers, 300)
         })
     }
 
@@ -244,16 +246,16 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     formIsDisabled = (): boolean => !this.state.selectedInstitution || this.state.addingRemovingUserToInstitution
 
     render () {
-        const userOptions: DropdownItemProps[] = this.state.userCandidates.map((userCandidate) => {
-            return {
-                key: userCandidate.id,
-                text: `${userCandidate.username} (${userCandidate.email})`,
-                value: userCandidate.id
-            }
-        })
+        /*        const userOptions: DropdownItemProps[] = this.state.userCandidates.map((userCandidate) => {
+                   return {
+                       key: userCandidate.id,
+                       text: `${userCandidate.username} (${userCandidate.email})`,
+                       value: userCandidate.id
+                   }
+               }) */
 
-        const formIsDisabled = this.formIsDisabled()
-
+        /*         const formIsDisabled = this.formIsDisabled()
+         */
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
                 {/* Modal to confirm User removal from an Institution */}
@@ -277,65 +279,68 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                     </div>
                                 </Header.Content>
                             </Header>
-
-                            <InstitutionsList
+                            <InstitutionForm />
+                            {/* Todo: remove component
+                              <InstitutionsList
                                 institutions={this.state.institutions}
                                 showUsers={this.showUsers}
                                 selectedInstitution={this.state.selectedInstitution}
-                            />
+                            /> */}
                         </Segment>
                     </Grid.Column>
 
                     {/* Files overview panel */}
                     <Grid.Column width={12}>
                         <Segment>
-                            <Grid stretched={true}>
-                                <Grid.Column width={16} textAlign='left' stretched={true}>
-                                    <Header textAlign="center">
-                                        <Icon name='key' />
-                                        <Header.Content>Manage access</Header.Content>
-                                    </Header>
+                            <PaginatedTable<DjangoInstitution>
+                                headerTitle='Institutions'
+                                headers={[
+                                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
+                                    { name: 'Location', serverCodeToSort: 'location', width: 1 },
+                                    { name: 'Email', width: 1 },
+                                    { name: 'Phone number', width: 1 },
+                                    { name: 'Actions', width: 1 }
+                                ]}
+                                defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
+                                showSearchInput
+                                searchLabel='Name'
+                                searchPlaceholder='Search by name'
+                                urlToRetrieveData={urlUserInstitutionsAsAdmin}
+                                updateWSKey='institutionsList'
+                                mapFunction={(institution: DjangoInstitution) => {
+                                    return (
+                                        <Table.Row key={institution.id as number}>
+                                            <TableCellWithTitle value={institution.name} />
+                                            <TableCellWithTitle value={institution.location} />
+                                            <TableCellWithTitle value={institution.email} />
+                                            <TableCellWithTitle value={institution.telephone_number} />
+                                            <Table.Cell width={1}>
+                                                {/* Details button */}
+                                                <Icon
+                                                    name='chart bar'
+                                                    className='clickable'
+                                                    color='blue'
+                                                    title='Details'
+                                                    onClick={() => this.handleOpenModal(InstitutionModalActions.READ, institution)}
+                                                />
 
-                                    <Form unstackable={true}>
-                                        <Form.Group fluid>
-                                            {/* User Search */}
-                                            <Form.Dropdown
-                                                fluid
-                                                width={12}
-                                                selection
-                                                search
-                                                options={userOptions}
-                                                value={this.state.selectedUserIdToAdd as number}
-                                                placeholder='Add Users'
-                                                onChange={(_e, { value }) => this.selectUser(value)}
-                                                onSearchChange={(_e, { searchQuery }) => this.handleInputChange(searchQuery)}
-                                                disabled={formIsDisabled}
-                                                loading={this.state.isFetchingUsersCandidates || this.state.addingRemovingUserToInstitution}
-                                            />
-
-                                            <Form.Button
-                                                color='green'
-                                                onClick={this.addUserToInstitution}
-                                                disabled={formIsDisabled || !this.state.selectedUserIdToAdd}
-                                                loading={this.state.addingRemovingUserToInstitution}
-                                            >
-                                                Add user
-                                            </Form.Button>
-                                        </Form.Group>
-                                    </Form>
-
-                                </Grid.Column>
-                                <Grid.Column width={12} stretched={true}>
-                                    {/* Institution's Users info */}
-                                    <InstitutionUsersInfo
-                                        selectedInstitution={this.state.selectedInstitution}
-                                        confirmFileDeletion={this.confirmFileDeletion}
-                                    />
-                                </Grid.Column>
-                            </Grid>
+                                                {/* Edit button */}
+                                                <Icon
+                                                    name='pencil'
+                                                    className='clickable margin-left-5'
+                                                    color={/* canEditMolecules ? */ 'yellow' /* : 'orange' */}
+                                                    title={`Edit (${institution.name}`}
+                                                    onClick={() => this.handleOpenModal(InstitutionModalActions.EDIT, institution)}
+                                                />
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    )
+                                }}
+                            />
                         </Segment>
                     </Grid.Column>
                 </Grid>
+                <InstitutionModal handleCloseModal={() => this.handleCloseModal()} action={this.state.modalState.action} isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution} />
             </Base>
         )
     }
