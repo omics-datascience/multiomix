@@ -34,6 +34,8 @@ def __get_clustering_algorithm_value(cluster_algorithm: ClusteringAlgorithm) -> 
         return 'spectral'
     if cluster_algorithm == ClusteringAlgorithm.BK_MEANS:
         return 'bk_means'
+    if cluster_algorithm == ClusteringAlgorithm.WARD:
+        return 'ward'
     return 'k_means'  # Default is kmeans
 
 
