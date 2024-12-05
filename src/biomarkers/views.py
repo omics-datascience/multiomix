@@ -16,15 +16,18 @@ from biomarkers.serializers import BiomarkerSerializer, MoleculeIdentifierSerial
     BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 
 class BiomarkerList(generics.ListAPIView):
     """REST endpoint: list for Biomarker model"""
 
     def get_queryset(self):
+        user = self.request.user
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
-        biomarkers = Biomarker.objects.filter(user=self.request.user)
+        biomarkers = Biomarker.objects.filter(
+            Q(is_public=True) | Q(user=user) | Q(shared_institutions__institutionadministration__user=user)).distinct()
+
         if only_successful:
             # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
             # FIXME: autovacuum settings could help
@@ -112,7 +115,6 @@ class BiomarkerClone(APIView):
             self.__copy_molecules_instances(biomarker_copy, biomarker.cnas.all())
             self.__copy_molecules_instances(biomarker_copy, biomarker.methylations.all())
 
-
         return Response({'ok': True})
 
 
@@ -141,6 +143,7 @@ def get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
         is_paginated=False,
         method='post'
     )
+
 
 def find_genes_from_request(request: Request) -> List[Dict]:
     """
