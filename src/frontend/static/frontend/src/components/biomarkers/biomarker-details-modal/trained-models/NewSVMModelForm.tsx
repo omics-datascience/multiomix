@@ -2,6 +2,8 @@ import React from 'react'
 import { Form, InputOnChangeData } from 'semantic-ui-react'
 import { SVMKernelOptions } from '../../utils'
 import { SVMParameters } from '../../types'
+import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { InputLabel } from '../../../common/InputLabel'
 
 interface NewSVMModelFormProps {
     /** Getter of the selected params to handle in the form. */
@@ -10,15 +12,28 @@ interface NewSVMModelFormProps {
     handleChangeParams: (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void
 }
 
+const SVMKernel = SVMKernelOptions.map(({ description, ...rest }) => rest)
+
 export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
-    // TODO: add an InfoPopup for all the inputs
+    const selectedKernel = SVMKernelOptions.find(option => option.value === props.parameters.kernel)
+    const kernelDescription = selectedKernel ? selectedKernel.description : 'No description available'
     return (
         <>
             <Form.Select
                 fluid
                 selectOnBlur={false}
-                label='Kernel'
-                options={SVMKernelOptions}
+                label={
+                    <InputLabel label='Kernel'>
+                        <InfoPopup
+                            content={kernelDescription}
+                            onTop={false}
+                            onEvent='hover'
+                            noBorder
+                            extraClassName='pull-right'
+                        />
+                    </InputLabel>
+                }
+                options={SVMKernel}
                 placeholder='Select a kernel'
                 name='kernel'
                 value={props.parameters.kernel}
@@ -28,7 +43,17 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
             <Form.Group widths='equal'>
                 <Form.Input
                     fluid
-                    label='Max iterations'
+                    label={
+                        <InputLabel label='Max iterations'>
+                            <InfoPopup
+                                content='The maximum number of iterations to be run'
+                                onTop={false}
+                                onEvent='hover'
+                                noBorder
+                                extraClassName='pull-right'
+                            />
+                        </InputLabel>
+                    }
                     placeholder='100-2000'
                     name='maxIterations'
                     value={props.parameters.maxIterations ?? ''}
@@ -37,7 +62,17 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
 
                 <Form.Input
                     fluid
-                    label='Random state'
+                    label={
+                        <InputLabel label='Random state'>
+                            <InfoPopup
+                                content='Seed used by the random number generator'
+                                onTop={false}
+                                onEvent='hover'
+                                noBorder
+                                extraClassName='pull-right'
+                            />
+                        </InputLabel>
+                    }
                     placeholder='An integer number'
                     type='number'
                     step={1}

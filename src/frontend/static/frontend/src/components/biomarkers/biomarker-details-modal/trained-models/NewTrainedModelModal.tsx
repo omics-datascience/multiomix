@@ -10,6 +10,8 @@ import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interf
 import ky from 'ky'
 import { NewClusteringModelForm } from './NewClusteringModelForm'
 import { NewRFModelForm } from './NewRFModelForm'
+import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { InputLabel } from '../../../common/InputLabel'
 
 declare const urlNewTrainedModel: string
 
@@ -437,7 +439,17 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                                 <Form.Input
                                     fluid
-                                    label='Number of folds'
+                                    label={
+                                        <InputLabel label='Number of folds'>
+                                            <InfoPopup
+                                                content='Defines the number of data splits for cross-validation; ensures robust model evaluation and prevents overfitting.'
+                                                onTop={false}
+                                                onEvent='hover'
+                                                noBorder
+                                                extraClassName='pull-right'
+                                            />
+                                        </InputLabel>
+                                    }
                                     placeholder='An integer number'
                                     type='number'
                                     step={1}
