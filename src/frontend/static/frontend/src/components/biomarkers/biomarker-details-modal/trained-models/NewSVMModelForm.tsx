@@ -12,11 +12,7 @@ interface NewSVMModelFormProps {
     handleChangeParams: (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void
 }
 
-const SVMKernel = SVMKernelOptions.map(({ description, ...rest }) => rest)
-
 export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
-    const selectedKernel = SVMKernelOptions.find(option => option.value === props.parameters.kernel)
-    const kernelDescription = selectedKernel ? selectedKernel.description : 'No description available'
     return (
         <>
             <Form.Select
@@ -25,7 +21,13 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                 label={
                     <InputLabel label='Kernel'>
                         <InfoPopup
-                            content={kernelDescription}
+                            content={
+                                <>
+                                    <p>Linear Kernel: Best for linearly separable data; commonly used for simple genomic or clinical feature classification.</p>
+                                    <p>Polynomial Kernel: Captures non-linear patterns; effective for complex relationships in multi-omics data.</p>
+                                    <p>RBF Kernel: Maps data to a higher-dimensional space; ideal for handling non-linear separations in RNA and methylation analyses.</p>
+                                </>
+                            }
                             onTop={false}
                             onEvent='hover'
                             noBorder
@@ -33,7 +35,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                         />
                     </InputLabel>
                 }
-                options={SVMKernel}
+                options={SVMKernelOptions}
                 placeholder='Select a kernel'
                 name='kernel'
                 value={props.parameters.kernel}
