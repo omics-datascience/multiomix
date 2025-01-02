@@ -1,6 +1,6 @@
 from typing import Literal, Union, Optional
 from django.conf import settings
-from sklearn.cluster import KMeans, SpectralClustering, BisectingKMeans
+from sklearn.cluster import KMeans, SpectralClustering, BisectingKMeans, AgglomerativeClustering
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.svm import FastKernelSurvivalSVM
 from .models import ClusteringAlgorithm
@@ -12,7 +12,7 @@ SVMKernelOptions = Literal["linear", "poly", "rbf", "sigmoid", "cosine", "precom
 SVMOptimizerOptions = Literal["avltree", "rbtree"]
 
 # Available models for clustering
-ClusteringModels = Union[KMeans, SpectralClustering, BisectingKMeans]
+ClusteringModels = Union[KMeans, SpectralClustering, BisectingKMeans, AgglomerativeClustering]
 
 
 def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
@@ -28,6 +28,8 @@ def get_clustering_model(clustering_algorithm: ClusteringAlgorithm,
         return KMeans(n_clusters=number_of_clusters, random_state=random_state, n_init='auto')
     elif clustering_algorithm == ClusteringAlgorithm.SPECTRAL:
         return SpectralClustering(n_clusters=number_of_clusters, random_state=random_state)
+    elif clustering_algorithm == ClusteringAlgorithm.WARD:
+        return AgglomerativeClustering(n_clusters=number_of_clusters, linkage='ward')
     elif clustering_algorithm == ClusteringAlgorithm.BK_MEANS:
         return BisectingKMeans(n_clusters=number_of_clusters, random_state=random_state)
 
