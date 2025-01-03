@@ -57,6 +57,7 @@ class Biomarker(models.Model):
     statistical_validations: QuerySet['statistical_properties.StatisticalValidation']
     inference_experiments: QuerySet['inferences.InferenceExperiment']
     methylations: QuerySet['MethylationIdentifier']
+    trained_models: QuerySet['trained_models.TrainedModel']
     cnas: QuerySet['CNAIdentifier']
     mirnas: QuerySet['MiRNAIdentifier']
     mrnas: QuerySet['MRNAIdentifier']
