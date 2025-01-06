@@ -446,7 +446,19 @@ interface DjangoInstitution {
     location: string,
     email: string,
     telephone_number: string,
-    users: DjangoUser[]
+    users?: DjangoUser[]
+}
+
+/**
+ * Django Institution user
+ */
+interface DjangoInstitutionUser {
+    user: {
+        id: number,
+        username: string,
+    },
+    id:number,
+    is_institution_admin: boolean,
 }
 
 /**
@@ -683,5 +695,6 @@ export {
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
     DjangoSurvivalColumnsTupleSimple,
-    DjangoNumberSamplesInCommonClinicalValidationResult
+    DjangoNumberSamplesInCommonClinicalValidationResult,
+    DjangoInstitutionUser
 }

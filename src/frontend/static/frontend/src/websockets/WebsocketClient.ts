@@ -22,8 +22,9 @@ class WebsocketClientCustom {
         this.websocket.onopen = function () {
             console.log('Websocket connection established')
         }
-
-        this.websocket.onmessage = debounce(function (event) {
+        // Makes all the functions debounced to prevent multiple concatenated executions.
+        config.commandsToAttend = config.commandsToAttend.map(command => ({...command, functionToExecute: debounce(command.functionToExecute, 300)}))
+        this.websocket.onmessage = function (event) {
             try {
                 const dataParsed: WebsocketMessage = JSON.parse(event.data)
 
@@ -38,7 +39,7 @@ class WebsocketClientCustom {
                 console.log('Data:', event.data)
                 console.log('Exception:', ex)
             }
-        }, 300)
+        }
 
         this.websocket.onerror = function (event) {
             console.log('Error establishing websocket connection', event)

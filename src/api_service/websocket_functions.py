@@ -106,3 +106,25 @@ def send_update_cluster_label_set_command(user_id: int):
         'command': 'update_cluster_labels_sets'
     }
     send_message(user_group_name, message)
+
+def send_update_institutions_command(user_id: int):
+    """
+    Sends a message indicating that a Institution state update has occurred
+    @param user_id: Institution's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_institutions'
+    }
+    send_message(user_group_name, message)
+
+def send_update_user_for_institution_command(user_id: int):
+    """
+    Sends a message indicating that a Institution_user state update has occurred
+    @param user_id: Institution's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_user_for_institution'
+    }
+    send_message(user_group_name, message)

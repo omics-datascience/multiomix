@@ -14,8 +14,12 @@
 
 {% block js %}
         <script>
-            const urlUserInstitutionsAsAdmin = "{% url 'user_institutions_as_admin' %}"
+            const urlGetUserInstitutions = "{% url 'user_institutions_list' %}"
             const urlGetUsersCandidates = "{% url 'user_candidates' %}"
+            const urlCreateInstitution = "{% url 'create_institution' %}"
+            const urlEditInstitution = "{% url 'edit_institution' %}"
+            const urlDeleteInstitution = "{% url 'delete-institution' %}"
+            const urlEditInstitutionAdmin = "{% url 'update-institution-admin' %}"
             const urlAddRemoveUserToInstitution = "{% url 'add_remove_user_to_institution' %}"
         </script>
         {% render_bundle 'institutions' 'js' %}

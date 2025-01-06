@@ -319,6 +319,14 @@ enum GenesColors {
     CLINICAL = 'teal'
 }
 
+/** Confirm modal  */
+interface ConfirmModal {
+    confirmModal: boolean,
+    headerText: string,
+    contentText: string,
+    onConfirm: Function,
+}
+
 export {
     GenesColors,
     CustomAlertTypes,
@@ -355,5 +363,6 @@ export {
     ScoreClassData,
     BinData,
     DataUICategoricalBinnedDatumShape,
-    OkResponse
+    OkResponse,
+    ConfirmModal
 }

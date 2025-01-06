@@ -1,22 +1,21 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Icon, Segment, Header, Table } from 'semantic-ui-react'
+import { Grid, Icon, Segment, Header, Table, Confirm } from 'semantic-ui-react'
 import { DjangoInstitution, DjangoUserCandidates, DjangoCommonResponse, DjangoAddRemoveUserToInstitutionInternalCode, DjangoResponseCode, DjangoUser } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { alertGeneralError, getDjangoHeader } from '../../utils/util_functions'
-/* import { InstitutionsList } from './InstitutionsList'
-import { InstitutionUsersInfo } from './InstitutionUsersInfo' */
 import { RemoveUserFromInstitutionModal } from './RemoveUserFromInstitutionModal'
-import { Nullable } from '../../utils/interfaces'
+import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../../utils/interfaces'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import InstitutionForm from './InstitutionForm'
-import { InstitutionModal, InstitutionModalActions, InstitutionModalState } from './InstitutionModal'
+import { InstitutionModal, InstitutionModalState } from './InstitutionModal'
+import { Alert } from '../common/Alert'
 
 // URLs defined in files.html
-declare const urlUserInstitutionsAsAdmin: string
-declare const urlAddRemoveUserToInstitution: string
+declare const urlGetUserInstitutions: string
+declare const urlDeleteInstitution: string
 
 /**
  * Component's state
@@ -33,6 +32,14 @@ interface InstitutionsPanelState {
     selectedUserToRemove: Nullable<DjangoUser>,
     showRemoveUserFromInstitutionModal: boolean,
     modalState: InstitutionModalState,
+    institutionToEdit: Nullable<DjangoInstitution>,
+    alert: CustomAlert,
+    isDeletingInstitution: boolean,
+    confirmModal: ConfirmModal,
+}
+
+export interface InstitutionTableData extends DjangoInstitution {
+    is_user_admin: boolean
 }
 
 /**
@@ -43,7 +50,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     filterTimeout: number | undefined
     abortController = new AbortController()
 
-    constructor (props) {
+    constructor(props) {
         super(props)
 
         this.state = {
@@ -57,38 +64,108 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             removingUserFromInstitution: false,
             selectedUserToRemove: null,
             showRemoveUserFromInstitutionModal: false,
-            modalState: this.defaultModalState()
+            modalState: this.defaultModalState(),
+            institutionToEdit: null,
+            alert: this.getDefaultAlertProps(),
+            isDeletingInstitution: false,
+            confirmModal: this.getDefaultConfirmModal()
         }
     }
 
-    selectedInstitutionChanged (institution: DjangoInstitution) {
-        this.setState({
-            selectedInstitution: institution
-        })
-    }
 
-    /**
-     * When the component has been mounted, It requests for
-     * tags and files
-     */
-    componentDidMount () { /* this.getUserInstitutions() */ }
 
     /**
      * Abort controller if component unmount
      */
 
-    componentWillUnmount () {
+    componentWillUnmount() {
         this.abortController.abort()
+    }
+
+    /**
+    * Generates a default alert structure
+    * @returns Default the default Alert
+    */
+    getDefaultAlertProps(): CustomAlert {
+        return {
+            message: '', // This have to change during cycle of component
+            isOpen: false,
+            type: CustomAlertTypes.SUCCESS,
+            duration: 500
+        }
+    }
+    getDefaultConfirmModal = (): ConfirmModal => {
+        return {
+            confirmModal: false,
+            headerText: '',
+            contentText: '',
+            onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+        }
+    }
+
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCancelConfirmModalState() {
+        this.setState({ confirmModal: this.getDefaultConfirmModal() })
+    }
+
+    /**
+     * Changes confirm modal state
+     * @param setOption New state of option
+     * @param headerText Optional text of header in confirm modal, by default will be empty
+     * @param contentText optional text of content in confirm modal, by default will be empty
+     * @param onConfirm Modal onConfirm callback
+     */
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+        const confirmModal = this.state.confirmModal
+        confirmModal.confirmModal = setOption
+        confirmModal.headerText = headerText
+        confirmModal.contentText = contentText
+        confirmModal.onConfirm = onConfirm
+        this.setState({ confirmModal })
+    }
+
+    /**
+     * Update Alert
+     * @param isOpen flag to open or close alert.
+     * @param type type of alert.
+     * @param message message of alert.
+     * @param callback Callback function if is needed.
+     */
+    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) {
+        const alert = this.state.alert
+        alert.isOpen = isOpen
+        alert.type = type
+        alert.message = message
+        let institutionToEdit = this.state.institutionToEdit
+        if(isEdit){
+            institutionToEdit = null
+        }
+        if (callback) {
+            callback()
+            this.setState({ alert, institutionToEdit })
+        }else{
+            this.setState({ alert, institutionToEdit })
+        }
+    }
+
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCloseAlert = () => {
+        const alert = this.state.alert
+        alert.isOpen = false
+        this.setState({ alert })
     }
 
     /**
      * Default modal attributes
      * @returns {InstitutionModalState} Default modal
      */
-    defaultModalState (): InstitutionModalState {
+    defaultModalState(): InstitutionModalState {
         return {
             isOpen: false,
-            action: InstitutionModalActions.READ,
             institution: null
         }
     }
@@ -96,177 +173,80 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     /**
      * Close modal
      */
-    handleCloseModal () {
+    handleCloseModal() {
         this.setState({ modalState: this.defaultModalState() })
     }
 
     /**
      * Open modal
-     * @param {InstitutionModalActions} action action type for modal.
-     * @param {DjangoInstitution} institution institution for modal.
+     * @param {InstitutionTableData} institution institution for modal.
      */
-    handleOpenModal (action: InstitutionModalActions, institution: DjangoInstitution) {
+    handleOpenModal(institution: InstitutionTableData) {
         const modalState = {
             isOpen: true,
-            action,
             institution
         }
         this.setState({ modalState })
     }
 
+
     /**
-     * Fetches the Institutions which the current user belongs to
+     * Reset institution to edit
      */
-    getUserInstitutions () {
-        ky.get(urlUserInstitutionsAsAdmin, { signal: this.abortController.signal }).then((response) => {
-            response.json().then((institutions: DjangoInstitution[]) => {
-                // If it's showing an institution, refresh it's state
-                // For example, in the case of adding or removing a user to/from an Institution
-                let newSelectedInstitution: Nullable<DjangoInstitution> = null
-
-                if (this.state.selectedInstitution !== null) {
-                    newSelectedInstitution = institutions.find((institution) => {
-                        return institution.id === this.state.selectedInstitution?.id
-                    }) ?? null
-                }
-
-                this.setState({ institutions, selectedInstitution: newSelectedInstitution })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log("Error getting user's datasets ->", err)
-        })
+    handleResetInstitutionToEdit(callbackToCancel: () => void) {
+        this.setState({ institutionToEdit: null })
+        callbackToCancel()
     }
 
     /**
-     * Set a selected Institution in state to show it users
-     * @param selectedInstitution Selected Institution to show users
+     * Set form to edit
+     * @param {InstitutionTableData} institution institution for modal.
      */
-    showUsers = (selectedInstitution: DjangoInstitution) => { this.setState({ selectedInstitution }) }
-
-    /**
-     * Cleans the inputs for adding a user to an Institution
-     */
-    cleanSearchAndCandidates () {
-        this.setState({
-            userCandidates: [],
-            selectedUserIdToAdd: null,
-            searchUserText: ''
-        })
+    handleSetInstitutionToEdit(institution: InstitutionTableData) {
+        this.setState({ institutionToEdit: institution })
     }
 
     /**
-     * Sets as selected a new user to add him to an Institution,
-     * @param selectedUserId Id of the selected user in the Dropdown
+     * 
+     * @returns 
      */
-    selectUser (selectedUserId) { this.setState({ selectedUserIdToAdd: selectedUserId }) }
-
-    /**
-     * Makes a request to the server to add/remove a User to/from an Institution
-     * @param userId Id of the user to add or remove
-     * @param isAdding True if want to add, false if want to remove
-     */
-    addOrRemoveUserToInstitution = (userId: number, isAdding: boolean) => {
-        // Sets the Request's Headers
+    handleDeleteInstitution(institutionId: number) {
+        const url = `${urlDeleteInstitution}/${institutionId}/`
         const myHeaders = getDjangoHeader()
-
-        const params = {
-            userId,
-            institutionId: this.state.selectedInstitution?.id,
-            isAdding
-        }
-
-        const loadingFlag = isAdding ? 'addingRemovingUserToInstitution' : 'removingUserFromInstitution'
-
-        this.setState<never>({ [loadingFlag]: true }, () => {
-            ky.post(urlAddRemoveUserToInstitution, { headers: myHeaders, json: params }).then((response) => {
-                this.setState<never>({ [loadingFlag]: false })
-                response.json().then((jsonResponse: DjangoCommonResponse<DjangoAddRemoveUserToInstitutionInternalCode>) => {
-                    this.cleanSearchAndCandidates()
-
-                    if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
-                        this.getUserInstitutions()
-                        this.handleClose()
-                    } else {
-                        if (jsonResponse.status.internal_code === DjangoAddRemoveUserToInstitutionInternalCode.CANNOT_REMOVE_YOURSELF) {
-                            alert('You cannot remove yourself from the Institution!')
-                        } else {
-                            alertGeneralError()
-                        }
-                    }
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
+        ky.delete(url, { headers: myHeaders }).then((response) => {
+            response.json().then((jsonResponse: DjangoInstitution) => {
+                this.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Institution deleted!', null)
             }).catch((err) => {
-                this.setState<never>({ [loadingFlag]: false })
-                console.log("Error getting user's datasets ->", err)
+                this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+                console.error('Error parsing JSON ->', err)
             })
+                .finally(() => {
+                    const confirmModal = this.state.confirmModal
+                    confirmModal.confirmModal = false
+                    this.setState({ confirmModal })
+                })
+        }).catch((err) => {
+            this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+            console.error('Error adding new Institution ->', err)
+        }).finally(() => {
+            const confirmModal = this.state.confirmModal
+            confirmModal.confirmModal = false
+            this.setState({ confirmModal })
         })
     }
 
-    /**
-     * Makes a request to the server to add a User from an Institution
-     */
-    addUserToInstitution = () => {
-        if (this.state.selectedUserIdToAdd !== null) {
-            this.addOrRemoveUserToInstitution(this.state.selectedUserIdToAdd, true)
-        }
-    }
-
-    /**
-     * Makes a request to the server to remove a User from an Institution
-     */
-    removeUserFromInstitution = () => {
-        if (this.state.selectedUserToRemove?.id) {
-            this.addOrRemoveUserToInstitution(this.state.selectedUserToRemove.id, false)
-        }
-    }
-
-    /**
-     * Show a modal to confirm a removal of an User from an Institution
-     * @param institutionUser Selected User to remove
-     */
-    confirmFileDeletion = (institutionUser: DjangoUser) => {
-        this.setState({
-            selectedUserToRemove: institutionUser,
-            showRemoveUserFromInstitutionModal: true
-        })
-    }
-
-    /**
-     * Closes the removal confirm modals
-     */
-    handleClose = () => { this.setState({ showRemoveUserFromInstitutionModal: false }) }
-
-    /**
-     * Checks if search input should be enabled or not
-     * @returns True if user can choose a user to add to an Institution, false otherwise
-     */
-    formIsDisabled = (): boolean => !this.state.selectedInstitution || this.state.addingRemovingUserToInstitution
-
-    render () {
-        /*        const userOptions: DropdownItemProps[] = this.state.userCandidates.map((userCandidate) => {
-                   return {
-                       key: userCandidate.id,
-                       text: `${userCandidate.username} (${userCandidate.email})`,
-                       value: userCandidate.id
-                   }
-               }) */
-
-        /*         const formIsDisabled = this.formIsDisabled()
-         */
+    render() {
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
                 {/* Modal to confirm User removal from an Institution */}
-                <RemoveUserFromInstitutionModal
+                {/* <RemoveUserFromInstitutionModal
                     selectedUserToRemove={this.state.selectedUserToRemove}
                     selectedInstitution={this.state.selectedInstitution}
                     showRemoveUserModal={this.state.showRemoveUserFromInstitutionModal}
                     removingUserFromInstitution={this.state.removingUserFromInstitution}
                     handleClose={this.handleClose}
                     removeUser={this.removeUserFromInstitution}
-                />
+                /> */}
                 <Grid columns={2} padded stackable divided stretched={true}>
                     {/* List of institutions */}
                     <Grid.Column width={4} textAlign='left' stretched={true}>
@@ -279,7 +259,11 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                     </div>
                                 </Header.Content>
                             </Header>
-                            <InstitutionForm />
+                            <InstitutionForm
+                                institutionToEdit={this.state.institutionToEdit}
+                                handleResetInstitutionToEdit={(callback) => this.handleResetInstitutionToEdit(callback)}
+                                handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback, isEdit)}
+                            />
                             {/* Todo: remove component
                               <InstitutionsList
                                 institutions={this.state.institutions}
@@ -292,22 +276,22 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     {/* Files overview panel */}
                     <Grid.Column width={12}>
                         <Segment>
-                            <PaginatedTable<DjangoInstitution>
+                            <PaginatedTable<InstitutionTableData>
                                 headerTitle='Institutions'
                                 headers={[
                                     { name: 'Name', serverCodeToSort: 'name', width: 3 },
                                     { name: 'Location', serverCodeToSort: 'location', width: 1 },
-                                    { name: 'Email', width: 1 },
-                                    { name: 'Phone number', width: 1 },
+                                    { name: 'Email', serverCodeToSort: 'email', width: 1 },
+                                    { name: 'Phone number', serverCodeToSort: 'telephone_number', width: 1 },
                                     { name: 'Actions', width: 1 }
                                 ]}
                                 defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                                 showSearchInput
                                 searchLabel='Name'
                                 searchPlaceholder='Search by name'
-                                urlToRetrieveData={urlUserInstitutionsAsAdmin}
-                                updateWSKey='institutionsList'
-                                mapFunction={(institution: DjangoInstitution) => {
+                                urlToRetrieveData={urlGetUserInstitutions}
+                                updateWSKey='update_institutions'
+                                mapFunction={(institution: InstitutionTableData) => {
                                     return (
                                         <Table.Row key={institution.id as number}>
                                             <TableCellWithTitle value={institution.name} />
@@ -317,21 +301,32 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                             <Table.Cell width={1}>
                                                 {/* Details button */}
                                                 <Icon
-                                                    name='chart bar'
+                                                    name='address book'
                                                     className='clickable'
                                                     color='blue'
                                                     title='Details'
-                                                    onClick={() => this.handleOpenModal(InstitutionModalActions.READ, institution)}
+                                                    onClick={() => this.handleOpenModal(institution)}
                                                 />
 
                                                 {/* Edit button */}
-                                                <Icon
+                                                {institution.is_user_admin && <Icon
                                                     name='pencil'
                                                     className='clickable margin-left-5'
-                                                    color={/* canEditMolecules ? */ 'yellow' /* : 'orange' */}
+                                                    color={'yellow'}
                                                     title={`Edit (${institution.name}`}
-                                                    onClick={() => this.handleOpenModal(InstitutionModalActions.EDIT, institution)}
-                                                />
+                                                    onClick={() => this.handleSetInstitutionToEdit(institution)}
+                                                />}
+                                                {/*Delete button */}
+                                                {institution.is_user_admin &&
+                                                    <Icon
+                                                        name='trash'
+                                                        className={`clickable margin-left-5`}
+                                                        color='red'
+                                                        disabled={this.state.isDeletingInstitution}
+                                                        title={'Delete Institution'}
+                                                        onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
+                                                    />
+                                                }
                                             </Table.Cell>
                                         </Table.Row>
                                     )
@@ -340,7 +335,27 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                         </Segment>
                     </Grid.Column>
                 </Grid>
-                <InstitutionModal handleCloseModal={() => this.handleCloseModal()} action={this.state.modalState.action} isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution} />
+                <InstitutionModal
+                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback)}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                    handleCloseModal={() => this.handleCloseModal()}
+                    isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution}
+                />
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
+                <Confirm
+                    open={this.state.confirmModal.confirmModal}
+                    header={this.state.confirmModal.headerText}
+                    content={this.state.confirmModal.contentText}
+                    size="large"
+                    onCancel={() => this.handleCancelConfirmModalState()}
+                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                />
             </Base>
         )
     }
