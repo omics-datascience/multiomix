@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Institution
-from frontend.serializers import UserSerializer
+from users.serializers import UserSerializer
 
 
 class InstitutionSerializer(serializers.ModelSerializer):

@@ -36,4 +36,5 @@ urlpatterns = [
     path('molecules/', include('molecules_details.urls')),
     path('admin/', admin.site.urls),
     path('email/', include(mail_urls)),
+    path('users/', include('users.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
