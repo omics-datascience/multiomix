@@ -152,7 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-MIN_PASSWORD_LEN: int = 8
+MIN_PASSWORD_LEN: int = int(os.getenv('MIN_PASSWORD_LEN', 8))
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
