@@ -1,10 +1,9 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Grid, Icon, Segment, Header, Table, Confirm } from 'semantic-ui-react'
-import { DjangoInstitution, DjangoUserCandidates, DjangoCommonResponse, DjangoAddRemoveUserToInstitutionInternalCode, DjangoResponseCode, DjangoUser } from '../../utils/django_interfaces'
+import { DjangoInstitution, DjangoUserCandidates, DjangoUser } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { alertGeneralError, getDjangoHeader } from '../../utils/util_functions'
-import { RemoveUserFromInstitutionModal } from './RemoveUserFromInstitutionModal'
+import { getDjangoHeader } from '../../utils/util_functions'
 import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../../utils/interfaces'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { PaginatedTable } from '../common/PaginatedTable'
@@ -238,15 +237,6 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     render() {
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
-                {/* Modal to confirm User removal from an Institution */}
-                {/* <RemoveUserFromInstitutionModal
-                    selectedUserToRemove={this.state.selectedUserToRemove}
-                    selectedInstitution={this.state.selectedInstitution}
-                    showRemoveUserModal={this.state.showRemoveUserFromInstitutionModal}
-                    removingUserFromInstitution={this.state.removingUserFromInstitution}
-                    handleClose={this.handleClose}
-                    removeUser={this.removeUserFromInstitution}
-                /> */}
                 <Grid columns={2} padded stackable divided stretched={true}>
                     {/* List of institutions */}
                     <Grid.Column width={4} textAlign='left' stretched={true}>
@@ -354,7 +344,12 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     content={this.state.confirmModal.contentText}
                     size="large"
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+                        const confirmModal = this.state.confirmModal
+                        confirmModal.confirmModal = false
+                        this.setState({ confirmModal })
+                    }}
                 />
             </Base>
         )

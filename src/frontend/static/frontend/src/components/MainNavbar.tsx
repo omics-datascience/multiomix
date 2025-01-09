@@ -176,23 +176,13 @@ const MainNavbar = (props: MainNavbarProps) => {
                                     />
                                 </React.Fragment>
                             }
-
-                            {/* Institutions panel (only for user who are admin of at least one institution) */}
-                            {currentUser.is_institution_admin &&
-                                <Dropdown.Item
-                                    text='Institutions'
-                                    icon='building'
-                                    as='a' href={urlInstitutions}
-                                    active={props.activeItem === 'institutions'}
-                                />
-                            }
                         </Dropdown.Menu>
                     </Dropdown>
                 </Menu.Menu>
             }
 
             {/* Institutions */}
-            {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) &&
+            {currentUser &&
                 <Menu.Menu as='h2'>
                     <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
                         Institutions

@@ -15,6 +15,8 @@ urlpatterns = [
     path('delete/<int:id>/', views.DeleteInstitutionView.as_view()),
     path('admin-update', views.UpdateInstitutionAdminView.as_view(), name='update-institution-admin'),
     path('admin-update/<int:id>/', views.UpdateInstitutionAdminView.as_view()),
+    path('non-users', views.InstitutionNonUsersListView.as_view(), name='institution-non-users-list'),
+    path('non-users/<int:institution_id>/', views.InstitutionNonUsersListView.as_view()),
     path(
         'add-remove-user-to-institution',
         views.add_remove_user_to_institution_action,

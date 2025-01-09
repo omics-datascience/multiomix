@@ -327,7 +327,15 @@ interface ConfirmModal {
     onConfirm: Function,
 }
 
+/** Select SemanticUi list interface */
+interface SemanticListItem {
+     key: string, 
+     value: string, 
+     text: string 
+}
+
 export {
+    SemanticListItem,
     GenesColors,
     CustomAlertTypes,
     CustomAlert,

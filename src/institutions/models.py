@@ -57,8 +57,8 @@ class InstitutionAdministration(models.Model):
         related_users = list(self.institution.users.all())
         # Sends a websockets message to all users for update the institutions state in the frontend
         for user in related_users:
-            send_update_user_for_institution_command(user.id)
             send_update_institutions_command(user.id)
+            send_update_user_for_institution_command(user.id)
 
     def __str__(self):
         as_admin_label = '(as admin)' if self.is_institution_admin else ''

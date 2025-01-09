@@ -7,7 +7,7 @@ from common.functions import encode_json_response_status
 from common.response import ResponseStatus
 from .enums import AddRemoveUserToInstitutionStatusErrorCode
 from .models import Institution, InstitutionAdministration
-from .serializers import InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer
+from .serializers import InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer, LimitedUserSerializer
 from django.contrib.auth.models import User
 from common.pagination import StandardResultsSetPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from api_service.websocket_functions import send_update_institutions_command, send_update_user_for_institution_command
 
 
 
@@ -85,13 +87,17 @@ def add_remove_user_to_institution_action(request):
                     institutionadministration__is_institution_admin=True
                 )
 
+
                 # Adds/Remove user
                 if is_adding:
                     institution.users.add(user)
                 else:
                     institution.users.remove(user)
 
-                institution.save()
+                for user in institution.users.all():
+                    send_update_institutions_command(user.id)
+                    send_update_user_for_institution_command(user.id)
+
 
                 response = {
                     'status': ResponseStatus(ResponseCode.SUCCESS)
@@ -245,6 +251,25 @@ class UpdateInstitutionAdminView(APIView):
         relation.is_institution_admin = not relation.is_institution_admin
         relation.save(update_fields=['is_institution_admin'])
         return Response({'ok': True})
+
+class InstitutionNonUsersListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users NOT associated with a specific institution.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users not associated with a specific institution.
+        """
+        institution_id = self.kwargs.get('institution_id')
+
+        associated_user_ids = InstitutionAdministration.objects.filter(
+            institution_id=institution_id
+        ).values_list('user_id', flat=True)
+
+        return get_user_model().objects.exclude(id__in=associated_user_ids)
 
 @login_required
 def institutions_action(request):
