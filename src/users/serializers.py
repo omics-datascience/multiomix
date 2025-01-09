@@ -53,15 +53,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.last_name = validated_data.get('last_name', instance.last_name)
 
             password = validated_data.pop('password', '')
-            
-            minimum_password_len = settings.MIN_PASSWORD_LEN
             password_length = len(password)
+            
             if password_length != 0:
+                minimum_password_len = settings.MIN_PASSWORD_LEN
                 if password_length < minimum_password_len:
                     raise ValidationError(f'Password must be at least {minimum_password_len} chars long')
-
-            instance.set_password(password)
-            
+                else:
+                    instance.set_password(password)
+                     
             instance.save()
         return instance
         
