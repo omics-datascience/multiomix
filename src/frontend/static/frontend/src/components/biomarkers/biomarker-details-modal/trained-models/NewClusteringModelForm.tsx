@@ -15,13 +15,29 @@ interface NewClusteringModelFormProps {
 }
 
 export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
-    // TODO: add an InfoPopup for all the inputs
     return (
         <>
             <Form.Select
                 fluid
                 selectOnBlur={false}
-                label='Algorithm'
+                label={
+                    <InputLabel label='Algorithm'>
+                        <InfoPopup
+                            content={
+                                <>
+                                    <p>K-Means: Groups data by minimizing intra-cluster variance; effective for clustering RNA and miRNA expression profiles.</p>
+                                    <p>Spectral Clustering: Uses graph-based similarity to identify complex patterns; ideal for integrating methylation and CNA data.</p>
+                                    <p>BK-Means: A hierarchical variation of K-Means, suitable for layered clustering of clinical and multi-omics datasets.</p>
+                                    <p>Ward’s Method: Minimizes variance in hierarchical clustering; well-suited for combining RNA and methylation data in integrated analyses.</p>
+                                </>
+                            }
+                            onTop={false}
+                            onEvent='hover'
+                            noBorder
+                            extraClassName='pull-right'
+                        />
+                    </InputLabel>
+                }
                 options={clusteringAlgorithmOptions}
                 placeholder='Select an algorithm'
                 name='algorithm'
@@ -29,7 +45,6 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 onChange={props.handleChangeParams}
             />
 
-            {/* TODO: add InfoPopup */}
             <Form.Checkbox
                 checked={props.parameters.lookForOptimalNClusters}
                 onChange={(_e, { checked }) => { props.handleChangeOptimalNClusters(checked ?? false) }}
@@ -39,7 +54,17 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             {!props.parameters.lookForOptimalNClusters &&
                 <Form.Input
                     type='number'
-                    label='Number of clusters'
+                    label={
+                        <InputLabel label='Number of clusters'>
+                            <InfoPopup
+                                content='The number of clusters to group the data into. The optimal number of clusters can be found by looking for the elbow in the curve of the sum of squared distances between samples and their closest cluster center.'
+                                onTop={false}
+                                onEvent='hover'
+                                noBorder
+                                extraClassName='pull-right'
+                            />
+                        </InputLabel>
+                    }
                     name='nClusters'
                     min={2}
                     max={10}
@@ -51,7 +76,22 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             <Form.Select
                 fluid
                 selectOnBlur={false}
-                label='Metric'
+                label={
+                    <InputLabel label='Metric'>
+                        <InfoPopup
+                            content={
+                                <>
+                                    <p>Cox Regression: A proportional hazards model to identify associations between multi-omics features (RNA, miRNA, methylation) and clinical outcomes over time.</p>
+                                    <p>Log-Rank Test: A non-parametric test to compare the survival distributions of two or more groups; currently not available.</p>
+                                </>
+                            }
+                            onTop={false}
+                            onEvent='hover'
+                            noBorder
+                            extraClassName='pull-right'
+                        />
+                    </InputLabel>
+                }
                 options={clusteringMetricOptions}
                 placeholder='Select a metric'
                 name='metric'
@@ -64,7 +104,22 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 <Form.Select
                     fluid
                     selectOnBlur={false}
-                    label='Scoring method'
+                    label={
+                        <InputLabel label='Scoring method'>
+                            <InfoPopup
+                                content={
+                                    <>
+                                        <p>C-Index: A measure of concordance between predicted and observed survival outcomes; higher values indicate better model performance.</p>
+                                        <p>Log Likelihood: The probability of observing the data given the model; lower values indicate better model performance.</p>
+                                    </>
+                                }
+                                onTop={false}
+                                onEvent='hover'
+                                noBorder
+                                extraClassName='pull-right'
+                            />
+                        </InputLabel>
+                    }
                     options={clusteringScoringMethodOptions}
                     placeholder='Select a method'
                     name='scoringMethod'
@@ -75,7 +130,17 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
 
             <Form.Group widths='equal'>
                 <Form.Input
-                    label='Random state'
+                    label={
+                        <InputLabel label='Random state'>
+                            <InfoPopup
+                                content='The seed used by the random number generator to ensure reproducibility of the results.'
+                                onTop={false}
+                                onEvent='hover'
+                                noBorder
+                                extraClassName='pull-right'
+                            />
+                        </InputLabel>
+                    }
                     placeholder='An integer number'
                     type='number'
                     step={1}

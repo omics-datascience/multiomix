@@ -11,7 +11,7 @@ from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
-from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
+from user_files.serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
 from rest_framework.response import Response
 

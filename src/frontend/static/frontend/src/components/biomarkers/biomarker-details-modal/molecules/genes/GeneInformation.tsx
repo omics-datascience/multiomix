@@ -66,247 +66,247 @@ export const GeneInformation = (props: GeneInformationProps) => {
                         source: 'PubMed',
                         rel: 'PubMed',
                         url: `https://pubmed.ncbi.nlm.nih.gov/?term=${moleculeKey}+`,
-                        icon: 'https://www.gene-list.com/build/images/pubmed.svg'
+                        icon: '/static/frontend/img/genes-icons/PubMed.webp'
                     },
                     {
                         source: 'Google',
                         rel: 'Google',
                         url: `https://scholar.google.ca/scholar?hl=en&as_sdt=0%2C5&q=${moleculeKey}+`,
-                        icon: 'https://www.gene-list.com/build/images/google.svg'
+                        icon: '/static/frontend/img/genes-icons/Google.webp'
                     },
                     {
                         source: 'GeneCards',
                         rel: 'GeneCards',
                         url: `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/gene_cards.svg'
+                        icon: '/static/frontend/img/genes-icons/GeneCards.webp'
                     },
                     {
                         source: 'MalaCards',
                         rel: 'MalaCards',
                         url: `https://www.malacards.org/search/results?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/malacards.svg'
+                        icon: '/static/frontend/img/genes-icons/MalaCards.webp'
                     },
                     {
                         source: 'PathCards',
                         rel: 'PathCards',
                         url: `https://pathcards.genecards.org/Search/Results?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/pathcards.svg'
+                        icon: '/static/frontend/img/genes-icons/PathCards.webp'
                     },
                     {
                         source: 'Reactome',
                         rel: 'Reactome',
                         url: `https://reactome.org/content/query?q=${moleculeKey}&species=Homo+sapiens&species=Entries+without+species&cluster=true`,
-                        icon: 'https://www.gene-list.com/build/images/reactome.svg'
+                        icon: '/static/frontend/img/genes-icons/Reactome.webp'
                     },
                     {
                         source: 'GeneMANIA',
                         rel: 'GeneMANIA',
                         url: `https://genemania.org/search/homo-sapiens/${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/genemania.svg'
+                        icon: '/static/frontend/img/genes-icons/GeneMANIA.webp'
                     },
                     {
                         source: 'Pathway Commons',
                         rel: 'Pathway Commons',
                         url: `https://apps.pathwaycommons.org/search?type=Pathway&q=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/pathway_commons.svg'
+                        icon: '/static/frontend/img/genes-icons/PathwayCommons.webp'
                     },
                     {
                         source: 'STRING',
                         rel: 'STRING',
                         url: `https://string-db.org/newstring_cgi/show_network_section.pl?identifiers=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/string.svg'
+                        icon: '/static/frontend/img/genes-icons/STRING.webp'
                     },
                     {
                         source: 'IntAct',
                         rel: 'IntAct',
                         url: `https://www.ebi.ac.uk/intact/search?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/intact.svg'
+                        icon: '/static/frontend/img/genes-icons/IntAct.webp'
                     },
                     {
                         source: 'Interactome Atlas',
                         rel: 'Interactome Atlas',
                         url: `http://www.interactome-atlas.org/search/${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/interactomeatlas.svg'
+                        icon: '/static/frontend/img/genes-icons/Interactome-Atlas.webp'
                     },
                     {
                         source: 'Complex Portal',
                         rel: 'Complex Portal',
                         url: `https://www.ebi.ac.uk/complexportal/complex/search?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/complex_portal.svg'
+                        icon: '/static/frontend/img/genes-icons/ComplexPortal.webp'
                     },
                     {
                         source: 'BioGrid',
                         rel: 'BioGrid',
                         url: `https://thebiogrid.org//summary/homo-sapiens/${moleculeKey}.html`,
-                        icon: 'https://www.gene-list.com/build/images/biogrid.svg'
+                        icon: '/static/frontend/img/genes-icons/BioGrid.webp'
                     },
                     {
                         source: 'DGV',
                         rel: 'DGV',
                         url: `http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?name=${moleculeKey};search=Search`,
-                        icon: 'https://www.gene-list.com/build/images/dgv.svg'
+                        icon: '/static/frontend/img/genes-icons/DGV.webp'
                     },
                     {
                         source: 'ClinVar',
                         rel: 'ClinVar',
                         url: `https://www.ncbi.nlm.nih.gov/clinvar/?term=${moleculeKey}%5Bgene%5D&redir=gene`,
-                        icon: 'https://www.gene-list.com/build/images/ncbi.svg'
+                        icon: '/static/frontend/img/genes-icons/ClinVar.webp'
                     },
                     {
                         source: 'DGIDB',
                         rel: 'DGIDB',
                         url: `https://www.dgidb.org/genes/${moleculeKey}#_interactions`,
-                        icon: 'https://www.gene-list.com/build/images/dgibd.svg'
+                        icon: '/static/frontend/img/genes-icons/dgidb.webp'
                     },
                     {
                         source: 'NCBI',
                         rel: 'NCBI',
                         url: `https://www.ncbi.nlm.nih.gov/gene/${jsonResponse.data[moleculeKey].entrez_id}`,
-                        icon: 'https://www.gene-list.com/build/images/ncbi.svg'
+                        icon: '/static/frontend/img/genes-icons/NCBI.webp'
                     },
                     {
                         source: 'Ensembl',
                         rel: 'Ensembl',
                         url: `http://www.ensembl.org/id/${jsonResponse.data[moleculeKey].ensembl_gene_id}`,
-                        icon: 'https://www.gene-list.com/build/images/ensembl.svg'
+                        icon: '/static/frontend/img/genes-icons/Ensembl.webp'
                     },
                     {
                         source: 'UCSC Browser',
                         rel: 'UCSC Browser',
                         url: `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&singleSearch=knownCanonical&position=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/ucsc.svg'
+                        icon: '/static/frontend/img/genes-icons/UCSCBrowser.webp'
                     },
                     {
                         source: 'Uniprot',
                         rel: 'Uniprot',
                         url: `http://www.uniprot.org/uniprot/${jsonResponse.data[moleculeKey].uniprot_ids}`,
-                        icon: 'https://www.gene-list.com/build/images/uniprot.svg'
+                        icon: '/static/frontend/img/genes-icons/Uniprot.webp'
                     },
                     {
                         source: 'Human Protein Atlas',
                         rel: 'Human Protein Atlas',
                         url: `https://www.proteinatlas.org/${jsonResponse.data[moleculeKey].uniprot_ids}`,
-                        icon: 'https://www.gene-list.com/build/images/hpa.svg'
+                        icon: '/static/frontend/img/genes-icons/Human-Protein-Atlas.webp'
                     },
                     {
                         source: 'Alliance Genome',
                         rel: 'Alliance Genome',
                         url: `https://www.proteinatlas.org/${jsonResponse.data[moleculeKey].hgnc_id}`,
-                        icon: 'https://www.gene-list.com/build/images/alliance_genome_human.svg'
+                        icon: '/static/frontend/img/genes-icons/Alliance-Genome.webp'
                     },
                     {
                         source: 'HGNC',
                         rel: 'HGNC',
                         url: `https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/${jsonResponse.data[moleculeKey].hgnc_id}`,
-                        icon: 'https://www.gene-list.com/build/images/hgnc.svg'
+                        icon: '/static/frontend/img/genes-icons/HGNC.webp'
                     },
                     {
                         source: 'Monarch',
                         rel: 'Monarch',
                         url: `https://monarchinitiative.org/gene/${jsonResponse.data[moleculeKey].hgnc_id}`,
-                        icon: 'https://www.gene-list.com/build/images/monarch.svg'
+                        icon: '/static/frontend/img/genes-icons/Monarch.webp'
                     },
                     {
                         source: 'HI-C Browser',
                         rel: 'HI-C Browser',
                         url: `http://3dgenome.fsm.northwestern.edu/view.php?method=Hi-C&species=human&assembly=hg38&source=inside&tissue=GM12878&type=Rao_2014-raw&c_url=&transfer=&gene=${jsonResponse.data[moleculeKey].uniprot_ids}&sessionID=&browser=none`,
-                        icon: 'https://www.gene-list.com/build/images/hi_c_browser.svg'
+                        icon: '/static/frontend/img/genes-icons/HI-CBrowser.webp'
                     },
                     {
                         source: 'InterPro',
                         rel: 'InterPro',
                         url: `https://www.ebi.ac.uk/interpro/protein/UniProt/${jsonResponse.data[moleculeKey].hgnc_id}`,
-                        icon: 'https://www.gene-list.com/build/images/interpro.svg'
+                        icon: '/static/frontend/img/genes-icons/InterPro.webp'
                     },
                     {
                         source: 'PDB',
                         rel: 'PDB',
                         url: `https://www.rcsb.org/search?request=%7B%22query%22%3A%7B%22type%22%3A%22group%22%2C%22logical_operator%22%3A%22and%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22logical_operator%22%3A%22and%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22full_text%22%2C%22parameters%22%3A%7B%22value%22%3A%22${moleculeKey}%22%7D%7D%5D%2C%22logical_operator%22%3A%22and%22%7D%5D%2C%22label%22%3A%22full_text%22%7D%5D%7D%2C%22return_type%22%3A%22entry%22%2C%22request_options%22%3A%7B%22pager%22%3A%7B%22start%22%3A0%2C%22rows%22%3A25%7D%2C%22scoring_strategy%22%3A%22combined%22%2C%22sort%22%3A%5B%7B%22sort_by%22%3A%22score%22%2C%22direction%22%3A%22desc%22%7D%5D%7D%2C%22request_info%22%3A%7B%22query_id%22%3A%225a4bea3ded0ab9c9fd19c0405097e1b2%22%7D%7D`,
-                        icon: 'https://www.gene-list.com/build/images/pdb.svg'
+                        icon: '/static/frontend/img/genes-icons/PDB.webp'
                     },
                     {
                         source: 'AlphaFold',
                         rel: 'AlphaFold',
                         url: `https://alphafold.ebi.ac.uk/entry/${jsonResponse.data[moleculeKey].uniprot_ids}`,
-                        icon: 'https://www.gene-list.com/build/images/alphafold.svg'
+                        icon: '/static/frontend/img/genes-icons/AlphaFold.webp'
                     },
                     {
                         source: 'Amigo',
                         rel: 'Amigo',
                         url: `http://amigo.geneontology.org/amigo/gene_product/UniProtKB:${jsonResponse.data[moleculeKey].uniprot_ids}`,
-                        icon: 'https://www.gene-list.com/build/images/amigo.svg'
+                        icon: '/static/frontend/img/genes-icons/Amigo.webp'
                     },
                     {
                         source: 'BioPlex',
                         rel: 'BioPlex',
                         url: `https://bioplex.hms.harvard.edu/explorer/externalQuery.php?geneQuery=${jsonResponse.data[moleculeKey].entrez_id}`,
-                        icon: 'https://www.gene-list.com/build/images/bioplex.svg'
+                        icon: '/static/frontend/img/genes-icons/BioPlex.webp'
                     },
                     {
                         source: 'GTEX',
                         rel: 'GTEX',
                         url: `https://www.gtexportal.org/home/gene/${jsonResponse.data[moleculeKey].ensembl_gene_id}`,
-                        icon: 'https://www.gene-list.com/build/images/gtex.svg'
+                        icon: '/static/frontend/img/genes-icons/GTEX.webp'
                     },
                     {
                         source: 'GDC',
                         rel: 'GDC',
                         url: `https://portal.gdc.cancer.gov/genes/${jsonResponse.data[moleculeKey].ensembl_gene_id}`,
-                        icon: 'https://www.gene-list.com/build/images/tcga.svg'
+                        icon: '/static/frontend/img/genes-icons/GDC.webp'
                     },
                     {
                         source: 'ICGC',
                         rel: 'ICGC',
                         url: `https://dcc.icgc.org/genes/${jsonResponse.data[moleculeKey].ensembl_gene_id}`,
-                        icon: 'https://www.gene-list.com/build/images/pcawg.svg'
+                        icon: '/static/frontend/img/genes-icons/ICGC.webp'
                     },
                     {
                         source: 'cBioPortal',
                         rel: 'cBioPortal',
                         url: `http://www.cbioportal.org/results/cancerTypesSummary?cancer_study_list=laml_tcga_pan_can_atlas_2018%2Cacc_tcga_pan_can_atlas_2018%2Cblca_tcga_pan_can_atlas_2018%2Clgg_tcga_pan_can_atlas_2018%2Cbrca_tcga_pan_can_atlas_2018%2Ccesc_tcga_pan_can_atlas_2018%2Cchol_tcga_pan_can_atlas_2018%2Ccoadread_tcga_pan_can_atlas_2018%2Cdlbc_tcga_pan_can_atlas_2018%2Cesca_tcga_pan_can_atlas_2018%2Cgbm_tcga_pan_can_atlas_2018%2Chnsc_tcga_pan_can_atlas_2018%2Ckich_tcga_pan_can_atlas_2018%2Ckirc_tcga_pan_can_atlas_2018%2Ckirp_tcga_pan_can_atlas_2018%2Clihc_tcga_pan_can_atlas_2018%2Cluad_tcga_pan_can_atlas_2018%2Clusc_tcga_pan_can_atlas_2018%2Cmeso_tcga_pan_can_atlas_2018%2Cov_tcga_pan_can_atlas_2018%2Cpaad_tcga_pan_can_atlas_2018%2Cpcpg_tcga_pan_can_atlas_2018%2Cprad_tcga_pan_can_atlas_2018%2Csarc_tcga_pan_can_atlas_2018%2Cskcm_tcga_pan_can_atlas_2018%2Cstad_tcga_pan_can_atlas_2018%2Ctgct_tcga_pan_can_atlas_2018%2Cthym_tcga_pan_can_atlas_2018%2Cthca_tcga_pan_can_atlas_2018%2Cucs_tcga_pan_can_atlas_2018%2Cucec_tcga_pan_can_atlas_2018%2Cuvm_tcga_pan_can_atlas_2018&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Cgistic&case_set_id=all&gene_list=${moleculeKey}&geneset_list=%20&tab_index=tab_visualize&Action=Submit`,
-                        icon: 'https://www.gene-list.com/build/images/cbioportal.svg'
+                        icon: '/static/frontend/img/genes-icons/cBioPortal.webp'
                     },
                     {
                         source: 'OMIM',
                         rel: 'OMIM',
                         url: `https://omim.org/entry/616125${jsonResponse.data[moleculeKey].omim_id}`,
-                        icon: 'https://www.gene-list.com/build/images/omim.svg'
+                        icon: '/static/frontend/img/genes-icons/OMIM.webp'
                     },
                     {
                         source: 'HPO',
                         rel: 'HPO',
                         url: `https://hpo.jax.org/app/browse/gene/${jsonResponse.data[moleculeKey].entrez_id}`,
-                        icon: 'https://www.gene-list.com/build/images/hpo.svg'
+                        icon: '/static/frontend/img/genes-icons/HPO.webp'
                     },
                     {
                         source: 'Open Targets',
                         rel: 'Open Targets',
                         url: `https://genetics.opentargets.org/gene/ENSG00000164169${jsonResponse.data[moleculeKey].ensembl_gene_id}`,
-                        icon: 'https://www.gene-list.com/build/images/open_targets.svg'
+                        icon: '/static/frontend/img/genes-icons/Open-Targets.webp'
                     },
                     {
                         source: 'Expression Atlas',
                         rel: 'Expression Atlas',
                         url: `https://www.ebac.uk/gxa/search?geneQuery=%5B%7B%22value%22%3A%22PRMT9%22%7D%5D&species=&conditionQuery=%5B%5D&bs=%7B%22homo%20sapiens%22%3A%5B%22ORGANISM_PART%22%5D%2C%22chlorocebus%20sabaeus%22%3A%5B%22ORGANISM_PART%22%5D%2C%22danio%20rerio%22%3A%5B%22DEVELOPMENTAL_STAGE%22%5D%2C%22equus%20caballus%22%3A%5B%22ORGANISM_PART%22%5D%2C%22gallus%20gallus%22%3A%5B%22ORGANISM_PART%22%5D%2C%22mus%20musculus%22%3A%5B%22ORGANISM_PART%22%5D%2C%22papio%20anubis%22%3A%5B%22ORGANISM_PART%22%5D%2C%22rattus%20norvegicus%22%3A%5B%22ORGANISM_PART%22%5D%7D&ds=%7B%22kingdom%22%3A%5B%22animals%22%5D%7D#baseline${jsonResponse.data[moleculeKey].entrez_id}`,
-                        icon: 'https://www.gene-list.com/build/images/expression_atlas.svg'
+                        icon: '/static/frontend/img/genes-icons/ExpressionAtlas.webp'
                     },
                     {
                         source: 'GWAS Catalog',
                         rel: 'GWAS Catalog',
                         url: `https://www.ebi.ac.uk/gwas/search?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/gwas.svg'
+                        icon: '/static/frontend/img/genes-icons/GWAS-Catalog.webp'
                     },
                     {
                         source: 'ActiveDriverDb',
                         rel: 'ActiveDriverDb',
                         url: `https://activedriverdb.org/gene/show/${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/activedriverdb.svg'
+                        icon: '/static/frontend/img/genes-icons/ActiveDriverDb.webp'
                     },
                     {
                         source: 'Pharmgkb',
                         rel: 'Pharmgkb',
                         url: `https://www.pharmgkb.org/search?query=${moleculeKey}`,
-                        icon: 'https://www.gene-list.com/build/images/pharmgkb.svg'
+                        icon: '/static/frontend/img/genes-icons/Pharmgkb.webp'
                     }
                 ]
                 setLinksData(linksData)

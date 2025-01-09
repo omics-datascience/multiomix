@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import QuerySet
 from queryset_sequence import QuerySetSequence
+
+from institutions.models import Institution
 from tags.models import Tag
 from api_service.websocket_functions import send_update_biomarkers_command
 from user_files.models_choices import MoleculeType
@@ -57,10 +59,11 @@ class Biomarker(models.Model):
     statistical_validations: QuerySet['statistical_properties.StatisticalValidation']
     inference_experiments: QuerySet['inferences.InferenceExperiment']
     methylations: QuerySet['MethylationIdentifier']
+    trained_models: QuerySet['trained_models.TrainedModel']
     cnas: QuerySet['CNAIdentifier']
     mirnas: QuerySet['MiRNAIdentifier']
     mrnas: QuerySet['MRNAIdentifier']
-
+    is_public = models.BooleanField(blank=False, null=False, default=False)
     name: str = models.CharField(max_length=300)
     description: Optional[str] = models.TextField(null=True, blank=True)
     tag: Optional[Tag] = models.ForeignKey(Tag, on_delete=models.SET_NULL, default=None, blank=True, null=True)
@@ -68,6 +71,7 @@ class Biomarker(models.Model):
     origin: int = models.IntegerField(choices=BiomarkerOrigin.choices)
     state: int = models.IntegerField(choices=BiomarkerState.choices)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    shared_institutions = models.ManyToManyField(Institution, related_name='biomarkers', blank=True)
 
     def __str__(self) -> str:
         return self.name

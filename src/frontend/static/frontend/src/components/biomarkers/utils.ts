@@ -37,13 +37,14 @@ const SVMKernelOptions: DropdownItemProps[] = [
 const clusteringAlgorithmOptions: DropdownItemProps[] = [
     { key: ClusteringAlgorithm.K_MEANS, text: 'K-Means', value: ClusteringAlgorithm.K_MEANS },
     { key: ClusteringAlgorithm.SPECTRAL, text: 'Spectral', value: ClusteringAlgorithm.SPECTRAL },
-    { key: ClusteringAlgorithm.BK_MEANS, text: 'BK-Means', value: ClusteringAlgorithm.BK_MEANS }
+    { key: ClusteringAlgorithm.BK_MEANS, text: 'BK-Means', value: ClusteringAlgorithm.BK_MEANS },
+    { key: ClusteringAlgorithm.WARD, text: 'Ward', value: ClusteringAlgorithm.WARD }
 ]
 
 /** Available options for a Clustering metric to optimize. */
 const clusteringMetricOptions: DropdownItemProps[] = [
     { key: ClusteringMetric.COX_REGRESSION, text: 'Cox-Regression', value: ClusteringMetric.COX_REGRESSION },
-    { key: ClusteringMetric.LOG_RANK_TEST, text: 'Log-Rank test', value: ClusteringMetric.LOG_RANK_TEST, disabled: true } // TODO: implement in backend
+    { key: ClusteringMetric.LOG_RANK_TEST, text: 'Log-Rank test', value: ClusteringMetric.LOG_RANK_TEST, disabled: true }
 ]
 
 /** Available options for a Clustering scoring method for Cox-Regression. */

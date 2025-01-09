@@ -214,6 +214,8 @@ class FeatureSelectionExperimentAWSNotification(APIView):
             algorithm = ClusteringAlgorithm.K_MEANS
         elif algorithm_description == 'spectral':
             algorithm = ClusteringAlgorithm.SPECTRAL
+        elif algorithm_description == 'ward':
+            algorithm = ClusteringAlgorithm.WARD
         else:
             algorithm = ClusteringAlgorithm.BK_MEANS
         scoring = ClusteringScoringMethod.C_INDEX if scoring_method == 'concordance-index' \

@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'inferences',
     'molecules_details',
     'chunked_upload',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -150,6 +151,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+MIN_PASSWORD_LEN: int = int(os.getenv('MIN_PASSWORD_LEN', 8))
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
@@ -295,7 +298,6 @@ EMAIL_MAIL_SUBJECT = os.getenv('EMAIL_MAIL_SUBJECT', 'Confirm your email')
 EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
-
 
 # Modulector settings
 MODULECTOR_SETTINGS = {
