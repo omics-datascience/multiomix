@@ -5,12 +5,12 @@ from django.db import transaction
 from rest_framework import serializers
 from common.functions import get_enum_from_value, create_survival_columns_from_json
 from datasets_synchronization.models import SurvivalColumnsTupleUserFile
-from .models_choices import FileType
-from .utils import has_uploaded_file_valid_format, get_invalid_format_response
-from frontend.serializers import UserSimpleSerializer
+from user_files.models_choices import FileType
+from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_response
+from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
-from .models import UserFile
+from user_files.models import UserFile
 
 
 class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
