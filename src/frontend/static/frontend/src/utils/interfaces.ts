@@ -329,9 +329,9 @@ interface ConfirmModal {
 
 /** Select SemanticUi list interface */
 interface SemanticListItem {
-     key: string, 
-     value: string, 
-     text: string 
+    key: string,
+    value: string,
+    text: string
 }
 
 export {

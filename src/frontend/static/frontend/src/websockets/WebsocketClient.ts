@@ -23,7 +23,9 @@ class WebsocketClientCustom {
             console.log('Websocket connection established')
         }
         // Makes all the functions debounced to prevent multiple concatenated executions.
-        config.commandsToAttend = config.commandsToAttend.map(command => ({...command, functionToExecute: debounce(command.functionToExecute, 300)}))
+
+        config.commandsToAttend = config.commandsToAttend.map(command => ({ ...command, functionToExecute: debounce(command.functionToExecute, 300) }))
+
         this.websocket.onmessage = function (event) {
             try {
                 const dataParsed: WebsocketMessage = JSON.parse(event.data)
@@ -31,6 +33,7 @@ class WebsocketClientCustom {
                 const commandToAttend = config.commandsToAttend.find((commandToAttend) => commandToAttend.key === dataParsed.command)
 
                 // If matches with any function defined by the user, executes it
+
                 if (commandToAttend !== undefined) {
                     commandToAttend.functionToExecute()
                 }

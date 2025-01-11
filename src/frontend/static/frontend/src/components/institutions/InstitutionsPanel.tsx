@@ -49,7 +49,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     filterTimeout: number | undefined
     abortController = new AbortController()
 
-    constructor(props) {
+    constructor (props) {
         super(props)
 
         this.state = {
@@ -71,21 +71,19 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         }
     }
 
-
-
     /**
      * Abort controller if component unmount
      */
 
-    componentWillUnmount() {
+    componentWillUnmount () {
         this.abortController.abort()
     }
 
     /**
-    * Generates a default alert structure
-    * @returns Default the default Alert
-    */
-    getDefaultAlertProps(): CustomAlert {
+     * Generates a default alert structure
+     * @returns Default alert.
+     */
+    getDefaultAlertProps (): CustomAlert {
         return {
             message: '', // This have to change during cycle of component
             isOpen: false,
@@ -93,6 +91,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             duration: 500
         }
     }
+
     getDefaultConfirmModal = (): ConfirmModal => {
         return {
             confirmModal: false,
@@ -105,7 +104,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     /**
      * Reset the confirm modal, to be used again
      */
-    handleCancelConfirmModalState() {
+    handleCancelConfirmModalState () {
         this.setState({ confirmModal: this.getDefaultConfirmModal() })
     }
 
@@ -131,20 +130,23 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * @param type type of alert.
      * @param message message of alert.
      * @param callback Callback function if is needed.
+     * @param isEdit option if is in edit mode.
      */
-    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) {
+    handleUpdateAlert (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) {
         const alert = this.state.alert
         alert.isOpen = isOpen
         alert.type = type
         alert.message = message
         let institutionToEdit = this.state.institutionToEdit
-        if(isEdit){
+
+        if (isEdit) {
             institutionToEdit = null
         }
+
         if (callback) {
             callback()
             this.setState({ alert, institutionToEdit })
-        }else{
+        } else {
             this.setState({ alert, institutionToEdit })
         }
     }
@@ -162,7 +164,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * Default modal attributes
      * @returns {InstitutionModalState} Default modal
      */
-    defaultModalState(): InstitutionModalState {
+    defaultModalState (): InstitutionModalState {
         return {
             isOpen: false,
             institution: null
@@ -172,7 +174,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     /**
      * Close modal
      */
-    handleCloseModal() {
+    handleCloseModal () {
         this.setState({ modalState: this.defaultModalState() })
     }
 
@@ -180,7 +182,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * Open modal
      * @param {InstitutionTableData} institution institution for modal.
      */
-    handleOpenModal(institution: InstitutionTableData) {
+    handleOpenModal (institution: InstitutionTableData) {
         const modalState = {
             isOpen: true,
             institution
@@ -188,11 +190,11 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         this.setState({ modalState })
     }
 
-
     /**
-     * Reset institution to edit
+     * Reset institution.
+     * @param callbackToCancel callbackfunction.
      */
-    handleResetInstitutionToEdit(callbackToCancel: () => void) {
+    handleResetInstitutionToEdit (callbackToCancel: () => void) {
         this.setState({ institutionToEdit: null })
         callbackToCancel()
     }
@@ -201,19 +203,19 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * Set form to edit
      * @param {InstitutionTableData} institution institution for modal.
      */
-    handleSetInstitutionToEdit(institution: InstitutionTableData) {
+    handleSetInstitutionToEdit (institution: InstitutionTableData) {
         this.setState({ institutionToEdit: institution })
     }
 
     /**
-     * 
-     * @returns 
+     * Delete institution.
+     * @param institutionId id from institution to delete.
      */
-    handleDeleteInstitution(institutionId: number) {
+    handleDeleteInstitution (institutionId: number) {
         const url = `${urlDeleteInstitution}/${institutionId}/`
         const myHeaders = getDjangoHeader()
         ky.delete(url, { headers: myHeaders }).then((response) => {
-            response.json().then((jsonResponse: DjangoInstitution) => {
+            response.json().then(() => {
                 this.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Institution deleted!', null)
             }).catch((err) => {
                 this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
@@ -234,7 +236,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         })
     }
 
-    render() {
+    render () {
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
                 <Grid columns={2} padded stackable divided stretched={true}>
@@ -299,21 +301,25 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                                 />
 
                                                 {/* Edit button */}
-                                                {institution.is_user_admin && <Icon
-                                                    name='pencil'
-                                                    className='clickable margin-left-5'
-                                                    color={'yellow'}
-                                                    title={`Edit (${institution.name}`}
-                                                    onClick={() => this.handleSetInstitutionToEdit(institution)}
-                                                />}
-                                                {/*Delete button */}
+
+                                                {
+                                                    institution.is_user_admin &&
+                                                        <Icon
+                                                            name='pencil'
+                                                            className='clickable margin-left-5'
+                                                            color='yellow'
+                                                            title={`Edit (${institution.name}`}
+                                                            onClick={() => this.handleSetInstitutionToEdit(institution)}
+                                                        />
+                                                }
+                                                {/* Delete button */}
                                                 {institution.is_user_admin &&
                                                     <Icon
                                                         name='trash'
-                                                        className={`clickable margin-left-5`}
+                                                        className='clickable margin-left-5'
                                                         color='red'
                                                         disabled={this.state.isDeletingInstitution}
-                                                        title={'Delete Institution'}
+                                                        title='Delete Institution'
                                                         onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
                                                     />
                                                 }
@@ -326,7 +332,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     </Grid.Column>
                 </Grid>
                 <InstitutionModal
-                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback)}
+                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => this.handleUpdateAlert(isOpen, type, message, callback)}
                     handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                     handleCloseModal={() => this.handleCloseModal()}
                     isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution}

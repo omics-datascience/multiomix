@@ -24,7 +24,6 @@ const defaultForm: {
 declare const urlCreateInstitution: string
 declare const urlEditInstitution: string
 
-
 interface Props {
     institutionToEdit: Nullable<DjangoInstitution>,
     handleResetInstitutionToEdit: (callbackToCancel: () => void) => void,
@@ -37,8 +36,10 @@ const InstitutionForm = (props: Props) => {
     /**
      * Handle form state data
      * @param e event
-     * @param param1 key value to edit field in form
+     * @param param.name key name to edit field in form
+     * @param param.value key value to edit field in form
      */
+
     const handleChange = (e, { name, value }) => {
         setFormData({ ...formData, [name]: value })
     }
@@ -48,20 +49,21 @@ const InstitutionForm = (props: Props) => {
      */
     const handleSubmit = () => {
         const myHeaders = getDjangoHeader()
+
         if (props.institutionToEdit?.id) {
             const jsonParams = {
-                "id": formData.id,
-                "name": formData.name,
-                "location": formData.location,
-                "email": formData.email,
-                "telephone_number": formData.telephone_number
+                id: formData.id,
+                name: formData.name,
+                location: formData.location,
+                email: formData.email,
+                telephone_number: formData.telephone_number
             }
             const editUrl = `${urlEditInstitution}/${formData.id}/`
 
             ky.patch(editUrl, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
                 response.json().then((jsonResponse: DjangoInstitution) => {
-                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} Updated!`, () => setFormData(defaultForm),true)
+                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} Updated!`, () => setFormData(defaultForm), true)
                 }).catch((err) => {
                     setFormData(prevState => ({ ...prevState, isLoading: false }))
                     props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
@@ -73,15 +75,14 @@ const InstitutionForm = (props: Props) => {
             })
         } else {
             const jsonParams = {
-                "name": formData.name,
-                "location": formData.location,
-                "email": formData.email,
-                "telephone_number": formData.telephone_number
+                name: formData.name,
+                location: formData.location,
+                email: formData.email,
+                telephone_number: formData.telephone_number
             }
             ky.post(urlCreateInstitution, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
                 response.json().then((jsonResponse: DjangoInstitution) => {
-                    //setFormData(defaultForm)
                     props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} created!`, () => setFormData(defaultForm))
                 }).catch((err) => {
                     props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
@@ -105,6 +106,7 @@ const InstitutionForm = (props: Props) => {
             setFormData(defaultForm)
         }
     }
+
     /**
      * use effect to handle if a institution for edit is sent
      */
@@ -113,7 +115,7 @@ const InstitutionForm = (props: Props) => {
             setFormData({
                 ...props.institutionToEdit,
                 id: props.institutionToEdit?.id,
-                isLoading: false,
+                isLoading: false
             })
         }
     }, [props.institutionToEdit])

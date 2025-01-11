@@ -41,8 +41,8 @@ interface Props extends InstitutionModalState {
  * @returns Component
  */
 export const InstitutionModal = (props: Props) => {
-    const [userIdToAdd, setUserIdToAdd] = useState<number>(0);
-    const [userList, setUserList] = useState<SemanticListItem[]>([]);
+    const [userIdToAdd, setUserIdToAdd] = useState<number>(0)
+    const [userList, setUserList] = useState<SemanticListItem[]>([])
     const abortController = useRef(new AbortController())
     const currentUser = useContext(CurrentUserContext)
 
@@ -58,7 +58,7 @@ export const InstitutionModal = (props: Props) => {
                 institutionId: props.institution?.id
             }
             ky.post(urlAddRemoveUserToInstitution, { headers: myHeaders, signal: abortController.current.signal, json: body }).then((response) => {
-                response.json().then((jsonResponse: any) => {
+                response.json().then(() => {
                     usersListNonInInstitution()
                 }).catch((err) => {
                     console.error('Error parsing JSON ->', err)
@@ -81,7 +81,7 @@ export const InstitutionModal = (props: Props) => {
             institutionId: props.institution?.id
         }
         ky.post(urlAddRemoveUserToInstitution, { headers: myHeaders, signal: abortController.current.signal, json: body }).then((response) => {
-            response.json().then((jsonResponse: any) => {
+            response.json().then(() => {
                 usersListNonInInstitution()
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
@@ -97,14 +97,11 @@ export const InstitutionModal = (props: Props) => {
      * @param idInstitution institution id.
      */
     const handleSwitchUserAdmin = (adminSwitched: boolean, idInstitution: number) => {
-
         const myHeaders = getDjangoHeader()
-
         const editUrl = `${urlEditInstitutionAdmin}/${idInstitution}/`
 
-
         ky.patch(editUrl, { headers: myHeaders }).then((response) => {
-            response.json().then((jsonResponse: any) => {
+            response.json().then(() => {
                 props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, adminSwitched ? 'User is admin!' : 'User is not admin!', null)
             }).catch((err) => {
                 props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error for switch role!', null)
@@ -114,7 +111,6 @@ export const InstitutionModal = (props: Props) => {
             props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error for switch role!', null)
             console.error('Error adding new Institution ->', err)
         })
-
     }
 
     /**
@@ -134,18 +130,17 @@ export const InstitutionModal = (props: Props) => {
         }).catch((err) => {
             console.error('Error getting users ->', err)
         })
-
     }
 
     useEffect(() => {
         if (props.institution?.is_user_admin && props.institution?.id) {
             usersListNonInInstitution()
         }
+
         return () => {
             abortController.current.abort()
         }
     }, [props.institution?.id])
-
 
     return (
         <Modal
@@ -172,14 +167,17 @@ export const InstitutionModal = (props: Props) => {
                     </Button>
                     <PaginatedTable<DjangoInstitutionUser>
                         headerTitle={props.institution?.name + ' users'}
-                        headers={props.institution?.is_user_admin ? [
-                            { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
-                            { name: 'Admin', width: 1 },
-                            { name: 'Actions', width: 1 }
-                        ] : [
-                            { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
-                            { name: 'Admin', width: 1 },
-                        ]}
+                        headers={props.institution?.is_user_admin
+                            ? [
+                                { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
+                                { name: 'Admin', width: 1 },
+                                { name: 'Actions', width: 1 }
+                            ]
+                            : [
+                                { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
+                                { name: 'Admin', width: 1 }
+                            ]
+                        }
                         showSearchInput
                         searchLabel='User name'
                         searchPlaceholder='Search by User name'
@@ -189,56 +187,60 @@ export const InstitutionModal = (props: Props) => {
                             return (
                                 <Table.Row key={userCandidate.user.id}>
                                     <TableCellWithTitle value={userCandidate.user.username} />
-                                    <Table.Cell value={userCandidate.is_institution_admin ? "true" : "false"}>
+                                    <Table.Cell value={userCandidate.is_institution_admin ? 'true' : 'false'}>
                                         {
-                                            userCandidate.is_institution_admin ?
-                                                <Icon
-                                                    name='check'
-                                                    className={`clickable margin-left-5`}
-                                                    color='teal'
-                                                    title={'Institution admin'}
-                                                />
-                                                :
-                                                <Icon
-                                                    name='close'
-                                                    className={`clickable margin-left-5`}
-                                                    color='red'
-                                                    title={'Non Institution admin'}
-                                                />
+                                            userCandidate.is_institution_admin
+                                                ? (
+                                                    <Icon
+                                                        name='check'
+                                                        className='clickable margin-left-5'
+                                                        color='teal'
+                                                        title='Institution admin'
+                                                    />
+                                                )
+                                                : (
+                                                    <Icon
+                                                        name='close'
+                                                        className='clickable margin-left-5'
+                                                        color='red'
+                                                        title='Non Institution admin'
+                                                    />
+                                                )
                                         }
                                     </Table.Cell>
                                     {props.institution?.is_user_admin &&
                                         <Table.Cell width={1}>
                                             {/* Edit button */}
                                             {
-                                                userCandidate.user.id !== currentUser?.id && (
-                                                    userCandidate.is_institution_admin ?
+                                                userCandidate.user.id !== currentUser?.id && userCandidate.is_institution_admin
+                                                    ? (
                                                         <Icon
                                                             name='close'
-                                                            className={`clickable margin-left-5`}
+                                                            className='clickable margin-left-5'
                                                             color='olive'
-                                                            title={'Switch to non Institution admin'}
+                                                            title='Switch to non Institution admin'
                                                             onClick={() => props.handleChangeConfirmModalState(true, 'Manage admin', 'Are you sure to remove admin to user?', () => handleSwitchUserAdmin(false, userCandidate.id))}
                                                         />
-                                                        :
+                                                    )
+                                                    : (
                                                         <Icon
                                                             name='star'
-                                                            className={`clickable margin-left-5`}
+                                                            className='clickable margin-left-5'
                                                             color='teal'
-                                                            title={'Switch to Institution admin'}
+                                                            title='Switch to Institution admin'
                                                             onClick={() => props.handleChangeConfirmModalState(true, 'Manage admin', 'Are you sure to make user admin?', () => handleSwitchUserAdmin(true, userCandidate.id))}
                                                         />
-                                                )
+                                                    )
                                             }
 
                                             {
                                                 (props.institution?.is_user_admin && userCandidate.user.id !== currentUser?.id) &&
                                                 <Icon
                                                     name='close'
-                                                    className={`clickable margin-left-5`}
+                                                    className='clickable margin-left-5'
                                                     color='red'
                                                     onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
-                                                    title={'Remove user from Institution'}
+                                                    title='Remove user from Institution'
                                                 />
                                             }
                                         </Table.Cell>
@@ -249,6 +251,6 @@ export const InstitutionModal = (props: Props) => {
                     />
                 </Segment>
             </ModalContent>
-        </Modal >
+        </Modal>
     )
 }

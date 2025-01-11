@@ -457,7 +457,7 @@ interface DjangoInstitutionUser {
         id: number,
         username: string,
     },
-    id:number,
+    id: number,
     is_institution_admin: boolean,
 }
 
@@ -542,7 +542,7 @@ interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoS
     data: DjangoSamplesInCommonResultJSON
 }
 
-interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON{
+interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON {
     number_samples_clinical: number
 }
 
