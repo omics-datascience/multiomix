@@ -99,13 +99,6 @@ interface Biomarker extends BiomarkerSimple {
     mrnas: SaveMoleculeStructure[]
 }
 
-interface ConfirmModal {
-    confirmModal: boolean,
-    headerText: string,
-    contentText: string,
-    onConfirm: Function,
-}
-
 /** Represents a molecule info to show in molecules Dropdown. */
 type MoleculeSymbol = {
     key: string,
@@ -630,7 +623,6 @@ export {
     MoleculesMultipleSelection,
     MoleculesSectionData,
     MoleculeSectionItem,
-    ConfirmModal,
     MoleculeSymbol,
     MoleculesSymbolFinder,
     ClusteringScoringMethod,
