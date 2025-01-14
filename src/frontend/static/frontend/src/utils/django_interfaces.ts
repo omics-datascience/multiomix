@@ -447,7 +447,19 @@ interface DjangoInstitution {
     location: string,
     email: string,
     telephone_number: string,
-    users: DjangoUser[]
+    users?: DjangoUser[]
+}
+
+/**
+ * Django Institution user
+ */
+interface DjangoInstitutionUser {
+    user: {
+        id: number,
+        username: string,
+    },
+    id: number,
+    is_institution_admin: boolean,
 }
 
 /**
@@ -531,7 +543,7 @@ interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoS
     data: DjangoSamplesInCommonResultJSON
 }
 
-interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON{
+interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON {
     number_samples_clinical: number
 }
 
@@ -684,5 +696,6 @@ export {
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
     DjangoSurvivalColumnsTupleSimple,
-    DjangoNumberSamplesInCommonClinicalValidationResult
+    DjangoNumberSamplesInCommonClinicalValidationResult,
+    DjangoInstitutionUser
 }

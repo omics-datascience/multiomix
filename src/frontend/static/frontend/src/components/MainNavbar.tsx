@@ -99,6 +99,9 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item style={{ padding: '0 1.7rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
+                    <Menu.Item style={{ padding: '0 1.7rem' }}>
+                        <Loader active inline='centered' />
+                    </Menu.Item>
                 </Menu.Menu>
             }
             {/* Analysis menu */}
@@ -173,19 +176,19 @@ const MainNavbar = (props: MainNavbarProps) => {
                                     />
                                 </React.Fragment>
                             }
-
-                            {/* Institutions panel (only for user who are admin of at least one institution) */}
-                            {currentUser.is_institution_admin &&
-                                <Dropdown.Item
-                                    text='Institutions'
-                                    icon='building'
-                                    as='a' href={urlInstitutions}
-                                    active={props.activeItem === 'institutions'}
-                                />
-                            }
                         </Dropdown.Menu>
                     </Dropdown>
                 </Menu.Menu>
+            }
+
+            {/* Institutions */}
+            {currentUser &&
+                <Menu.Menu as='h2'>
+                    <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
+                        Institutions
+                    </Menu.Item>
+                </Menu.Menu>
+
             }
 
             {/* About us */}
