@@ -63,8 +63,9 @@ class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
     mRNA_source = ExperimentSourceSerializer()
     gem_source = ExperimentSourceSerializer()
-    shared_institutions = InstitutionSimpleSerializer()
-    print(shared_institutions)
+    shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
+    #shared_institutions = InstitutionSimpleSerializer()
+    #print(shared_institutions)
     tag = TagSerializer()
 
     class Meta:
