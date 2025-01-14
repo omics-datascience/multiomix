@@ -282,7 +282,8 @@ interface DjangoExperiment {
     p_values_adjustment_method: PValuesAdjustmentMethod,
     tag: DjangoTag,
     type: ExperimentType,
-    clinical_source_id: Nullable<number>
+    clinical_source_id: Nullable<number>,
+    is_public: boolean,
 }
 
 /** A reduced structure of Gene model */

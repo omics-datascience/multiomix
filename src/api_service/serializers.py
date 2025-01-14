@@ -83,7 +83,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'p_values_adjustment_method',
             'type',
             'tag',
-            'clinical_source_id'
+            'clinical_source_id',
+            'is_public'
         ]
 
 

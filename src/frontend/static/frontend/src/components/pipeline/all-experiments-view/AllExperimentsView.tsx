@@ -10,6 +10,7 @@ import { ClinicalSourcePopup } from './ClinicalSourcePopup'
 import { SeeResultButton } from './SeeResultButton'
 import { StopExperimentButton } from './StopExperimentButton'
 import { DeleteExperimentButton } from './DeleteExperimentButton'
+import { SharedInstitutions, SharedInstitutionsProps } from '../../common/SharedInstitutions'
 
 declare const urlUserExperiments: string
 declare const urlDownloadFullResult: string
@@ -41,6 +42,8 @@ interface AllExperimentsViewProps {
 interface AllExperimentsViewState {
     /** Id of the experiment which clinical source popup must be opened */
     clinicalPopupOpenId: Nullable<number>
+    /** modal to handle shared institutions */
+    modalInstitutions: SharedInstitutionsProps
 }
 
 /**
@@ -49,11 +52,12 @@ interface AllExperimentsViewState {
  * @returns Component
  */
 export class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
-    constructor (props) {
+    constructor(props) {
         super(props)
 
         this.state = {
-            clinicalPopupOpenId: null
+            clinicalPopupOpenId: null,
+            modalInstitutions: this.defaultModalInstitutions()
         }
     }
 
@@ -61,7 +65,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
      * Generates default table's Filters
      * @returns Default object for table's Filters
      */
-    getDefaultFilters (): PaginationCustomFilter[] {
+    getDefaultFilters(): PaginationCustomFilter[] {
         const tagOptions: DropdownItemProps[] = this.props.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
@@ -97,6 +101,24 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
     }
 
     /**
+     * 
+     */
+    handleCloseModal = () => {
+        this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * 
+     * @returns 
+     */
+    defaultModalInstitutions = (): SharedInstitutionsProps => {
+        return {
+            isOpen: false,
+            institutions: []
+        }
+    }
+
+    /**
      * Opens popup to add/edit clinical source data for a specific Experiment
      * @param experimentId ID of the experiment to show popup
      */
@@ -107,7 +129,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
      */
     closePopup = () => { this.setState({ clinicalPopupOpenId: null }) }
 
-    render (): JSX.Element {
+    render(): JSX.Element {
         return (
             <div>
                 <PaginatedTable<DjangoExperiment>
@@ -125,6 +147,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         { name: 'Clinical', width: 1, textAlign: 'center' },
                         { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
                         { name: 'Sources' },
+                        { name: 'Shared' },
+                        { name: 'Public' },
                         { name: 'Actions' }
                     ]}
                     customFilters={this.getDefaultFilters()}
@@ -204,6 +228,38 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                         downloadButtonTitle={`Download ${getExperimentTypeObj(experiment.type, 'ExperimentType').description} source file`}
                                     />
                                 </TableCell>
+                                <TableCell textAlign='center'>
+                                    {
+                                        experiment.is_public
+                                            ? (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='check'
+                                                    color='green'
+                                                />
+                                            ) :
+                                            (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='close'
+                                                    color='red'
+                                                />
+                                            )
+                                    }
+                                </TableCell>
+                                <TableCell >
+                                    <Icon
+                                        title='shared institutions'
+                                        name='building'
+                                        color='green'
+                                        onClick={()=>this.setState({ modalInstitutions: { ...this.state.modalInstitutions, isOpen: true } })}
+                                    />
+                                    <Icon
+                                        title='shared users'
+                                        name='users'
+                                        color='teal'
+                                    />
+                                </TableCell>
                                 <TableCell>
                                     {/* See results button */}
                                     <SeeResultButton experiment={experiment} seeResult={this.props.seeResult} />
@@ -229,7 +285,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     />
 
                                     {/* Stop button */}
-                                    {isInProcess &&
+                                    {isInProcess && !experiment.is_public &&
                                         <StopExperimentButton
                                             title='Stop experiment'
                                             onClick={() => this.props.confirmExperimentStop(experiment)}
@@ -237,7 +293,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     }
 
                                     {/* Delete button */}
-                                    {!isInProcess &&
+                                    {!isInProcess && !experiment.is_public &&
                                         <DeleteExperimentButton
                                             title='Delete experiment'
                                             onClick={() => this.props.confirmExperimentDeletion(experiment)}
@@ -248,6 +304,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         )
                     }}
                 />
+                <SharedInstitutions isOpen={this.state.modalInstitutions.isOpen} institutions={this.state.modalInstitutions.institutions} handleClose={this.handleCloseModal}/>
             </div>
         )
     }
