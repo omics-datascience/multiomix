@@ -451,13 +451,25 @@ interface DjangoInstitution {
 }
 
 /**
+ * Institution user
+ */
+interface InstitutionUser {
+    id: number,
+    username: string,
+}
+
+/**
+ * Django Institution limited user
+ */
+interface DjangoInstitutionUserLimited {
+    user: InstitutionUser,
+}
+
+/**
  * Django Institution user
  */
 interface DjangoInstitutionUser {
-    user: {
-        id: number,
-        username: string,
-    },
+    user: InstitutionUser,
     id: number,
     is_institution_admin: boolean,
 }
@@ -697,5 +709,7 @@ export {
     DjangoMonotonicityTest,
     DjangoSurvivalColumnsTupleSimple,
     DjangoNumberSamplesInCommonClinicalValidationResult,
-    DjangoInstitutionUser
+    DjangoInstitutionUser,
+    DjangoInstitutionUserLimited,
+    InstitutionUser
 }

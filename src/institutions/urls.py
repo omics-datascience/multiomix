@@ -8,6 +8,8 @@ urlpatterns = [
     path('my-institutions-list', views.UserInstitutionList.as_view(), name='user_institutions_list'),
     path('user-candidates', views.UserCandidatesList.as_view(), name='user_candidates'),
     path('user-candidates/<int:institution_id>/', views.UserCandidatesList.as_view()),
+    path('user-candidates-limited', views.UserCandidatesLimitedList.as_view(), name='user_candidates_limited'),
+    path('user-candidates-limited/<int:institution_id>/', views.UserCandidatesLimitedList.as_view()),
     path('create', views.CreateInstitutionView.as_view(), name='create_institution'),
     path('edit', views.UpdateInstitutionView.as_view(), name='edit_institution'),
     path('edit/<int:id>/', views.UpdateInstitutionView.as_view()),

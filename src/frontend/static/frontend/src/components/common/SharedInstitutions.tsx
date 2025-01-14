@@ -1,5 +1,10 @@
 import React from 'react'
-import { Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader } from 'semantic-ui-react'
+import { Divider, Grid, GridColumn, Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader, Segment, Table } from 'semantic-ui-react'
+import { PaginatedTable } from './PaginatedTable'
+import { DjangoInstitutionUserLimited } from '../../utils/django_interfaces'
+import { TableCellWithTitle } from './TableCellWithTitle'
+
+declare const urlGetUsersCandidatesLimited: string
 
 export interface SharedInstitutionsProps {
     isOpen: boolean,
@@ -7,6 +12,35 @@ export interface SharedInstitutionsProps {
 }
 interface Props extends SharedInstitutionsProps {
     handleClose: VoidFunction
+}
+
+interface InstitutionUserListProps{
+    institutionName: string,
+    institutionId: number,
+}
+const InstitutionUserList = (props: InstitutionUserListProps) => {
+    return (
+        <>
+            <PaginatedTable<DjangoInstitutionUserLimited>
+                headerTitle={props.institutionName + ' users'}
+                headers={[
+                    { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 }
+                ]}
+                showSearchInput
+                searchLabel='User name'
+                searchPlaceholder='Search by User name'
+                urlToRetrieveData={urlGetUsersCandidatesLimited + '/' + props.institutionId + '/'}
+                updateWSKey='update_user_for_institution'
+                mapFunction={(userCandidate: DjangoInstitutionUserLimited) => {
+                    return (
+                        <Table.Row key={userCandidate.user.id}>
+                            <TableCellWithTitle value={userCandidate.user.username} />
+                        </Table.Row>
+                    )
+                }}
+            />
+        </>
+    )
 }
 
 export const SharedInstitutions = (props: Props) => {
@@ -17,14 +51,28 @@ export const SharedInstitutions = (props: Props) => {
         >
             <ModalHeader>Select a Photo</ModalHeader>
             <ModalContent>
-                <List selection verticalAlign='middle'>
-                    <ListItem>
-                        <ListContent>
-                            <ListHeader>Helen</ListHeader>
-                        </ListContent>
-                    </ListItem>
-                </List>
+
+                <Segment>
+                    <Grid columns={2} relaxed='very'>
+                        <GridColumn>
+                            <List selection verticalAlign='middle'>
+                                <ListItem>
+                                    <ListContent>
+                                        <ListHeader>Helen</ListHeader>
+                                    </ListContent>
+                                </ListItem>
+                            </List>
+                        </GridColumn>
+                        <Divider vertical />
+                        <GridColumn>
+                            <InstitutionUserList institutionName={'asd'} institutionId={4} />
+                        </GridColumn>
+                    </Grid>
+
+                </Segment>
             </ModalContent>
         </Modal>
     )
 }
+
+

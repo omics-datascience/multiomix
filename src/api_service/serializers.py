@@ -5,7 +5,7 @@ from user_files.serializers import SimpleUserFileSerializer, UserFileSerializer
 from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNACombination, GeneCNACombination, \
     GeneMethylationCombination, ExperimentClinicalSource
 from rest_framework import serializers
-
+from institutions.serializers import InstitutionSimpleSerializer
 
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
     """GeneGEMCombination serializer"""
@@ -63,6 +63,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
     mRNA_source = ExperimentSourceSerializer()
     gem_source = ExperimentSourceSerializer()
+    shared_institutions = InstitutionSimpleSerializer()
+    print(shared_institutions)
     tag = TagSerializer()
 
     class Meta:
@@ -84,7 +86,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'type',
             'tag',
             'clinical_source_id',
-            'is_public'
+            'is_public',
+            'shared_institutions'
         ]
 
 
