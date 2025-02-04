@@ -5,11 +5,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.models import User
 from django_email_verification import sendConfirm
-from rest_framework import permissions, generics
+from rest_framework import permissions, generics, filters
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from users.serializers import UserSerializer, UserUpdateSerializer
+from users.serializers import UserInfoSerializer, UserSerializer, UserUpdateSerializer
 from django.conf import settings
 from django.db import transaction, InternalError
 
@@ -186,3 +186,14 @@ class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserSearchView(generics.ListAPIView): 
+    serializer_class = UserInfoSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name','last_name','email']
+    ordering_fields = ['first_name','last_name','email']
+
+    def get_queryset(self):
+        return User.objects.all()[:5] 
+    
