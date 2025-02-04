@@ -281,9 +281,8 @@ class BiomarkerMolecules(generics.ListAPIView):
 
 
 class BiomarkerCorrelationAPIView(APIView):
-    """
-    comments...
-    """
+    """Validates the request data and retrieves the corresponding experiment."""
+    
     def post(self, request, *args, **kwargs):
         # Instantiate the serializer with the received data
         serializer = BiomarkerFromCorrelationAnalysisSerializer(data=request.data)
