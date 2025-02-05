@@ -8,7 +8,8 @@ urlpatterns = [
     path('create-user', views.create_user_action, name='create_user'),
     path('logout', views.logout_action, name='logout'),
     path('user', views.CurrentUserView.as_view(), name='current_user'),
-    path('edit-profile', views.UserRetrieveUpdateView.as_view(), name='update_user')
+    path('edit-profile', views.UserRetrieveUpdateView.as_view(), name='update_user'),
+    path('search-user/',views.UserSearchView.as_view(), name='search_user')
 ]
 
 if settings.DEBUG:
