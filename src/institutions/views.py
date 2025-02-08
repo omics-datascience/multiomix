@@ -7,7 +7,7 @@ from common.functions import encode_json_response_status
 from common.response import ResponseStatus
 from .enums import AddRemoveUserToInstitutionStatusErrorCode
 from .models import Institution, InstitutionAdministration
-from .serializers import InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer, LimitedUserSerializer, UserCandidateLimitedSerializer
+from .serializers import InstitutionSimpleSerializer, InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer, LimitedUserSerializer, UserCandidateLimitedSerializer
 from django.contrib.auth.models import User
 from common.pagination import StandardResultsSetPagination
 from django_filters.rest_framework import DjangoFilterBackend

@@ -123,7 +123,8 @@ interface MiRNAPipelineProps {
     /** Function callback when a study is selected from CGDS Modal */
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: NewExperimentSourceStateName) => void,
     /** Function callback to handle GEM FileType changes */
-    selectGEMFileType: (fileType: FileType) => void
+    selectGEMFileType: (fileType: FileType) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
 }
 
 /**
@@ -781,6 +782,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     confirmExperimentStop={this.confirmExperimentStop}
                     handleSortAllExperiments={this.props.handleSortAllExperiments}
                     handleTableControlChangesAllExperiments={this.props.handleTableControlChangesAllExperiments}
+                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
                 />
             )
         } else {

@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Icon } from 'semantic-ui-react'
+import { CurrentUserContext } from '../../Base'
 
 /**
  * Component's props
@@ -12,7 +13,9 @@ interface StopExperimentButtonProps {
     /** Whether the button is disabled */
     disabled?: boolean,
     /** Callback to execute on click event */
-    onClick: () => void
+    onClick: () => void,
+    /** Owner id to check security */
+    ownerId?: number,
 }
 
 /**
@@ -22,6 +25,10 @@ interface StopExperimentButtonProps {
  */
 export const StopExperimentButton = (props: StopExperimentButtonProps) => {
     const extraClassName = props.className ?? ''
+    const currentUser = useContext(CurrentUserContext)
+    if(props.ownerId !== undefined && currentUser?.id !== props.ownerId){
+        return <></>
+    }
     return (
         <Icon
             name='stop'
