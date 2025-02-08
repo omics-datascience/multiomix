@@ -64,4 +64,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                      
             instance.save()
         return instance
-        
+       
+class UserInfoSerializer(serializers.ModelSerializer):
+    """User serializer with info about him"""
+    class Meta:
+        model=get_user_model()
+        fields=['id','first_name','last_name','email']
