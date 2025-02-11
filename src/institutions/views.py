@@ -7,7 +7,7 @@ from common.functions import encode_json_response_status
 from common.response import ResponseStatus
 from .enums import AddRemoveUserToInstitutionStatusErrorCode
 from .models import Institution, InstitutionAdministration
-from .serializers import InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer, LimitedUserSerializer
+from .serializers import InstitutionSimpleSerializer, InstitutionSerializer, UserCandidateSerializer, InstitutionListSerializer, InstitutionAdminUpdateSerializer, LimitedUserSerializer, UserCandidateLimitedSerializer
 from django.contrib.auth.models import User
 from common.pagination import StandardResultsSetPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -41,6 +41,22 @@ class UserInstitution(generics.ListAPIView):
         return Institution.objects.filter(institutionadministration__user=self.request.user)
     serializer_class = InstitutionSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class UserCandidatesLimitedList(generics.ListAPIView):
+    """REST endpoint: list for User model. Used to add to an Institution"""
+
+    def get_queryset(self):
+        institution_id = self.kwargs.get('institution_id')
+        return InstitutionAdministration.objects.filter(
+            institution_id=institution_id
+        )
+    serializer_class = UserCandidateLimitedSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    search_fields = ['user__username']
+    ordering_fields = ['user__username']
 
 class UserCandidatesList(generics.ListAPIView):
     """REST endpoint: list for User model. Used to add to an Institution"""

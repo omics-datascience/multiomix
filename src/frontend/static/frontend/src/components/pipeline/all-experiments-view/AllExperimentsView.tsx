@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table, TableCell, Icon, DropdownItemProps } from 'semantic-ui-react'
+import { Table, TableCell, Icon, DropdownItemProps, Button } from 'semantic-ui-react'
 import { AllExperimentsTableControl, GenesColors, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
 import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
@@ -10,6 +10,11 @@ import { ClinicalSourcePopup } from './ClinicalSourcePopup'
 import { SeeResultButton } from './SeeResultButton'
 import { StopExperimentButton } from './StopExperimentButton'
 import { DeleteExperimentButton } from './DeleteExperimentButton'
+import { SharedInstitutions, SharedInstitutionsProps } from './SharedInstitutions'
+import { PublicButtonExperiment } from './PublicButtonExperiment'
+import { SharedUsers, SharedUsersProps } from './SharedUsers'
+import { EditExperimentIcon } from './EditExperimentIcon'
+import { PopupExperiment } from './PopupExperiment'
 
 declare const urlUserExperiments: string
 declare const urlDownloadFullResult: string
@@ -33,6 +38,7 @@ interface AllExperimentsViewProps {
     confirmExperimentStop: (experiment: DjangoExperiment) => void,
     handleSortAllExperiments: (headerServerCodeToSort: string) => void,
     handleTableControlChangesAllExperiments: (name: string, value: any, resetPagination?: boolean) => void
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
 }
 
 /**
@@ -41,6 +47,10 @@ interface AllExperimentsViewProps {
 interface AllExperimentsViewState {
     /** Id of the experiment which clinical source popup must be opened */
     clinicalPopupOpenId: Nullable<number>
+    /** modal to handle shared institutions */
+    modalInstitutions: SharedInstitutionsProps,
+    /** modal to handle shared users */
+    modalUsers: SharedUsersProps,
 }
 
 /**
@@ -51,9 +61,23 @@ interface AllExperimentsViewState {
 export class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
     constructor (props) {
         super(props)
-
         this.state = {
-            clinicalPopupOpenId: null
+            clinicalPopupOpenId: null,
+            modalInstitutions: this.defaultModalInstitutions(),
+            modalUsers: this.defaultModalUsers()
+        }
+    }
+
+    defaultModalUsers (): SharedUsersProps {
+        return {
+            isOpen: false,
+            users: [],
+            experimentId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
         }
     }
 
@@ -97,6 +121,37 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
     }
 
     /**
+     * default modal institution
+     */
+    handleCloseModalModalInstitution = () => {
+        this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * default modal user
+     */
+    handleCloseModalModalUser = () => {
+        this.setState({ modalUsers: this.defaultModalUsers() })
+    }
+
+    /**
+     * default modal institution
+     * @returns default modal shared institution object
+     */
+    defaultModalInstitutions = (): SharedInstitutionsProps => {
+        return {
+            isOpen: false,
+            institutions: [],
+            experimentId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
      * Opens popup to add/edit clinical source data for a specific Experiment
      * @param experimentId ID of the experiment to show popup
      */
@@ -125,6 +180,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         { name: 'Clinical', width: 1, textAlign: 'center' },
                         { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
                         { name: 'Sources' },
+                        { name: 'Public' },
+                        { name: 'Shared' },
                         { name: 'Actions' }
                     ]}
                     customFilters={this.getDefaultFilters()}
@@ -146,6 +203,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                         // Number of combinations
                         const finalRowCount = experiment.result_final_row_count ?? '-'
                         const evaluatedRowCount = experiment.evaluated_row_count ?? finalRowCount
+
                         return (
                             <Table.Row key={experiment.id as number}>
                                 <TableCellWithTitle value={experiment.name} />
@@ -204,49 +262,112 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                         downloadButtonTitle={`Download ${getExperimentTypeObj(experiment.type, 'ExperimentType').description} source file`}
                                     />
                                 </TableCell>
+                                <TableCell textAlign='center'>
+                                    {
+                                        experiment.is_public
+                                            ? (
+                                                <Icon
+                                                    title='All users of the platform can see this experiment'
+                                                    name='check'
+                                                    color='green'
+                                                />
+                                            )
+                                            : (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='close'
+                                                    color='red'
+                                                />
+                                            )
+                                    }
+                                </TableCell>
+                                <TableCell>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, experimentId: experiment.id, isOpen: true, user: experiment.user } })}
+                                    >
+                                        <Icon
+                                            title='shared institutions'
+                                            name='building'
+                                            color='green'
+                                        />
+                                    </Button>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, experimentId: experiment.id, isOpen: true, user: experiment.user } })}
+                                    >
+                                        <Icon
+                                            title='shared users'
+                                            name='users'
+                                            color='teal'
+                                        />
+                                    </Button>
+                                </TableCell>
                                 <TableCell>
                                     {/* See results button */}
                                     <SeeResultButton experiment={experiment} seeResult={this.props.seeResult} />
 
-                                    {/* Download button */}
-                                    <Icon
-                                        name='cloud download'
-                                        color='blue'
-                                        className='clickable margin-left-5'
-                                        title='Download result'
-                                        onClick={() => window.open(`${urlDownloadFullResult}/${experiment.id}`, '_blank')}
-                                        disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
-                                    />
-
                                     {/* Edit button */}
-                                    <Icon
-                                        name='pencil'
-                                        className='clickable margin-left-5'
-                                        color='yellow'
-                                        title='Edit'
-                                        onClick={() => this.props.editExperiment(experiment)}
-                                        disabled={experiment.state !== ExperimentState.COMPLETED}
+                                    <EditExperimentIcon
+                                        editExperiment={this.props.editExperiment}
+                                        experiment={experiment}
+                                        ownerId={experiment.user.id}
                                     />
 
-                                    {/* Stop button */}
-                                    {isInProcess &&
-                                        <StopExperimentButton
-                                            title='Stop experiment'
-                                            onClick={() => this.props.confirmExperimentStop(experiment)}
-                                        />
-                                    }
+                                    <PopupExperiment
+                                        content={
+                                            <>
+                                                {/* Download button */}
+                                                <Icon
+                                                    name='cloud download'
+                                                    color='blue'
+                                                    className='clickable margin-left-5'
+                                                    title='Download result'
+                                                    onClick={() => window.open(`${urlDownloadFullResult}/${experiment.id}`, '_blank')}
+                                                    disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
+                                                />
+                                                {/* Stop button */}
+                                                <StopExperimentButton
+                                                    title='Stop experiment'
+                                                    onClick={() => this.props.confirmExperimentStop(experiment)}
+                                                    ownerId={experiment.user.id}
+                                                />
 
-                                    {/* Delete button */}
-                                    {!isInProcess &&
-                                        <DeleteExperimentButton
-                                            title='Delete experiment'
-                                            onClick={() => this.props.confirmExperimentDeletion(experiment)}
-                                        />
-                                    }
+                                                {/* Delete button */}
+                                                {!isInProcess && !experiment.is_public &&
+                                                    <DeleteExperimentButton
+                                                        title='Delete experiment'
+                                                        onClick={() => this.props.confirmExperimentDeletion(experiment)}
+                                                    />
+                                                }
+
+                                                {/* Public switch */}
+                                                <PublicButtonExperiment experiment={experiment} handleChangeConfirmModalState={this.props.handleChangeConfirmModalState} />
+                                            </>
+                                        }
+                                    />
                                 </TableCell>
                             </Table.Row>
                         )
                     }}
+                />
+                <SharedUsers
+                    handleClose={this.handleCloseModalModalUser}
+                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                    {...this.state.modalUsers}
+                />
+                <SharedInstitutions
+                    user={this.state.modalInstitutions.user}
+                    isOpen={this.state.modalInstitutions.isOpen}
+                    institutions={this.state.modalInstitutions.institutions}
+                    handleClose={this.handleCloseModalModalInstitution}
+                    experimentId={this.state.modalInstitutions.experimentId}
+                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                    isAdding={this.state.modalInstitutions.isAdding}
                 />
             </div>
         )

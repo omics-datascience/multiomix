@@ -92,6 +92,10 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
         }
     }
 
+    /**
+     * Default modal.
+     * @returns Confirm modal struct.
+     */
     getDefaultConfirmModal = (): ConfirmModal => {
         return {
             confirmModal: false,

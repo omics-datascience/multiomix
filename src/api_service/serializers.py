@@ -5,7 +5,7 @@ from user_files.serializers import SimpleUserFileSerializer, UserFileSerializer
 from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNACombination, GeneCNACombination, \
     GeneMethylationCombination, ExperimentClinicalSource
 from rest_framework import serializers
-
+from django.contrib.auth import get_user_model
 
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
     """GeneGEMCombination serializer"""
@@ -58,11 +58,17 @@ class ExperimentSourceSerializer(serializers.ModelSerializer):
         model = ExperimentSource
         fields = '__all__'
 
+class LimitedUserSerializer(serializers.ModelSerializer):
+    """A lightweight serializer for User model"""
+    class Meta:
+        model = get_user_model()
+        fields = ['id', 'username']
 
 class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
     mRNA_source = ExperimentSourceSerializer()
     gem_source = ExperimentSourceSerializer()
+    user = LimitedUserSerializer()
     tag = TagSerializer()
 
     class Meta:
@@ -83,7 +89,9 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'p_values_adjustment_method',
             'type',
             'tag',
-            'clinical_source_id'
+            'clinical_source_id',
+            'is_public',
+            'user'
         ]
 
 

@@ -49,3 +49,10 @@ class InstitutionAdminUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstitutionAdministration
         fields = ['id', 'is_institution_admin']
+
+class UserCandidateLimitedSerializer(serializers.ModelSerializer):
+    """Serializer useful to add a User to an Institution"""
+    user = LimitedUserSerializer()
+    class Meta:
+        model = InstitutionAdministration
+        fields = ['user']

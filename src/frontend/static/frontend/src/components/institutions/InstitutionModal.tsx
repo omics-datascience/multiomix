@@ -30,7 +30,7 @@ export interface InstitutionModalState {
 
 interface Props extends InstitutionModalState {
     /* Close modal function */
-    handleCloseModal: () => void,
+    handleCloseModal: VoidFunction,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
     handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>): void,
 }

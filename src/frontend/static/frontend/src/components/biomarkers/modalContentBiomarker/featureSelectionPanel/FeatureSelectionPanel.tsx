@@ -213,7 +213,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                     </Grid.Row>
                 </Grid>
             </Modal.Content>
-            <Modal.Actions style={{/* justifySelf: 'flex-end' */ }}>
+            <Modal.Actions>
                 <Button
                     color="red"
                     onClick={props.cancelForm}
