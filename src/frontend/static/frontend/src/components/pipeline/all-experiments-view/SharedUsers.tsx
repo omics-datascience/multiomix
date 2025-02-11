@@ -10,7 +10,6 @@ declare const urlPostRemoveUser: string
 declare const urlGetUsersNonInExperiment: string
 declare const urlShareExperimentToUser: string
 
-
 export interface SharedUsersProps {
     isOpen: boolean,
     users: { id: number, name: string }[],
@@ -31,7 +30,6 @@ export const SharedUsers = (props: Props) => {
     const [usersList, setUsersList] = useState<{ id: number, username: string }[]>([])
     const [listOfUsersNonPart, setListOfUsersPart] = useState<SemanticListItem[]>([])
     const [userIdToAdd, setUserIdToAdd] = useState<number>(0)
-
 
     /**
      * Function to search users that are not in experiment.
@@ -63,6 +61,7 @@ export const SharedUsers = (props: Props) => {
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { id: number, username: string }[]) => {
                 setUsersList(jsonResponse)
+
                 if (!(jsonResponse.map(item => item.id).includes(activeUser.id))) {
                     setActiveUser(jsonResponse.length ? jsonResponse[0] : { id: 0, username: '' })
                 }
@@ -73,9 +72,10 @@ export const SharedUsers = (props: Props) => {
             console.error('Error getting users ->', err)
         })
     }
+
     /**
- * Function to add user to experiment.
- */
+     * Function to add user to experiment.
+     */
     const handleAddInstitution = () => {
         if (userIdToAdd) {
             setIsLoadingUser(true)
@@ -167,8 +167,8 @@ export const SharedUsers = (props: Props) => {
                             <List selection verticalAlign='middle'>
                                 <div
                                     style={{
-                                        maxHeight: "400px",
-                                        overflowY: "auto"
+                                        maxHeight: '400px',
+                                        overflowY: 'auto'
                                     }}
                                 >
                                     {usersList.map(institution => (

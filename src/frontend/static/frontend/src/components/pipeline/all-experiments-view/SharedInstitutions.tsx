@@ -30,6 +30,7 @@ interface InstitutionUserListProps {
     institutionName: string,
     institutionId: number,
 }
+
 const InstitutionUserList = (props: InstitutionUserListProps) => {
     return (
         <div key={props.institutionId} style={{ padding: '0 1rem 0 0' }}>
@@ -94,6 +95,7 @@ export const SharedInstitutions = (props: Props) => {
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { id: number, name: string }[]) => {
                 setInstitutionList(jsonResponse)
+
                 if (!(jsonResponse.map(item => item.id).includes(activeInstitution.id))) {
                     setActiveInstitution(jsonResponse.length ? jsonResponse[0] : { id: 0, name: '' })
                 }
@@ -200,8 +202,8 @@ export const SharedInstitutions = (props: Props) => {
                             <List selection verticalAlign='middle'>
                                 <div
                                     style={{
-                                        maxHeight: "400px",
-                                        overflowY: "auto"
+                                        maxHeight: '400px',
+                                        overflowY: 'auto'
                                     }}
                                 >
                                     {institutionList.map(institution => (
@@ -235,11 +237,11 @@ export const SharedInstitutions = (props: Props) => {
                         <Divider vertical />
                         <GridColumn>
                             {
-                                activeInstitution.id ?
-                                    (
+                                activeInstitution.id
+                                    ? (
                                         <InstitutionUserList institutionName={activeInstitution.name} institutionId={activeInstitution.id} />
-                                    ) :
-                                    (
+                                    )
+                                    : (
                                         <></>
                                     )
                             }
@@ -250,5 +252,3 @@ export const SharedInstitutions = (props: Props) => {
         </Modal>
     )
 }
-
-

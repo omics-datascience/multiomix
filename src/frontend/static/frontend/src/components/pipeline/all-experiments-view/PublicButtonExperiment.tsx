@@ -2,16 +2,16 @@ import React, { useContext, useState } from 'react'
 import { Icon } from 'semantic-ui-react'
 import { DjangoExperiment } from '../../../utils/django_interfaces'
 import { CurrentUserContext } from '../../Base'
-import { getDjangoHeader } from '../../../utils/util_functions';
-import ky from 'ky';
+import { getDjangoHeader } from '../../../utils/util_functions'
+import ky from 'ky'
 
-
-declare const urlPostSwitchInstitutionPublicView;
+declare const urlPostSwitchInstitutionPublicView
 
 interface Props {
     experiment: DjangoExperiment
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void;
 }
+
 export const PublicButtonExperiment = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
     const [isLoading, setIsLoading] = useState(false)
@@ -40,7 +40,7 @@ export const PublicButtonExperiment = (props: Props) => {
         })
     }
 
-    if(currentUser?.id !== props.experiment.user.id){
+    if (currentUser?.id !== props.experiment.user.id) {
         return <></>
     }
 
@@ -51,7 +51,7 @@ export const PublicButtonExperiment = (props: Props) => {
             disabled={isLoading}
             color={props.experiment.is_public ? 'red' : 'teal'}
             title={props.experiment.is_public ? 'Make experiment private' : 'Make experiment public'}
-            onClick={() => props.handleChangeConfirmModalState(true, props.experiment.is_public ? 'Make experiment private' :'Make experiment public', props.experiment.is_public ? 'Are you sure to make the experiment private?' : 'Are you sure to make the experiment public', handleSwitchVisibility)}
+            onClick={() => props.handleChangeConfirmModalState(true, props.experiment.is_public ? 'Make experiment private' : 'Make experiment public', props.experiment.is_public ? 'Are you sure to make the experiment private?' : 'Are you sure to make the experiment public', handleSwitchVisibility)}
         />
     )
 }

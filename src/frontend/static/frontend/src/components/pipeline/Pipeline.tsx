@@ -338,7 +338,6 @@ class Pipeline extends React.Component<{}, PipelineState> {
         }
     }
 
-
     /**
      * Changes confirm modal state
      * @param setOption New state of option
@@ -346,14 +345,14 @@ class Pipeline extends React.Component<{}, PipelineState> {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-        handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
-            const confirmModal = this.state.confirmModal
-            confirmModal.confirmModal = setOption
-            confirmModal.headerText = headerText
-            confirmModal.contentText = contentText
-            confirmModal.onConfirm = onConfirm
-            this.setState({ confirmModal })
-        }
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+        const confirmModal = this.state.confirmModal
+        confirmModal.confirmModal = setOption
+        confirmModal.headerText = headerText
+        confirmModal.contentText = contentText
+        confirmModal.onConfirm = onConfirm
+        this.setState({ confirmModal })
+    }
 
     /**
      * Reset the confirm modal, to be used again
@@ -364,7 +363,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
     /**
      * Default modal.
-     * @returns {ConfirmModal}
+     * @returns {ConfirmModal} Confirm modal base
      */
     getDefaultConfirmModal = (): ConfirmModal => {
         return {

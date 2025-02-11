@@ -284,7 +284,7 @@ interface DjangoExperiment {
     type: ExperimentType,
     clinical_source_id: Nullable<number>,
     is_public: boolean,
-    user: { id:number, username: string }
+    user: { id: number, username: string }
 }
 
 /** A reduced structure of Gene model */

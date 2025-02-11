@@ -12,9 +12,10 @@ interface Props{
 export const EditExperimentIcon = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
 
-    if(props.ownerId !== currentUser?.id){
+    if (props.ownerId !== currentUser?.id) {
         return <></>
     }
+
     return (
         <Icon
             name='pencil'

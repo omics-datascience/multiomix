@@ -314,11 +314,9 @@ class RemoveInstitutionFromExperimentView(APIView):
             )
 
         experiment.shared_institutions.remove(institution)
-        experiment.save()
 
         return Response(
-            {"message": f"Institution {institution.id} removed from experiment {experiment.id}."},
-            status=status.HTTP_200_OK
+            {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
         )
 class RemoveUserFromExperimentView(APIView):
     """
@@ -350,11 +348,9 @@ class RemoveUserFromExperimentView(APIView):
             )
 
         experiment.shared_users.remove(user)
-        experiment.save()
 
         return Response(
-            {"message": f"User {user.id} removed from experiment {experiment.id}."},
-            status=status.HTTP_200_OK
+            {"message": f"User {user.id} removed from experiment {experiment.id}."}
         )
 
 class ToggleExperimentPublicView(APIView):
@@ -378,11 +374,9 @@ class ToggleExperimentPublicView(APIView):
             )
 
         experiment.is_public = not experiment.is_public
-        experiment.save()
 
         return Response(
-            {"id": experiment.id, "is_public": experiment.is_public},
-            status=status.HTTP_200_OK
+            {"id": experiment.id, "is_public": experiment.is_public}
         )
 
 class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
@@ -419,7 +413,6 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
         experiment = get_object_or_404(Experiment, id=experiment_id)
 
         associated_user_ids = experiment.shared_users.values_list('id', flat=True)
-        print(associated_user_ids)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
 
 class UsersExperimentsSharedListView(generics.ListAPIView):
@@ -473,10 +466,9 @@ class AddInstitutionToExperimentView(APIView):
         institution = get_object_or_404(Institution, id=institution_id)
 
         experiment.shared_institutions.add(institution)
-        experiment.save()
 
         serializer = InstitutionSerializer(institution)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
 class AddUserToExperimentView(APIView):
     """
@@ -499,7 +491,6 @@ class AddUserToExperimentView(APIView):
         user = get_object_or_404(User, id=user_id)
 
         experiment.shared_users.add(user)
-        experiment.save()
 
         serializer = LimitedUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)

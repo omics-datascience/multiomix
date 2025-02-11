@@ -94,7 +94,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
 
     /**
      * Default modal.
-     * @returns {ConfirmModal}
+     * @returns {ConfirmModal} confirmo modal base
      */
     getDefaultConfirmModal = (): ConfirmModal => {
         return {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table, TableCell, Icon, DropdownItemProps, Button, Popup } from 'semantic-ui-react'
+import { Table, TableCell, Icon, DropdownItemProps, Button } from 'semantic-ui-react'
 import { AllExperimentsTableControl, GenesColors, Nullable } from '../../../utils/interfaces'
 import { DjangoExperiment, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod } from '../../../utils/django_interfaces'
 import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, formatDateLocale, getExperimentTypeObj, getExperimentCorrelationMethodInfo, getExperimentStateObj } from '../../../utils/util_functions'
@@ -59,7 +59,7 @@ interface AllExperimentsViewState {
  * @returns Component
  */
 export class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
-    constructor(props) {
+    constructor (props) {
         super(props)
         this.state = {
             clinicalPopupOpenId: null,
@@ -68,7 +68,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         }
     }
 
-    defaultModalUsers(): SharedUsersProps {
+    defaultModalUsers (): SharedUsersProps {
         return {
             isOpen: false,
             users: [],
@@ -81,12 +81,11 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         }
     }
 
-
     /**
      * Generates default table's Filters
      * @returns Default object for table's Filters
      */
-    getDefaultFilters(): PaginationCustomFilter[] {
+    getDefaultFilters (): PaginationCustomFilter[] {
         const tagOptions: DropdownItemProps[] = this.props.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
@@ -129,15 +128,15 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
     }
 
     /**
- * default modal user
- */
+     * default modal user
+     */
     handleCloseModalModalUser = () => {
         this.setState({ modalUsers: this.defaultModalUsers() })
     }
 
     /**
-     * 
-     * @returns 
+     * default modal institution
+     * @returns default modal shared institution object
      */
     defaultModalInstitutions = (): SharedInstitutionsProps => {
         return {
@@ -163,7 +162,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
      */
     closePopup = () => { this.setState({ clinicalPopupOpenId: null }) }
 
-    render(): JSX.Element {
+    render (): JSX.Element {
         return (
             <div>
                 <PaginatedTable<DjangoExperiment>
@@ -268,12 +267,12 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                         experiment.is_public
                                             ? (
                                                 <Icon
-                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    title='All users of the platform can see this experiment'
                                                     name='check'
                                                     color='green'
                                                 />
-                                            ) :
-                                            (
+                                            )
+                                            : (
                                                 <Icon
                                                     title='If this is checked all the users in the platform can see (but not edit or remove) this element'
                                                     name='close'
@@ -332,13 +331,11 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                     disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
                                                 />
                                                 {/* Stop button */}
-                                                {
-                                                    <StopExperimentButton
-                                                        title='Stop experiment'
-                                                        onClick={() => this.props.confirmExperimentStop(experiment)}
-                                                        ownerId={experiment.user.id}
-                                                    />
-                                                }
+                                                <StopExperimentButton
+                                                    title='Stop experiment'
+                                                    onClick={() => this.props.confirmExperimentStop(experiment)}
+                                                    ownerId={experiment.user.id}
+                                                />
 
                                                 {/* Delete button */}
                                                 {!isInProcess && !experiment.is_public &&
@@ -347,7 +344,8 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                         onClick={() => this.props.confirmExperimentDeletion(experiment)}
                                                     />
                                                 }
-                                                {/**Public switch */}
+
+                                                {/* Public switch */}
                                                 <PublicButtonExperiment experiment={experiment} handleChangeConfirmModalState={this.props.handleChangeConfirmModalState} />
                                             </>
                                         }

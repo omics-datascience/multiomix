@@ -26,9 +26,11 @@ interface StopExperimentButtonProps {
 export const StopExperimentButton = (props: StopExperimentButtonProps) => {
     const extraClassName = props.className ?? ''
     const currentUser = useContext(CurrentUserContext)
-    if(props.ownerId !== undefined && currentUser?.id !== props.ownerId){
+
+    if (props.ownerId !== undefined && currentUser?.id !== props.ownerId) {
         return <></>
     }
+
     return (
         <Icon
             name='stop'
