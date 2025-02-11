@@ -224,7 +224,7 @@ export const SharedInstitutions = (props: Props) => {
                                                             disabled={isLoadingInstitution}
                                                             color='red'
                                                             title='Remove institution'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to institution?', () => handleRemoveInstitution(institution.id))}
+                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
                                                         />
                                                     )
                                                 }
@@ -241,9 +241,7 @@ export const SharedInstitutions = (props: Props) => {
                                     ? (
                                         <InstitutionUserList institutionName={activeInstitution.name} institutionId={activeInstitution.id} />
                                     )
-                                    : (
-                                        <></>
-                                    )
+                                    : null
                             }
                         </GridColumn>
                     </Grid>
