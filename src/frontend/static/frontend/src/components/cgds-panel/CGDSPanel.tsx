@@ -110,7 +110,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     editCGDSStudy = (CGDSStudy: DjangoCGDSStudy) => {
         const CGDSStudyCopy = copyObject(CGDSStudy)
-
         // Parse optional text fields to prevent React errors because null values
         CGDSStudyCopy.description = CGDSStudyCopy.description ?? ''
         CGDSStudyCopy.url_study_info = CGDSStudyCopy.url_study_info ?? ''
@@ -121,7 +120,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         CGDSStudyCopy.clinical_patient_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_patient_dataset)
         CGDSStudyCopy.clinical_sample_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_sample_dataset)
 
-        this.setState({ newCGDSStudy: CGDSStudyCopy })
+        this.setState({
+             newCGDSStudy: CGDSStudyCopy
+            })
     }
 
     /**
@@ -153,9 +154,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     addOrEditStudy = () => {
         if (!this.canAddCGDSStudy()) {
-            return
+            return 
         }
-
+        
         // Sets the Request's Headers
         const myHeaders = getDjangoHeader()
 
@@ -169,9 +170,10 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
             addOrEditURL = urlCGDSStudiesCRUD
             requestMethod = ky.post
         }
-
+   
         this.setState({ addingOrEditingCGDSStudy: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy }).then((response) => {
+            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy, timeout:20000})
+            .then((response) => {
                 this.setState({ addingOrEditingCGDSStudy: false })
                 response.json().then((CGDSStudy: DjangoCGDSStudy) => {
                     if (CGDSStudy && CGDSStudy.id) {
@@ -406,14 +408,20 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     /**
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
+     * 
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
         const dataset = newCGDSStudy[datasetName]
-
+        
         if (dataset !== null) {
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
-
+            
+            if(dataset.header_row_index === 0){
+                newElement.event_column = 'OS_STATUS' 
+                newElement.time_column = 'OS_MONTH'
+            }
+            
             if (dataset.survival_columns === undefined) {
                 dataset.survival_columns = []
             }
@@ -575,18 +583,20 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     addCGDSDataset = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
+
+        const headerRowIndex = (datasetName === 'clinical_patient_dataset' || datasetName === 'clinical_sample_dataset') ? 4 : 0
         newCGDSStudy[datasetName] = {
             file_path: '',
             separator: CGDSDatasetSeparator.TAB,
             observation: '',
-            header_row_index: 0,
+            header_row_index: headerRowIndex,
             mongo_collection_name: '',
             is_cpg_site_id: true, // Always is true for CGDS
             platform: DjangoMethylationPlatform.PLATFORM_450
         }
         this.setState({ newCGDSStudy })
     }
-
+    
     /**
      * Removes a CGDS dataset from a CGDS Study
      * @param datasetName Name of the dataset to remove
@@ -948,7 +958,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                             onClick={() => this.confirmCGDSStudySync(CGDSStudyFileRow)}
                                                         />
 
-                                                        {/* Edit button */}
+                                                        {/* Edit button */}                                              
                                                         <Icon
                                                             name='pencil'
                                                             color='yellow'
