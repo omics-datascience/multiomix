@@ -56,7 +56,7 @@ enum SyncStrategy {
  * @returns Component
  */
 class CGDSPanel extends React.Component<{}, CGDSPanelState> {
-    constructor(props) {
+    constructor (props) {
         super(props)
 
         this.state = {
@@ -74,7 +74,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * Generates a default new file form
      * @returns An object with all the field with default values
      */
-    getDefaultNewCGDSStudy(): DjangoCGDSStudy {
+    getDefaultNewCGDSStudy (): DjangoCGDSStudy {
         return {
             name: '',
             description: '',
@@ -96,7 +96,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param dataset Dataset to escape
      * @returns Escaped CGDSDataset object
      */
-    escapeDatasetNullFields(dataset: Nullable<DjangoCGDSDataset>): Nullable<DjangoCGDSDataset> {
+    escapeDatasetNullFields (dataset: Nullable<DjangoCGDSDataset>): Nullable<DjangoCGDSDataset> {
         if (dataset !== null) {
             dataset.observation = dataset.observation ?? ''
         }
@@ -129,7 +129,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * Generates a default filter
      * @returns An object with all the field with default values
      */
-    getDefaultFilter() {
+    getDefaultFilter () {
         return {
             fileType: FileType.ALL,
             tag: null
@@ -317,7 +317,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param dataset CGDSDataset to check
      * @returns True if all the field are valid for submission, false otherwise
      */
-    datasetFieldsAreValid(dataset: DjangoCGDSDataset): boolean {
+    datasetFieldsAreValid (dataset: DjangoCGDSDataset): boolean {
         return dataset.file_path.trim().length > 0 &&
             dataset.separator !== null &&
             (dataset.header_row_index.toString() !== '' && dataset.header_row_index >= 0) &&
@@ -329,7 +329,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param dataset Dataset to check
      * @returns True if everything is OK, false otherwise
      */
-    datasetIsValid(dataset: Nullable<DjangoCGDSDataset>): boolean {
+    datasetIsValid (dataset: Nullable<DjangoCGDSDataset>): boolean {
         return dataset === null || (
             dataset !== null &&
             this.datasetFieldsAreValid(dataset)
@@ -340,7 +340,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * Clinical data needs both patient and sample data
      * @returns True if clinical data is valid, false otherwise
      */
-    clinicalDatasetAreValid(): boolean {
+    clinicalDatasetAreValid (): boolean {
         const patientDataset = this.state.newCGDSStudy.clinical_patient_dataset
         const sampleDataset = this.state.newCGDSStudy.clinical_sample_dataset
 
@@ -408,7 +408,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     /**
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
-     * 
+     *
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
@@ -472,7 +472,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * Generates the modal to confirm a CGDSStudy sync stopping
      * @returns Modal component. Null if no CGDSStudy was selected to stop
      */
-    getCGDSStudyStopConfirmModal() {
+    getCGDSStudyStopConfirmModal () {
         if (!this.state.selectedCGDSStudyToStop) {
             return null
         }
@@ -499,7 +499,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * Generates the modal to confirm a CGDSStudy synchronization
      * @returns Modal component. Null if no CGDSStudy was selected to sync.
      */
-    getCGDSStudySyncConfirmModal() {
+    getCGDSStudySyncConfirmModal () {
         if (!this.state.selectedCGDSStudyToSync) {
             return null
         }
@@ -629,7 +629,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param isSuperuser is a superuser or not?
      * @returns Default object for table's headers
      */
-    getDefaultHeaders(isSuperuser: boolean | undefined): RowHeader<DjangoCGDSStudy>[] {
+    getDefaultHeaders (isSuperuser: boolean | undefined): RowHeader<DjangoCGDSStudy>[] {
         const headersOptions: RowHeader<DjangoCGDSStudy>[] = [
             { name: 'Name', serverCodeToSort: 'name', width: 1 },
             { name: 'Description', serverCodeToSort: 'description', width: 2 },
@@ -657,7 +657,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param isClinicalData True if the dataset is about clinical data as its data is transposed
      * @returns The corresponding info of the current CGDS Dataset state
      */
-    getCGDSDatasetStateObj(CGDSDataset: DjangoCGDSDataset, isClinicalData: boolean): CGDSStudyAndDatasetStateInfo {
+    getCGDSDatasetStateObj (CGDSDataset: DjangoCGDSDataset, isClinicalData: boolean): CGDSStudyAndDatasetStateInfo {
         let stateIcon: CGDSStudyAndDatasetStateInfo
 
         switch (CGDSDataset.state) {
@@ -732,7 +732,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param isClinicalData True if the dataset is about clinical data as its data is transposed
      * @returns JSX element
      */
-    generateDatasetCell(CGDSDataset: Nullable<DjangoCGDSDataset>, isClinicalData: boolean = false): React.ReactNode {
+    generateDatasetCell (CGDSDataset: Nullable<DjangoCGDSDataset>, isClinicalData: boolean = false): React.ReactNode {
         if (CGDSDataset) {
             const datasetState = this.getCGDSDatasetStateObj(CGDSDataset, isClinicalData)
             return (
@@ -753,7 +753,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param CGDSStudy CGDS study to evaluate
      * @returns JSX element
      */
-    generateStudyCell(CGDSStudy: Nullable<CGDSStudySynchronizationState> | undefined): React.ReactNode {
+    generateStudyCell (CGDSStudy: Nullable<CGDSStudySynchronizationState> | undefined): React.ReactNode {
         if (CGDSStudy) {
             const studyState = this.getStateObj(CGDSStudy)
             return (
@@ -774,7 +774,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      * @param state CGDSStudy state
      * @returns The corresponding info of the current study's state
      */
-    getStateObj(state: CGDSStudySynchronizationState | undefined): CGDSStudyAndDatasetStateInfo {
+    getStateObj (state: CGDSStudySynchronizationState | undefined): CGDSStudyAndDatasetStateInfo {
         let stateIcon: CGDSStudyAndDatasetStateInfo
 
         switch (state) {
@@ -871,7 +871,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         return stateIcon
     }
 
-    render() {
+    render () {
         // CGDS Study modals
         const cgdsStudyStopConfirmModal = this.getCGDSStudyStopConfirmModal()
         const cgdsStudySyncConfirmModal = this.getCGDSStudySyncConfirmModal()
