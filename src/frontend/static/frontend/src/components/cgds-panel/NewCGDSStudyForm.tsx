@@ -110,9 +110,9 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 addingOrEditingCGDSStudy={props.addingOrEditingCGDSStudy}
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
-                removeCGDSDataset={props.removeCGDSDataset} 
-                newCGDSStudy={props.newCGDSStudy}            
-                />
+                removeCGDSDataset={props.removeCGDSDataset}
+                newCGDSStudy={props.newCGDSStudy}
+            />
 
             {/* miRNA Dataset */}
             <NewCGDSDatasetForm
@@ -124,7 +124,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
                 removeCGDSDataset={props.removeCGDSDataset}
-                newCGDSStudy={props.newCGDSStudy}   
+                newCGDSStudy={props.newCGDSStudy}
             />
 
             {/* CNA Dataset */}
@@ -137,7 +137,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
                 removeCGDSDataset={props.removeCGDSDataset}
-                newCGDSStudy={props.newCGDSStudy}   
+                newCGDSStudy={props.newCGDSStudy}
             />
 
             {/* Methylation Dataset */}
@@ -150,7 +150,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
                 removeCGDSDataset={props.removeCGDSDataset}
-                newCGDSStudy={props.newCGDSStudy}   
+                newCGDSStudy={props.newCGDSStudy}
             />
 
             {/* Clinical Patients Dataset */}
@@ -166,7 +166,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 handleSurvivalFormDatasetChanges={props.handleSurvivalFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
                 removeCGDSDataset={props.removeCGDSDataset}
-                newCGDSStudy={props.newCGDSStudy}    
+                newCGDSStudy={props.newCGDSStudy}
             />
 
             {/* Clinical Samples Dataset */}
@@ -179,7 +179,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 handleFormDatasetChanges={props.handleFormDatasetChanges}
                 addCGDSDataset={props.addCGDSDataset}
                 removeCGDSDataset={props.removeCGDSDataset}
-                newCGDSStudy={props.newCGDSStudy}   
+                newCGDSStudy={props.newCGDSStudy}
             />
 
             <div className="margin-top-5">
@@ -197,7 +197,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 className="margin-top-2"
                 fluid
                 onClick={props.addOrEditStudy}
-                disabled={!props.canAddCGDSStudy()} 
+                disabled={!props.canAddCGDSStudy()}
             />
 
             {/* Cancel button */}

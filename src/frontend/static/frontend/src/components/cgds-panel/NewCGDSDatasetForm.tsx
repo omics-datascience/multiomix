@@ -41,6 +41,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(
         (name, value) => props.handleFormDatasetChanges(props.datasetName, name, value)
     )
+    
     const generateMongoCollectionName = () : string => {
         const name = props.newCGDSStudy.name.split(' ')[0]
         .replace(/[(),]/g,"") || '';
