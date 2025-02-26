@@ -12,7 +12,7 @@ from multiomics_intermediate import settings
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'is_superuser', 'first_name', 'last_name']
+        fields = ['id', 'username', 'is_superuser', 'first_name', 'last_name', 'email']
 
     def to_representation(self, instance):
         # Adds custom fields
