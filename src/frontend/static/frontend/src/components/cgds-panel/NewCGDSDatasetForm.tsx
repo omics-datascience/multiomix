@@ -14,6 +14,7 @@ type RemoveSurvivalTupleCallback = (datasetName: NameOfCGDSDataset, idxSurvivalT
  * Component's props
  */
 interface NewCGDSDatasetFormProps {
+    /** CDGSStudy to take some fields to generate the CGDSDataset Mongo collection's name. */
     newCGDSStudy: DjangoCGDSStudy,
     newCGDSDataset: Nullable<DjangoCGDSDataset>,
     nameToShow: string,
@@ -33,15 +34,16 @@ interface NewCGDSDatasetFormProps {
  * Renders a form to add a CGDS Dataset to a CGDS Study
  * @param props Component's props
  * @returns Component
- *
- * Generates a MongoDB collection name in the format: "name_description_datasetType_version_versionNumber".
- * Removes unwanted characters, limits the description to three words, and trims extra spaces and underscores.
  */
 export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(
         (name, value) => props.handleFormDatasetChanges(props.datasetName, name, value)
     )
 
+    /*
+     * Generates a MongoDB collection name using the study name, a shortened description,
+     * dataset type, and version, ensuring a clean and formatted output.
+     */
     const generateMongoCollectionName = (): string => {
         const name = props.newCGDSStudy.name.split(' ')[0]
             .replace(/[(),]/g, '') || ''

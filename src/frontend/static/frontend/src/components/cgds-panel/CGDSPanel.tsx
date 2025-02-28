@@ -417,6 +417,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         if (dataset !== null) {
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
 
+            /** These tuples are very common, so they are set by default the first time. */
             if (dataset.header_row_index === 0) {
                 newElement.event_column = 'OS_STATUS'
                 newElement.time_column = 'OS_MONTH'
