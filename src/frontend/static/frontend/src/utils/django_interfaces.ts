@@ -174,6 +174,12 @@ interface DjangoUser {
     is_superuser: boolean,
     /** Indicates if the user is admin of at least one institution */
     is_institution_admin: boolean,
+    /** Indicate user first name */
+    first_name: string,
+    /** Indicate user last name */
+    last_name: string,
+    /** Indicate user email */
+    email: string
 }
 
 /**

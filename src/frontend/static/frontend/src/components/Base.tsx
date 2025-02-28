@@ -62,8 +62,10 @@ const Base = (props: BaseProps) => {
                     username: null,
                     is_anonymous: true,
                     is_superuser: false,
-                    is_institution_admin: false
-
+                    is_institution_admin: false,
+                    last_name: '',
+                    first_name: '',
+                    email: ''
                 })
             } else {
                 console.log('Error getting current User ->', err)

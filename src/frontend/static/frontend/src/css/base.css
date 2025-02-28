@@ -134,6 +134,10 @@ div.ellipsis>button {
     padding-top: 0 !important;
 }
 
+.padding-vertical-1 {
+    padding: 1rem 0;
+}
+
 .box-shadow:hover {
     box-shadow: 0 2px 8px #bbb !important;
 }
