@@ -22,6 +22,7 @@ export const UpdateUserModal = (props: Props) => {
     const [password, setPassword] = useState({ text: '', visibility: false })
     const [passwordCheck, setPasswordCheck] = useState({ text: '', visibility: false })
     const [textError, setTextError] = useState({ isOpen: false, title: '', body: '' })
+
     const handleUpdateUser = () => {
         const myHeaders = getDjangoHeader()
         let body
@@ -31,11 +32,12 @@ export const UpdateUserModal = (props: Props) => {
                 setTextError(prevState => ({ ...prevState, title: 'Both password have to be equal', isOpen: true, body: 'Ensure to both password being equal.' }))
                 return
             }
-    
+
             if (password.text.length < 8) {
                 setTextError(prevState => ({ ...prevState, title: 'Password length', isOpen: true, body: 'Password has at lesat 8 characters.' }))
                 return
             }
+
             body = {
                 last_name: lastName.trim(),
                 first_name: firstName.trim(),
@@ -43,10 +45,11 @@ export const UpdateUserModal = (props: Props) => {
             }
         } else {
             body = {
-                "last_name": lastName.trim(),
-                "first_name": firstName.trim()
+                last_name: lastName.trim(),
+                first_name: firstName.trim()
             }
         }
+
         setIsLoading(true)
         ky.patch(urlUpdateUser, { headers: myHeaders, json: body }).then((response) => {
             response.json().then((_: any) => {
@@ -54,7 +57,7 @@ export const UpdateUserModal = (props: Props) => {
                     setTextError({ isOpen: false, title: '', body: '' })
                     setPassword(prevState => ({ ...prevState, text: '' }))
                     setPasswordCheck(prevState => ({ ...prevState, text: '' }))
-                    window.location.reload();
+                    window.location.reload()
                 })
             })
         }).catch((err) => {
@@ -67,6 +70,7 @@ export const UpdateUserModal = (props: Props) => {
             setIsLoading(false)
         })
     }
+
     return (
         <Modal
             open={props.isOpen}

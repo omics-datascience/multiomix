@@ -37,6 +37,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
             onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
         }
     }
+
     /**
      * Generates a default alert structure
      * @returns Default alert.
@@ -49,20 +50,19 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
             duration: 500
         }
     }
+
     const [modal, setModal] = useState({
         isOpen: false
     })
     const [alert, setAlert] = useState<CustomAlert>(getDefaultAlertProps)
     const [confirm, setConfirm] = useState<ConfirmModal>(getDefaultConfirmModal())
+
     /**
      * Reset the confirm modal, to be used again
      */
     const handleCancelConfirmModalState = () => {
         setConfirm(getDefaultConfirmModal())
     }
-
-
-
 
     /**
      * Changes confirm modal state
@@ -75,25 +75,25 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
         setConfirm(prevState => ({
             ...prevState,
             confirmModal: setOption,
-            headerText: headerText,
-            contentText: contentText,
-            onConfirm: onConfirm
+            headerText,
+            contentText,
+            onConfirm
         }))
     }
+
     /**
      * Update Alert
      * @param isOpen flag to open or close alert.
      * @param type type of alert.
      * @param message message of alert.
      * @param callback Callback function if is needed.
-     * @param isEdit option if is in edit mode.
      */
     const handleUpdateAlert = (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => {
         if (callback) {
             callback()
-            setAlert(prevState => ({ ...prevState, isOpen: isOpen, type: type, message: message }))
+            setAlert(prevState => ({ ...prevState, isOpen, type, message }))
         } else {
-            setAlert(prevState => ({ ...prevState, isOpen: isOpen, type: type, message: message }))
+            setAlert(prevState => ({ ...prevState, isOpen, type, message }))
         }
     }
 
@@ -143,7 +143,8 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
                 message={alert.message}
                 isOpen={alert.isOpen}
                 type={alert.type}
-                duration={alert.duration} />
+                duration={alert.duration}
+            />
         </>
     )
 }
