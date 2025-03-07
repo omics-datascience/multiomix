@@ -57,7 +57,12 @@ export const UpdateUserModal = (props: Props) => {
                     setTextError({ isOpen: false, title: '', body: '' })
                     setPassword(prevState => ({ ...prevState, text: '' }))
                     setPasswordCheck(prevState => ({ ...prevState, text: '' }))
-                    window.location.reload()
+
+                    if (password.text.length || passwordCheck.text.length) {
+                        setTimeout(() => {
+                            window.location.reload()
+                        }, 1000)
+                    }
                 })
             })
         }).catch((err) => {
@@ -67,7 +72,13 @@ export const UpdateUserModal = (props: Props) => {
             console.error('Error updating profile ->', err)
             props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error updating credentials!', null)
         }).finally(() => {
-            setIsLoading(false)
+            if (password.text.length || passwordCheck.text.length) {
+                setTimeout(() => {
+                    setIsLoading(false)
+                }, 1000)
+            } else {
+                setIsLoading(false)
+            }
         })
     }
 
@@ -159,7 +170,7 @@ export const UpdateUserModal = (props: Props) => {
                     color="green"
                     loading={isLoading}
                     disabled={isLoading}
-                    onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, 'Change profile', 'Are you sure to change your profile? You have to reaload de app.', handleUpdateUser)}
+                    onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, 'Change password', 'Are you sure to change your password?', handleUpdateUser)}
                 >
                     Confirm
                 </Button>
