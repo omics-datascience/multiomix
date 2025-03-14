@@ -110,7 +110,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     editCGDSStudy = (CGDSStudy: DjangoCGDSStudy) => {
         const CGDSStudyCopy = copyObject(CGDSStudy)
-
         // Parse optional text fields to prevent React errors because null values
         CGDSStudyCopy.description = CGDSStudyCopy.description ?? ''
         CGDSStudyCopy.url_study_info = CGDSStudyCopy.url_study_info ?? ''
@@ -121,7 +120,9 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         CGDSStudyCopy.clinical_patient_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_patient_dataset)
         CGDSStudyCopy.clinical_sample_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_sample_dataset)
 
-        this.setState({ newCGDSStudy: CGDSStudyCopy })
+        this.setState({
+            newCGDSStudy: CGDSStudyCopy
+        })
     }
 
     /**
@@ -171,38 +172,39 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
         }
 
         this.setState({ addingOrEditingCGDSStudy: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy }).then((response) => {
-                this.setState({ addingOrEditingCGDSStudy: false })
-                response.json().then((CGDSStudy: DjangoCGDSStudy) => {
-                    if (CGDSStudy && CGDSStudy.id) {
-                        // If all is OK, resets the form and gets the User's tag to refresh the list
-                        this.cleanForm()
-                    }
-                }).catch((err) => {
-                    alertGeneralError()
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                this.setState({ addingOrEditingCGDSStudy: false })
-
-                if (err.response?.status === 400) {
-                    err.response.json().then((errResponse) => {
-                        const errData = errResponse.status
-
-                        if (errData.internal_code === DjangoCreateCGDSStudyResponseCode.CGDS_WITH_DUPLICATED_COLLECTION_NAME) {
-                            alert(errData.message)
-                        } else {
-                            alertGeneralError()
+            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy, timeout: 20000 })
+                .then((response) => {
+                    this.setState({ addingOrEditingCGDSStudy: false })
+                    response.json().then((CGDSStudy: DjangoCGDSStudy) => {
+                        if (CGDSStudy && CGDSStudy.id) {
+                            // If all is OK, resets the form and gets the User's tag to refresh the list
+                            this.cleanForm()
                         }
-                    }).catch(() => {
+                    }).catch((err) => {
                         alertGeneralError()
+                        console.log('Error parsing JSON ->', err)
                     })
-                } else {
-                    alertGeneralError()
-                }
+                }).catch((err) => {
+                    this.setState({ addingOrEditingCGDSStudy: false })
 
-                console.log('Error adding new CGDSStudy ->', err)
-            })
+                    if (err.response?.status === 400) {
+                        err.response.json().then((errResponse) => {
+                            const errData = errResponse.status
+
+                            if (errData.internal_code === DjangoCreateCGDSStudyResponseCode.CGDS_WITH_DUPLICATED_COLLECTION_NAME) {
+                                alert(errData.message)
+                            } else {
+                                alertGeneralError()
+                            }
+                        }).catch(() => {
+                            alertGeneralError()
+                        })
+                    } else {
+                        alertGeneralError()
+                    }
+
+                    console.log('Error adding new CGDSStudy ->', err)
+                })
         })
     }
 
@@ -406,6 +408,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     /**
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
+     *
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
@@ -413,6 +416,12 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
 
         if (dataset !== null) {
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
+
+            /** These tuples are very common, so they are set by default the first time. */
+            if (dataset.header_row_index === 0) {
+                newElement.event_column = 'OS_STATUS'
+                newElement.time_column = 'OS_MONTH'
+            }
 
             if (dataset.survival_columns === undefined) {
                 dataset.survival_columns = []
@@ -575,11 +584,13 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
      */
     addCGDSDataset = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
+
+        const headerRowIndex = (datasetName === 'clinical_patient_dataset' || datasetName === 'clinical_sample_dataset') ? 4 : 0
         newCGDSStudy[datasetName] = {
             file_path: '',
             separator: CGDSDatasetSeparator.TAB,
             observation: '',
-            header_row_index: 0,
+            header_row_index: headerRowIndex,
             mongo_collection_name: '',
             is_cpg_site_id: true, // Always is true for CGDS
             platform: DjangoMethylationPlatform.PLATFORM_450
@@ -936,36 +947,36 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                     <Table.Cell textAlign='center'>{this.generateDatasetCell(CGDSStudyFileRow.clinical_sample_dataset, true)}</Table.Cell>
                                                     <Table.Cell textAlign='center'>{this.generateStudyCell(CGDSStudyFileRow.state)}</Table.Cell>
                                                     {userIsAdmin &&
-                                                    <Table.Cell>
-                                                        {/* Sync button */}
-                                                        <Icon
-                                                            name='sync alternate'
-                                                            color='blue'
-                                                            className='clickable'
-                                                            title='Sync study'
-                                                            loading={studyState.loading}
-                                                            disabled={studyState.loading || this.state.sendingSyncRequest}
-                                                            onClick={() => this.confirmCGDSStudySync(CGDSStudyFileRow)}
-                                                        />
-
-                                                        {/* Edit button */}
-                                                        <Icon
-                                                            name='pencil'
-                                                            color='yellow'
-                                                            className='clickable margin-left-30'
-                                                            title='Edit study'
-                                                            disabled={studyState.loading || this.state.sendingSyncRequest}
-                                                            onClick={() => this.editCGDSStudy(CGDSStudyFileRow)}
-                                                        />
-
-                                                        {/* Stop button */}
-                                                        {isInProcess &&
-                                                            <StopExperimentButton
-                                                                title='Stop CGDS study synchronization'
-                                                                onClick={() => this.setState({ selectedCGDSStudyToStop: CGDSStudyFileRow })}
+                                                        <Table.Cell>
+                                                            {/* Sync button */}
+                                                            <Icon
+                                                                name='sync alternate'
+                                                                color='blue'
+                                                                className='clickable'
+                                                                title='Sync study'
+                                                                loading={studyState.loading}
+                                                                disabled={studyState.loading || this.state.sendingSyncRequest}
+                                                                onClick={() => this.confirmCGDSStudySync(CGDSStudyFileRow)}
                                                             />
-                                                        }
-                                                    </Table.Cell>
+
+                                                            {/* Edit button */}
+                                                            <Icon
+                                                                name='pencil'
+                                                                color='yellow'
+                                                                className='clickable margin-left-30'
+                                                                title='Edit study'
+                                                                disabled={studyState.loading || this.state.sendingSyncRequest}
+                                                                onClick={() => this.editCGDSStudy(CGDSStudyFileRow)}
+                                                            />
+
+                                                            {/* Stop button */}
+                                                            {isInProcess &&
+                                                                <StopExperimentButton
+                                                                    title='Stop CGDS study synchronization'
+                                                                    onClick={() => this.setState({ selectedCGDSStudyToStop: CGDSStudyFileRow })}
+                                                                />
+                                                            }
+                                                        </Table.Cell>
                                                     }
                                                 </Table.Row>
                                             )

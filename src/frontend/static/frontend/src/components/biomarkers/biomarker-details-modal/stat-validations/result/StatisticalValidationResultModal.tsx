@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { ActiveStatValidationsItemMenu, StatisticalValidationForTable } from '../../../types'
 import { StatisticalValidationMenu } from '../StatisticalValidationMenu'
 import { StatisticalValidationResultMetrics } from './StatisticalValidationResultMetrics'
-import { Grid, Segment } from 'semantic-ui-react'
+import { Grid, Segment, GridColumn } from 'semantic-ui-react'
 import { StatisticalValidationResultBestFeatures } from './StatisticalValidationResultBestFeatures'
 import { StatisticalValidationResultHeatMap } from './StatisticalValidationResultHeatMap'
 import { StatisticalValidationResultKaplanMeier } from './StatisticalValidationResultKaplanMeier'
@@ -41,27 +41,25 @@ export const StatisticalValidationResultModal = (props: StatisticalValidationRes
 
     return (
         <>
-            <Grid>
-                <Grid.Row columns={2} stretched>
-                    <Grid.Column width={4}>
-                        <Segment>
-                            <StatisticalValidationResultMetrics selectedStatisticalValidation={props.selectedStatisticalValidation} />
-                        </Segment>
-                    </Grid.Column>
-                    <Grid.Column width={12} textAlign='center'>
-                        <Segment>
-                            {/* Menu */}
-                            <StatisticalValidationMenu
-                                activeItem={activeItem}
-                                setActiveItem={setActiveItem}
-                                selectedStatisticalValidation={props.selectedStatisticalValidation}
-                            />
+            <Grid stretched>
+                <GridColumn mobile={16} tablet={16} computer={4}>
+                    <Segment>
+                        <StatisticalValidationResultMetrics selectedStatisticalValidation={props.selectedStatisticalValidation} />
+                    </Segment>
+                </GridColumn>
+                <GridColumn mobile={16} tablet={16} computer={12}>
+                    <Segment>
+                        {/* Menu */}
+                        <StatisticalValidationMenu
+                            activeItem={activeItem}
+                            setActiveItem={setActiveItem}
+                            selectedStatisticalValidation={props.selectedStatisticalValidation}
+                        />
 
-                            {/* Selected menu option */}
-                            {getSelectedComponent()}
-                        </Segment>
-                    </Grid.Column>
-                </Grid.Row>
+                        {/* Selected menu option */}
+                        {getSelectedComponent()}
+                    </Segment>
+                </GridColumn>
             </Grid>
         </>
     )

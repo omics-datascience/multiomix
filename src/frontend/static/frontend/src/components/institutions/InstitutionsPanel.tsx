@@ -1,19 +1,20 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Icon, Segment, Header, Form, DropdownItemProps } from 'semantic-ui-react'
-import { DjangoInstitution, DjangoUserCandidates, DjangoCommonResponse, DjangoAddRemoveUserToInstitutionInternalCode, DjangoResponseCode, DjangoUser } from '../../utils/django_interfaces'
+import { Grid, Icon, Segment, Header, Table, Confirm } from 'semantic-ui-react'
+import { DjangoInstitution, DjangoUserCandidates, DjangoUser } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { alertGeneralError, getDjangoHeader } from '../../utils/util_functions'
-import { InstitutionsList } from './InstitutionsList'
-import { InstitutionUsersInfo } from './InstitutionUsersInfo'
-import { RemoveUserFromInstitutionModal } from './RemoveUserFromInstitutionModal'
-import { Nullable } from '../../utils/interfaces'
+import { getDjangoHeader } from '../../utils/util_functions'
+import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../../utils/interfaces'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { PaginatedTable } from '../common/PaginatedTable'
+import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import InstitutionForm from './InstitutionForm'
+import { InstitutionModal, InstitutionModalState } from './InstitutionModal'
+import { Alert } from '../common/Alert'
 
 // URLs defined in files.html
-declare const urlUserInstitutionsAsAdmin: string
-declare const urlGetUsersCandidates: string
-declare const urlAddRemoveUserToInstitution: string
+declare const urlGetUserInstitutions: string
+declare const urlDeleteInstitution: string
 
 /**
  * Component's state
@@ -29,6 +30,15 @@ interface InstitutionsPanelState {
     removingUserFromInstitution: boolean,
     selectedUserToRemove: Nullable<DjangoUser>,
     showRemoveUserFromInstitutionModal: boolean,
+    modalState: InstitutionModalState,
+    institutionToEdit: Nullable<DjangoInstitution>,
+    alert: CustomAlert,
+    isDeletingInstitution: boolean,
+    confirmModal: ConfirmModal,
+}
+
+export interface InstitutionTableData extends DjangoInstitution {
+    is_user_admin: boolean
 }
 
 /**
@@ -52,21 +62,14 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
             addingRemovingUserToInstitution: false,
             removingUserFromInstitution: false,
             selectedUserToRemove: null,
-            showRemoveUserFromInstitutionModal: false
+            showRemoveUserFromInstitutionModal: false,
+            modalState: this.defaultModalState(),
+            institutionToEdit: null,
+            alert: this.getDefaultAlertProps(),
+            isDeletingInstitution: false,
+            confirmModal: this.getDefaultConfirmModal()
         }
     }
-
-    selectedInstitutionChanged (institution: DjangoInstitution) {
-        this.setState({
-            selectedInstitution: institution
-        })
-    }
-
-    /**
-     * When the component has been mounted, It requests for
-     * tags and files
-     */
-    componentDidMount () { this.getUserInstitutions() }
 
     /**
      * Abort controller if component unmount
@@ -77,194 +80,169 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
     }
 
     /**
-     * Fetches the Institutions which the current user belongs to
+     * Generates a default alert structure
+     * @returns Default alert.
      */
-    getUserInstitutions () {
-        ky.get(urlUserInstitutionsAsAdmin, { signal: this.abortController.signal }).then((response) => {
-            response.json().then((institutions: DjangoInstitution[]) => {
-                // If it's showing an institution, refresh it's state
-                // For example, in the case of adding or removing a user to/from an Institution
-                let newSelectedInstitution: Nullable<DjangoInstitution> = null
-
-                if (this.state.selectedInstitution !== null) {
-                    newSelectedInstitution = institutions.find((institution) => {
-                        return institution.id === this.state.selectedInstitution?.id
-                    }) ?? null
-                }
-
-                this.setState({ institutions, selectedInstitution: newSelectedInstitution })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log("Error getting user's datasets ->", err)
-        })
+    getDefaultAlertProps (): CustomAlert {
+        return {
+            message: '', // This have to change during cycle of component
+            isOpen: false,
+            type: CustomAlertTypes.SUCCESS,
+            duration: 500
+        }
     }
 
     /**
-     * Fetches the User's uploaded files
+     * Default modal.
+     * @returns Confirm modal struct.
      */
-    searchUsers = () => {
-        this.setState({ isFetchingUsersCandidates: true }, () => {
-            const searchParams = {
-                querySearch: this.state.searchUserText
-            }
-            ky.get(urlGetUsersCandidates, { searchParams, signal: this.abortController.signal }).then((response) => {
-                this.setState({ isFetchingUsersCandidates: false })
-                response.json().then((userCandidates: DjangoUserCandidates[]) => {
-                    this.setState({ userCandidates })
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                if (!this.abortController.signal.aborted) {
-                    this.setState({ isFetchingUsersCandidates: false })
-                }
-
-                console.log("Error getting user's datasets ->", err)
-            })
-        })
+    getDefaultConfirmModal = (): ConfirmModal => {
+        return {
+            confirmModal: false,
+            headerText: '',
+            contentText: '',
+            onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+        }
     }
 
     /**
-     * Handles search user input changes
-     * @param value Value to assign to the specified field
+     * Reset the confirm modal, to be used again
      */
-    handleInputChange = (value: string) => {
-        this.setState({ searchUserText: value }, () => {
-            clearTimeout(this.filterTimeout)
-            this.filterTimeout = window.setTimeout(this.searchUsers, 300)
-        })
+    handleCancelConfirmModalState () {
+        this.setState({ confirmModal: this.getDefaultConfirmModal() })
     }
 
     /**
-     * Set a selected Institution in state to show it users
-     * @param selectedInstitution Selected Institution to show users
+     * Changes confirm modal state
+     * @param setOption New state of option
+     * @param headerText Optional text of header in confirm modal, by default will be empty
+     * @param contentText optional text of content in confirm modal, by default will be empty
+     * @param onConfirm Modal onConfirm callback
      */
-    showUsers = (selectedInstitution: DjangoInstitution) => { this.setState({ selectedInstitution }) }
-
-    /**
-     * Cleans the inputs for adding a user to an Institution
-     */
-    cleanSearchAndCandidates () {
-        this.setState({
-            userCandidates: [],
-            selectedUserIdToAdd: null,
-            searchUserText: ''
-        })
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+        const confirmModal = this.state.confirmModal
+        confirmModal.confirmModal = setOption
+        confirmModal.headerText = headerText
+        confirmModal.contentText = contentText
+        confirmModal.onConfirm = onConfirm
+        this.setState({ confirmModal })
     }
 
     /**
-     * Sets as selected a new user to add him to an Institution,
-     * @param selectedUserId Id of the selected user in the Dropdown
+     * Update Alert
+     * @param isOpen flag to open or close alert.
+     * @param type type of alert.
+     * @param message message of alert.
+     * @param callback Callback function if is needed.
+     * @param isEdit option if is in edit mode.
      */
-    selectUser (selectedUserId) { this.setState({ selectedUserIdToAdd: selectedUserId }) }
+    handleUpdateAlert (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) {
+        const alert = this.state.alert
+        alert.isOpen = isOpen
+        alert.type = type
+        alert.message = message
+        let institutionToEdit = this.state.institutionToEdit
+
+        if (isEdit) {
+            institutionToEdit = null
+        }
+
+        if (callback) {
+            callback()
+            this.setState({ alert, institutionToEdit })
+        } else {
+            this.setState({ alert, institutionToEdit })
+        }
+    }
 
     /**
-     * Makes a request to the server to add/remove a User to/from an Institution
-     * @param userId Id of the user to add or remove
-     * @param isAdding True if want to add, false if want to remove
+     * Reset the confirm modal, to be used again
      */
-    addOrRemoveUserToInstitution = (userId: number, isAdding: boolean) => {
-        // Sets the Request's Headers
+    handleCloseAlert = () => {
+        const alert = this.state.alert
+        alert.isOpen = false
+        this.setState({ alert })
+    }
+
+    /**
+     * Default modal attributes
+     * @returns {InstitutionModalState} Default modal
+     */
+    defaultModalState (): InstitutionModalState {
+        return {
+            isOpen: false,
+            institution: null
+        }
+    }
+
+    /**
+     * Close modal
+     */
+    handleCloseModal () {
+        this.setState({ modalState: this.defaultModalState() })
+    }
+
+    /**
+     * Open modal
+     * @param {InstitutionTableData} institution institution for modal.
+     */
+    handleOpenModal (institution: InstitutionTableData) {
+        const modalState = {
+            isOpen: true,
+            institution
+        }
+        this.setState({ modalState })
+    }
+
+    /**
+     * Reset institution.
+     * @param callbackToCancel callbackfunction.
+     */
+    handleResetInstitutionToEdit (callbackToCancel: () => void) {
+        this.setState({ institutionToEdit: null })
+        callbackToCancel()
+    }
+
+    /**
+     * Set form to edit
+     * @param {InstitutionTableData} institution institution for modal.
+     */
+    handleSetInstitutionToEdit (institution: InstitutionTableData) {
+        this.setState({ institutionToEdit: institution })
+    }
+
+    /**
+     * Delete institution.
+     * @param institutionId id from institution to delete.
+     */
+    handleDeleteInstitution (institutionId: number) {
+        const url = `${urlDeleteInstitution}/${institutionId}/`
         const myHeaders = getDjangoHeader()
-
-        const params = {
-            userId,
-            institutionId: this.state.selectedInstitution?.id,
-            isAdding
-        }
-
-        const loadingFlag = isAdding ? 'addingRemovingUserToInstitution' : 'removingUserFromInstitution'
-
-        this.setState<never>({ [loadingFlag]: true }, () => {
-            ky.post(urlAddRemoveUserToInstitution, { headers: myHeaders, json: params }).then((response) => {
-                this.setState<never>({ [loadingFlag]: false })
-                response.json().then((jsonResponse: DjangoCommonResponse<DjangoAddRemoveUserToInstitutionInternalCode>) => {
-                    this.cleanSearchAndCandidates()
-
-                    if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
-                        this.getUserInstitutions()
-                        this.handleClose()
-                    } else {
-                        if (jsonResponse.status.internal_code === DjangoAddRemoveUserToInstitutionInternalCode.CANNOT_REMOVE_YOURSELF) {
-                            alert('You cannot remove yourself from the Institution!')
-                        } else {
-                            alertGeneralError()
-                        }
-                    }
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
+        ky.delete(url, { headers: myHeaders }).then((response) => {
+            response.json().then(() => {
+                this.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Institution deleted!', null)
             }).catch((err) => {
-                this.setState<never>({ [loadingFlag]: false })
-                console.log("Error getting user's datasets ->", err)
+                this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+                console.error('Error parsing JSON ->', err)
             })
+                .finally(() => {
+                    const confirmModal = this.state.confirmModal
+                    confirmModal.confirmModal = false
+                    this.setState({ confirmModal })
+                })
+        }).catch((err) => {
+            this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+            console.error('Error adding new Institution ->', err)
+        }).finally(() => {
+            const confirmModal = this.state.confirmModal
+            confirmModal.confirmModal = false
+            this.setState({ confirmModal })
         })
     }
-
-    /**
-     * Makes a request to the server to add a User from an Institution
-     */
-    addUserToInstitution = () => {
-        if (this.state.selectedUserIdToAdd !== null) {
-            this.addOrRemoveUserToInstitution(this.state.selectedUserIdToAdd, true)
-        }
-    }
-
-    /**
-     * Makes a request to the server to remove a User from an Institution
-     */
-    removeUserFromInstitution = () => {
-        if (this.state.selectedUserToRemove?.id) {
-            this.addOrRemoveUserToInstitution(this.state.selectedUserToRemove.id, false)
-        }
-    }
-
-    /**
-     * Show a modal to confirm a removal of an User from an Institution
-     * @param institutionUser Selected User to remove
-     */
-    confirmFileDeletion = (institutionUser: DjangoUser) => {
-        this.setState({
-            selectedUserToRemove: institutionUser,
-            showRemoveUserFromInstitutionModal: true
-        })
-    }
-
-    /**
-     * Closes the removal confirm modals
-     */
-    handleClose = () => { this.setState({ showRemoveUserFromInstitutionModal: false }) }
-
-    /**
-     * Checks if search input should be enabled or not
-     * @returns True if user can choose a user to add to an Institution, false otherwise
-     */
-    formIsDisabled = (): boolean => !this.state.selectedInstitution || this.state.addingRemovingUserToInstitution
 
     render () {
-        const userOptions: DropdownItemProps[] = this.state.userCandidates.map((userCandidate) => {
-            return {
-                key: userCandidate.id,
-                text: `${userCandidate.username} (${userCandidate.email})`,
-                value: userCandidate.id
-            }
-        })
-
-        const formIsDisabled = this.formIsDisabled()
-
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
-                {/* Modal to confirm User removal from an Institution */}
-                <RemoveUserFromInstitutionModal
-                    selectedUserToRemove={this.state.selectedUserToRemove}
-                    selectedInstitution={this.state.selectedInstitution}
-                    showRemoveUserModal={this.state.showRemoveUserFromInstitutionModal}
-                    removingUserFromInstitution={this.state.removingUserFromInstitution}
-                    handleClose={this.handleClose}
-                    removeUser={this.removeUserFromInstitution}
-                />
                 <Grid columns={2} padded stackable divided stretched={true}>
                     {/* List of institutions */}
                     <Grid.Column width={4} textAlign='left' stretched={true}>
@@ -277,65 +255,112 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                                     </div>
                                 </Header.Content>
                             </Header>
-
-                            <InstitutionsList
+                            <InstitutionForm
+                                institutionToEdit={this.state.institutionToEdit}
+                                handleResetInstitutionToEdit={(callback) => this.handleResetInstitutionToEdit(callback)}
+                                handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback, isEdit)}
+                            />
+                            {/* Todo: remove component
+                              <InstitutionsList
                                 institutions={this.state.institutions}
                                 showUsers={this.showUsers}
                                 selectedInstitution={this.state.selectedInstitution}
-                            />
+                            /> */}
                         </Segment>
                     </Grid.Column>
 
                     {/* Files overview panel */}
                     <Grid.Column width={12}>
                         <Segment>
-                            <Grid stretched={true}>
-                                <Grid.Column width={16} textAlign='left' stretched={true}>
-                                    <Header textAlign="center">
-                                        <Icon name='key' />
-                                        <Header.Content>Manage access</Header.Content>
-                                    </Header>
+                            <PaginatedTable<InstitutionTableData>
+                                headerTitle='Institutions'
+                                headers={[
+                                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
+                                    { name: 'Location', serverCodeToSort: 'location', width: 1 },
+                                    { name: 'Email', serverCodeToSort: 'email', width: 1 },
+                                    { name: 'Phone number', serverCodeToSort: 'telephone_number', width: 1 },
+                                    { name: 'Actions', width: 1 }
+                                ]}
+                                defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
+                                showSearchInput
+                                searchLabel='Name'
+                                searchPlaceholder='Search by name'
+                                urlToRetrieveData={urlGetUserInstitutions}
+                                updateWSKey='update_institutions'
+                                mapFunction={(institution: InstitutionTableData) => {
+                                    return (
+                                        <Table.Row key={institution.id as number}>
+                                            <TableCellWithTitle value={institution.name} />
+                                            <TableCellWithTitle value={institution.location} />
+                                            <TableCellWithTitle value={institution.email} />
+                                            <TableCellWithTitle value={institution.telephone_number} />
+                                            <Table.Cell width={1}>
+                                                {/* Details button */}
+                                                <Icon
+                                                    name='address book'
+                                                    className='clickable'
+                                                    color='blue'
+                                                    title='Details'
+                                                    onClick={() => this.handleOpenModal(institution)}
+                                                />
 
-                                    <Form unstackable={true}>
-                                        <Form.Group fluid>
-                                            {/* User Search */}
-                                            <Form.Dropdown
-                                                fluid
-                                                width={12}
-                                                selection
-                                                search
-                                                options={userOptions}
-                                                value={this.state.selectedUserIdToAdd as number}
-                                                placeholder='Add Users'
-                                                onChange={(_e, { value }) => this.selectUser(value)}
-                                                onSearchChange={(_e, { searchQuery }) => this.handleInputChange(searchQuery)}
-                                                disabled={formIsDisabled}
-                                                loading={this.state.isFetchingUsersCandidates || this.state.addingRemovingUserToInstitution}
-                                            />
+                                                {/* Edit button */}
 
-                                            <Form.Button
-                                                color='green'
-                                                onClick={this.addUserToInstitution}
-                                                disabled={formIsDisabled || !this.state.selectedUserIdToAdd}
-                                                loading={this.state.addingRemovingUserToInstitution}
-                                            >
-                                                Add user
-                                            </Form.Button>
-                                        </Form.Group>
-                                    </Form>
-
-                                </Grid.Column>
-                                <Grid.Column width={12} stretched={true}>
-                                    {/* Institution's Users info */}
-                                    <InstitutionUsersInfo
-                                        selectedInstitution={this.state.selectedInstitution}
-                                        confirmFileDeletion={this.confirmFileDeletion}
-                                    />
-                                </Grid.Column>
-                            </Grid>
+                                                {
+                                                    institution.is_user_admin &&
+                                                        <Icon
+                                                            name='pencil'
+                                                            className='clickable margin-left-5'
+                                                            color='yellow'
+                                                            title={`Edit (${institution.name}`}
+                                                            onClick={() => this.handleSetInstitutionToEdit(institution)}
+                                                        />
+                                                }
+                                                {/* Delete button */}
+                                                {institution.is_user_admin &&
+                                                    <Icon
+                                                        name='trash'
+                                                        className='clickable margin-left-5'
+                                                        color='red'
+                                                        disabled={this.state.isDeletingInstitution}
+                                                        title='Delete Institution'
+                                                        onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
+                                                    />
+                                                }
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    )
+                                }}
+                            />
                         </Segment>
                     </Grid.Column>
                 </Grid>
+                <InstitutionModal
+                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => this.handleUpdateAlert(isOpen, type, message, callback)}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                    handleCloseModal={() => this.handleCloseModal()}
+                    isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution}
+                />
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
+                <Confirm
+                    open={this.state.confirmModal.confirmModal}
+                    header={this.state.confirmModal.headerText}
+                    content={this.state.confirmModal.contentText}
+                    size="large"
+                    onCancel={() => this.handleCancelConfirmModalState()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+                        const confirmModal = this.state.confirmModal
+                        confirmModal.confirmModal = false
+                        this.setState({ confirmModal })
+                    }}
+                />
             </Base>
         )
     }

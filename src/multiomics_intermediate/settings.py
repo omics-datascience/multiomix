@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'inferences',
     'molecules_details',
     'chunked_upload',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -151,6 +152,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+MIN_PASSWORD_LEN: int = int(os.getenv('MIN_PASSWORD_LEN', 8))
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -186,7 +189,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.4.0'
+VERSION: str = '5.5.0'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -296,17 +299,18 @@ EMAIL_MAIL_HTML = 'mail_body.html'
 EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 
-
 # Modulector settings
 MODULECTOR_SETTINGS = {
-    'host': os.getenv('MODULECTOR_HOST', '127.0.0.1'),
-    'port': os.getenv('MODULECTOR_PORT', '8001')
+    'host': os.getenv('MODULECTOR_HOST', 'modulector.multiomix.org'),
+    'port': os.getenv('MODULECTOR_PORT', 443),
+    'protocol': os.getenv('BIOAPI_PROTOCOL', 'https')
 }
 
 # BioAPI settings
 BIOAPI_SETTINGS = {
-    'host': os.getenv('BIOAPI_HOST', '127.0.0.1'),
-    'port': os.getenv('BIOAPI_PORT', '8002')
+    'host': os.getenv('BIOAPI_HOST', 'bioapi.multiomix.org'),
+    'port': os.getenv('BIOAPI_PORT', 443),
+    'protocol': os.getenv('BIOAPI_PROTOCOL', 'https')
 }
 
 # Multiomix-aws-emr

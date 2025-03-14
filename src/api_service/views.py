@@ -14,10 +14,12 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 import api_service.pipelines as pipelines
 from common.enums import ResponseCode
@@ -44,9 +46,11 @@ from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_co
 from .permissions import ExperimentIsNotRunning
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
-    ExperimentClinicalSourceSerializer
+    ExperimentClinicalSourceSerializer, LimitedUserSerializer
 from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
+from institutions.models import Institution
+from institutions.serializers import InstitutionSimpleSerializer, InstitutionSerializer
 
 
 class CorrelationAnalysis(APIView):
@@ -279,6 +283,217 @@ class ExperimentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = ExperimentSerializerDetail
     permission_classes = [permissions.IsAuthenticated, ExperimentIsNotRunning]
+
+class RemoveInstitutionFromExperimentView(APIView):
+    """
+    API endpoint to remove an institution from an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        institution_id = data.get('institutionId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        if not experiment.shared_institutions.filter(id=institution.id).exists():
+            return Response(
+                {"error": "This institution is not associated with the experiment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        experiment.shared_institutions.remove(institution)
+
+        return Response(
+            {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
+        )
+class RemoveUserFromExperimentView(APIView):
+    """
+    API endpoint to remove an user from an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        user_id = data.get('userId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = get_object_or_404(User, id=user_id)
+
+        if not experiment.shared_users.filter(id=user.id).exists():
+            return Response(
+                {"error": "This USER is not associated with the experiment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        experiment.shared_users.remove(user)
+
+        return Response(
+            {"message": f"User {user.id} removed from experiment {experiment.id}."}
+        )
+
+class ToggleExperimentPublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        experiment.is_public = not experiment.is_public
+
+        return Response(
+            {"id": experiment.id, "is_public": experiment.is_public}
+        )
+
+class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution NOT associated with a specific experiment.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institutions not associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        user = self.request.user
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        user_institutions = Institution.objects.filter(users=user)
+        return user_institutions.exclude(
+            id__in=experiment.shared_institutions.values_list('id', flat=True)
+        )
+
+class UsersNonExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users NOT associated with a specific experiment.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users not associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+
+        associated_user_ids = experiment.shared_users.values_list('id', flat=True)
+        return get_user_model().objects.exclude(id__in=associated_user_ids)
+
+class UsersExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users associated with a specific experiment.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        return experiment.shared_users
+
+class InstitutionExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution associated with a specific experiment.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institution associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        return experiment.shared_institutions
+
+class AddInstitutionToExperimentView(APIView):
+    """
+    API endpoint to add an institution to an experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        institution_id = data.get('institutionId')
+        experiment_id = data.get('experimentId')
+
+        if not institution_id or not experiment_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'experimentId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        experiment.shared_institutions.add(institution)
+
+        serializer = InstitutionSerializer(institution)
+        return Response(serializer.data)
+
+class AddUserToExperimentView(APIView):
+    """
+    API endpoint to add an institution to an experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        user_id = data.get('userId')
+        experiment_id = data.get('experimentId')
+
+        if not user_id or not experiment_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'experimentId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        user = get_object_or_404(User, id=user_id)
+
+        experiment.shared_users.add(user)
+
+        serializer = LimitedUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @login_required

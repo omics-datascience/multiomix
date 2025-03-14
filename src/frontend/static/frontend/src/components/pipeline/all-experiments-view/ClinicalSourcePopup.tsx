@@ -71,8 +71,8 @@ interface ClinicalSourceState {
     cgdsStudyName: Nullable<string>,
     /** Alert interface */
     alert: CustomAlert,
-    /** Posibles values for survival tuple */
-    survivalTuplesPossiblesValues: string[],
+    /** Posibles values for survival tuple, undefined prevents rendering an empty Select for CGDS Datasets or user Datasets */
+    survivalTuplesPossiblesValues: string[] | undefined,
 }
 
 /**
@@ -137,8 +137,11 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         clinicalSource.selectedExistingFile = null
         clinicalSource.CGDSStudy = null
         cleanRef(clinicalSource.newUploadedFileRef)
-
-        this.setState({ clinicalSource }, this.updateSourceFilenames)
+        // Clean survival columns
+        const survivalColumns = []
+        // Clean possibles values
+        const survivalTuplesPossiblesValues = []
+        this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
     }
 
     /**
@@ -238,9 +241,10 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                             if (jsonResponse.data.number_samples_in_common > 0) {
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
                                 clinicalSource.selectedExistingFile = selectedFile
-
-                                const survivalColumns = selectedFile.survival_columns ?? []
-                                this.setState({ clinicalSource, survivalColumns }, this.updateSourceFilenames)
+                                const survivalColumns = selectedFile.survival_columns || []
+                                // set undefined to set values for tuple
+                                const survivalTuplesPossiblesValues = undefined
+                                this.setState({ clinicalSource, survivalColumns, survivalTuplesPossiblesValues }, this.updateSourceFilenames)
                             } else {
                                 this.clinicalSourceVoid()
                             }

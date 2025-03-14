@@ -4,8 +4,8 @@ import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } 
 import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, ConfirmModal, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from './types'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal } from '../../utils/interfaces'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -1704,7 +1704,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         {/* Stop button */}
                                         {isInProcess &&
                                             <StopExperimentButton
-                                                title='Stop experiment'
+                                                title='Stop biomarker'
                                                 onClick={() => this.setState({ biomarkerToStop: biomarker })}
                                             />
                                         }
@@ -1712,7 +1712,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                         {/* Delete button */}
                                         {!isInProcess &&
                                             <DeleteExperimentButton
-                                                title='Delete experiment'
+                                                title='Delete biomarker'
                                                 disabled={currentBiomarkerIsLoading}
                                                 onClick={() => this.confirmBiomarkerDeletion(biomarker)}
                                             />

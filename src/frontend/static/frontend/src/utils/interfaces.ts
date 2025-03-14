@@ -319,7 +319,23 @@ enum GenesColors {
     CLINICAL = 'teal'
 }
 
+/** Confirm modal  */
+interface ConfirmModal {
+    confirmModal: boolean,
+    headerText: string,
+    contentText: string,
+    onConfirm: Function,
+}
+
+/** Select SemanticUi list interface */
+interface SemanticListItem {
+    key: string,
+    value: string,
+    text: string
+}
+
 export {
+    SemanticListItem,
     GenesColors,
     CustomAlertTypes,
     CustomAlert,
@@ -355,5 +371,6 @@ export {
     ScoreClassData,
     BinData,
     DataUICategoricalBinnedDatumShape,
-    OkResponse
+    OkResponse,
+    ConfirmModal
 }

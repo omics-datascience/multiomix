@@ -99,13 +99,6 @@ interface Biomarker extends BiomarkerSimple {
     mrnas: SaveMoleculeStructure[]
 }
 
-interface ConfirmModal {
-    confirmModal: boolean,
-    headerText: string,
-    contentText: string,
-    onConfirm: Function,
-}
-
 /** Represents a molecule info to show in molecules Dropdown. */
 type MoleculeSymbol = {
     key: string,
@@ -208,7 +201,9 @@ enum FitnessFunction {
 /** Clustering algorithm. */
 enum ClusteringAlgorithm {
     K_MEANS = 1,
-    SPECTRAL = 2
+    SPECTRAL = 2,
+    BK_MEANS = 3,
+    WARD = 4
 }
 
 /** Clustering metric to optimize. */
@@ -628,7 +623,6 @@ export {
     MoleculesMultipleSelection,
     MoleculesSectionData,
     MoleculeSectionItem,
-    ConfirmModal,
     MoleculeSymbol,
     MoleculesSymbolFinder,
     ClusteringScoringMethod,
