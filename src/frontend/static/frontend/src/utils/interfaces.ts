@@ -324,7 +324,7 @@ interface ConfirmModal {
     confirmModal: boolean,
     headerText: string,
     contentText: string,
-    onConfirm: Function,
+    onConfirm: () => any,
 }
 
 /** Select SemanticUi list interface */

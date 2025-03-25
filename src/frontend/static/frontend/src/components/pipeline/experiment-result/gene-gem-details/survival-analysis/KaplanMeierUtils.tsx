@@ -27,7 +27,7 @@ class Base extends React.Component<{
     width: number,
     height: number,
     children: any
-}, {}> {
+}, any> {
     render () {
         return (
             <svg
@@ -58,7 +58,7 @@ interface KaplanMeierSeriesProps {
 /**
  * Renders Kaplan-Meier curve for every group
  */
-class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, {}> {
+class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, any> {
     buildCurves (groups, disabledGroups) {
         return groups.map((group, index) => {
             if (disabledGroups[group.label]) {
@@ -103,7 +103,7 @@ interface KaplanMeierCurveProps {
 /**
  * Renders Kaplan-Meier single curve
  */
-class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
+class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, any> {
     collectCensorPoints (data) {
         return data.filter(({ status }) => !status)
     }
@@ -236,7 +236,7 @@ interface LegendProps {
 /**
  * Renders Kaplan-Meier chart's legend
  */
-class Legend extends React.Component<LegendProps, {}> {
+class Legend extends React.Component<LegendProps, any> {
     _onClick (label: string) {
         return () => {
             this.props.toggleGroup(label)
@@ -362,7 +362,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
      */
     findMaxTime (groups: KaplanMeierGroup[]): number {
         return groups.reduce((currentMax, { data }) => {
-            return Math.max(currentMax, Math.max.apply(Math, data.map((sample) => sample.time)))
+            return Math.max(currentMax, Math.max(...data.map((sample) => sample.time)))
         }, -Infinity)
     }
 

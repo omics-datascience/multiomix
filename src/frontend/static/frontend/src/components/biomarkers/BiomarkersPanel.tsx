@@ -98,7 +98,7 @@ interface BiomarkersPanelState {
 /**
  * Renders a CRUD panel for a Biomarker.
  */
-export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
+export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelState> {
     abortController = new AbortController()
     constructor (props) {
         super(props)
@@ -469,7 +469,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         const confirmModal = this.state.confirmModal
         confirmModal.confirmModal = setOption
         confirmModal.headerText = headerText
@@ -1754,14 +1754,16 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
                     style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
                     onClose={() => {
-                        this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
-                            ? this.handleChangeConfirmModalState(
+                        if (this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE) {
+                            this.handleChangeConfirmModalState(
                                 true,
                                 'You are going to lose all the data inserted',
                                 'Are you sure?',
                                 this.closeBiomarkerModal
                             )
-                            : this.closeBiomarkerModal()
+                        } else {
+                            this.closeBiomarkerModal()
+                        }
                     }}
                 >
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&

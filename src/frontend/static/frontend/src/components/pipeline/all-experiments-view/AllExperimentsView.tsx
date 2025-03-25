@@ -38,7 +38,7 @@ interface AllExperimentsViewProps {
     confirmExperimentStop: (experiment: DjangoExperiment) => void,
     handleSortAllExperiments: (headerServerCodeToSort: string) => void,
     handleTableControlChangesAllExperiments: (name: string, value: any, resetPagination?: boolean) => void
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 /**

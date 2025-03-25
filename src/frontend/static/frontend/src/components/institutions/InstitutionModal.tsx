@@ -31,13 +31,13 @@ export interface InstitutionModalState {
 interface Props extends InstitutionModalState {
     /* Close modal function */
     handleCloseModal: VoidFunction,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>): void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
+    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>): void,
 }
 
 /**
  *  Institution modal
- * @param {Props} props  Props for component
+ * @param props  Props for component
  * @returns Component
  */
 export const InstitutionModal = (props: Props) => {

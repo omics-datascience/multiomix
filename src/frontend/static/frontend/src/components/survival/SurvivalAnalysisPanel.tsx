@@ -32,7 +32,7 @@ interface SurvivalAnalysisPanelState {
  * Renders a Survival Analysis panel
  * @returns Component
  */
-class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelState> {
+class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPanelState> {
     abortController = new AbortController()
 
     constructor (props) {

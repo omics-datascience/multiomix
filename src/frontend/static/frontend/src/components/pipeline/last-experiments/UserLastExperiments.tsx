@@ -13,7 +13,7 @@ interface UserLastExperimentsProps {
     addingTag: boolean,
     seeResult: (DjangoExperiment) => void,
     selectExperimentToAssignTag: (experiment: DjangoExperiment) => void,
-    selectTagForLastExperiment: (selectedTagId: any, selectedExperiment: DjangoExperiment) => void,
+    selectTagForLastExperiment: (selectedTagId: number, selectedExperiment: DjangoExperiment) => void,
     confirmExperimentDeletion: (DjangoExperiment) => void,
     handleAddTagInputsChange: (name: string, value: any) => void
     handleKeyDown: (e) => void
