@@ -36,7 +36,6 @@ interface UserDatasetsModalProps {
 
 /**
  * Generates a modal with the User's datasets
- *
  * @returns React Modal component
  * @param props Component's props
  */

@@ -74,7 +74,7 @@ interface FilesManagerState {
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-class FilesManager extends React.Component<{}, FilesManagerState> {
+class FilesManager extends React.Component<unknown, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
     abortController = new AbortController()
@@ -152,7 +152,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
     /**
      * Prevents users from closing browser tag when upload is in process.
-     *
      * @param e Event
      */
     onUnload = e => { // the method that will be used for both add and remove event

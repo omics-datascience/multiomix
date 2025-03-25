@@ -77,7 +77,7 @@ type PipelineState = {
  * Main Pipeline class render. Renders a new experiment form
  * and modals to confirm some actions
  */
-class Pipeline extends React.Component<{}, PipelineState> {
+class Pipeline extends React.Component<any, PipelineState> {
     websocketClient: WebsocketClientCustom
     filterTimeout: number | undefined
     defaultNewExperiment: NewExperiment
@@ -345,7 +345,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         const confirmModal = this.state.confirmModal
         confirmModal.confirmModal = setOption
         confirmModal.headerText = headerText
@@ -363,7 +363,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
 
     /**
      * Default modal.
-     * @returns {ConfirmModal} Confirm modal base
+     * @returns Confirm modal base
      */
     getDefaultConfirmModal = (): ConfirmModal => {
         return {

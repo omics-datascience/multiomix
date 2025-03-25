@@ -68,7 +68,7 @@ const GeneralForm = (props: GeneralFormProps) => {
 /**
  * Renders a Login/Sign up form
  */
-export class LoginSignUpForm extends React.Component<{}, LoginSignUpState> {
+export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
     constructor (props) {
         super(props)
 

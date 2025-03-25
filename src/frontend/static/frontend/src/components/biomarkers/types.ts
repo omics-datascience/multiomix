@@ -268,8 +268,10 @@ interface SVMParameters extends ModelParameters {
 interface RFParameters extends ModelParameters {
     /** Number of trees in the RF. */
     nEstimators: number,
-    /** The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure or
-    until all leaves contain less than min_samples_split samples. */
+    /**
+     * The maximum depth of the tree. If None, then nodes are expanded until all leaves are pure or
+     * until all leaves contain less than `min_samples_split` samples.
+     */
     maxDepth: Nullable<number>,
     /**
      * If true, the algorithm will look for the optimal number of trees during a new TrainedModel request.

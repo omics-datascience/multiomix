@@ -169,7 +169,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                             key: FeatureSelectionAlgorithm.PSO,
                             text: 'PSO',
                             value: FeatureSelectionAlgorithm.PSO,
-                            disabled: true || metaheuristicsAreDisabled // TODO: remove 'true'
+                            disabled: metaheuristicsAreDisabled
                         }
                     ]}
                     value={featureSelection.algorithm}

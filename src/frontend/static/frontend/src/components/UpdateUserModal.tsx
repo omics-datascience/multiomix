@@ -11,8 +11,8 @@ interface Props {
     isOpen: boolean,
     handleClose: VoidFunction,
     currentUser: DjangoUser,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleUpdateAlert: (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
+    handleUpdateAlert: (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => void,
 }
 
 export const UpdateUserModal = (props: Props) => {

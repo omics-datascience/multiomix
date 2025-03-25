@@ -124,7 +124,7 @@ interface MiRNAPipelineProps {
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: NewExperimentSourceStateName) => void,
     /** Function callback to handle GEM FileType changes */
     selectGEMFileType: (fileType: FileType) => void,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 /**

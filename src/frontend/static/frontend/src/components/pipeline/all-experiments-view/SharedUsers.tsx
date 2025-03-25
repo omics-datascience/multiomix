@@ -19,7 +19,7 @@ export interface SharedUsersProps {
 }
 interface Props extends SharedUsersProps {
     handleClose: VoidFunction,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 export const SharedUsers = (props: Props) => {
