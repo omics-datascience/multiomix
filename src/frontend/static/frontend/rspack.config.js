@@ -1,10 +1,10 @@
-const path = require('path');
-const BundleTracker = require('webpack-bundle-tracker');
+const path = require('path')
+const BundleTracker = require('webpack-bundle-tracker')
 
 const PATHS = {
     src: path.join(__dirname, 'src'),
     output: path.join(__dirname, 'dist')
-};
+}
 
 module.exports = {
     entry: {
@@ -31,13 +31,8 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
-                exclude: /node_modules/,
-                use: 'swc-loader' // ✅ Cambiado a swc-loader
-            },
-            {
                 test: /\.css$/,
-                use: ['style-loader', 'css-loader'] // ✅ Soporte para CSS sin MiniCssExtractPlugin
+                use: ['style-loader', 'css-loader']
             },
             {
                 test: /\.(png|jpg|woff|woff2|eot|ttf|svg)$/,
@@ -48,4 +43,4 @@ module.exports = {
     plugins: [
         new BundleTracker({ filename: 'webpack-stats.json' })
     ]
-};
+}

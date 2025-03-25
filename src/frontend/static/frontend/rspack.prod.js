@@ -1,60 +1,25 @@
-const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const LightningCSS = require('lightningcss');
-const browsersList = require('browserslist');
-const common = require('./rspack.config.js');
+const common = require('./rspack.config.js')
 
 module.exports = {
-    ...common, // Combinar manualmente con el archivo base
+    ...common,
     mode: 'production',
     devtool: false,
     module: {
         rules: [
-            ...common.module.rules, // Mantiene reglas de `rspack.config.js`
+            ...common.module.rules, // Keeps rules from `rspack.config.js`
             {
-                test: /\.tsx?$/,
+                test: /\.ts(x)?$/,
                 exclude: /node_modules/,
-                use: {
-                    loader: 'swc-loader',
-                    options: {
-                        module: {
-                            type: 'es6',
-                            strict: false
-                        },
-                        minify: true,
-                        isModule: true,
-                        jsc: {
-                            target: 'es2016',
-                            parser: {
-                                syntax: 'typescript',
-                                tsx: true,
-                                decorators: true
-                            },
-                            transform: {
-                                react: {
-                                    runtime: 'automatic'
-                                }
-                            }
+                loader: 'builtin:swc-loader',
+                options: {
+                    jsc: {
+                        parser: {
+                            syntax: 'typescript'
                         }
                     }
-                }
+                },
+                type: 'javascript/auto'
             }
         ]
-    },
-    optimization: {
-        minimize: true,
-        minimizer: [
-            new TerserPlugin({
-                minify: TerserPlugin.swcMinify,
-            }),
-            new CssMinimizerPlugin({
-                minify: CssMinimizerPlugin.lightningCssMinify,
-                minimizerOptions: {
-                    safe: true,
-                    targets: LightningCSS.browserslistToTargets(browsersList('>= 0.25%'))
-                }
-            })
-        ]
     }
-};
+}
