@@ -1,21 +1,19 @@
-const { merge } = require('webpack-merge')
-const common = require('./webpack.common.js')
+const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const LightningCSS = require('lightningcss');
+const browsersList = require('browserslist');
+const common = require('./rspack.config.js');
 
-// Plugins
-const TerserPlugin = require('terser-webpack-plugin')
-const MiniCssExtractPlugin = require('css-minimizer-webpack-plugin')
-const LightningCSS = require('lightningcss')
-const browsersList = require('browserslist')
-
-module.exports = merge(common, {
+module.exports = {
+    ...common, // Combinar manualmente con el archivo base
     mode: 'production',
     devtool: false,
     module: {
         rules: [
-            // Adds support for ts(x) files with swc-loader which transpiles fast but can NOT show Typescript error during the process
-            // more info at: https://github.com/swc-project/pkgs/issues/21
+            ...common.module.rules, // Mantiene reglas de `rspack.config.js`
             {
-                test: /\.ts(x?)$/,
+                test: /\.tsx?$/,
                 exclude: /node_modules/,
                 use: {
                     loader: 'swc-loader',
@@ -24,7 +22,7 @@ module.exports = merge(common, {
                             type: 'es6',
                             strict: false
                         },
-                        minify: false,
+                        minify: true,
                         isModule: true,
                         jsc: {
                             target: 'es2016',
@@ -48,11 +46,10 @@ module.exports = merge(common, {
         minimize: true,
         minimizer: [
             new TerserPlugin({
-                minify: TerserPlugin.swcMinify
+                minify: TerserPlugin.swcMinify,
             }),
-            new MiniCssExtractPlugin({
-                minify: MiniCssExtractPlugin.lightningCssMinify,
-                // Safe: true prevents problems with z-index
+            new CssMinimizerPlugin({
+                minify: CssMinimizerPlugin.lightningCssMinify,
                 minimizerOptions: {
                     safe: true,
                     targets: LightningCSS.browserslistToTargets(browsersList('>= 0.25%'))
@@ -60,4 +57,4 @@ module.exports = merge(common, {
             })
         ]
     }
-})
+};
