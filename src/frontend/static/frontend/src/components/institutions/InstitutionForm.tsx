@@ -27,7 +27,7 @@ declare const urlEditInstitution: string
 interface Props {
     institutionToEdit: Nullable<DjangoInstitution>,
     handleResetInstitutionToEdit: (callbackToCancel: () => void) => void,
-    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean): void,
+    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>, isEdit?: boolean): void,
 }
 
 const InstitutionForm = (props: Props) => {

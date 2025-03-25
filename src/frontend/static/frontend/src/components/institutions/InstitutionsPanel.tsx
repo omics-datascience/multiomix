@@ -45,7 +45,7 @@ export interface InstitutionTableData extends DjangoInstitution {
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelState> {
+export class InstitutionsPanel extends React.Component<unknown, InstitutionsPanelState> {
     filterTimeout: number | undefined
     abortController = new AbortController()
 
@@ -119,7 +119,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         const confirmModal = this.state.confirmModal
         confirmModal.confirmModal = setOption
         confirmModal.headerText = headerText
@@ -136,7 +136,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
      * @param callback Callback function if is needed.
      * @param isEdit option if is in edit mode.
      */
-    handleUpdateAlert (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) {
+    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>, isEdit?: boolean) {
         const alert = this.state.alert
         alert.isOpen = isOpen
         alert.type = type
@@ -166,7 +166,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
 
     /**
      * Default modal attributes
-     * @returns {InstitutionModalState} Default modal
+     * @returns Default modal
      */
     defaultModalState (): InstitutionModalState {
         return {
@@ -184,7 +184,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
 
     /**
      * Open modal
-     * @param {InstitutionTableData} institution institution for modal.
+     * @param institution institution for modal.
      */
     handleOpenModal (institution: InstitutionTableData) {
         const modalState = {
@@ -205,7 +205,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
 
     /**
      * Set form to edit
-     * @param {InstitutionTableData} institution institution for modal.
+     * @param institution institution for modal.
      */
     handleSetInstitutionToEdit (institution: InstitutionTableData) {
         this.setState({ institutionToEdit: institution })
@@ -258,7 +258,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                             <InstitutionForm
                                 institutionToEdit={this.state.institutionToEdit}
                                 handleResetInstitutionToEdit={(callback) => this.handleResetInstitutionToEdit(callback)}
-                                handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback, isEdit)}
+                                handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>, isEdit?: boolean) => this.handleUpdateAlert(isOpen, type, message, callback, isEdit)}
                             />
                             {/* Todo: remove component
                               <InstitutionsList
@@ -336,7 +336,7 @@ export class InstitutionsPanel extends React.Component<{}, InstitutionsPanelStat
                     </Grid.Column>
                 </Grid>
                 <InstitutionModal
-                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => this.handleUpdateAlert(isOpen, type, message, callback)}
+                    handleUpdateAlert={(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => this.handleUpdateAlert(isOpen, type, message, callback)}
                     handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                     handleCloseModal={() => this.handleCloseModal()}
                     isOpen={this.state.modalState.isOpen} institution={this.state.modalState.institution}

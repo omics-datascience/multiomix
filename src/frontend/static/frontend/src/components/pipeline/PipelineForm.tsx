@@ -54,7 +54,7 @@ interface PipelineFormProps {
  * Renders a form to submit an experiment/pipeline
  * @param props Component's props
  */
-export class PipelineForm extends React.Component<PipelineFormProps, {}> {
+export class PipelineForm extends React.Component<PipelineFormProps, any> {
     /**
      * Checks if user can submit the files to run a pipeline
      * @returns True if can submit, false otherwise

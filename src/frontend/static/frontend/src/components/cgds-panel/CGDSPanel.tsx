@@ -55,7 +55,7 @@ enum SyncStrategy {
  * Renders a CRUD panel for a CGDS Studies and their datasets
  * @returns Component
  */
-class CGDSPanel extends React.Component<{}, CGDSPanelState> {
+class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     constructor (props) {
         super(props)
 
@@ -408,7 +408,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     /**
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
-     *
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy

@@ -71,7 +71,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    const handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    const handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         setConfirm(prevState => ({
             ...prevState,
             confirmModal: setOption,
@@ -88,7 +88,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
      * @param message message of alert.
      * @param callback Callback function if is needed.
      */
-    const handleUpdateAlert = (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => {
+    const handleUpdateAlert = (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => {
         if (callback) {
             callback()
             setAlert(prevState => ({ ...prevState, isOpen, type, message }))

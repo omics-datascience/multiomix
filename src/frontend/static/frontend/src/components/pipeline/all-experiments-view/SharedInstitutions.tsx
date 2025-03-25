@@ -23,7 +23,7 @@ export interface SharedInstitutionsProps {
 }
 interface Props extends SharedInstitutionsProps {
     handleClose: VoidFunction,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 interface InstitutionUserListProps {
