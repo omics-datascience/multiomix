@@ -49,11 +49,11 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
                 <Table.Cell textAlign='center'>
                     <Button
                         basic
-                        color="blue"
+                        color='blue'
                         icon
-                        title="See in NCBI"
-                        className="borderless-button"
-                        as='a' href={drugRow.pubmed} target="_blank"
+                        title='See in NCBI'
+                        className='borderless-button'
+                        as='a' href={drugRow.pubmed} target='_blank'
                     >
                         <Icon
                             name='file'
@@ -79,7 +79,7 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
     ]
 
     return (
-        <React.Fragment>
+        <>
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNADrugsJSON>
@@ -97,6 +97,6 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
                 urlToRetrieveData={urlMiRNAeDrugs}
                 mapFunction={mapFunction}
             />
-        </React.Fragment>
+        </>
     )
 }

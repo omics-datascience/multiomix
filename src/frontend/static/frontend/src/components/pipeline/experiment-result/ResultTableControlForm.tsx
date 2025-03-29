@@ -25,7 +25,7 @@ interface ResultTableControlFormProps {
     /** Total number of combinations */
     totalNumberOfCombinations: number,
     /** Callback for changes in form */
-    handleTableControlChanges: (field: keyof ExperimentResultTableControl, value) => void,
+    onHandleTableControlChanges: (field: keyof ExperimentResultTableControl, value) => void,
     /** Callback for changes in (adjusted) p-values precision only */
     changePrecisionState: (showHighPrecision: boolean) => void,
     /** Callback for reset filters and sorting */
@@ -98,36 +98,36 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                     placeholder={`Search by ${props.gemDescription} or mRNA`}
                     name='textFilter'
                     value={props.tableControl.textFilter}
-                    onChange={(_, { name, value }) => props.handleTableControlChanges(name, value)}
+                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
                 />
 
                 {/* Correlation threshold */}
                 <Form.Field width={6}>
                     <Label
                         id='slider-cor-filter-label'
-                        className="align-center bolder"
+                        className='align-center bolder'
                     >
                         Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}
                     </Label>
 
                     <SingleRangeSlider
                         value={props.tableControl.coefficientThreshold}
-                        color="green"
+                        color='green'
                         defaultMinValue={props.minimumCoefficientThreshold}
                         className='margin-bottom-5'
                         defaultMaxValue={0.95}
                         step={0.05}
-                        onChange={(value: number) => props.handleTableControlChanges('coefficientThreshold', value)}
+                        onChange={(value: number) => props.onHandleTableControlChanges('coefficientThreshold', value)}
                     />
 
                     <Label
-                        id="label-minimum-threshold"
-                        color="green"
-                        className="pull-left"
+                        id='label-minimum-threshold'
+                        color='green'
+                        className='pull-left'
                     >
                         {props.minimumCoefficientThreshold.toFixed(2)}
                     </Label>
-                    <Label color="green" className="pull-right">0.95</Label>
+                    <Label color='green' className='pull-right'>0.95</Label>
                 </Form.Field>
 
                 {/* Correlation type */}
@@ -139,7 +139,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                     options={selectCorrelationTypeOptions}
                     name='correlationType'
                     value={props.tableControl.correlationType}
-                    onChange={(_, { name, value }) => props.handleTableControlChanges(name, value)}
+                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
                 />
 
                 {/* Page size */}
@@ -151,7 +151,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                     options={selectPageSizeOptions}
                     name='pageSize'
                     value={props.tableControl.pageSize}
-                    onChange={(_, { name, value }) => props.handleTableControlChanges(name, value)}
+                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
                 />
 
                 <Form.Button

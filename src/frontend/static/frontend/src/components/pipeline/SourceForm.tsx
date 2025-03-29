@@ -140,7 +140,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             case SourceType.NEW_DATASET: {
                 const current = this.props.source.newUploadedFileRef.current
                 component = (
-                    <React.Fragment>
+                    <>
                         <UploadButton
                             color={current && current.files.length > 0 ? 'green' : 'blue'}
                             content={sourceFilename}
@@ -149,14 +149,13 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                             fileChangeEvent={this.props.selectNewFile}
                         />
 
-                        <Label style={{ width: '100%' }} className="margin-top-2" color="yellow">
+                        <Label style={{ width: '100%' }} className='margin-top-2' color='yellow'>
                             The file will be added to "Datasets/Multiomix"
                         </Label>
 
                         {current && current.files.length > 0 &&
-                            <HugeFileAdvice fileSize={current.files[0].size} />
-                        }
-                    </React.Fragment>
+                            <HugeFileAdvice fileSize={current.files[0].size} />}
+                    </>
                 )
                 break
             }
@@ -164,8 +163,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             case SourceType.UPLOADED_DATASETS:
                 component = (
                     <Label
-                        className="clickable full-width"
-                        title="Select your dataset"
+                        className='clickable full-width'
+                        title='Select your dataset'
                         color={this.props.source.selectedExistingFile !== null ? 'green' : 'red'}
                         onClick={this.openUsersDatasetsSelectionModal}
                     >
@@ -176,8 +175,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
             case SourceType.CGDS:
                 component = (
                     <Label
-                        className="clickable full-width"
-                        title="Select your dataset"
+                        className='clickable full-width'
+                        title='Select your dataset'
                         color={this.props.source.CGDSStudy !== null ? 'green' : 'red'}
                         onClick={this.openCGDSDatasetsSelectionModal}
                     >
@@ -295,9 +294,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         selectStudy={this.selectStudy}
                         handleClose={this.handleClose}
                         markStudyAsSelected={this.markStudyAsSelected}
-                    />
-                }
-                <Header as='h4' icon={isIcon} image={!isIcon} textAlign="center">
+                    />}
+                <Header as='h4' icon={isIcon} image={!isIcon} textAlign='center'>
                     {icon}
                     {this.props.headerTitle.split(' ').map((text, index) => (
                         <React.Fragment key={index}>
@@ -315,7 +313,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         fluid
                         floating
                         disabled={this.props.disabled}
-                        className="margin-bottom-2"
+                        className='margin-bottom-2'
                         value={this.props.source.type as SourceType}
                         options={selectOptions}
                         placeholder='Select dataset...'

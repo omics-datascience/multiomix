@@ -291,8 +291,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                         <StopExperimentButton
                                             title='Stop trained model'
                                             onClick={() => setTrainedModelToStop(trainedModel)}
-                                        />
-                                    }
+                                        />}
 
                                     {/* Delete button */}
                                     {!isInProcess &&
@@ -300,13 +299,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                             disabled={!trainedModel.can_be_deleted}
                                             title={trainedModel.can_be_deleted
                                                 ? 'Delete trained model'
-                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'
-                                            }
+                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'}
                                             onClick={() => setTrainedModelToRemove(trainedModel)}
-                                        />
-                                    }
-                                </Table.Cell>
-                            }
+                                        />}
+                                </Table.Cell>}
                         </Table.Row>
                     )
                 }}

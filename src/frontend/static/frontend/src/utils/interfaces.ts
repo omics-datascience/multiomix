@@ -193,7 +193,7 @@ interface ResponseRequestWithPagination<T> {
 /**
  * Possible CGDS dataset name in a CGDS Study
  */
-type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'methylation_dataset' | 'clinical_patient_dataset' | 'clinical_sample_dataset';
+type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'methylation_dataset' | 'clinical_patient_dataset' | 'clinical_sample_dataset'
 
 /**
  * State icon info
@@ -324,7 +324,7 @@ interface ConfirmModal {
     confirmModal: boolean,
     headerText: string,
     contentText: string,
-    onConfirm: Function,
+    onConfirm: () => any,
 }
 
 /** Select SemanticUi list interface */

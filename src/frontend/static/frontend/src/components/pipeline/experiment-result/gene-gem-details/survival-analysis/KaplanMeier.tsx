@@ -290,7 +290,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     selection
                                     clearable
                                     multiple
-                                    name="fieldsInterest"
+                                    name='fieldsInterest'
                                     value={this.state.fieldsInterest}
                                     onChange={(_, { name, value }) => this.handleChange(name, value)}
                                     placeholder='Select some fields'
@@ -309,8 +309,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     >
                                         The fields of interest were inferred from common values
                                     </Label>
-                                </Form.Field>
-                            }
+                                </Form.Field>}
 
                         </Form.Group>
                     </Form>

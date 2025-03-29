@@ -541,14 +541,14 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     trigger={
                         <Icon
                             title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
-                            name="file"
+                            name='file'
                             className={clinicalButtonClassName}
                             color={experiment.clinical_source_id ? 'blue' : 'grey'}
                             disabled={clinicalIsDisabled}
                         />
                     }
                 >
-                    <React.Fragment>
+                    <>
                         {/* If it's a CGDSDataset as clinical source it can't be edited */}
                         {this.state.cgdsStudyName
                             ? <Label color='green'>{this.state.cgdsStudyName}</Label>
@@ -599,8 +599,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                                 removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                                                 survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
                                             />
-                                        </Grid.Column>
-                                    }
+                                        </Grid.Column>}
                                 </Grid>
                             )}
 
@@ -626,9 +625,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                 disabled={isProcessing}
                             >
                                 Unlink
-                            </Button>
-                        }
-                    </React.Fragment>
+                            </Button>}
+                    </>
                 </Popup>
                 <Alert
                     onClose={this.handleCloseAlert}

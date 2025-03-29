@@ -55,7 +55,7 @@ enum SyncStrategy {
  * Renders a CRUD panel for a CGDS Studies and their datasets
  * @returns Component
  */
-class CGDSPanel extends React.Component<{}, CGDSPanelState> {
+class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     constructor (props) {
         super(props)
 
@@ -408,7 +408,6 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
     /**
      * Adds a Survival data tuple for a CGDSDataset
      * @param datasetName Name of the edited CGDS dataset
-     *
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
         const newCGDSStudy = this.state.newCGDSStudy
@@ -534,8 +533,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                     </p>
 
                     {!this.state.selectedCGDSStudyToSync.is_last_version &&
-                        <p>New versions of a Study can only be done from its last version</p>
-                    }
+                        <p>New versions of a Study can only be done from its last version</p>}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
@@ -571,8 +569,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                             disabled={this.state.sendingSyncRequest}
                         >
                             Create new version and sync
-                        </Button>
-                    }
+                        </Button>}
                 </Modal.Actions>
             </Modal>
         )
@@ -910,8 +907,7 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                             cleanForm={this.cleanForm}
                                             isFormEmpty={this.isFormEmpty}
                                         />
-                                    </Grid.Column>
-                                }
+                                    </Grid.Column>}
                                 {/* List of CGDS Studies */}
                                 <Grid.Column width={userIsAdmin ? 13 : 16} textAlign='center'>
                                     <PaginatedTable<DjangoCGDSStudy>
@@ -974,10 +970,8 @@ class CGDSPanel extends React.Component<{}, CGDSPanelState> {
                                                                 <StopExperimentButton
                                                                     title='Stop CGDS study synchronization'
                                                                     onClick={() => this.setState({ selectedCGDSStudyToStop: CGDSStudyFileRow })}
-                                                                />
-                                                            }
-                                                        </Table.Cell>
-                                                    }
+                                                                />}
+                                                        </Table.Cell>}
                                                 </Table.Row>
                                             )
                                         }}

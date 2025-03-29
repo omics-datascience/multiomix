@@ -128,8 +128,8 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
                 text: 'Coefficient'
             },
             type: 'category',
-            min: Math.ceil(Math.min.apply(Math, coefficients) - EPSILON),
-            max: Math.ceil(Math.max.apply(Math, coefficients) + EPSILON)
+            min: Math.ceil(Math.min(...coefficients) - EPSILON),
+            max: Math.ceil(Math.max(...coefficients) + EPSILON)
         },
         noData: {
             text: 'No significant features found for this statistical validation'
@@ -139,12 +139,10 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
     return (
         <>
             {loading &&
-                <ResultPlaceholder />
-            }
+                <ResultPlaceholder />}
 
             {(!loading && statValidationData !== null) &&
-                <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={440} />
-            }
+                <ReactApexChart options={chartOptions} series={chartSeries} type='bar' height={440} />}
         </>
     )
 }

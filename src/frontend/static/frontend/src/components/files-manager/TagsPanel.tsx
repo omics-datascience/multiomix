@@ -73,7 +73,7 @@ export const TagsPanel = (props: TagsPanelProps) => {
 
     return (
         <Segment>
-            <Header textAlign="center">
+            <Header textAlign='center'>
                 <Icon name='tags' />
                 <Header.Content>My Tags</Header.Content>
             </Header>
@@ -83,12 +83,12 @@ export const TagsPanel = (props: TagsPanelProps) => {
                 tag={props.newTag}
                 disableInputs={props.addingTag}
                 loading={props.addingTag}
-                handleAddTagInputsChange={props.handleAddTagInputsChange}
-                handleKeyDown={props.handleKeyDown}
+                onHandleAddTagInputsChange={props.handleAddTagInputsChange}
+                onHandleKeyDown={props.handleKeyDown}
             />
 
             {/* Tag List */}
-            <List className="margin-top-5" divided relaxed verticalAlign='middle'>
+            <List className='margin-top-5' divided relaxed verticalAlign='middle'>
                 {tagsItems}
             </List>
         </Segment>

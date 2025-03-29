@@ -223,8 +223,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                         Group by clinical
                                     </Button>
                                 </Button.Group>
-                            </Form.Field>
-                        }
+                            </Form.Field>}
 
                         {/* Clinical attribute select */}
                         {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') &&
@@ -238,8 +237,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 onChange={(_, { value }) => { setSelectedClinicalAttribute(value as string) }}
                                 placeholder='Clinical attribute to group by'
                                 disabled={clinicalAttributesOptions.length === 0}
-                            />
-                        }
+                            />}
                     </Form>
 
                     {/* TODO: add InfoPopups for every metric and their interpretation. */}
@@ -271,8 +269,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             <Modal.Actions>
                                 <Button onClick={() => setShowSamplesAndClusters(false)}>Close</Button>
                             </Modal.Actions>
-                        </Modal>
-                    }
+                        </Modal>}
                 </GridColumn>
             </Grid.Row>
         </Grid>

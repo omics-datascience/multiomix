@@ -57,8 +57,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                         name='nEstimators'
                         value={props.parameters.nEstimators}
                         onChange={props.handleChangeParams}
-                    />
-                }
+                    />}
 
                 <Form.Input
                     fluid

@@ -23,7 +23,7 @@ export interface SharedInstitutionsProps {
 }
 interface Props extends SharedInstitutionsProps {
     handleClose: VoidFunction,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 interface InstitutionUserListProps {
@@ -226,8 +226,7 @@ export const SharedInstitutions = (props: Props) => {
                                                             title='Remove institution'
                                                             onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
                                                         />
-                                                    )
-                                                }
+                                                    )}
                                             </div>
                                         </ListItem>
                                     ))}

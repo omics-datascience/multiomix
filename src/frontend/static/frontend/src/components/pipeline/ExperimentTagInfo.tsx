@@ -46,7 +46,7 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
                 fluid
                 search
                 selection
-                className="margin-top-2"
+                className='margin-top-2'
                 options={props.tagOptions}
                 clearable
                 onChange={(_e, { value }) => props.selectTagForNewExperiment(value)}
@@ -61,8 +61,8 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
                 tag={props.newTag}
                 disableInputs={props.addingTag}
                 loading={props.addingTag}
-                handleAddTagInputsChange={props.handleAddTagInputsChange}
-                handleKeyDown={props.handleKeyDown}
+                onHandleAddTagInputsChange={props.handleAddTagInputsChange}
+                onHandleKeyDown={props.handleKeyDown}
             />
         )
         : null
@@ -70,7 +70,7 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
     const buttonRemoveTag = isTagSelected
         ? (
             <Icon
-                className="clickable margin-left-2"
+                className='clickable margin-left-2'
                 name='trash'
                 color='red'
                 title='Remove Tag'
@@ -80,18 +80,18 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
         : null
 
     return (
-        <Card.Meta className="margin-top-10 align-left">
+        <Card.Meta className='margin-top-10 align-left'>
             <Label
                 id='label-new-experiment-selected-tag'
                 color={isTagSelected ? 'yellow' : 'grey'}
-                className="margin-bottom-2 align-center"
+                className='margin-bottom-2 align-center'
                 title={isTagSelected ? props.experiment.tag.description : ''}
             >
                 {isTagSelected ? props.experiment.tag.name : 'No tag assigned'}
             </Label>
 
             <Icon
-                className="clickable margin-left-2"
+                className='clickable margin-left-2'
                 name={props.isSelectingTag ? 'times' : 'pencil'}
                 color={props.isSelectingTag ? 'red' : 'yellow'}
                 title={props.isSelectingTag ? 'Cancel' : 'Edit'}

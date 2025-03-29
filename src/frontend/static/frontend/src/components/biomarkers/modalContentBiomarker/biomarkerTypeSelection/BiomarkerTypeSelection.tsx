@@ -25,7 +25,7 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
     ]
     return (
         <>
-            <Header as="h2" textAlign="center">
+            <Header as='h2' textAlign='center'>
                 Create a new Biomarker
             </Header>
 

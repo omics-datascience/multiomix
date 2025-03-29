@@ -31,13 +31,13 @@ export interface InstitutionModalState {
 interface Props extends InstitutionModalState {
     /* Close modal function */
     handleCloseModal: VoidFunction,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>): void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
+    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>): void,
 }
 
 /**
  *  Institution modal
- * @param {Props} props  Props for component
+ * @param props  Props for component
  * @returns Component
  */
 export const InstitutionModal = (props: Props) => {
@@ -176,8 +176,7 @@ export const InstitutionModal = (props: Props) => {
                             : [
                                 { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
                                 { name: 'Admin', width: 1 }
-                            ]
-                        }
+                            ]}
                         showSearchInput
                         searchLabel='User name'
                         searchPlaceholder='Search by User name'
@@ -243,8 +242,7 @@ export const InstitutionModal = (props: Props) => {
                                                     title='Remove user from Institution'
                                                 />
                                             }
-                                        </Table.Cell>
-                                    }
+                                        </Table.Cell>}
                                 </Table.Row>
                             )
                         }}

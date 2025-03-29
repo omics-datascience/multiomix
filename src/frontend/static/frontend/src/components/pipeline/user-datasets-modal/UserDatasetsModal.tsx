@@ -36,7 +36,6 @@ interface UserDatasetsModalProps {
 
 /**
  * Generates a modal with the User's datasets
- *
  * @returns React Modal component
  * @param props Component's props
  */
@@ -104,7 +103,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                         return (
                             <Table.Row
                                 key={userFile.id as number}
-                                className="clickable"
+                                className='clickable'
                                 active={userFile.id === props.selectedFile?.id}
                                 onClick={() => props.markFileAsSelected(userFile)}
                                 onDoubleClick={() => props.selectFile(userFile)}
@@ -112,8 +111,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                                 <Table.Cell>{userFile.name}</Table.Cell>
                                 <Table.Cell>{userFile.description}</Table.Cell>
                                 {isClinical &&
-                                    <Table.Cell textAlign='center'>{userFile.survival_columns ? userFile.survival_columns.length : 0}</Table.Cell>
-                                }
+                                    <Table.Cell textAlign='center'>{userFile.survival_columns ? userFile.survival_columns.length : 0}</Table.Cell>}
                                 <Table.Cell collapsing textAlign='center'>
                                     <TagLabel tag={userFile.tag} fluid />
                                 </Table.Cell>
@@ -137,7 +135,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                 </Button>
 
                 <Button
-                    color="green"
+                    color='green'
                     onClick={() => props.selectFile(props.selectedFile)}
                     disabled={props.selectedFile === null}
                 >

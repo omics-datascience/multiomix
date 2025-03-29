@@ -70,8 +70,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     max={10}
                     value={props.parameters.nClusters}
                     onChange={props.handleChangeParams}
-                />
-            }
+                />}
 
             <Form.Select
                 fluid
@@ -125,8 +124,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     name='scoringMethod'
                     value={props.parameters.scoringMethod}
                     onChange={props.handleChangeParams}
-                />
-            }
+                />}
 
             <Form.Group widths='equal'>
                 <Form.Input

@@ -65,8 +65,9 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                     queryParams={{ file_type: props.selectingFileType }}
                     mapFunction={(CGDSStudy: DjangoCGDSStudy) => {
                         return (
-                            <Table.Row key={CGDSStudy.id as number}
-                                className="clickable"
+                            <Table.Row
+                                key={CGDSStudy.id as number}
+                                className='clickable'
                                 active={CGDSStudy.id === props.selectedStudy?.id}
                                 onClick={() => props.markStudyAsSelected(CGDSStudy)}
                                 onDoubleClick={() => props.selectStudy(CGDSStudy)}
@@ -81,11 +82,11 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                                 <Table.Cell collapsing textAlign='center'>
                                     <Button
                                         basic
-                                        color="blue"
+                                        color='blue'
                                         icon
-                                        title="See more info"
-                                        className="borderless-button"
-                                        as='a' href={CGDSStudy.url_study_info} target="_blank"
+                                        title='See more info'
+                                        className='borderless-button'
+                                        as='a' href={CGDSStudy.url_study_info} target='_blank'
                                         disabled={!CGDSStudy.url_study_info}
                                     >
                                         <Icon name='info circle' />
@@ -104,7 +105,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                 </Button>
 
                 <Button
-                    color="green"
+                    color='green'
                     onClick={() => props.selectStudy(props.selectedStudy)}
                     disabled={props.selectedStudy === null}
                 >

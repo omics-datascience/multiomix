@@ -74,7 +74,7 @@ interface FilesManagerState {
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-class FilesManager extends React.Component<{}, FilesManagerState> {
+class FilesManager extends React.Component<unknown, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
     abortController = new AbortController()
@@ -152,7 +152,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
     /**
      * Prevents users from closing browser tag when upload is in process.
-     *
      * @param e Event
      */
     onUnload = e => { // the method that will be used for both add and remove event
@@ -810,7 +809,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
                     {/* Files overview panel */}
                     <Grid.Column
-                        id="files-manager-result-column"
+                        id='files-manager-result-column'
                         width={13}
                         textAlign='center'
                     >
@@ -831,12 +830,11 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
                                         {userFileRow.institutions.length > 0 &&
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
-                                                />
-                                        }
+                                        <Icon
+                                            name='building'
+                                            size='large'
+                                            title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                        />}
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
                                     <Table.Cell>
@@ -852,7 +850,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
                                         {userFileRow.is_private_or_institution_admin &&
-                                            <React.Fragment>
+                                            <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
                                                     name='pencil'
@@ -870,8 +868,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                                     title='Delete experiment'
                                                     onClick={() => this.confirmFileDeletion(userFileRow)}
                                                 />
-                                            </React.Fragment>
-                                        }
+                                            </>}
 
                                         {/* Extra information: */}
                                         <Icon
@@ -888,8 +885,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                                 className='margin-left-2'
                                                 color='yellow'
                                                 title='The dataset contains NaN values'
-                                            />
-                                        }
+                                            />}
                                     </Table.Cell>
                                 </Table.Row>
                             )}

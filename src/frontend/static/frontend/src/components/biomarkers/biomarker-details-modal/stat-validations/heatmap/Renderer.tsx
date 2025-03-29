@@ -13,7 +13,7 @@ type RendererProps = {
     data: Dataset;
     setHoveredCell: (hoveredCell: InteractionData | null) => void;
     colorScale: d3.ScaleLinear<string, string, never>;
-};
+}
 
 /**
  * SVG renderer of the HeatMap.
@@ -92,11 +92,11 @@ export const Renderer = (props: RendererProps) => {
                     key={i}
                     x={xScale(name)}
                     y={boundsHeight + 10}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
+                    textAnchor='middle'
+                    dominantBaseline='middle'
                     fontSize={10}
-                    stroke="none"
-                    fill="black"
+                    stroke='none'
+                    fill='black'
                 >
                     {name}
                 </text>
@@ -115,8 +115,8 @@ export const Renderer = (props: RendererProps) => {
                     key={i}
                     x={-5}
                     y={yPos + yScale.bandwidth() / 2}
-                    textAnchor="end"
-                    dominantBaseline="middle"
+                    textAnchor='end'
+                    dominantBaseline='middle'
                     fontSize={10}
                 >
                     {name}

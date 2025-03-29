@@ -1,16 +1,11 @@
 const path = require('path')
 const BundleTracker = require('webpack-bundle-tracker')
 
-// Plugins
-
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-
-// General paths for reusability
 const PATHS = {
     src: path.join(__dirname, 'src'),
     output: path.join(__dirname, 'dist')
 }
+
 module.exports = {
     entry: {
         base: `${PATHS.src}/base.tsx`,
@@ -27,41 +22,25 @@ module.exports = {
     },
     output: {
         path: PATHS.output,
-        filename: '[name]-[contenthash].js'
+        filename: '[name]-[contenthash].js',
+        clean: true
     },
     resolve: {
-        // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: ['.ts', '.tsx', '.js', '.jsx']
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.css']
     },
     module: {
         rules: [
             {
                 test: /\.css$/,
-                use: [
-                    {
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            // you can specify a publicPath here
-                            // by default it uses publicPath in webpackOptions.output
-                            publicPath: '../'
-                        }
-                    },
-                    'css-loader'
-                ]
+                use: ['style-loader', 'css-loader']
             },
             {
                 test: /\.(png|jpg|woff|woff2|eot|ttf|svg)$/,
-                loader: 'url-loader'
+                type: 'asset/resource'
             }
         ]
     },
     plugins: [
-        new CleanWebpackPlugin({
-            protectWebpackAssets: false
-        }),
-        new MiniCssExtractPlugin({
-            filename: '[name]-[contenthash].css'
-        }),
         new BundleTracker({ filename: 'webpack-stats.json' })
     ]
 }

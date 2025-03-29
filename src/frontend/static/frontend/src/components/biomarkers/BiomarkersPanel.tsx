@@ -98,7 +98,7 @@ interface BiomarkersPanelState {
 /**
  * Renders a CRUD panel for a Biomarker.
  */
-export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
+export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelState> {
     abortController = new AbortController()
     constructor (props) {
         super(props)
@@ -469,7 +469,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         const confirmModal = this.state.confirmModal
         confirmModal.confirmModal = setOption
         confirmModal.headerText = headerText
@@ -791,7 +791,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
             }
         })
         let urlToFind: string
-        let json: {[key: string]: string[]}
+        let json: { [key: string]: string[] }
         let keyMolecules: string
 
         switch (this.state.formBiomarker.moleculeSelected) {
@@ -1706,8 +1706,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                             <StopExperimentButton
                                                 title='Stop biomarker'
                                                 onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                            />
-                                        }
+                                            />}
 
                                         {/* Delete button */}
                                         {!isInProcess &&
@@ -1715,8 +1714,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                                                 title='Delete biomarker'
                                                 disabled={currentBiomarkerIsLoading}
                                                 onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                            />
-                                        }
+                                            />}
                                     </>
                                 </Table.Cell>
                             </Table.Row>
@@ -1754,19 +1752,20 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
                     style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
                     onClose={() => {
-                        this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE
-                            ? this.handleChangeConfirmModalState(
+                        if (this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE) {
+                            this.handleChangeConfirmModalState(
                                 true,
                                 'You are going to lose all the data inserted',
                                 'Are you sure?',
                                 this.closeBiomarkerModal
                             )
-                            : this.closeBiomarkerModal()
+                        } else {
+                            this.closeBiomarkerModal()
+                        }
                     }}
                 >
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
-                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />
-                    }
+                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />}
 
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL &&
                         <ManualForm
@@ -1791,8 +1790,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleSendForm={this.handleSendForm}
                             handleChangeCheckBox={this.handleChangeCheckBox}
                             handleRestartSection={this.handleRestartSection}
-                        />
-                    }
+                        />}
 
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION &&
                         <FeatureSelectionPanel
@@ -1815,8 +1813,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                             handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
                             handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
                             cancelForm={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
-                        />
-                    }
+                        />}
                 </Modal>
 
                 {/* Biomarker details modal. */}
@@ -1837,7 +1834,7 @@ export class BiomarkersPanel extends React.Component<{}, BiomarkersPanelState> {
                     open={this.state.confirmModal.confirmModal}
                     header={this.state.confirmModal.headerText}
                     content={this.state.confirmModal.contentText}
-                    size="large"
+                    size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => this.state.confirmModal.onConfirm()}
                 />

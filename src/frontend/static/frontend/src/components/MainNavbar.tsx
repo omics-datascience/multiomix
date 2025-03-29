@@ -71,7 +71,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    const handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    const handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
         setConfirm(prevState => ({
             ...prevState,
             confirmModal: setOption,
@@ -88,7 +88,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
      * @param message message of alert.
      * @param callback Callback function if is needed.
      */
-    const handleUpdateAlert = (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => {
+    const handleUpdateAlert = (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => {
         if (callback) {
             callback()
             setAlert(prevState => ({ ...prevState, isOpen, type, message }))
@@ -129,7 +129,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
                 open={confirm.confirmModal}
                 header={confirm.headerText}
                 content={confirm.contentText}
-                size="large"
+                size='large'
                 onCancel={() => handleCancelConfirmModalState()}
                 onConfirm={() => {
                     confirm.onConfirm()
@@ -196,11 +196,10 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item style={{ padding: '0 1.7rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
-                </Menu.Menu>
-            }
+                </Menu.Menu>}
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous &&
-                <React.Fragment>
+                <>
                     <Menu.Menu as='h2'>
                         <Dropdown text='Analysis' className='link item' icon={null}>
                             <Dropdown.Menu>
@@ -251,8 +250,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
-                </React.Fragment>
-            }
+                </>}
 
             {/* Only admin options */}
             {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) &&
@@ -260,7 +258,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Dropdown text='Admin' className='link item' icon={null}>
                         <Dropdown.Menu>
                             {currentUser.is_superuser &&
-                                <React.Fragment>
+                                <>
                                     {/* User's Datasets panel */}
                                     <Dropdown.Item
                                         text='Database: Genes'
@@ -268,12 +266,10 @@ const MainNavbar = (props: MainNavbarProps) => {
                                         // as='a' href={null}
                                         disabled
                                     />
-                                </React.Fragment>
-                            }
+                                </>}
                         </Dropdown.Menu>
                     </Dropdown>
-                </Menu.Menu>
-            }
+                </Menu.Menu>}
 
             {/* Institutions */}
             {currentUser &&
@@ -281,9 +277,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
                         Institutions
                     </Menu.Item>
-                </Menu.Menu>
-
-            }
+                </Menu.Menu>}
 
             {/* About us */}
             <Menu.Menu as='h2'>

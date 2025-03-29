@@ -19,7 +19,7 @@ interface ListOfElementsWithHeaderProps {
 export const ListOfElementsWithHeader = (props: ListOfElementsWithHeaderProps) => {
     return (
         <Segment>
-            <Header textAlign="center">
+            <Header textAlign='center'>
                 <Icon name={props.headerIcon} />
                 <Header.Content>{props.headerTitle}</Header.Content>
             </Header>

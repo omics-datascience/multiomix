@@ -38,7 +38,7 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
     }
 
     return (
-        <React.Fragment>
+        <>
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNADiseasesJSON>
@@ -54,6 +54,6 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
                 urlToRetrieveData={urlMiRNADiseases}
                 mapFunction={mapFunction}
             />
-        </React.Fragment>
+        </>
     )
 }

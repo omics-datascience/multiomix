@@ -32,7 +32,7 @@ interface SurvivalAnalysisPanelState {
  * Renders a Survival Analysis panel
  * @returns Component
  */
-class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelState> {
+class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPanelState> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -258,7 +258,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
                                 <SurvivalForm
                                     {...this.state}
                                     selectStudy={this.selectStudy}
-                                    handleChangeSourceType={this.handleChangeSourceType}
+                                    onHandleChangeSourceType={this.handleChangeSourceType}
                                     selectUploadedFile={this.selectUploadedFile}
                                     selectSurvivalColumn={this.selectSurvivalColumn}
                                     selectNewFile={this.selectNewFile}
@@ -271,7 +271,7 @@ class SurvivalAnalysisPanel extends React.Component<{}, SurvivalAnalysisPanelSta
                                 <SurvivalGeneSelectionPanel
                                     genes={this.state.genes}
                                     selectedGenes={this.state.selectedGenes}
-                                    handleGenesChanges={this.handleGenesChanges}
+                                    onHandleGenesChanges={this.handleGenesChanges}
                                 />
                             </Grid.Column>
                         </Grid>

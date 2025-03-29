@@ -90,11 +90,10 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
     return (
         <div className='align-left'>
             {cnaDescription &&
-                <React.Fragment>
+                <>
                     <strong>{cnaDescription}</strong>
                     <hr />
-                </React.Fragment>
-            }
+                </>}
             <TooltipElement strongTitle='Min' numberToDisplay={min} color={color} fixed={2} />
             <TooltipElement strongTitle='First quartile' numberToDisplay={firstQuartile} color={color} fixed={2} />
             <TooltipElement strongTitle='Median' numberToDisplay={median} color={color} fixed={2} />
@@ -102,7 +101,7 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
             <TooltipElement strongTitle='Max' numberToDisplay={max} color={color} fixed={2} />
             <TooltipElement strongTitle='Mean' numberToDisplay={mean} color={color} fixed={3} />
             {outliers && outliers.length > 0 &&
-                <React.Fragment>
+                <>
                     <TooltipElement strongTitle='Outliers (using MAD)' numberToDisplay={outliers.length} color={color} />
 
                     {outliersObjects.map((outlier) => (
@@ -113,8 +112,7 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
                             color={color}
                         />
                     ))}
-                </React.Fragment>
-            }
+                </>}
         </div>
     )
 }
