@@ -167,8 +167,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                         value={termsRelatedToGeneForm.correction_method}
                                         onChange={(_e, { value }) => handleChangesInForm('correction_method', value)}
                                     />
-                                </>
-                            }
+                                </>}
                             <Form.Group grouped>
                                 <Form.Field>
                                     <label>Relation type</label>
@@ -253,16 +252,13 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                         </Table.Row>
                                     ))}
                                 </Table.Body>
-                            </Table>
-                        }
+                            </Table>}
                     </Grid.Column>
-                </Grid.Row>
-            }
+                </Grid.Row>}
 
             {/* Selected Term */}
             {selectedTerm &&
-                <GeneOntologyCytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />
-            }
+                <GeneOntologyCytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />}
         </Grid>
     )
 }

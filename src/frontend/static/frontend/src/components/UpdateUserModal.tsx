@@ -156,8 +156,7 @@ export const UpdateUserModal = (props: Props) => {
                                 <Message negative>
                                     <MessageHeader>{textError.title}</MessageHeader>
                                     <p>{textError.body}</p>
-                                </Message>
-                            }
+                                </Message>}
                         </div>
                     </div>
                 </Segment>
@@ -167,7 +166,7 @@ export const UpdateUserModal = (props: Props) => {
                     Cancel
                 </Button>
                 <Button
-                    color="green"
+                    color='green'
                     loading={isLoading}
                     disabled={isLoading}
                     onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, 'Change password', 'Are you sure to change your password?', handleUpdateUser)}

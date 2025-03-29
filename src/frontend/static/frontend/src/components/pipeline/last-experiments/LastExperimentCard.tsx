@@ -21,8 +21,8 @@ interface LastExperimentCardProps {
     selectTagForLastExperiment: (selectedTagId: number, selectedExperiment: DjangoExperiment) => void,
     confirmExperimentDeletion: (experiment: DjangoExperiment) => void,
     selectExperimentToAssignTag: (experiment: DjangoExperiment) => void,
-    handleAddTagInputsChange: (name: string, value: any) => void
-    handleKeyDown: (e) => void
+    onHandleAddTagInputsChange: (name: string, value: any) => void
+    onHandleKeyDown: (e) => void
 }
 
 /**
@@ -40,8 +40,8 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
     if (experiment.result_final_row_count !== experiment.result_total_row_count) {
         const truncTitle = `The result has been truncated due its size. Has ${experiment.result_total_row_count}, truncated to ${experiment.result_final_row_count}`
         trunc_alert = (
-            <Card.Meta className="margin-top-2" title={truncTitle}>
-                <Label color="red">Truncated</Label>
+            <Card.Meta className='margin-top-2' title={truncTitle}>
+                <Label color='red'>Truncated</Label>
             </Card.Meta>
         )
     } else {
@@ -49,8 +49,8 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
     }
 
     return (
-        <Card fluid className="experiment-data-card">
-            <Card.Content textAlign="left">
+        <Card fluid className='experiment-data-card'>
+            <Card.Content textAlign='left'>
                 <Card.Header className='experiment-data-card-header'>
                     <span title={experiment.name} className='last-experiment-name ellipsis'>
                         {experiment.name}
@@ -59,8 +59,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     {/* Delete button */}
                     {/* TODO: remove this, is a temporal fix to prevent errors in server */}
                     {!(experiment.state === ExperimentState.IN_PROCESS || experiment.state === ExperimentState.WAITING_FOR_QUEUE) &&
-                        <DeleteExperimentButton className='pull-right' onClick={() => props.confirmExperimentDeletion(experiment)} />
-                    }
+                        <DeleteExperimentButton className='pull-right' onClick={() => props.confirmExperimentDeletion(experiment)} />}
 
                     {/* See result button */}
                     <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right' />
@@ -93,8 +92,8 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     selectTag={props.selectTagForLastExperiment}
                     newTag={props.newTag}
                     addingTag={props.addingTag}
-                    handleKeyDown={props.handleKeyDown}
-                    handleAddTagInputsChange={props.handleAddTagInputsChange}
+                    onHandleKeyDown={props.onHandleKeyDown}
+                    onHandleAddTagInputsChange={props.onHandleAddTagInputsChange}
                 />
             </Card.Content>
         </Card>

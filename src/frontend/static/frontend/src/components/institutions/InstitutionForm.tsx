@@ -123,33 +123,33 @@ const InstitutionForm = (props: Props) => {
         <>
             <Form onSubmit={handleSubmit}>
                 <Form.Input
-                    name="name"
+                    name='name'
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="Institution name"
+                    placeholder='Institution name'
                 />
                 <Form.Input
-                    name="location"
+                    name='location'
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder="Institution location"
+                    placeholder='Institution location'
                 />
                 <Form.Input
-                    name="email"
-                    type="email"
+                    name='email'
+                    type='email'
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Institution email"
+                    placeholder='Institution email'
                 />
                 <Form.Input
-                    name="telephone_number"
-                    type="tel"
+                    name='telephone_number'
+                    type='tel'
                     value={formData.telephone_number}
                     onChange={handleChange}
-                    placeholder="Institution phone number"
+                    placeholder='Institution phone number'
                 />
                 <Button
-                    type="submit"
+                    type='submit'
                     fluid
                     primary
                     disabled={(!formData.email.trim() && !formData.location.trim() && !formData.name.trim() && !formData.telephone_number.trim()) || formData.isLoading}

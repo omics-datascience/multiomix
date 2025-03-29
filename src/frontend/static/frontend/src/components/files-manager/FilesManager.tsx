@@ -809,7 +809,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
 
                     {/* Files overview panel */}
                     <Grid.Column
-                        id="files-manager-result-column"
+                        id='files-manager-result-column'
                         width={13}
                         textAlign='center'
                     >
@@ -830,12 +830,11 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
                                         {userFileRow.institutions.length > 0 &&
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
-                                                />
-                                        }
+                                        <Icon
+                                            name='building'
+                                            size='large'
+                                            title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                        />}
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
                                     <Table.Cell>
@@ -851,7 +850,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
                                         {userFileRow.is_private_or_institution_admin &&
-                                            <React.Fragment>
+                                            <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
                                                     name='pencil'
@@ -869,8 +868,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                                     title='Delete experiment'
                                                     onClick={() => this.confirmFileDeletion(userFileRow)}
                                                 />
-                                            </React.Fragment>
-                                        }
+                                            </>}
 
                                         {/* Extra information: */}
                                         <Icon
@@ -887,8 +885,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                                 className='margin-left-2'
                                                 color='yellow'
                                                 title='The dataset contains NaN values'
-                                            />
-                                        }
+                                            />}
                                     </Table.Cell>
                                 </Table.Row>
                             )}

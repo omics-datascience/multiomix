@@ -191,8 +191,7 @@ export const SharedUsers = (props: Props) => {
                                                             title='Remove institution'
                                                             onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing to user', 'Are you sure to stop sharing experiment to user?', () => handleRemoveInstitution(institution.id))}
                                                         />
-                                                    )
-                                                }
+                                                    )}
                                             </div>
                                         </ListItem>
                                     ))}

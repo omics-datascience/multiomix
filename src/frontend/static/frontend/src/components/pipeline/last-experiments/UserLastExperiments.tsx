@@ -40,15 +40,15 @@ export const UserLastExperiments = (props: UserLastExperimentsProps) => {
                 confirmExperimentDeletion={props.confirmExperimentDeletion}
                 newTag={props.newTag}
                 addingTag={props.addingTag}
-                handleKeyDown={props.handleKeyDown}
-                handleAddTagInputsChange={props.handleAddTagInputsChange}
+                onHandleKeyDown={props.handleKeyDown}
+                onHandleAddTagInputsChange={props.handleAddTagInputsChange}
             />
         )
     })
 
     return (
-        <div className="align-center">
-            <Label className="margin-bottom-5 full-width" color="blue" size="large">Last analysis</Label>
+        <div className='align-center'>
+            <Label className='margin-bottom-5 full-width' color='blue' size='large'>Last analysis</Label>
 
             {/* Experiments list */}
             <Card.Group id='last-experiments-cards-group'>

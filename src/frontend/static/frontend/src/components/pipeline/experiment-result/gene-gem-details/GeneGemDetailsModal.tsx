@@ -84,7 +84,7 @@ interface GeneGemDetailsModalProps {
     /** Flag to sho the modal */
     showModal: boolean,
     /** Close callback */
-    handleClose: () => void,
+    onHandleClose: () => void,
     /** Callback to refresh experiment info on clinical source changes */
     refreshExperimentInfo: (experimentId: number) => void
 }
@@ -176,7 +176,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
     /**
      * Restart some field before close
      */
-    resetFieldsAndClose = () => { this.setState(this.getDefaultState(), this.props.handleClose) }
+    resetFieldsAndClose = () => { this.setState(this.getDefaultState(), this.props.onHandleClose) }
 
     /**
      * Gets active menu
@@ -248,12 +248,12 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 // in PaginatedTable component. Otherwise, React will see miRNA interaction
                 // and miRNA-Target interaction as the same component and won't trigger XHR requests
                 return (
-                    <React.Fragment>
+                    <>
                         <MiRNAInteractionPanel
                             miRNA={gem}
                             showGeneSearchInput
                         />
-                    </React.Fragment>
+                    </>
                 )
             case ActiveItemMenu.DISEASES_ASSOCIATION:
                 return <MiRNADiseasesPanel miRNA={gem} />
@@ -328,7 +328,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         }
 
         // Groups by clinical data generating different ApexChartSeries with different colors
-        const seriesGrouped: {[clinicalKey: string]: [number, number][]} = {}
+        const seriesGrouped: { [clinicalKey: string]: [number, number][] } = {}
         geneData.forEach((geneValue, idx) => {
             const gemValue = gemData[idx]
             const clinicalValue = clinicalData[idx]
@@ -364,7 +364,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         gemData: number[]
     ): StatChartData[] {
         // Generates the new Chart's data which is an object of numerical key and values
-        type MergedDataBoxplot = {[gemKey: number]: number[]}
+        type MergedDataBoxplot = { [gemKey: number]: number[] }
         const zippedData: MergedDataBoxplot = {}
         geneData.forEach((geneElem, idx) => {
             const gemKey = gemData[idx] // Gets GEM data for same sample

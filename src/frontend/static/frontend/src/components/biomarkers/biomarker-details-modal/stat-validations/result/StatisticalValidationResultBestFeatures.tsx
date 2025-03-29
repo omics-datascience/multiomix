@@ -139,12 +139,10 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
     return (
         <>
             {loading &&
-                <ResultPlaceholder />
-            }
+                <ResultPlaceholder />}
 
             {(!loading && statValidationData !== null) &&
-                <ReactApexChart options={chartOptions} series={chartSeries} type="bar" height={440} />
-            }
+                <ReactApexChart options={chartOptions} series={chartSeries} type='bar' height={440} />}
         </>
     )
 }

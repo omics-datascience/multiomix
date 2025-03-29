@@ -11,7 +11,7 @@ import { SurvivalAnalysisPanelState, SourceStateName, ColumnStateName } from './
  */
 interface SurvivalFormProps extends SurvivalAnalysisPanelState {
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceName: SourceStateName) => void,
-    handleChangeSourceType: (sourceSelected: SourceType, sourceName: SourceStateName) => void,
+    onHandleChangeSourceType: (sourceSelected: SourceType, sourceName: SourceStateName) => void,
     selectUploadedFile: (selectedFile: DjangoUserFile, sourceName: SourceStateName) => void,
     selectSurvivalColumn: (name: ColumnStateName, value) => void,
     selectNewFile: (sourceName: SourceStateName) => void,
@@ -31,10 +31,10 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
     return (
         <div>
             <Segment>
-                <Grid className="padded-left-10 padded-right-10">
+                <Grid className='padded-left-10 padded-right-10'>
                     {/* File type for expression dataset */}
                     <Grid.Row>
-                        <Header textAlign="center">
+                        <Header textAlign='center'>
                             <Header.Content>Expression file type</Header.Content>
                         </Header>
 
@@ -43,7 +43,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                             selectOnBlur={false}
                             value={props.expressionFileType}
                             options={fileTypeOptions}
-                            name="fileType"
+                            name='fileType'
                             onChange={(_, { value }) => props.changeFileType(value)}
                         />
                     </Grid.Row>
@@ -59,7 +59,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         fileType={props.expressionFileType}
                         tagOptions={[]}
                         handleChangeSourceType={(selectedSourceType) => {
-                            props.handleChangeSourceType(selectedSourceType, 'expressionSource')
+                            props.onHandleChangeSourceType(selectedSourceType, 'expressionSource')
                         }}
                         selectNewFile={() => {
                             props.selectNewFile('expressionSource')
@@ -83,7 +83,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         fileType={FileType.CLINICAL}
                         tagOptions={[]}
                         handleChangeSourceType={(selectedSourceType) => {
-                            props.handleChangeSourceType(selectedSourceType, 'survivalSource')
+                            props.onHandleChangeSourceType(selectedSourceType, 'survivalSource')
                         }}
                         selectNewFile={() => {
                             props.selectNewFile('survivalSource')
@@ -107,7 +107,7 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         fluid
                         selectOnBlur={false}
                         floating
-                        className="margin-bottom-5"
+                        className='margin-bottom-5'
                         disabled={optionsArrayIsEmpty}
                         name='columnEventTime'
                         value={props.columnEventTime}

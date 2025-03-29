@@ -38,7 +38,7 @@ export const TextAreaMolecules = (props: TextAreaMoleculesProps) => {
     return (
         <TextArea
             style={{ maxWidth: '100%', minWidth: '100%' }}
-            className="biomarkers--side--bar--text--area"
+            className='biomarkers--side--bar--text--area'
             placeholder='Insert molecules'
             name='moleculesTextArea'
             rows={10}

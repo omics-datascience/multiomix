@@ -62,7 +62,8 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                         selectedMolecule={selectedMolecule}
                         gene={[MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule?.type as MoleculeType) ? selectedMolecule.identifier : null}
                         miRNA={[MoleculeType.MIRNA].includes(props.selectedMolecule?.type as MoleculeType) ? selectedMolecule.identifier : null}
-                    />)
+                    />
+                )
             case ActiveBiomarkerMoleculeItemMenu.ACT_CAN_GENES:
                 return <ActionableCancerGenesPanel />
             default:

@@ -213,8 +213,7 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                                         </span>
                                     ))}
                                 </div>
-                            </div>
-                        }
+                            </div>}
                     </Tooltip>
                 )}
             </>

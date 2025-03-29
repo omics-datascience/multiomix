@@ -120,8 +120,7 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                         {methylationData.chromosome_position &&
                             <Header size='large'>
                                 Chr. Position: {methylationData.chromosome_position}
-                            </Header>
-                        }
+                            </Header>}
                     </Segment>
 
                     <Segment>

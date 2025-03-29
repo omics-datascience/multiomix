@@ -1,7 +1,7 @@
 import React from 'react'
 import { Icon, Popup, PopupContentProps, SemanticShorthandItem } from 'semantic-ui-react'
 
-interface Props{
+interface Props {
     content: SemanticShorthandItem<PopupContentProps>,
 }
 

@@ -16,12 +16,12 @@ interface PubmedButtonProps {
 export const PubmedButton = (props: PubmedButtonProps) => (
     <Button
         basic
-        color="blue"
+        color='blue'
         icon
         title='See in NCBI'
-        className="borderless-button"
+        className='borderless-button'
         disabled={!props.pubmedURL}
-        as='a' href={props.pubmedURL} target="_blank" rel='noopener noreferrer'
+        as='a' href={props.pubmedURL} target='_blank' rel='noopener noreferrer'
     >
         <Icon name='file' />
     </Button>

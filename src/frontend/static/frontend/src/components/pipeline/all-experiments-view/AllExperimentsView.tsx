@@ -342,8 +342,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                     <DeleteExperimentButton
                                                         title='Delete experiment'
                                                         onClick={() => this.props.confirmExperimentDeletion(experiment)}
-                                                    />
-                                                }
+                                                    />}
 
                                                 {/* Public switch */}
                                                 <PublicButtonExperiment experiment={experiment} handleChangeConfirmModalState={this.props.handleChangeConfirmModalState} />

@@ -176,8 +176,7 @@ export const InstitutionModal = (props: Props) => {
                             : [
                                 { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
                                 { name: 'Admin', width: 1 }
-                            ]
-                        }
+                            ]}
                         showSearchInput
                         searchLabel='User name'
                         searchPlaceholder='Search by User name'
@@ -243,8 +242,7 @@ export const InstitutionModal = (props: Props) => {
                                                     title='Remove user from Institution'
                                                 />
                                             }
-                                        </Table.Cell>
-                                    }
+                                        </Table.Cell>}
                                 </Table.Row>
                             )
                         }}

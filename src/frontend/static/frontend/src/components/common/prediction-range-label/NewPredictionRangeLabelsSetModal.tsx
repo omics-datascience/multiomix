@@ -253,7 +253,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                                 fluid
                                                                 onClick={() => { removeLabel(idx) }}
                                                             >
-                                                            Delete label
+                                                                Delete label
                                                             </Button>
                                                         </Form.Field>
                                                     </Grid.Column>
@@ -277,14 +277,14 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
             </Modal.Content>
             <Modal.Actions>
                 <Button
-                    color="red"
+                    color='red'
                     onClick={() => props.setShowNewPredictionRangeLabelsSet(false)}
                 >
                     Cancel
                 </Button>
 
                 <Button
-                    color="green"
+                    color='green'
                     loading={sendingData}
                     onClick={submit}
                     disabled={!formIsValid()}

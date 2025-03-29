@@ -3,7 +3,7 @@ import { Icon } from 'semantic-ui-react'
 import { DjangoExperiment, ExperimentState } from '../../../utils/django_interfaces'
 import { CurrentUserContext } from '../../Base'
 
-interface Props{
+interface Props {
     editExperiment: (experiment: DjangoExperiment) => void,
     experiment: DjangoExperiment,
     ownerId: number,

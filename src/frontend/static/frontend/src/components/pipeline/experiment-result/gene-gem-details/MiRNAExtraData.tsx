@@ -120,8 +120,7 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                         <Header size='large'>
                             {miRNAData.mirna_sequence}
                         </Header>
-                    </Grid.Column>
-                }
+                    </Grid.Column>}
 
                 {(othersLinks.length > 0) &&
                     <Grid.Column width={2} verticalAlign='middle'>
@@ -129,17 +128,16 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                             <Button
                                 key={link.source}
                                 basic
-                                color="blue"
+                                color='blue'
                                 icon
                                 title={link.source}
-                                className="borderless-button no-box-shadow"
-                                as='a' href={link.url} target="_blank" rel='noopener noreferrer'
+                                className='borderless-button no-box-shadow'
+                                as='a' href={link.url} target='_blank' rel='noopener noreferrer'
                             >
                                 <Icon name='linkify' />
                             </Button>
                         ))}
-                    </Grid.Column>
-                }
+                    </Grid.Column>}
             </Grid.Row>
         </Grid>
     )

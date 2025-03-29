@@ -132,12 +132,12 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                             content={
                                 <p>
                                     If this option is enabled, the experiment will be executed (if possible) using <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink> to optimize execution times
-                                </p>}
+                                </p>
+                            }
                             onTop={false}
                         />
                     </Grid.Column>
-                </Grid.Row>
-            }
+                </Grid.Row>}
         </Grid>
     )
 }

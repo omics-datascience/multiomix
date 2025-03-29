@@ -224,24 +224,21 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                         className='clickable'
                                         color='blue'
                                         title='See results'
-                                    />
-                                }
+                                    />}
 
                                 {/* Stop button */}
                                 {isInProcess &&
                                     <StopExperimentButton
                                         title='Stop statistical validation'
                                         onClick={() => setStatValidationToStop(statisticalValidation)}
-                                    />
-                                }
+                                    />}
 
                                 {/* Delete button */}
                                 {!isInProcess &&
                                     <DeleteExperimentButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
-                                    />
-                                }
+                                    />}
                             </Table.Cell>
                         </Table.Row>
                     )

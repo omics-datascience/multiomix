@@ -425,29 +425,30 @@ export const GeneInformation = (props: GeneInformationProps) => {
                         }
                         index={1}
                     />
-                    <Accordion.Content active={activeIndex === 1} content={
-                        <Grid columns={6} stackable>
-                            {linksData.slice(5, linksData.length).map(item => (
-                                <Grid.Column key={item.source}>
-                                    <Button
-                                        fluid
-                                        icon
-                                        color='blue'
-                                        onClick={() => handleButtonNavigate(item.url)}
-                                        style={{
-                                            justifyContent: 'center',
-                                            display: 'flex',
-                                            alignItems: 'center'
-                                        }}
-                                        title={item.source}
-                                    >
-                                        <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} />
-                                        <p className='ellipsis'> {item.source}</p>
-                                    </Button>
-                                </Grid.Column>
-                            ))}
-                        </Grid>
-                    }
+                    <Accordion.Content
+                        active={activeIndex === 1} content={
+                            <Grid columns={6} stackable>
+                                {linksData.slice(5, linksData.length).map(item => (
+                                    <Grid.Column key={item.source}>
+                                        <Button
+                                            fluid
+                                            icon
+                                            color='blue'
+                                            onClick={() => handleButtonNavigate(item.url)}
+                                            style={{
+                                                justifyContent: 'center',
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}
+                                            title={item.source}
+                                        >
+                                            <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} />
+                                            <p className='ellipsis'> {item.source}</p>
+                                        </Button>
+                                    </Grid.Column>
+                                ))}
+                            </Grid>
+                        }
                     />
                 </Accordion>
             </Segment>

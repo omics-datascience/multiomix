@@ -71,7 +71,7 @@ type PipelineState = {
     gettingAllExperiments: boolean,
     confirmModal: ConfirmModal,
 
-};
+}
 
 /**
  * Main Pipeline class render. Renders a new experiment form
@@ -1063,7 +1063,7 @@ class Pipeline extends React.Component<any, PipelineState> {
                     open={this.state.confirmModal.confirmModal}
                     header={this.state.confirmModal.headerText}
                     content={this.state.confirmModal.contentText}
-                    size="large"
+                    size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => {
                         this.state.confirmModal.onConfirm()

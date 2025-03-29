@@ -166,8 +166,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         selectedClinicalAttribute={selectedClinicalAttribute}
                                         setSelectedClinicalAttribute={setSelectedClinicalAttribute}
                                     />
-                                </>
-                            }
+                                </>}
 
                             {/* Range Select */}
                             <PredictionRangeLabelsSetSelect
@@ -177,8 +176,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             />
 
                             <Button className='margin-top-2' primary fluid onClick={() => { setOpenRangeLabelsSetModal(true) }}>Add Range labels</Button>
-                        </>
-                    }
+                        </>}
                 </Grid.Column>
             </Grid.Row>
         </Grid>

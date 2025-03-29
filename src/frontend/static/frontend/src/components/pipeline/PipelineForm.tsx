@@ -118,7 +118,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                 <Button
                     color='green'
                     content={isEditing ? 'Save changes' : 'Run analysis'}
-                    className="margin-top-2"
+                    className='margin-top-2'
                     fluid
                     onClick={isEditing ? this.props.makeEditExperimentRequest : this.props.runPipeline}
                     loading={this.props.sendingRequest}
@@ -135,12 +135,13 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
         return (
             <div>
                 <div>
-                    <Select id='select-gem-file-type'
+                    <Select
+                        id='select-gem-file-type'
                         button
                         selectOnBlur={false}
                         fluid
                         floating
-                        className="margin-bottom-2"
+                        className='margin-bottom-2'
                         value={this.props.gemFileType}
                         options={selectOptions}
                         placeholder='Select dataset...'
@@ -150,7 +151,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
 
                 {/* Files Panel */}
                 <Segment>
-                    <Grid className="padded-left-10 padded-right-10">
+                    <Grid className='padded-left-10 padded-right-10'>
                         <InfoPopup content={<PipelineSourcePopupContent />} />
 
                         {/* mRNA SourceForm */}
@@ -212,7 +213,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
 
                 {/* Name, description and tag panel */}
                 <Segment>
-                    <Header textAlign="left">
+                    <Header textAlign='left'>
                         <Header.Content>Analysis info</Header.Content>
                     </Header>
 
@@ -264,7 +265,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         {progressOrButton}
 
                         {/* Warning about upload time */}
-                        <Label className="margin-top-2 full-width no-margin-left align-center" color="yellow">
+                        <Label className='margin-top-2 full-width no-margin-left align-center' color='yellow'>
                             The upload time is subject to the size of the file
                         </Label>
 
@@ -272,7 +273,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         <Button
                             color='red'
                             content='Clear form'
-                            className="margin-top-2"
+                            className='margin-top-2'
                             fluid
                             onClick={this.props.resetExperimentForm}
                             disabled={this.props.noDataEntered()}

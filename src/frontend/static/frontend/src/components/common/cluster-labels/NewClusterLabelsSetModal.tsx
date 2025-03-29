@@ -230,14 +230,14 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
             </Modal.Content>
             <Modal.Actions>
                 <Button
-                    color="red"
+                    color='red'
                     onClick={() => props.setShowNewClusterLabelsSet(false)}
                 >
                     Cancel
                 </Button>
 
                 <Button
-                    color="green"
+                    color='green'
                     loading={sendingData}
                     onClick={submit}
                     disabled={!formIsValid()}

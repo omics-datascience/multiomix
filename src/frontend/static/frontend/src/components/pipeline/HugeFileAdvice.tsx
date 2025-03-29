@@ -30,7 +30,7 @@ export const HugeFileAdvice = (props: HugeFileAdviceProps) => {
     if (sizeInMB < MAX_FILE_SIZE_IN_MB_ERROR) {
         // Just shows the warning
         return (
-            <Label className="margin-top-2" color="orange">
+            <Label className='margin-top-2' color='orange'>
                 The file exceeds {MAX_FILE_SIZE_IN_MB_WARN}MB, please take into consideration that the upload may take some time
             </Label>
         )
@@ -38,7 +38,7 @@ export const HugeFileAdvice = (props: HugeFileAdviceProps) => {
 
     // Prevents over complexity. Promotes the usage of 'My datasets' panel which has more features and validations
     return (
-        <Label className="margin-top-2" color="red">
+        <Label className='margin-top-2' color='red'>
             The file exceeds {MAX_FILE_SIZE_IN_MB_ERROR}MB, please upload your dataset from <a id='huge-size-msg-link' href={urlDatasets}>My datasets</a> panel
         </Label>
     )

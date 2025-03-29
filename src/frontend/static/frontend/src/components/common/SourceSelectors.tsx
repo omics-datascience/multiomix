@@ -74,8 +74,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                 selectStudy={(selectedStudy) => {
                                     selectStudy(selectedStudy, 'clinicalSource')
                                 }}
-                            />
-                        }
+                            />}
                     </Grid.Column>
                     {/* mRNA */}
                     <Grid.Column>
@@ -100,8 +99,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                 selectStudy={(selectedStudy) => {
                                     selectStudy(selectedStudy, 'mRNASource')
                                 }}
-                            />
-                        }
+                            />}
                     </Grid.Column>
                     {/* miRNA */}
                     <Grid.Column>
@@ -126,8 +124,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                 selectStudy={(selectedStudy) => {
                                     selectStudy(selectedStudy, 'mirnaSource')
                                 }}
-                            />
-                        }
+                            />}
                     </Grid.Column>
                     <Grid.Column>
                         {/* CNA */}
@@ -152,8 +149,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                 selectStudy={(selectedStudy) => {
                                     selectStudy(selectedStudy, 'cnaSource')
                                 }}
-                            />
-                        }
+                            />}
                     </Grid.Column>
                     <Grid.Column>
                         {/* Methylation */}
@@ -178,8 +174,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                 selectStudy={(selectedStudy) => {
                                     selectStudy(selectedStudy, 'methylationSource')
                                 }}
-                            />
-                        }
+                            />}
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

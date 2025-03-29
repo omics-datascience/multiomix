@@ -41,14 +41,14 @@ const GeneralForm = (props: GeneralFormProps) => {
     const nextUrl = new URLSearchParams(window.location.search).get('next') ?? urlIndex
 
     return (
-        <div className="container-login">
-            <div className="wrap-login">
-                <Form className="login-form validate-form" action={props.url} method='POST'>
-                    <span className="login-form-logo">
+        <div className='container-login'>
+            <div className='wrap-login'>
+                <Form className='login-form validate-form' action={props.url} method='POST'>
+                    <span className='login-form-logo'>
                         <Image circular size='large' src='/static/frontend/img/logo-login.png' />
                     </span>
 
-                    <span className="login-form-title">
+                    <span className='login-form-title'>
                         {props.title}
                     </span>
 
@@ -153,14 +153,14 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
         }
 
         return (
-            <GeneralForm title="Log in" url={urlAuthenticate}>
+            <GeneralForm title='Log in' url={urlAuthenticate}>
                 {message}
 
                 <Form.Input
                     fluid
                     icon='user'
                     iconPosition='left'
-                    className="wrap-login-input"
+                    className='wrap-login-input'
                     placeholder='Username'
                     name='username'
                     value={this.state.username}
@@ -171,7 +171,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     fluid
                     icon='lock'
                     iconPosition='left'
-                    className="wrap-login-input"
+                    className='wrap-login-input'
                     placeholder='Password'
                     name='password'
                     value={this.state.password}
@@ -222,7 +222,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
         const emailIsNotValid = this.state.email != null && this.state.email.trim().length > 0 && !this.emailIsValid()
 
         return (
-            <GeneralForm title="Sign Up" url={urlCreateUser}>
+            <GeneralForm title='Sign Up' url={urlCreateUser}>
                 <Form.Input
                     fluid
                     icon='user'
@@ -246,8 +246,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                 {emailIsNotValid &&
                     <p className='align-center error-message-helper'>
                         Please provide a valid <i>email</i> address
-                    </p>
-                }
+                    </p>}
                 <Form.Input
                     fluid
                     icon='lock'
@@ -273,8 +272,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                 {passwordsMismatch &&
                     <p className='align-center error-message-helper'>
                         This value is different to <i>Password</i> field
-                    </p>
-                }
+                    </p>}
 
                 <Form.Group className='margin-top-5' widths='equal'>
                     <Form.Field

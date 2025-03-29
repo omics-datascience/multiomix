@@ -91,12 +91,12 @@ export const DensityChart = (props: DensityChartProps) => {
                         }}
                         barCategoryGap={0}
                     >
-                        <CartesianGrid stroke="#f5f5f5" />
-                        <XAxis2 dataKey="bin0" />
+                        <CartesianGrid stroke='#f5f5f5' />
+                        <XAxis2 dataKey='bin0' />
                         <YAxis2 />
                         <Tooltip content={<CustomTooltip color={data.strokeColor} color2={null} />} />
                         <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
-                        <Bar dataKey="density" fill={data.fillColor} stroke={data.strokeColor} strokeWidth={1} />
+                        <Bar dataKey='density' fill={data.fillColor} stroke={data.strokeColor} strokeWidth={1} />
                         {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}
                         {/* <Area type="monotone" dataKey="density" fill={data.strokeColor} stroke={data.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                         <Area type="monotone" dataKey="density2" fill="#000" stroke="#000" /> */}
@@ -204,13 +204,13 @@ export const DensityChartMix = (props: DensityChartMixProps) => {
                     }}
                     barGap={0}
                 >
-                    <CartesianGrid stroke="#f5f5f5" />
-                    <XAxis2 dataKey="bin0" tickCount={4} />
+                    <CartesianGrid stroke='#f5f5f5' />
+                    <XAxis2 dataKey='bin0' tickCount={4} />
                     <YAxis2 />
                     <Tooltip content={<CustomTooltip color={newData.strokeColor} color2={newData.strokeColor2} />} />
                     <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
-                    <Bar dataKey="density" fill={newData.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
-                    <Bar dataKey="density2" fill={newData.strokeColor2} activeBar={!props.showBars} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
+                    <Bar dataKey='density' fill={newData.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
+                    <Bar dataKey='density2' fill={newData.strokeColor2} activeBar={!props.showBars} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                     {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}
                     {/* <Area type="monotone" dataKey="density" fill={newData.strokeColor} stroke={newData.strokeColor} />
                     <Area type="monotone" dataKey="density2" fill={newData.strokeColor2} stroke={newData.strokeColor2} /> */}

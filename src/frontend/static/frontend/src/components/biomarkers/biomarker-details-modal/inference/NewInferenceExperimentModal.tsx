@@ -330,7 +330,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                     />
                                 </Form>
 
-                                <div className="margin-top-2">
+                                <div className='margin-top-2'>
                                     <Icon name='asterisk' /> Required field
                                 </div>
                             </Segment>
@@ -375,17 +375,16 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
             <Modal.Actions>
                 {currentStep > 1 &&
                     <Button
-                        color="red"
+                        color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
                         Go back
-                    </Button>
-                }
+                    </Button>}
 
                 {/* Continue button */}
                 {currentStep === 1 &&
                     <Button
-                        color="green"
+                        color='green'
                         loading={sendingData}
                         onClick={() => {
                             setCurrentStep(currentStep + 1)
@@ -393,13 +392,12 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         disabled={!selectedTrainedModelIsValid}
                     >
                         Continue
-                    </Button>
-                }
+                    </Button>}
 
                 {/* Submit StatisticalAnalysis button */}
                 {currentStep === 2 &&
                     <Button
-                        color="green"
+                        color='green'
                         loading={sendingData}
                         onClick={() => {
                             runStatisticalAnalysis()
@@ -407,8 +405,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         disabled={!formIsValid()}
                     >
                         Confirm
-                    </Button>
-                }
+                    </Button>}
             </Modal.Actions>
         </Modal>
     )

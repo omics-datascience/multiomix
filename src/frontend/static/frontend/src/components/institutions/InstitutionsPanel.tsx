@@ -136,7 +136,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
      * @param callback Callback function if is needed.
      * @param isEdit option if is in edit mode.
      */
-    handleUpdateAlert(isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>, isEdit?: boolean) {
+    handleUpdateAlert (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>, isEdit?: boolean) {
         const alert = this.state.alert
         alert.isOpen = isOpen
         alert.type = type
@@ -243,11 +243,11 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
     render () {
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
-                <Grid columns={2} padded stackable divided stretched={true}>
+                <Grid columns={2} padded stackable divided stretched>
                     {/* List of institutions */}
-                    <Grid.Column width={4} textAlign='left' stretched={true}>
+                    <Grid.Column width={4} textAlign='left' stretched>
                         <Segment>
-                            <Header textAlign="center">
+                            <Header textAlign='center'>
                                 <Icon name='building' />
                                 <Header.Content className='headerContent'><span>My institutions</span>
                                     <div style={{ float: 'right', height: '10px' }}>
@@ -325,8 +325,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                         disabled={this.state.isDeletingInstitution}
                                                         title='Delete Institution'
                                                         onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
-                                                    />
-                                                }
+                                                    />}
                                             </Table.Cell>
                                         </Table.Row>
                                     )
@@ -352,7 +351,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                     open={this.state.confirmModal.confirmModal}
                     header={this.state.confirmModal.headerText}
                     content={this.state.confirmModal.contentText}
-                    size="large"
+                    size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => {
                         this.state.confirmModal.onConfirm()

@@ -533,8 +533,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                     </p>
 
                     {!this.state.selectedCGDSStudyToSync.is_last_version &&
-                        <p>New versions of a Study can only be done from its last version</p>
-                    }
+                        <p>New versions of a Study can only be done from its last version</p>}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
@@ -570,8 +569,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                             disabled={this.state.sendingSyncRequest}
                         >
                             Create new version and sync
-                        </Button>
-                    }
+                        </Button>}
                 </Modal.Actions>
             </Modal>
         )
@@ -909,8 +907,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                             cleanForm={this.cleanForm}
                                             isFormEmpty={this.isFormEmpty}
                                         />
-                                    </Grid.Column>
-                                }
+                                    </Grid.Column>}
                                 {/* List of CGDS Studies */}
                                 <Grid.Column width={userIsAdmin ? 13 : 16} textAlign='center'>
                                     <PaginatedTable<DjangoCGDSStudy>
@@ -973,10 +970,8 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                                                 <StopExperimentButton
                                                                     title='Stop CGDS study synchronization'
                                                                     onClick={() => this.setState({ selectedCGDSStudyToStop: CGDSStudyFileRow })}
-                                                                />
-                                                            }
-                                                        </Table.Cell>
-                                                    }
+                                                                />}
+                                                        </Table.Cell>}
                                                 </Table.Row>
                                             )
                                         }}

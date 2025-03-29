@@ -215,13 +215,13 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
             </Modal.Content>
             <Modal.Actions>
                 <Button
-                    color="red"
+                    color='red'
                     onClick={props.cancelForm}
                 >
                     Cancel
                 </Button>
                 <Button
-                    color="green"
+                    color='green'
                     onClick={handleConfirm}
                     disabled={handleVerifyDisabled()}
                 >

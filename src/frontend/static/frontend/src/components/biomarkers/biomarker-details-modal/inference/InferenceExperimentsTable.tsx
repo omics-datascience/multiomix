@@ -220,24 +220,21 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                         className='clickable'
                                         color='blue'
                                         title='See results'
-                                    />
-                                }
+                                    />}
 
                                 {/* Stop button */}
                                 {isInProcess &&
                                     <StopExperimentButton
                                         title='Stop experiment'
                                         onClick={() => setInferenceExperimentToStop(inferenceExperiment)}
-                                    />
-                                }
+                                    />}
 
                                 {/* Delete button */}
                                 {!isInProcess &&
                                     <DeleteExperimentButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
-                                    />
-                                }
+                                    />}
                             </Table.Cell>
                         </Table.Row>
                     )
