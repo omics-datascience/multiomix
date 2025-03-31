@@ -1,4 +1,4 @@
-const common = require('./rspack.config.js')
+const common = require('./common.config.js')
 
 module.exports = {
     ...common,
