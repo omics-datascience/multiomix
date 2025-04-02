@@ -1,6 +1,7 @@
 import os
 import tempfile
 import numpy as np
+import numpy.lib.recfunctions as rfn
 from typing import Union, Optional, cast, List, Literal, Tuple, Any
 import pandas as pd
 from api_service.models import ExperimentSource
@@ -118,8 +119,7 @@ def generate_clinical_file(experiment: ExperimentObjType, samples_in_common: np.
         event_column = survival_tuple.event_column
         time_column = survival_tuple.time_column
 
-        # Keeps only the survival tuple and samples in common
-        clinical_df = clinical_df[[event_column, time_column]]
+        # Keeps only the samples in common
         clinical_df = clinical_df.loc[samples_in_common]
 
         # Replaces str values of CGDS for booleans values
@@ -206,19 +206,40 @@ def clean_dataset(df: pd.DataFrame, axis: Axis) -> pd.DataFrame:
     return df
 
 
-def clinical_df_to_struct_array(clinical_df: pd.DataFrame) -> np.ndarray:
+def clinical_df_to_struct_array(clinical_df: pd.DataFrame, event_column: str, time_column: str) -> np.ndarray:
     """
-    Converts a Pandas DataFrame with clinical data to a Numpy structured array with the columns 'event' and 'time'.
-    @param clinical_df: Clinical data as a Pandas DataFrame.
-    @return: Clinical data as a Numpy structured array.
+    Converts a clinical DataFrame to a structured array with 2 fields: event and time.
+    @param clinical_df: Clinical DataFrame.
+    @param event_column: Event column name.
+    @param time_column: Time column name.
+    @return: Numpy structured array with 2 fields: event
     """
-    clinical_data = np.core.records.fromarrays(clinical_df.to_numpy().transpose(), names='event, time',
-                                               formats='bool, float')
+    # Select only the event and time columns
+    filtered_df = clinical_df[[event_column, time_column]]
+
+    # Convert the filtered DataFrame to a structured array with 2 fields
+    clinical_data = np.core.records.fromarrays(
+        filtered_df.to_numpy().transpose(),
+        names=f'{event_column},{time_column}',
+        formats='bool,float'
+    )
+
+    # Add the remaining columns to the structured array
+    remaining_columns = clinical_df.drop(columns=[event_column, time_column])
+    for col_name in remaining_columns.columns:
+        col_data = remaining_columns[col_name].to_numpy()
+        # Ensure the column data type is compatible
+        if col_data.dtype == 'O':  # Object type
+            col_data = col_data.astype(str)  # Convert to string
+        clinical_data = rfn.append_fields(
+            clinical_data, col_name, col_data, usemask=False
+        )
+
     return clinical_data
 
 
 def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
-                is_regression: bool) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray]:
+                is_regression: bool, survival_tuple: Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray]:
     """
     Reads both molecules and clinical data and formats them to be used in the models: replaces NaNs values, removes
     0 values (if needed), and removes inconsistencies where the event occurred but there's no time data. Always keeping
@@ -227,14 +248,16 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     @param clinical_temp_file_path: Clinical data file path.
     @param is_regression: Whether the experiment is a regression or not. In case it's a regression task, removes the
     samples with time == 0.
+    @param survival_tuple: Tuple with the event and time column names to retrieve.
     @return: Molecules as Pandas DataFrame and the clinical data as a Pandas DataFrame and as a Numpy structured array.
     """
     # Gets molecules and clinical DataFrames
     molecules_df = pd.read_csv(molecules_temp_file_path, sep='\t', decimal='.', index_col=0)
     clinical_df = pd.read_csv(clinical_temp_file_path, sep='\t', decimal='.', index_col=0)
 
-    # NOTE: The event and time columns are ALWAYS the first and second one at this point
-    event_column, time_column = clinical_df.columns.tolist()
+    # Assign event and time columns from survival_tuple
+    event_column = survival_tuple.event_column
+    time_column = survival_tuple.time_column
 
     # In case of regression removes time == 0 in the datasets to prevent errors in the models fit() method
     if is_regression:
@@ -255,7 +278,7 @@ def format_data(molecules_temp_file_path: str, clinical_temp_file_path: str,
     molecules_df = clean_dataset(molecules_df, axis='index')
 
     # Formats clinical data to a Numpy structured array
-    clinical_data = clinical_df_to_struct_array(clinical_df)
+    clinical_data = clinical_df_to_struct_array(clinical_df, event_column, time_column)
 
     return molecules_df, clinical_df, clinical_data
 

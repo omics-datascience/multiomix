@@ -212,6 +212,7 @@ MONGO_SETTINGS = {
 # Celery settings. Uses same Redis as Channels and same RESULT_BACKEND as BROKER_URL
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TASK_ALWAYS_EAGER = True
 
 # Result experiment table view config
 TABLE_SETTINGS = {

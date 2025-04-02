@@ -77,11 +77,12 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     classifier: SurvModel = trained_model.get_model_instance()
     is_clustering = hasattr(classifier, 'clustering_parameters')
     is_regression = not is_clustering  # If it's not a clustering model, it's an SVM or RF
-
+    survival_tuple = trained_model.survival_column_tuple
+    # test = trained_model.clinical_source.get_survival_columns()
     # Gets data in the correct format
     check_if_stopped(is_aborted, ExperimentStopped)
     molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
-                                                           is_regression)
+                                                           is_regression, survival_tuple)
 
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
     n_samples = clinical_df.shape[0]
@@ -204,6 +205,60 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
         scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
         return cph.score(df, scoring_method=scoring_method)
 
+    def score_clustering_with_parameters(model: ClusteringModels, subset: pd.DataFrame, y: np.ndarray,
+                                         score_method: ClusteringScoringMethod, penalizer: Optional[float],
+                                         clinical_attributes: List[str]) -> float:
+        """
+        Scores a clustering model using a Cox Regression model and returns coefficients for specified clinical attributes.
+        @param model: Clustering model to be scored.
+        @param subset: Subset of the data to be used for the clustering.
+        @param y: Survival data.
+        @param score_method: Method to be used for scoring the clustering model.
+        @param penalizer: Penalizer to be used for the Cox Regression model.
+        @param clinical_attributes: List of clinical attributes to get coefficients for.
+        @return: Dictionary with coefficients and other statistics for each clinical attribute.
+        """
+        clustering_result = model.fit(subset.values)
+        print("esta llegando???????????????")
+        # Generates a DataFrame with a column for time, event, group, and clinical attributes
+        labels = clustering_result.labels_
+        dfs: List[pd.DataFrame] = []
+        for cluster_id in range(model.n_clusters):
+            current_group_y = y[np.where(labels == cluster_id)]
+            current_group_subset = subset.iloc[np.where(labels == cluster_id)]
+            df = pd.DataFrame({'E': current_group_y['event'], 'T': current_group_y['time'], 'group': cluster_id})
+            for attribute in clinical_attributes:
+                df[attribute] = current_group_subset[attribute].values
+            dfs.append(df)
+        df = pd.concat(dfs)
+
+        # Fits a Cox Regression model using the column group and clinical attributes as variables to consider
+        cph: CoxPHFitter = CoxPHFitter(penalizer=penalizer).fit(df, duration_col='T', event_col='E')
+
+        # Extracts coefficients and other statistics for the specified clinical attributes
+        result = {}
+        for attribute in clinical_attributes:
+            if attribute in cph.summary.index:
+                row = cph.summary.loc[attribute]
+                result[attribute] = {
+                    "coef": row["coef"],
+                    "exp_coef": row["exp(coef)"],
+                    "se_coef": row["se(coef)"],
+                    "coef_lower_95": row["coef lower 95%"],
+                    "coef_upper_95": row["coef upper 95%"],
+                    "exp_coef_lower_95": row["exp(coef) lower 95%"],
+                    "exp_coef_upper_95": row["exp(coef) upper 95%"],
+                    "z": row["z"],
+                    "p": row["p"],
+                    "neg_log2_p": row["-log2(p)"]
+                }
+        print(result)
+
+        # This documentation recommends using log-likelihood to optimize:
+        # https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html#lifelines.fitters.coxph_fitter.SemiParametricPHFitter.score
+        scoring_method = 'concordance_index' if score_method == ClusteringScoringMethod.C_INDEX else 'log_likelihood'
+        return cph.score(df, scoring_method=scoring_method)
+
     # Gets model instance and stores its parameters
     check_if_stopped(is_aborted, ExperimentStopped)
     classifier, clustering_scoring_method, is_clustering, is_regression = create_models_parameters_and_classifier(
@@ -212,8 +267,9 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
 
     # Gets data in the correct format
     check_if_stopped(is_aborted, ExperimentStopped)
+    survival_tuple = trained_model.survival_column_tuple
     molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
-                                                           is_regression)
+                                                           is_regression, survival_tuple)
 
     # Gets all the molecules in the needed order. It's necessary to call get_subset_of_features to fix the
     # structure of data
@@ -270,18 +326,19 @@ def __compute_trained_model(trained_model: TrainedModel, molecules_temp_file_pat
             param_grid = {'n_clusters': range(2, 11)}
         else:
             param_grid = {'n_clusters': [clustering_parameters.n_clusters]}
-
+        # survival_tuple = trained_model.clinical_source.get_survival_columns()
         gcv = GridSearchCV(
             classifier,
             param_grid,
-            scoring=lambda model, x, y: score_clustering(model, x, y, clustering_parameters.scoring_method,
-                                                         clustering_parameters.penalizer),
+            scoring=lambda model, x, y: score_clustering_with_parameters(model, x, y, clustering_parameters.scoring_method,
+                                                         clustering_parameters.penalizer, ['AGE']),
             n_jobs=1,
             refit=False,
             cv=cv
         )
 
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
+    clinical_df.head()
     n_samples = clinical_df.shape[0]
     if n_samples < cross_validation_folds:
         raise NoBestModelFound(f'Number of samples ({n_samples}) are fewer than CV number of folds '
@@ -337,6 +394,7 @@ def get_molecules_and_clinical_df(stat_validation: StatisticalValidation) -> Tup
     """
     # Get samples in common
     samples_in_common = get_common_samples(stat_validation)
+    survival_tuple = stat_validation.survival_column_tuple
 
     # Generates needed DataFrames
     molecules_temp_file_path, clinical_temp_file_path = __generate_df_molecules_and_clinical(stat_validation,
@@ -344,7 +402,7 @@ def get_molecules_and_clinical_df(stat_validation: StatisticalValidation) -> Tup
 
     # Gets both DataFrames without NaNs values
     molecules_df, _clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
-                                                            is_regression=False)
+                                                            is_regression=False, survival_tuple=survival_tuple)
 
     return molecules_df, clinical_data
 

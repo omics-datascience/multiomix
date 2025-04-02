@@ -344,7 +344,7 @@ class StatisticalValidationKaplanMeierByAttribute(APIView):
 
             # Gets only clinical data
             current_clinical_df = group[[survival_tuple.event_column, survival_tuple.time_column]]
-            clinical_data_np = clinical_df_to_struct_array(current_clinical_df)
+            clinical_data_np = clinical_df_to_struct_array(current_clinical_df, event_column, time_column)
 
             # Set as KaplanMeierSample
             current_group = struct_array_to_kaplan_meier_samples(clinical_data_np)

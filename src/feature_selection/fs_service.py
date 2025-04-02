@@ -14,6 +14,7 @@ from .fs_algorithms_spark import binary_black_hole_spark
 from .models import FSExperiment, FitnessFunction, FeatureSelectionAlgorithm, TrainedModel, \
     BBHAParameters, CoxRegressionParameters, GeneticAlgorithmsParameters, BBHAVersion
 from .utils import save_model_dump_and_best_score, create_models_parameters_and_classifier, save_molecule_identifiers
+from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 
 # Common event values
 COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
@@ -86,8 +87,9 @@ def __compute_fs_experiment(experiment: FSExperiment, molecules_temp_file_path: 
 
     # Gets data in the correct format
     check_if_stopped(is_aborted, ExperimentStopped)
+    survival_tuple = trained_model.survival_column_tuple
     molecules_df, clinical_df, clinical_data = format_data(molecules_temp_file_path, clinical_temp_file_path,
-                                                           is_regression)
+                                                           is_regression, survival_tuple)
 
     # Checks if there are fewer samples than splits in the CV to prevent ValueError
     check_if_stopped(is_aborted, ExperimentStopped)
