@@ -1,4 +1,4 @@
-import { common } from './common.config.js'
+import { common } from './rspack.common.js'
 import { TsCheckerRspackPlugin } from 'ts-checker-rspack-plugin'
 
 export default {
@@ -11,7 +11,7 @@ export default {
         ignored: /node_modules/
     },
     plugins: [
-        ...common.plugins, // Keeps plugins from `common.config.js`
+        ...common.plugins, // Keeps plugins from `rspack.common.js`
         // Enables TypeScript type checking
         new TsCheckerRspackPlugin({
             async: false, // This prevents the page to load correctly if there are type errors
