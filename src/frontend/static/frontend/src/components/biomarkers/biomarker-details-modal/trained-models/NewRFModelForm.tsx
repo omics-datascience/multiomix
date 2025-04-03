@@ -22,7 +22,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
             <Form.Checkbox
                 checked={lookForOptimalNEstimators}
                 onChange={(_e, { checked }) => { props.handleChangeOptimalNEstimators(checked ?? false) }}
-                label={
+                label={(
                     <InputLabel label='Search for the optimal number of trees'>
                         <InfoPopup
                             content='This option is useful when the number of samples in the clinical data is small or there are few observed events, setting this value increases the robustness of the model in such cases avoiding problems with NaN values'
@@ -32,14 +32,14 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                             extraClassName='pull-right'
                         />
                     </InputLabel>
-                }
+                )}
             />
 
             <Form.Group widths='equal'>
-                {!lookForOptimalNEstimators &&
+                {!lookForOptimalNEstimators && (
                     <Form.Input
                         fluid
-                        label={
+                        label={(
                             <InputLabel label='Number of trees'>
                                 <InfoPopup
                                     content='The number of trees in the forest'
@@ -49,7 +49,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                                     extraClassName='pull-right'
                                 />
                             </InputLabel>
-                        }
+                        )}
                         type='number'
                         min={10}
                         max={20}
@@ -58,11 +58,11 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                         value={props.parameters.nEstimators}
                         onChange={props.handleChangeParams}
                     />
-                }
+                )}
 
                 <Form.Input
                     fluid
-                    label={
+                    label={(
                         <InputLabel label='Max depth'>
                             <InfoPopup
                                 content='The maximum depth of the tree'
@@ -72,7 +72,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                                 extraClassName='pull-right'
                             />
                         </InputLabel>
-                    }
+                    )}
                     placeholder='An integer number'
                     type='number'
                     min={3}
@@ -84,7 +84,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
 
             <Form.Input
                 fluid
-                label={
+                label={(
                     <InputLabel label='Random state'>
                         <InfoPopup
                             content='Seed used by the random number generator'
@@ -94,7 +94,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                             extraClassName='pull-right'
                         />
                     </InputLabel>
-                }
+                )}
                 placeholder='An integer number'
                 type='number'
                 step={1}

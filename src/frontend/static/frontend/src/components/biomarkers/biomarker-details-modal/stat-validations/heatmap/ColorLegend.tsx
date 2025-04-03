@@ -10,7 +10,7 @@ type ColorLegendProps = {
     max: number;
     colorScale: d3.ScaleLinear<string, string, never>;
     interactionData: InteractionData | null;
-};
+}
 
 const COLOR_LEGEND_MARGIN = { top: 0, right: 0, bottom: 50, left: 0 }
 
@@ -39,23 +39,23 @@ export const ColorLegend = (props: ColorLegendProps) => {
 
     const allTicks = xScale.ticks(4).map((tick) => {
         return (
-            <>
+            <React.Fragment key={tick}>
                 <line
                     x1={xScale(tick)}
                     x2={xScale(tick)}
                     y1={0}
                     y2={boundsHeight + 10}
-                    stroke="black"
+                    stroke='black'
                 />
                 <text
                     x={xScale(tick)}
                     y={boundsHeight + 20}
                     fontSize={9}
-                    textAnchor="middle"
+                    textAnchor='middle'
                 >
                     {tick}
                 </text>
-            </>
+            </React.Fragment>
         )
     })
 
@@ -68,7 +68,7 @@ export const ColorLegend = (props: ColorLegendProps) => {
             <polygon
                 points={`${x},0 ${x - triangleWidth / 2},${-triangleHeight} ${x + triangleWidth / 2
                 },${-triangleHeight}`}
-                fill="grey"
+                fill='grey'
             />
         )
         : null

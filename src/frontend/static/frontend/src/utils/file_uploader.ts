@@ -32,7 +32,7 @@ type ChunkFileUploaderConfig = {
 }
 
 /** Response structure from the Django chunk upload library. */
-type ChunkUploadResponse = { upload_id: string, offset: number, expires: string}
+type ChunkUploadResponse = { upload_id: string, offset: number, expires: string }
 
 /** Util class to upload a file in chunks. */
 class ChunkFileUploader {

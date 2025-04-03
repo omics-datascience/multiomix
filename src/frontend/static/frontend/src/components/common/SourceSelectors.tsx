@@ -53,7 +53,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
             <Grid stackable>
                 <Grid.Row stretched columns={5}>
                     <Grid.Column>
-                        {props.clinicalSource !== undefined &&
+                        {props.clinicalSource !== undefined && (
                             <SourceForm
                                 source={props.clinicalSource.source}
                                 headerTitle='Clinical profile'
@@ -75,11 +75,11 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                     selectStudy(selectedStudy, 'clinicalSource')
                                 }}
                             />
-                        }
+                        )}
                     </Grid.Column>
                     {/* mRNA */}
                     <Grid.Column>
-                        {props.mRNASource !== undefined &&
+                        {props.mRNASource !== undefined && (
                             <SourceForm
                                 source={props.mRNASource.source}
                                 headerTitle='mRNA profile'
@@ -101,11 +101,11 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                     selectStudy(selectedStudy, 'mRNASource')
                                 }}
                             />
-                        }
+                        )}
                     </Grid.Column>
                     {/* miRNA */}
                     <Grid.Column>
-                        {props.mirnaSource !== undefined &&
+                        {props.mirnaSource !== undefined && (
                             <SourceForm
                                 source={props.mirnaSource.source}
                                 headerTitle='Mirna profile'
@@ -127,11 +127,11 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                     selectStudy(selectedStudy, 'mirnaSource')
                                 }}
                             />
-                        }
+                        )}
                     </Grid.Column>
                     <Grid.Column>
                         {/* CNA */}
-                        {props.cnaSource !== undefined &&
+                        {props.cnaSource !== undefined && (
                             <SourceForm
                                 source={props.cnaSource.source}
                                 headerTitle='CNA profile'
@@ -153,11 +153,11 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                     selectStudy(selectedStudy, 'cnaSource')
                                 }}
                             />
-                        }
+                        )}
                     </Grid.Column>
                     <Grid.Column>
                         {/* Methylation */}
-                        {props.methylationSource !== undefined &&
+                        {props.methylationSource !== undefined && (
                             <SourceForm
                                 source={props.methylationSource.source}
                                 headerTitle='Methylation profile'
@@ -179,7 +179,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                                     selectStudy(selectedStudy, 'methylationSource')
                                 }}
                             />
-                        }
+                        )}
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

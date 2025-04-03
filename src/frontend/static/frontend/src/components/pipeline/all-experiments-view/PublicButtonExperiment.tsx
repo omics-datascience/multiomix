@@ -9,7 +9,7 @@ declare const urlPostSwitchInstitutionPublicView
 
 interface Props {
     experiment: DjangoExperiment
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void;
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void;
 }
 
 export const PublicButtonExperiment = (props: Props) => {

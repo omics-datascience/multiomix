@@ -25,7 +25,7 @@ interface ManualFormProps {
     handleSelectOptionMolecule: (molecule: MoleculesSectionData, section: BiomarkerType, itemSelected: string) => void,
     handleRemoveInvalidGenes: (sector: BiomarkerType) => void,
     handleRestartSection: (sector: BiomarkerType) => void,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,

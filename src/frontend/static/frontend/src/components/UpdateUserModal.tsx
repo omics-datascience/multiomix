@@ -11,8 +11,8 @@ interface Props {
     isOpen: boolean,
     handleClose: VoidFunction,
     currentUser: DjangoUser,
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void,
-    handleUpdateAlert: (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<Function>) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
+    handleUpdateAlert: (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => void,
 }
 
 export const UpdateUserModal = (props: Props) => {
@@ -121,7 +121,7 @@ export const UpdateUserModal = (props: Props) => {
                             </h6>
                             <Input
                                 type={password.visibility ? 'text' : 'password'}
-                                icon={
+                                icon={(
                                     <Button
                                         icon
                                         onClick={(_) => setPassword(prevState => ({ ...prevState, visibility: !prevState.visibility }))}
@@ -130,7 +130,7 @@ export const UpdateUserModal = (props: Props) => {
                                             name={password.visibility ? 'eye slash' : 'eye'}
                                         />
                                     </Button>
-                                }
+                                )}
                                 value={password.text}
                                 onChange={(e, { value }) => setPassword(prevState => ({ ...prevState, text: value.trim() }))}
                             />
@@ -139,7 +139,7 @@ export const UpdateUserModal = (props: Props) => {
                             <p>Repeat password:</p>
                             <Input
                                 type={passwordCheck.visibility ? 'text' : 'password'}
-                                icon={
+                                icon={(
                                     <Button
                                         icon
                                         onClick={(_) => setPasswordCheck(prevState => ({ ...prevState, visibility: !prevState.visibility }))}
@@ -148,16 +148,16 @@ export const UpdateUserModal = (props: Props) => {
                                             name={passwordCheck.visibility ? 'eye slash' : 'eye'}
                                         />
                                     </Button>
-                                }
+                                )}
                                 value={passwordCheck.text}
                                 onChange={(e, { value }) => setPasswordCheck(prevState => ({ ...prevState, text: value.trim() }))}
                             />
-                            {textError.isOpen &&
+                            {textError.isOpen && (
                                 <Message negative>
                                     <MessageHeader>{textError.title}</MessageHeader>
                                     <p>{textError.body}</p>
                                 </Message>
-                            }
+                            )}
                         </div>
                     </div>
                 </Segment>
@@ -167,7 +167,7 @@ export const UpdateUserModal = (props: Props) => {
                     Cancel
                 </Button>
                 <Button
-                    color="green"
+                    color='green'
                     loading={isLoading}
                     disabled={isLoading}
                     onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, 'Change password', 'Are you sure to change your password?', handleUpdateUser)}

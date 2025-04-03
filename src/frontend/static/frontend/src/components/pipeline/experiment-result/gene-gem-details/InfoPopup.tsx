@@ -37,7 +37,7 @@ export const InfoPopup = (props: InfoPopupProps) => {
         <Popup
             on={onEvent}
             basic
-            trigger={
+            trigger={(
                 <Icon
                     name='question'
                     color='blue'
@@ -46,7 +46,7 @@ export const InfoPopup = (props: InfoPopupProps) => {
                     id={id}
                     className={`${onTopClassName} ${extraClassName} ${noBorderClassName} clickable`}
                 />
-            }
+            )}
             content={props.content}
         />
     )

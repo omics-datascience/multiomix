@@ -31,13 +31,13 @@ const UploadLabel = (props: UploadLabelProps) => {
             {isUploading ? 'Uploading file' : 'Checking file'}
 
             <InfoPopup
-                content={
-                    <React.Fragment>
+                content={(
+                    <>
                         <Header>{header}</Header>
 
                         <p>{description}. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
-                    </React.Fragment>
-                }
+                    </>
+                )}
                 onTop={false}
                 extraClassName='margin-left-5'
             />
@@ -116,15 +116,15 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             {/* This hidden input must be present in DOM to prevent issues with React ref */}
                             <input
                                 ref={props.newFileInputRef}
-                                type="file"
+                                type='file'
                                 accept={ACCEPTED_FILE_TYPES}
                                 hidden
                                 onChange={props.fileChange}
                             />
 
                             <InfoPopup
-                                content={
-                                    <React.Fragment>
+                                content={(
+                                    <>
                                         <Header>Datasets</Header>
 
                                         <p>In this form you can submit your own datasets. It will be pre-processed and will be available to launch new experiments or share with colleagues from the institutions to which you belong</p>
@@ -141,10 +141,10 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                         <img
                                             src='static/frontend/img/datasets/DatasetFormat.jpg'
                                             className='margin-top-5'
-                                            alt="Dataset format"
+                                            alt='Dataset format'
                                         />
-                                    </React.Fragment>
-                                }
+                                    </>
+                                )}
                                 onTop={false}
                             />
                         </Grid.Row>
@@ -177,8 +177,8 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             />
                         </Grid.Row>
 
-                        {props.newFile.newFileType === FileType.METHYLATION &&
-                            <React.Fragment>
+                        {props.newFile.newFileType === FileType.METHYLATION && (
+                            <>
                                 <Grid.Row>
                                     <Form.Select
                                         fluid
@@ -196,7 +196,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                     />
                                 </Grid.Row>
 
-                                {props.newFile.isCpGSiteId &&
+                                {props.newFile.isCpGSiteId && (
                                     <Grid.Row>
                                         <Form.Select
                                             fluid
@@ -214,9 +214,9 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                             disabled={props.uploadingFile}
                                         />
                                     </Grid.Row>
-                                }
-                            </React.Fragment>
-                        }
+                                )}
+                            </>
+                        )}
 
                         <Grid.Row>
                             {/* File description input */}
@@ -283,14 +283,14 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 fluid
                                 width={6}
                                 icon='trash'
-                                color="red"
+                                color='red'
                                 onClick={props.resetNewFileForm}
                                 disabled={!props.newFileIsValid || props.uploadingFile}
-                                title="Clear the form"
+                                title='Clear the form'
                             />
                         </Grid.Row>
 
-                        {props.newFile.newFileType === FileType.CLINICAL &&
+                        {props.newFile.newFileType === FileType.CLINICAL && (
                             <SurvivalTuplesForm
                                 noPadding
                                 survivalColumns={props.newFile.survivalColumns}
@@ -300,7 +300,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 disabled={props.uploadingFile}
                                 survivalTuplesPossiblesValues={props.survivalTuplesPossiblesValues}
                             />
-                        }
+                        )}
                     </Grid>
                 </Form.Group>
             </Form>

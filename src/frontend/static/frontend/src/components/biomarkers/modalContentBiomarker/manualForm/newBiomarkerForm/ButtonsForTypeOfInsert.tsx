@@ -12,7 +12,7 @@ export const ButtonsForTypeOfInsert = ({ handleChangeMoleculeInputSelected, mole
         <Container className='biomarkers--side--bar--box'>
             <Button.Group
                 compact
-                name="moleculesTypeOfSelection"
+                name='moleculesTypeOfSelection'
                 className='biomarkers--side--bar--buttons-group'
             >
                 <Button

@@ -13,7 +13,7 @@ interface UserLastExperimentsProps {
     addingTag: boolean,
     seeResult: (DjangoExperiment) => void,
     selectExperimentToAssignTag: (experiment: DjangoExperiment) => void,
-    selectTagForLastExperiment: (selectedTagId: any, selectedExperiment: DjangoExperiment) => void,
+    selectTagForLastExperiment: (selectedTagId: number, selectedExperiment: DjangoExperiment) => void,
     confirmExperimentDeletion: (DjangoExperiment) => void,
     handleAddTagInputsChange: (name: string, value: any) => void
     handleKeyDown: (e) => void
@@ -40,15 +40,15 @@ export const UserLastExperiments = (props: UserLastExperimentsProps) => {
                 confirmExperimentDeletion={props.confirmExperimentDeletion}
                 newTag={props.newTag}
                 addingTag={props.addingTag}
-                handleKeyDown={props.handleKeyDown}
-                handleAddTagInputsChange={props.handleAddTagInputsChange}
+                onHandleKeyDown={props.handleKeyDown}
+                onHandleAddTagInputsChange={props.handleAddTagInputsChange}
             />
         )
     })
 
     return (
-        <div className="align-center">
-            <Label className="margin-bottom-5 full-width" color="blue" size="large">Last analysis</Label>
+        <div className='align-center'>
+            <Label className='margin-bottom-5 full-width' color='blue' size='large'>Last analysis</Label>
 
             {/* Experiments list */}
             <Card.Group id='last-experiments-cards-group'>

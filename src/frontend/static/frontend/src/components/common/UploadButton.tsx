@@ -25,7 +25,7 @@ export const UploadButton = (props: UploadButtonProps) => {
             icon
             fluid
             title={props.title}
-            className="ellipsis"
+            className='ellipsis'
             color={props.color ? props.color : 'blue'}
             onClick={() => props.inputRef.current.click()}
         >
@@ -35,7 +35,7 @@ export const UploadButton = (props: UploadButtonProps) => {
             {/* Hidden input for ref */}
             <input
                 ref={props.inputRef}
-                type="file"
+                type='file'
                 accept={ACCEPTED_FILE_TYPES}
                 hidden
                 onChange={props.fileChangeEvent}

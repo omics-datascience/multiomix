@@ -21,7 +21,7 @@ export const LogRankTestStats = (props: LogRankTestStatsProps) => {
         : [props.logrankTest.test_statistic.toFixed(3), props.logrankTest.p_value.toExponential(3)]
 
     return (
-        <React.Fragment>
+        <>
             <Header as='h2' dividing>Logrank test</Header>
 
             <Statistic size='tiny'>
@@ -32,6 +32,6 @@ export const LogRankTestStats = (props: LogRankTestStatsProps) => {
                 <Statistic.Value>{pValue}</Statistic.Value>
                 <Statistic.Label>P-Value</Statistic.Label>
             </Statistic>
-        </React.Fragment>
+        </>
     )
 }

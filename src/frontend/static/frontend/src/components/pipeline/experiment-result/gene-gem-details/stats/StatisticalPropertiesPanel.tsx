@@ -40,7 +40,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     }
 
     return (
-        <React.Fragment>
+        <>
             <Segment>
                 <Grid padded>
                     <Grid.Row columns='equal' divided>
@@ -93,6 +93,6 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                     monotonicity={stats.monotonicity}
                 />
             </Segment>
-        </React.Fragment>
+        </>
     )
 }

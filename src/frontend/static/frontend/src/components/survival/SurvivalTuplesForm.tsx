@@ -78,8 +78,8 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
     const posiblesValues = useMemo(() => props.survivalTuplesPossiblesValues === undefined ? undefined : props.survivalTuplesPossiblesValues.map(item => ({ key: item, value: item, text: item })), [props.survivalTuplesPossiblesValues])
 
     return (
-        <React.Fragment>
-            <React.Fragment>
+        <>
+            <>
                 {props.survivalColumns?.map((survivalColumn, idx) => {
                     const checkedHandleSurvivalFormChanges = checkedValidityCallback(
                         (name, value) => {
@@ -111,7 +111,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 icon='asterisk'
                                                 fluid
                                                 name='event_column'
-                                                className="margin-top-2"
+                                                className='margin-top-2'
                                                 value={survivalColumn.event_column}
                                                 onChange={checkedHandleSurvivalFormChanges}
                                                 loading={props.loading}
@@ -125,7 +125,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 placeholder='Column of event'
                                                 name='event_column'
                                                 fluid
-                                                className="margin-top-2"
+                                                className='margin-top-2'
                                                 loading={props.loading}
                                                 disabled={props.disabled}
                                                 options={posiblesValues.filter(value => value.key !== survivalColumn.time_column)}
@@ -141,7 +141,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 icon='asterisk'
                                                 fluid
                                                 name='time_column'
-                                                className="margin-top-2"
+                                                className='margin-top-2'
                                                 value={survivalColumn.time_column}
                                                 onChange={checkedHandleSurvivalFormChanges}
                                                 loading={props.loading}
@@ -155,7 +155,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 options={posiblesValues.filter(value => value.key !== survivalColumn.event_column)}
                                                 fluid
                                                 name='time_column'
-                                                className="margin-top-2"
+                                                className='margin-top-2'
                                                 value={survivalColumn.time_column}
                                                 loading={props.loading}
                                                 disabled={props.disabled}
@@ -168,7 +168,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                         </ContainerNoInline>
                     )
                 })}
-            </React.Fragment>
+            </>
 
             <Grid.Row>
                 <Grid.Column className={props.noPadding ? 'no-padding' : ''}>
@@ -186,6 +186,6 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                     </Button>
                 </Grid.Column>
             </Grid.Row>
-        </React.Fragment>
+        </>
     )
 }

@@ -24,7 +24,7 @@ const MeanAndStdStats = memo((props: MeanAndStdStatsProps) => {
     const log2Display = isNaN(log2) ? '-' : log2.toFixed(COMMON_DECIMAL_PLACES)
 
     return (
-        <React.Fragment>
+        <>
             <Statistic size='small'>
                 <Statistic.Value>{props.mean.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                 <Statistic.Label>Average</Statistic.Label>
@@ -37,7 +37,7 @@ const MeanAndStdStats = memo((props: MeanAndStdStatsProps) => {
                 <Statistic.Value>{props.standardDeviation.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
                 <Statistic.Label>Standard deviation</Statistic.Label>
             </Statistic>
-        </React.Fragment>
+        </>
     )
 })
 
@@ -55,7 +55,7 @@ interface NormalityStatsProps {
  * @returns Component
  */
 const NormalityStats = memo((props: NormalityStatsProps) => (
-    <React.Fragment>
+    <>
         <InfoPopup content={`It tests if the ${props.geneOrGem} vector follows a normal distribution`} />
 
         <Statistic size='tiny'>
@@ -66,7 +66,7 @@ const NormalityStats = memo((props: NormalityStatsProps) => (
             <Statistic.Value>{props.normality.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
             <Statistic.Label>P-Value</Statistic.Label>
         </Statistic>
-    </React.Fragment>
+    </>
 ))
 
 /**
@@ -183,7 +183,7 @@ export const ChartSection = (props: ChartSectionProps) => {
 
     if (!props.showTogether) {
         return (
-            <React.Fragment>
+            <>
                 {/* GEM stats */}
                 <Grid.Column textAlign='center'>
                     <StatsSection
@@ -217,7 +217,7 @@ export const ChartSection = (props: ChartSectionProps) => {
                         dataIsOrdinal={false}
                     />
                 </Grid.Column>
-            </React.Fragment>
+            </>
         )
     }
 

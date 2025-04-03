@@ -51,7 +51,7 @@ export const MoleculeOption = (props: PropsMoleculeOption) => {
     if (Array.isArray(molecule.value)) {
         const moleculeKey = index + title + molecule.value.length
         return (
-            <Segment key={moleculeKey} className="biomarkers--molecules--container--item table-bordered">
+            <Segment key={moleculeKey} className='biomarkers--molecules--container--item table-bordered'>
                 {molecule.value.map((item) => (
                     <Button
                         key={moleculeKey + item}
