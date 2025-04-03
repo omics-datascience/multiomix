@@ -13,6 +13,8 @@ export default {
     plugins: [
         ...common.plugins, // Keeps plugins from `common.config.js`
         // Enables TypeScript type checking
-        new TsCheckerRspackPlugin()
+        new TsCheckerRspackPlugin({
+            async: false, // This prevents the page to load correctly if there are type errors
+        })
     ]
 }
