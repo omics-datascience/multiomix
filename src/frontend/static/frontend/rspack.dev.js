@@ -1,7 +1,7 @@
-const common = require('./common.config.js')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { common } from './common.config.js'
+import { TsCheckerRspackPlugin } from 'ts-checker-rspack-plugin'
 
-module.exports = {
+export default {
     ...common,
     mode: 'development',
     // Enable sourcemaps for debugging Webpack output.
@@ -11,18 +11,8 @@ module.exports = {
         ignored: /node_modules/
     },
     plugins: [
-        ...common.plugins,
-        new ForkTsCheckerWebpackPlugin()
-    ],
-    module: {
-        rules: [
-            ...common.module.rules, // Keeps rules from `rspack.config.js`
-            // Adds support for ts(x) files with ts-loader which can show Typescript error on transpilation
-            {
-                test: /\.ts(x?)$/,
-                exclude: /node_modules/,
-                use: 'ts-loader'
-            }
-        ]
-    }
+        ...common.plugins, // Keeps plugins from `common.config.js`
+        // Enables TypeScript type checking
+        new TsCheckerRspackPlugin()
+    ]
 }

@@ -1,25 +1,8 @@
-const common = require('./common.config.js')
+import { common } from './common.config.js'
 
-module.exports = {
+export default {
     ...common,
     mode: 'production',
-    devtool: false,
-    module: {
-        rules: [
-            ...common.module.rules,
-            {
-                test: /\.ts(x)?$/,
-                exclude: /node_modules/,
-                loader: 'builtin:swc-loader',
-                options: {
-                    jsc: {
-                        parser: {
-                            syntax: 'typescript'
-                        }
-                    }
-                },
-                type: 'javascript/auto'
-            }
-        ]
-    }
+    devtool: false
+    // NOTE: no need to set minimizer here, as it's already set by RSPack (read more at https://rspack.dev/config/optimization#optimizationminimizer)
 }

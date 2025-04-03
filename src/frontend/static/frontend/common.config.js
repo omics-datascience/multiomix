@@ -1,12 +1,17 @@
-const path = require('path')
-const BundleTracker = require('webpack-bundle-tracker')
+import path, { dirname } from 'path'
+import { fileURLToPath } from 'url'
+import BundleTracker from 'webpack-bundle-tracker'
+import { rspack } from '@rspack/core'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const PATHS = {
     src: path.join(__dirname, 'src'),
     output: path.join(__dirname, 'dist')
 }
 
-module.exports = {
+export const common = {
     entry: {
         base: `${PATHS.src}/base.tsx`,
         gem: `${PATHS.src}/gem.tsx`,
@@ -31,8 +36,22 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.ts(x)?$/,
+                exclude: /node_modules/,
+                loader: 'builtin:swc-loader',
+                options: {
+                    jsc: {
+                        parser: {
+                            syntax: 'typescript'
+                        }
+                    }
+                },
+                type: 'javascript/auto'
+            },
+            {
                 test: /\.css$/,
-                use: ['style-loader', 'css-loader']
+                use: [rspack.CssExtractRspackPlugin.loader, 'css-loader'],
+                type: 'javascript/auto',
             },
             {
                 test: /\.(png|jpg|woff|woff2|eot|ttf|svg)$/,
@@ -41,6 +60,12 @@ module.exports = {
         ]
     },
     plugins: [
-        new BundleTracker({ filename: 'webpack-stats.json' })
+        new rspack.CssExtractRspackPlugin({
+            filename: '[name]-[contenthash].css'
+        }),
+        new BundleTracker({
+            path: PATHS.output,
+            filename: 'webpack-stats.json'
+        })
     ]
 }
