@@ -84,7 +84,7 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
 
                     <Checkbox
                         className='biomarkers--side--bar--validation--items'
-                        label={
+                        label={(
                             <label>
                                 Don't use proposed alias
 
@@ -95,7 +95,7 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
                                     extraClassName='margin-left-5'
                                 />
                             </label>
-                        }
+                        )}
                         checked={props.checkedIgnoreProposedAlias}
                         onChange={() => props.handleChangeIgnoreProposedAlias(!props.checkedIgnoreProposedAlias)}
                     />

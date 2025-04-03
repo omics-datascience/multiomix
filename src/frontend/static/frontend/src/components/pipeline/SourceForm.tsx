@@ -286,7 +286,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 />
 
                 {/* Select CGDS Study modal */}
-                {showCBioPortalOption &&
+                {showCBioPortalOption && (
                     <CGDSDatasetsModal
                         showCGDSDatasetsModal={this.state.showCGDSDatasetsModal}
                         selectingFileType={this.props.fileType}
@@ -294,7 +294,8 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         selectStudy={this.selectStudy}
                         handleClose={this.handleClose}
                         markStudyAsSelected={this.markStudyAsSelected}
-                    />}
+                    />
+                )}
                 <Header as='h4' icon={isIcon} image={!isIcon} textAlign='center'>
                     {icon}
                     {this.props.headerTitle.split(' ').map((text, index) => (

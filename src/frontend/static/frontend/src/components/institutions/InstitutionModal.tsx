@@ -207,7 +207,7 @@ export const InstitutionModal = (props: Props) => {
                                                 )
                                         }
                                     </Table.Cell>
-                                    {props.institution?.is_user_admin &&
+                                    {props.institution?.is_user_admin && (
                                         <Table.Cell width={1}>
                                             {/* Edit button */}
                                             {
@@ -233,16 +233,18 @@ export const InstitutionModal = (props: Props) => {
                                             }
 
                                             {
-                                                (props.institution?.is_user_admin && userCandidate.user.id !== currentUser?.id) &&
-                                                <Icon
-                                                    name='close'
-                                                    className='clickable margin-left-5'
-                                                    color='red'
-                                                    onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
-                                                    title='Remove user from Institution'
-                                                />
+                                                (props.institution?.is_user_admin && userCandidate.user.id !== currentUser?.id) && (
+                                                    <Icon
+                                                        name='close'
+                                                        className='clickable margin-left-5'
+                                                        color='red'
+                                                        onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
+                                                        title='Remove user from Institution'
+                                                    />
+                                                )
                                             }
-                                        </Table.Cell>}
+                                        </Table.Cell>
+                                    )}
                                 </Table.Row>
                             )
                         }}

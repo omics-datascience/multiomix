@@ -10,7 +10,7 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import neostandard from 'neostandard'
 
 /** Files to include in linting. */
-const filesToParse = ['**/*.{mjs,ts,tsx}']
+const filesToParse = ['**/*.{mjs,js,ts,tsx}']
 
 export default defineConfig([
     // Auto generated features
@@ -105,6 +105,15 @@ export default defineConfig([
             'react/jsx-equals-spacing': 'error',
             'react/jsx-closing-bracket-location': 'error',
             'react/jsx-closing-tag-location': 'error',
+            'react/jsx-wrap-multilines': ['error', {
+                declaration: 'parens-new-line',
+                assignment: 'parens-new-line',
+                return: 'parens-new-line',
+                arrow: 'parens-new-line',
+                condition: 'parens-new-line',
+                logical: 'parens-new-line',
+                prop: 'parens-new-line'
+            }],
             'react/jsx-curly-spacing': [
                 'error',
                 {

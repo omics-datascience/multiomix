@@ -31,13 +31,13 @@ const UploadLabel = (props: UploadLabelProps) => {
             {isUploading ? 'Uploading file' : 'Checking file'}
 
             <InfoPopup
-                content={
+                content={(
                     <>
                         <Header>{header}</Header>
 
                         <p>{description}. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
                     </>
-                }
+                )}
                 onTop={false}
                 extraClassName='margin-left-5'
             />
@@ -123,7 +123,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             />
 
                             <InfoPopup
-                                content={
+                                content={(
                                     <>
                                         <Header>Datasets</Header>
 
@@ -144,7 +144,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                             alt='Dataset format'
                                         />
                                     </>
-                                }
+                                )}
                                 onTop={false}
                             />
                         </Grid.Row>
@@ -177,7 +177,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             />
                         </Grid.Row>
 
-                        {props.newFile.newFileType === FileType.METHYLATION &&
+                        {props.newFile.newFileType === FileType.METHYLATION && (
                             <>
                                 <Grid.Row>
                                     <Form.Select
@@ -196,7 +196,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                     />
                                 </Grid.Row>
 
-                                {props.newFile.isCpGSiteId &&
+                                {props.newFile.isCpGSiteId && (
                                     <Grid.Row>
                                         <Form.Select
                                             fluid
@@ -213,8 +213,10 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                             width={16}
                                             disabled={props.uploadingFile}
                                         />
-                                    </Grid.Row>}
-                            </>}
+                                    </Grid.Row>
+                                )}
+                            </>
+                        )}
 
                         <Grid.Row>
                             {/* File description input */}
@@ -288,7 +290,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             />
                         </Grid.Row>
 
-                        {props.newFile.newFileType === FileType.CLINICAL &&
+                        {props.newFile.newFileType === FileType.CLINICAL && (
                             <SurvivalTuplesForm
                                 noPadding
                                 survivalColumns={props.newFile.survivalColumns}
@@ -297,7 +299,8 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 removeSurvivalFormTuple={props.removeSurvivalFormTuple}
                                 disabled={props.uploadingFile}
                                 survivalTuplesPossiblesValues={props.survivalTuplesPossiblesValues}
-                            />}
+                            />
+                        )}
                     </Grid>
                 </Form.Group>
             </Form>

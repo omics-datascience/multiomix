@@ -319,7 +319,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     />
 
                                     <PopupExperiment
-                                        content={
+                                        content={(
                                             <>
                                                 {/* Download button */}
                                                 <Icon
@@ -338,16 +338,17 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                 />
 
                                                 {/* Delete button */}
-                                                {!isInProcess && !experiment.is_public &&
+                                                {!isInProcess && !experiment.is_public && (
                                                     <DeleteExperimentButton
                                                         title='Delete experiment'
                                                         onClick={() => this.props.confirmExperimentDeletion(experiment)}
-                                                    />}
+                                                    />
+                                                )}
 
                                                 {/* Public switch */}
                                                 <PublicButtonExperiment experiment={experiment} handleChangeConfirmModalState={this.props.handleChangeConfirmModalState} />
                                             </>
-                                        }
+                                        )}
                                     />
                                 </TableCell>
                             </Table.Row>

@@ -115,14 +115,15 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                     </Header>
                 </Grid.Column>
 
-                {miRNAData.mirna_sequence &&
+                {miRNAData.mirna_sequence && (
                     <Grid.Column width={8} title='Sequence' verticalAlign='middle'>
                         <Header size='large'>
                             {miRNAData.mirna_sequence}
                         </Header>
-                    </Grid.Column>}
+                    </Grid.Column>
+                )}
 
-                {(othersLinks.length > 0) &&
+                {(othersLinks.length > 0) && (
                     <Grid.Column width={2} verticalAlign='middle'>
                         {othersLinks.map((link) => (
                             <Button
@@ -137,7 +138,8 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                                 <Icon name='linkify' />
                             </Button>
                         ))}
-                    </Grid.Column>}
+                    </Grid.Column>
+                )}
             </Grid.Row>
         </Grid>
     )

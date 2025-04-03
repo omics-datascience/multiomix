@@ -133,7 +133,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 </Grid.Column>
 
                 <Grid.Column width={4}>
-                    {selectedTrainedModelPk !== null &&
+                    {selectedTrainedModelPk !== null && (
                         <>
                             <NewPredictionRangeLabelsSetModal
                                 showNewPredictionRangeLabelsSet={openRangeLabelsSetModal}
@@ -142,7 +142,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             />
 
                             {/* Clinical attribute select */}
-                            {(activeMenuItem === 'charts' && props.selectedInferenceExperiment.clinical_source_id) &&
+                            {(activeMenuItem === 'charts' && props.selectedInferenceExperiment.clinical_source_id) && (
                                 <>
                                     <ClinicalSourcePopup
                                         experiment={props.selectedInferenceExperiment}
@@ -166,7 +166,8 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         selectedClinicalAttribute={selectedClinicalAttribute}
                                         setSelectedClinicalAttribute={setSelectedClinicalAttribute}
                                     />
-                                </>}
+                                </>
+                            )}
 
                             {/* Range Select */}
                             <PredictionRangeLabelsSetSelect
@@ -176,7 +177,8 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             />
 
                             <Button className='margin-top-2' primary fluid onClick={() => { setOpenRangeLabelsSetModal(true) }}>Add Range labels</Button>
-                        </>}
+                        </>
+                    )}
                 </Grid.Column>
             </Grid.Row>
         </Grid>

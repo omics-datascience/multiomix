@@ -142,23 +142,24 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     maxLength={100}
                 />
 
-                {props.showSurvivalTuplesForm &&
-                <SurvivalTuplesForm
-                    survivalColumns={props.newCGDSDataset.survival_columns ?? []}
-                    disabled={props.addingOrEditingCGDSStudy}
-                    handleSurvivalFormDatasetChanges={(idx: number, name: string, value) => {
-                        const handleSurvivalFormDatasetChanges = props.handleSurvivalFormDatasetChanges as HandleSurvivalChangesCallback
-                        handleSurvivalFormDatasetChanges(props.datasetName, idx, name, value)
-                    }}
-                    addSurvivalFormTuple={() => {
-                        const addSurvivalFormTuple = props.addSurvivalFormTuple as AddSurvivalTuplesCallback
-                        addSurvivalFormTuple(props.datasetName)
-                    }}
-                    removeSurvivalFormTuple={(idx) => {
-                        const removeSurvivalFormTuple = props.removeSurvivalFormTuple as RemoveSurvivalTupleCallback
-                        removeSurvivalFormTuple(props.datasetName, idx)
-                    }}
-                />}
+                {props.showSurvivalTuplesForm && (
+                    <SurvivalTuplesForm
+                        survivalColumns={props.newCGDSDataset.survival_columns ?? []}
+                        disabled={props.addingOrEditingCGDSStudy}
+                        handleSurvivalFormDatasetChanges={(idx: number, name: string, value) => {
+                            const handleSurvivalFormDatasetChanges = props.handleSurvivalFormDatasetChanges as HandleSurvivalChangesCallback
+                            handleSurvivalFormDatasetChanges(props.datasetName, idx, name, value)
+                        }}
+                        addSurvivalFormTuple={() => {
+                            const addSurvivalFormTuple = props.addSurvivalFormTuple as AddSurvivalTuplesCallback
+                            addSurvivalFormTuple(props.datasetName)
+                        }}
+                        removeSurvivalFormTuple={(idx) => {
+                            const removeSurvivalFormTuple = props.removeSurvivalFormTuple as RemoveSurvivalTupleCallback
+                            removeSurvivalFormTuple(props.datasetName, idx)
+                        }}
+                    />
+                )}
             </div>
         )
         : null

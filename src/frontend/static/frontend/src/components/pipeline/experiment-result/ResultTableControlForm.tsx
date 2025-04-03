@@ -196,11 +196,11 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                 <Form.Field width={1}>
                     <InfoPopup
                         id='experiment-result-info-popup'
-                        content={
+                        content={(
                             <p>
                                 This table shows all the combinations whose correlation coefficient was more or equal than selected threshold ({props.minimumCoefficientThreshold}). Choose some of the options listed in <i>Actions</i> column
                             </p>
-                        }
+                        )}
                     />
                 </Form.Field>
             </Form.Group>

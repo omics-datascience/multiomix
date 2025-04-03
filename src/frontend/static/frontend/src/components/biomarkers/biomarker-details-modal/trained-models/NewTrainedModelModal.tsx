@@ -438,7 +438,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                                 <Form.Input
                                     fluid
-                                    label={
+                                    label={(
                                         <InputLabel label='Number of folds'>
                                             <InfoPopup
                                                 content='Defines the number of data splits for cross-validation; ensures robust model evaluation and prevents overfitting.'
@@ -448,7 +448,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                                 extraClassName='pull-right'
                                             />
                                         </InputLabel>
-                                    }
+                                    )}
                                     placeholder='An integer number'
                                     type='number'
                                     step={1}

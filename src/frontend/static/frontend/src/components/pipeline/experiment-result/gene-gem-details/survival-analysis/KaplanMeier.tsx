@@ -299,7 +299,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
 
                             </Form.Field>
 
-                            {this.state.couldInferFieldsOfInterest &&
+                            {this.state.couldInferFieldsOfInterest && (
                                 <Form.Field width={4}>
                                     <Label
                                         id='advice-infer-interest'
@@ -309,7 +309,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     >
                                         The fields of interest were inferred from common values
                                     </Label>
-                                </Form.Field>}
+                                </Form.Field>
+                            )}
 
                         </Form.Group>
                     </Form>

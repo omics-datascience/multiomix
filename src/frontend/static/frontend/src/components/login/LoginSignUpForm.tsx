@@ -243,10 +243,11 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     value={this.state.email}
                     onChange={this.handleInputChange}
                 />
-                {emailIsNotValid &&
+                {emailIsNotValid && (
                     <p className='align-center error-message-helper'>
                         Please provide a valid <i>email</i> address
-                    </p>}
+                    </p>
+                )}
                 <Form.Input
                     fluid
                     icon='lock'
@@ -269,10 +270,11 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     onChange={this.handleInputChange}
                     type='password'
                 />
-                {passwordsMismatch &&
+                {passwordsMismatch && (
                     <p className='align-center error-message-helper'>
                         This value is different to <i>Password</i> field
-                    </p>}
+                    </p>
+                )}
 
                 <Form.Group className='margin-top-5' widths='equal'>
                     <Form.Field

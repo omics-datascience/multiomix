@@ -217,28 +217,31 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 />
                             </Table.Cell>
                             <Table.Cell width={1}>
-                                {statisticalValidation.state === BiomarkerState.COMPLETED &&
+                                {statisticalValidation.state === BiomarkerState.COMPLETED && (
                                     <Icon
                                         name='chart area'
                                         onClick={() => { props.openStatResult(statisticalValidation) }}
                                         className='clickable'
                                         color='blue'
                                         title='See results'
-                                    />}
+                                    />
+                                )}
 
                                 {/* Stop button */}
-                                {isInProcess &&
+                                {isInProcess && (
                                     <StopExperimentButton
                                         title='Stop statistical validation'
                                         onClick={() => setStatValidationToStop(statisticalValidation)}
-                                    />}
+                                    />
+                                )}
 
                                 {/* Delete button */}
-                                {!isInProcess &&
+                                {!isInProcess && (
                                     <DeleteExperimentButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
-                                    />}
+                                    />
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     )

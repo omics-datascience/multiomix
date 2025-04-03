@@ -133,7 +133,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
         return (
             <>
                 {/* NOTE: this conditional ensures that componentDidMount fires when selectedRow is set avoiding errors */}
-                {this.state.showDetailsModal &&
+                {this.state.showDetailsModal && (
                     <GeneGemDetailsModal
                         experiment={experiment}
                         selectedRow={this.state.selectedRow}
@@ -143,7 +143,8 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                         showModal={this.state.showDetailsModal}
                         refreshExperimentInfo={this.props.refreshExperimentInfo}
                         onHandleClose={this.handleCloseModal}
-                    />}
+                    />
+                )}
 
                 {/* Table Control */}
                 <ResultTableControlForm

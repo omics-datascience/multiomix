@@ -380,16 +380,17 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
 
             {/* Buttons */}
             <Modal.Actions>
-                {currentStep > 1 &&
+                {currentStep > 1 && (
                     <Button
                         color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
                         Go back
-                    </Button>}
+                    </Button>
+                )}
 
                 {/* Continue button */}
-                {currentStep === 1 &&
+                {currentStep === 1 && (
                     <Button
                         color='green'
                         loading={sendingData}
@@ -399,10 +400,11 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         disabled={!selectedTrainedModelIsValid}
                     >
                         Continue
-                    </Button>}
+                    </Button>
+                )}
 
                 {/* Submit StatisticalAnalysis button */}
-                {currentStep === 2 &&
+                {currentStep === 2 && (
                     <Button
                         color='green'
                         loading={sendingData}
@@ -412,7 +414,8 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         disabled={!formIsValid()}
                     >
                         Confirm
-                    </Button>}
+                    </Button>
+                )}
             </Modal.Actions>
         </Modal>
     )

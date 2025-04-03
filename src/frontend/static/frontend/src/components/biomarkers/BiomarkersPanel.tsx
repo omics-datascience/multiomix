@@ -1702,19 +1702,21 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         />
 
                                         {/* Stop button */}
-                                        {isInProcess &&
+                                        {isInProcess && (
                                             <StopExperimentButton
                                                 title='Stop biomarker'
                                                 onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                            />}
+                                            />
+                                        )}
 
                                         {/* Delete button */}
-                                        {!isInProcess &&
+                                        {!isInProcess && (
                                             <DeleteExperimentButton
                                                 title='Delete biomarker'
                                                 disabled={currentBiomarkerIsLoading}
                                                 onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                            />}
+                                            />
+                                        )}
                                     </>
                                 </Table.Cell>
                             </Table.Row>
@@ -1767,7 +1769,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                     {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
                         <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />}
 
-                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL &&
+                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL && (
                         <ManualForm
                             handleChangeInputForm={this.handleChangeInputForm}
                             handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
@@ -1790,9 +1792,10 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                             handleSendForm={this.handleSendForm}
                             handleChangeCheckBox={this.handleChangeCheckBox}
                             handleRestartSection={this.handleRestartSection}
-                        />}
+                        />
+                    )}
 
-                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION &&
+                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION && (
                         <FeatureSelectionPanel
                             featureSelection={this.state.featureSelection}
                             getDefaultFilters={this.getDefaultFilters()}
@@ -1813,7 +1816,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                             handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
                             handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
                             cancelForm={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
-                        />}
+                        />
+                    )}
                 </Modal>
 
                 {/* Biomarker details modal. */}

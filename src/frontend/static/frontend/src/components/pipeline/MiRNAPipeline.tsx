@@ -944,7 +944,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                         </Grid.Column>
 
                         {/* My experiments info */}
-                        {this.state.showLastExperiments &&
+                        {this.state.showLastExperiments && (
                             <Grid.Column width={2} textAlign='center'>
                                 <UserLastExperiments
                                     seeResult={this.seeResult}
@@ -960,7 +960,8 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                     handleKeyDown={this.handleKeyDownTagForLastExperiment}
                                     handleAddTagInputsChange={this.handleAddTagInputsChangeForLastExperiment}
                                 />
-                            </Grid.Column>}
+                            </Grid.Column>
+                        )}
                     </Grid>
                 </Segment>
             </div>

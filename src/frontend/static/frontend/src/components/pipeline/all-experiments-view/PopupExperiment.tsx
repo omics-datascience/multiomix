@@ -10,14 +10,14 @@ export const PopupExperiment = (props: Props) => {
         <Popup
             on='click'
             basic
-            trigger={
+            trigger={(
                 <Icon
                     name='ellipsis vertical'
                     color='blue'
                     size='small'
                     className='clickable'
                 />
-            }
+            )}
             content={props.content}
         />
     )

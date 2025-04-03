@@ -182,7 +182,7 @@ const MainNavbar = (props: MainNavbarProps) => {
             </Menu.Item>
 
             {/* Loading spinners while user is fetch */}
-            {props.isLoadingUser &&
+            {props.isLoadingUser && (
                 <Menu.Menu>
                     <Menu.Item style={{ padding: '0 1.72rem' }}>
                         <Loader active inline='centered' />
@@ -196,9 +196,10 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item style={{ padding: '0 1.7rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
-                </Menu.Menu>}
+                </Menu.Menu>
+            )}
             {/* Analysis menu */}
-            {currentUser && !currentUser.is_anonymous &&
+            {currentUser && !currentUser.is_anonymous && (
                 <>
                     <Menu.Menu as='h2'>
                         <Dropdown text='Analysis' className='link item' icon={null}>
@@ -250,14 +251,15 @@ const MainNavbar = (props: MainNavbarProps) => {
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
-                </>}
+                </>
+            )}
 
             {/* Only admin options */}
-            {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) &&
+            {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) && (
                 <Menu.Menu as='h2'>
                     <Dropdown text='Admin' className='link item' icon={null}>
                         <Dropdown.Menu>
-                            {currentUser.is_superuser &&
+                            {currentUser.is_superuser && (
                                 <>
                                     {/* User's Datasets panel */}
                                     <Dropdown.Item
@@ -266,18 +268,21 @@ const MainNavbar = (props: MainNavbarProps) => {
                                         // as='a' href={null}
                                         disabled
                                     />
-                                </>}
+                                </>
+                            )}
                         </Dropdown.Menu>
                     </Dropdown>
-                </Menu.Menu>}
+                </Menu.Menu>
+            )}
 
             {/* Institutions */}
-            {currentUser &&
+            {currentUser && (
                 <Menu.Menu as='h2'>
                     <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
                         Institutions
                     </Menu.Item>
-                </Menu.Menu>}
+                </Menu.Menu>
+            )}
 
             {/* About us */}
             <Menu.Menu as='h2'>

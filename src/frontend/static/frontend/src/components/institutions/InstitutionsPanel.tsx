@@ -307,7 +307,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                 {/* Edit button */}
 
                                                 {
-                                                    institution.is_user_admin &&
+                                                    institution.is_user_admin && (
                                                         <Icon
                                                             name='pencil'
                                                             className='clickable margin-left-5'
@@ -315,9 +315,10 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                             title={`Edit (${institution.name}`}
                                                             onClick={() => this.handleSetInstitutionToEdit(institution)}
                                                         />
+                                                    )
                                                 }
                                                 {/* Delete button */}
-                                                {institution.is_user_admin &&
+                                                {institution.is_user_admin && (
                                                     <Icon
                                                         name='trash'
                                                         className='clickable margin-left-5'
@@ -325,7 +326,8 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                         disabled={this.state.isDeletingInstitution}
                                                         title='Delete Institution'
                                                         onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
-                                                    />}
+                                                    />
+                                                )}
                                             </Table.Cell>
                                         </Table.Row>
                                     )

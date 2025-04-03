@@ -88,7 +88,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                     />
                 </Grid.Column>
                 <Grid.Column width={4}>
-                    {selectedTrainedModelPk !== null &&
+                    {selectedTrainedModelPk !== null && (
                         <>
                             <NewClusterLabelsSetModal
                                 showNewClusterLabelsSet={openClusterLabelsSetModal}
@@ -103,7 +103,8 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                             />
 
                             <Button className='margin-top-2' primary fluid onClick={() => { setOpenClusterLabelsSetModal(true) }}>Add Cluster labels</Button>
-                        </>}
+                        </>
+                    )}
                 </Grid.Column>
             </Grid.Row>
         </Grid>

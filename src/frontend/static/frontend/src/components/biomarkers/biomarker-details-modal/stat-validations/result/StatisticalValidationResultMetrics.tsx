@@ -84,21 +84,22 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
             </Segment>
 
             {/* Result metrics data. */}
-            {!isClustering &&
+            {!isClustering && (
                 <Segment className='align-center margin-top-5'>
-                    {loadingMetrics &&
-                    <Placeholder className='full-width'>
-                        <Placeholder.Header image>
-                            <Placeholder.Line />
-                            <Placeholder.Line />
-                        </Placeholder.Header>
-                        <Placeholder.Paragraph>
-                            <Placeholder.Line length='medium' />
-                            <Placeholder.Line length='short' />
-                        </Placeholder.Paragraph>
-                    </Placeholder>}
+                    {loadingMetrics && (
+                        <Placeholder className='full-width'>
+                            <Placeholder.Header image>
+                                <Placeholder.Line />
+                                <Placeholder.Line />
+                            </Placeholder.Header>
+                            <Placeholder.Paragraph>
+                                <Placeholder.Line length='medium' />
+                                <Placeholder.Line length='short' />
+                            </Placeholder.Paragraph>
+                        </Placeholder>
+                    )}
 
-                    {(!loadingMetrics && statValidationData !== null) &&
+                    {(!loadingMetrics && statValidationData !== null) && (
                         <>
                             <Header as='h2' dividing textAlign='left'>Validation metrics</Header>
 
@@ -114,8 +115,10 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
                                 <Statistic.Value>{statValidationData.r2_score ? statValidationData.r2_score.toFixed(3) : '-'}</Statistic.Value>
                                 <Statistic.Label>R2 score</Statistic.Label>
                             </Statistic>
-                        </>}
-                </Segment>}
+                        </>
+                    )}
+                </Segment>
+            )}
         </>
     )
 }

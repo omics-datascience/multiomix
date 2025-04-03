@@ -203,7 +203,7 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                             {tooltipData.thirdQuartile && <div>Third quartile: {tooltipData.thirdQuartile}</div>}
                             {tooltipData.max && <div>Max: {tooltipData.max}</div>}
                         </div>
-                        {(tooltipData.outliersObjects && tooltipData.outliersObjects.length > 0) &&
+                        {(tooltipData.outliersObjects && tooltipData.outliersObjects.length > 0) && (
                             <div>
                                 <strong>Outliers</strong>
                                 <div>
@@ -213,7 +213,8 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                                         </span>
                                     ))}
                                 </div>
-                            </div>}
+                            </div>
+                        )}
                     </Tooltip>
                 )}
             </>

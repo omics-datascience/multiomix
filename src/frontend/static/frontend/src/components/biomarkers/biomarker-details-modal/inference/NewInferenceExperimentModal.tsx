@@ -373,16 +373,17 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
 
             {/* Buttons */}
             <Modal.Actions>
-                {currentStep > 1 &&
+                {currentStep > 1 && (
                     <Button
                         color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
                         Go back
-                    </Button>}
+                    </Button>
+                )}
 
                 {/* Continue button */}
-                {currentStep === 1 &&
+                {currentStep === 1 && (
                     <Button
                         color='green'
                         loading={sendingData}
@@ -392,10 +393,11 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         disabled={!selectedTrainedModelIsValid}
                     >
                         Continue
-                    </Button>}
+                    </Button>
+                )}
 
                 {/* Submit StatisticalAnalysis button */}
-                {currentStep === 2 &&
+                {currentStep === 2 && (
                     <Button
                         color='green'
                         loading={sendingData}
@@ -405,7 +407,8 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         disabled={!formIsValid()}
                     >
                         Confirm
-                    </Button>}
+                    </Button>
+                )}
             </Modal.Actions>
         </Modal>
     )

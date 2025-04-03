@@ -267,11 +267,11 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 </Grid.Column>
                 <Grid.Column width={1} verticalAlign='middle'>
                     <InfoPopup
-                        content={
+                        content={(
                             <span>
                                 The combined score is computed by combining the probabilities from the different evidence channels and corrected for the probability of randomly observing an interaction. For a more detailed description please see <ExternalLink href='https://pubmed.ncbi.nlm.nih.gov/15608232/'>von Mering, et al. Nucleic Acids Res. 2005</ExternalLink>
                             </span>
-                        }
+                        )}
                         onTop={false}
                         onEvent='click'
                     />

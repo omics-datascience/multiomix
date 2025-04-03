@@ -115,7 +115,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                 <Icon name={showAdvancedSettings ? 'chevron down' : 'chevron right'} /> <strong>Advanced Settings</strong>
             </div>
 
-            {showAdvancedSettings &&
+            {showAdvancedSettings && (
                 <Form className='margin-bottom-5'>
                     {/* Correlation method */}
                     <Form.Field>
@@ -137,7 +137,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     </Form.Field>
 
                     {/* For Methylation only: if it will be a all vs all of only Methylation/CNA genes = Genes */}
-                    {props.gemFileType !== FileType.MIRNA &&
+                    {props.gemFileType !== FileType.MIRNA && (
                         <>
                             <LabelWithInfoPopup
                                 labelText='Correlate...'
@@ -160,7 +160,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                                 /* FIXME: disabled all vs all for Kendall until https://github.com/zolkko/kendalls/issues/2 is fixed */
                                 disabled={props.isEditing || props.newExperiment.correlationMethod === CorrelationMethod.KENDALL}
                             />
-                        </>}
+                        </>
+                    )}
 
                     {/* Minimum correlation coefficient */}
                     <Form.Field>
@@ -223,7 +224,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                             disabled={props.isEditing}
                         />
                     </Form.Field>
-                </Form>}
+                </Form>
+            )}
         </>
     )
 }

@@ -63,7 +63,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
             position='left center'
             wide='very'
             size='large'
-            trigger={
+            trigger={(
                 <Button
                     basic
                     color={props.iconColor}
@@ -72,7 +72,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
                 >
                     <Icon name={props.iconName} />
                 </Button>
-            }
+            )}
         >
             {/* Popup content */}
             <>

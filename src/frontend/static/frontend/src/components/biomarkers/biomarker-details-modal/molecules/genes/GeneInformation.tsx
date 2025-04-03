@@ -358,7 +358,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                             header={geneData.name}
                             meta={geneData.alias_symbol}
                             description={geneData.ensembl_gene_id}
-                            extra={
+                            extra={(
                                 <Grid textAlign='center'>
                                     <Grid.Row columns={1}>
                                         <Grid.Column><strong>GRCh37:</strong></Grid.Column>
@@ -369,7 +369,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                                         <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_position}-{geneData.end_position}</Grid.Column>
                                     </Grid.Row>
                                 </Grid>
-                            }
+                            )}
                             color='violet'
                         />
                     </Grid.Column>
@@ -389,7 +389,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     <Accordion.Title
                         active={activeIndex === 1}
                         icon={<></>}
-                        content={
+                        content={(
                             <Grid padded columns={6} stackable>
                                 {linksData.slice(0, 5).map(item => (
                                     <Grid.Column key={item.source}>
@@ -422,11 +422,11 @@ export const GeneInformation = (props: GeneInformationProps) => {
                                     </Button>
                                 </Grid.Column>
                             </Grid>
-                        }
+                        )}
                         index={1}
                     />
                     <Accordion.Content
-                        active={activeIndex === 1} content={
+                        active={activeIndex === 1} content={(
                             <Grid columns={6} stackable>
                                 {linksData.slice(5, linksData.length).map(item => (
                                     <Grid.Column key={item.source}>
@@ -448,7 +448,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                                     </Grid.Column>
                                 ))}
                             </Grid>
-                        }
+                        )}
                     />
                 </Accordion>
             </Segment>

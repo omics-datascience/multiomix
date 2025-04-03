@@ -203,7 +203,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     <Header as='h2' dividing>Clustering metrics</Header>
 
                     <Form>
-                        {hasClusteringModel &&
+                        {hasClusteringModel && (
                             <Form.Field>
                                 <Button.Group
                                     compact
@@ -223,10 +223,11 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                         Group by clinical
                                     </Button>
                                 </Button.Group>
-                            </Form.Field>}
+                            </Form.Field>
+                        )}
 
                         {/* Clinical attribute select */}
-                        {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') &&
+                        {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') && (
                             <Form.Select
                                 fluid
                                 selectOnBlur={false}
@@ -237,7 +238,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 onChange={(_, { value }) => { setSelectedClinicalAttribute(value as string) }}
                                 placeholder='Clinical attribute to group by'
                                 disabled={clinicalAttributesOptions.length === 0}
-                            />}
+                            />
+                        )}
                     </Form>
 
                     {/* TODO: add InfoPopups for every metric and their interpretation. */}
@@ -251,7 +253,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     </Statistic>
 
                     {/* Samples and clusters modal. */}
-                    {(hasClusteringModel && kaplanMeierStrategy === 'clustering' && kaplanMeierData !== null) &&
+                    {(hasClusteringModel && kaplanMeierStrategy === 'clustering' && kaplanMeierData !== null) && (
                         <Modal
                             onClose={() => setShowSamplesAndClusters(false)}
                             onOpen={() => setShowSamplesAndClusters(true)}
@@ -269,7 +271,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             <Modal.Actions>
                                 <Button onClick={() => setShowSamplesAndClusters(false)}>Close</Button>
                             </Modal.Actions>
-                        </Modal>}
+                        </Modal>
+                    )}
                 </GridColumn>
             </Grid.Row>
         </Grid>

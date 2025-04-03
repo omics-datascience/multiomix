@@ -121,7 +121,7 @@ export const UpdateUserModal = (props: Props) => {
                             </h6>
                             <Input
                                 type={password.visibility ? 'text' : 'password'}
-                                icon={
+                                icon={(
                                     <Button
                                         icon
                                         onClick={(_) => setPassword(prevState => ({ ...prevState, visibility: !prevState.visibility }))}
@@ -130,7 +130,7 @@ export const UpdateUserModal = (props: Props) => {
                                             name={password.visibility ? 'eye slash' : 'eye'}
                                         />
                                     </Button>
-                                }
+                                )}
                                 value={password.text}
                                 onChange={(e, { value }) => setPassword(prevState => ({ ...prevState, text: value.trim() }))}
                             />
@@ -139,7 +139,7 @@ export const UpdateUserModal = (props: Props) => {
                             <p>Repeat password:</p>
                             <Input
                                 type={passwordCheck.visibility ? 'text' : 'password'}
-                                icon={
+                                icon={(
                                     <Button
                                         icon
                                         onClick={(_) => setPasswordCheck(prevState => ({ ...prevState, visibility: !prevState.visibility }))}
@@ -148,15 +148,16 @@ export const UpdateUserModal = (props: Props) => {
                                             name={passwordCheck.visibility ? 'eye slash' : 'eye'}
                                         />
                                     </Button>
-                                }
+                                )}
                                 value={passwordCheck.text}
                                 onChange={(e, { value }) => setPasswordCheck(prevState => ({ ...prevState, text: value.trim() }))}
                             />
-                            {textError.isOpen &&
+                            {textError.isOpen && (
                                 <Message negative>
                                     <MessageHeader>{textError.title}</MessageHeader>
                                     <p>{textError.body}</p>
-                                </Message>}
+                                </Message>
+                            )}
                         </div>
                     </div>
                 </Segment>
