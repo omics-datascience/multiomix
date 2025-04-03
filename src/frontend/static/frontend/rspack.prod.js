@@ -6,7 +6,7 @@ module.exports = {
     devtool: false,
     module: {
         rules: [
-            ...common.module.rules, // Keeps rules from `rspack.config.js`
+            ...common.module.rules,
             {
                 test: /\.ts(x)?$/,
                 exclude: /node_modules/,
