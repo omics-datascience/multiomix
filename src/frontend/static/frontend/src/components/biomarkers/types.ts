@@ -88,7 +88,11 @@ interface BiomarkerSimple {
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
-    column_used_as_index: string
+    column_used_as_index: string,
+    user: {
+        id: number,
+        username: string,
+    }
 }
 
 /** Django Biomarker model. */

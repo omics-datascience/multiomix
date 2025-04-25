@@ -318,6 +318,7 @@ class RemoveInstitutionFromExperimentView(APIView):
         return Response(
             {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
         )
+
 class RemoveUserFromExperimentView(APIView):
     """
     API endpoint to remove an user from an experiment.
@@ -417,7 +418,7 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
 
 class UsersExperimentsSharedListView(generics.ListAPIView):
     """
-    REST endpoint: Get all users associated with a specific experiment.
+    REST endpoint: Get all institution associated with a specific experiment.
     """
     serializer_class = LimitedUserSerializer
     permission_classes = [permissions.IsAuthenticated]

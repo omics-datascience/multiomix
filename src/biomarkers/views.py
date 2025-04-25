@@ -2,10 +2,11 @@ from copy import deepcopy
 from typing import List, Optional, Dict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+
 from django.db import transaction
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,12 +15,14 @@ from api_service.models import Experiment
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
 from biomarkers.serializers import BiomarkerFromCorrelationAnalysisSerializer, BiomarkerSerializer, MoleculeIdentifierSerializer, \
-    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
+    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer, LimitedUserSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
 from django.db.models import QuerySet, Q
-
-
+from institutions.serializers import InstitutionSimpleSerializer, InstitutionSerializer
+from institutions.models import Institution
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
 class BiomarkerList(generics.ListAPIView):
     """REST endpoint: list for Biomarker model"""
@@ -281,7 +284,7 @@ class BiomarkerMolecules(generics.ListAPIView):
 
 
 class BiomarkerCorrelationAPIView(APIView):
-    """Validates the request data and retrieves the corresponding experiment."""
+    """Validates the request data and retrieves the corresponding biomarker."""
     
     def post(self, request, *args, **kwargs):
         # Instantiate the serializer with the received data
@@ -297,3 +300,188 @@ class BiomarkerCorrelationAPIView(APIView):
         return Response({
             "ok": True,
         })
+
+class InstitutionNonExperimentsSharedBiomarkerListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution NOT associated with a specific biomarker.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institutions not associated with a specific biomarker.
+        """
+        biomarker_id = self.kwargs.get('biomarker_id')
+        user = self.request.user
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        user_institutions = Institution.objects.filter(users=user)
+        return user_institutions.exclude(
+            id__in=biomarker.shared_institutions.values_list('id', flat=True)
+        )
+
+class AddInstitutionToBiomarkerView(APIView):
+    """
+    API endpoint to add an institution to a biomarker.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        institution_id = data.get('institutionId')
+        biomarker_id = data.get('biomarkerId')
+
+        if not institution_id or not biomarker_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'biomarkerId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        biomarker.shared_institutions.add(institution)
+        serializer = InstitutionSerializer(institution)
+        return Response(serializer.data)
+
+class UsersSharedBiomarkerListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution associated with a specific biomarker.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users associated with a specific institution.
+        """
+        biomarker_id = self.kwargs.get('biomarker_id')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        return biomarker.shared_users
+
+class RemoveInstitutionFromBiomarkerView(APIView):
+    """
+    API endpoint to remove an institution from an biomarker.
+    Only the owner of the biomarker can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the biomarker.
+        """
+        data = request.data
+        biomarker_id = data.get('biomarkerId')
+        institution_id = data.get('institutionId')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if biomarker.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        if not biomarker.shared_institutions.filter(id=institution.id).exists():
+            return Response(
+                {"error": "This institution is not associated with the experiment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        biomarker.shared_institutions.remove(institution)
+
+        return Response(
+            {"message": f"Institution {institution.id} removed from biomarker {biomarker.id}."}
+        )
+
+class InstitutionBiomarkersSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution associated with a specific biomarker.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institution associated with a specific institution.
+        """
+        biomarker_id = self.kwargs.get('biomarker_id')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        return biomarker.shared_institutions
+
+class RemoveUserFromBiomarkerView(APIView):
+    """
+    API endpoint to remove an user from an biomarker.
+    Only the owner of the biomarker can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the biomarker.
+        """
+        data = request.data
+        biomarker_id = data.get('biomarkerId')
+        user_id = data.get('userId')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if biomarker.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this biomarker."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = get_object_or_404(User, id=user_id)
+
+        if not biomarker.shared_users.filter(id=user.id).exists():
+            return Response(
+                {"error": "This USER is not associated with the biomarker."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        biomarker.shared_users.remove(user)
+
+        return Response(
+            {"message": f"User {user.id} removed from biomarker {biomarker.id}."}
+        )
+
+class UsersNonBiomarkersSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users NOT associated with a specific biomarker.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users not associated with a specific institution.
+        """
+        biomarker_id = self.kwargs.get('biomarker_id')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+
+        associated_user_ids = biomarker.shared_users.values_list('id', flat=True)
+        return get_user_model().objects.exclude(id__in=associated_user_ids)
+
+class AddUserToBiomarkerView(APIView):
+    """
+    API endpoint to add an institution to an biomarker.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        user_id = data.get('userId')
+        biomarker_id = data.get('biomarkerId')
+
+        if not user_id or not biomarker_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'biomarkerId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        user = get_object_or_404(User, id=user_id)
+
+        biomarker.shared_users.add(user)
+
+        serializer = LimitedUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

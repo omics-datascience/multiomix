@@ -68,6 +68,10 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         }
     }
 
+    /**
+     * default modal user
+     * @returns default modal shared user object
+     */
     defaultModalUsers (): SharedUsersProps {
         return {
             isOpen: false,

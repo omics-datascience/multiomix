@@ -23,6 +23,8 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 import './../../css/biomarkers.css'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
+import { SharedUsersBiomarker, SharedUsersBiomarkerProps } from './SharedUsersBiomarker'
+import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerProps } from './SharedInstitutionsBiomarker'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -91,8 +93,11 @@ interface BiomarkersPanelState {
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
     submittingFSExperiment: boolean,
-    openDetailsModal2: boolean
-
+    openDetailsModal2: boolean,
+    /** modal to handle shared institutions */
+    modalInstitutions: SharedInstitutionsBiomarkerProps,
+    /** modal to handle shared users */
+    modalUsers: SharedUsersBiomarkerProps,
 }
 
 /**
@@ -126,7 +131,9 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
             submittingFSExperiment: false,
-            openDetailsModal2: false
+            openDetailsModal2: false,
+            modalInstitutions: this.defaultModalInstitutions(),
+            modalUsers: this.defaultModalUsers()
         }
     }
 
@@ -136,6 +143,54 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * default modal institution
+     */
+    handleCloseModalModalInstitution = () => {
+        this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * default modal institution
+     * @returns default modal shared institution object
+     */
+    defaultModalInstitutions = (): SharedInstitutionsBiomarkerProps => {
+        return {
+            isOpen: false,
+            institutions: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     * @returns default modal shared user object
+     */
+    defaultModalUsers (): SharedUsersBiomarkerProps {
+        return {
+            isOpen: false,
+            users: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     */
+    handleCloseModalModalUser = () => {
+        this.setState({ modalUsers: this.defaultModalUsers() })
     }
 
     /**
@@ -1197,7 +1252,11 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             methylations: [],
             mirnas: [],
             cnas: [],
-            mrnas: []
+            mrnas: [],
+            user: {
+                id: 0,
+                username: ''
+            }
         }
     }
 
@@ -1627,6 +1686,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                        { name: 'Shared', width: 1 },
                         { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
@@ -1666,6 +1726,32 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                <Table.Cell>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared institutions'
+                                            name='building'
+                                            color='green'
+                                        />
+                                    </Button>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared users'
+                                            name='users'
+                                            color='teal'
+                                        />
+                                    </Button>
+                                </Table.Cell>
                                 <Table.Cell width={1}>
                                     {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
                                     <>
@@ -1840,7 +1926,26 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                     content={this.state.confirmModal.contentText}
                     size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+                        const confirmModal = this.state.confirmModal
+                        confirmModal.confirmModal = false
+                        this.setState({ confirmModal })
+                    }}
+                />
+                <SharedUsersBiomarker
+                    {...this.state.modalUsers}
+                    handleClose={this.handleCloseModalModalUser}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                />
+                <SharedInstitutionsBiomarker
+                    user={this.state.modalInstitutions.user}
+                    isOpen={this.state.modalInstitutions.isOpen}
+                    institutions={this.state.modalInstitutions.institutions}
+                    handleClose={this.handleCloseModalModalInstitution}
+                    biomarkerId={this.state.modalInstitutions.biomarkerId}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                    isAdding={this.state.modalInstitutions.isAdding}
                 />
 
                 <Alert

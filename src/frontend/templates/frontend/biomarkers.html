@@ -81,6 +81,15 @@
                 const urlMiRNADiseases = "{% url 'mirna_diseases' %}"
                 const urlMiRNAInteraction = "{% url 'mirna_target_interaction' %}"
                 const downloadFileURL = "{% url 'download_user_file' %}"
+                const urlGetUsersCandidatesLimitedBiomarker = "{% url 'user_candidates_limited_institution' %}"
+                const urlGetInstitutionsNonInExperimentBiomarker = "{% url 'institution-non-experiments-list-biomarker' %}"
+                const urlShareBiomarkerToInstitution = "{% url 'share-biomarker-to-institution' %}"
+                const urlGetSharedInstitutionBiomarker = "{% url 'shared-institution-biomarker' %}"
+                const urlPostRemoveInstitutionBiomarker = "{% url 'remove-institution-biomarker' %}"
+                const urlGetSharedUsersBiomarker = "{% url 'shared-users-biomarker' %}"
+                const urlPostRemoveUserBiomarker = "{% url 'remove-user-biomarker' %}"
+                const urlGetUsersNonInBiomarker = "{% url 'user-non-biomarker-list' %}"
+                const urlShareBiomarkerToUser = "{% url 'share-biomarker-to-user' %}"
         </script>
         {% render_bundle 'biomarkers' 'js' %}
 {% endblock %}
