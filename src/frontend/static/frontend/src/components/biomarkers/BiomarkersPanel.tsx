@@ -25,6 +25,8 @@ import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExper
 import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
 import { SharedUsersBiomarker, SharedUsersBiomarkerProps } from './SharedUsersBiomarker'
 import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerProps } from './SharedInstitutionsBiomarker'
+import { PublicButtonBiomarker } from './PublicButtonBiomarker'
+import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -1256,7 +1258,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             user: {
                 id: 0,
                 username: ''
-            }
+            },
+            is_public: false,
         }
     }
 
@@ -1686,6 +1689,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                        { name: 'Public', width: 1 },
                         { name: 'Shared', width: 1 },
                         { name: 'Actions', width: 2 }
                     ]}
@@ -1726,6 +1730,25 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                <Table.Cell textAlign='center'>
+                                    {
+                                        biomarker.is_public
+                                            ? (
+                                                <Icon
+                                                    title='All users of the platform can see this experiment'
+                                                    name='check'
+                                                    color='green'
+                                                />
+                                            )
+                                            : (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='close'
+                                                    color='red'
+                                                />
+                                            )
+                                    }
+                                </Table.Cell>
                                 <Table.Cell>
                                     <Button
                                         basic
@@ -1767,14 +1790,13 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         />
 
                                         {/* Edit button */}
-                                        <Icon
-                                            name={currentBiomarkerIsLoading ? 'spinner' : 'pencil'}
-                                            className='clickable margin-left-5'
-                                            color={canEditMolecules ? 'yellow' : 'orange'}
-                                            loading={currentBiomarkerIsLoading}
-                                            disabled={isLoadingFullBiomarker}
-                                            title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
-                                            onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                        <EditBiomarkerIcon 
+                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker} 
+                                            biomarker={biomarker} 
+                                            ownerId={biomarker.user.id} 
+                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading} 
+                                            canEditMolecules={canEditMolecules} 
+                                            isLoadingFullBiomarker={isLoadingFullBiomarker}
                                         />
 
                                         {/* Clone button */}
@@ -1796,13 +1818,16 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         )}
 
                                         {/* Delete button */}
-                                        {!isInProcess && (
+                                        {!isInProcess && !biomarker.is_public &&  (
                                             <DeleteExperimentButton
                                                 title='Delete biomarker'
                                                 disabled={currentBiomarkerIsLoading}
                                                 onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                                ownerId={biomarker.user.id}
                                             />
                                         )}
+                                        {/* Public switch */}
+                                        <PublicButtonBiomarker biomarker={biomarker} handleChangeConfirmModalState={this.handleChangeConfirmModalState} />
                                     </>
                                 </Table.Cell>
                             </Table.Row>

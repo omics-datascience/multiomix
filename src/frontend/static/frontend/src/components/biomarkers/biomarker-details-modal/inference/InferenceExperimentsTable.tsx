@@ -232,10 +232,12 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 )}
 
                                 {/* Delete button */}
+                                {/* Todo: Revisar ownerid */}
                                 {!isInProcess && (
                                     <DeleteExperimentButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
+                                        ownerId={null}
                                     />
                                 )}
                             </Table.Cell>

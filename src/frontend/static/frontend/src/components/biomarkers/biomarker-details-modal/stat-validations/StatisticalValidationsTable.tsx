@@ -236,10 +236,12 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 )}
 
                                 {/* Delete button */}
+                                { /** Todo: revisar ownerId */}
                                 {!isInProcess && (
                                     <DeleteExperimentButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
+                                        ownerId={null}
                                     />
                                 )}
                             </Table.Cell>

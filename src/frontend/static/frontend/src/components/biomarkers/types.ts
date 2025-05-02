@@ -93,6 +93,7 @@ interface BiomarkerSimple {
         id: number,
         username: string,
     }
+    is_public: boolean,
 }
 
 /** Django Biomarker model. */

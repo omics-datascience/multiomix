@@ -31,4 +31,5 @@ urlpatterns = [
     path('non-users', views.UsersNonBiomarkersSharedListView.as_view(), name='user-non-biomarker-list'),
     path('non-users/<int:biomarker_id>/', views.UsersNonBiomarkersSharedListView.as_view()),
     path('share-biomarker-to-user', views.AddUserToBiomarkerView.as_view(), name='share-biomarker-to-user'),
+    path('switch-biomarker-public-view', views.ToggleBiomarkerPublicView.as_view(), name='switch-biomarker-public-view'),
 ]

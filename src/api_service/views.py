@@ -204,9 +204,19 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
     def get_queryset(self):
         experiment_id = self.request.GET.get('experiment_id')
+        user = self.request.user
+
         try:
-            experiment: Experiment = Experiment.objects.get(
-                pk=experiment_id, user=self.request.user)
+            #Todo: modificar Query
+            experiment: Experiment = Experiment.objects.filter(
+                Q(pk=experiment_id) &
+                (
+                    Q(user=user) |
+                    Q(is_public=True) |
+                    Q(shared_institutions__institutionadministration__user=user) |
+                    Q(shared_users=user)
+                )
+            ).distinct().get()
             combinations_queryset = experiment.combinations
 
             # Applies the filters

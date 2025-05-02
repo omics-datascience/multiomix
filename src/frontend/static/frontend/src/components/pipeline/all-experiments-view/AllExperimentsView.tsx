@@ -346,6 +346,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                     <DeleteExperimentButton
                                                         title='Delete experiment'
                                                         onClick={() => this.props.confirmExperimentDeletion(experiment)}
+                                                        ownerId={experiment.user.id}
                                                     />
                                                 )}
 

@@ -31,7 +31,11 @@ class BiomarkerList(generics.ListAPIView):
         user = self.request.user
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
         biomarkers = Biomarker.objects.filter(
-            Q(is_public=True) | Q(user=user) | Q(shared_institutions__institutionadministration__user=user)).distinct()
+            Q(is_public=True) |
+            Q(user=user) |
+            Q(shared_institutions__institutionadministration__user=user) |
+            Q(shared_users=user)
+        ).distinct()
 
         if only_successful:
             # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
@@ -73,7 +77,17 @@ class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
     """REST endpoint: get, modify and delete for Biomarker model."""
 
     def get_queryset(self):
-        return Biomarker.objects.filter(user=self.request.user)
+        user = self.request.user
+        biomarker_id = self.kwargs.get('pk')
+        return Biomarker.objects.filter(
+            Q(pk=biomarker_id) &
+            (
+                Q(is_public=True) |
+                Q(user=user) |
+                Q(shared_institutions__institutionadministration__user=user) |
+                Q(shared_users=user)
+            )
+        ).distinct()
 
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -485,3 +499,30 @@ class AddUserToBiomarkerView(APIView):
 
         serializer = LimitedUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ToggleBiomarkerPublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an biomarker.
+    Only the owner of the biomarker can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the biomarker.
+        """
+        data = request.data
+        biomarker_id = data.get('biomarkerId')
+        biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if biomarker.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this biomarker."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        biomarker.is_public = not biomarker.is_public
+        biomarker.save()
+        return Response(
+            {"id": biomarker.id, "is_public": biomarker.is_public}
+        )
+
