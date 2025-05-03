@@ -1,6 +1,6 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon, Dropdown } from 'semantic-ui-react'
+import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
