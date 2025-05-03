@@ -14,6 +14,7 @@ from common.pagination import StandardResultsSetPagination
 from user_files.serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
 from rest_framework.response import Response
+from rest_framework import status
 
 
 class UserFileChunkedUploadView(ChunkedUploadView):
@@ -178,3 +179,31 @@ class DownloadUserFile(APIView):
         response['Content-Disposition'] = f'attachment; filename={user_file.name}'
 
         return response
+
+class ToggleFilePublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an a user file.
+    Only the owner of the user file can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the userFiles.
+        """
+        data = request.data
+        print("Los datos recibidos son: ", data)
+        userFile_id = data.get('userFileId')
+        userFile = get_object_or_404(UserFile, id=userFile_id)
+        if userFile.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this user file."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        userFile.is_public = not userFile.is_public
+        userFile.save()
+
+        return Response(
+            {"id": userFile.id, "is_public": userFile.is_public}
+        )

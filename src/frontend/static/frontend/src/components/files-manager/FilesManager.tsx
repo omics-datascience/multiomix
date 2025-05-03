@@ -11,6 +11,8 @@ import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
+import { PopupExperiment } from '../pipeline/all-experiments-view/PopupExperiment'
+import { SwitchPublicButton } from '../pipeline/all-experiments-view/SwitchPublicButton'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -74,7 +76,11 @@ interface FilesManagerState {
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-class FilesManager extends React.Component<{}, FilesManagerState> {
+interface FilesManagerProps {
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void
+}
+
+class FilesManager extends React.Component<FilesManagerProps, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
     abortController = new AbortController()
@@ -702,6 +708,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             { name: 'Date', serverCodeToSort: 'upload_date' },
             { name: 'Institutions', width: 2 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
+            { name: 'Public', width: 1 },
             { name: 'Actions', width: 2 }
         ]
     }
@@ -753,7 +760,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         // Tag and File deletion modals
         const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
-
         const fileTypeOptions = getFileTypeSelectOptions(false)
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
@@ -839,6 +845,25 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                         }
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        {
+                                            userFileRow.is_public
+                                                ? (
+                                                    <Icon
+                                                        title='All users of the platform can see this file'
+                                                        name='check'
+                                                        color='green'
+                                                    />
+                                                )
+                                                : (
+                                                    <Icon
+                                                        title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                        name='close'
+                                                        color='red'
+                                                    />
+                                                )
+                                        }
+                                    </Table.Cell>
                                     <Table.Cell>
                                         {/* Shows a download button if specified */}
                                         <Icon
@@ -879,6 +904,43 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                             className='margin-left-2'
                                             color='blue'
                                             title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
+                                        />
+
+                                        <PopupExperiment
+                                            content={
+                                                <>
+                                                    {/* Shows a edit button if specified */}
+                                                    <Icon
+                                                        name='pencil'
+                                                        className='clickable margin-left-5'
+                                                        color='yellow'
+                                                        title='Edit'
+                                                        onClick={() => this.editFile(userFileRow)}
+                                                    />
+
+                                                    {/* Shows a delete button if specified */}
+                                                    <Icon
+                                                        name='trash'
+                                                        className='clickable margin-left-5'
+                                                        color='red'
+                                                        title='Delete experiment'
+                                                        onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                    />
+
+                                                    {/* Public switch */}
+                                                    <SwitchPublicButton
+                                                        PublicButtonEntity={{
+                                                            id: userFileRow.id as number,
+                                                            user: { id: userFileRow.user.id },
+                                                            is_public: userFileRow.is_public
+                                                        }}
+                                                        nameEntity='file'
+                                                        publicKey='userFileId'
+                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                    />
+
+                                                </>
+                                            }
                                         />
 
                                         {/* NaNs warning */}

@@ -11,7 +11,7 @@ import { SeeResultButton } from './SeeResultButton'
 import { StopExperimentButton } from './StopExperimentButton'
 import { DeleteExperimentButton } from './DeleteExperimentButton'
 import { SharedInstitutions, SharedInstitutionsProps } from './SharedInstitutions'
-import { PublicButtonExperiment } from './PublicButtonExperiment'
+import { SwitchPublicButton } from './SwitchPublicButton'
 import { SharedUsers, SharedUsersProps } from './SharedUsers'
 import { EditExperimentIcon } from './EditExperimentIcon'
 import { PopupExperiment } from './PopupExperiment'
@@ -346,7 +346,12 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                 }
 
                                                 {/* Public switch */}
-                                                <PublicButtonExperiment experiment={experiment} handleChangeConfirmModalState={this.props.handleChangeConfirmModalState} />
+                                                <SwitchPublicButton
+                                                    PublicButtonEntity={experiment}
+                                                    publicKey='experimentId'
+                                                    nameEntity='experiment'
+                                                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                />
                                             </>
                                         }
                                     />

@@ -374,6 +374,7 @@ class ToggleExperimentPublicView(APIView):
             )
 
         experiment.is_public = not experiment.is_public
+        experiment.save()
 
         return Response(
             {"id": experiment.id, "is_public": experiment.is_public}
