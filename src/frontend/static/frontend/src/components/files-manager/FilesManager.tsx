@@ -1,6 +1,6 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
+import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon, Dropdown } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
@@ -865,15 +865,13 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                         }
                                     </Table.Cell>
                                     <Table.Cell>
-                                        {/* Shows a download button if specified */}
+                                        {/* Extra information: */}
                                         <Icon
-                                            name='cloud download'
+                                            name='info'
+                                            className='margin-left-2'
                                             color='blue'
-                                            className='clickable margin-left-5'
-                                            title='Download file'
-                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
                                         />
-
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
                                         {userFileRow.is_private_or_institution_admin &&
@@ -886,59 +884,41 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                     title='Edit'
                                                     onClick={() => this.editFile(userFileRow)}
                                                 />
-
-                                                {/* Shows a delete button if specified */}
-                                                <Icon
-                                                    name='trash'
-                                                    className='clickable margin-left-5'
-                                                    color='red'
-                                                    title='Delete experiment'
-                                                    onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                />
                                             </React.Fragment>
                                         }
-
-                                        {/* Extra information: */}
-                                        <Icon
-                                            name='info'
-                                            className='margin-left-2'
-                                            color='blue'
-                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
-                                        />
 
                                         <PopupExperiment
                                             content={
                                                 <>
-                                                    {/* Shows a edit button if specified */}
-                                                    <Icon
-                                                        name='pencil'
-                                                        className='clickable margin-left-5'
-                                                        color='yellow'
-                                                        title='Edit'
-                                                        onClick={() => this.editFile(userFileRow)}
-                                                    />
-
-                                                    {/* Shows a delete button if specified */}
-                                                    <Icon
-                                                        name='trash'
-                                                        className='clickable margin-left-5'
-                                                        color='red'
-                                                        title='Delete experiment'
-                                                        onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                    />
-
-                                                    {/* Public switch */}
-                                                    <SwitchPublicButton
-                                                        PublicButtonEntity={{
-                                                            id: userFileRow.id as number,
-                                                            user: { id: userFileRow.user.id },
-                                                            is_public: userFileRow.is_public
-                                                        }}
-                                                        nameEntity='file'
-                                                        publicKey='userFileId'
-                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
-                                                    />
-
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {/* Shows a download button if specified */}
+                                                        <Icon
+                                                            name='cloud download'
+                                                            color='blue'
+                                                            className='clickable margin-left-5'
+                                                            title='Download file'
+                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                        />
+                                                        {/* Public switch */}
+                                                        <SwitchPublicButton
+                                                            PublicButtonEntity={{
+                                                                id: userFileRow.id as number,
+                                                                user: { id: userFileRow.user.id },
+                                                                is_public: userFileRow.is_public
+                                                            }}
+                                                            nameEntity='file'
+                                                            publicKey='userFileId'
+                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                        />
+                                                        {/* Shows a delete button if specified */}
+                                                        <Icon
+                                                            name='trash'
+                                                            className='clickable margin-left-5'
+                                                            color='red'
+                                                            title='Delete experiment'
+                                                            onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                        />
+                                                    </div>
                                                 </>
                                             }
                                         />
