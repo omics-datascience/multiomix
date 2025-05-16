@@ -20,53 +20,58 @@ export const TableCellSources = (props: Props) => {
         <>
             {
                 /* Download clinical file */
-                props.clinical_source &&
-                <SourcePopup
-                    source={props.clinical_source}
-                    iconName='file'
-                    iconColor={GenesColors.CLINICAL}
-                    downloadButtonTitle='Download source clinical file'
-                />
+                props.clinical_source && (
+                    <SourcePopup
+                        source={props.clinical_source}
+                        iconName='file'
+                        iconColor={GenesColors.CLINICAL}
+                        downloadButtonTitle='Download source clinical file'
+                    />
+                )
             }
             {
                 /* Download mRna file */
-                props.mrna_source &&
-                <SourcePopup
-                    source={props.mrna_source}
-                    iconName='file alternate'
-                    iconColor={GenesColors.MRNA}
-                    downloadButtonTitle='Download source mRna file'
-                />
+                props.mrna_source && (
+                    <SourcePopup
+                        source={props.mrna_source}
+                        iconName='file alternate'
+                        iconColor={GenesColors.MRNA}
+                        downloadButtonTitle='Download source mRna file'
+                    />
+                )
             }
             {
                 /* Download mirna file */
-                props.mirna_source &&
-                <SourcePopup
-                    source={props.mirna_source}
-                    iconName='file alternate'
-                    iconColor={GenesColors.MIRNA}
-                    downloadButtonTitle='Download source mirna file'
-                />
+                props.mirna_source && (
+                    <SourcePopup
+                        source={props.mirna_source}
+                        iconName='file alternate'
+                        iconColor={GenesColors.MIRNA}
+                        downloadButtonTitle='Download source mirna file'
+                    />
+                )
             }
             {
                 /* Download cna file */
-                props.cna_source &&
-                <SourcePopup
-                    source={props.cna_source}
-                    iconName='file alternate'
-                    iconColor={GenesColors.CNA}
-                    downloadButtonTitle='Download source cna file'
-                />
+                props.cna_source && (
+                    <SourcePopup
+                        source={props.cna_source}
+                        iconName='file alternate'
+                        iconColor={GenesColors.CNA}
+                        downloadButtonTitle='Download source cna file'
+                    />
+                )
             }
             {
                 /* Download methylation file */
-                props.methylation_source &&
-                <SourcePopup
-                    source={props.methylation_source}
-                    iconName='file alternate'
-                    iconColor={GenesColors.METHYLATION}
-                    downloadButtonTitle='Download source methylation file'
-                />
+                props.methylation_source && (
+                    <SourcePopup
+                        source={props.methylation_source}
+                        iconName='file alternate'
+                        iconColor={GenesColors.METHYLATION}
+                        downloadButtonTitle='Download source methylation file'
+                    />
+                )
             }
         </>
     )

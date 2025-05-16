@@ -18,23 +18,23 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
             <Form.Select
                 fluid
                 selectOnBlur={false}
-                label={
+                label={(
                     <InputLabel label='Kernel'>
                         <InfoPopup
-                            content={
+                            content={(
                                 <>
                                     <p>Linear Kernel: Best for linearly separable data; commonly used for simple genomic or clinical feature classification.</p>
                                     <p>Polynomial Kernel: Captures non-linear patterns; effective for complex relationships in multi-omics data.</p>
                                     <p>RBF Kernel: Maps data to a higher-dimensional space; ideal for handling non-linear separations in RNA and methylation analyses.</p>
                                 </>
-                            }
+                            )}
                             onTop={false}
                             onEvent='hover'
                             noBorder
                             extraClassName='pull-right'
                         />
                     </InputLabel>
-                }
+                )}
                 options={SVMKernelOptions}
                 placeholder='Select a kernel'
                 name='kernel'
@@ -45,7 +45,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
             <Form.Group widths='equal'>
                 <Form.Input
                     fluid
-                    label={
+                    label={(
                         <InputLabel label='Max iterations'>
                             <InfoPopup
                                 content='The maximum number of iterations to be run'
@@ -55,7 +55,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                                 extraClassName='pull-right'
                             />
                         </InputLabel>
-                    }
+                    )}
                     placeholder='100-2000'
                     name='maxIterations'
                     value={props.parameters.maxIterations ?? ''}
@@ -64,7 +64,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
 
                 <Form.Input
                     fluid
-                    label={
+                    label={(
                         <InputLabel label='Random state'>
                             <InfoPopup
                                 content='Seed used by the random number generator'
@@ -74,7 +74,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                                 extraClassName='pull-right'
                             />
                         </InputLabel>
-                    }
+                    )}
                     placeholder='An integer number'
                     type='number'
                     step={1}

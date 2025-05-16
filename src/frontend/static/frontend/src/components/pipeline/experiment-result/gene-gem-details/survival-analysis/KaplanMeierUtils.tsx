@@ -27,7 +27,7 @@ class Base extends React.Component<{
     width: number,
     height: number,
     children: any
-}, {}> {
+}, any> {
     render () {
         return (
             <svg
@@ -58,7 +58,7 @@ interface KaplanMeierSeriesProps {
 /**
  * Renders Kaplan-Meier curve for every group
  */
-class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, {}> {
+class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, any> {
     buildCurves (groups, disabledGroups) {
         return groups.map((group, index) => {
             if (disabledGroups[group.label]) {
@@ -103,7 +103,7 @@ interface KaplanMeierCurveProps {
 /**
  * Renders Kaplan-Meier single curve
  */
-class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
+class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, any> {
     collectCensorPoints (data) {
         return data.filter(({ status }) => !status)
     }
@@ -140,12 +140,11 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
             <g>
                 <path
                     d={lineFunction(data) ?? undefined}
-                    fill="none"
+                    fill='none'
                     opacity={0.7}
                     stroke={color}
                     strokeWidth={3}
-                >
-                </path>
+                />
                 {this.buildCensorMarks(censorPoints, xScale, yScale, color)}
             </g>
         )
@@ -181,11 +180,11 @@ const YAxis = (props: AxisProps) => {
                  * If the Dom change in the future, open the navigator inspect then verify the Dom and fix the new structure.
                  */
             }
-            <g className='g-wrapper' dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
+            <g className='g-wrapper' dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)} />
             <text
-                dy="1.50em"
+                dy='1.50em'
                 style={{ textAnchor: 'middle' }}
-                transform="rotate(-90)"
+                transform='rotate(-90)'
                 x={-props.height / 2}
                 y={6}
             >
@@ -208,7 +207,7 @@ const XAxis = (props: AxisProps) => {
             className='axis axis-x'
             transform={`translate(${props.left}, ${props.top})`}
         >
-            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(xAxis, props.width, props.height)}></g>
+            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(xAxis, props.width, props.height)} />
             <text
                 className='label'
                 style={{ textAnchor: 'middle' }}
@@ -236,7 +235,7 @@ interface LegendProps {
 /**
  * Renders Kaplan-Meier chart's legend
  */
-class Legend extends React.Component<LegendProps, {}> {
+class Legend extends React.Component<LegendProps, any> {
     _onClick (label: string) {
         return () => {
             this.props.toggleGroup(label)
@@ -259,7 +258,7 @@ class Legend extends React.Component<LegendProps, {}> {
                     transform={`translate(${0}, ${index * 24})`}
                 >
                     <text
-                        dy="0.35em"
+                        dy='0.35em'
                         style={{ textAnchor: 'end', userSelect: 'none' }}
                         // style={{ textAnchor: 'left', userSelect: 'none', textAnchor: 'end' }}
                         y={8}
@@ -362,7 +361,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
      */
     findMaxTime (groups: KaplanMeierGroup[]): number {
         return groups.reduce((currentMax, { data }) => {
-            return Math.max(currentMax, Math.max.apply(Math, data.map((sample) => sample.time)))
+            return Math.max(currentMax, Math.max(...data.map((sample) => sample.time)))
         }, -Infinity)
     }
 

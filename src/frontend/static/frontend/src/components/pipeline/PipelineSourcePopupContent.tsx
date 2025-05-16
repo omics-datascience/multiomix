@@ -9,7 +9,7 @@ declare const urlDatasets: string
  * @returns Component
  */
 export const PipelineSourcePopupContent = () => (
-    <React.Fragment>
+    <>
         <Header>New experiment</Header>
 
         <p>In this panel you can select the source data which will be used to compute a correlation analysis. There are three different ways to select a source:</p>
@@ -48,5 +48,5 @@ export const PipelineSourcePopupContent = () => (
         <p>
             Keep in mind that <strong>only samples in common will be evaluated</strong> and <strong>Genes/GEMs that contains NaNs value will be removed</strong>
         </p>
-    </React.Fragment>
+    </>
 )

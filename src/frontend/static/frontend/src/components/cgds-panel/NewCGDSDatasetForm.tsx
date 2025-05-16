@@ -68,7 +68,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     icon='asterisk'
                     fluid
                     name='file_path'
-                    className="no-margin-right"
+                    className='no-margin-right'
                     value={props.newCGDSDataset.file_path}
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
@@ -83,7 +83,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     selectOnBlur={false}
                     floating
                     name='separator'
-                    className="margin-top-2"
+                    className='margin-top-2'
                     value={props.newCGDSDataset.separator}
                     options={[
                         { key: 'select_separator', text: 'Separator' },
@@ -101,7 +101,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                 <Input
                     fluid
                     name='observation'
-                    className="margin-top-2"
+                    className='margin-top-2'
                     value={props.newCGDSDataset.observation}
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
@@ -115,7 +115,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     fluid
                     name='header_row_index'
                     type='number'
-                    className="margin-top-2"
+                    className='margin-top-2'
                     value={props.newCGDSDataset.header_row_index}
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
@@ -138,28 +138,28 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}
                     placeholder="Mongo Collection's name"
-                    pattern="^[a-zA-Z]([a-zA-Z0-9]|_)*" // Starts with a letter, the letters, numbers or '_' only
+                    pattern='^[a-zA-Z]([a-zA-Z0-9]|_)*' // Starts with a letter, the letters, numbers or '_' only
                     maxLength={100}
                 />
 
-                {props.showSurvivalTuplesForm &&
-                <SurvivalTuplesForm
-                    survivalColumns={props.newCGDSDataset.survival_columns ?? []}
-                    disabled={props.addingOrEditingCGDSStudy}
-                    handleSurvivalFormDatasetChanges={(idx: number, name: string, value) => {
-                        const handleSurvivalFormDatasetChanges = props.handleSurvivalFormDatasetChanges as HandleSurvivalChangesCallback
-                        handleSurvivalFormDatasetChanges(props.datasetName, idx, name, value)
-                    }}
-                    addSurvivalFormTuple={() => {
-                        const addSurvivalFormTuple = props.addSurvivalFormTuple as AddSurvivalTuplesCallback
-                        addSurvivalFormTuple(props.datasetName)
-                    }}
-                    removeSurvivalFormTuple={(idx) => {
-                        const removeSurvivalFormTuple = props.removeSurvivalFormTuple as RemoveSurvivalTupleCallback
-                        removeSurvivalFormTuple(props.datasetName, idx)
-                    }}
-                />
-                }
+                {props.showSurvivalTuplesForm && (
+                    <SurvivalTuplesForm
+                        survivalColumns={props.newCGDSDataset.survival_columns ?? []}
+                        disabled={props.addingOrEditingCGDSStudy}
+                        handleSurvivalFormDatasetChanges={(idx: number, name: string, value) => {
+                            const handleSurvivalFormDatasetChanges = props.handleSurvivalFormDatasetChanges as HandleSurvivalChangesCallback
+                            handleSurvivalFormDatasetChanges(props.datasetName, idx, name, value)
+                        }}
+                        addSurvivalFormTuple={() => {
+                            const addSurvivalFormTuple = props.addSurvivalFormTuple as AddSurvivalTuplesCallback
+                            addSurvivalFormTuple(props.datasetName)
+                        }}
+                        removeSurvivalFormTuple={(idx) => {
+                            const removeSurvivalFormTuple = props.removeSurvivalFormTuple as RemoveSurvivalTupleCallback
+                            removeSurvivalFormTuple(props.datasetName, idx)
+                        }}
+                    />
+                )}
             </div>
         )
         : null
@@ -188,7 +188,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
         )
 
     return (
-        <Segment className="margin-top-5">
+        <Segment className='margin-top-5'>
             <Header as='h4'>
                 {props.nameToShow} Dataset {buttonToAddOrRemove}
             </Header>

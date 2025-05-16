@@ -12,10 +12,11 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "types": ["@rspack/core/module"]
     },
     "exclude": [
         "node_modules",
-        "webpack.*.js"
+        "rspack.*.js"
     ]
 }

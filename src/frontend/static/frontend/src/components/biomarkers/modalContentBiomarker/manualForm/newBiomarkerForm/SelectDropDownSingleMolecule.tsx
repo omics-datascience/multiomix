@@ -73,18 +73,18 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
                         fluid
                         search
                         clearable
-                        name="moleculesMultiple"
+                        name='moleculesMultiple'
                         searchQuery={inputString.query}
                         onSearchChange={(_, { searchQuery }) => setInputString({ ...inputString, query: searchQuery.trim() })}
                         onChange={(_e, { value }) => handleDropDownChange((value as string) ?? '')}
-                        noResultsMessage="Molecule not found"
+                        noResultsMessage='Molecule not found'
                         selection
                         options={options.data}
                     />
 
                     <Checkbox
                         className='biomarkers--side--bar--validation--items'
-                        label={
+                        label={(
                             <label>
                                 Don't use proposed alias
 
@@ -95,7 +95,7 @@ export const SelectDropDownSingleMolecule = (props: SelectDropDownSingleMolecule
                                     extraClassName='margin-left-5'
                                 />
                             </label>
-                        }
+                        )}
                         checked={props.checkedIgnoreProposedAlias}
                         onChange={() => props.handleChangeIgnoreProposedAlias(!props.checkedIgnoreProposedAlias)}
                     />

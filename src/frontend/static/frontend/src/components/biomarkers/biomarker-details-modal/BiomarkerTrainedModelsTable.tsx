@@ -284,29 +284,28 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             </Table.Cell>
 
                             {/* Actions column */}
-                            {props.allowFullManagement &&
+                            {props.allowFullManagement && (
                                 <Table.Cell width={1}>
                                     {/* Stop button */}
-                                    {isInProcess &&
+                                    {isInProcess && (
                                         <StopExperimentButton
                                             title='Stop trained model'
                                             onClick={() => setTrainedModelToStop(trainedModel)}
                                         />
-                                    }
+                                    )}
 
                                     {/* Delete button */}
-                                    {!isInProcess &&
+                                    {!isInProcess && (
                                         <DeleteExperimentButton
                                             disabled={!trainedModel.can_be_deleted}
                                             title={trainedModel.can_be_deleted
                                                 ? 'Delete trained model'
-                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'
-                                            }
+                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'}
                                             onClick={() => setTrainedModelToRemove(trainedModel)}
                                         />
-                                    }
+                                    )}
                                 </Table.Cell>
-                            }
+                            )}
                         </Table.Row>
                     )
                 }}

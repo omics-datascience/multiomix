@@ -31,9 +31,9 @@ const CytoscapeLegends = () => (
     <div className='cytoscape-legends'>
         <div className='legend-title'>Relations</div>
         <div className='legend-scale'>
-            <ul className='legend-labels' id="legend">
+            <ul className='legend-labels' id='legend'>
                 {Object.entries(COLORS_BY_STRING_RELATION).map(([_, [relationDescription, color]]) => (
-                    <li key={relationDescription}><span style={{ backgroundColor: color }}></span>{relationDescription}</li>
+                    <li key={relationDescription}><span style={{ backgroundColor: color }} />{relationDescription}</li>
                 ))}
             </ul>
         </div>
@@ -267,11 +267,11 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 </Grid.Column>
                 <Grid.Column width={1} verticalAlign='middle'>
                     <InfoPopup
-                        content={
+                        content={(
                             <span>
                                 The combined score is computed by combining the probabilities from the different evidence channels and corrected for the probability of randomly observing an interaction. For a more detailed description please see <ExternalLink href='https://pubmed.ncbi.nlm.nih.gov/15608232/'>von Mering, et al. Nucleic Acids Res. 2005</ExternalLink>
                             </span>
-                        }
+                        )}
                         onTop={false}
                         onEvent='click'
                     />
@@ -279,7 +279,7 @@ export const GeneAssociationsNetworkPanel = (props: GeneAssociationsNetworkPanel
                 <Grid.Column width={12}>
                     <CytoscapeLegends />
 
-                    <div id="cy"></div>
+                    <div id='cy' />
                 </Grid.Column>
             </Grid.Row>
         </Grid>

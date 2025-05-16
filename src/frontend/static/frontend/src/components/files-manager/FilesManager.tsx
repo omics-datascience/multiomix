@@ -158,7 +158,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
 
     /**
      * Prevents users from closing browser tag when upload is in process.
-     *
      * @param e Event
      */
     onUnload = e => { // the method that will be used for both add and remove event
@@ -816,7 +815,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
 
                     {/* Files overview panel */}
                     <Grid.Column
-                        id="files-manager-result-column"
+                        id='files-manager-result-column'
                         width={13}
                         textAlign='center'
                     >
@@ -836,13 +835,13 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                     <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
-                                        {userFileRow.institutions.length > 0 &&
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
-                                                />
-                                        }
+                                        {userFileRow.institutions.length > 0 && (
+                                            <Icon
+                                                name='building'
+                                                size='large'
+                                                title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                            />
+                                        )}
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
                                     <Table.Cell textAlign='center'>
@@ -874,8 +873,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                         />
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
-                                        {userFileRow.is_private_or_institution_admin &&
-                                            <React.Fragment>
+                                        {userFileRow.is_private_or_institution_admin && (
+                                            <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
                                                     name='pencil'
@@ -924,14 +923,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                         />
 
                                         {/* NaNs warning */}
-                                        {userFileRow.contains_nan_values &&
+                                        {userFileRow.contains_nan_values && (
                                             <Icon
                                                 name='warning sign'
                                                 className='margin-left-2'
                                                 color='yellow'
                                                 title='The dataset contains NaN values'
                                             />
-                                        }
+                                        )}
                                     </Table.Cell>
                                 </Table.Row>
                             )}

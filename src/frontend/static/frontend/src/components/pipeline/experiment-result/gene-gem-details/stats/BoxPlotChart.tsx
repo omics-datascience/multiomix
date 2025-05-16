@@ -41,8 +41,8 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
             const newData = dataObjects.map(dataObj => {
                 const dataArray = dataObj.data
                 // Data for Tooltip
-                const min2: number = Number(Math.min.apply(Math, dataArray).toFixed(3))
-                const max2: number = Number(Math.max.apply(Math, dataArray).toFixed(3))
+                const min2: number = Number(Math.min(...dataArray).toFixed(3))
+                const max2: number = Number(Math.max(...dataArray).toFixed(3))
                 const firstQuantile = Number(quantile(dataArray, 0.25).toFixed(3))
                 const thirdQuantile = Number(quantile(dataArray, 0.75).toFixed(3))
                 const median2 = Number(quantile(dataArray, 0.50).toFixed(3))
@@ -203,7 +203,7 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                             {tooltipData.thirdQuartile && <div>Third quartile: {tooltipData.thirdQuartile}</div>}
                             {tooltipData.max && <div>Max: {tooltipData.max}</div>}
                         </div>
-                        {(tooltipData.outliersObjects && tooltipData.outliersObjects.length > 0) &&
+                        {(tooltipData.outliersObjects && tooltipData.outliersObjects.length > 0) && (
                             <div>
                                 <strong>Outliers</strong>
                                 <div>
@@ -214,7 +214,7 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                                     ))}
                                 </div>
                             </div>
-                        }
+                        )}
                     </Tooltip>
                 )}
             </>

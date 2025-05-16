@@ -425,8 +425,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                             {/* Specific model params */}
                             <Grid.Column width={6}>
                                 {selectedFitnessFunction !== null &&
-                                    <Header as='h4'>Select model parameters</Header>
-                                }
+                                    <Header as='h4'>Select model parameters</Header>}
 
                                 <Form>
                                     {getModelForm()}
@@ -439,7 +438,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                                 <Form.Input
                                     fluid
-                                    label={
+                                    label={(
                                         <InputLabel label='Number of folds'>
                                             <InfoPopup
                                                 content='Defines the number of data splits for cross-validation; ensures robust model evaluation and prevents overfitting.'
@@ -449,7 +448,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                                 extraClassName='pull-right'
                                             />
                                         </InputLabel>
-                                    }
+                                    )}
                                     placeholder='An integer number'
                                     type='number'
                                     step={1}
@@ -543,7 +542,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 />
                             </Form>
 
-                            <div className="margin-top-2">
+                            <div className='margin-top-2'>
                                 <Icon name='asterisk' /> Required field
                             </div>
                         </Grid.Column>
@@ -587,7 +586,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                 {/* Submit StatisticalAnalysis button */}
                 <Button
-                    color="green"
+                    color='green'
                     loading={sendingData}
                     onClick={() => {
                         if (isLastStep) {

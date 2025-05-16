@@ -12,7 +12,7 @@ type HeatmapProps = {
     min: number;
     max: number;
     data: { x: number | string; y: string; value: number }[];
-};
+}
 
 /** Interaction data for the tooltip. */
 export type InteractionData = {
@@ -21,7 +21,7 @@ export type InteractionData = {
     xPos: number;
     yPos: number;
     value: number | null;
-};
+}
 
 /**
  * Renders a HeatMap chart. Taken from https://www.react-graph-gallery.com/heatmap.

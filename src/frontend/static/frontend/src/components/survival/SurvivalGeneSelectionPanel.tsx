@@ -8,7 +8,7 @@ import { listToDropdownOptions } from '../../utils/util_functions'
 interface SurvivalGeneSelectionPanelProps {
     genes: string[],
     selectedGenes: string[],
-    handleGenesChanges: (selectedGenes) => void
+    onHandleGenesChanges: (selectedGenes) => void
 }
 
 /**
@@ -22,10 +22,10 @@ export const SurvivalGeneSelectionPanel = (props: SurvivalGeneSelectionPanelProp
 
     return (
         <Segment>
-            <Grid className="padded-left-10 padded-right-10">
+            <Grid className='padded-left-10 padded-right-10'>
                 {/* File type for expression dataset */}
                 <Grid.Row>
-                    <Header textAlign="center">
+                    <Header textAlign='center'>
                         <Header.Content>Select Genes</Header.Content>
                     </Header>
 
@@ -35,7 +35,7 @@ export const SurvivalGeneSelectionPanel = (props: SurvivalGeneSelectionPanelProp
                         multiple
                         search
                         selection
-                        onChange={(_, { value }) => props.handleGenesChanges(value)}
+                        onChange={(_, { value }) => props.onHandleGenesChanges(value)}
                         value={props.selectedGenes}
                         disabled={optionsArrayIsEmpty}
                         options={genesOptions}

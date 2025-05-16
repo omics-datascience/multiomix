@@ -35,7 +35,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
 
     return (
         <Segment>
-            <Header textAlign="center">
+            <Header textAlign='center'>
                 <Icon name='database' />
                 <Header.Content>Add specification of CGDS Study</Header.Content>
             </Header>
@@ -45,7 +45,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 icon='asterisk'
                 fluid
                 name='name'
-                className="no-margin-right"
+                className='no-margin-right'
                 value={props.newCGDSStudy.name}
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
@@ -58,7 +58,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             <Input
                 fluid
                 name='description'
-                className="margin-top-2"
+                className='margin-top-2'
                 value={parseValue(props.newCGDSStudy.description)}
                 onChange={(_, { name, value }) => props.handleFormChanges(name, value)}
                 onKeyDown={props.handleKeyDown}
@@ -71,7 +71,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 icon='asterisk'
                 fluid
                 name='url'
-                className="margin-top-2"
+                className='margin-top-2'
                 value={props.newCGDSStudy.url}
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
@@ -84,7 +84,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             <Input
                 fluid
                 name='url_study_info'
-                className="margin-top-2"
+                className='margin-top-2'
                 value={parseValue(props.newCGDSStudy.url_study_info)}
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
@@ -96,7 +96,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             <Divider />
 
             {/* Dataset */}
-            <Header textAlign="center">
+            <Header textAlign='center'>
                 <Icon name='file archive' />
                 <Header.Content>CGDS Datasets</Header.Content>
             </Header>
@@ -182,7 +182,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 newCGDSStudy={props.newCGDSStudy}
             />
 
-            <div className="margin-top-5">
+            <div className='margin-top-5'>
                 <Icon name='asterisk' /> Required field
 
                 <Label color='yellow' className='align-center' size='large'>
@@ -194,7 +194,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             <Button
                 color='green'
                 content={`${props.newCGDSStudy && props.newCGDSStudy.id ? 'Edit' : 'Add'} study`}
-                className="margin-top-2"
+                className='margin-top-2'
                 fluid
                 onClick={props.addOrEditStudy}
                 disabled={!props.canAddCGDSStudy()}
@@ -204,7 +204,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             <Button
                 color='red'
                 content='Cancel'
-                className="margin-top-2"
+                className='margin-top-2'
                 fluid
                 onClick={props.cleanForm}
                 disabled={props.isFormEmpty()}

@@ -6,7 +6,7 @@ type TooltipProps = {
     interactionData: InteractionData | null;
     width: number;
     height: number;
-};
+}
 
 export const Tooltip = ({ interactionData, width, height }: TooltipProps) => {
     if (!interactionData) {

@@ -117,7 +117,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
 
     return (
         <Grid>
-            {!selectedTerm &&
+            {!selectedTerm && (
                 <Grid.Row columns={2}>
                     <Grid.Column width={3}>
                         {/* Form for termsRelatedToGeneForm */}
@@ -149,7 +149,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                     />
                                 </Form.Field>
                             </Form.Group>
-                            {termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT &&
+                            {termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT && (
                                 <>
                                     <Form.Input
                                         label='P-value threshold'
@@ -168,7 +168,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                         onChange={(_e, { value }) => handleChangesInForm('correction_method', value)}
                                     />
                                 </>
-                            }
+                            )}
                             <Form.Group grouped>
                                 <Form.Field>
                                     <label>Relation type</label>
@@ -237,7 +237,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                     <Grid.Column width={13}>
                         {/* Table of terms to select */}
                         {/* TODO: implement max height to scroll in this table when have a lot of rows */}
-                        {!selectedTerm &&
+                        {!selectedTerm && (
                             <Table celled selectable>
                                 <Table.Header>
                                     <Table.Row>
@@ -254,15 +254,14 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                     ))}
                                 </Table.Body>
                             </Table>
-                        }
+                        )}
                     </Grid.Column>
                 </Grid.Row>
-            }
+            )}
 
             {/* Selected Term */}
             {selectedTerm &&
-                <GeneOntologyCytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />
-            }
+                <GeneOntologyCytoscapeChart termId={selectedTerm} goBack={() => setSelectedTerm(null)} />}
         </Grid>
     )
 }
