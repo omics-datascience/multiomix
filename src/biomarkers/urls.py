@@ -22,7 +22,7 @@ urlpatterns = [
     path('non-institutions-biomarker/<int:biomarker_id>/', views.InstitutionNonExperimentsSharedBiomarkerListView.as_view()),
     path('non-institutions-biomarker', views.InstitutionNonExperimentsSharedBiomarkerListView.as_view(), name='institution-non-experiments-list-biomarker'),
     path('share-biomarker-to-institution', views.AddInstitutionToBiomarkerView.as_view(), name='share-biomarker-to-institution'),
-    path('shared-institution-biomarker/<int:biomarker_id>/', views.InstitutionBiomarkersSharedListView.as_view(), ),
+    path('shared-institution-biomarker/<int:biomarker_id>/', views.InstitutionBiomarkersSharedListView.as_view()),
     path('shared-institution-biomarker', views.InstitutionBiomarkersSharedListView.as_view(), name='shared-institution-biomarker'),
     path('remove-institution-biomarker', views.RemoveInstitutionFromBiomarkerView.as_view(), name='remove-institution-biomarker'),
     path('shared-users-biomarker/<int:biomarker_id>/', views.UsersSharedBiomarkerListView.as_view(), ),

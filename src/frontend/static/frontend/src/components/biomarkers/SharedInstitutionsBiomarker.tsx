@@ -57,7 +57,6 @@ const InstitutionUserList = (props: InstitutionUserListProps) => {
 }
 
 export const SharedInstitutionsBiomarker = (props: Props) => {
-    console.log(props)
     const [activeInstitution, setActiveInstitution] = useState<{ id: number, name: string }>({ id: 0, name: '' })
     const [listOfInstitutionNonPart, setListOfInstitutionNonPart] = useState<SemanticListItem[]>([])
     const [institutionIdToAdd, setInstitutionIdToAdd] = useState<number>(0)
