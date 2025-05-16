@@ -25,7 +25,12 @@ class FilesApp extends React.Component<{}, FileState> {
      * @param contentText optional text of content in confirm modal, by default will be empty
      * @param onConfirm Modal onConfirm callback
      */
-    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => {
+    handleChangeConfirmModalState = (
+        setOption: boolean,
+        headerText: string,
+        contentText: string,
+        onConfirm: () => any
+    ) => {
         const confirmModal = this.state.confirmModal
         confirmModal.confirmModal = setOption
         confirmModal.headerText = headerText

@@ -883,8 +883,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                     title='Edit'
                                                     onClick={() => this.editFile(userFileRow)}
                                                 />
-                                            </React.Fragment>
-                                        }
+                                            </>
+                                        )}
 
                                         <PopupExperiment
                                             content={
