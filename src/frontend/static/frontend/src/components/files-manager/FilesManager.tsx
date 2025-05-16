@@ -77,7 +77,7 @@ interface FilesManagerState {
  * Also, this component renders a CRUD of Tags for files
  */
 interface FilesManagerProps {
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void
 }
 
 class FilesManager extends React.Component<FilesManagerProps, FilesManagerState> {
@@ -887,7 +887,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                         )}
 
                                         <PopupExperiment
-                                            content={
+                                            content={(
                                                 <>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                         {/* Shows a download button if specified */}
@@ -919,7 +919,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                         />
                                                     </div>
                                                 </>
-                                            }
+                                            )}
                                         />
 
                                         {/* NaNs warning */}

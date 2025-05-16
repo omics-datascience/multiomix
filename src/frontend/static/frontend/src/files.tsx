@@ -7,10 +7,10 @@ import { Confirm } from 'semantic-ui-react'
 import { createRoot } from 'react-dom/client'
 
 type FileState = {
-     confirmModal: ConfirmModal
-    };
+    confirmModal: ConfirmModal
+}
 
-class FilesApp extends React.Component<{}, FileState> {
+class FilesApp extends React.Component<object, FileState> {
     constructor (props) {
         super(props)
         this.state = {
@@ -64,7 +64,7 @@ class FilesApp extends React.Component<{}, FileState> {
 
     /**
      * Default modal.
-     * @returns {ConfirmModal} Confirm modal base
+     * @returns Confirm modal base
      */
     getDefaultConfirmModal = (): ConfirmModal => {
         return {
@@ -77,7 +77,7 @@ class FilesApp extends React.Component<{}, FileState> {
 
     render () {
         return (
-            <div id="files-app" className="files-app">
+            <div id='files-app' className='files-app'>
                 <FilesManager handleChangeConfirmModalState={this.handleChangeConfirmModalState} />
                 <Confirm
                     open={this.state.confirmModal.confirmModal}

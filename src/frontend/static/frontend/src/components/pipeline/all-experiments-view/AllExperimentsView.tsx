@@ -339,12 +339,12 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                     />
 
                                                     {/* Delete button */}
-                                                    {!isInProcess && !experiment.is_public &&
-                                                    <DeleteExperimentButton
-                                                        title='Delete experiment'
-                                                        onClick={() => this.props.confirmExperimentDeletion(experiment)}
-                                                    />
-                                                    }
+                                                    {!isInProcess && !experiment.is_public && (
+                                                        <DeleteExperimentButton
+                                                            title='Delete experiment'
+                                                            onClick={() => this.props.confirmExperimentDeletion(experiment)}
+                                                        />
+                                                    )}
 
                                                     {/* Public switch */}
                                                     <SwitchPublicButton
@@ -356,7 +356,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                 </div>
 
                                             </>
-                        )}
+                                        )}
                                     />
                                 </TableCell>
                             </Table.Row>
