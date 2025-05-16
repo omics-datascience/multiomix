@@ -33,7 +33,6 @@ class FilesApp extends React.Component<{}, FileState> {
         confirmModal.onConfirm = onConfirm
         this.setState({ confirmModal },
             () => {
-                // Ahora sí puedes acceder a this.state actualizado
                 if (this.state.confirmModal.confirmModal === true) {
                     console.log('Confirm modal is true')
                 } else if (this.state.confirmModal.confirmModal === false) {
@@ -49,7 +48,6 @@ class FilesApp extends React.Component<{}, FileState> {
         this.setState(
             { confirmModal: this.getDefaultConfirmModal() },
             () => {
-                // Ahora sí puedes acceder a this.state actualizado
                 if (this.state.confirmModal.confirmModal === true) {
                     console.log('Confirm modal is true')
                 } else if (this.state.confirmModal.confirmModal === false) {
