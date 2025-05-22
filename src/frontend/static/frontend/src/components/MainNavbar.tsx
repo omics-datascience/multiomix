@@ -252,6 +252,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                         </Dropdown>
                     </Menu.Menu>
 
+                    {/* Institutions  */}
                     <Menu.Menu as='h2'>
                         <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
                             Institutions
