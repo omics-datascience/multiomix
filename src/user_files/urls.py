@@ -13,5 +13,8 @@ urlpatterns = [
         name='api_chunked_upload_complete'
     ),
    path('file-header/', views.UserFileHeaders.as_view(), name='user_file_headers'),
-   path('file-header/<int:pk>/', views.UserFileHeaders.as_view())
+   path('file-header/<int:pk>/', views.UserFileHeaders.as_view()),
+   path('switch-file-public-view/', views.ToggleFilePublicView.as_view(), name='switch-userFile-public-view'),
+   path('switch-file-public-view/<int:userFileId>/', views.ToggleFilePublicView.as_view()),
 ]
+ 
