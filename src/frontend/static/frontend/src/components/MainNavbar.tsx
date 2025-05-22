@@ -251,6 +251,12 @@ const MainNavbar = (props: MainNavbarProps) => {
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
+
+                    <Menu.Menu as='h2'>
+                        <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
+                            Institutions
+                        </Menu.Item>
+                    </Menu.Menu>
                 </>
             )}
 
@@ -272,15 +278,6 @@ const MainNavbar = (props: MainNavbarProps) => {
                             )}
                         </Dropdown.Menu>
                     </Dropdown>
-                </Menu.Menu>
-            )}
-
-            {/* Institutions */}
-            {currentUser && (
-                <Menu.Menu as='h2'>
-                    <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
-                        Institutions
-                    </Menu.Item>
                 </Menu.Menu>
             )}
 
