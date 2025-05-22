@@ -7,12 +7,17 @@ import ky from 'ky'
 declare const urlPostSwitchInstitutionPublicView
 
 interface Props {
-    PublicButtonEntity: { id: number, user: { id: number }, is_public: boolean }
+    publicButtonEntity: { id: number, user: { id: number }, is_public: boolean }
     nameEntity: string
     publicKey: string
-    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: Function) => void;
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void;
 }
 
+/**
+ * Component to switch visibility of experiment
+ * @param props The properties for the SwitchPublicButton component.
+ * @returns The rendered component.
+ */
 export const SwitchPublicButton = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
     const [isLoading, setIsLoading] = useState(false)
@@ -25,7 +30,7 @@ export const SwitchPublicButton = (props: Props) => {
         const settings = {
             headers: getDjangoHeader(),
             json: {
-                [props.publicKey]: props.PublicButtonEntity.id
+                [props.publicKey]: props.publicButtonEntity.id
             }
         }
 
@@ -41,7 +46,7 @@ export const SwitchPublicButton = (props: Props) => {
         })
     }
 
-    if (currentUser?.id !== props.PublicButtonEntity.user.id) {
+    if (currentUser?.id !== props.publicButtonEntity.user.id) {
         return <></>
     }
 
@@ -50,9 +55,9 @@ export const SwitchPublicButton = (props: Props) => {
             name='external share'
             className='clickable margin-left-5'
             disabled={isLoading}
-            color={props.PublicButtonEntity.is_public ? 'red' : 'teal'}
-            title={props.PublicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`}
-            onClick={() => props.handleChangeConfirmModalState(true, props.PublicButtonEntity.is_public ? 'Make experiment private' : 'Make experiment public', props.PublicButtonEntity.is_public ? 'Are you sure to make the experiment private?' : 'Are you sure to make the experiment public', handleSwitchVisibility)}
+            color={props.publicButtonEntity.is_public ? 'red' : 'teal'}
+            title={props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`}
+            onClick={() => props.handleChangeConfirmModalState(true, props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`, props.publicButtonEntity.is_public ? `Are you sure to make the ${props.nameEntity} private?` : `Are you sure to make the ${props.nameEntity} public`, handleSwitchVisibility)}
         />
     )
 }

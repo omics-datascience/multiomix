@@ -348,7 +348,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
 
                                                     {/* Public switch */}
                                                     <SwitchPublicButton
-                                                        PublicButtonEntity={experiment}
+                                                        publicButtonEntity={experiment}
                                                         publicKey='experimentId'
                                                         nameEntity='experiment'
                                                         handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}

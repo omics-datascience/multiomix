@@ -900,7 +900,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                         />
                                                         {/* Public switch */}
                                                         <SwitchPublicButton
-                                                            PublicButtonEntity={{
+                                                            publicButtonEntity={{
                                                                 id: userFileRow.id as number,
                                                                 user: { id: userFileRow.user.id },
                                                                 is_public: userFileRow.is_public

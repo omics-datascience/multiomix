@@ -202,7 +202,7 @@ class ToggleFilePublicView(APIView):
             )
 
         userFile.is_public = not userFile.is_public
-        userFile.save()
+        userFile.save(update_fields=['is_public'])  
 
         return Response(
             {"id": userFile.id, "is_public": userFile.is_public}
