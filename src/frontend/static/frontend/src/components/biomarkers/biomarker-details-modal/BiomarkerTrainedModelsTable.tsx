@@ -11,7 +11,7 @@ import { NewTrainedModelModal } from './trained-models/NewTrainedModelModal'
 import { TrainedModelStateLabel } from '../labels/TrainedModelStateLabel'
 import ky from 'ky'
 import { StopExperimentButton } from '../../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../common/DeleteButton'
 import { TableCellSources } from '../../common/TableCellSources'
 
 declare const urlBiomarkerTrainedModels: string
@@ -297,7 +297,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                     {/* Delete button */}
                                     {/* Todo: revisar ownerId */}
                                     {!isInProcess && (
-                                        <DeleteExperimentButton
+                                        <DeleteButton
                                             disabled={!trainedModel.can_be_deleted}
                                             title={trainedModel.can_be_deleted
                                                 ? 'Delete trained model'

@@ -22,11 +22,12 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 // Styles
 import './../../css/biomarkers.css'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../common/DeleteButton'
 import { SharedUsersBiomarker, SharedUsersBiomarkerProps } from './SharedUsersBiomarker'
 import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerProps } from './SharedInstitutionsBiomarker'
-import { PublicButtonBiomarker } from './PublicButtonBiomarker'
 import { EditBiomarkerIcon } from './EditBiomarkerIcon'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { PopupIcons } from '../common/PopupIcons'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -1790,44 +1791,58 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         />
 
                                         {/* Edit button */}
-                                        <EditBiomarkerIcon 
-                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker} 
-                                            biomarker={biomarker} 
-                                            ownerId={biomarker.user.id} 
-                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading} 
-                                            canEditMolecules={canEditMolecules} 
+                                        <EditBiomarkerIcon
+                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker}
+                                            biomarker={biomarker}
+                                            ownerId={biomarker.user.id}
+                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading}
+                                            canEditMolecules={canEditMolecules}
                                             isLoadingFullBiomarker={isLoadingFullBiomarker}
                                         />
+                                        <PopupIcons
+                                            content={(
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Clone button */}
+                                                    <Icon
+                                                        name='copy'
+                                                        color='teal'
+                                                        className='clickable margin-left-5'
+                                                        disabled={currentBiomarkerIsLoading}
+                                                        title='Clone biomarker'
+                                                        onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    />
 
-                                        {/* Clone button */}
-                                        <Icon
-                                            name='copy'
-                                            color='teal'
-                                            className='clickable margin-left-5'
-                                            disabled={currentBiomarkerIsLoading}
-                                            title='Clone biomarker'
-                                            onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    {/* Stop button */}
+                                                    {isInProcess && (
+                                                        <StopExperimentButton
+                                                            title='Stop biomarker'
+                                                            onClick={() => this.setState({ biomarkerToStop: biomarker })}
+                                                        />
+                                                    )}
+
+                                                    {/* Delete button */}
+                                                    {!isInProcess && !biomarker.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete biomarker'
+                                                            disabled={currentBiomarkerIsLoading}
+                                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                                            ownerId={biomarker.user.id}
+                                                        />
+                                                    )}
+                                                    {/* Public switch */}
+                                                    {
+                                                        biomarker.id && (
+                                                            <SwitchPublicButton
+                                                                publicButtonEntity={{ id: biomarker.id ?? 0, user: { id: biomarker.user.id }, is_public: biomarker.is_public }}
+                                                                publicKey='biomarkerId'
+                                                                nameEntity='biomarker'
+                                                                handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                                            />
+                                                        )
+                                                    }
+                                                </div>
+                                            )}
                                         />
-
-                                        {/* Stop button */}
-                                        {isInProcess && (
-                                            <StopExperimentButton
-                                                title='Stop biomarker'
-                                                onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                            />
-                                        )}
-
-                                        {/* Delete button */}
-                                        {!isInProcess && !biomarker.is_public &&  (
-                                            <DeleteExperimentButton
-                                                title='Delete biomarker'
-                                                disabled={currentBiomarkerIsLoading}
-                                                onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                                ownerId={biomarker.user.id}
-                                            />
-                                        )}
-                                        {/* Public switch */}
-                                        <PublicButtonBiomarker biomarker={biomarker} handleChangeConfirmModalState={this.handleChangeConfirmModalState} />
                                     </>
                                 </Table.Cell>
                             </Table.Row>

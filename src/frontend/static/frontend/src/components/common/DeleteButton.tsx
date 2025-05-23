@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { Icon } from 'semantic-ui-react'
-import { CurrentUserContext } from '../../Base'
-import { Nullable } from '../../../utils/interfaces'
+import { CurrentUserContext } from '../Base'
+import { Nullable } from '../../utils/interfaces'
 
 /**
  * Component's props
@@ -24,8 +24,7 @@ interface DeleteExperimentButtonProps {
  * @param props Component's props
  * @returns Component
  */
-export const DeleteExperimentButton = (props: DeleteExperimentButtonProps) => {
-
+export const DeleteButton = (props: DeleteExperimentButtonProps) => {
     const currentUser = useContext(CurrentUserContext)
 
     if (props.ownerId !== currentUser?.id && props.ownerId !== null) {
