@@ -1,26 +1,25 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 <!DOCTYPE html>
-<html>
+<htm
+l>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
         <title>Multiomix {% block title %}{% endblock %}</title>
-
         {# Favicon #}
         <link rel="shortcut icon" href="{% static "frontend/img/favicon.ico" %}" type="image/x-icon">
         <link rel="icon" href="{% static "frontend/img/favicon.ico" %}" type="image/x-icon">
-        
+
         {# General CSS #}
         {% render_bundle 'base' 'css' %}
-
-        {# Custom page CSS #}
+         {# Custom page CSS #}
         {% block css %}{% endblock %}
     </head>
     <body>
         {# Custom page content #}
         {% block content %}{% endblock %}
-        
+
         {# General JS #}
         <script>
             const multiomixVersion = "{{ VERSION }}"
