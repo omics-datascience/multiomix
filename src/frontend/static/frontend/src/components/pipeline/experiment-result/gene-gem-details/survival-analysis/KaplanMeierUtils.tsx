@@ -1,7 +1,7 @@
 import React from 'react'
 import * as d3 from 'd3'
 import { Nullable } from '../../../../../utils/interfaces'
-
+import './kaplanMeier.css'
 /** Needed structure for KaplanMeier chart */
 type KaplanMeierSample = {
     time: number,
@@ -27,7 +27,7 @@ class Base extends React.Component<{
     width: number,
     height: number,
     children: any
-}, {}> {
+}, any> {
     render () {
         return (
             <svg
@@ -58,7 +58,7 @@ interface KaplanMeierSeriesProps {
 /**
  * Renders Kaplan-Meier curve for every group
  */
-class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, {}> {
+class KaplanMeierSeries extends React.Component<KaplanMeierSeriesProps, any> {
     buildCurves (groups, disabledGroups) {
         return groups.map((group, index) => {
             if (disabledGroups[group.label]) {
@@ -103,13 +103,13 @@ interface KaplanMeierCurveProps {
 /**
  * Renders Kaplan-Meier single curve
  */
-class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
+class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, any> {
     collectCensorPoints (data) {
         return data.filter(({ status }) => !status)
     }
 
-    generateLineFunction (xScale, yScale) {
-        return d3.line().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).curve(d3.curveStepAfter)
+    generateLineFunction (xScale: d3.ScaleLinear<KaplanMeierSample, number>, yScale: d3.ScaleLinear<KaplanMeierSample, number>) {
+        return d3.line<KaplanMeierSample>().x(({ time }) => xScale(time)).y(({ probability }) => yScale(probability)).curve(d3.curveStepAfter)
     }
 
     buildCensorMarks (censorPoints, xScale, yScale, color) {
@@ -139,13 +139,12 @@ class KaplanMeierCurve extends React.Component<KaplanMeierCurveProps, {}> {
         return (
             <g>
                 <path
-                    d={lineFunction(data)}
-                    fill="none"
+                    d={lineFunction(data) ?? undefined}
+                    fill='none'
                     opacity={0.7}
                     stroke={color}
                     strokeWidth={3}
-                >
-                </path>
+                />
                 {this.buildCensorMarks(censorPoints, xScale, yScale, color)}
             </g>
         )
@@ -174,11 +173,18 @@ const YAxis = (props: AxisProps) => {
             className='axis axis-y'
             transform={`translate(${props.left}, ${props.top})`}
         >
-            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)}></g>
+            {
+                /**
+                 * g tag generate the dom structure of <g> <g> <text> ... </g> </g>
+                 * The idea es usign the first g wrapp the inside g tag and text to move it a few px to prevents being overwrite by Y axis.
+                 * If the Dom change in the future, open the navigator inspect then verify the Dom and fix the new structure.
+                 */
+            }
+            <g className='g-wrapper' dangerouslySetInnerHTML={d3Utils.createAxisMarkup(yAxis, props.width, props.height)} />
             <text
-                dy="0.71em"
+                dy='1.50em'
                 style={{ textAnchor: 'middle' }}
-                transform="rotate(-90)"
+                transform='rotate(-90)'
                 x={-props.height / 2}
                 y={6}
             >
@@ -201,7 +207,7 @@ const XAxis = (props: AxisProps) => {
             className='axis axis-x'
             transform={`translate(${props.left}, ${props.top})`}
         >
-            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(xAxis, props.width, props.height)}></g>
+            <g dangerouslySetInnerHTML={d3Utils.createAxisMarkup(xAxis, props.width, props.height)} />
             <text
                 className='label'
                 style={{ textAnchor: 'middle' }}
@@ -229,7 +235,7 @@ interface LegendProps {
 /**
  * Renders Kaplan-Meier chart's legend
  */
-class Legend extends React.Component<LegendProps, {}> {
+class Legend extends React.Component<LegendProps, any> {
     _onClick (label: string) {
         return () => {
             this.props.toggleGroup(label)
@@ -252,7 +258,7 @@ class Legend extends React.Component<LegendProps, {}> {
                     transform={`translate(${0}, ${index * 24})`}
                 >
                     <text
-                        dy="0.35em"
+                        dy='0.35em'
                         style={{ textAnchor: 'end', userSelect: 'none' }}
                         // style={{ textAnchor: 'left', userSelect: 'none', textAnchor: 'end' }}
                         y={8}
@@ -302,8 +308,8 @@ const d3Utils = {
         }
     },
 
-    createLinearScale: (range, domain) => {
-        return d3.scaleLinear().range(range).domain(domain)
+    createLinearScale: (range, domain): d3.ScaleLinear<KaplanMeierSample, number> => {
+        return d3.scaleLinear<KaplanMeierSample, number>().range(range).domain(domain)
     },
 
     createAxisMarkup: (axis, width: number, height: number) => { // refactor, this is an insane hack
@@ -313,7 +319,7 @@ const d3Utils = {
         svg.attr('height', height)
         const g = svg.append('g')
         g.call(axis)
-        const html = g.node().innerHTML
+        const html = g.node()?.innerHTML ?? ''
         return { __html: html }
     }
 }
@@ -355,7 +361,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
      */
     findMaxTime (groups: KaplanMeierGroup[]): number {
         return groups.reduce((currentMax, { data }) => {
-            return Math.max(currentMax, Math.max.apply(Math, data.map((sample) => sample.time)))
+            return Math.max(currentMax, Math.max(...data.map((sample) => sample.time)))
         }, -Infinity)
     }
 
@@ -388,7 +394,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
         const colors = d3.scaleOrdinal(d3.schemeCategory10).range()
         const yDomain = [1, 0]
 
-        const seriesWidth = this.props.width - 64
+        const seriesWidth = this.props.width
         const seriesHeight = this.props.height - 64
 
         return (
@@ -405,7 +411,7 @@ class KaplanMeier extends React.Component<KaplanMeierProps, KaplanMeierState> {
                     domain={yDomain}
                     height={seriesHeight}
                     label={this.props.yAxisLabel}
-                    left={32}
+                    left={48}
                     top={16}
                     width={32}
                 />

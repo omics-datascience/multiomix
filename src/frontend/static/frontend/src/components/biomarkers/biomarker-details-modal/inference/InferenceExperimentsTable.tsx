@@ -10,6 +10,7 @@ import ky from 'ky'
 import { Nullable } from '../../../../utils/interfaces'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerInferenceExperiments: string
 declare const urlStopInferenceExperiment: string
@@ -171,6 +172,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                     { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
                     { name: 'Model', serverCodeToSort: 'model', width: 1 },
                     { name: 'Date', serverCodeToSort: 'created' },
+                    { name: 'Datasets' },
                     { name: 'Actions' }
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
@@ -201,8 +203,17 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                             </Table.Cell>
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={inferenceExperiment.model} /></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(inferenceExperiment.created as string, 'L')} />
+                            <Table.Cell>
+                                <TableCellSources
+                                    clinical_source={inferenceExperiment.clinical_source}
+                                    methylation_source={inferenceExperiment.mrna_source}
+                                    mrna_source={inferenceExperiment.mirna_source}
+                                    cna_source={inferenceExperiment.cna_source}
+                                    mirna_source={inferenceExperiment.methylation_source}
+                                />
+                            </Table.Cell>
                             <Table.Cell width={1}>
-                                {inferenceExperiment.state === BiomarkerState.COMPLETED &&
+                                {inferenceExperiment.state === BiomarkerState.COMPLETED && (
                                     <Icon
                                         name='chart area'
                                         onClick={() => { props.openInferenceResult(inferenceExperiment) }}
@@ -210,23 +221,23 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                         color='blue'
                                         title='See results'
                                     />
-                                }
+                                )}
 
                                 {/* Stop button */}
-                                {isInProcess &&
+                                {isInProcess && (
                                     <StopExperimentButton
                                         title='Stop experiment'
                                         onClick={() => setInferenceExperimentToStop(inferenceExperiment)}
                                     />
-                                }
+                                )}
 
                                 {/* Delete button */}
-                                {!isInProcess &&
+                                {!isInProcess && (
                                     <DeleteExperimentButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
                                     />
-                                }
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     )

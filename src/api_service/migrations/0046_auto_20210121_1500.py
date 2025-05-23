@@ -26,7 +26,7 @@ def get_reverse_study_of_dataset(dataset: CGDSDataset):
         return dataset.clinical_sample_dataset
 
 
-def generate_clinical_source(dataset: CGDSDataset) -> Optional[ExperimentClinicalSource]:
+def generate_clinical_source(dataset: CGDSDataset):
     """
     Generates a ExperimentClinicalSource instance (if dataset is valid) from a CGDSDataset
     @param dataset: CGDSDataset to get needed clinical data

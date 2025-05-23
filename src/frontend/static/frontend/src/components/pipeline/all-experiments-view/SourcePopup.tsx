@@ -63,7 +63,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
             position='left center'
             wide='very'
             size='large'
-            trigger={
+            trigger={(
                 <Button
                     basic
                     color={props.iconColor}
@@ -72,7 +72,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
                 >
                     <Icon name={props.iconName} />
                 </Button>
-            }
+            )}
         >
             {/* Popup content */}
             <>
@@ -95,8 +95,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
 
                                 {/* CGDS data */}
                                 {props.source.cgds_dataset &&
-                                    getCGDSData(datasetObj as SourceSimpleCGDSDataset)
-                                }
+                                    getCGDSData(datasetObj as SourceSimpleCGDSDataset)}
                             </List.List>
                         </List.Content>
                     </List.Item>
@@ -106,7 +105,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
                 <Button
                     basic
                     fluid
-                    color="green"
+                    color='green'
                     title={props.downloadButtonTitle}
                     as='a' href={`${downloadFileURL}${datasetObj.id}`} target='_blank'
                     disabled={!isUserFile}

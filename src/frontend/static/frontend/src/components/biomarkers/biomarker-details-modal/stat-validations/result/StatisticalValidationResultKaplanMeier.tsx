@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ky from 'ky'
-import { Button, Form, Grid, Header, Icon, Modal, Statistic } from 'semantic-ui-react'
+import { Button, Form, Grid, Header, Icon, Modal, Statistic, GridColumn } from 'semantic-ui-react'
 import { alertGeneralError, listToDropdownOptions } from '../../../../../utils/util_functions'
 import { StatisticalValidationForTable, KaplanMeierResultData, FitnessFunction } from '../../../types'
 import { KaplanMeier } from '../../../../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
@@ -188,10 +188,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
     return (
         <Grid>
             <Grid.Row columns={2} divided textAlign='center'>
-                <Grid.Column textAlign='center'>
+                <GridColumn textAlign='center' mobile={16} tablet={16} computer={12}>
                     {getKaplanMeierPanel()}
-                </Grid.Column>
-                <Grid.Column textAlign='center'>
+                </GridColumn>
+                <GridColumn textAlign='center' mobile={16} tablet={16} computer={4}>
                     {/* Clustering metrics. */}
                     <InfoPopup
                         content='This metrics are computed using Cox-Regression'
@@ -203,7 +203,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     <Header as='h2' dividing>Clustering metrics</Header>
 
                     <Form>
-                        {hasClusteringModel &&
+                        {hasClusteringModel && (
                             <Form.Field>
                                 <Button.Group
                                     compact
@@ -224,10 +224,10 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                     </Button>
                                 </Button.Group>
                             </Form.Field>
-                        }
+                        )}
 
                         {/* Clinical attribute select */}
-                        {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') &&
+                        {(!hasClusteringModel || kaplanMeierStrategy === 'clinical_attribute') && (
                             <Form.Select
                                 fluid
                                 selectOnBlur={false}
@@ -239,7 +239,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 placeholder='Clinical attribute to group by'
                                 disabled={clinicalAttributesOptions.length === 0}
                             />
-                        }
+                        )}
                     </Form>
 
                     {/* TODO: add InfoPopups for every metric and their interpretation. */}
@@ -253,7 +253,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     </Statistic>
 
                     {/* Samples and clusters modal. */}
-                    {(hasClusteringModel && kaplanMeierStrategy === 'clustering' && kaplanMeierData !== null) &&
+                    {(hasClusteringModel && kaplanMeierStrategy === 'clustering' && kaplanMeierData !== null) && (
                         <Modal
                             onClose={() => setShowSamplesAndClusters(false)}
                             onOpen={() => setShowSamplesAndClusters(true)}
@@ -272,8 +272,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 <Button onClick={() => setShowSamplesAndClusters(false)}>Close</Button>
                             </Modal.Actions>
                         </Modal>
-                    }
-                </Grid.Column>
+                    )}
+                </GridColumn>
             </Grid.Row>
         </Grid>
     )

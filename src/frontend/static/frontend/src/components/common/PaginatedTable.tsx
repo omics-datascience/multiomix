@@ -66,7 +66,7 @@ type PaginationCustomFilter = {
      */
     urlToRetrieveOptions?: string,
     /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
-    disabledFunction?: (actualValues: {[key: string]: any}) => boolean
+    disabledFunction?: (actualValues: { [key: string]: any }) => boolean
 }
 
 /**
@@ -478,19 +478,19 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                 <Grid.Row>
                     {/* Predicted table */}
                     <Grid.Column textAlign='left' width={this.props.width ?? 16}>
-                        {this.props.headerTitle &&
+                        {this.props.headerTitle && (
                             <Header as='h4' textAlign='left' className='margin-bottom-1'>
                                 {this.props.headerTitle}
                             </Header>
-                        }
+                        )}
 
-                        {this.props.infoPopupContent &&
+                        {this.props.infoPopupContent && (
                             <InfoPopup
                                 content={this.props.infoPopupContent}
                                 extraClassName='no-margin-right pull-right info-popup-paginated-table'
                                 onTop={false}
                             />
-                        }
+                        )}
                     </Grid.Column>
                     <Grid.Column width={16}>
                         <Form>
@@ -498,20 +498,20 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {this.props.customElements}
 
                                 {/* Search input */}
-                                {this.props.showSearchInput &&
-                                        <Form.Input
-                                            width={this.props.searchWidth ?? 3}
-                                            icon='search' iconPosition='left'
-                                            label={this.props.searchLabel ?? 'Name/Description'}
-                                            title={this.props.searchPlaceholder}
-                                            placeholder={this.props.searchPlaceholder}
-                                            name='textFilter'
-                                            value={tableControl.textFilter}
-                                            onChange={(_, { name, value }) => {
-                                                this.handleTableControlChanges(name, value)
-                                            }}
-                                        />
-                                }
+                                {this.props.showSearchInput && (
+                                    <Form.Input
+                                        width={this.props.searchWidth ?? 3}
+                                        icon='search' iconPosition='left'
+                                        label={this.props.searchLabel ?? 'Name/Description'}
+                                        title={this.props.searchPlaceholder}
+                                        placeholder={this.props.searchPlaceholder}
+                                        name='textFilter'
+                                        value={tableControl.textFilter}
+                                        onChange={(_, { name, value }) => {
+                                            this.handleTableControlChanges(name, value)
+                                        }}
+                                    />
+                                )}
                                 {customFilters}
                                 {/* Page size */}
                                 <Form.Select
@@ -558,14 +558,14 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                             >
                                                 {header.name}
 
-                                                {header.infoPopupContent &&
+                                                {header.infoPopupContent && (
                                                     <InfoPopup
                                                         onTop={false}
                                                         onEvent='hover'
                                                         extraClassName='pull-right'
                                                         content={header.infoPopupContent}
                                                     />
-                                                }
+                                                )}
                                             </Table.HeaderCell>
                                         )
                                     })}

@@ -185,7 +185,7 @@ def generate_molecules_file(experiment: ExperimentObjType, samples_in_common: np
                 chunk = __process_chunk(chunk, file_type, molecules, samples_in_common)
 
                 # Saves in disk
-                chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.')
+                chunk.to_csv(temp_file, header=temp_file.tell() == 0, sep='\t', decimal='.', lineterminator='\n')
 
     return molecules_temp_file_path
 

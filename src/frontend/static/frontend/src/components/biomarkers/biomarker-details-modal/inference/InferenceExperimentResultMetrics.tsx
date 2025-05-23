@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { Header, Segment } from 'semantic-ui-react'
 import { InferenceExperimentForTable } from '../../types'
@@ -29,8 +28,7 @@ export const InferenceExperimentResultMetrics = (props: InferenceExperimentResul
                 <Header as='h2' dividing>Model details</Header>
 
                 {props.selectedInferenceExperiment.trained_model !== null &&
-                    <ModelDetailsPanel trainedModelPk={props.selectedInferenceExperiment.trained_model} />
-                }
+                    <ModelDetailsPanel trainedModelPk={props.selectedInferenceExperiment.trained_model} />}
             </Segment>
         </>
     )

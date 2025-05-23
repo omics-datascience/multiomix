@@ -55,7 +55,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
     // Color generator
     const seriesIndexes = [...Array(seriesLength).keys()]
 
-    const colors = d3.scaleLinear().range(
+    const colors = d3.scaleLinear<string, number>().range(
         [
             // Tableau10 (taken from https://observablehq.com/@d3/color-schemes)
             '#4e79a7', '#f28e2c', '#e15759', '#76b7b2', '#59a14f', '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab',

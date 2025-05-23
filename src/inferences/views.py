@@ -357,13 +357,16 @@ class AddEditClinicalSourceInferenceExperiment(APIView):
         with transaction.atomic():
             # Creates and assign ExperimentClinicalSource instance to experiment
             clinical_source_type = int(request.POST.get('clinicalType'))
-            if clinical_source_type == SourceType.CGDS:
-                return HttpResponse('Unauthorized', status=401)
-            clinical_source, _ = get_experiment_source(clinical_source_type, request, FileType.CLINICAL, 'clinical')
+            clinical_source, clinical_aux = get_experiment_source(clinical_source_type, request, FileType.CLINICAL,
+                                                                  'clinical')
 
-            # Creates Survival Tuples for clinical source
-            survival_columns_str = request.POST.get('survival_columns', '[]')
-            create_survival_columns_from_json(survival_columns_str, clinical_source.user_file)
+            # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
+            clinical_source = clinical_aux if clinical_aux is not None else clinical_source
+
+            # Creates Survival Tuples for clinical source (only if it's a new dataset)
+            if clinical_source_type == SourceType.NEW_DATASET.value:
+                survival_columns_str = request.POST.get('survival_columns', '[]')
+                create_survival_columns_from_json(survival_columns_str, clinical_source.user_file)
 
             # Assigns to experiment and saves
             experiment.clinical_source = clinical_source
@@ -404,21 +407,16 @@ class InferenceExperimentChartDataByAttribute(APIView):
         samples_and_times_df = samples_and_times_df.set_index('sample_id')
         clinical_df = clinical_df.join(samples_and_times_df, how='inner')
 
-        # Groups by the clinical attribute generating a list of dicts with the group and the 'time' column. The 'time'
-        # column must be a list with the minimum value, the Q1 value, the median, the Q3 value, and the maximum value
-        # TODO: change the structure as this one was used by ApexCharts which was discarded.
-        response = []
-        for group, group_df in clinical_df.groupby(clinical_attribute):
-            group_df = group_df['time']
-            group_dict = {'group': group}
-            group_dict.update(group_df.describe().to_dict())
-            response.append({
-                'x': group_dict['group'],
-                'y': [group_dict['min'], group_dict['25%'], group_dict['50%'], group_dict['75%'], group_dict['max']],
-                'mean': round(group_dict['mean'], 4)
-            })
+        # Groups by the clinical attribute generating a list of dicts with the group and the 'time' column
+        response_data = [
+            {
+                'x': group,
+                'y': group_df['time'].values
+            }
+            for group, group_df in clinical_df.groupby(clinical_attribute)
+        ]
 
-        return Response(response)
+        return Response(response_data)
 
 
 class UnlinkClinicalSourceInferenceExperiment(APIView):

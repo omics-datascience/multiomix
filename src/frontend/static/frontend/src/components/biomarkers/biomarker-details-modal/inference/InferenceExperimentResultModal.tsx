@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { Grid, Segment } from 'semantic-ui-react'
 import { FitnessFunction, InferenceExperimentForTable } from '../../types'
@@ -38,8 +37,7 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                                     selectedInferenceExperiment={props.selectedInferenceExperiment}
                                     refreshExperimentInfo={props.refreshExperimentInfo}
                                 />
-                            )
-                        }
+                            )}
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react'
 import { MoleculesExpressions, StatisticalValidationForTable } from '../../../types'
 import { Nullable } from '../../../../../utils/interfaces'
@@ -76,12 +75,10 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
     return (
         <>
             {loading &&
-                <ResultPlaceholder />
-            }
+                <ResultPlaceholder />}
 
             {(!loading && heatMapData !== null) &&
-                <Heatmap data={data} width={1000} height={550} min={heatMapData.min} max={heatMapData.max} />
-            }
+                <Heatmap data={data} width={1000} height={550} min={heatMapData.min} max={heatMapData.max} />}
         </>
     )
 }

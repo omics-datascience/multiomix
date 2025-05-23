@@ -22,6 +22,7 @@ interface RandomStateInputProps {
 export const RandomStateInput = (props: RandomStateInputProps) => (
     <Form.Input
         fluid
+        style={{ minWidth: '180px', maxWidth: '100% ' }}
         label='Random state'
         placeholder='An integer number'
         type='number'

@@ -61,7 +61,7 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
     )
 
     return (
-        <React.Fragment>
+        <>
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNAGeneInteractionJSON>
@@ -95,16 +95,16 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
                             <Table.Cell>
                                 {firstPubmedPapers.map(generatePubmedButton)}
 
-                                {restOfPubmedPapers.length > 0 &&
+                                {restOfPubmedPapers.length > 0 && (
                                     <Popup
-                                        trigger={
+                                        trigger={(
                                             <Icon
                                                 title='See more papers'
                                                 name='plus circle'
                                                 color='teal'
                                                 className='clickable'
                                             />
-                                        }
+                                        )}
                                         on='click'
                                         position='left center'
                                         content={
@@ -112,12 +112,12 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
                                         }
                                         size='mini'
                                     />
-                                }
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     )
                 }}
             />
-        </React.Fragment>
+        </>
     )
 }

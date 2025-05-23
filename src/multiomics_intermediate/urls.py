@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django_email_verification import urls as mail_urls
 
-# NOTE: the static path to MEDIA_URL should not be setted in production it.
+# NOTE: the static path to MEDIA_URL should not be set in production it.
 # See: https://docs.djangoproject.com/en/3.0/howto/static-files/deployment/
 
 urlpatterns = [
@@ -36,4 +36,5 @@ urlpatterns = [
     path('molecules/', include('molecules_details.urls')),
     path('admin/', admin.site.urls),
     path('email/', include(mail_urls)),
+    path('users/', include('users.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

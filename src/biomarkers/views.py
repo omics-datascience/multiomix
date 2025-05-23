@@ -10,21 +10,26 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from api_service.models import Experiment
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
-from biomarkers.serializers import BiomarkerSerializer, MoleculeIdentifierSerializer, \
+from biomarkers.serializers import BiomarkerFromCorrelationAnalysisSerializer, BiomarkerSerializer, MoleculeIdentifierSerializer, \
     BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
+
 
 
 class BiomarkerList(generics.ListAPIView):
     """REST endpoint: list for Biomarker model"""
 
     def get_queryset(self):
+        user = self.request.user
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
-        biomarkers = Biomarker.objects.filter(user=self.request.user)
+        biomarkers = Biomarker.objects.filter(
+            Q(is_public=True) | Q(user=user) | Q(shared_institutions__institutionadministration__user=user)).distinct()
+
         if only_successful:
             # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
             # FIXME: autovacuum settings could help
@@ -112,7 +117,6 @@ class BiomarkerClone(APIView):
             self.__copy_molecules_instances(biomarker_copy, biomarker.cnas.all())
             self.__copy_molecules_instances(biomarker_copy, biomarker.methylations.all())
 
-
         return Response({'ok': True})
 
 
@@ -141,6 +145,7 @@ def get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
         is_paginated=False,
         method='post'
     )
+
 
 def find_genes_from_request(request: Request) -> List[Dict]:
     """
@@ -273,3 +278,22 @@ class BiomarkerMolecules(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['identifier']
     ordering_fields = ['identifier']
+
+
+class BiomarkerCorrelationAPIView(APIView):
+    """Validates the request data and retrieves the corresponding experiment."""
+    
+    def post(self, request, *args, **kwargs):
+        # Instantiate the serializer with the received data
+        serializer = BiomarkerFromCorrelationAnalysisSerializer(data=request.data)
+
+        # Validate the data (returns a 400 error if the structure is incorrect)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        # Here the Biomarker is created validating which parameters were sent from the frontend
+        cor_analysis = get_object_or_404(Experiment, pk=validated_data['correlation_analysis_id'])
+        
+        return Response({
+            "ok": True,
+        })

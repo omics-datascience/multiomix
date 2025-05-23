@@ -3,7 +3,7 @@ import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
@@ -11,6 +11,8 @@ import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
+import { PopupExperiment } from '../pipeline/all-experiments-view/PopupExperiment'
+import { SwitchPublicButton } from '../pipeline/all-experiments-view/SwitchPublicButton'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -29,6 +31,7 @@ declare const urlUserInstitutions: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
+declare const downloadFileHeaders: string
 
 /**
  * New File Form fields
@@ -65,13 +68,19 @@ interface FilesManagerState {
     addingTag: boolean,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
+    /** posibles values for survival tuple */
+    survivalTuplesPossiblesValues: string[],
 }
 
 /**
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-class FilesManager extends React.Component<{}, FilesManagerState> {
+interface FilesManagerProps {
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void
+}
+
+class FilesManager extends React.Component<FilesManagerProps, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
     abortController = new AbortController()
@@ -94,7 +103,8 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             newFile: this.getDefaultNewFile(),
             addingTag: false,
             uploadPercentage: 0,
-            uploadState: null
+            uploadState: null,
+            survivalTuplesPossiblesValues: []
         }
     }
 
@@ -121,19 +131,18 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      */
     fileChange = () => {
         const newFileForm = this.state.newFile
-
         // Get Filename if file was selected
         const newFile = this.newFileInputRef.current
         const newFileName = (newFile && newFile.files.length > 0) ? newFile.files[0].name : FILE_INPUT_LABEL
 
         // If there wasn't a File name written by the user, loads the filename in the input
         const newFileNameUser = (newFileForm.newFileNameUser.trim().length > 0) ? newFileForm.newFileNameUser : newFileName
-
         // Sets the new field values
         newFileForm.newFileName = newFileName
         newFileForm.newFileNameUser = newFileNameUser
-
-        this.setState({ newFile: newFileForm })
+        getInputFileCSVColumns(newFile.files[0]).then((headersColumnsNames) => {
+            this.setState({ newFile: newFileForm, survivalTuplesPossiblesValues: headersColumnsNames })
+        })
     }
 
     /**
@@ -149,7 +158,6 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
     /**
      * Prevents users from closing browser tag when upload is in process.
-     *
      * @param e Event
      */
     onUnload = e => { // the method that will be used for both add and remove event
@@ -610,21 +618,49 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
      * @param fileToEdit Selected file to edit
      */
     editFile = (fileToEdit: DjangoUserFile) => {
-        this.setState({
-            newFile: {
-                id: fileToEdit.id,
-                newFileName: fileToEdit.name,
-                newFileNameUser: fileToEdit.name,
-                newFileType: fileToEdit.file_type,
-                newFileDescription: fileToEdit.description ?? '',
-                newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
-                isCpGSiteId: fileToEdit.is_cpg_site_id,
-                platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
-                // We only need the IDs
-                institutions: fileToEdit.institutions.map((institution) => institution.id),
-                survivalColumns: fileToEdit.survival_columns ?? []
-            }
-        })
+        if (fileToEdit.file_type === FileType.CLINICAL) {
+            ky.get(`${downloadFileHeaders}${fileToEdit.id}`, { signal: this.abortController.signal }).then((response) => {
+                response.json().then((fileHeaders: string[]) => {
+                    // Recieve file separates by , to get array of headers
+                    const survivalTuplesPossiblesValues = fileHeaders
+                    this.setState({
+                        survivalTuplesPossiblesValues,
+                        newFile: {
+                            id: fileToEdit.id,
+                            newFileName: fileToEdit.name,
+                            newFileNameUser: fileToEdit.name,
+                            newFileType: fileToEdit.file_type,
+                            newFileDescription: fileToEdit.description ?? '',
+                            newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                            isCpGSiteId: fileToEdit.is_cpg_site_id,
+                            platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                            institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            survivalColumns: fileToEdit.survival_columns ?? []
+                        }
+                    })
+                }).catch((err) => {
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                console.log('Error getting file content ->', err)
+            })
+        } else {
+            this.setState({
+                survivalTuplesPossiblesValues: [],
+                newFile: {
+                    id: fileToEdit.id,
+                    newFileName: fileToEdit.name,
+                    newFileNameUser: fileToEdit.name,
+                    newFileType: fileToEdit.file_type,
+                    newFileDescription: fileToEdit.description ?? '',
+                    newTag: fileToEdit.tag ? fileToEdit.tag.id : null,
+                    isCpGSiteId: fileToEdit.is_cpg_site_id,
+                    platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
+                    institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    survivalColumns: fileToEdit.survival_columns ?? []
+                }
+            })
+        }
     }
 
     /**
@@ -671,6 +707,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
             { name: 'Date', serverCodeToSort: 'upload_date' },
             { name: 'Institutions', width: 2 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
+            { name: 'Public', width: 1 },
             { name: 'Actions', width: 2 }
         ]
     }
@@ -722,9 +759,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
         // Tag and File deletion modals
         const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
-
         const fileTypeOptions = getFileTypeSelectOptions(false)
-
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
@@ -764,6 +799,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                             handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                             addSurvivalFormTuple={this.addSurvivalFormTuple}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                            survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
                         />
 
                         <TagsPanel
@@ -779,7 +815,7 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
 
                     {/* Files overview panel */}
                     <Grid.Column
-                        id="files-manager-result-column"
+                        id='files-manager-result-column'
                         width={13}
                         textAlign='center'
                     >
@@ -799,29 +835,46 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                     <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
-                                        {userFileRow.institutions.length > 0 &&
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
-                                                />
-                                        }
+                                        {userFileRow.institutions.length > 0 && (
+                                            <Icon
+                                                name='building'
+                                                size='large'
+                                                title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                            />
+                                        )}
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        {
+                                            userFileRow.is_public
+                                                ? (
+                                                    <Icon
+                                                        title='All users of the platform can see this file'
+                                                        name='check'
+                                                        color='green'
+                                                    />
+                                                )
+                                                : (
+                                                    <Icon
+                                                        title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                        name='close'
+                                                        color='red'
+                                                    />
+                                                )
+                                        }
+                                    </Table.Cell>
                                     <Table.Cell>
-                                        {/* Shows a download button if specified */}
+                                        {/* Extra information: */}
                                         <Icon
-                                            name='cloud download'
+                                            name='info'
+                                            className='margin-left-2'
                                             color='blue'
-                                            className='clickable margin-left-5'
-                                            title='Download file'
-                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
                                         />
-
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
-                                        {userFileRow.is_private_or_institution_admin &&
-                                            <React.Fragment>
+                                        {userFileRow.is_private_or_institution_admin && (
+                                            <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
                                                     name='pencil'
@@ -830,35 +883,54 @@ class FilesManager extends React.Component<{}, FilesManagerState> {
                                                     title='Edit'
                                                     onClick={() => this.editFile(userFileRow)}
                                                 />
+                                            </>
+                                        )}
 
-                                                {/* Shows a delete button if specified */}
-                                                <Icon
-                                                    name='trash'
-                                                    className='clickable margin-left-5'
-                                                    color='red'
-                                                    title='Delete experiment'
-                                                    onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                />
-                                            </React.Fragment>
-                                        }
-
-                                        {/* Extra information: */}
-                                        <Icon
-                                            name='info'
-                                            className='margin-left-2'
-                                            color='blue'
-                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
+                                        <PopupExperiment
+                                            content={(
+                                                <>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {/* Shows a download button if specified */}
+                                                        <Icon
+                                                            name='cloud download'
+                                                            color='blue'
+                                                            className='clickable margin-left-5'
+                                                            title='Download file'
+                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                        />
+                                                        {/* Public switch */}
+                                                        <SwitchPublicButton
+                                                            publicButtonEntity={{
+                                                                id: userFileRow.id as number,
+                                                                user: { id: userFileRow.user.id },
+                                                                is_public: userFileRow.is_public
+                                                            }}
+                                                            nameEntity='file'
+                                                            publicKey='userFileId'
+                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                        />
+                                                        {/* Shows a delete button if specified */}
+                                                        <Icon
+                                                            name='trash'
+                                                            className='clickable margin-left-5'
+                                                            color='red'
+                                                            title='Delete experiment'
+                                                            onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
                                         />
 
                                         {/* NaNs warning */}
-                                        {userFileRow.contains_nan_values &&
+                                        {userFileRow.contains_nan_values && (
                                             <Icon
                                                 name='warning sign'
                                                 className='margin-left-2'
                                                 color='yellow'
                                                 title='The dataset contains NaN values'
                                             />
-                                        }
+                                        )}
                                     </Table.Cell>
                                 </Table.Row>
                             )}

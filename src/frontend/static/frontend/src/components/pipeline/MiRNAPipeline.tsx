@@ -29,7 +29,7 @@ declare const maximumNumberOfOpenTabs: number
 declare const currentUserId: string
 
 /** Options for tabs: user could view all his experiments or a specific result */
-type ActiveTabsOptions = 'all-experiments' | number;
+type ActiveTabsOptions = 'all-experiments' | number
 
 /** To type the RowHeader array */
 interface GeneExtraDataFields {
@@ -123,7 +123,8 @@ interface MiRNAPipelineProps {
     /** Function callback when a study is selected from CGDS Modal */
     selectStudy: (selectedStudy: DjangoCGDSStudy, sourceStateName: NewExperimentSourceStateName) => void,
     /** Function callback to handle GEM FileType changes */
-    selectGEMFileType: (fileType: FileType) => void
+    selectGEMFileType: (fileType: FileType) => void,
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
 /**
@@ -781,6 +782,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                     confirmExperimentStop={this.confirmExperimentStop}
                     handleSortAllExperiments={this.props.handleSortAllExperiments}
                     handleTableControlChangesAllExperiments={this.props.handleTableControlChangesAllExperiments}
+                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
                 />
             )
         } else {
@@ -897,14 +899,14 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
 
                         {/* Tabs with all experiments Table or a table with current selected experiment info */}
                         <Grid.Column
-                            id="experiment-result-column"
+                            id='experiment-result-column'
                             width={this.state.showLastExperiments ? 12 : 14}
                             textAlign='center'
                         >
                             <Grid>
                                 <Grid.Row columns={2}>
                                     <Grid.Column width={15}>
-                                        <Menu className="menu-with-bolder-border">
+                                        <Menu className='menu-with-bolder-border'>
                                             <Menu.Item
                                                 id='all-experiments-tab'
                                                 active={this.state.activeTab === 'all-experiments'}
@@ -942,7 +944,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                         </Grid.Column>
 
                         {/* My experiments info */}
-                        {this.state.showLastExperiments &&
+                        {this.state.showLastExperiments && (
                             <Grid.Column width={2} textAlign='center'>
                                 <UserLastExperiments
                                     seeResult={this.seeResult}
@@ -959,7 +961,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                     handleAddTagInputsChange={this.handleAddTagInputsChangeForLastExperiment}
                                 />
                             </Grid.Column>
-                        }
+                        )}
                     </Grid>
                 </Segment>
             </div>

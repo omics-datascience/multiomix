@@ -25,7 +25,7 @@ export const LastExperimentTypeAndMethodInfo = (props: LastExperimentTypeInfoPro
     const experimentCorrelationMethodInfo = getExperimentCorrelationMethodInfo(props.correlationMethod)
 
     return (
-        <Card.Meta className="margin-top-2">
+        <Card.Meta className='margin-top-2'>
             <Label color={experimentTypeInfo.color} size='tiny'>
                 {experimentTypeInfo.description}
             </Label>

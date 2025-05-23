@@ -133,7 +133,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 </Grid.Column>
 
                 <Grid.Column width={4}>
-                    {selectedTrainedModelPk !== null &&
+                    {selectedTrainedModelPk !== null && (
                         <>
                             <NewPredictionRangeLabelsSetModal
                                 showNewPredictionRangeLabelsSet={openRangeLabelsSetModal}
@@ -142,13 +142,14 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             />
 
                             {/* Clinical attribute select */}
-                            {(activeMenuItem === 'charts' && props.selectedInferenceExperiment.clinical_source_id) &&
+                            {(activeMenuItem === 'charts' && props.selectedInferenceExperiment.clinical_source_id) && (
                                 <>
                                     <ClinicalSourcePopup
                                         experiment={props.selectedInferenceExperiment}
                                         experimentType='inference'
                                         // In survival analysis tabs is necessary to have survival tuples
                                         showOnlyClinicalDataWithSurvivalTuples
+                                        showCBioPortalOption
                                         showPopup={showPopup}
                                         urlClinicalSourceAddOrEdit={urlClinicalSourceAddOrEditInferenceExperiment}
                                         urlUnlinkClinicalSource={urlUnlinkClinicalSourceInferenceExperiment}
@@ -157,6 +158,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         openPopup={() => setShowPopup(true)}
                                         closePopup={() => setShowPopup(false)}
                                         onSuccessCallback={props.refreshExperimentInfo}
+                                        validationSource={null}
                                     />
 
                                     <InferenceExperimentClinicalAttributeSelect
@@ -165,7 +167,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                         setSelectedClinicalAttribute={setSelectedClinicalAttribute}
                                     />
                                 </>
-                            }
+                            )}
 
                             {/* Range Select */}
                             <PredictionRangeLabelsSetSelect
@@ -176,7 +178,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
 
                             <Button className='margin-top-2' primary fluid onClick={() => { setOpenRangeLabelsSetModal(true) }}>Add Range labels</Button>
                         </>
-                    }
+                    )}
                 </Grid.Column>
             </Grid.Row>
         </Grid>

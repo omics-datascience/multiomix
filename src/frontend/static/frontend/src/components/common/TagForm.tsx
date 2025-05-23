@@ -10,8 +10,8 @@ interface TagFormProps {
     tag: DjangoTag,
     disableInputs: boolean,
     loading: boolean,
-    handleKeyDown: (any) => void,
-    handleAddTagInputsChange: (name: string, value: any) => void
+    onHandleKeyDown: (any) => void,
+    onHandleAddTagInputsChange: (name: string, value: any) => void
 }
 
 /**
@@ -20,7 +20,7 @@ interface TagFormProps {
  * @returns Component
  */
 export const TagForm = (props: TagFormProps) => {
-    const checkedHandleFormChanges = checkedValidityCallback(props.handleAddTagInputsChange)
+    const checkedHandleFormChanges = checkedValidityCallback(props.onHandleAddTagInputsChange)
 
     return (
         <div>
@@ -28,10 +28,10 @@ export const TagForm = (props: TagFormProps) => {
                 icon={props.tag.id ? 'pencil' : 'add'}
                 fluid
                 name='name'
-                className="no-margin-right"
+                className='no-margin-right'
                 value={props.tag.name}
                 onChange={checkedHandleFormChanges}
-                onKeyDown={props.handleKeyDown}
+                onKeyDown={props.onHandleKeyDown}
                 loading={props.loading}
                 disabled={props.disableInputs}
                 placeholder='New tag'
@@ -40,11 +40,11 @@ export const TagForm = (props: TagFormProps) => {
 
             <Input
                 fluid
-                className="margin-top-2"
+                className='margin-top-2'
                 name='description'
                 value={props.tag.description}
                 onChange={checkedHandleFormChanges}
-                onKeyDown={props.handleKeyDown}
+                onKeyDown={props.onHandleKeyDown}
                 disabled={props.disableInputs}
                 placeholder='Description (optional)'
                 maxLength={60}

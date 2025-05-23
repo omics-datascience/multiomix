@@ -32,6 +32,10 @@ def __get_clustering_algorithm_value(cluster_algorithm: ClusteringAlgorithm) -> 
     """Gets the corresponding string value for the parameter 'clustering-algorithm' of the EMR integration."""
     if cluster_algorithm == ClusteringAlgorithm.SPECTRAL:
         return 'spectral'
+    if cluster_algorithm == ClusteringAlgorithm.BK_MEANS:
+        return 'bk_means'
+    if cluster_algorithm == ClusteringAlgorithm.WARD:
+        return 'ward'
     return 'k_means'  # Default is kmeans
 
 

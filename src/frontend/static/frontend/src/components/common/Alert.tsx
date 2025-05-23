@@ -19,7 +19,7 @@ type AlertStyle = {
 const alertStyles: AlertStyle = {
     [CustomAlertTypes.WARNING]: {
         color: '#fbbd08',
-        iconName: 'check'
+        iconName: 'exclamation'
     },
     [CustomAlertTypes.ERROR]: {
         color: '#db2828',
@@ -27,8 +27,12 @@ const alertStyles: AlertStyle = {
     },
     [CustomAlertTypes.SUCCESS]: {
         color: '#21ba45',
-        iconName: 'exclamation'
+        iconName: 'check'
     }
+}
+const positionDictionary = {
+    top: '5%',
+    bottom: '75%'
 }
 
 /**
@@ -42,7 +46,8 @@ export const Alert = (props: AlertProps) => {
         isOpen,
         message,
         type,
-        duration
+        duration,
+        position = 'bottom'
     } = props
     const { color, iconName } = alertStyles[type]
 
@@ -52,7 +57,7 @@ export const Alert = (props: AlertProps) => {
             open={isOpen}
             transition={{ duration }}
         >
-            <div className='alert--container--transition' style={{ zIndex: 10000 }}>
+            <div className='alert--container--transition' style={{ zIndex: 10000, top: positionDictionary[position] }}>
                 <div className='alert--container--alert' style={{ border: `1px solid ${color}` }}>
                     <Icon
                         className='alert--icon'

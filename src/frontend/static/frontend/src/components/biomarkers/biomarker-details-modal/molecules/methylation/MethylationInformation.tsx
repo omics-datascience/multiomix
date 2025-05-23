@@ -117,20 +117,20 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                             <span>{methylationAliases}</span>
                         </Header>
 
-                        {methylationData.chromosome_position &&
+                        {methylationData.chromosome_position && (
                             <Header size='large'>
                                 Chr. Position: {methylationData.chromosome_position}
                             </Header>
-                        }
+                        )}
                     </Segment>
 
                     <Segment>
                         <InfoPopup
-                            content={
+                            content={(
                                 <span>
                                     List of islands related to the methylation site according to the <ExternalLink href='https://genome.ucsc.edu/cgi-bin/hgTrackUi?hgsid=2155344452_RupMtKk6A9IgaOvoZvt1JA970CO7&g=cpgIsland&hgTracksConfigPage=configure'>UCSC database</ExternalLink>
                                 </span>
-                            }
+                            )}
                             onTop
                         />
                         <Header size='huge' textAlign='left' className='margin-top-0'>

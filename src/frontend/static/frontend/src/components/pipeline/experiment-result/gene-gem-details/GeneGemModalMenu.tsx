@@ -60,8 +60,8 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                 />
             </Menu.Item>
 
-            {props.isMiRNA &&
-                <React.Fragment>
+            {props.isMiRNA && (
+                <>
                     <Menu.Item
                         active={props.activeItem === ActiveItemMenu.MIRNA_TARGET_INTERACTION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.MIRNA_TARGET_INTERACTION)}
@@ -117,8 +117,8 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                             extraClassName='margin-left-5'
                         />
                     </Menu.Item>
-                </React.Fragment>
-            }
+                </>
+            )}
 
             <Menu.Item
                 active={props.activeItem === ActiveItemMenu.ASSUMPTIONS}

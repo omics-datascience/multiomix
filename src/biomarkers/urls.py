@@ -18,4 +18,5 @@ urlpatterns = [
     path('methylation-sites', views.MethylationSites.as_view(), name='methylation_sites'),
     path('methylation-sites-finder', views.MethylationSites.as_view(), name='methylation_sites_finder'),
     path('biomarker-molecules', views.BiomarkerMolecules.as_view(), name='biomarker_molecules'),
+    path('biomarker-correlation-api', views.BiomarkerCorrelationAPIView.as_view(), name='biomarker_correlation_api'),
 ]

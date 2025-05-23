@@ -11,8 +11,10 @@ from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
-from .serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
+from user_files.serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class UserFileChunkedUploadView(ChunkedUploadView):
@@ -111,6 +113,22 @@ def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool
 
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
+class UserFileHeaders(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    """REST endpoint: list for UserFile header. """
+
+    @staticmethod
+    def get(request, pk: int) -> QuerySet:
+        """
+        Returns the User's files headers from DB
+        @param user: User to retrieve his Datasets
+        @param pk: Id from file
+        @return: File's headers
+        """
+        user = request.user
+        user_file = get_an_user_file(user=user, user_file_pk=pk)
+        list_of_header = user_file.get_column_names()
+        return Response(list_of_header)
 
 class UserFileList(generics.ListAPIView):
     """REST endpoint: list for UserFile model. """
@@ -161,3 +179,31 @@ class DownloadUserFile(APIView):
         response['Content-Disposition'] = f'attachment; filename={user_file.name}'
 
         return response
+
+class ToggleFilePublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an a user file.
+    Only the owner of the user file can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the userFiles.
+        """
+        data = request.dat
+       
+        userFile_id = data.get('userFileId')
+        userFile = get_object_or_404(UserFile, id=userFile_id)
+        if userFile.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this user file."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        userFile.is_public = not userFile.is_public
+        userFile.save(update_fields=['is_public'])  
+
+        return Response(
+            {"id": userFile.id, "is_public": userFile.is_public}
+        )

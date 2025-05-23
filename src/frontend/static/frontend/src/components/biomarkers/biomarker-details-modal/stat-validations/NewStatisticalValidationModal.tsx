@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { Biomarker, SourceStateBiomarker, TrainedModelForTable } from '../../types'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
@@ -338,7 +337,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                     />
                                 </Form>
 
-                                <div className="margin-top-2">
+                                <div className='margin-top-2'>
                                     <Icon name='asterisk' /> Required field
                                 </div>
                             </Segment>
@@ -381,19 +380,19 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
 
             {/* Buttons */}
             <Modal.Actions>
-                {currentStep > 1 &&
+                {currentStep > 1 && (
                     <Button
-                        color="red"
+                        color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
                         Go back
                     </Button>
-                }
+                )}
 
                 {/* Continue button */}
-                {currentStep === 1 &&
+                {currentStep === 1 && (
                     <Button
-                        color="green"
+                        color='green'
                         loading={sendingData}
                         onClick={() => {
                             setCurrentStep(currentStep + 1)
@@ -402,12 +401,12 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                     >
                         Continue
                     </Button>
-                }
+                )}
 
                 {/* Submit StatisticalAnalysis button */}
-                {currentStep === 2 &&
+                {currentStep === 2 && (
                     <Button
-                        color="green"
+                        color='green'
                         loading={sendingData}
                         onClick={() => {
                             runStatisticalAnalysis()
@@ -416,7 +415,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                     >
                         Confirm
                     </Button>
-                }
+                )}
             </Modal.Actions>
         </Modal>
     )

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from genes.serializers import GeneGEMWithType
 from user_files.models_choices import MoleculeType
 from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier, MoleculeIdentifier
 from tags.serializers import TagSerializer
@@ -164,5 +165,14 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
         This avoids the user to edit a Biomarker that was already used and generate inconsistencies.
         """
         return ins.was_already_used
+    
+    
+class BiomarkerFromCorrelationAnalysisSerializer(serializers.Serializer):
+    """
+    Serializer for BiomarkerFromCorrelationAnalysis, including correlation analysis ID, gene GEM list, and correlation threshold.
+    """
+    correlation_analysis_id = serializers.IntegerField()
+    gene_gem_list = GeneGEMWithType(many=True, required=False)
+    correlation_threshold = serializers.IntegerField(required=False)
 
 

@@ -174,6 +174,12 @@ interface DjangoUser {
     is_superuser: boolean,
     /** Indicates if the user is admin of at least one institution */
     is_institution_admin: boolean,
+    /** Indicate user first name */
+    first_name: string,
+    /** Indicate user last name */
+    last_name: string,
+    /** Indicate user email */
+    email: string
 }
 
 /**
@@ -282,7 +288,9 @@ interface DjangoExperiment {
     p_values_adjustment_method: PValuesAdjustmentMethod,
     tag: DjangoTag,
     type: ExperimentType,
-    clinical_source_id: Nullable<number>
+    clinical_source_id: Nullable<number>,
+    is_public: boolean,
+    user: { id: number, username: string }
 }
 
 /** A reduced structure of Gene model */
@@ -446,7 +454,31 @@ interface DjangoInstitution {
     location: string,
     email: string,
     telephone_number: string,
-    users: DjangoUser[]
+    users?: DjangoUser[]
+}
+
+/**
+ * Institution user
+ */
+interface InstitutionUser {
+    id: number,
+    username: string,
+}
+
+/**
+ * Django Institution limited user
+ */
+interface DjangoInstitutionUserLimited {
+    user: InstitutionUser,
+}
+
+/**
+ * Django Institution user
+ */
+interface DjangoInstitutionUser {
+    user: InstitutionUser,
+    id: number,
+    is_institution_admin: boolean,
 }
 
 /**
@@ -528,6 +560,14 @@ interface DjangoCommonResponse<INTERNAL_CODE_STATUS = null> {
  */
 interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
     data: DjangoSamplesInCommonResultJSON
+}
+
+interface DjangoSamplesInCommonResultClinicalValidationJSON extends DjangoSamplesInCommonResultJSON {
+    number_samples_clinical: number
+}
+
+interface DjangoNumberSamplesInCommonClinicalValidationResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
+    data: DjangoSamplesInCommonResultClinicalValidationJSON
 }
 
 /**
@@ -674,5 +714,9 @@ export {
     DjangoMethylationDataJSON,
     DjangoSourceDataOutliersBasic,
     DjangoMonotonicityTest,
-    DjangoSurvivalColumnsTupleSimple
+    DjangoSurvivalColumnsTupleSimple,
+    DjangoNumberSamplesInCommonClinicalValidationResult,
+    DjangoInstitutionUser,
+    DjangoInstitutionUserLimited,
+    InstitutionUser
 }

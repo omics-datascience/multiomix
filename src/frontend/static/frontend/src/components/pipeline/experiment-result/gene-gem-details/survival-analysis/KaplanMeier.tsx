@@ -1,15 +1,16 @@
 import React from 'react'
 import { LogRankStatistic, Nullable } from '../../../../../utils/interfaces'
-import { DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple } from '../../../../../utils/django_interfaces'
+import { DjangoCommonResponse, DjangoExperimentSource, DjangoMRNAxGEMResultRow, DjangoResponseCode, DjangoSurvivalColumnsTupleSimple } from '../../../../../utils/django_interfaces'
 import { alertGeneralError, getDjangoHeader, getGeneAndGEMFromSelectedRow, listToDropdownOptions } from '../../../../../utils/util_functions'
 import ky from 'ky'
-import { DropdownItemProps, Form, Grid, Header, Label, Select } from 'semantic-ui-react'
+import { Button, DropdownItemProps, Form, Grid, Header, Label, Select } from 'semantic-ui-react'
 import { KaplanMeier, KaplanMeierData, KaplanMeierSample } from './KaplanMeierUtils'
 import { LogRankTestStats } from './LogRankTestStats'
 import { LoadingPanel } from '../LoadingPanel'
 
 declare const urlSurvivalData: string
-
+// Defined in gem.html
+declare const urlUnlinkClinicalSourceUserFile: string
 /** Common interest values */
 const COMMON_INTEREST_VALUES = ['DEAD', 'DECEASE', 'DEATH']
 
@@ -36,6 +37,8 @@ type SurvivalDataResponse = {
 interface KaplanMeierChartProps {
     experimentId: number,
     selectedRow: Nullable<DjangoMRNAxGEMResultRow>,
+    gem_source: DjangoExperimentSource,
+    mRNA_source: DjangoExperimentSource,
 }
 
 /**
@@ -62,6 +65,8 @@ interface KaplanMeierChartState {
     selectedSurvivalColumnId: Nullable<number>,
     /** Flag of survival data request */
     gettingSurvivalData: boolean,
+    /** Flag to check if source is being unlink */
+    unlinkingSource: boolean,
 }
 
 /**
@@ -80,7 +85,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             couldInferFieldsOfInterest: false,
             survivalColumns: [],
             selectedSurvivalColumnId: null,
-            gettingSurvivalData: false
+            gettingSurvivalData: false,
+            unlinkingSource: false
         }
     }
 
@@ -204,6 +210,37 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         })
     }
 
+    /**
+     * Unlink dataset if experiment is not created by cBioportal datasets
+     */
+    handleUnlinkClinicalSource () {
+        // validate if is dataset from cBioportal
+        if (this.props.gem_source.cgds_dataset || this.props.mRNA_source.cgds_dataset) {
+            return
+        }
+
+        const myHeaders = getDjangoHeader()
+        let unlinkingSource = true
+        this.setState({ unlinkingSource })
+        const url = `${urlUnlinkClinicalSourceUserFile}/${this.props.experimentId}/`
+        ky.patch(url, { headers: myHeaders }).then((response) => {
+            response.json().then((response: DjangoCommonResponse) => {
+                if (response.status.code === DjangoResponseCode.SUCCESS) {
+                    unlinkingSource = false
+                    this.setState({ unlinkingSource })
+                } else {
+                    alertGeneralError()
+                }
+            }).catch((err) => {
+                alertGeneralError()
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error adding new Tag ->', err)
+        })
+    }
+
     render () {
         if (this.state.gettingSurvivalData) {
             return <LoadingPanel />
@@ -253,7 +290,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     selection
                                     clearable
                                     multiple
-                                    name="fieldsInterest"
+                                    name='fieldsInterest'
                                     value={this.state.fieldsInterest}
                                     onChange={(_, { name, value }) => this.handleChange(name, value)}
                                     placeholder='Select some fields'
@@ -262,7 +299,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
 
                             </Form.Field>
 
-                            {this.state.couldInferFieldsOfInterest &&
+                            {this.state.couldInferFieldsOfInterest && (
                                 <Form.Field width={4}>
                                     <Label
                                         id='advice-infer-interest'
@@ -273,7 +310,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                         The fields of interest were inferred from common values
                                     </Label>
                                 </Form.Field>
-                            }
+                            )}
 
                         </Form.Group>
                     </Form>
@@ -293,11 +330,25 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             <Grid>
                 {selectSurvivalColumns}
 
-                <Grid.Row className='no-padding-top'>
+                <Grid.Row className='no-padding-top' columns={2}>
                     <Grid.Column>
                         <Label color='orange' size='large'>
                             Samples with empty values (i.e. blank values) will be ignored in survival analysis
                         </Label>
+                    </Grid.Column>
+                    <Grid.Column style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ margin: '0 2rem 0 0', display: this.props.gem_source.cgds_dataset || this.props.mRNA_source.cgds_dataset ? 'none' : 'normal' }}>
+                            <Button
+                                color='orange'
+                                fluid
+                                title='Unlink clinical dataset from this experiment'
+                                onClick={() => this.handleUnlinkClinicalSource()}
+                                loading={this.state.unlinkingSource}
+                                disabled={this.state.unlinkingSource}
+                            >
+                                Unlink DataSet
+                            </Button>
+                        </div>
                     </Grid.Column>
                 </Grid.Row>
                 <Grid.Row columns={2} divided textAlign='center'>

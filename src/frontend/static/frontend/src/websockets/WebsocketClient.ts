@@ -22,14 +22,18 @@ class WebsocketClientCustom {
         this.websocket.onopen = function () {
             console.log('Websocket connection established')
         }
+        // Makes all the functions debounced to prevent multiple concatenated executions.
 
-        this.websocket.onmessage = debounce(function (event) {
+        config.commandsToAttend = config.commandsToAttend.map(command => ({ ...command, functionToExecute: debounce(command.functionToExecute, 300) }))
+
+        this.websocket.onmessage = function (event) {
             try {
                 const dataParsed: WebsocketMessage = JSON.parse(event.data)
 
                 const commandToAttend = config.commandsToAttend.find((commandToAttend) => commandToAttend.key === dataParsed.command)
 
                 // If matches with any function defined by the user, executes it
+
                 if (commandToAttend !== undefined) {
                     commandToAttend.functionToExecute()
                 }
@@ -38,7 +42,7 @@ class WebsocketClientCustom {
                 console.log('Data:', event.data)
                 console.log('Exception:', ex)
             }
-        }, 300)
+        }
 
         this.websocket.onerror = function (event) {
             console.log('Error establishing websocket connection', event)

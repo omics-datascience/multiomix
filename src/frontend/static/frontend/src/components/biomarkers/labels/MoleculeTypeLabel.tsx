@@ -1,6 +1,6 @@
 import React from 'react'
 import { Label, SemanticCOLORS } from 'semantic-ui-react'
-import { MoleculeType } from '../../../utils/interfaces'
+import { GenesColors, MoleculeType } from '../../../utils/interfaces'
 
 /** MoleculeTypeLabel props. */
 interface MoleculeTypeLabelProps {
@@ -23,19 +23,19 @@ export const MoleculeTypeLabel = (props: MoleculeTypeLabelProps) => {
 
     switch (props.moleculeType) {
         case MoleculeType.MRNA:
-            color = 'blue'
+            color = GenesColors.MRNA
             description = 'mRNA'
             break
         case MoleculeType.MIRNA:
-            color = 'orange'
+            color = GenesColors.MIRNA
             description = 'miRNA'
             break
         case MoleculeType.CNA:
-            color = 'yellow'
+            color = GenesColors.CNA
             description = 'CNA'
             break
         case MoleculeType.METHYLATION:
-            color = 'olive'
+            color = GenesColors.METHYLATION
             description = 'Methylation'
             break
         default:

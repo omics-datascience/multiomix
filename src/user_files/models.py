@@ -1,19 +1,21 @@
+import csv
 import os
+from typing import List, TextIO, Optional, Iterable, Union, cast
+
+import numpy as np
+import pandas as pd
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import QuerySet
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from api_service.websocket_functions import send_update_user_file_command
 from common.methylation import MethylationPlatform
 from institutions.models import Institution
 from tags.models import Tag
-from typing import List, TextIO, Optional, Iterable, Union, cast
-import csv
-import numpy as np
-import pandas as pd
 from user_files.models_choices import FileType, FileDecimalSeparator
-from user_files.utils import get_decimal_separator_and_numerical_data
-from django.conf import settings
-from api_service.websocket_functions import send_update_user_file_command
+from user_files.utils import get_decimal_separator_and_numerical_data, read_excel_in_chunks
 
 
 def user_directory_path(instance, filename: str):
@@ -23,6 +25,8 @@ def user_directory_path(instance, filename: str):
 
 class UserFile(models.Model):
     """User Files to submit experiments: mRNA and Gene Expression Modulators (GEM) file (miRNA, CNA or Methylation)"""
+    survival_columns: QuerySet['SurvivalColumnsTupleUserFile']
+    user_file: QuerySet['ExperimentSource']
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=300, blank=True, null=True)
     file_obj = models.FileField(upload_to=user_directory_path)
@@ -68,9 +72,6 @@ class UserFile(models.Model):
                 contains_nan_values = True
                 break
         self.contains_nan_values = contains_nan_values
-        # TODO: implement parameter of file size to handle the DataFrame entirely
-        # self.contains_nan_values = pd.read_csv(self.file_obj.file.name, sep=None, index_col=0, engine='python')\
-        #     .isnull().values.any()
 
     def __compute_row_used_as_index(self):
         """Computes the first column's header, which is used as index of the UserFile"""
@@ -80,7 +81,8 @@ class UserFile(models.Model):
     def __compute_decimal_separator(self):
         """Computes the UserFile decimal_separator field"""
         # This shouldn't fail as it was checked on upload
-        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file.name, seek_beginning=False, all_rows=False)
+        decimal_separator = get_decimal_separator_and_numerical_data(self.file_obj.file, seek_beginning=False,
+                                                                     all_rows=False)
         self.decimal_separator = decimal_separator if decimal_separator is not None else FileDecimalSeparator.DOT
 
     def compute_post_saved_field(self):
@@ -143,15 +145,23 @@ class UserFile(models.Model):
         dialect = self.__get_csv_reader_dialect(csv_file)
         return csv.reader(csv_file, dialect=dialect)
 
+    @property
+    def is_xlsx(self) -> bool:
+        """Checks if the file is an Excel file."""
+        return self.file_obj.name.endswith('.xlsx') or self.file_obj.name.endswith('.xls')
+
     def __get_dataframe(
-        self,
-        chunk_size: Optional[int] = None
+            self,
+            chunk_size: Optional[int] = None
     ) -> Union[pd.DataFrame, Iterable[pd.DataFrame]]:
         """
         Returns a DataFrame (entirely or in chunks).
         @param chunk_size: Chunk size to split the DataFrame (optional).
         @return: DataFrame or Iterator of DataFrame's chunks in case chunk_size is specified
         """
+        if self.is_xlsx:
+            return read_excel_in_chunks(self.file_obj.file, self.decimal_separator, chunk_size)
+
         return pd.read_csv(
             self.file_obj.file.name,
             sep=None,
@@ -185,12 +195,17 @@ class UserFile(models.Model):
         IMPORTANT: it's not using Pandas as it is extremely slow in comparison with this method (see times below)
         Pandas -> Takes 15.22 sec to finish 100 iterations
         CSV -> Takes 1.61 sec to finish 10000 iterations
-        @param include_first_column: If True, includes the firts column (the index)
+        @param include_first_column: If True, includes the first column (the index)
         @return: List of columns' names
         """
-        with open(self.file_obj.file.name, 'r') as csv_file:
-            reader = self.__get_dict_reader_from_file(csv_file)
-            fieldnames = reader.fieldnames
+        if self.is_xlsx:
+            with pd.ExcelFile(self.file_obj.file.name) as xls:
+                reader = pd.read_excel(xls, sheet_name=None)
+                fieldnames = reader[list(reader.keys())[0]].columns.tolist()
+        else:
+            with open(self.file_obj.file.name, 'r') as csv_file:
+                reader = self.__get_dict_reader_from_file(csv_file)
+                fieldnames = reader.fieldnames
 
         # The reader returns Optional[Sequence[str]]. We need a list
         if fieldnames is None:
@@ -198,6 +213,25 @@ class UserFile(models.Model):
 
         # If needed, removes the first column as it's the index (gene or gem name)
         return list(fieldnames[1:] if not include_first_column else fieldnames)
+
+    def get_first_column_of_all_rows(self) -> List[str]:
+        """
+        Gets the first element of each row in the CSV file, excluding the first row.
+        @return: List of first elements from each row.
+        """
+        first_elements = []
+        with open(self.file_obj.file.name, 'r') as csv_file:
+            reader = self.__get_reader_from_file(csv_file)
+            if reader is None:
+                return []
+
+            # Skips first line (have titles)
+            next(reader)
+            for row in reader:
+                if row:
+                    first_elements.append(row[0])
+
+        return first_elements
 
     def get_specific_row(self, row: str) -> np.ndarray:
         """
@@ -217,8 +251,12 @@ class UserFile(models.Model):
         Computes the number of rows that have the UserFile
         @return: Number of rows
         """
-        with open(self.file_obj.file.name, 'r') as infile:
-            row_count = sum(1 for _ in infile)
+        if self.is_xlsx:
+            with pd.ExcelFile(self.file_obj.file.name) as xls:
+                row_count = sum(1 for _ in pd.read_excel(xls, sheet_name=None))
+        else:
+            with open(self.file_obj.file.name, 'r') as infile:
+                row_count = sum(1 for _ in infile)
 
         # Subtracts 1 as it's assumed to have a header row in the file
         return row_count - 1
@@ -239,6 +277,7 @@ class UserFile(models.Model):
 
     class Meta:
         ordering = ['-id']
+
 
 @receiver(post_delete, sender=UserFile)
 def user_file_post_delete(sender, instance, **kwargs):

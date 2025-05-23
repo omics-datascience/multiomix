@@ -457,7 +457,39 @@ const getInputFileCSVColumns = (csvFile: File, separator: string = '\t'): Promis
             resolve([])
         }
 
-        fileReader.onerror = (event) => reject(event)
+        fileReader.onerror = reject
+        fileReader.readAsText(csvFile)
+    })
+}
+
+/**
+ * Gets the columns' name of an specific CSV file
+ * @param csvFile CSV file to parse
+ * @param separator Columns separator
+ * @returns A Promise with an array of all first column all rows o a rejection with the event
+ */
+const getInputFileCSVFirstColumnAllRows = (csvFile: File, separator: string = '\t'): Promise<string[]> => {
+    // Todo Send number of column to search
+    return new Promise<string[]>((resolve, reject) => {
+        const fileReader = new FileReader()
+
+        fileReader.onload = (event) => {
+            if (event?.target) {
+                const fileContent = event.target.result as string
+                const lines = fileContent.split('\n')
+                const clinicalData = lines.slice(1).map(line => line.split(separator)[0])
+
+                if (clinicalData) {
+                    resolve(clinicalData)
+                } else {
+                    resolve([])
+                }
+            }
+
+            resolve([])
+        }
+
+        fileReader.onerror = reject
         fileReader.readAsText(csvFile)
     })
 }
@@ -621,7 +653,7 @@ const experimentSourceIsValid = (source: Source): boolean => {
         getFileSizeInMB(source.newUploadedFileRef.current.files[0].size) <= MAX_FILE_SIZE_IN_MB_ERROR
     ) || (
         source.type === SourceType.UPLOADED_DATASETS &&
-        source.selectedExistingFile !== null
+            source.selectedExistingFile !== null
     ) || (
         source.type === SourceType.CGDS &&
         source.CGDSStudy !== null
@@ -772,5 +804,6 @@ export {
     getFileSizeInMB,
     getScoreClassData,
     generateBinData,
-    getFileTypeName
+    getFileTypeName,
+    getInputFileCSVFirstColumnAllRows
 }

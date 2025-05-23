@@ -3,8 +3,9 @@ from typing import Dict, Tuple, cast, Optional, Union, List
 import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, silhouette_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.cluster import AgglomerativeClustering
 from sksurv.metrics import concordance_index_censored
 from common.datasets_utils import get_common_samples, generate_molecules_file, format_data, \
     generate_clinical_file, generate_molecules_dataframe, check_sample_classes, \
@@ -113,13 +114,19 @@ def __compute_stat_validation(stat_validation: StatisticalValidation, molecules_
     # Makes predictions
     if is_regression:
         check_if_stopped(is_aborted, ExperimentStopped)
-        predictions = classifier.predict(molecules_df)
+        if isinstance(classifier, AgglomerativeClustering):
+            predictions = classifier.fit_predict(molecules_df)
+        else:
+            predictions = classifier.predict(molecules_df)
 
         # Gets all the metrics for the SVM or RF
         check_if_stopped(is_aborted, ExperimentStopped)
         y_true = clinical_data['time']
         stat_validation.mean_squared_error = mean_squared_error(y_true, predictions)
-        stat_validation.c_index = classifier.score(molecules_df, clinical_data)
+        if isinstance(classifier, AgglomerativeClustering):
+            stat_validation.c_index = silhouette_score(molecules_df, predictions)
+        else:
+            stat_validation.c_index = classifier.score(molecules_df, clinical_data)
         stat_validation.r2_score = r2_score(y_true, predictions)
 
         # TODO: add here all the metrics for every Source type

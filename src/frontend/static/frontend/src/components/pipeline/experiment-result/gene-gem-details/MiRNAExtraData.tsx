@@ -115,31 +115,31 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                     </Header>
                 </Grid.Column>
 
-                {miRNAData.mirna_sequence &&
+                {miRNAData.mirna_sequence && (
                     <Grid.Column width={8} title='Sequence' verticalAlign='middle'>
                         <Header size='large'>
                             {miRNAData.mirna_sequence}
                         </Header>
                     </Grid.Column>
-                }
+                )}
 
-                {(othersLinks.length > 0) &&
+                {(othersLinks.length > 0) && (
                     <Grid.Column width={2} verticalAlign='middle'>
                         {othersLinks.map((link) => (
                             <Button
                                 key={link.source}
                                 basic
-                                color="blue"
+                                color='blue'
                                 icon
                                 title={link.source}
-                                className="borderless-button no-box-shadow"
-                                as='a' href={link.url} target="_blank" rel='noopener noreferrer'
+                                className='borderless-button no-box-shadow'
+                                as='a' href={link.url} target='_blank' rel='noopener noreferrer'
                             >
                                 <Icon name='linkify' />
                             </Button>
                         ))}
                     </Grid.Column>
-                }
+                )}
             </Grid.Row>
         </Grid>
     )

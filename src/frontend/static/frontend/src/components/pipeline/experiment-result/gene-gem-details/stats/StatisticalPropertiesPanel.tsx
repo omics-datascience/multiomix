@@ -23,7 +23,7 @@ interface StatisticalPropertiesPanelProps {
  * @returns Component
  */
 export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProps) => {
-    const [showBars, setShowBars] = useState(true)
+    const [showBars, _setShowBars] = useState(true) // FIXME: uncomment when the area is well displayed
     const [showTogether, setShowTogether] = useState(false)
 
     const stats = props.statisticalProperties
@@ -40,14 +40,15 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
     }
 
     return (
-        <React.Fragment>
+        <>
             <Segment>
                 <Grid padded>
                     <Grid.Row columns='equal' divided>
                         {/* Control panel */}
                         <Grid.Column width={1} textAlign='center'>
                             {/* Show BarCharts */}
-                            <Button
+                            {/* FIXME: uncomment when the area is well displayed */}
+                            {/* <Button
                                 icon
                                 circular
                                 title={showBars ? 'Show area only' : 'Show bars'}
@@ -55,7 +56,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                                 onClick={() => setShowBars(!showBars)}
                             >
                                 <Icon name={showBars ? 'chart area' : 'chart bar'} />
-                            </Button>
+                            </Button> */}
 
                             {/* Show both Gene and GEM data in one chart */}
                             <Button
@@ -69,6 +70,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                                 <Icon name={showTogether ? 'arrows alternate horizontal' : 'compress'} />
                             </Button>
                         </Grid.Column>
+
                         <ChartSection
                             selectedRow={props.selectedRow}
                             stats={stats}
@@ -76,7 +78,6 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                             showTogether={showTogether}
                             gemDataIsOrdinal={props.gemDataIsOrdinal}
                         />
-
                     </Grid.Row>
                 </Grid>
             </Segment>
@@ -92,6 +93,6 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                     monotonicity={stats.monotonicity}
                 />
             </Segment>
-        </React.Fragment>
+        </>
     )
 }

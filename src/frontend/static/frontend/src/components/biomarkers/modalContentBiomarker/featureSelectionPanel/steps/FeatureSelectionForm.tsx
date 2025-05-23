@@ -48,44 +48,64 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                             settings={fitnessFunctionParameters?.clusteringParameters} /* ?? 0} */
                             handleChangeFitnessFunctionOption={handleChangeFitnessFunctionOption}
                         />
-                        <Form.Group style={{ display: isExpertOn ? 'inherit' : 'none' }}>
-                            <Form.Checkbox
-                                checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
-                                disabled // TODO: remove this when backend is implemented
-                                onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
-                                label='Search for the optimal number of clusters (soon)'
-                            />
+                        <div style={{ display: isExpertOn ? 'inherit' : 'none', padding: '10px' }}>
+                            <Form.Group style={{ display: isExpertOn ? 'flex' : 'none', flexDirection: 'row', alignItems: 'start' }}>
+                                <span style={{ fontSize: '12px', color: '#6c757d', opacity: 0.8, marginRight: '10px' }}>
+                                    Search for the optimal number of clusters (soon)
+                                </span>
+                                <Form.Checkbox
+                                    checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
+                                    disabled // TODO: remove this when backend is implemented
+                                    onChange={(_e, { checked }) => { handleChangeFitnessFunctionOption('clusteringParameters', 'lookForOptimalNClusters', checked ?? false) }}
+                                />
+                            </Form.Group>
+                            <Form.Group style={{ display: isExpertOn ? 'flex' : 'none', flexDirection: 'row', alignItems: 'start' }}>
+                                {!fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters && (
+                                    <Form.Input
+                                        fluid
+                                        style={{ minWidth: '180px', maxWidth: '100% ' }}
+                                        type='number'
+                                        label='Number of clusters'
+                                        name='nClusters'
+                                        min={2}
+                                        max={10}
+                                        value={fitnessFunctionParameters.clusteringParameters.nClusters}
+                                        onChange={(_, { name, value }) => {
+                                            const numVal = Number(value)
 
-                            {!fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters &&
+                                            if (numVal < 2) {
+                                                handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
+                                            } else if (numVal > 10) {
+                                                handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
+                                            } else {
+                                                handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
+                                            }
+                                        }}
+                                    />
+                                )}
+
+                                {/* General fields */}
                                 <Form.Input
+                                    fluid
+                                    style={{ minWidth: '180px', maxWidth: '100% ' }}
                                     type='number'
-                                    label='Number of clusters'
-                                    name='nClusters'
-                                    min={2}
-                                    max={10}
-                                    value={fitnessFunctionParameters.clusteringParameters.nClusters}
+                                    label='Penalizer'
+                                    name='penalizer'
+                                    min={0}
+                                    value={fitnessFunctionParameters.clusteringParameters.penalizer}
                                     onChange={(_, { name, value }) => {
-                                        const numVal = Number(value)
-
-                                        if (numVal < 2) {
-                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 2)
-                                        } else if (numVal > 10) {
-                                            handleChangeFitnessFunctionOption('clusteringParameters', name, 10)
-                                        } else {
-                                            handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
-                                        }
+                                        const numVal = Math.max(Number(value), 0)
+                                        handleChangeFitnessFunctionOption('clusteringParameters', name, numVal)
                                     }}
                                 />
-                            }
-
-                            {/* General fields */}
-                            <RandomStateInput
-                                value={fitnessFunctionParameters.clusteringParameters.randomState}
-                                parameterKey='clusteringParameters'
-                                handleChange={handleChangeFitnessFunctionOption}
-                            />
-                            <CrossValidationInput value={crossValidationParameters.folds} handleChange={handleChangeCrossValidation} />
-                        </Form.Group>
+                                <RandomStateInput
+                                    value={fitnessFunctionParameters.clusteringParameters.randomState}
+                                    parameterKey='clusteringParameters'
+                                    handleChange={handleChangeFitnessFunctionOption}
+                                />
+                                <CrossValidationInput value={crossValidationParameters.folds} handleChange={handleChangeCrossValidation} />
+                            </Form.Group>
+                        </div>
                     </>
                 )
             case FitnessFunction.SVM:

@@ -62,8 +62,10 @@ const Base = (props: BaseProps) => {
                     username: null,
                     is_anonymous: true,
                     is_superuser: false,
-                    is_institution_admin: false
-
+                    is_institution_admin: false,
+                    last_name: '',
+                    first_name: '',
+                    email: ''
                 })
             } else {
                 console.log('Error getting current User ->', err)
@@ -71,26 +73,6 @@ const Base = (props: BaseProps) => {
         }).finally(() => {
             setIsLoadingCurrentUser(false)
         })
-        /*  ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
-             response.json().then((currentUser: DjangoUser) => {
-                 setUser(currentUser)
-             }).catch((err) => {
-                 console.log('Error parsing JSON ->', err)
-             })
-         }).catch((err) => {
-             if (err.response.status === 403 && !abortController.current.signal.aborted) {
-                 // It's an anonymous user
-                 setUser({
-                     id: null,
-                     username: null,
-                     is_anonymous: true,
-                     is_superuser: false,
-                     is_institution_admin: false
-                 })
-             } else {
-                 console.log('Error getting current User ->', err)
-             }
-         }) */
     }
 
     const sitePolicyLink = <a id='site-policy-link' href={urlSitePolicy}>Terms and privacy policy</a>

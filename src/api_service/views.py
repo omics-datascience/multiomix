@@ -1,9 +1,10 @@
 import json
 import logging
-from builtins import map
-from celery.contrib.abortable import AbortableAsyncResult
 from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
+
 import numpy as np
+import pandas as pd
+from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
@@ -13,13 +14,17 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+import api_service.pipelines as pipelines
 from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_integer_enum_from_value, encode_json_response_status, \
-    request_bool_to_python_bool, get_intersection, create_survival_columns_from_json
+    request_bool_to_python_bool, get_intersection, create_survival_columns_from_json, get_intersection_clinical
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus, generate_json_response_or_404
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
@@ -32,20 +37,20 @@ from user_files.models_choices import FileType
 from user_files.serializers import SurvivalColumnsTupleUserFileSimpleSerializer
 from user_files.utils import get_invalid_format_response
 from user_files.views import get_an_user_file
+from .enums import CorrelationType
 from .enums import SourceType, CorrelationGraphStatusErrorCode, CommonSamplesStatusErrorCode
 from .models import Experiment, GeneMiRNACombination, GeneGEMCombination, ExperimentClinicalSource
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
-from .enums import CorrelationType
 from .mrna_service import global_mrna_service
 from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_correlation
 from .permissions import ExperimentIsNotRunning
-import api_service.pipelines as pipelines
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
-    ExperimentClinicalSourceSerializer
+    ExperimentClinicalSourceSerializer, LimitedUserSerializer
 from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
-import pandas as pd
+from institutions.models import Institution
+from institutions.serializers import InstitutionSimpleSerializer, InstitutionSerializer
 
 
 class CorrelationAnalysis(APIView):
@@ -139,7 +144,7 @@ class CorrelationAnalysis(APIView):
             experiment.save(force_insert=True)
 
         # Adds the experiment to the TaskQueue and gets Task id
-        async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk, ),
+        async_res: AbortableAsyncResult = eval_mrna_gem_experiment.apply_async((experiment.pk,),
                                                                                queue='correlation_analysis')
 
         experiment.task_id = async_res.task_id
@@ -160,7 +165,28 @@ class ExperimentList(generics.ListAPIView):
     """REST endpoint: list for Experiment model with pagination"""
 
     def get_queryset(self):
-        return Experiment.objects.filter(user=self.request.user)
+        # User can only retrieve their own experiments (UserFile) or those marked as public.
+        user = self.request.user
+        queryset = self.get_experiments_shared_with_user(user)
+        return queryset
+
+    @staticmethod
+    def get_experiments_shared_with_user(user):
+        """
+        Retrieves experiments associated with the user, including:
+        - Experiments uploaded by the user.
+        - Public experiments.
+        - Experiments shared through institutions the user manages.
+        - Experiments explicitly shared with the user.
+        @param user: The user for whom the experiments are retrieved.
+        @return: Queryset of experiments visible to the user.
+        """
+        return Experiment.objects.filter(
+            Q(user=user) |
+            Q(is_public=True) |
+            Q(shared_institutions__institutionadministration__user=user) |
+            Q(shared_users=user)
+        ).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -208,7 +234,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
         return combinations_queryset
 
     def get_serializer_class(self):
-        """Gets the Serializer class depending of the Experiment's type"""
+        """Gets the Serializer class depending on the Experiment's type"""
         queryset = self.get_queryset()
         if not queryset:
             return GeneMiRNACombinationSerializer
@@ -257,6 +283,218 @@ class ExperimentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = ExperimentSerializerDetail
     permission_classes = [permissions.IsAuthenticated, ExperimentIsNotRunning]
+
+class RemoveInstitutionFromExperimentView(APIView):
+    """
+    API endpoint to remove an institution from an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        institution_id = data.get('institutionId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        if not experiment.shared_institutions.filter(id=institution.id).exists():
+            return Response(
+                {"error": "This institution is not associated with the experiment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        experiment.shared_institutions.remove(institution)
+
+        return Response(
+            {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
+        )
+class RemoveUserFromExperimentView(APIView):
+    """
+    API endpoint to remove an user from an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Remove an institution from the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        user_id = data.get('userId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = get_object_or_404(User, id=user_id)
+
+        if not experiment.shared_users.filter(id=user.id).exists():
+            return Response(
+                {"error": "This USER is not associated with the experiment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        experiment.shared_users.remove(user)
+
+        return Response(
+            {"message": f"User {user.id} removed from experiment {experiment.id}."}
+        )
+
+class ToggleExperimentPublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        experiment.is_public = not experiment.is_public
+        experiment.save(update_fields=['is_public'])
+
+        return Response(
+            {"id": experiment.id, "is_public": experiment.is_public}
+        )
+
+class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution NOT associated with a specific experiment.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institutions not associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        user = self.request.user
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        user_institutions = Institution.objects.filter(users=user)
+        return user_institutions.exclude(
+            id__in=experiment.shared_institutions.values_list('id', flat=True)
+        )
+
+class UsersNonExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users NOT associated with a specific experiment.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users not associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+
+        associated_user_ids = experiment.shared_users.values_list('id', flat=True)
+        return get_user_model().objects.exclude(id__in=associated_user_ids)
+
+class UsersExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all users associated with a specific experiment.
+    """
+    serializer_class = LimitedUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all users associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        return experiment.shared_users
+
+class InstitutionExperimentsSharedListView(generics.ListAPIView):
+    """
+    REST endpoint: Get all institution associated with a specific experiment.
+    """
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all institution associated with a specific institution.
+        """
+        experiment_id = self.kwargs.get('experiment_id')
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        return experiment.shared_institutions
+
+class AddInstitutionToExperimentView(APIView):
+    """
+    API endpoint to add an institution to an experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        institution_id = data.get('institutionId')
+        experiment_id = data.get('experimentId')
+
+        if not institution_id or not experiment_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'experimentId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        institution = get_object_or_404(Institution, id=institution_id)
+
+        experiment.shared_institutions.add(institution)
+
+        serializer = InstitutionSerializer(institution)
+        return Response(serializer.data)
+
+class AddUserToExperimentView(APIView):
+    """
+    API endpoint to add an institution to an experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        user_id = data.get('userId')
+        experiment_id = data.get('experimentId')
+
+        if not user_id or not experiment_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'experimentId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        experiment = get_object_or_404(Experiment, id=experiment_id)
+        user = get_object_or_404(User, id=user_id)
+
+        experiment.shared_users.add(user)
+
+        serializer = LimitedUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @login_required
@@ -380,7 +618,10 @@ def get_samples_list(
     elif type_source == SourceType.UPLOADED_DATASETS:
         try:
             user_file = get_an_user_file(user=user, user_file_pk=id_source)
-            list_of_samples = user_file.get_column_names()
+            if file_type == FileType.CLINICAL:
+                list_of_samples = user_file.get_first_column_of_all_rows()
+            else:
+                list_of_samples = user_file.get_column_names()
         except UserFile.DoesNotExist:
             response = {
                 'status': ResponseStatus(
@@ -417,7 +658,7 @@ def get_number_samples_in_common_action(request):
     mrna_source_type = request.GET.get('mRNASourceType')
     gem_source_id = request.GET.get('gemSourceId')
     gem_source_type = request.GET.get('gemSourceType')
-    gem_file_type = request.GET.get('gemFileType')
+    gem_file_type = request.GET.get('gemFileType')  # TODO: remover y usar el enum directamente.
 
     if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, gem_file_type]:
         response = {
@@ -455,8 +696,7 @@ def get_number_samples_in_common_action(request):
             )
 
             # Gets intersection
-            intersection = get_intersection(
-                samples_list_mrna, samples_list_gem)
+            intersection = get_intersection(samples_list_mrna, samples_list_gem)
 
             if response is None:
                 response = {
@@ -473,11 +713,139 @@ def get_number_samples_in_common_action(request):
 
 
 @login_required
+def get_number_samples_in_common_clinical_validation_source(request):
+    json_request_data = json.loads(request.body)
+    clinical_data: Optional[List[str]] = json_request_data.get('clinicalData')
+    mrna_source_id = json_request_data.get('mRNASourceId')
+    mrna_source_type = json_request_data.get('mRNASourceType')
+
+    gem_source_id = json_request_data.get('gemSourceId')
+    gem_source_type = json_request_data.get('gemSourceType')
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, json_request_data, clinical_data]:
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message='Invalid request params',
+                internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+            ),
+        }
+    else:
+        # Cast parameters
+        mrna_source_id = int(mrna_source_id)
+        mrna_source_type = get_enum_from_value(
+            int(mrna_source_type), SourceType)
+
+        gem_source_id = int(gem_source_id)
+        gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
+        # Gets df
+        samples_list_mrna, response = get_samples_list(
+            mrna_source_id,
+            mrna_source_type,
+            FileType.MRNA,
+            request.user
+        )
+
+        # Response will be != None if an error occurred
+        if response is None:
+            samples_list_gem, response = get_samples_list(
+                gem_source_id,
+                gem_source_type,
+                FileType.MIRNA,
+                request.user
+            )
+            # Gets intersection
+            if response is None:
+                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, clinical_data)
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS),
+                    'data': {
+                        'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
+                        'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
+                        'number_samples_clinical': len(clinical_data) if clinical_data is not None else 0,
+                        'number_samples_in_common': intersection.size
+                    }
+                }
+
+    # Formats to JSON the ResponseStatus object
+    return encode_json_response_status(response)
+
+
+@login_required
+def get_number_samples_in_common_clinical_validation(request):
+    mrna_source_id = request.GET.get('mRNASourceId')
+    mrna_source_type = request.GET.get('mRNASourceType')
+    gem_source_id = request.GET.get('gemSourceId')
+    gem_source_type = request.GET.get('gemSourceType')
+    clinical_source_id = request.GET.get('clinicalSourceId')
+    clinical_source_type = request.GET.get('clinicalSourceType')
+    if None in [mrna_source_id, gem_source_id, mrna_source_type, gem_source_type, clinical_source_id,
+                clinical_source_type]:
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message='Invalid request params',
+                internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+            ),
+        }
+    else:
+        # Cast parameters
+        mrna_source_id = int(mrna_source_id)
+        mrna_source_type = get_enum_from_value(
+            int(mrna_source_type), SourceType)
+
+        gem_source_id = int(gem_source_id)
+        gem_source_type = get_enum_from_value(int(gem_source_type), SourceType)
+
+        clinical_source_id = int(clinical_source_id)
+        clinical_source_type = get_enum_from_value(int(clinical_source_type), SourceType)
+
+        # Gets df
+        samples_list_mrna, response = get_samples_list(
+            mrna_source_id,
+            mrna_source_type,
+            FileType.MRNA,
+            request.user
+        )
+
+        # Response will be != None if an error occurred
+        if response is None:
+            samples_list_gem, response = get_samples_list(
+                gem_source_id,
+                gem_source_type,
+                FileType.MIRNA,
+                request.user
+            )
+            if response is None:
+                samples_list_clinical, response = get_samples_list(
+                    clinical_source_id,
+                    clinical_source_type,
+                    FileType.CLINICAL,
+                    request.user
+                )
+                intersection = get_intersection_clinical(samples_list_mrna, samples_list_gem, samples_list_clinical)
+                # Gets intersection
+
+                if response is None:
+                    response = {
+                        'status': ResponseStatus(ResponseCode.SUCCESS),
+                        'data': {
+                            'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
+                            'number_samples_gem': len(samples_list_gem) if samples_list_gem is not None else 0,
+                            'number_samples_clinical': len(
+                                samples_list_clinical) if samples_list_clinical is not None else 0,
+                            'number_samples_in_common': intersection.size
+                        }
+                    }
+
+    # Formats to JSON the ResponseStatus object
+    return encode_json_response_status(response)
+
+
+@login_required
 def get_number_samples_in_common_action_one_front(request):
     """Gets the number of in common samples between two datasets"""
     json_request_data = json.loads(request.body)
-    headers_in_front: Optional[List[str]
-                               ] = json_request_data.get('headersColumnsNames')
+    headers_in_front: Optional[List[str]] = json_request_data.get('headersColumnsNames')
     other_source_id = json_request_data.get('otherSourceId')
     other_source_type = json_request_data.get('otherSourceType')
 
@@ -547,7 +915,6 @@ def get_mirna_target_interaction_action(request):
     """
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
-    score = request.GET.get('score')
     include_pubmeds = request.GET.get('include_pubmeds')
 
     if not gene and not mirna:
@@ -562,7 +929,7 @@ def get_mirna_target_interaction_action(request):
     score = request.GET.get('score')
     if score:
         params['score'] = score
-    
+
     if include_pubmeds:
         if include_pubmeds.lower() == "true":
             params['include_pubmeds'] = "true"
@@ -622,8 +989,8 @@ def get_dataset_columns_name_action(request):
 
 
 def generate_result_file_response(
-    combinations: List[Dict],
-    experiment_name: str
+        combinations: List[Dict],
+        experiment_name: str
 ) -> HttpResponse:
     """
     Generates a HttpResponse to force an experiment result file download
@@ -646,9 +1013,9 @@ def download_full_result(request, pk: int):
 
     def format_combination_object(combination: Type[GeneGEMCombination]) -> Dict:
         """
-        Generates a dict from a GeneGEMCombination
-        @param combination: GeneGEMCombination instance
-        @return: Dict with the fields
+        Generates a dict from a GeneGEMCombination.
+        @param combination: GeneGEMCombination instance.
+        @return: Dict with the fields.
         """
         data = {'gem': combination.gem, 'gene': combination.gene_name}
         try:
@@ -781,6 +1148,7 @@ def unlink_clinical_source_user_file(request, pk: int):
 
 class SurvivalDataDetails(APIView):
     """REST endpoint: Gene and GEM survival data"""
+
     @staticmethod
     def post(request: Request):
         # Gets the specific experiment to extract gene, GEM and clinical information
@@ -823,14 +1191,14 @@ class SurvivalDataDetails(APIView):
             # Gets Gene and GEM expression with time values
             gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
                 clinical_samples = pipelines.get_valid_data_from_sources(
-                    experiment,
-                    gene,
-                    gem,
-                    round_values=False,
-                    return_samples_identifiers=True,
-                    clinical_attribute=time_attribute,
-                    fill_clinical_missing_samples=False
-                )
+                experiment,
+                gene,
+                gem,
+                round_values=False,
+                return_samples_identifiers=True,
+                clinical_attribute=time_attribute,
+                fill_clinical_missing_samples=False
+            )
 
             # Gets event values
             clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(

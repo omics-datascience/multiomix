@@ -55,19 +55,6 @@ const quantile = (data: number[], q: number): number => {
     return sortedAscendant[base]
 }
 
-// Chart with theme
-/* const XYChartWithTheme = withTheme(theme)(XYChart)
-const ResponsiveXYChart = withParentSize(({ parentWidth, parentHeight, renderTooltip, children, ...rest }) => (
-    <XYChartWithTheme
-        width={parentWidth}
-        height={parentHeight}
-        renderTooltip={renderTooltip}
-        {...rest}
-    >
-        {children}
-    </XYChartWithTheme>
-)) */
-
 /**
  * Component's props
  */
@@ -102,20 +89,20 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
 
     return (
         <div className='align-left'>
-            {cnaDescription &&
-                <React.Fragment>
+            {cnaDescription && (
+                <>
                     <strong>{cnaDescription}</strong>
                     <hr />
-                </React.Fragment>
-            }
+                </>
+            )}
             <TooltipElement strongTitle='Min' numberToDisplay={min} color={color} fixed={2} />
             <TooltipElement strongTitle='First quartile' numberToDisplay={firstQuartile} color={color} fixed={2} />
             <TooltipElement strongTitle='Median' numberToDisplay={median} color={color} fixed={2} />
             <TooltipElement strongTitle='Third quartile' numberToDisplay={thirdQuartile} color={color} fixed={2} />
             <TooltipElement strongTitle='Max' numberToDisplay={max} color={color} fixed={2} />
             <TooltipElement strongTitle='Mean' numberToDisplay={mean} color={color} fixed={3} />
-            {outliers && outliers.length > 0 &&
-                <React.Fragment>
+            {outliers && outliers.length > 0 && (
+                <>
                     <TooltipElement strongTitle='Outliers (using MAD)' numberToDisplay={outliers.length} color={color} />
 
                     {outliersObjects.map((outlier) => (
@@ -126,8 +113,8 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
                             color={color}
                         />
                     ))}
-                </React.Fragment>
-            }
+                </>
+            )}
         </div>
     )
 }
@@ -137,9 +124,7 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
 export {
     mean,
     quantile,
-    /*   ResponsiveXYChart, */
     BoxPlotTooltipProps,
     renderBoxPlotTooltip,
     BoxplotDatum
-    /* colors as boxPlotThemeColors */
 }

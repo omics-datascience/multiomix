@@ -1,7 +1,7 @@
 import React from 'react'
 import { MiRNAPipeline } from './MiRNAPipeline'
 import { Base } from '../Base'
-import { WebsocketConfig, FileType, Source, SourceType, ResponseRequestWithPagination, AllExperimentsTableControl, AllExperimentsSortField, NewExperiment, Nullable, KySearchParams } from '../../utils/interfaces'
+import { WebsocketConfig, FileType, Source, SourceType, ResponseRequestWithPagination, AllExperimentsTableControl, AllExperimentsSortField, NewExperiment, Nullable, KySearchParams, ConfirmModal } from '../../utils/interfaces'
 import { getDjangoHeader, alertGeneralError, getDefaultNewTag, getDefaultSource, getInputFileCSVColumns, getFilenameFromSource, cleanRef, generatesOrderingQuery, getFileSizeInMB, makeSourceAndAppend } from '../../utils/util_functions'
 import ky from 'ky'
 import { DjangoResponseCode, DjangoCommonResponse, DjangoExperiment, ExperimentType, DjangoUserFile, DjangoCGDSStudy, CorrelationMethod, DjangoTag, TagType, DjangoNumberSamplesInCommonResult, DjangoNumberSamplesInCommonOneFrontResult, PValuesAdjustmentMethod, DjangoUserFileUploadErrorInternalCode } from '../../utils/django_interfaces'
@@ -10,6 +10,7 @@ import isEqual from 'lodash/isEqual'
 import intersection from 'lodash/intersection'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
+import { Confirm } from 'semantic-ui-react'
 
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesGEM'
 type NewExperimentSourceStateName = 'mRNASource' | 'gemSource'
@@ -67,14 +68,16 @@ type PipelineState = {
     // All experiments table's fields
     allExperiments: DjangoExperiment[],
     allExperimentsTableControl: AllExperimentsTableControl,
-    gettingAllExperiments: boolean
-};
+    gettingAllExperiments: boolean,
+    confirmModal: ConfirmModal,
+
+}
 
 /**
  * Main Pipeline class render. Renders a new experiment form
  * and modals to confirm some actions
  */
-class Pipeline extends React.Component<{}, PipelineState> {
+class Pipeline extends React.Component<any, PipelineState> {
     websocketClient: WebsocketClientCustom
     filterTimeout: number | undefined
     defaultNewExperiment: NewExperiment
@@ -106,7 +109,8 @@ class Pipeline extends React.Component<{}, PipelineState> {
             selectedFileTypeForFilter: FileType.ALL,
             allExperiments: [],
             allExperimentsTableControl: this.getDefaultAllExperimentsTableControl(),
-            gettingAllExperiments: false
+            gettingAllExperiments: false,
+            confirmModal: this.getDefaultConfirmModal()
         }
     }
     /**
@@ -154,6 +158,7 @@ class Pipeline extends React.Component<{}, PipelineState> {
      * to show in the new experiment form
      */
     checkCommonSamples () {
+        // funcion que me ayuda
         const newExperiment = this.state.newExperiment
 
         // It needs both sources!
@@ -325,6 +330,42 @@ class Pipeline extends React.Component<{}, PipelineState> {
                     })
                 })
             }).catch(this.errorReadingFileInInput)
+        }
+    }
+
+    /**
+     * Changes confirm modal state
+     * @param setOption New state of option
+     * @param headerText Optional text of header in confirm modal, by default will be empty
+     * @param contentText optional text of content in confirm modal, by default will be empty
+     * @param onConfirm Modal onConfirm callback
+     */
+    handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
+        const confirmModal = this.state.confirmModal
+        confirmModal.confirmModal = setOption
+        confirmModal.headerText = headerText
+        confirmModal.contentText = contentText
+        confirmModal.onConfirm = onConfirm
+        this.setState({ confirmModal })
+    }
+
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    handleCancelConfirmModalState () {
+        this.setState({ confirmModal: this.getDefaultConfirmModal() })
+    }
+
+    /**
+     * Default modal.
+     * @returns Confirm modal base
+     */
+    getDefaultConfirmModal = (): ConfirmModal => {
+        return {
+            confirmModal: false,
+            headerText: '',
+            contentText: '',
+            onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
         }
     }
 
@@ -1010,8 +1051,22 @@ class Pipeline extends React.Component<{}, PipelineState> {
                         handleSortAllExperiments={this.handleSortAllExperiments}
                         handleTableControlChangesAllExperiments={this.handleTableControlChangesAllExperiments}
                         updateAllExperimentsTables={this.updateAllExperimentsTables}
+                        handleChangeConfirmModalState={this.handleChangeConfirmModalState}
                     />
                 </Base>
+                <Confirm
+                    open={this.state.confirmModal.confirmModal}
+                    header={this.state.confirmModal.headerText}
+                    content={this.state.confirmModal.contentText}
+                    size='large'
+                    onCancel={() => this.handleCancelConfirmModalState()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+                        const confirmModal = this.state.confirmModal
+                        confirmModal.confirmModal = false
+                        this.setState({ confirmModal })
+                    }}
+                />
             </div>
         )
     }

@@ -163,6 +163,8 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
     ordering_fields = ['name', 'description', 'state', 'created']
 
 
+
+# Todo: Verificar
 class StatisticalValidationDestroy(generics.DestroyAPIView):
     """REST endpoint: delete for StatisticalValidation model."""
 

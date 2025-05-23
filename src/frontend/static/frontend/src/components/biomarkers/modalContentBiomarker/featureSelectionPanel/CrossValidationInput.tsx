@@ -17,6 +17,7 @@ interface CrossValidationInputProps {
 export const CrossValidationInput = (props: CrossValidationInputProps) => (
     <Form.Input
         fluid
+        style={{ minWidth: '180px', maxWidth: '100% ' }}
         label='Number of folds'
         placeholder='An integer number'
         type='number'

@@ -122,11 +122,13 @@ interface GeneralTableControlWithoutSorting {
     // TODO: after big refactoring using only PaginatedTable.tsx, check if totalRowCount is optional
     totalRowCount?: number,
     // TODO: after big refactoring using only PaginatedTable.tsx, check if filters is optional
-    filters: { [key: string]: {
-        value: any,
-        /** Indicates if 0 as filter value is accepted */
-        allowZero?: boolean
-    } },
+    filters: {
+        [key: string]: {
+            value: any,
+            /** Indicates if 0 as filter value is accepted */
+            allowZero?: boolean
+        }
+    },
 }
 
 /**
@@ -191,7 +193,7 @@ interface ResponseRequestWithPagination<T> {
 /**
  * Possible CGDS dataset name in a CGDS Study
  */
-type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'methylation_dataset' | 'clinical_patient_dataset' | 'clinical_sample_dataset';
+type NameOfCGDSDataset = 'mrna_dataset' | 'mirna_dataset' | 'cna_dataset' | 'methylation_dataset' | 'clinical_patient_dataset' | 'clinical_sample_dataset'
 
 /**
  * State icon info
@@ -249,8 +251,8 @@ type ScoreClassData = {
 interface StatChartData {
     data: number[],
     x?: string, // Useful for vertical Boxplots
-    fillColor?: string,
-    strokeColor?: string
+    fillColor: string,
+    strokeColor: string
 }
 
 interface StatChartDataWithOutliers extends StatChartData {
@@ -300,6 +302,7 @@ interface CustomAlert {
     isOpen: boolean,
     type: CustomAlertTypes,
     duration: number,
+    position?: 'top' | 'bottom',
 }
 
 /** Just a simple response from the server. */
@@ -307,7 +310,33 @@ type OkResponse = {
     ok: boolean
 }
 
+/** Types for genes colors */
+enum GenesColors {
+    MRNA = 'blue',
+    MIRNA = 'orange',
+    CNA = 'yellow',
+    METHYLATION = 'olive',
+    CLINICAL = 'teal'
+}
+
+/** Confirm modal  */
+interface ConfirmModal {
+    confirmModal: boolean,
+    headerText: string,
+    contentText: string,
+    onConfirm: () => any,
+}
+
+/** Select SemanticUi list interface */
+interface SemanticListItem {
+    key: string,
+    value: string,
+    text: string
+}
+
 export {
+    SemanticListItem,
+    GenesColors,
     CustomAlertTypes,
     CustomAlert,
     Nullable,
@@ -342,5 +371,6 @@ export {
     ScoreClassData,
     BinData,
     DataUICategoricalBinnedDatumShape,
-    OkResponse
+    OkResponse,
+    ConfirmModal
 }

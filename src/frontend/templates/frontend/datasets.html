@@ -14,7 +14,9 @@
 
 {% block js %}
         <script>
-            const downloadFileURL = "{% url 'download_user_file' %}"
+                const downloadFileURL = "{% url 'download_user_file' %}"
+                const downloadFileHeaders = "{% url 'user_file_headers' %}"
+                const urlPostSwitchInstitutionPublicView = "{% url 'switch-userFile-public-view' %}"
         </script>
 
         {% render_bundle 'files' 'js' %}

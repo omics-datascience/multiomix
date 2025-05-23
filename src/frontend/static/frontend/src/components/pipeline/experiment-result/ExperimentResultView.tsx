@@ -130,11 +130,10 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
 
         // Calculates total pages
         const totalPages = Math.max(1, Math.ceil(this.props.experimentInfo.totalRowCount / this.props.tableControl.pageSize))
-
         return (
-            <React.Fragment>
+            <>
                 {/* NOTE: this conditional ensures that componentDidMount fires when selectedRow is set avoiding errors */}
-                {this.state.showDetailsModal &&
+                {this.state.showDetailsModal && (
                     <GeneGemDetailsModal
                         experiment={experiment}
                         selectedRow={this.state.selectedRow}
@@ -143,9 +142,9 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                         pValuesAdjustmentMethodDescription={pValuesAdjustmentMethodDescription}
                         showModal={this.state.showDetailsModal}
                         refreshExperimentInfo={this.props.refreshExperimentInfo}
-                        handleClose={this.handleCloseModal}
+                        onHandleClose={this.handleCloseModal}
                     />
-                }
+                )}
 
                 {/* Table Control */}
                 <ResultTableControlForm
@@ -155,7 +154,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                     minimumCoefficientThreshold={experiment.minimum_coefficient_threshold}
                     numberOfShowingCombinations={this.props.experimentInfo.totalRowCount}
                     totalNumberOfCombinations={experiment.result_final_row_count}
-                    handleTableControlChanges={this.handleTableControlChanges}
+                    onHandleTableControlChanges={this.handleTableControlChanges}
                     changePrecisionState={this.changePrecisionState}
                     resetFiltersAndSorting={this.props.resetFiltersAndSorting}
                     resetFilters={this.props.resetFilters}
@@ -182,7 +181,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                 </p>
 
                 {/* Table */}
-                <Table sortable celled textAlign="center" fixed singleLine>
+                <Table sortable celled textAlign='center' fixed singleLine>
                     {/* Header */}
                     <Table.Header>
                         <Table.Row>
@@ -230,7 +229,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                     size='mini'
                     totalPages={totalPages}
                 />
-            </React.Fragment>
+            </>
         )
     }
 }

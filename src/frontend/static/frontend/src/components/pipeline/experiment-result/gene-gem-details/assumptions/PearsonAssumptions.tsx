@@ -57,7 +57,7 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
                             {/* Normality */}
                             <AssumptionStep
                                 title='Normality'
-                                description={`Gene (${props.gene}) expression values and GEM (${props.gem}) expression values should be normally distributed each other for applying Pearson.`}
+                                description={`Gene (${props.gene}) expression values and GEM (${props.gem}) expression values should be normally distributed each other for applying Pearson`}
                                 geneIsOk={props.assumptions.geneNormalityIsOk}
                                 gemIsOk={props.assumptions.gemNormalityIsOk}
                                 selectedRow={props.selectedRow}
@@ -66,7 +66,7 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
                             {/* Outliers */}
                             <AssumptionStep
                                 title='Outliers'
-                                description='There should be no outliers.'
+                                description='There should be no outliers'
                                 geneIsOk={props.assumptions.geneOutliersIsOk}
                                 gemIsOk={props.assumptions.gemOutliersIsOk}
                                 selectedRow={props.selectedRow}

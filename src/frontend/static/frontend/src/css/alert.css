@@ -12,7 +12,6 @@
     max-height: 0;
     padding: 1rem;
     position: fixed;
-    top: 5%;
     width: 100%;
     z-index: 1000;
 }

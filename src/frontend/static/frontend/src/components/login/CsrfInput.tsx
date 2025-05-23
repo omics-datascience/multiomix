@@ -7,4 +7,4 @@ declare const CSRFToken: string
  * POST request
  * @returns Input component with the CSRF token
  */
-export const CsrfInput = () => <input type="hidden" name="csrfmiddlewaretoken" value={CSRFToken} />
+export const CsrfInput = () => <input type='hidden' name='csrfmiddlewaretoken' value={CSRFToken} />
