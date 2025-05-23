@@ -157,7 +157,6 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                                 name='correlateWithAllGenes'
                                 checked={props.newExperiment.correlateWithAllGenes}
                                 onChange={(_, { name }) => props.handleFormInputsChange(name as string, true)}
-                                /* FIXME: disabled all vs all for Kendall until https://github.com/zolkko/kendalls/issues/2 is fixed */
                                 disabled={props.isEditing}
                             />
                         </>
