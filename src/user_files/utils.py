@@ -1,8 +1,12 @@
-from _csv import Error
+import os
 from io import BytesIO, TextIOWrapper
 from typing import Dict, Optional, Union
+
+import pandas as pd
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from pandas import read_csv
+from pandas import read_excel
+
 from common.enums import ResponseCode
 from common.response import ResponseStatus
 from user_files.enums import UserFileUploadErrorCode
@@ -23,21 +27,37 @@ def get_decimal_separator_and_numerical_data(
     """
     n_rows = None if all_rows else 1
     for name, decimal_separator in zip(FileDecimalSeparator.names, FileDecimalSeparator.values):
-        try:
-            # If no exception is thrown then the decimal separator is correct
-            for chunk in read_csv(file, sep=None, engine='python', index_col=0, nrows=n_rows, decimal=decimal_separator,
-                                  chunksize=20_000):
-                chunk.astype(float)
-            # TODO: implement parameter of file size to handle the DataFrame entirely
-            # _ = read_csv(file, sep=None, engine='python', index_col=0, nrows=nrows, decimal=decimal_separator)\
-            #     .astype(float)
-            return FileDecimalSeparator[name]
-        except (ValueError, Error):
-            if seek_beginning:
-                file.seek(0)
 
-    return None
+        from pandas.errors import EmptyDataError
+        print(file)
 
+        def process_file(file, row_count=None, decimal_sep='.'):
+            try:
+                # Verificar si el archivo es un CSV
+                if file.lower().endswith('.csv'):
+                    # Procesar como archivo CSV
+                    df = pd.read_csv(file, nrows=row_count, index_col=0, decimal=decimal_sep)
+                else:
+                    # Procesar como archivo Excel
+                    df = pd.read_excel(file, nrows=row_count, index_col=0, decimal=decimal_sep, engine='openpyxl')
+
+                # Revisar si todas las columnas (excepto 'jaundice') son numéricas
+                for column in df.columns:
+                    if not pd.api.types.is_numeric_dtype(df[column]):
+                        raise ValueError(f"Columna '{column}' no es numérica.")
+
+                # Intentar convertir el DataFrame a float
+                try:
+                    df = df.astype(float)
+                except ValueError as ex:
+                    print(f"Error en la conversión a float: {ex}")
+                    return None
+
+                return df
+
+            except (ValueError, pd.errors.EmptyDataError) as e:
+                print(f"Error al procesar el archivo: {e}")
+                return None
 
 def has_uploaded_file_valid_format(uploaded_file: InMemoryUploadedFile) -> bool:
     """

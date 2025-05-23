@@ -126,11 +126,6 @@ class Pipeline extends React.Component<{}, PipelineState> {
         const newExperiment = this.state.newExperiment
         newExperiment[name] = value
 
-        // TODO: remove this after Kendall performance issue is solved
-        if (name === 'correlationMethod' && value === CorrelationMethod.KENDALL) {
-            newExperiment.correlateWithAllGenes = false
-        }
-
         this.setState({ newExperiment })
     }
 
