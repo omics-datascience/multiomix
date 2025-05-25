@@ -23,8 +23,8 @@ interface SharedUsersBiomarkerProps extends SharedUsersBiomarkerPropsExtend {
 }
 
 /**
- * Modal that shows user shared to a biomarker
- * @param {SharedUsersBiomarkerProps} props Component props.
+ * Modal that show users shared to a biomarker
+ * @param props Component props.
  * @returns Component render
  */
 export const SharedUsersBiomarker = (props: SharedUsersBiomarkerProps) => {

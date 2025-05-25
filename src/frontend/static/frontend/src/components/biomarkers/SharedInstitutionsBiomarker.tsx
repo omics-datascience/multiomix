@@ -58,7 +58,7 @@ const InstitutionUserList = (props: InstitutionUserListProps) => {
 
 /**
  * Modal that shows institutions shared to a biomarker
- * @param {SharedInstitutionsBiomarkerProps} props Component props
+ * @param props Component props
  * @returns Component render
  */
 export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerProps) => {

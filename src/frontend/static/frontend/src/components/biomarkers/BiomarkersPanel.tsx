@@ -23,8 +23,8 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 import './../../css/biomarkers.css'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteButton } from '../common/DeleteButton'
-import { SharedUsersBiomarker, SharedUsersBiomarkerProps } from './SharedUsersBiomarker'
-import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerProps } from './SharedInstitutionsBiomarker'
+import { SharedUsersBiomarker, SharedUsersBiomarkerPropsExtend } from './SharedUsersBiomarker'
+import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } from './SharedInstitutionsBiomarker'
 import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
@@ -98,9 +98,9 @@ interface BiomarkersPanelState {
     submittingFSExperiment: boolean,
     openDetailsModal2: boolean,
     /** modal to handle shared institutions */
-    modalInstitutions: SharedInstitutionsBiomarkerProps,
+    modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
     /** modal to handle shared users */
-    modalUsers: SharedUsersBiomarkerProps,
+    modalUsers: SharedUsersBiomarkerPropsExtend,
 }
 
 /**
@@ -159,7 +159,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * default modal institution
      * @returns default modal shared institution object
      */
-    defaultModalInstitutions = (): SharedInstitutionsBiomarkerProps => {
+    defaultModalInstitutions = (): SharedInstitutionsBiomarkerPropsExtend => {
         return {
             isOpen: false,
             institutions: [],
@@ -176,7 +176,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * default modal user
      * @returns default modal shared user object
      */
-    defaultModalUsers (): SharedUsersBiomarkerProps {
+    defaultModalUsers (): SharedUsersBiomarkerPropsExtend {
         return {
             isOpen: false,
             users: [],
