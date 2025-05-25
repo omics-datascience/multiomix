@@ -57,7 +57,6 @@ export const InstitutionModal = (props: Props) => {
                 isAdding: true,
                 institutionId: props.institution?.id
             }
-            console.log(body)
             ky.post(urlAddRemoveUserToInstitution, { headers: myHeaders, signal: abortController.current.signal, json: body }).then((response) => {
                 response.json().then(() => {
                     usersListNonInInstitution()
@@ -123,7 +122,6 @@ export const InstitutionModal = (props: Props) => {
         const editUrl = `${urlNonUserListInstitution}/${props.institution?.id}/`
         ky.get(editUrl, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { id: number, username: string }[]) => {
-                console.log(jsonResponse)
                 setUserList(jsonResponse.map(user => ({ key: user.id.toString(), value: user.id.toString(), text: user.username })))
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)

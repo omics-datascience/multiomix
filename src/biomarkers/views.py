@@ -12,10 +12,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api_service.models import Experiment
+from api_service.serializers import LimitedUserSerializer
 from api_service.mrna_service import global_mrna_service
 from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
 from biomarkers.serializers import BiomarkerFromCorrelationAnalysisSerializer, BiomarkerSerializer, MoleculeIdentifierSerializer, \
-    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer, LimitedUserSerializer
+    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
 from django.db.models import QuerySet, Q
@@ -521,7 +522,7 @@ class ToggleBiomarkerPublicView(APIView):
             )
 
         biomarker.is_public = not biomarker.is_public
-        biomarker.save()
+        biomarker.save(update_fields=['is_public'])
         return Response(
             {"id": biomarker.id, "is_public": biomarker.is_public}
         )

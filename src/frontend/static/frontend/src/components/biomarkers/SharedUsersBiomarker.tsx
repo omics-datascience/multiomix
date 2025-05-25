@@ -10,19 +10,24 @@ declare const urlPostRemoveUserBiomarker: string
 declare const urlGetUsersNonInBiomarker: string
 declare const urlShareBiomarkerToUser: string
 
-export interface SharedUsersBiomarkerProps {
+export interface SharedUsersBiomarkerPropsExtend {
     isOpen: boolean,
     users: { id: number, name: string }[],
     biomarkerId: number,
     isAdding: boolean,
     user: { id: number, username: string }
 }
-interface Props extends SharedUsersBiomarkerProps {
+interface SharedUsersBiomarkerProps extends SharedUsersBiomarkerPropsExtend {
     handleClose: VoidFunction,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
-export const SharedUsersBiomarker = (props: Props) => {
+/**
+ * Modal that shows user shared to a biomarker
+ * @param {SharedUsersBiomarkerProps} props Component props.
+ * @returns Component render
+ */
+export const SharedUsersBiomarker = (props: SharedUsersBiomarkerProps) => {
     const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false)
     const currentUser = useContext(CurrentUserContext)
     const [activeUser, setActiveUser] = useState<{ id: number, username: string }>({ id: 0, username: '' })

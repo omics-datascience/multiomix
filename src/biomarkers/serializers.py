@@ -5,6 +5,7 @@ from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentif
 from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
 from django.contrib.auth import get_user_model
+from api_service.serializers import LimitedUserSerializer
 
 
 class MoleculeIdentifierSerializer(serializers.Serializer):
@@ -58,11 +59,6 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
         model = MethylationIdentifier
         exclude = ['biomarker']
 
-class LimitedUserSerializer(serializers.ModelSerializer):
-    """A lightweight serializer for User model"""
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username']
 
 class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     """Biomarker model serializer without the molecules (useful to list Biomarkers)."""

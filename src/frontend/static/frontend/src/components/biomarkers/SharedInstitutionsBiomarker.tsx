@@ -14,14 +14,14 @@ declare const urlShareBiomarkerToInstitution: string
 declare const urlGetSharedInstitutionBiomarker: string
 declare const urlPostRemoveInstitutionBiomarker: string
 
-export interface SharedInstitutionsBiomarkerProps {
+export interface SharedInstitutionsBiomarkerPropsExtend {
     isOpen: boolean,
     institutions: { id: number, name: string }[],
     biomarkerId: number,
     isAdding: boolean,
     user: { id: number, username: string }
 }
-interface Props extends SharedInstitutionsBiomarkerProps {
+interface SharedInstitutionsBiomarkerProps extends SharedInstitutionsBiomarkerPropsExtend {
     handleClose: VoidFunction,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
@@ -56,7 +56,12 @@ const InstitutionUserList = (props: InstitutionUserListProps) => {
     )
 }
 
-export const SharedInstitutionsBiomarker = (props: Props) => {
+/**
+ * Modal that shows institutions shared to a biomarker
+ * @param {SharedInstitutionsBiomarkerProps} props Component props
+ * @returns Component render
+ */
+export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerProps) => {
     const [activeInstitution, setActiveInstitution] = useState<{ id: number, name: string }>({ id: 0, name: '' })
     const [listOfInstitutionNonPart, setListOfInstitutionNonPart] = useState<SemanticListItem[]>([])
     const [institutionIdToAdd, setInstitutionIdToAdd] = useState<number>(0)
