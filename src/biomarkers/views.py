@@ -79,15 +79,11 @@ class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        biomarker_id = self.kwargs.get('pk')
         return Biomarker.objects.filter(
-            Q(pk=biomarker_id) &
-            (
-                Q(is_public=True) |
-                Q(user=user) |
-                Q(shared_institutions__institutionadministration__user=user) |
-                Q(shared_users=user)
-            )
+            Q(is_public=True) |
+            Q(user=user) |
+            Q(shared_institutions__institutionadministration__user=user) |
+            Q(shared_users=user)
         ).distinct()
 
     serializer_class = BiomarkerSerializer
