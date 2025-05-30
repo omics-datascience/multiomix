@@ -5,7 +5,7 @@ import { LastExperimentTypeAndMethodInfo } from './LastExperimentTypeAndMethodIn
 import { LastExperimentTagInfo } from './LastExperimentTagInfo'
 import { getExperimentStateObj, formatDateLocale } from '../../../utils/util_functions'
 import { SeeResultButton } from '../all-experiments-view/SeeResultButton'
-import { DeleteExperimentButton } from '../all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../common/DeleteButton'
 import { Nullable } from '../../../utils/interfaces'
 
 /**
@@ -58,9 +58,16 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
 
                     {/* Delete button */}
                     {/* TODO: remove this, is a temporal fix to prevent errors in server */}
-                    {!(experiment.state === ExperimentState.IN_PROCESS || experiment.state === ExperimentState.WAITING_FOR_QUEUE) &&
-                        <DeleteExperimentButton className='pull-right' onClick={() => props.confirmExperimentDeletion(experiment)} />}
-
+                    {
+                        !(experiment.state === ExperimentState.IN_PROCESS || experiment.state === ExperimentState.WAITING_FOR_QUEUE) &&
+                            (
+                                <DeleteButton
+                                    className='pull-right'
+                                    onClick={() => props.confirmExperimentDeletion(experiment)}
+                                    ownerId={experiment.user.id}
+                                />
+                            )
+                    }
                     {/* See result button */}
                     <SeeResultButton experiment={experiment} seeResult={props.seeResult} className='pull-right' />
                 </Card.Header>

@@ -718,5 +718,6 @@ export {
     DjangoNumberSamplesInCommonClinicalValidationResult,
     DjangoInstitutionUser,
     DjangoInstitutionUserLimited,
-    InstitutionUser
+    InstitutionUser,
+    DjangoUserSimple
 }

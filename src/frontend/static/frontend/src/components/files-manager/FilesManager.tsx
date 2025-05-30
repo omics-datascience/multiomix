@@ -11,8 +11,9 @@ import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
-import { PopupExperiment } from '../pipeline/all-experiments-view/PopupExperiment'
-import { SwitchPublicButton } from '../pipeline/all-experiments-view/SwitchPublicButton'
+import { PopupIcons } from '../common/PopupIcons'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { DeleteButton } from '../common/DeleteButton'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -886,39 +887,37 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             </>
                                         )}
 
-                                        <PopupExperiment
+                                        <PopupIcons
                                             content={(
-                                                <>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                        {/* Shows a download button if specified */}
-                                                        <Icon
-                                                            name='cloud download'
-                                                            color='blue'
-                                                            className='clickable margin-left-5'
-                                                            title='Download file'
-                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
-                                                        />
-                                                        {/* Public switch */}
-                                                        <SwitchPublicButton
-                                                            publicButtonEntity={{
-                                                                id: userFileRow.id as number,
-                                                                user: { id: userFileRow.user.id },
-                                                                is_public: userFileRow.is_public
-                                                            }}
-                                                            nameEntity='file'
-                                                            publicKey='userFileId'
-                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
-                                                        />
-                                                        {/* Shows a delete button if specified */}
-                                                        <Icon
-                                                            name='trash'
-                                                            className='clickable margin-left-5'
-                                                            color='red'
-                                                            title='Delete experiment'
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Shows a download button if specified */}
+                                                    <Icon
+                                                        name='cloud download'
+                                                        color='blue'
+                                                        className='clickable margin-left-5'
+                                                        title='Download file'
+                                                        onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                    />
+                                                    {/* Public switch */}
+                                                    <SwitchPublicButton
+                                                        publicButtonEntity={{
+                                                            id: userFileRow.id as number,
+                                                            user: { id: userFileRow.user.id },
+                                                            is_public: userFileRow.is_public
+                                                        }}
+                                                        nameEntity='file'
+                                                        publicKey='userFileId'
+                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                    />
+                                                    {/* Shows a delete button if specified */}
+                                                    {!userFileRow.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete file'
                                                             onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                            ownerId={userFileRow.user.id}
                                                         />
-                                                    </div>
-                                                </>
+                                                    )}
+                                                </div>
                                             )}
                                         />
 

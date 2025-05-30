@@ -5,7 +5,7 @@ interface Props {
     content: SemanticShorthandItem<PopupContentProps>,
 }
 
-export const PopupExperiment = (props: Props) => {
+export const PopupIcons = (props: Props) => {
     return (
         <Popup
             on='click'

@@ -42,7 +42,7 @@ class UserInstitution(generics.ListAPIView):
     serializer_class = InstitutionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class UserCandidatesLimitedList(generics.ListAPIView):
+class UserCandidatesInstitutionLimitedList(generics.ListAPIView):
     """REST endpoint: list for User model. Used to add to an Institution"""
 
     def get_queryset(self):

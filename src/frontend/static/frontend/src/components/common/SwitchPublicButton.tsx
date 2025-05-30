@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Icon } from 'semantic-ui-react'
-import { CurrentUserContext } from '../../Base'
-import { getDjangoHeader } from '../../../utils/util_functions'
+import { CurrentUserContext } from '../Base'
+import { getDjangoHeader } from '../../utils/util_functions'
 import ky from 'ky'
 
 declare const urlPostSwitchInstitutionPublicView
