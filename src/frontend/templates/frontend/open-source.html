@@ -1,0 +1,11 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block content %}
+        <div id="open-source-app"></div>
+{% endblock %}
+
+{% block js %}
+        {% render_bundle 'openSource' 'js' %}
+{% endblock %}
