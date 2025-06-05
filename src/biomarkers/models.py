@@ -2,6 +2,8 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import QuerySet
+from django.contrib.auth.models import User
+
 from queryset_sequence import QuerySetSequence
 
 from institutions.models import Institution
@@ -71,8 +73,9 @@ class Biomarker(models.Model):
     origin: int = models.IntegerField(choices=BiomarkerOrigin.choices)
     state: int = models.IntegerField(choices=BiomarkerState.choices)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    shared_institutions = models.ManyToManyField(Institution, related_name='biomarkers', blank=True)
-
+    shared_institutions = models.ManyToManyField(Institution, related_name='shared_biomarkers', blank=True)
+    shared_users = models.ManyToManyField(User, blank=True,
+                                                 related_name='shared_users_biomarkers')
     def __str__(self) -> str:
         return self.name
 

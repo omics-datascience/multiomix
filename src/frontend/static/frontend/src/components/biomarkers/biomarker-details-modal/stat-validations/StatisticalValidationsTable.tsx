@@ -9,7 +9,7 @@ import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 import ky from 'ky'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
 import { Nullable } from '../../../../utils/interfaces'
-import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerStatisticalValidations: string
@@ -236,10 +236,12 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 )}
 
                                 {/* Delete button */}
+                                {/** Todo: revisar ownerId */}
                                 {!isInProcess && (
-                                    <DeleteExperimentButton
+                                    <DeleteButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
+                                        ownerId={null}
                                     />
                                 )}
                             </Table.Cell>

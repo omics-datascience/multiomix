@@ -4,6 +4,8 @@ from user_files.models_choices import MoleculeType
 from .models import Biomarker, MRNAIdentifier, MethylationIdentifier, CNAIdentifier, MiRNAIdentifier, MoleculeIdentifier
 from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
+from django.contrib.auth import get_user_model
+from api_service.serializers import LimitedUserSerializer
 
 
 class MoleculeIdentifierSerializer(serializers.Serializer):
@@ -65,7 +67,7 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     number_of_cnas = serializers.SerializerMethodField(method_name='get_number_of_cnas')
     number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
     has_fs_experiment = serializers.SerializerMethodField(method_name='get_has_fs_experiment')
-
+    user = LimitedUserSerializer()
     origin = serializers.IntegerField(required=False)
     state = serializers.IntegerField(required=False)
 
@@ -73,7 +75,7 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
 
     class Meta:
         model = Biomarker
-        exclude = ['user']
+        fields = '__all__'
 
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:
@@ -174,5 +176,3 @@ class BiomarkerFromCorrelationAnalysisSerializer(serializers.Serializer):
     correlation_analysis_id = serializers.IntegerField()
     gene_gem_list = GeneGEMWithType(many=True, required=False)
     correlation_threshold = serializers.IntegerField(required=False)
-
-

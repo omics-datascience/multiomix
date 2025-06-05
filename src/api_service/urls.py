@@ -78,12 +78,11 @@ urlpatterns = [
     path('non-users/<int:experiment_id>/', views.UsersNonExperimentsSharedListView.as_view()),
     path('share-experiment-to-institution', views.AddInstitutionToExperimentView.as_view(), name='share-experiment-to-institution'),
     path('share-experiment-to-user', views.AddUserToExperimentView.as_view(), name='share-experiment-to-user'),
-    path('shared-institution', views.UsersExperimentsSharedListView.as_view(), name='shared-institution'),
     path('shared-users/<int:experiment_id>/', views.UsersExperimentsSharedListView.as_view(), ),
-    path('shared-users', views.InstitutionExperimentsSharedListView.as_view(), name='shared-users'),
+    path('shared-users', views.UsersExperimentsSharedListView.as_view(), name='shared-users'),
     path('shared-institution/<int:experiment_id>/', views.InstitutionExperimentsSharedListView.as_view(), ),
+    path('shared-institution', views.InstitutionExperimentsSharedListView.as_view(), name='shared-institution'),
     path('switch-institution-public-view', views.ToggleExperimentPublicView.as_view(), name='switch-experiment-public-view'),
     path('remove-institution', views.RemoveInstitutionFromExperimentView.as_view(), name='remove-institution'),
     path('remove-user', views.RemoveUserFromExperimentView.as_view(), name='remove-user')
-
 ]

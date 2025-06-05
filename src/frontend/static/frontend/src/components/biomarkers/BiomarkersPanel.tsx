@@ -22,7 +22,12 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 // Styles
 import './../../css/biomarkers.css'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../common/DeleteButton'
+import { SharedUsersBiomarker, SharedUsersBiomarkerPropsExtend } from './SharedUsersBiomarker'
+import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } from './SharedInstitutionsBiomarker'
+import { EditBiomarkerIcon } from './EditBiomarkerIcon'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { PopupIcons } from '../common/PopupIcons'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -91,8 +96,11 @@ interface BiomarkersPanelState {
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
     submittingFSExperiment: boolean,
-    openDetailsModal2: boolean
-
+    openDetailsModal2: boolean,
+    /** modal to handle shared institutions */
+    modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
+    /** modal to handle shared users */
+    modalUsers: SharedUsersBiomarkerPropsExtend,
 }
 
 /**
@@ -126,7 +134,9 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
             submittingFSExperiment: false,
-            openDetailsModal2: false
+            openDetailsModal2: false,
+            modalInstitutions: this.defaultModalInstitutions(),
+            modalUsers: this.defaultModalUsers()
         }
     }
 
@@ -136,6 +146,54 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * default modal institution
+     */
+    handleCloseModalModalInstitution = () => {
+        this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * default modal institution
+     * @returns default modal shared institution object
+     */
+    defaultModalInstitutions = (): SharedInstitutionsBiomarkerPropsExtend => {
+        return {
+            isOpen: false,
+            institutions: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     * @returns default modal shared user object
+     */
+    defaultModalUsers (): SharedUsersBiomarkerPropsExtend {
+        return {
+            isOpen: false,
+            users: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     */
+    handleCloseModalModalUser = () => {
+        this.setState({ modalUsers: this.defaultModalUsers() })
     }
 
     /**
@@ -1197,7 +1255,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             methylations: [],
             mirnas: [],
             cnas: [],
-            mrnas: []
+            mrnas: [],
+            user: {
+                id: 0,
+                username: ''
+            },
+            is_public: false,
         }
     }
 
@@ -1627,6 +1690,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                        { name: 'Public', width: 1 },
+                        { name: 'Shared', width: 1 },
                         { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
@@ -1666,6 +1731,51 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                <Table.Cell textAlign='center'>
+                                    {
+                                        biomarker.is_public
+                                            ? (
+                                                <Icon
+                                                    title='All users of the platform can see this experiment'
+                                                    name='check'
+                                                    color='green'
+                                                />
+                                            )
+                                            : (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='close'
+                                                    color='red'
+                                                />
+                                            )
+                                    }
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared institutions'
+                                            name='building'
+                                            color='green'
+                                        />
+                                    </Button>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared users'
+                                            name='users'
+                                            color='teal'
+                                        />
+                                    </Button>
+                                </Table.Cell>
                                 <Table.Cell width={1}>
                                     {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
                                     <>
@@ -1681,42 +1791,58 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         />
 
                                         {/* Edit button */}
-                                        <Icon
-                                            name={currentBiomarkerIsLoading ? 'spinner' : 'pencil'}
-                                            className='clickable margin-left-5'
-                                            color={canEditMolecules ? 'yellow' : 'orange'}
-                                            loading={currentBiomarkerIsLoading}
-                                            disabled={isLoadingFullBiomarker}
-                                            title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
-                                            onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                        <EditBiomarkerIcon
+                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker}
+                                            biomarker={biomarker}
+                                            ownerId={biomarker.user.id}
+                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading}
+                                            canEditMolecules={canEditMolecules}
+                                            isLoadingFullBiomarker={isLoadingFullBiomarker}
                                         />
+                                        <PopupIcons
+                                            content={(
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Clone button */}
+                                                    <Icon
+                                                        name='copy'
+                                                        color='teal'
+                                                        className='clickable margin-left-5'
+                                                        disabled={currentBiomarkerIsLoading}
+                                                        title='Clone biomarker'
+                                                        onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    />
 
-                                        {/* Clone button */}
-                                        <Icon
-                                            name='copy'
-                                            color='teal'
-                                            className='clickable margin-left-5'
-                                            disabled={currentBiomarkerIsLoading}
-                                            title='Clone biomarker'
-                                            onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    {/* Stop button */}
+                                                    {isInProcess && (
+                                                        <StopExperimentButton
+                                                            title='Stop biomarker'
+                                                            onClick={() => this.setState({ biomarkerToStop: biomarker })}
+                                                        />
+                                                    )}
+
+                                                    {/* Delete button */}
+                                                    {!isInProcess && !biomarker.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete biomarker'
+                                                            disabled={currentBiomarkerIsLoading}
+                                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                                            ownerId={biomarker.user.id}
+                                                        />
+                                                    )}
+                                                    {/* Public switch */}
+                                                    {
+                                                        biomarker.id && (
+                                                            <SwitchPublicButton
+                                                                publicButtonEntity={{ id: biomarker.id ?? 0, user: { id: biomarker.user.id }, is_public: biomarker.is_public }}
+                                                                publicKey='biomarkerId'
+                                                                nameEntity='biomarker'
+                                                                handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                                            />
+                                                        )
+                                                    }
+                                                </div>
+                                            )}
                                         />
-
-                                        {/* Stop button */}
-                                        {isInProcess && (
-                                            <StopExperimentButton
-                                                title='Stop biomarker'
-                                                onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                            />
-                                        )}
-
-                                        {/* Delete button */}
-                                        {!isInProcess && (
-                                            <DeleteExperimentButton
-                                                title='Delete biomarker'
-                                                disabled={currentBiomarkerIsLoading}
-                                                onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                            />
-                                        )}
                                     </>
                                 </Table.Cell>
                             </Table.Row>
@@ -1840,7 +1966,26 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                     content={this.state.confirmModal.contentText}
                     size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+                        const confirmModal = this.state.confirmModal
+                        confirmModal.confirmModal = false
+                        this.setState({ confirmModal })
+                    }}
+                />
+                <SharedUsersBiomarker
+                    {...this.state.modalUsers}
+                    handleClose={this.handleCloseModalModalUser}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                />
+                <SharedInstitutionsBiomarker
+                    user={this.state.modalInstitutions.user}
+                    isOpen={this.state.modalInstitutions.isOpen}
+                    institutions={this.state.modalInstitutions.institutions}
+                    handleClose={this.handleCloseModalModalInstitution}
+                    biomarkerId={this.state.modalInstitutions.biomarkerId}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                    isAdding={this.state.modalInstitutions.isAdding}
                 />
 
                 <Alert

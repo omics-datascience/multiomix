@@ -9,7 +9,7 @@ import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 import ky from 'ky'
 import { Nullable } from '../../../../utils/interfaces'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerInferenceExperiments: string
@@ -232,10 +232,12 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 )}
 
                                 {/* Delete button */}
+                                {/* Todo: Revisar ownerid */}
                                 {!isInProcess && (
-                                    <DeleteExperimentButton
+                                    <DeleteButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
+                                        ownerId={null}
                                     />
                                 )}
                             </Table.Cell>
