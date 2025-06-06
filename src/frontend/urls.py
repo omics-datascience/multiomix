@@ -7,6 +7,7 @@ urlpatterns = [
     path('my-datasets', views.datasets_action, name='datasets'),
     path('survival', views.survival_action, name='survival'),
     path('about-us', views.about_us_action, name='about_us'),
+    path('open-source', views.open_source, name='open_source'),
     path('site-policy', views.terms_and_privacy_policy_action, name='site_policy')
 ]
 

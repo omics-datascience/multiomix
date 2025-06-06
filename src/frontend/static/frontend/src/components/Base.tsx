@@ -3,11 +3,9 @@ import { MainNavbar, ActiveItemOptions } from './MainNavbar'
 import ky from 'ky'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
-import { Container, Grid, Segment } from 'semantic-ui-react'
+import { Footer } from './Footer'
 
 declare const urlCurrentUser: string
-declare const urlSitePolicy: string
-declare const multiomixVersion: string
 
 /**
  * Component's props
@@ -75,8 +73,6 @@ const Base = (props: BaseProps) => {
         })
     }
 
-    const sitePolicyLink = <a id='site-policy-link' href={urlSitePolicy}>Terms and privacy policy</a>
-
     return (
         <CurrentUserContext.Provider value={currentUser}>
             {/* Navbar */}
@@ -89,19 +85,7 @@ const Base = (props: BaseProps) => {
 
             {/* Footer */}
             {/* TODO: add license */}
-            <Segment id='footer' inverted vertical>
-                <Container>
-                    <Grid divided inverted stackable textAlign='center'>
-                        <Grid.Row columns={1}>
-                            <Grid.Column>
-                                <p>
-                                    OmicsDataScience | Multiomix v{multiomixVersion} | {sitePolicyLink}
-                                </p>
-                            </Grid.Column>
-                        </Grid.Row>
-                    </Grid>
-                </Container>
-            </Segment>
+            <Footer />
         </CurrentUserContext.Provider>
     )
 }

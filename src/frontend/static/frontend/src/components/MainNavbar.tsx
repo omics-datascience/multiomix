@@ -17,6 +17,7 @@ declare const urlBiomarkers: string
 declare const urlInstitutions: string
 declare const urlCGDSPanel: string
 declare const urlAboutUs: string
+declare const urlOpenSource: string
 
 /** Component's Props */
 interface LogInLogOutPanelProps {
@@ -149,7 +150,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers'
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions,
@@ -286,6 +287,12 @@ const MainNavbar = (props: MainNavbarProps) => {
             <Menu.Menu as='h2'>
                 <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
                     About us
+                </Menu.Item>
+            </Menu.Menu>
+
+            <Menu.Menu as='h2'>
+                <Menu.Item as='a' href={urlOpenSource} style={{ fontSize: '1rem' }}>
+                    Open source
                 </Menu.Item>
             </Menu.Menu>
 

@@ -5,7 +5,6 @@ import { NewExperiment, FileType } from '../../utils/interfaces'
 import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } from '../../utils/util_functions'
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
-import { CorrelationMethod } from '../../utils/django_interfaces'
 import { ExternalLink } from '../common/ExternalLink'
 
 // Slider styles
