@@ -42,7 +42,7 @@ def survival_action(request):
     """Survival Analysis view"""
     return render(request, "frontend/survival.html")
 
-@login_required
+
 def open_source(request):
     """Open source view"""
     return render(request, "frontend/open-source.html")
