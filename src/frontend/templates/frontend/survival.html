@@ -2,7 +2,8 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
-{% block title %}| Survival Analysis{% endblock %}
+{% block title %} | Survival Analysis{% endblock %}
+{% block meta_description %}Explore the Survival Analysis Panel to assess patient outcomes using multi-omics data. Generate Kaplan–Meier curves, perform statistical tests, and discover prognostic biomarkers.{% endblock %}=
 
 {% block css %}
     {% render_bundle 'survival' 'css' %}

@@ -2,6 +2,9 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
+{% block title %}| My experiments{% endblock %}
+{% block meta_description %}Leverage the GEM Panel to perform gene expression and methylation correlation analyses. Configure parameters, visualize results, and export comprehensive reports for your cancer research.{% endblock %}
+
 {% block css %}
         {% render_bundle 'gem' 'css' %}
 {% endblock %}
