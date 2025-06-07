@@ -2,8 +2,6 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
-{% block title %}| My Institutions{% endblock %}
-
 {% block css %}
         {% render_bundle 'institutions' 'css' %}
 {% endblock %}
@@ -12,7 +10,7 @@
 {% block meta_description %}Use the Institutions Panel to create and manage research organizations, assign administrative roles, and collaborate on shared multi-omics datasets with your team.{% endblock %}=
 
 {% block content %}
-        <div id="institutions-app"></div>
+        <main id="institutions-app"></main>
 {% endblock %}
 
 {% block js %}

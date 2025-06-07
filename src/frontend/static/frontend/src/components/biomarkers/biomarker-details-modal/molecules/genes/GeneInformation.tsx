@@ -405,7 +405,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                                             }}
                                             title={item.source}
                                         >
-                                            <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} />
+                                            <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} alt={item.source} />
                                             <p className='ellipsis'> {item.source}</p>
                                         </Button>
                                     </Grid.Column>
@@ -442,7 +442,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                                             }}
                                             title={item.source}
                                         >
-                                            <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} />
+                                            <img src={item.icon} width={16} height={16} style={{ marginRight: '4px' }} alt={item.source}/>
                                             <p className='ellipsis'> {item.source}</p>
                                         </Button>
                                     </Grid.Column>

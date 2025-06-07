@@ -1,10 +1,11 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Dropdown, Menu, Image, Icon, Loader, Confirm } from 'semantic-ui-react'
 import { DjangoUser } from '../utils/django_interfaces'
 import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../utils/interfaces'
 import { CurrentUserContext } from './Base'
 import { UpdateUserModal } from './UpdateUserModal'
 import { Alert } from './common/Alert'
+import { createPortal } from 'react-dom'
 
 // Constants declared in base.html
 declare const urlIndex: string
@@ -119,7 +120,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // Logged user
     return (
         <>
-            <Dropdown text={`Hi, ${props.currentUser.username}`} className='link item'>
+            <Dropdown text={`Hi, ${props.currentUser.username}`} className='link item' aria-label='Login/Logout'>
                 <Dropdown.Menu>
                     <Dropdown.Item icon='user' text='Edit profile' onClick={() => setModal({ ...modal, isOpen: true })} />
                     <Dropdown.Item icon='power off' text='Exit' as='a' href={urlLogout} />
@@ -174,12 +175,18 @@ const MainNavbar = (props: MainNavbarProps) => {
             active={props.activeItem === 'cgds'}
         />
     )
+    const [headerEl, setHeaderEl] = useState<HTMLElement | null>(null)
 
-    return (
-        <Menu className='margin-bottom-0' inverted borderless>
+    useEffect(() => {
+        setHeaderEl(document.getElementById('header'))
+    }, [])
+
+    if (!headerEl) return null
+    const content = (
+        <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation' >
             {/* Logo */}
             <Menu.Item as='a' header href={urlIndex} title='Multiomix homepage'>
-                <Image size='tiny' src='/static/frontend/img/logo.png' />
+                <Image size='tiny' src='/static/frontend/img/logo.png' alt='Multiomix homepage'/>
             </Menu.Item>
 
             {/* Loading spinners while user is fetch */}
@@ -202,8 +209,8 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous && (
                 <>
-                    <Menu.Menu as='h2'>
-                        <Dropdown text='Analysis' className='link item' icon={null}>
+                    <Menu.Item>
+                        <Dropdown item text='Analysis' className='link item' icon={null} aria-label='Analysis'>
                             <Dropdown.Menu>
                                 {/* GEM panel */}
                                 <Dropdown.Item
@@ -233,11 +240,11 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 />
                             </Dropdown.Menu>
                         </Dropdown>
-                    </Menu.Menu>
+                    </Menu.Item>
 
                     {/* Datasets menu */}
                     <Menu.Menu as='h2'>
-                        <Dropdown text='Datasets' className='link item' icon={null}>
+                        <Dropdown text='Datasets' className='link item' icon={null} aria-label='Datasets'>
                             <Dropdown.Menu>
                                 {/* User's Datasets panel */}
                                 <Dropdown.Item
@@ -265,7 +272,7 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* Only admin options */}
             {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) && (
                 <Menu.Menu as='h2'>
-                    <Dropdown text='Admin' className='link item' icon={null}>
+                    <Dropdown text='Admin' className='link item' icon={null} aria-label='Admin'>
                         <Dropdown.Menu>
                             {currentUser.is_superuser && (
                                 <>
@@ -302,6 +309,7 @@ const MainNavbar = (props: MainNavbarProps) => {
             </Menu.Menu>
         </Menu>
     )
+    return createPortal(content, headerEl)
 }
 
 export { MainNavbar, ActiveItemOptions }
