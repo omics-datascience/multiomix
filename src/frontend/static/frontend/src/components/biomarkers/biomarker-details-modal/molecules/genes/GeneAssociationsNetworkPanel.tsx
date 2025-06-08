@@ -7,9 +7,6 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ExternalLink } from '../../../../common/ExternalLink'
 
-// Styles
-import '../../../../../css/cytoscape.css'
-
 // Defined in biomarkers.html
 declare const urlGeneAssociationsNetwork: string
 

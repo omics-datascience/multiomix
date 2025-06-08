@@ -5,9 +5,6 @@ import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import { KySearchParams, Nullable } from '../../../../utils/interfaces'
 import { LinkOrPlainText } from '../../../common/LinkOrPlainText'
 
-// Styles
-import './../../../../css/base.css'
-
 declare const urlMiRNAData: string
 
 /**

@@ -206,3 +206,7 @@
     opacity: 1;
     text-decoration: underline;
 }
+
+.g-wrapper> g > text {
+    transform: translateX(-20px); /* Prevents Y axis overwrite text */
+}

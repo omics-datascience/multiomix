@@ -209,7 +209,7 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous && (
                 <>
-                    <Menu.Item>
+                    <Menu.Menu>
                         <Dropdown item text='Analysis' className='link item' icon={null} aria-label='Analysis'>
                             <Dropdown.Menu>
                                 {/* GEM panel */}
@@ -240,7 +240,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 />
                             </Dropdown.Menu>
                         </Dropdown>
-                    </Menu.Item>
+                    </Menu.Menu>
 
                     {/* Datasets menu */}
                     <Menu.Menu as='h2'>

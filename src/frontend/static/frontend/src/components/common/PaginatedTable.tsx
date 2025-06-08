@@ -10,9 +10,6 @@ import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoData
 import { InputLabel } from './InputLabel'
 import isEqual from 'lodash/isEqual'
 
-// Styles
-import './commonStyles.css'
-
 declare const currentUserId: string
 
 /** Structure in which the retrieved filter must be. */

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import './../../featureSelection.css'
 import { AdvancedCoxRegression } from '../../../../types'
 
 declare const maxFeaturesCoxRegression: number

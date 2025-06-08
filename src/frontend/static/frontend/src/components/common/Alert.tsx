@@ -1,7 +1,6 @@
 import React from 'react'
 import { Icon, SemanticICONS, TransitionablePortal } from 'semantic-ui-react'
 import { CustomAlert, CustomAlertTypes } from '../../utils/interfaces'
-import './../../css/alert.css'
 
 /** Alert's props. */
 interface AlertProps extends CustomAlert {

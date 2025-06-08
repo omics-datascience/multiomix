@@ -1,3 +1,0 @@
-.g-wrapper> g > text {
-    transform: translateX(-20px); /* Prevents Y axis overwrite text */
-}

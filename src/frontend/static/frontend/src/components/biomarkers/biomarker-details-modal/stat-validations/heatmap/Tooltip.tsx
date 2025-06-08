@@ -1,6 +1,5 @@
 import React from 'react'
 import { InteractionData } from './Heatmap'
-import './tooltip.css'
 
 type TooltipProps = {
     interactionData: InteractionData | null;

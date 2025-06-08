@@ -7,7 +7,6 @@ import { Biomarker, CrossValidationParameters, FeatureSelectionAlgorithm, Featur
 import { FeatureSelectionStep1 } from './steps/FeatureSelectionStep1'
 import { FeatureSelectionStep2 } from './steps/FeatureSelectionStep2'
 import { FeatureSelectionStep3 } from './steps/FeatureSelectionStep3'
-import './featureSelection.css'
 import { experimentSourceIsValid } from '../../../../utils/util_functions'
 
 /** FeatureSelectionPanel props. */
