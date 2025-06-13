@@ -1,3 +1,7 @@
+# Complete the SECRET_KEY with the output of `get_random_secret_key()` from Django
+x-common-variables: &common-variables
+    SECRET_KEY: ''  # <- Set this to the output of `get_random_secret_key()` from Django
+
 services:
     # PostgreSQL
     db:
@@ -5,8 +9,8 @@ services:
         restart: 'always'
         command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
         environment:
-            # IMPORTANT: these three params must be the same as POSTGRES_USERNAME, POSTGRES_PASSWORD, POSTGRES_DB
-            # below in 'multiomix' service respectively
+            <<: *common-variables
+            # IMPORTANT: these must match the credentials below in the 'multiomix' service
             POSTGRES_USER: 'multiomics'
             POSTGRES_PASSWORD: 'multiomics'
             POSTGRES_DB: 'multiomics'
@@ -14,8 +18,6 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data/
             - ./config/postgres/postgres.conf:/etc/postgresql/postgresql.conf
-        # There's a problem with IPVS connections timeout.
-        # See: https://github.com/moby/moby/issues/37466 or https://stackoverflow.com/a/64507844/7058363
         deploy:
             endpoint_mode: dnsrr
 
@@ -24,26 +26,24 @@ services:
         image: mongo:4.2
         restart: 'always'
         environment:
-            # IMPORTANT: these three params must be the same as MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB
-            # below in 'multiomix' service respectively
+            # IMPORTANT: these must match credentials in the 'multiomix' service
             MONGO_INITDB_ROOT_USERNAME: 'multiomics'
             MONGO_INITDB_ROOT_PASSWORD: 'multiomics'
             MONGO_INITDB_DATABASE: 'multiomics'
-        # Sets the config file
         command: --config /etc/mongo/mongod.conf
         volumes:
             - mongo_data:/data/db
             - mongo_config:/data/configdb
             - ./config/mongo/mongod.conf:/etc/mongo/mongod.conf
 
-    # Redis Server for Websockets connections
+    # Redis Server for Websockets
     redis:
         image: redis:6.2.14-alpine
         restart: 'always'
         volumes:
             - redis_data:/data
 
-    # Django Proxy Server
+    # Django Proxy (NGINX)
     nginx:
         image: nginx:1.27
         restart: 'always'
@@ -58,6 +58,23 @@ services:
         depends_on:
             - multiomix
 
+    # Celery worker for emailing
+    emailing-celery-worker:
+        image: omicsdatascience/multiomix:5.5.0-celery
+        restart: 'always'
+        depends_on:
+            - db
+            - redis
+        volumes:
+            - media_data:/src/media
+            - static_data:/src/static
+        environment:
+            <<: *common-variables
+            # Common variables including the needed SECRET_KEY for production
+            # Celery parameters
+            QUEUE_NAME: 'emailing'
+            CONCURRENCY: 1
+
     # Celery worker for correlation analysis
     correlation-analysis-worker:
         image: omicsdatascience/multiomix:5.5.0-celery
@@ -69,13 +86,10 @@ services:
             - media_data:/src/media
         environment:
             # Celery parameters
-            QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
+            QUEUE_NAME: 'correlation_analysis'
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
-            # changed here too!
-
-    # Celery worker for feature selection experiments
+    # Celery worker for feature selection
     fs-experiments-worker:
         image: omicsdatascience/multiomix:5.5.0-celery
         restart: 'always'
@@ -86,13 +100,10 @@ services:
             - media_data:/src/media
         environment:
             # Celery parameters
-            QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
+            QUEUE_NAME: 'feature_selection'
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
-            # changed here too!
-
-    # Celery worker for statistical validations and trained models
+    # Celery worker for statistical validation
     stats-worker:
         image: omicsdatascience/multiomix:5.5.0-celery
         restart: 'always'
@@ -103,13 +114,10 @@ services:
             - media_data:/src/media
         environment:
             # Celery parameters
-            QUEUE_NAME: 'stats'  # This MUST NOT be changed
+            QUEUE_NAME: 'stats'
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
-            # changed here too!
-
-    # Celery worker for inference experiments
+    # Celery worker for inference
     inference-worker:
         image: omicsdatascience/multiomix:5.5.0-celery
         restart: 'always'
@@ -120,13 +128,10 @@ services:
             - media_data:/src/media
         environment:
             # Celery parameters
-            QUEUE_NAME: 'inference'  # This MUST NOT be changed
+            QUEUE_NAME: 'inference'
             CONCURRENCY: 2
 
-            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
-            # changed here too!
-
-    # Celery worker for sync CGDSStudies
+    # Celery worker for syncing datasets
     sync-datasets-worker:
         image: omicsdatascience/multiomix:5.5.0-celery
         restart: 'always'
@@ -137,54 +142,18 @@ services:
             - media_data:/src/media
         environment:
             # Celery parameters
-            QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
+            QUEUE_NAME: 'sync_datasets'
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
 
-            # NOTE: in case of changes in the 'multiomix', PostgreSQL and/or MongoDB connection parameters, they MUST be
-            # changed here too!
-
-    # Django Backend Server
+    # Django backend service
     multiomix:
         image: omicsdatascience/multiomix:5.5.0
         restart: 'always'
-        # environment:
-            # DJANGO_SETTINGS_MODULE: 'multiomics_intermediate.settings_prod'
-            # ENABLE_SECURITY: 'true'
-
-            # CSRF. Django 4.x need this.
-            # Hosts separated by comma ('http://', 'https://' prefixes are mandatory)
-            # Example: CSRF_TRUSTED_ORIGINS: 'http://127.0.0.1', 'http://127.0.0.1,https://127.0.0.1:8000', etc
-            # CSRF_TRUSTED_ORIGINS: ''
-
-            # Set this equal to the upstream server name in the NGINX config file in sites-available in case of
-            # using HTTPS
-            # ALLOWED_HOSTS: '*'  # Needed to make websockets work
-
-            # LISTEN_PORT=8000
-            # LISTEN_IP=0.0.0.0
-            # RESULT_DATAFRAME_LIMIT_ROWS: 300000
-            # TABLE_PAGE_SIZE: 10
-
-            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
-            # POSTGRES_USERNAME: 'multiomics'
-            # POSTGRES_PASSWORD: 'multiomics'
-            # POSTGRES_HOST: 'db'
-            # POSTGRES_PORT: 5432
-            # POSTGRES_DB: 'multiomics'
-
-            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
-            # MONGO_USERNAME: 'multiomics'
-            # MONGO_PASSWORD: 'multiomics'
-            # MONGO_HOST: 'mongo'
-            # MONGO_PORT: 27017
-            # MONGO_DB: 'multiomics'
-
-            # Redis
-            # REDIS_HOST: 'redis'
-            # REDIS_PORT: 6379
-            #
-            # For logging (by default LOG_FILE_PATH is /logs)
-            # LOG_FILE_PATH: /path/to/folder/log
+        environment:
+            <<: *common-variables
+            # Common variables including the needed SECRET_KEY for production
+            DJANGO_SETTINGS_MODULE: 'rwe.settings_prod'
+            ENABLE_SECURITY: 'false'
         volumes:
             - static_data:/src/static
             - media_data:/src/media
@@ -220,4 +189,3 @@ volumes:
     logs_data:
         external: true
         name: 'multiomics_intermediate_logs_data'
-

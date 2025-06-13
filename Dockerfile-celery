@@ -50,4 +50,9 @@ RUN pip install --upgrade pip && pip3 install -r /config/requirements.txt
 WORKDIR /src
 ADD src .
 
+# Healthcheck and Housekeeping
+ADD tools /tools
+RUN chmod +x /tools/*
+HEALTHCHECK --interval=5m --timeout=30s CMD ["/bin/bash", "-c", "/tools/checks.sh"]
+
 ENTRYPOINT ["/bin/bash", "-c", "/src/entrypoint_celery.sh"]
