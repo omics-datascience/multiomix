@@ -1,17 +1,15 @@
 import logging
 from .settings import *
 
-from django.core.management.utils import get_random_secret_key
-
-# If SECRET_KEY is not set in the environment, raise an exception and suggest a random key
-
 secret_key_env = os.getenv('SECRET_KEY')
 
 if secret_key_env is None:
+    # If SECRET_KEY is not set in the environment, raise an exception and suggest a random key
+    from django.core.management.utils import get_random_secret_key
+
     raise Exception(f'SECRET_KEY environment variable is not set. Try {get_random_secret_key()}')
 
 # Sets the production key
-
 SECRET_KEY = secret_key_env
 
 # SECURITY WARNING: don't run with debug turned on in production!
