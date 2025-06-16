@@ -1,9 +1,9 @@
-from typing import List
+from django.db import models
 from django.db.models import QuerySet
+
 from api_service.websocket_functions import send_update_stat_validations_command
 from biomarkers.models import BiomarkerState
 from user_files.models_choices import FileType, MoleculeType
-from django.db import models
 
 
 # Create your models here.
@@ -51,6 +51,7 @@ class SourceDataStatisticalProperties(models.Model):
     Stores statistical info about Experiment's source data
     """
     outliers: QuerySet['SourceDataOutliers']
+
     gene_mean = models.FloatField()
     gem_mean = models.FloatField()
     gene_standard_deviation = models.FloatField()
@@ -64,7 +65,7 @@ class SourceDataStatisticalProperties(models.Model):
     number_of_samples_evaluated = models.PositiveIntegerField()
 
     @property
-    def gene_outliers(self) -> List:
+    def gene_outliers(self) -> QuerySet['SourceDataOutliers']:
         """
         Gets the outliers found in gene data
         @return: List of SourceDataOutliers instances
@@ -72,7 +73,7 @@ class SourceDataStatisticalProperties(models.Model):
         return self.outliers.filter(is_gene_data=True)
 
     @property
-    def gem_outliers(self) -> List:
+    def gem_outliers(self) -> QuerySet['SourceDataOutliers']:
         """
         Gets the outliers found in GEM data
         @return: List of SourceDataOutliers instances
