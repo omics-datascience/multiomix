@@ -268,7 +268,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
         const isIcon = this.props.headerIcon.type === 'icon'
         const icon = isIcon
             ? <Icon name={this.props.headerIcon.src as SemanticICONS} />
-            : <Image circular src={this.props.headerIcon.src} />
+            : <Image circular src={this.props.headerIcon.src} alt={this.props.headerTitle} />
 
         return (
             <Grid.Row>

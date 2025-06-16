@@ -21,6 +21,7 @@ export const SitePolicy = () => {
                                     rounded
                                     centered
                                     src='/static/frontend/img/about-us/multiomix-logo-description.png'
+                                    alt='multiomix-logo-description'
                                 />
                             </Grid.Column>
                         </Grid.Row>

@@ -56,5 +56,4 @@ export const Footer = () => {
         </Segment>
       )
     return createPortal(content, footerEl)
-
 }

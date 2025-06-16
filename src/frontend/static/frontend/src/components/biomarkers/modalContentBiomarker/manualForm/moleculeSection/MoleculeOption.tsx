@@ -2,7 +2,6 @@ import React from 'react'
 import { Button, Icon, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData } from '../../../types'
 
-
 /** MoleculeOption props. */
 interface PropsMoleculeOption {
     molecule: MoleculesSectionData,

@@ -864,7 +864,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                 <Segment>
                     <Grid columns={3} stackable textAlign='left' divided>
                         {/* New Experiment panel */}
-                        <Grid.Column width={2} textAlign='center'>
+                        <Grid.Column width={3} textAlign='center'>
                             <PipelineForm
                                 newExperiment={this.props.newExperiment}
                                 gemFileType={this.props.gemFileType}
@@ -900,7 +900,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                         {/* Tabs with all experiments Table or a table with current selected experiment info */}
                         <Grid.Column
                             id='experiment-result-column'
-                            width={this.state.showLastExperiments ? 12 : 14}
+                            width={this.state.showLastExperiments ? 12 : 13}
                             textAlign='center'
                         >
                             <Grid>

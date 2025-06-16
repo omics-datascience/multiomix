@@ -229,13 +229,13 @@ i.no-border {
     color: #fff;
     text-decoration: none;
     transition: color 0.2s ease;
-  }
-  
-  .hover-link:hover {
+}
+
+.hover-link:hover {
     color: #eee;
     text-decoration: underline;
     text-decoration-color: #fff;
-  }
+}
 
 /* Fixed heigh 100% for html and body */
 .ui.popup {
@@ -322,4 +322,8 @@ h2.menu,
     max-width: 250px;
     padding: 0.5rem;
     text-align: center;
+}
+
+.z-index-1 {
+    z-index: 1;
 }

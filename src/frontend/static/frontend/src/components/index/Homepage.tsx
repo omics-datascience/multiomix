@@ -13,7 +13,7 @@ const HomepageHeading = () => (
     <Segment id='homepage-heading' inverted>
         <Grid stackable textAlign='center' className='margin-top-2'>
             <Grid.Row columns={1}>
-                <Image rounded size='big' src='/static/frontend/img/homepage/multiomix-logo-name.png' alt="Multiomix"/>
+                <Image rounded size='big' src='/static/frontend/img/homepage/multiomix-logo-name.png' alt='Multiomix' />
             </Grid.Row>
             <Grid.Row columns={1}>
                 <Header
