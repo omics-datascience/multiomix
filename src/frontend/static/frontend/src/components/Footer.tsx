@@ -1,21 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { Container, Grid, Icon, Segment } from 'semantic-ui-react'
 
 declare const multiomixVersion: string
 declare const urlSitePolicy: string
 
+/** Site's footer */
 export const Footer = () => {
-
-    const [footerEl, setFooterEl] = useState<HTMLElement | null>(null)
-
-    useEffect(() => {
-        setFooterEl(document.getElementById('footer'))
-    }, [])
-
-    if (!footerEl) return null
-
-    const content = (
+    return (
         <Segment id='footercomponent' inverted vertical>
           <Container>
             <Grid divided inverted stackable textAlign='center'>
@@ -55,5 +46,4 @@ export const Footer = () => {
           </Container>
         </Segment>
       )
-    return createPortal(content, footerEl)
 }
