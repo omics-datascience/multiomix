@@ -1,11 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Dropdown, Menu, Image, Icon, Loader, Confirm } from 'semantic-ui-react'
 import { DjangoUser } from '../utils/django_interfaces'
 import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../utils/interfaces'
 import { CurrentUserContext } from './Base'
 import { UpdateUserModal } from './UpdateUserModal'
 import { Alert } from './common/Alert'
-import { createPortal } from 'react-dom'
 
 // Constants declared in base.html
 declare const urlIndex: string
@@ -13,7 +12,6 @@ declare const urlLogin: string
 declare const urlLogout: string
 declare const urlPipeline: string
 declare const urlDatasets: string
-// declare const urlSurvival: string
 declare const urlBiomarkers: string
 declare const urlInstitutions: string
 declare const urlCGDSPanel: string
@@ -175,17 +173,8 @@ const MainNavbar = (props: MainNavbarProps) => {
             active={props.activeItem === 'cgds'}
         />
     )
-    const [headerEl, setHeaderEl] = useState<HTMLElement | null>(null)
 
-    useEffect(() => {
-        setHeaderEl(document.getElementById('header'))
-    }, [])
-
-    if (!headerEl) {
-        return null
-    }
-
-    const content = (
+    return (
         <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
             {/* Logo */}
             <Menu.Item as='a' header href={urlIndex} title='Multiomix homepage'>
@@ -312,7 +301,6 @@ const MainNavbar = (props: MainNavbarProps) => {
             </Menu.Menu>
         </Menu>
     )
-    return createPortal(content, headerEl)
 }
 
 export { MainNavbar, ActiveItemOptions }
