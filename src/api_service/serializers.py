@@ -7,6 +7,7 @@ from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNAC
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
     """GeneGEMCombination serializer"""
     gene_extra_data = GeneForResultTableSerializer(source='gene', read_only=True)
@@ -21,6 +22,7 @@ class GeneGEMCombinationSerializer(serializers.ModelSerializer):
 
 class GeneMiRNACombinationSerializer(GeneGEMCombinationSerializer):
     """GeneMiRNACombination serializer"""
+
     class Meta:
         model = GeneMiRNACombination
         fields = GeneGEMCombinationSerializer.Meta.fields
@@ -28,6 +30,7 @@ class GeneMiRNACombinationSerializer(GeneGEMCombinationSerializer):
 
 class GeneCNACombinationSerializer(GeneGEMCombinationSerializer):
     """GeneCNACombination serializer"""
+
     class Meta:
         model = GeneCNACombination
         fields = GeneGEMCombinationSerializer.Meta.fields
@@ -35,6 +38,7 @@ class GeneCNACombinationSerializer(GeneGEMCombinationSerializer):
 
 class GeneMethylationCombinationSerializer(GeneGEMCombinationSerializer):
     """GeneMethylationCombination serializer"""
+
     class Meta:
         model = GeneMethylationCombination
         fields = GeneGEMCombinationSerializer.Meta.fields
@@ -42,6 +46,7 @@ class GeneMethylationCombinationSerializer(GeneGEMCombinationSerializer):
 
 class ExperimentSerializerDetail(serializers.ModelSerializer):
     """Serializer for Experiment update"""
+
     class Meta:
         model = Experiment
         fields = ['id', 'name', 'description', 'tag']
@@ -58,11 +63,14 @@ class ExperimentSourceSerializer(serializers.ModelSerializer):
         model = ExperimentSource
         fields = '__all__'
 
+
 class LimitedUserSerializer(serializers.ModelSerializer):
     """A lightweight serializer for User model"""
+
     class Meta:
         model = get_user_model()
         fields = ['id', 'username']
+
 
 class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
