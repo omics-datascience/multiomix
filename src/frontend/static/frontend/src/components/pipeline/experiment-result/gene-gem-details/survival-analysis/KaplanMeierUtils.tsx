@@ -1,6 +1,7 @@
 import React from 'react'
 import * as d3 from 'd3'
 import { Nullable } from '../../../../../utils/interfaces'
+import './kaplanMeier.css'
 /** Needed structure for KaplanMeier chart */
 type KaplanMeierSample = {
     time: number,
