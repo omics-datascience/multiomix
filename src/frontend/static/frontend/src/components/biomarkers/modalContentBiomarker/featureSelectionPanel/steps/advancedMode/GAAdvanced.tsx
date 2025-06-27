@@ -1,7 +1,6 @@
 import React from 'react'
 import { Checkbox, Grid, Input } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import './../../featureSelection.css'
 import { AdvancedGA } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
 

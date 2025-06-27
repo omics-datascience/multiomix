@@ -3,7 +3,6 @@ import { Menu } from 'semantic-ui-react'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
-import './../../../../css/biomarkers.css'
 
 /** MoleculesDetailsMenu props. */
 interface MoleculesDetailsMenuProps {

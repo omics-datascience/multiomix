@@ -2,7 +2,6 @@ import React, { useMemo } from 'react'
 import * as d3 from 'd3'
 import { InteractionData } from './Heatmap'
 import { MARGIN } from './constants'
-import './renderer.css'
 
 type Dataset = { x: number | string; y: string; value: number | null }[]
 

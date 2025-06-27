@@ -1,7 +1,6 @@
 import React from 'react'
 import { Checkbox, Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import './../../featureSelection.css'
 import { advanceBBHAOptions, improvedBBHACoeff1Options, improvedBBHACoeff2Options } from '../../../../utils'
 import { AdvancedBBHA, BBHAVersion } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'

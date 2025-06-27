@@ -220,9 +220,21 @@ i.no-border {
     max-width: 92px;
 }
 
-#footer {
+#footer-component {
     background: #1b1c1d;
     padding: 2em 0em;
+}
+
+.hover-link {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.hover-link:hover {
+    color: #eee;
+    text-decoration: underline;
+    text-decoration-color: #fff;
 }
 
 /* Fixed heigh 100% for html and body */
@@ -276,4 +288,8 @@ h2.menu,
 /* Pulls the Entries Select to the right. */
 .entries-select-table {
     margin-left: auto !important;
+}
+
+.z-index-1 {
+    z-index: 1;
 }
