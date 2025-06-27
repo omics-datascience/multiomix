@@ -9,6 +9,7 @@ import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPo
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
 import isEqual from 'lodash/isEqual'
+import './../../css/common-styles'
 
 declare const currentUserId: string
 

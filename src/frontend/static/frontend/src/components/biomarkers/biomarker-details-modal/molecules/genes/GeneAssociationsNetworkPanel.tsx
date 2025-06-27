@@ -6,6 +6,7 @@ import { Form, Grid, Input } from 'semantic-ui-react'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ExternalLink } from '../../../../common/ExternalLink'
+import '../../../../../css/cytoscape.css'
 
 // Defined in biomarkers.html
 declare const urlGeneAssociationsNetwork: string
