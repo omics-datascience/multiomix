@@ -5,9 +5,6 @@ import { SearchMoleculesInput } from './SearchMoleculesInput'
 import { List } from 'react-virtualized'
 import { MoleculeDynamicRow } from './MoleculeDynamicRow'
 
-// Styles
-import './moleculeSectionStyles.css'
-
 /** MoleculeSection's props. */
 interface MoleculeSectionProps {
     title: BiomarkerType,

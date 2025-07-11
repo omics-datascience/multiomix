@@ -3,13 +3,14 @@
 {% load render_bundle from webpack_loader %}
 
 {% block title %}| Biomarkers{% endblock %}
+{% block meta_description %}Access the Biomarkers Panel to identify, analyze, and validate genomic and epigenomic markers. Interactive visualizations and advanced tools drive your cancer research forward.{% endblock %}
 
 {% block css %}
         {% render_bundle 'biomarkers' 'css' %}
 {% endblock %}
 
 {% block content %}
-        <div id="biomarkers-app"></div>
+        <main id="biomarkers-app"></main>
 {% endblock %}
 
 {% block js %}

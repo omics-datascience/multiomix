@@ -207,7 +207,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
         user = self.request.user
 
         try:
-            experiment: Experiment = Experiment.objects.get(
+            experiment: Experiment = Experiment.objects.filter(
                 Q(pk=experiment_id) &
                 (
                     Q(user=user) |
@@ -215,7 +215,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
                     Q(shared_institutions__institutionadministration__user=user) |
                     Q(shared_users=user)
                 )
-            )
+            ).distinct().get()
             combinations_queryset = experiment.combinations
 
             # Applies the filters

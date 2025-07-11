@@ -5,6 +5,7 @@ import { debounce } from 'lodash'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams, GoTermToTermForm } from './types'
 import { Button, Form, Grid } from 'semantic-ui-react'
+import '../../../../../css/cytoscape.css'
 
 declare const urlGOTermToTerms: string
 

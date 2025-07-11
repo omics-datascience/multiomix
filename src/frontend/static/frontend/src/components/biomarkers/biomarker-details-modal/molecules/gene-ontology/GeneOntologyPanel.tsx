@@ -8,9 +8,6 @@ import { GeneOntologyCytoscapeChart } from './GeneOntologyCytoscapeChart'
 import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchParams, GoTerm, OntologyType, TermsRelatedToGene } from './types'
 import { debounce } from 'lodash'
 
-// Styles
-import '../../../../../css/cytoscape.css'
-
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
 

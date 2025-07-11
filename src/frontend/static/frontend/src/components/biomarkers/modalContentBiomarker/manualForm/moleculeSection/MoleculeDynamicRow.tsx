@@ -2,9 +2,6 @@ import React, { useRef } from 'react'
 import { BiomarkerType, MoleculesSectionData } from '../../../types'
 import { MoleculeOption } from './MoleculeOption'
 
-// Styles
-import './moleculeSectionStyles.css'
-
 /** MoleculeDynamicRow props. */
 interface MoleculeDynamicRowProps {
     content: MoleculesSectionData[],

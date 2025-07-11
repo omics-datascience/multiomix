@@ -1,7 +1,6 @@
 import React from 'react'
 import { Card, Grid, Header, Image } from 'semantic-ui-react'
 import { BiomarkerOrigin } from '../../types'
-import './biomarkerTypeSelectionStyles.css'
 
 /** BiomarkerTypeSelection props. */
 interface BiomarkerTypeSelectionProps {
