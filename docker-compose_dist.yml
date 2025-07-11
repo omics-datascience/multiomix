@@ -68,6 +68,9 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
             CONCURRENCY: 2
@@ -82,6 +85,9 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
             CONCURRENCY: 2
@@ -96,6 +102,9 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
             CONCURRENCY: 2
@@ -110,6 +119,9 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
@@ -124,6 +136,9 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
