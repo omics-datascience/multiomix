@@ -60,7 +60,7 @@ services:
 
     # Celery worker for correlation analysis
     correlation-analysis-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -74,7 +74,7 @@ services:
 
     # Celery worker for feature selection
     fs-experiments-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -88,7 +88,7 @@ services:
 
     # Celery worker for statistical validation
     stats-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -102,7 +102,7 @@ services:
 
     # Celery worker for inference
     inference-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -116,7 +116,7 @@ services:
 
     # Celery worker for syncing datasets
     sync-datasets-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -130,7 +130,7 @@ services:
 
     # Django backend service
     multiomix:
-        image: omicsdatascience/multiomix:5.5.0
+        image: omicsdatascience/multiomix:5.6.0
         restart: 'always'
         environment:
             # Common variables including the needed SECRET_KEY for production
