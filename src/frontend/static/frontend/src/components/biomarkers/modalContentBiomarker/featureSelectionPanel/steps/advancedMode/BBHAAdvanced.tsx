@@ -1,7 +1,6 @@
 import React from 'react'
 import { Checkbox, Form, Grid } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import './../../featureSelection.css'
 import { advanceBBHAOptions, improvedBBHACoeff1Options, improvedBBHACoeff2Options } from '../../../../utils'
 import { AdvancedBBHA, BBHAVersion } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
@@ -111,7 +110,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content={
+                        content={(
                             <>
                                 <p>
                                     The <i>Original</i> approach executes the original Binary Black Hole Algorithm as defined in <ExternalLink href='https://www.sciencedirect.com/science/article/pii/S1568494617301242?via%3Dihub'>this article</ExternalLink>.
@@ -120,14 +119,14 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                                     <i>Version 2</i> it is an improved version defined in this <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>newer article</ExternalLink>
                                 </p>
                             </>
-                        }
+                        )}
                         onTop={false}
                     />
                 </Grid.Column>
             </Grid.Row>
 
             {/* Improved BBHA version parameters */}
-            {(advancedData.BBHAVersion === BBHAVersion.IMPROVED) &&
+            {(advancedData.BBHAVersion === BBHAVersion.IMPROVED) && (
                 <>
                     <Grid.Row columns={2}>
                         <Grid.Column width={14}>
@@ -164,10 +163,10 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         </Grid.Column>
                     </Grid.Row>
                 </>
-            }
+            )}
 
             {/* Apache Spark optimization */}
-            {sparkIntegrationIsEnabled &&
+            {sparkIntegrationIsEnabled && (
                 <Grid.Row columns={2}>
                     <Grid.Column width={14}>
                         <Checkbox
@@ -178,15 +177,16 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     </Grid.Column>
                     <Grid.Column width={2} className='advance-center-container'>
                         <InfoPopup
-                            content={
+                            content={(
                                 <p>
                                     If this option is enabled, the experiment will be executed (if possible) using <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink> to optimize execution times
-                                </p>}
+                                </p>
+                            )}
                             onTop={false}
                         />
                     </Grid.Column>
                 </Grid.Row>
-            }
+            )}
         </Grid>
     )
 }

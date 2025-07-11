@@ -258,7 +258,7 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
                                 <SurvivalForm
                                     {...this.state}
                                     selectStudy={this.selectStudy}
-                                    handleChangeSourceType={this.handleChangeSourceType}
+                                    onHandleChangeSourceType={this.handleChangeSourceType}
                                     selectUploadedFile={this.selectUploadedFile}
                                     selectSurvivalColumn={this.selectSurvivalColumn}
                                     selectNewFile={this.selectNewFile}
@@ -271,7 +271,7 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
                                 <SurvivalGeneSelectionPanel
                                     genes={this.state.genes}
                                     selectedGenes={this.state.selectedGenes}
-                                    handleGenesChanges={this.handleGenesChanges}
+                                    onHandleGenesChanges={this.handleGenesChanges}
                                 />
                             </Grid.Column>
                         </Grid>

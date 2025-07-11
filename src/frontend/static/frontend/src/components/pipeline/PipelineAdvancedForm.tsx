@@ -5,7 +5,6 @@ import { NewExperiment, FileType } from '../../utils/interfaces'
 import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } from '../../utils/util_functions'
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
-import { CorrelationMethod } from '../../utils/django_interfaces'
 import { ExternalLink } from '../common/ExternalLink'
 
 // Slider styles
@@ -107,7 +106,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
     const gemStdFormatted = props.newExperiment.standardDeviationGEM.toFixed(2)
 
     return (
-        <React.Fragment>
+        <>
             <div
                 className='clickable margin-bottom-5'
                 onClick={() => setShowAdvancedSetting(!showAdvancedSettings)}
@@ -115,7 +114,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                 <Icon name={showAdvancedSettings ? 'chevron down' : 'chevron right'} /> <strong>Advanced Settings</strong>
             </div>
 
-            {showAdvancedSettings &&
+            {showAdvancedSettings && (
                 <Form className='margin-bottom-5'>
                     {/* Correlation method */}
                     <Form.Field>
@@ -127,7 +126,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                         <Select
                             fluid
                             selectOnBlur={false}
-                            className="margin-top-5"
+                            className='margin-top-5'
                             options={selectCorrelationMethodsOptions}
                             name='correlationMethod'
                             value={props.newExperiment.correlationMethod}
@@ -137,8 +136,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     </Form.Field>
 
                     {/* For Methylation only: if it will be a all vs all of only Methylation/CNA genes = Genes */}
-                    {props.gemFileType !== FileType.MIRNA &&
-                        <React.Fragment>
+                    {props.gemFileType !== FileType.MIRNA && (
+                        <>
                             <LabelWithInfoPopup
                                 labelText='Correlate...'
                                 popupContent='You can choose whether to keep only the combinations whose genes match or to keep all the combinations resulting from the experiment'
@@ -157,11 +156,10 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                                 name='correlateWithAllGenes'
                                 checked={props.newExperiment.correlateWithAllGenes}
                                 onChange={(_, { name }) => props.handleFormInputsChange(name as string, true)}
-                                /* FIXME: disabled all vs all for Kendall until https://github.com/zolkko/kendalls/issues/2 is fixed */
-                                disabled={props.isEditing || props.newExperiment.correlationMethod === CorrelationMethod.KENDALL}
+                                disabled={props.isEditing}
                             />
-                        </React.Fragment>
-                    }
+                        </>
+                    )}
 
                     {/* Minimum correlation coefficient */}
                     <Form.Field>
@@ -173,8 +171,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
 
                         <SingleRangeSlider {...correlationSliderSettings} />
 
-                        <Label color="blue">{MIN_VALUE_CORRELATION}</Label>
-                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
+                        <Label color='blue'>{MIN_VALUE_CORRELATION}</Label>
+                        <Label color='blue' className='pull-right'>{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* Minimum Standard Deviation for Genes */}
@@ -187,8 +185,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
 
                         <SingleRangeSlider {...stdGeneSliderSettings} />
 
-                        <Label color="blue">0</Label>
-                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
+                        <Label color='blue'>0</Label>
+                        <Label color='blue' className='pull-right'>{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* Minimum Standard Deviation for GEM */}
@@ -200,8 +198,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                         />
 
                         <SingleRangeSlider {...stdGemSliderSettings} />
-                        <Label color="blue">0</Label>
-                        <Label color="blue" className="pull-right">{MAX_FILTER_VALUE}</Label>
+                        <Label color='blue'>0</Label>
+                        <Label color='blue' className='pull-right'>{MAX_FILTER_VALUE}</Label>
                     </Form.Field>
 
                     {/* P-value adjustment method */}
@@ -216,7 +214,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                         <Select
                             fluid
                             selectOnBlur={false}
-                            className="margin-top-5"
+                            className='margin-top-5'
                             options={selectAdjustmentMethodsOptions}
                             name='adjustmentMethod'
                             value={props.newExperiment.adjustmentMethod}
@@ -225,7 +223,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                         />
                     </Form.Field>
                 </Form>
-            }
-        </React.Fragment>
+            )}
+        </>
     )
 }

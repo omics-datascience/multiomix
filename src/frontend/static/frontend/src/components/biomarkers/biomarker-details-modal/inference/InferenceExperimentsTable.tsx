@@ -9,7 +9,7 @@ import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 import ky from 'ky'
 import { Nullable } from '../../../../utils/interfaces'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerInferenceExperiments: string
@@ -213,7 +213,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 />
                             </Table.Cell>
                             <Table.Cell width={1}>
-                                {inferenceExperiment.state === BiomarkerState.COMPLETED &&
+                                {inferenceExperiment.state === BiomarkerState.COMPLETED && (
                                     <Icon
                                         name='chart area'
                                         onClick={() => { props.openInferenceResult(inferenceExperiment) }}
@@ -221,23 +221,25 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                         color='blue'
                                         title='See results'
                                     />
-                                }
+                                )}
 
                                 {/* Stop button */}
-                                {isInProcess &&
+                                {isInProcess && (
                                     <StopExperimentButton
                                         title='Stop experiment'
                                         onClick={() => setInferenceExperimentToStop(inferenceExperiment)}
                                     />
-                                }
+                                )}
 
                                 {/* Delete button */}
-                                {!isInProcess &&
-                                    <DeleteExperimentButton
+                                {/* Todo: Revisar ownerid */}
+                                {!isInProcess && (
+                                    <DeleteButton
                                         title='Delete experiment'
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
+                                        ownerId={null}
                                     />
-                                }
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     )

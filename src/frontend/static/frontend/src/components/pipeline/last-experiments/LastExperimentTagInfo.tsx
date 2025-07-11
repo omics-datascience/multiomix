@@ -16,8 +16,8 @@ interface LastExperimentTagInfoProps {
     addingTag: boolean,
     selectExperimentToAssignTag: (experiment: DjangoExperiment) => void,
     selectTag: (selectedTagId: any, selectedExperiment: DjangoExperiment) => void,
-    handleAddTagInputsChange: (name: string, value: any) => void
-    handleKeyDown: (any) => void
+    onHandleAddTagInputsChange: (name: string, value: any) => void
+    onHandleKeyDown: (any) => void
 }
 
 /**
@@ -34,7 +34,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
                 fluid
                 search
                 selection
-                className="margin-top-2"
+                className='margin-top-2'
                 options={props.tagOptions}
                 clearable
                 onChange={(_e, { value }) => props.selectTag(value, props.experiment)}
@@ -49,8 +49,8 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
                 tag={props.newTag}
                 disableInputs={props.addingTag}
                 loading={props.addingTag}
-                handleAddTagInputsChange={props.handleAddTagInputsChange}
-                handleKeyDown={props.handleKeyDown}
+                onHandleAddTagInputsChange={props.onHandleAddTagInputsChange}
+                onHandleKeyDown={props.onHandleKeyDown}
             />
         )
         : null
@@ -58,7 +58,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
     const buttonRemoveTag = props.experiment.tag
         ? (
             <Icon
-                className="clickable margin-left-2"
+                className='clickable margin-left-2'
                 name='trash'
                 color='red'
                 title='Remove Tag'
@@ -68,11 +68,11 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
         : null
 
     return (
-        <Card.Meta className="margin-top-2">
+        <Card.Meta className='margin-top-2'>
             <TagLabel tag={props.experiment.tag} className='margin-bottom-2' size='tiny' />
 
             <Icon
-                className="clickable margin-left-2"
+                className='clickable margin-left-2'
                 name={isEditingTagInfo ? 'times' : 'pencil'}
                 color={isEditingTagInfo ? 'red' : 'yellow'}
                 title={isEditingTagInfo ? 'Cancel' : 'Edit'}

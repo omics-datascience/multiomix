@@ -120,7 +120,6 @@ export const InstitutionModal = (props: Props) => {
         const myHeaders = getDjangoHeader()
 
         const editUrl = `${urlNonUserListInstitution}/${props.institution?.id}/`
-
         ky.get(editUrl, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
             response.json().then((jsonResponse: { id: number, username: string }[]) => {
                 setUserList(jsonResponse.map(user => ({ key: user.id.toString(), value: user.id.toString(), text: user.username })))
@@ -138,7 +137,9 @@ export const InstitutionModal = (props: Props) => {
         }
 
         return () => {
-            abortController.current.abort()
+            if (props.institution?.is_user_admin && props.institution?.id) {
+                abortController.current.abort()
+            }
         }
     }, [props.institution?.id])
 
@@ -176,8 +177,7 @@ export const InstitutionModal = (props: Props) => {
                             : [
                                 { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
                                 { name: 'Admin', width: 1 }
-                            ]
-                        }
+                            ]}
                         showSearchInput
                         searchLabel='User name'
                         searchPlaceholder='Search by User name'
@@ -208,7 +208,7 @@ export const InstitutionModal = (props: Props) => {
                                                 )
                                         }
                                     </Table.Cell>
-                                    {props.institution?.is_user_admin &&
+                                    {props.institution?.is_user_admin && (
                                         <Table.Cell width={1}>
                                             {/* Edit button */}
                                             {
@@ -234,17 +234,18 @@ export const InstitutionModal = (props: Props) => {
                                             }
 
                                             {
-                                                (props.institution?.is_user_admin && userCandidate.user.id !== currentUser?.id) &&
-                                                <Icon
-                                                    name='close'
-                                                    className='clickable margin-left-5'
-                                                    color='red'
-                                                    onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
-                                                    title='Remove user from Institution'
-                                                />
+                                                (props.institution?.is_user_admin && userCandidate.user.id !== currentUser?.id) && (
+                                                    <Icon
+                                                        name='close'
+                                                        className='clickable margin-left-5'
+                                                        color='red'
+                                                        onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
+                                                        title='Remove user from Institution'
+                                                    />
+                                                )
                                             }
                                         </Table.Cell>
-                                    }
+                                    )}
                                 </Table.Row>
                             )
                         }}

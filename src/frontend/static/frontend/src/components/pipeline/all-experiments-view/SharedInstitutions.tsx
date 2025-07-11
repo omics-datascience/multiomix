@@ -226,8 +226,7 @@ export const SharedInstitutions = (props: Props) => {
                                                             title='Remove institution'
                                                             onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
                                                         />
-                                                    )
-                                                }
+                                                    )}
                                             </div>
                                         </ListItem>
                                     ))}

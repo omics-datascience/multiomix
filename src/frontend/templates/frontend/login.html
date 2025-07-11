@@ -2,12 +2,15 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
+{% block title %} | Login{% endblock %}
+{% block meta_description %}Securely log in to Multiomix to access your personalized multi-omics analysis dashboard, manage experiments, and collaborate with your research team.{% endblock %}=
+
 {% block css %}
     {% render_bundle 'login' 'css' %}
 {% endblock %}
 
 {% block content %}
-        <div id="login-form"></div>
+        <main id="login-form"></main>
 {% endblock %}
 
 {% block js %}

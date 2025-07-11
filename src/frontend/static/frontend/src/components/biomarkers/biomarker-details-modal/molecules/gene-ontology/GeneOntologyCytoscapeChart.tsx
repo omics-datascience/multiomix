@@ -5,6 +5,7 @@ import { debounce } from 'lodash'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams, GoTermToTermForm } from './types'
 import { Button, Form, Grid } from 'semantic-ui-react'
+import '../../../../../css/cytoscape.css'
 
 declare const urlGOTermToTerms: string
 
@@ -23,9 +24,9 @@ const CytoscapeLegends = () => (
     <div className='cytoscape-legends'>
         <div className='legend-title'>Relations</div>
         <div className='legend-scale'>
-            <ul className='legend-labels' id="legend">
+            <ul className='legend-labels' id='legend'>
                 {Object.entries(COLORS_BY_ONTOLOGY_RELATION).map(([_, [relationDescription, color]]) => (
-                    <li key={relationDescription}><span style={{ backgroundColor: color }}></span>{relationDescription}</li>
+                    <li key={relationDescription}><span style={{ backgroundColor: color }} />{relationDescription}</li>
                 ))}
             </ul>
         </div>
@@ -202,8 +203,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                                     checked={termsRelatedToTermForm.relations.includes(value)}
                                     onChange={() => handleCheckboxChange('relations', value)}
                                 />
-                            ))
-                        }
+                            ))}
                     </Form.Field>
                     <Form.Field>
                         <label>Ontology type</label>
@@ -237,7 +237,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
             </Grid.Column>
             <Grid.Column width={13}>
                 <CytoscapeLegends />
-                <div id="cy"></div>
+                <div id='cy' />
             </Grid.Column>
         </Grid.Row>
     )

@@ -71,7 +71,7 @@ type PipelineState = {
     gettingAllExperiments: boolean,
     confirmModal: ConfirmModal,
 
-};
+}
 
 /**
  * Main Pipeline class render. Renders a new experiment form
@@ -129,11 +129,6 @@ class Pipeline extends React.Component<any, PipelineState> {
     handleFormInputsChange = (name: string, value) => {
         const newExperiment = this.state.newExperiment
         newExperiment[name] = value
-
-        // TODO: remove this after Kendall performance issue is solved
-        if (name === 'correlationMethod' && value === CorrelationMethod.KENDALL) {
-            newExperiment.correlateWithAllGenes = false
-        }
 
         this.setState({ newExperiment })
     }
@@ -1063,7 +1058,7 @@ class Pipeline extends React.Component<any, PipelineState> {
                     open={this.state.confirmModal.confirmModal}
                     header={this.state.confirmModal.headerText}
                     content={this.state.confirmModal.contentText}
-                    size="large"
+                    size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
                     onConfirm={() => {
                         this.state.confirmModal.onConfirm()

@@ -2,7 +2,6 @@ import React from 'react'
 import { Button, Form, Label, Segment } from 'semantic-ui-react'
 import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunctionParameters } from '../../../../types'
 import { clusteringAlgorithmOptions } from '../../../../utils'
-import './../../featureSelection.css'
 
 /** ClusteringPanel props. */
 interface ClusteringPanelProps {

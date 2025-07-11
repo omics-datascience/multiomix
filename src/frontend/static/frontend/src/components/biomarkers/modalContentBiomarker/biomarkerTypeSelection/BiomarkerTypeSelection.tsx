@@ -1,7 +1,6 @@
 import React from 'react'
 import { Card, Grid, Header, Image } from 'semantic-ui-react'
 import { BiomarkerOrigin } from '../../types'
-import './biomarkerTypeSelectionStyles.css'
 
 /** BiomarkerTypeSelection props. */
 interface BiomarkerTypeSelectionProps {
@@ -25,7 +24,7 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
     ]
     return (
         <>
-            <Header as="h2" textAlign="center">
+            <Header as='h2' textAlign='center'>
                 Create a new Biomarker
             </Header>
 

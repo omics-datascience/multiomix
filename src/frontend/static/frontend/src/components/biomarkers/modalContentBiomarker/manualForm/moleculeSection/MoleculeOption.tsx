@@ -2,9 +2,6 @@ import React from 'react'
 import { Button, Icon, Segment } from 'semantic-ui-react'
 import { BiomarkerType, MoleculesSectionData } from '../../../types'
 
-// Styles
-import './moleculeSectionStyles.css'
-
 /** MoleculeOption props. */
 interface PropsMoleculeOption {
     molecule: MoleculesSectionData,
@@ -51,7 +48,7 @@ export const MoleculeOption = (props: PropsMoleculeOption) => {
     if (Array.isArray(molecule.value)) {
         const moleculeKey = index + title + molecule.value.length
         return (
-            <Segment key={moleculeKey} className="biomarkers--molecules--container--item table-bordered">
+            <Segment key={moleculeKey} className='biomarkers--molecules--container--item table-bordered'>
                 {molecule.value.map((item) => (
                     <Button
                         key={moleculeKey + item}

@@ -2,7 +2,6 @@ import React from 'react'
 import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea, Message } from 'semantic-ui-react'
 import { TextAreaMolecules } from './TextAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
-import './newBiomarkerFormStyles.css'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
@@ -65,20 +64,20 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
 
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
-            <Header textAlign="center" className='margin-top-0'>
+            <Header textAlign='center' className='margin-top-0'>
                 <Icon name='th' />
                 <Header.Content>New Biomarker</Header.Content>
             </Header>
 
             {/* Notifies the user that the Biomarker was used and its molecules cannot be edited. */}
-            {!canEditMolecules &&
+            {!canEditMolecules && (
                 <Message
                     color='blue'
                     icon='info circle'
                     header='Cannot edit molecules'
                     content='This biomarker contains some associated models and validations, so its molecules cannot be modified. To change its molecules consider cloning this biomarker and work with its copy'
                 />
-            }
+            )}
 
             <Input
                 onChange={(e) => props.handleChangeInputForm(e.target.value, 'biomarkerName')}
@@ -99,7 +98,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
             />
 
             {/* Only if molecules edition is enabled, shows all the inputs to add/edit molecules */}
-            {canEditMolecules &&
+            {canEditMolecules && (
                 <>
                     <Select
                         selectOnBlur={false}
@@ -117,7 +116,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         moleculesTypeOfSelection={props.biomarkerForm.moleculesTypeOfSelection}
                     />
 
-                    {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT &&
+                    {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.INPUT && (
                         <SelectDropDownSingleMolecule
                             checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
                             handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
@@ -125,36 +124,35 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                             handleSearchNewData={props.handleGenesSymbolsFinder}
                             options={props.biomarkerForm.moleculesSymbolsFinder}
                         />
-                    }
+                    )}
 
                     {props.biomarkerForm.moleculesTypeOfSelection === MoleculesTypeOfSelection.AREA &&
-                        <TextAreaMolecules handleGenesSymbols={props.handleGenesSymbols} />
-                    }
+                        <TextAreaMolecules handleGenesSymbols={props.handleGenesSymbols} />}
                 </>
-            }
+            )}
 
             <Container className='biomarkers--side--bar--buttons--box'>
-                {haveInvalid &&
+                {haveInvalid && (
                     <div className='biomarkers--side--bar--validation--items'>
                         <Label color='orange' className='biomarkers--side--bar--validation--labels'>
                             Some molecules (in orange) from the molecule panels where not found in our database.
                         </Label>
                     </div>
-                }
+                )}
 
-                {haveAmbiguous &&
+                {haveAmbiguous && (
                     <div className='biomarkers--side--bar--validation--items'>
                         <Label color='yellow' className='biomarkers--side--bar--validation--labels'>
                             There are some ambiguous molecules (in yellow). Please select the appropriate ones in the molecule panels.
                         </Label>
                     </div>
-                }
+                )}
 
                 {/* Ignoring molecules error is not useful when molecules section are disabled (implies the Biomarker was successfully created). */}
-                {canEditMolecules &&
+                {canEditMolecules && (
                     <Checkbox
                         className='biomarkers--side--bar--validation--items'
-                        label={
+                        label={(
                             <label>
                                 Ignore molecules with warnings
 
@@ -165,11 +163,11 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                                     extraClassName='margin-left-5'
                                 />
                             </label>
-                        }
+                        )}
                         checked={props.biomarkerForm.validation.checkBox}
                         onChange={() => props.handleChangeCheckBox(!props.biomarkerForm.validation.checkBox)}
                     />
-                }
+                )}
 
                 {/* Submit form button */}
                 <Container className='biomarkers--side--bar--box'>
@@ -184,7 +182,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                 </Container>
 
                 {/* Reset button  */}
-                {canEditMolecules &&
+                {canEditMolecules && (
                     <Container className='biomarkers--side--bar--box'>
                         <Button
                             color='red'
@@ -194,7 +192,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                             disabled={props.biomarkerForm.validation.isLoading}
                         />
                     </Container>
-                }
+                )}
             </Container>
         </Segment>
     )

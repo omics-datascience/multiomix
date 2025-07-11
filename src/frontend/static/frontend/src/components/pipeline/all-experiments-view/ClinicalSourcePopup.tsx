@@ -538,17 +538,17 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     size='large'
                     open={this.props.showPopup}
                     onOpen={this.openPopup}
-                    trigger={
+                    trigger={(
                         <Icon
                             title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
-                            name="file"
+                            name='file'
                             className={clinicalButtonClassName}
                             color={experiment.clinical_source_id ? 'blue' : 'grey'}
                             disabled={clinicalIsDisabled}
                         />
-                    }
+                    )}
                 >
-                    <React.Fragment>
+                    <>
                         {/* If it's a CGDSDataset as clinical source it can't be edited */}
                         {this.state.cgdsStudyName
                             ? <Label color='green'>{this.state.cgdsStudyName}</Label>
@@ -586,7 +586,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                     </Grid.Column>
 
                                     {/* If it's a New Dataset, we give the opportunity to add Survival columns too */}
-                                    {showSurvivalTuplesForm &&
+                                    {showSurvivalTuplesForm && (
                                         <Grid.Column>
                                             <SurvivalTuplesForm
                                                 survivalColumns={isaNewDataset
@@ -600,7 +600,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                                 survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
                                             />
                                         </Grid.Column>
-                                    }
+                                    )}
                                 </Grid>
                             )}
 
@@ -615,7 +615,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                         </Button>
 
                         {/* Unlink button (only for UserFiles) */}
-                        {this.state.clinicalSource.id && !this.state.cgdsStudyName &&
+                        {this.state.clinicalSource.id && !this.state.cgdsStudyName && (
                             <Button
                                 color='orange'
                                 fluid
@@ -627,8 +627,8 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                             >
                                 Unlink
                             </Button>
-                        }
-                    </React.Fragment>
+                        )}
+                    </>
                 </Popup>
                 <Alert
                     onClose={this.handleCloseAlert}

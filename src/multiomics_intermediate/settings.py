@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     'biomarkers',
     'feature_selection',
     'statistical_properties',
-    'django_generate_secret_key',
     'webpack_loader',
     'django_email_verification',
     'genes',
@@ -189,7 +188,7 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # +++++ Custom settings +++++
 
 # Current Multiomix version
-VERSION: str = '5.5.0'
+VERSION: str = '5.6.0'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

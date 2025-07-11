@@ -1,7 +1,6 @@
 import React from 'react'
 import { Checkbox, Grid, Input } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import './../../featureSelection.css'
 import { AdvancedGA } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
 
@@ -118,7 +117,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
             </Grid.Row>
 
             {/* Apache Spark optimization */}
-            {sparkIntegrationIsEnabled &&
+            {sparkIntegrationIsEnabled && (
                 <Grid.Row columns={2}>
                     <Grid.Column width={14}>
                         <Checkbox
@@ -129,15 +128,16 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                     </Grid.Column>
                     <Grid.Column width={2} className='advance-center-container'>
                         <InfoPopup
-                            content={
+                            content={(
                                 <p>
                                     If this option is enabled, the experiment will be executed (if possible) using <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink> to optimize execution times
-                                </p>}
+                                </p>
+                            )}
                             onTop={false}
                         />
                     </Grid.Column>
                 </Grid.Row>
-            }
+            )}
         </Grid>
     )
 }

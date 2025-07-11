@@ -1,12 +1,11 @@
 import React from 'react'
 import { InteractionData } from './Heatmap'
-import './tooltip.css'
 
 type TooltipProps = {
     interactionData: InteractionData | null;
     width: number;
     height: number;
-};
+}
 
 export const Tooltip = ({ interactionData, width, height }: TooltipProps) => {
     if (!interactionData) {

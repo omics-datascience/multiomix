@@ -3,11 +3,9 @@ import { MainNavbar, ActiveItemOptions } from './MainNavbar'
 import ky from 'ky'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
-import { Container, Grid, Segment } from 'semantic-ui-react'
+import { Footer } from './Footer'
 
 declare const urlCurrentUser: string
-declare const urlSitePolicy: string
-declare const multiomixVersion: string
 
 /**
  * Component's props
@@ -73,29 +71,7 @@ const Base = (props: BaseProps) => {
         }).finally(() => {
             setIsLoadingCurrentUser(false)
         })
-        /*  ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
-             response.json().then((currentUser: DjangoUser) => {
-                 setUser(currentUser)
-             }).catch((err) => {
-                 console.log('Error parsing JSON ->', err)
-             })
-         }).catch((err) => {
-             if (err.response.status === 403 && !abortController.current.signal.aborted) {
-                 // It's an anonymous user
-                 setUser({
-                     id: null,
-                     username: null,
-                     is_anonymous: true,
-                     is_superuser: false,
-                     is_institution_admin: false
-                 })
-             } else {
-                 console.log('Error getting current User ->', err)
-             }
-         }) */
     }
-
-    const sitePolicyLink = <a id='site-policy-link' href={urlSitePolicy}>Terms and privacy policy</a>
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
@@ -109,19 +85,7 @@ const Base = (props: BaseProps) => {
 
             {/* Footer */}
             {/* TODO: add license */}
-            <Segment id='footer' inverted vertical>
-                <Container>
-                    <Grid divided inverted stackable textAlign='center'>
-                        <Grid.Row columns={1}>
-                            <Grid.Column>
-                                <p>
-                                    OmicsDataScience | Multiomix v{multiomixVersion} | {sitePolicyLink}
-                                </p>
-                            </Grid.Column>
-                        </Grid.Row>
-                    </Grid>
-                </Container>
-            </Segment>
+            <Footer />
         </CurrentUserContext.Provider>
     )
 }

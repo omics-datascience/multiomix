@@ -1,18 +1,24 @@
 import React, { useContext, useState } from 'react'
 import { Icon } from 'semantic-ui-react'
-import { DjangoExperiment } from '../../../utils/django_interfaces'
-import { CurrentUserContext } from '../../Base'
-import { getDjangoHeader } from '../../../utils/util_functions'
+import { CurrentUserContext } from '../Base'
+import { getDjangoHeader } from '../../utils/util_functions'
 import ky from 'ky'
 
 declare const urlPostSwitchInstitutionPublicView
 
 interface Props {
-    experiment: DjangoExperiment
+    publicButtonEntity: { id: number, user: { id: number }, is_public: boolean }
+    nameEntity: string
+    publicKey: string
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void;
 }
 
-export const PublicButtonExperiment = (props: Props) => {
+/**
+ * Component to switch visibility of experiment
+ * @param props The properties for the SwitchPublicButton component.
+ * @returns The rendered component.
+ */
+export const SwitchPublicButton = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
     const [isLoading, setIsLoading] = useState(false)
 
@@ -24,7 +30,7 @@ export const PublicButtonExperiment = (props: Props) => {
         const settings = {
             headers: getDjangoHeader(),
             json: {
-                experimentId: props.experiment.id
+                [props.publicKey]: props.publicButtonEntity.id
             }
         }
 
@@ -40,7 +46,7 @@ export const PublicButtonExperiment = (props: Props) => {
         })
     }
 
-    if (currentUser?.id !== props.experiment.user.id) {
+    if (currentUser?.id !== props.publicButtonEntity.user.id) {
         return <></>
     }
 
@@ -49,9 +55,9 @@ export const PublicButtonExperiment = (props: Props) => {
             name='external share'
             className='clickable margin-left-5'
             disabled={isLoading}
-            color={props.experiment.is_public ? 'red' : 'teal'}
-            title={props.experiment.is_public ? 'Make experiment private' : 'Make experiment public'}
-            onClick={() => props.handleChangeConfirmModalState(true, props.experiment.is_public ? 'Make experiment private' : 'Make experiment public', props.experiment.is_public ? 'Are you sure to make the experiment private?' : 'Are you sure to make the experiment public', handleSwitchVisibility)}
+            color={props.publicButtonEntity.is_public ? 'red' : 'teal'}
+            title={props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`}
+            onClick={() => props.handleChangeConfirmModalState(true, props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`, props.publicButtonEntity.is_public ? `Are you sure to make the ${props.nameEntity} private?` : `Are you sure to make the ${props.nameEntity} public`, handleSwitchVisibility)}
         />
     )
 }

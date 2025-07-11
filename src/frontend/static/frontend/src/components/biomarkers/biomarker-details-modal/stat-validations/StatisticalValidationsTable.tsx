@@ -9,7 +9,7 @@ import { BiomarkerStateLabel } from '../../labels/BiomarkerStateLabel'
 import ky from 'ky'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
 import { Nullable } from '../../../../utils/interfaces'
-import { DeleteExperimentButton } from '../../../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
 
 declare const urlBiomarkerStatisticalValidations: string
@@ -217,7 +217,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 />
                             </Table.Cell>
                             <Table.Cell width={1}>
-                                {statisticalValidation.state === BiomarkerState.COMPLETED &&
+                                {statisticalValidation.state === BiomarkerState.COMPLETED && (
                                     <Icon
                                         name='chart area'
                                         onClick={() => { props.openStatResult(statisticalValidation) }}
@@ -225,23 +225,25 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                         color='blue'
                                         title='See results'
                                     />
-                                }
+                                )}
 
                                 {/* Stop button */}
-                                {isInProcess &&
+                                {isInProcess && (
                                     <StopExperimentButton
                                         title='Stop statistical validation'
                                         onClick={() => setStatValidationToStop(statisticalValidation)}
                                     />
-                                }
+                                )}
 
                                 {/* Delete button */}
-                                {!isInProcess &&
-                                    <DeleteExperimentButton
+                                {/** Todo: revisar ownerId */}
+                                {!isInProcess && (
+                                    <DeleteButton
                                         title='Delete statistical validation'
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
+                                        ownerId={null}
                                     />
-                                }
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     )

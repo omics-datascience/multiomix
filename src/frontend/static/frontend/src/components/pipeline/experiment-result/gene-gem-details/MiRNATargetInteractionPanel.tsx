@@ -129,10 +129,9 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
         const scoreClassData = getScoreClassData(this.state.data.score_class)
 
         return (
-            <React.Fragment>
+            <>
                 {this.props.miRNA &&
-                    <MiRNAExtraData miRNA={this.props.miRNA} />
-                }
+                    <MiRNAExtraData miRNA={this.props.miRNA} />}
 
                 <Grid className='margin-top-2'>
                     <Grid.Row stretched>
@@ -177,7 +176,7 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
-            </React.Fragment>
+            </>
         )
     }
 }

@@ -37,8 +37,7 @@ export const InferenceExperimentResultModal = (props: InferenceExperimentResultM
                                     selectedInferenceExperiment={props.selectedInferenceExperiment}
                                     refreshExperimentInfo={props.refreshExperimentInfo}
                                 />
-                            )
-                        }
+                            )}
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

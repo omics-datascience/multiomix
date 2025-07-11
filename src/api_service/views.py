@@ -204,9 +204,18 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
     def get_queryset(self):
         experiment_id = self.request.GET.get('experiment_id')
+        user = self.request.user
+
         try:
-            experiment: Experiment = Experiment.objects.get(
-                pk=experiment_id, user=self.request.user)
+            experiment: Experiment = Experiment.objects.filter(
+                Q(pk=experiment_id) &
+                (
+                    Q(user=user) |
+                    Q(is_public=True) |
+                    Q(shared_institutions__institutionadministration__user=user) |
+                    Q(shared_users=user)
+                )
+            ).distinct().get()
             combinations_queryset = experiment.combinations
 
             # Applies the filters
@@ -318,6 +327,7 @@ class RemoveInstitutionFromExperimentView(APIView):
         return Response(
             {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
         )
+
 class RemoveUserFromExperimentView(APIView):
     """
     API endpoint to remove an user from an experiment.
@@ -374,6 +384,7 @@ class ToggleExperimentPublicView(APIView):
             )
 
         experiment.is_public = not experiment.is_public
+        experiment.save(update_fields=['is_public'])
 
         return Response(
             {"id": experiment.id, "is_public": experiment.is_public}
@@ -417,7 +428,7 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
 
 class UsersExperimentsSharedListView(generics.ListAPIView):
     """
-    REST endpoint: Get all users associated with a specific experiment.
+    REST endpoint: Get all institution associated with a specific experiment.
     """
     serializer_class = LimitedUserSerializer
     permission_classes = [permissions.IsAuthenticated]

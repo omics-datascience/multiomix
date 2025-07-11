@@ -11,6 +11,9 @@ import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
+import { PopupIcons } from '../common/PopupIcons'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { DeleteButton } from '../common/DeleteButton'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -74,7 +77,11 @@ interface FilesManagerState {
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
  */
-class FilesManager extends React.Component<unknown, FilesManagerState> {
+interface FilesManagerProps {
+    handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void
+}
+
+class FilesManager extends React.Component<FilesManagerProps, FilesManagerState> {
     private newFileInputRef: React.RefObject<any> = React.createRef()
     filterTimeout: number | undefined
     abortController = new AbortController()
@@ -701,6 +708,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
             { name: 'Date', serverCodeToSort: 'upload_date' },
             { name: 'Institutions', width: 2 },
             { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
+            { name: 'Public', width: 1 },
             { name: 'Actions', width: 2 }
         ]
     }
@@ -752,7 +760,6 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
         // Tag and File deletion modals
         const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
-
         const fileTypeOptions = getFileTypeSelectOptions(false)
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
@@ -809,7 +816,7 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
 
                     {/* Files overview panel */}
                     <Grid.Column
-                        id="files-manager-result-column"
+                        id='files-manager-result-column'
                         width={13}
                         textAlign='center'
                     >
@@ -829,29 +836,46 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                     <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
                                     <Table.Cell>
-                                        {userFileRow.institutions.length > 0 &&
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
-                                                />
-                                        }
+                                        {userFileRow.institutions.length > 0 && (
+                                            <Icon
+                                                name='building'
+                                                size='large'
+                                                title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                            />
+                                        )}
                                     </Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell textAlign='center'>
+                                        {
+                                            userFileRow.is_public
+                                                ? (
+                                                    <Icon
+                                                        title='All users of the platform can see this file'
+                                                        name='check'
+                                                        color='green'
+                                                    />
+                                                )
+                                                : (
+                                                    <Icon
+                                                        title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                        name='close'
+                                                        color='red'
+                                                    />
+                                                )
+                                        }
+                                    </Table.Cell>
                                     <Table.Cell>
-                                        {/* Shows a download button if specified */}
+                                        {/* Extra information: */}
                                         <Icon
-                                            name='cloud download'
+                                            name='info'
+                                            className='margin-left-2'
                                             color='blue'
-                                            className='clickable margin-left-5'
-                                            title='Download file'
-                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
                                         />
-
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
-                                        {userFileRow.is_private_or_institution_admin &&
-                                            <React.Fragment>
+                                        {userFileRow.is_private_or_institution_admin && (
+                                            <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
                                                     name='pencil'
@@ -860,35 +884,52 @@ class FilesManager extends React.Component<unknown, FilesManagerState> {
                                                     title='Edit'
                                                     onClick={() => this.editFile(userFileRow)}
                                                 />
+                                            </>
+                                        )}
 
-                                                {/* Shows a delete button if specified */}
-                                                <Icon
-                                                    name='trash'
-                                                    className='clickable margin-left-5'
-                                                    color='red'
-                                                    title='Delete experiment'
-                                                    onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                />
-                                            </React.Fragment>
-                                        }
-
-                                        {/* Extra information: */}
-                                        <Icon
-                                            name='info'
-                                            className='margin-left-2'
-                                            color='blue'
-                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
+                                        <PopupIcons
+                                            content={(
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Shows a download button if specified */}
+                                                    <Icon
+                                                        name='cloud download'
+                                                        color='blue'
+                                                        className='clickable margin-left-5'
+                                                        title='Download file'
+                                                        onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                    />
+                                                    {/* Public switch */}
+                                                    <SwitchPublicButton
+                                                        publicButtonEntity={{
+                                                            id: userFileRow.id as number,
+                                                            user: { id: userFileRow.user.id },
+                                                            is_public: userFileRow.is_public
+                                                        }}
+                                                        nameEntity='file'
+                                                        publicKey='userFileId'
+                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                    />
+                                                    {/* Shows a delete button if specified */}
+                                                    {!userFileRow.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete file'
+                                                            onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                            ownerId={userFileRow.user.id}
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
                                         />
 
                                         {/* NaNs warning */}
-                                        {userFileRow.contains_nan_values &&
+                                        {userFileRow.contains_nan_values && (
                                             <Icon
                                                 name='warning sign'
                                                 className='margin-left-2'
                                                 color='yellow'
                                                 title='The dataset contains NaN values'
                                             />
-                                        }
+                                        )}
                                     </Table.Cell>
                                 </Table.Row>
                             )}

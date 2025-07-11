@@ -1,23 +1,23 @@
 import React from 'react'
 import { Icon, Popup, PopupContentProps, SemanticShorthandItem } from 'semantic-ui-react'
 
-interface Props{
+interface Props {
     content: SemanticShorthandItem<PopupContentProps>,
 }
 
-export const PopupExperiment = (props: Props) => {
+export const PopupIcons = (props: Props) => {
     return (
         <Popup
             on='click'
             basic
-            trigger={
+            trigger={(
                 <Icon
                     name='ellipsis vertical'
                     color='blue'
                     size='small'
                     className='clickable'
                 />
-            }
+            )}
             content={props.content}
         />
     )
