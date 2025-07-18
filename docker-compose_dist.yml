@@ -60,7 +60,7 @@ services:
 
     # Celery worker for correlation analysis
     correlation-analysis-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -68,13 +68,16 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
             CONCURRENCY: 2
 
     # Celery worker for feature selection
     fs-experiments-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -82,13 +85,16 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
             CONCURRENCY: 2
 
     # Celery worker for statistical validation
     stats-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -96,13 +102,16 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
             CONCURRENCY: 2
 
     # Celery worker for inference
     inference-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -110,13 +119,16 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
 
     # Celery worker for syncing datasets
     sync-datasets-worker:
-        image: omicsdatascience/multiomix:5.5.0-celery
+        image: omicsdatascience/multiomix:5.6.0-celery
         restart: 'always'
         depends_on:
             - db
@@ -124,13 +136,16 @@ services:
         volumes:
             - media_data:/src/media
         environment:
+            # Common variables including the needed SECRET_KEY for production
+            <<: *common-variables
+
             # Celery parameters
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
 
     # Django backend service
     multiomix:
-        image: omicsdatascience/multiomix:5.5.0
+        image: omicsdatascience/multiomix:5.6.0
         restart: 'always'
         environment:
             # Common variables including the needed SECRET_KEY for production
