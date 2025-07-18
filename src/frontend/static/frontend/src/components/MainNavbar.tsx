@@ -149,7 +149,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source'
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source' | 'faq'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions,
@@ -286,6 +286,17 @@ const MainNavbar = (props: MainNavbarProps) => {
             <Menu.Menu>
                 <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
                     About us
+                </Menu.Item>
+            </Menu.Menu>
+
+            <Menu.Menu>
+                <Menu.Item
+                    as='a'
+                    href='/faq'
+                    style={{ fontSize: '1rem' }}
+                    active={props.activeItem === 'faq'}
+                >
+                    FAQ
                 </Menu.Item>
             </Menu.Menu>
 
