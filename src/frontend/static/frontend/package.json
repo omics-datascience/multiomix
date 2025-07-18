@@ -57,7 +57,7 @@
     "@visx/scale": "^3.5.0",
     "@visx/stats": "^3.5.0",
     "@visx/tooltip": "^3.3.0",
-    "apexcharts": "^3.52.0",
+    "apexcharts": "^4.0.0",
     "axios": "^1.8.4",
     "cytoscape": "^3.30.2",
     "d3": "^7.9.0",
