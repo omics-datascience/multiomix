@@ -75,6 +75,24 @@ services:
             QUEUE_NAME: 'correlation_analysis'  # This MUST NOT be changed
             CONCURRENCY: 2
 
+            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+            # POSTGRES_USERNAME: 'multiomics'
+            # POSTGRES_PASSWORD: 'multiomics'
+            # POSTGRES_HOST: 'db'
+            # POSTGRES_PORT: 5432
+            # POSTGRES_DB: 'multiomics'
+
+            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+            # MONGO_USERNAME: 'multiomics'
+            # MONGO_PASSWORD: 'multiomics'
+            # MONGO_HOST: 'mongo'
+            # MONGO_PORT: 27017
+            # MONGO_DB: 'multiomics'
+
+            # Redis
+            # REDIS_HOST: 'redis'
+            # REDIS_PORT: 6379
+
     # Celery worker for feature selection
     fs-experiments-worker:
         image: omicsdatascience/multiomix:5.6.0-celery
@@ -91,6 +109,24 @@ services:
             # Celery parameters
             QUEUE_NAME: 'feature_selection'  # This MUST NOT be changed
             CONCURRENCY: 2
+
+            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+            # POSTGRES_USERNAME: 'multiomics'
+            # POSTGRES_PASSWORD: 'multiomics'
+            # POSTGRES_HOST: 'db'
+            # POSTGRES_PORT: 5432
+            # POSTGRES_DB: 'multiomics'
+
+            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+            # MONGO_USERNAME: 'multiomics'
+            # MONGO_PASSWORD: 'multiomics'
+            # MONGO_HOST: 'mongo'
+            # MONGO_PORT: 27017
+            # MONGO_DB: 'multiomics'
+
+            # Redis
+            # REDIS_HOST: 'redis'
+            # REDIS_PORT: 6379
 
     # Celery worker for statistical validation
     stats-worker:
@@ -109,6 +145,24 @@ services:
             QUEUE_NAME: 'stats'  # This MUST NOT be changed
             CONCURRENCY: 2
 
+            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+            # POSTGRES_USERNAME: 'multiomics'
+            # POSTGRES_PASSWORD: 'multiomics'
+            # POSTGRES_HOST: 'db'
+            # POSTGRES_PORT: 5432
+            # POSTGRES_DB: 'multiomics'
+
+            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+            # MONGO_USERNAME: 'multiomics'
+            # MONGO_PASSWORD: 'multiomics'
+            # MONGO_HOST: 'mongo'
+            # MONGO_PORT: 27017
+            # MONGO_DB: 'multiomics'
+
+            # Redis
+            # REDIS_HOST: 'redis'
+            # REDIS_PORT: 6379
+
     # Celery worker for inference
     inference-worker:
         image: omicsdatascience/multiomix:5.6.0-celery
@@ -126,6 +180,24 @@ services:
             QUEUE_NAME: 'inference'  # This MUST NOT be changed
             CONCURRENCY: 2
 
+            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+            # POSTGRES_USERNAME: 'multiomics'
+            # POSTGRES_PASSWORD: 'multiomics'
+            # POSTGRES_HOST: 'db'
+            # POSTGRES_PORT: 5432
+            # POSTGRES_DB: 'multiomics'
+
+            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+            # MONGO_USERNAME: 'multiomics'
+            # MONGO_PASSWORD: 'multiomics'
+            # MONGO_HOST: 'mongo'
+            # MONGO_PORT: 27017
+            # MONGO_DB: 'multiomics'
+
+            # Redis
+            # REDIS_HOST: 'redis'
+            # REDIS_PORT: 6379
+
     # Celery worker for syncing datasets
     sync-datasets-worker:
         image: omicsdatascience/multiomix:5.6.0-celery
@@ -142,6 +214,24 @@ services:
             # Celery parameters
             QUEUE_NAME: 'sync_datasets'  # This MUST NOT be changed
             CONCURRENCY: 1  # NOTE: concurrency is set to minimum by default for this service
+
+            # PostgreSQL DB connection parameters (MUST match the parameters defined in the "db" service above)
+            # POSTGRES_USERNAME: 'multiomics'
+            # POSTGRES_PASSWORD: 'multiomics'
+            # POSTGRES_HOST: 'db'
+            # POSTGRES_PORT: 5432
+            # POSTGRES_DB: 'multiomics'
+
+            # Mongo DB connection parameters (MUST match the parameters defined in the "mongo" service above)
+            # MONGO_USERNAME: 'multiomics'
+            # MONGO_PASSWORD: 'multiomics'
+            # MONGO_HOST: 'mongo'
+            # MONGO_PORT: 27017
+            # MONGO_DB: 'multiomics'
+
+            # Redis
+            # REDIS_HOST: 'redis'
+            # REDIS_PORT: 6379
 
     # Django backend service
     multiomix:
