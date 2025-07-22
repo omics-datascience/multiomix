@@ -2,6 +2,7 @@ import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import BundleTracker from 'webpack-bundle-tracker'
 import { rspack } from '@rspack/core'
+import babelConfig from './babel.config.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -39,13 +40,10 @@ export const common = {
             {
                 test: /\.ts(x)?$/,
                 exclude: /node_modules/,
-                loader: 'builtin:swc-loader',
-                options: {
-                    jsc: {
-                        parser: {
-                            syntax: 'typescript'
-                        }
-                    }
+                // TODO: Migrate to SWC when AntD 6 and React 19 are available.
+                use:{
+                    loader: 'babel-loader',
+                    options: babelConfig
                 },
                 type: 'javascript/auto'
             },

@@ -8,6 +8,7 @@ import jsdocPlugin from 'eslint-plugin-jsdoc'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import neostandard from 'neostandard'
+import reactCompilerPlugin from 'eslint-plugin-react-compiler'
 
 /** Files to include in linting. */
 const filesToParse = ['**/*.{mjs,js,ts,tsx}']
@@ -86,12 +87,14 @@ export default defineConfig([
         files: filesToParse,
         plugins: {
             react: reactPlugin,
+            'react-compiler': reactCompilerPlugin
         },
         languageOptions: {
             parserOptions: {
                 ecmaFeatures: {
                     jsx: true,
                 },
+                'react-compiler/react-compiler': 'error',
             },
             globals: {
                 ...globals.browser,
