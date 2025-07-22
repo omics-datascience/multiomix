@@ -40,7 +40,7 @@ export const common = {
             {
                 test: /\.ts(x)?$/,
                 exclude: /node_modules/,
-                // TODO: Migrate to SWC when AntD 6 and React 19 are available.
+                // TODO: Migrate to SWC when React 19 is available.
                 use:{
                     loader: 'babel-loader',
                     options: babelConfig
