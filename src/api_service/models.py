@@ -1,13 +1,16 @@
 import datetime
 from typing import Iterable, List, Optional, Type, Set, Any
 
-from django.contrib.auth.base_user import AbstractBaseUser
+import numpy as np
+import pandas as pd
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.auth import get_user_model
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
+
 from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
+from datasets_synchronization.models import CGDSDataset
 from genes.models import Gene
 from inferences.models import InferenceExperiment
 from institutions.models import Institution
@@ -16,9 +19,6 @@ from user_files.models import UserFile
 from user_files.models_choices import FileType
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
 from .websocket_functions import send_update_experiments_command
-from datasets_synchronization.models import CGDSDataset
-import pandas as pd
-import numpy as np
 
 
 def get_combination_class(experiment_type: ExperimentType):
