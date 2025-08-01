@@ -17,6 +17,7 @@ declare const urlInstitutions: string
 declare const urlCGDSPanel: string
 declare const urlAboutUs: string
 declare const urlOpenSource: string
+declare const urlDifferentialExpression: string
 
 /** Component's Props */
 interface LogInLogOutPanelProps {
@@ -149,7 +150,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source'
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source' | 'differential-expression'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions,
@@ -229,6 +230,14 @@ const MainNavbar = (props: MainNavbarProps) => {
                                     icon='list layout'
                                     as='a' href={urlBiomarkers}
                                     active={props.activeItem === 'biomarkers'}
+                                />
+
+                                {/* Differential Expression panel */}
+                                <Dropdown.Item
+                                    text='Differential expression'
+                                    icon='list layout'
+                                    as='a' href={urlDifferentialExpression}
+                                    active={props.activeItem === 'differential-expression'}
                                 />
                             </Dropdown.Menu>
                         </Dropdown>

@@ -1,0 +1,20 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| Differential expression experiments{% endblock %}
+{% block meta_description %}Todo: cambiar Description.{% endblock %}
+
+{% block css %}
+        {% render_bundle 'differentialExpression' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <main id="differential-expression-app"></main>
+{% endblock %}
+
+{% block js %}
+        <script>
+        </script>
+        {% render_bundle 'differentialExpression' 'js' %}
+{% endblock %}

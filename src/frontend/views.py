@@ -42,6 +42,16 @@ def survival_action(request):
     """Survival Analysis view"""
     return render(request, "frontend/survival.html")
 
+@login_required
+def biomarker(request):
+    """Biomarker view"""
+    return render(request, "frontend/biomarker.html")
+
+@login_required
+def differential_expression(request):
+    """Differential expression experiment view"""
+    return render(request, "frontend/differential-expression.html")
+
 
 def open_source(request):
     """Open source view"""

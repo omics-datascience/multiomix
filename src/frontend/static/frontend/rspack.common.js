@@ -14,6 +14,7 @@ const PATHS = {
 
 export const common = {
     entry: {
+        differentialExpression: `${PATHS.src}/differential-expression.tsx`,
         base: `${PATHS.src}/base.tsx`,
         gem: `${PATHS.src}/gem.tsx`,
         main: `${PATHS.src}/index.tsx`,

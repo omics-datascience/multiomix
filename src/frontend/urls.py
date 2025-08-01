@@ -8,6 +8,8 @@ urlpatterns = [
     path('survival', views.survival_action, name='survival'),
     path('about-us', views.about_us_action, name='about_us'),
     path('open-source', views.open_source, name='open_source'),
-    path('site-policy', views.terms_and_privacy_policy_action, name='site_policy')
+    path('site-policy', views.terms_and_privacy_policy_action, name='site_policy'),
+    path('biomarker', views.biomarker, name='biomarker'),
+    path('differential-expression', views.differential_expression, name='differential_expression')
 ]
 
