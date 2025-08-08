@@ -14,6 +14,36 @@ from django.db.models import QuerySet, Q
 from differential_expression.serializers import DifferentialExpressionExperimentSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from common.pagination import StandardResultsSetPagination
+from celery.contrib.abortable import AbortableAsyncResult
+from .tasks import eval_differential_expression_experiment
+
+
+class DifferentialExpressionDetail(generics.RetrieveAPIView):
+    """
+    Endpoint to retrieve a differential expression experiment.
+    """
+
+    def get_object(self) -> DifferentialExpressionExperiment:
+        """
+        Retrieve the differential expression experiment by its ID.
+        """
+        user = self.request.user
+        experiment_id = self.kwargs.get('pk')
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
+
+        # Check if the user has access to the experiment
+        if not (experiment.is_public or
+                experiment.user == user or
+                experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
+                experiment.shared_users.filter(id=user.id).exists()):
+            raise ValidationError('You do not have permission to access this experiment.')
+
+        print(experiment.clinical_source.get_attributes())
+
+        return experiment
+
+    serializer_class = DifferentialExpressionExperimentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class DifferentialExpressionList(generics.ListAPIView):
     """
@@ -26,7 +56,7 @@ class DifferentialExpressionList(generics.ListAPIView):
         """
         user = self.request.user
         experiments = DifferentialExpressionExperiment.objects.filter(
-            # Q(is_public=True) |
+            Q(is_public=True) |
             Q(user=user) |
             Q(shared_institutions__institutionadministration__user=user) |
             Q(shared_users=user)
@@ -108,5 +138,18 @@ class DifferentialExpressionSubmit(APIView):
                 threshold=threshold,
                 user = request.user,
             )
+
+            # async_res: AbortableAsyncResult = eval_feature_selection_experiment.apply_async(
+            # (fs_experiment.pk, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
+            #  cross_validation_parameters), queue='feature_selection')
+
+            # fs_experiment.task_id = async_res.task_id
+            # fs_experiment.save(update_fields=['task_id'])
+            
+            async_res : AbortableAsyncResult = eval_differential_expression_experiment.apply_async(
+                (experiment.pk,), queue='differential_expression')
+            
+            experiment.task_id = async_res.task_id
+            experiment.save(update_fields=['task_id'])
 
             return Response({'ok': True})
