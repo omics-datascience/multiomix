@@ -75,4 +75,58 @@ class DifferentialExpressionExperiment(models.Model):
         #     raise ValueError(f"An experiment with the name '{self.name}' already exists.")
 
         super().save(*args, **kwargs)
+
+
+    # Results storage
+    # Store the complete differential expression results as JSON
+    # This is more efficient than individual records for large datasets
+    results_json = models.JSONField(blank=True, null=True, help_text='Complete differential expression results as JSON')
+    
+    def save_results(self, dataframe):
+        """
+        Save the differential expression DataFrame results as JSON.
+        
+        Args:
+            dataframe: pandas DataFrame with differential expression results
+        """
+        # Convert DataFrame to JSON format (records orientation)
+        self.results_json = dataframe.to_dict('records')
+        self.save(update_fields=['results_json'])
+    
+    def get_results_dataframe(self):
+        """
+        Retrieve results as a pandas DataFrame.
+        
+        Returns:
+            pandas.DataFrame: DataFrame with differential expression results
+        """
+        if not self.results_json:
+            return None
+            
+        import pandas as pd
+        return pd.DataFrame(self.results_json)
+    
+    def get_significant_genes(self, p_value_threshold=0.05, log_fc_threshold=1.0):
+        """
+        Get significantly differentially expressed genes.
+        
+        Args:
+            p_value_threshold: Maximum adjusted p-value (default 0.05)
+            log_fc_threshold: Minimum absolute log fold change (default 1.0)
+            
+        Returns:
+            list: List of gene records meeting the criteria
+        """
+        if not self.results_json:
+            return []
+            
+        significant_genes = []
+        for gene in self.results_json:
+            adj_p_val = gene.get('adj.P.Val', gene.get('adjusted_p_value', 1.0))
+            log_fc = abs(gene.get('logFC', gene.get('log_fold_change', 0.0)))
+            
+            if adj_p_val <= p_value_threshold and log_fc >= log_fc_threshold:
+                significant_genes.append(gene)
+                
+        return significant_genes
         

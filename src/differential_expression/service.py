@@ -95,7 +95,11 @@ class DifferentialExpressionService:
             
             # Convert the R data frame to a Pandas DataFrame for further analysis in Python.
             results_df = pandas2ri.rpy2py(results)
-            return results_df
+            
+            top_genes = results_df.nsmallest(10, 'adj.P.Val')
+            top_genes_reset = top_genes.reset_index() 
+            
+            return top_genes_reset
         
         except Exception as e:
             logging.error(f"Error occurred during differential expression analysis: {e}")
@@ -194,10 +198,9 @@ class DataProcessingService:
         filtering samples based on the clinical dataset, and cleaning up NA values.
         """
         
-        mrna_dataset = self.mrna_df.reset_index(names='Hugo_Symbol')
-        
+
         # Eliminar duplicados manteniendo la primera ocurrencia
-        mrna_dataset = mrna_dataset.drop_duplicates(subset=['Hugo_Symbol'], keep='first')
+        mrna_dataset = self.mrna_df.drop_duplicates(subset=['Standard_Symbol'], keep='first')
         
         # Antes de la intersección, normalizar los SAMPLE_ID extrayendo solo la parte base
         self.clinical_df['SAMPLE_ID'] = self.clinical_df['SAMPLE_ID'].str.rsplit('-', n=1).str[0]
@@ -206,14 +209,15 @@ class DataProcessingService:
         valid_columns = list(set(mrna_dataset.columns) & set(self.clinical_df['SAMPLE_ID']))
         
         # Filtrar el dataset de RNA-Seq para mantener solo las columnas válidas
-        mrna_dataset = mrna_dataset[['Hugo_Symbol'] + valid_columns]
+        mrna_dataset = mrna_dataset[['Standard_Symbol'] + valid_columns]
         
         # Eliminar filas con NA en los datos de expresión génica
-        # Eliminar filas donde Hugo_Symbol es NA
-        mrna_dataset = mrna_dataset.dropna(subset=['Hugo_Symbol'])
+        # Eliminar filas donde Standard_Symbol es NA
+        mrna_dataset = mrna_dataset.dropna(subset=['Standard_Symbol'])
 
-        # Establecer Hugo_Symbol como índice y eliminar la columna
-        mrna_dataset = mrna_dataset.set_index('Hugo_Symbol')
+        # Establecer Standard_Symbol como índice con el nombre Hugo_Symbol y eliminar la columna
+        mrna_dataset = mrna_dataset.set_index('Standard_Symbol')
+        mrna_dataset.index.name = 'Hugo_Symbol'
         
         self.mrna_df = mrna_dataset
         logging.info("mRNA data processed successfully.")

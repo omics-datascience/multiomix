@@ -43,14 +43,19 @@ def eval_differential_expression_experiment(self, experiment_pk: int, ):
         start = time.time()
 
         compute_differential_expression = DifferentialExpressionService(experiment, is_aborted=self.is_aborted)
-        compute_differential_expression.perform_differential_expression()
-
+        result = compute_differential_expression.perform_differential_expression()
+        print(f'Result of differential expression computation: {result}')
         total_execution_time = time.time() - start
         logging.info(f'DifferentialExpressionExperiment {experiment.pk} processed in {total_execution_time:.2f} seconds.')
         
         # If user cancel the experiment, discard changes
         if self.is_aborted():
             raise ExperimentStopped
+        
+        # Save the results to the database if we got results
+        if result is not None:
+            experiment.save_results(result)
+            logging.info(f'Results saved for DifferentialExpressionExperiment {experiment.pk}')
         
         experiment.execution_time = total_execution_time
         experiment.save(update_fields=['execution_time'])
