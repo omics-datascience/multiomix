@@ -1,3 +1,4 @@
+from TESTS.join_df import mrna_path
 from common.exceptions import EmptyDataset
 from differential_expression.models import DifferentialExpressionExperiment
 import pandas as pd
@@ -96,10 +97,10 @@ class DifferentialExpressionService:
             # Convert the R data frame to a Pandas DataFrame for further analysis in Python.
             results_df = pandas2ri.rpy2py(results)
             
-            top_genes = results_df.nsmallest(10, 'adj.P.Val')
-            top_genes_reset = top_genes.reset_index() 
+            # Return top genes sorted by adjusted p-value, keeping gene names as index
+            top_genes = results_df.nsmallest(1000, 'adj.P.Val')
             
-            return top_genes_reset
+            return top_genes
         
         except Exception as e:
             logging.error(f"Error occurred during differential expression analysis: {e}")
@@ -187,6 +188,7 @@ class DataProcessingService:
         df_clinical = df_clinical[['SAMPLE_ID', self.clinical_attribute]]
 
         df_clinical = df_clinical.drop_duplicates()
+        df_clinical['SAMPLE_ID'] = df_clinical['SAMPLE_ID'].str.replace('-', '.')
         
         self.clinical_df = df_clinical
         logging.info("Clinical data processed successfully.")
@@ -197,14 +199,39 @@ class DataProcessingService:
         This method processes the mRNA dataset by renaming columns, removing duplicates,
         filtering samples based on the clinical dataset, and cleaning up NA values.
         """
-        
+
+        mrna_dataset = self.mrna_df.copy()
+
+        mrna_dataset.reset_index(inplace=True)
+
+        # SOLUCIÓN: Reemplazar guiones por puntos en los nombres de las columnas sino no puede machear con SAMPLE_ID
+        columns_to_rename = {}
+        for col in mrna_dataset.columns:
+            if col not in 'Standard_Symbol':
+                columns_to_rename[col] = col.replace('-', '.')
+
+        mrna_dataset = mrna_dataset.rename(columns=columns_to_rename)
+
+        mrna_dataset = mrna_dataset.drop_duplicates(subset=['Standard_Symbol'], keep='first')
+
+        # # Si Standard_Symbol está como índice, convertirlo a columna
+        # if mrna_dataset.index.name == 'Standard_Symbol' in str(mrna_dataset.index.name):
+        #     mrna_dataset = mrna_dataset.reset_index()
+
+        # Si Standard_Symbol no está como columna pero está en el índice
+        # if 'Standard_Symbol' not in mrna_dataset.columns and mrna_dataset.index.name is not None:
+        #     mrna_dataset = mrna_dataset.reset_index()
+        #     # Renombrar la primera columna a Standard_Symbol si es necesario
+        #     if mrna_dataset.columns[0] != 'Standard_Symbol':
+        #         mrna_dataset = mrna_dataset.rename(columns={mrna_dataset.columns[0]: 'Standard_Symbol'})
+
 
         # Eliminar duplicados manteniendo la primera ocurrencia
-        mrna_dataset = self.mrna_df.drop_duplicates(subset=['Standard_Symbol'], keep='first')
+        # mrna_dataset = self.mrna_df.drop_duplicates(subset=['Standard_Symbol'], keep='first')
         
         # Antes de la intersección, normalizar los SAMPLE_ID extrayendo solo la parte base
-        self.clinical_df['SAMPLE_ID'] = self.clinical_df['SAMPLE_ID'].str.rsplit('-', n=1).str[0]
-        
+        self.clinical_df['SAMPLE_ID'] = self.clinical_df['SAMPLE_ID'].str.rsplit('.', n=1).str[0]
+
         # Obtener valores de SAMPLE_ID del DataFrame de metadatos
         valid_columns = list(set(mrna_dataset.columns) & set(self.clinical_df['SAMPLE_ID']))
         

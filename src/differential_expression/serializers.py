@@ -1,51 +1,188 @@
 from rest_framework import serializers
-
-from differential_expression.models import DifferentialExpressionExperiment
+from django.contrib.auth.models import User
+from institutions.models import Institution
+from differential_expression.models import (
+    DifferentialExpressionExperiment, 
+    DifferentialExpressionExperimentResult,
+    DifferentialExpressionSource,
+    DifferentialExpressionClinicalSource
+)
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 
-class DifferentialExpressionExperimentSerializer(WritableNestedModelSerializer):
+class DifferentialExpressionSourceSerializer(serializers.ModelSerializer):
     """
-    Serializer for Differential Expression Experiment.
+    Serializer for Differential Expression Source.
     """
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=255)
-    description = serializers.CharField(allow_blank=True, required=False)
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-    clinical_source = serializers.CharField(max_length=255, required=False)
-    mrna_source = serializers.CharField(max_length=255, required=False)
+    source_type = serializers.SerializerMethodField()
+    source_name = serializers.SerializerMethodField()
+    file_type = serializers.SerializerMethodField()
     
-    # Results-related fields
-    results_json = serializers.JSONField(read_only=True)
+    class Meta:
+        model = DifferentialExpressionSource
+        fields = ['id', 'source_type', 'source_name', 'file_type', 'number_of_samples', 'number_of_rows']
+        read_only_fields = ['id', 'number_of_samples', 'number_of_rows']
+    
+    def get_source_type(self, obj):
+        """Returns the type of source."""
+        if obj.user_file:
+            return 'user_file'
+        elif obj.cgds_dataset:
+            return 'cgds_dataset'
+        return 'unknown'
+    
+    def get_source_name(self, obj):
+        """Returns the name of the source."""
+        try:
+            valid_source = obj.get_valid_source()
+            return getattr(valid_source, 'name', str(valid_source))
+        except:
+            return 'No source'
+    
+    def get_file_type(self, obj):
+        """Returns the file type of the source."""
+        try:
+            valid_source = obj.get_valid_source()
+            return getattr(valid_source, 'file_type', None)
+        except:
+            return None
+
+
+class DifferentialExpressionClinicalSourceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Differential Expression Clinical Source.
+    """
+    source_type = serializers.SerializerMethodField()
+    source_name = serializers.SerializerMethodField()
+    attributes_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = DifferentialExpressionClinicalSource
+        fields = ['id', 'source_type', 'source_name', 'attributes_count', 'number_of_samples', 'number_of_rows']
+        read_only_fields = ['id', 'number_of_samples', 'number_of_rows']
+    
+    def get_source_type(self, obj):
+        """Returns the type of clinical source."""
+        if obj.user_file:
+            return 'user_file'
+        elif obj.cgds_dataset and obj.extra_cgds_dataset:
+            return 'cgds_clinical_combined'
+        elif obj.cgds_dataset:
+            return 'cgds_clinical'
+        return 'unknown'
+    
+    def get_source_name(self, obj):
+        """Returns the name of the clinical source."""
+        try:
+            if obj.user_file:
+                return obj.user_file.name
+            elif obj.cgds_dataset:
+                return obj.cgds_dataset.name
+            return 'No source'
+        except:
+            return 'No source'
+    
+    def get_attributes_count(self, obj):
+        """Returns the number of clinical attributes."""
+        try:
+            return len(obj.get_attributes())
+        except:
+            return 0
+
+
+class UserSimpleSerializer(serializers.ModelSerializer):
+    """Simple serializer for User model."""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        read_only_fields = ['id', 'username', 'first_name', 'last_name', 'email']
+
+
+class InstitutionSimpleSerializer(serializers.ModelSerializer):
+    """Simple serializer for Institution model."""
+    class Meta:
+        model = Institution
+        fields = ['id', 'name']
+        read_only_fields = ['id', 'name']
+
+
+class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Differential Expression Experiment Results.
+    """
+    is_significant = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = DifferentialExpressionExperimentResult
+        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic', 'is_significant']
+        read_only_fields = ['id']
+    
+    def get_is_significant(self, obj):
+        """Check if this gene is significantly differentially expressed."""
+        return obj.adj_p_val <= 0.05 and abs(obj.log_fc) >= 1.0
+
+
+class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Differential Expression Experiment (List view).
+    """
+    user = UserSimpleSerializer(read_only=True)
+    clinical_source = DifferentialExpressionClinicalSourceSerializer(read_only=True)
+    mrna_source = DifferentialExpressionSourceSerializer(read_only=True)
+    
+    # Computed fields
     has_results = serializers.SerializerMethodField()
     results_count = serializers.SerializerMethodField()
     significant_genes_count = serializers.SerializerMethodField()
-
+    state_display = serializers.CharField(source='get_state_display', read_only=True)
+    
     class Meta:
         model = DifferentialExpressionExperiment
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'description', 'user', 'clinical_source', 'mrna_source',
+            'clinical_attribute', 'threshold_percentile', 'threshold', 'state', 'state_display',
+            'execution_time', 'created_at', 'updated_at', 'is_public',
+            'has_results', 'results_count', 'significant_genes_count'
+        ]
+        read_only_fields = [
+            'id', 'execution_time', 'created_at', 'updated_at', 
+            'has_results', 'results_count', 'significant_genes_count'
+        ]
     
     def get_has_results(self, obj):
         """Check if the experiment has results."""
-        return obj.results_json is not None and len(obj.results_json) > 0
+        try:
+            return obj.results.exists()
+        except:
+            return False
     
     def get_results_count(self, obj):
         """Get the total number of genes in results."""
-        if obj.results_json:
-            return len(obj.results_json)
-        return 0
+        try:
+            return obj.results.count()
+        except:
+            return 0
     
     def get_significant_genes_count(self, obj):
-        """Get the number of significant genes (adj.P.Val <= 0.05)."""
-        if not obj.results_json:
+        """Get the number of significant genes (adj.P.Val <= 0.05 and |logFC| >= 1.0)."""
+        try:
+            return obj.get_significant_genes().count()
+        except:
             return 0
-        
-        significant_count = 0
-        for gene in obj.results_json:
-            adj_p_val = gene.get('adj.P.Val', gene.get('adjusted_p_value', 1.0))
-            if adj_p_val <= 0.05:
-                significant_count += 1
-        
-        return significant_count
+
+
+class DifferentialExpressionExperimentDetailSerializer(DifferentialExpressionExperimentSerializer):
+    """
+    Detailed serializer for Differential Expression Experiment (Detail view).
+    Includes additional information like shared users and institutions.
+    """
+    shared_users = UserSimpleSerializer(many=True, read_only=True)
+    shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
+    
+    class Meta(DifferentialExpressionExperimentSerializer.Meta):
+        fields = DifferentialExpressionExperimentSerializer.Meta.fields + [
+            'shared_users', 'shared_institutions', 'task_id', 'attempt'
+        ]
+        read_only_fields = DifferentialExpressionExperimentSerializer.Meta.read_only_fields + [
+            'task_id', 'attempt'
+        ]

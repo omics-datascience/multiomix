@@ -50,7 +50,14 @@ def biomarker(request):
 @login_required
 def differential_expression(request):
     """Differential expression experiment view"""
-    return render(request, "frontend/differential-expression.html")
+    return render(
+        request,
+        "frontend/differential-expression.html",
+        {
+            'maximum_number_of_open_tabs': settings.MAX_NUMBER_OF_OPEN_TABS,
+            'threshold_to_consider_ordinal': settings.THRESHOLD_ORDINAL
+        }
+    )
 
 
 def open_source(request):
