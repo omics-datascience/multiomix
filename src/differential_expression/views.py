@@ -1,29 +1,32 @@
 from django.db import transaction
+from django.db.models import Q
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, permissions
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from api_service.enums import SourceType
 from api_service.utils import get_cgds_dataset
+from common.pagination import StandardResultsSetPagination
 from datasets_synchronization.models import CGDSStudy
+from differential_expression.models import (
+    DifferentialExpressionClinicalSource,
+    DifferentialExpressionExperiment,
+    DifferentialExpressionSource,
+)
+from differential_expression.serializers import (
+    DifferentialExpressionExperimentDetailSerializer,
+    DifferentialExpressionExperimentResultSerializer,
+    DifferentialExpressionExperimentSerializer,
+)
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from user_files.views import get_an_user_file
-from rest_framework.exceptions import ValidationError
-from differential_expression.models import (
-    DifferentialExpressionExperiment, 
-    DifferentialExpressionSource,
-    DifferentialExpressionClinicalSource
-)
-from rest_framework.response import Response
-from rest_framework import generics, permissions, filters
-from rest_framework.generics import get_object_or_404
-from django.db.models import Q
-from differential_expression.serializers import (
-    DifferentialExpressionExperimentSerializer, 
-    DifferentialExpressionExperimentDetailSerializer,
-    DifferentialExpressionExperimentResultSerializer
-)
-from django_filters.rest_framework import DjangoFilterBackend
-from common.pagination import StandardResultsSetPagination
+
 from .tasks import eval_differential_expression_experiment
 
 
@@ -213,6 +216,16 @@ class DifferentialExpressionSubmit(APIView):
             if threshold < 0 or threshold > 1:
                 raise ValidationError('Threshold must be between 0 and 1')
 
+            # Top parameter
+            try:
+                top_str = post_data.get('top', '100')
+                top = int(top_str)
+            except (ValueError, TypeError) as exc:
+                raise ValidationError('Invalid top value') from exc
+
+            if top < 1 or top > 1000:
+                raise ValidationError('Top must be between 1 and 1000')
+
             # Create the differential expression experiment
             experiment = DifferentialExpressionExperiment.objects.create(
                 name=name,
@@ -222,6 +235,7 @@ class DifferentialExpressionSubmit(APIView):
                 clinical_attribute=clinical_attribute,
                 threshold_percentile=threshold_percentile,
                 threshold=threshold,
+                top=top,
                 user=request.user,
             )
 

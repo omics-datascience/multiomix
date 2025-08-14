@@ -1,12 +1,16 @@
 import logging
 import time
+
 from celery.contrib.abortable import AbortableTask
-from multiomics_intermediate.celery import app
+from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
-from api_service import models as api_models
-from time import sleep
-from differential_expression.models import DifferentialExpressionExperiment, DifferentialExpressionExperimentState
+from multiomics_intermediate.celery import app
+
 from common.exceptions import EmptyDataset, ExperimentStopped
+from differential_expression.models import (
+    DifferentialExpressionExperiment,
+    DifferentialExpressionExperimentState,
+)
 from .service import DifferentialExpressionService
 
 @app.task(bind=True, base=AbortableTask, acks_late=True, reject_on_worker_lost=True,
@@ -50,6 +54,8 @@ def eval_differential_expression_experiment(self, experiment_pk: int, ):
         
         # If user cancel the experiment, discard changes
         if self.is_aborted():
+            experiment.state = DifferentialExpressionExperimentState.STOPPING
+            experiment.save(update_fields=['state'])
             raise ExperimentStopped
         
         # Save the results to the database if we got results
@@ -68,6 +74,33 @@ def eval_differential_expression_experiment(self, experiment_pk: int, ):
         experiment.state = DifferentialExpressionExperimentState.EMPTY_DATASET
         experiment.save(update_fields=['state'])
         return
+
+    except SoftTimeLimitExceeded as e:
+        # If celery soft time limit is exceeded, sets the experiment as TIMEOUT_EXCEEDED
+        logging.warning(f'DifferentialExpressionExperiment {experiment.pk} has exceeded the soft time limit')
+        logging.exception(e)
+        experiment.state = DifferentialExpressionExperimentState.TIMEOUT_EXCEEDED
+        experiment.save(update_fields=['state'])
+        return
+
+    except ValueError as e:
+        error_msg = str(e)
+        if error_msg == "NO_SAMPLES_IN_COMMON":
+            logging.error(f'No samples in common for DifferentialExpressionExperiment {experiment.pk}')
+            experiment.state = DifferentialExpressionExperimentState.NO_SAMPLES_IN_COMMON
+            experiment.save(update_fields=['state'])
+            return
+        elif error_msg == "NO_FEATURES_FOUND":
+            logging.error(f'No features found after filtering for DifferentialExpressionExperiment {experiment.pk}')
+            experiment.state = DifferentialExpressionExperimentState.NO_FEATURES_FOUND
+            experiment.save(update_fields=['state'])
+            return
+        else:
+            # Handle other ValueError cases
+            logging.error(f'ValueError during evaluation of DifferentialExperimentExperiment {experiment.pk}: {e}')
+            experiment.state = DifferentialExpressionExperimentState.FINISHED_WITH_ERROR
+            experiment.save(update_fields=['state'])
+            raise e
 
     except Exception as e:
         logging.error(f'Error during evaluation of DifferentialExpressionExperiment {experiment.pk}: {e}')

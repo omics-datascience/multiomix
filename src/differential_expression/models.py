@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import math
 
-from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
+from common.constants import PATIENT_ID_COLUMN
 
 class DifferentialExpressionSource(models.Model):
     """
@@ -240,6 +240,13 @@ class DifferentialExpressionExperiment(models.Model):
 
     threshold = models.FloatField(default=0.0001, blank=False, null=False)
 
+    top = models.IntegerField(
+        default=100, 
+        blank=False, 
+        null=False,
+        help_text='Number of significant results to keep (max 1000)'
+    )
+
     # Celery task related fields
     # This is used to track the execution of the task and its state
     execution_time = models.FloatField(default=0.0, blank=True, null=True, help_text='Execution time in seconds')
@@ -321,15 +328,11 @@ class DifferentialExpressionExperiment(models.Model):
     def get_results_dataframe(self):
         """
         Retrieve results as a pandas DataFrame.
-        
-        Returns:
-            pandas.DataFrame: DataFrame with differential expression results
         """
         results = self.results.all()
         if not results.exists():
             return None
             
-        import pandas as pd
         data = []
         for result in results:
             data.append({
@@ -399,4 +402,3 @@ class DifferentialExpressionExperimentResult(models.Model):
         """Check if this gene is significantly differentially expressed."""
         return (self.adj_p_val <= p_threshold and 
                 abs(self.log_fc) >= fc_threshold)
-        

@@ -2,8 +2,8 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
-{% block title %}| Differential expression experiments{% endblock %}
-{% block meta_description %}Perform differential expression analysis to identify genes with significantly different expression levels between conditions. Configure experiments, analyze results, and discover biomarkers for your research.{% endblock %}
+{% block title %}| Differential Expression{% endblock %}
+{% block meta_description %}Perform differential gene expression analysis to identify significantly expressed genes between different conditions. Configure parameters, visualize results, and export comprehensive reports for your research.{% endblock %}
 
 {% block css %}
         {% render_bundle 'differentialExpression' 'css' %}
@@ -17,24 +17,6 @@
         <script>
             const urlDifferentialExpressionList = "{% url 'differential_expression_list' %}"
             const urlDifferentialExpressionSubmit = "{% url 'differential_expression_submit' %}"
-            const downloadFileURL = "{% url 'download_user_file' %}"
-            const urlGetUsersCandidatesLimited = "{% url 'user_candidates_limited_institution' %}"
-            const urlGetInstitutionsNonInExperiment = "{% url 'institution-non-experiments-list' %}"
-            const urlGetUsersNonInExperiment = "{% url 'user-non-experiments-list' %}"
-            const urlShareExperimentToInstitution = "{% url 'share-experiment-to-institution' %}"
-            const urlShareExperimentToUser = "{% url 'share-experiment-to-user' %}"
-            const urlGetSharedInstitution = "{% url 'shared-institution' %}"
-            const urlGetSharedUsers = "{% url 'shared-users' %}"
-            const urlPostSwitchInstitutionPublicView = "{% url 'switch-experiment-public-view' %}"
-            const urlPostRemoveInstitution = "{% url 'remove-institution' %}"
-            const urlPostRemoveUser = "{% url 'remove-user' %}"
-            const urlGetCommonSamples = "{% url 'get_number_samples_in_common' %}"
-            const urlGetCommonSamplesClinical = "{% url 'get_number_samples_in_common_clinical_validation' %}"
-            const urlGetCommonSamplesClinicalSource = "{% url 'get_number_samples_in_common_clinical_validation_source' %}"
-            const urlGetCommonSamplesOneFront = "{% url 'get_number_samples_in_common_one_front' %}"
-            const urlUnlinkClinicalSourceUserFile = "{% url 'unlink_clinical_source_user_file' %}"
-            const maximumNumberOfOpenTabs = Number.parseInt("{{ maximum_number_of_open_tabs }}")
-            const thresholdToConsiderOrdinal = Number.parseInt("{{ threshold_to_consider_ordinal }}")
         </script>
         {% render_bundle 'differentialExpression' 'js' %}
 {% endblock %}

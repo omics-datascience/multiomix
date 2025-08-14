@@ -7,7 +7,6 @@ from differential_expression.models import (
     DifferentialExpressionSource,
     DifferentialExpressionClinicalSource
 )
-from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 
 class DifferentialExpressionSourceSerializer(serializers.ModelSerializer):
@@ -76,10 +75,18 @@ class DifferentialExpressionClinicalSourceSerializer(serializers.ModelSerializer
         try:
             if obj.user_file:
                 return obj.user_file.name
+            elif obj.cgds_dataset and obj.extra_cgds_dataset:
+                # For combined CGDS clinical sources, show both dataset names
+                main_name = str(obj.cgds_dataset)
+                extra_name = str(obj.extra_cgds_dataset)
+                return f"Clinical Combined: {main_name} + {extra_name}"
             elif obj.cgds_dataset:
-                return obj.cgds_dataset.name
+                return str(obj.cgds_dataset)
             return 'No source'
-        except:
+        except Exception as e:
+            # More detailed error logging for debugging
+            import logging
+            logging.error(f"Error getting clinical source name: {e}")
             return 'No source'
     
     def get_attributes_count(self, obj):
@@ -114,7 +121,8 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
     
     class Meta:
         model = DifferentialExpressionExperimentResult
-        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic', 'is_significant']
+        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic', 'is_significant'
+        ]
         read_only_fields = ['id']
     
     def get_is_significant(self, obj):
@@ -140,7 +148,7 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
         model = DifferentialExpressionExperiment
         fields = [
             'id', 'name', 'description', 'user', 'clinical_source', 'mrna_source',
-            'clinical_attribute', 'threshold_percentile', 'threshold', 'state', 'state_display',
+            'clinical_attribute', 'threshold_percentile', 'threshold', 'top', 'state', 'state_display',
             'execution_time', 'created_at', 'updated_at', 'is_public',
             'has_results', 'results_count', 'significant_genes_count'
         ]

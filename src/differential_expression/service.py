@@ -1,17 +1,26 @@
-from TESTS.join_df import mrna_path
 from common.exceptions import EmptyDataset
-from differential_expression.models import DifferentialExpressionExperiment
-import pandas as pd
-import numpy as np
-import logging
 from common.typing import AbortEvent
-    
+from differential_expression.models import DifferentialExpressionExperiment
+import logging
+import warnings
+from itertools import combinations
+
+import numpy as np
+import pandas as pd
+
+# Filter R warnings BEFORE importing rpy2
+warnings.filterwarnings('ignore',
+                       message='Environment variable "XPC_SERVICE_NAME" redefined by R',
+                       category=UserWarning)
+warnings.filterwarnings('ignore',
+                       message='Environment variable "R_SESSION_TMPDIR" redefined by R and overriding existing variable.',
+                       category=UserWarning)
+
 import rpy2.robjects as robjects
+from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import get_conversion, localconverter
 from rpy2.robjects.pandas2ri import converter
-from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
-from itertools import combinations
 
 class DifferentialExpressionService:
     def __init__(self, experiment: DifferentialExpressionExperiment, is_aborted: AbortEvent):
@@ -24,19 +33,29 @@ class DifferentialExpressionService:
         sample_column = 'SAMPLE_ID'
         if sample_column in clinical_df.columns:
             common_samples = sorted(set(mrna_df.columns) & set(clinical_df[sample_column]))
+
+            # Check if there are samples in common
+            if len(common_samples) == 0:
+                from differential_expression.models import DifferentialExpressionExperimentState
+                raise ValueError("NO_SAMPLES_IN_COMMON")
+
             df_RNAseq_filtered = mrna_df[common_samples]
             df_clinical_filtered = clinical_df[clinical_df[sample_column].isin(common_samples)]
             df_clinical_filtered = df_clinical_filtered.set_index(sample_column).reindex(common_samples).reset_index()
         else:
             df_RNAseq_filtered = mrna_df
             df_clinical_filtered = clinical_df
+
+        # Check if we have any features (genes) left after filtering
+        if df_RNAseq_filtered.empty or df_RNAseq_filtered.shape[0] == 0:
+            raise ValueError("NO_FEATURES_FOUND")
             
         try:
             # Import R packages
             limma = importr('limma')  # limma for differential expression
             stats = importr('stats')  # stats for model matrix
             base = importr('base')  # base R functions
-            
+
             # 1. Validation: Ensure the clinical attribute has at least two categories
             # This is necessary because differential expression requires at least two groups to compare.
             unique_values = df_clinical_filtered[self.experiment.clinical_attribute].dropna().unique()
@@ -98,7 +117,7 @@ class DifferentialExpressionService:
             results_df = pandas2ri.rpy2py(results)
             
             # Return top genes sorted by adjusted p-value, keeping gene names as index
-            top_genes = results_df.nsmallest(1000, 'adj.P.Val')
+            top_genes = results_df.nsmallest(self.experiment.top, 'adj.P.Val')
             
             return top_genes
         
@@ -300,6 +319,11 @@ class DataProcessingService:
         # Filter out genes with variance below the threshold
         genes_to_keep = variances > self.threshold
         self.mrna_df = self.mrna_df[genes_to_keep]
+
+        # Check if we still have features after filtering
+        if self.mrna_df.empty or self.mrna_df.shape[0] == 0:
+            raise ValueError("NO_FEATURES_FOUND")
+
         logging.info(f"Filtered genes by variance. Threshold: {self.threshold:.2f}")
         
     

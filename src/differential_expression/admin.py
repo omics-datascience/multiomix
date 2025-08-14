@@ -102,7 +102,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
     
     list_display = (
         'id', 'name', 'user', 'state', 'clinical_attribute', 
-        'threshold_percentile', 'threshold', 'execution_time', 'created_at'
+        'threshold_percentile', 'threshold', 'top', 'execution_time', 'created_at'
     )
     list_filter = (
         'state', 'is_public', 'clinical_attribute', 'created_at'
@@ -122,7 +122,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
             'fields': ('clinical_source', 'mrna_source')
         }),
         ('Analysis Parameters', {
-            'fields': ('clinical_attribute', 'threshold_percentile', 'threshold')
+            'fields': ('clinical_attribute', 'threshold_percentile', 'threshold', 'top')
         }),
         ('Execution Information', {
             'fields': ('state', 'task_id', 'execution_time', 'attempt', 'created_at', 'updated_at'),
