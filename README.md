@@ -15,6 +15,7 @@ This document is focused on the **development** of the system. If you are lookin
 - Node JS >= `20.x` (tested version: `20.x`)
 - [Modulector][modulector] `2.2.0`
 - [BioAPI][bioapi] `1.2.1`
+- R `4.4.2` (requerido para `differential-expression`)
 
 
 ## Installation 
@@ -66,6 +67,7 @@ Every time you want to work with Multiomix, you need to follow the below steps:
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q stats`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q inference`
    1. `python3 -m celery -A multiomics_intermediate worker -l info -Q sync_datasets`
+   1. `python3 -m celery -A multiomics_intermediate worker -l info -Q differential_expression`
    1. If you want to check Task in the GUI you can run [Flower](https://flower.readthedocs.io/en/latest/index.html) `python3 -m celery -A multiomics_intermediate flower`
 
     **NOTE:** maybe in Windows is needed to add `--pool=solo` to the previous commands. Example: `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis --concurrency 1 --pool=solo`
