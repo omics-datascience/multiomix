@@ -338,7 +338,13 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     handleAddTagInputsChange = (name: string, value) => {
         const newTag = this.state.newTag
         newTag[name] = value
-        this.setState({ newTag })
+        console.log(name, value)
+        this.setState(prevState => ({
+            newTag: {
+                ...prevState.newTag,
+                [name]: value,
+            }
+        }))
     }
 
     /**
@@ -668,10 +674,15 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * Adds a Survival data tuple
      */
     addSurvivalFormTuple = () => {
-        const newFile = this.state.newFile
-        const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
-        newFile.survivalColumns.push(newElement)
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: [
+                    ...prevState.newFile.survivalColumns,
+                    { event_column: '', time_column: '' }
+                ],
+            },
+        }))
     }
 
     /**
@@ -679,9 +690,12 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @param idxSurvivalTuple Index in survival tuple
      */
     removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
-        const newFile = this.state.newFile
-        newFile.survivalColumns.splice(idxSurvivalTuple, 1)
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
+            },
+        }))
     }
 
     /**
@@ -691,9 +705,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @param value Value to assign to the specified field
      */
     handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
-        const newFile = this.state.newFile
-        newFile.survivalColumns[idxSurvivalTuple][name] = value
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
+                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
+                ),
+            },
+        }))
     }
 
     /**
