@@ -29,6 +29,9 @@ from user_files.views import get_an_user_file
 
 from .tasks import eval_differential_expression_experiment
 
+from celery.contrib.abortable import AbortableAsyncResult
+from differential_expression.models import DifferentialExpressionExperimentState
+
 
 def create_differential_expression_source(
     source_type: int,
@@ -154,6 +157,8 @@ class DifferentialExpressionSubmit(APIView):
     Endpoint to submit a differential expression experiment.
     """
 
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request: Request):
         """
         Endpoint to submit a differential expression experiment.
@@ -161,7 +166,7 @@ class DifferentialExpressionSubmit(APIView):
         with transaction.atomic():
             # Get basic experiment data
             post_data = getattr(request, 'data', {}) or getattr(request, 'POST', {})
-            
+
             name = post_data.get('name', 'Differential Expression Experiment')
             description = post_data.get('description', '')
 
@@ -242,7 +247,7 @@ class DifferentialExpressionSubmit(APIView):
             # Start the async task
             async_res = eval_differential_expression_experiment.apply_async(
                 (experiment.pk,), queue='differential_expression')
-            
+
             experiment.task_id = async_res.task_id
             experiment.save(update_fields=['task_id'])
 
@@ -259,11 +264,11 @@ class DifferentialExpressionResults(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = ['adj_p_val', 'log_fc', 'p_value', 'ave_expr']
     ordering = ['adj_p_val']  # Default ordering by adjusted p-value
-    
+
     def get_queryset(self):
         experiment_id = self.kwargs.get('pk')
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
-        
+
         # Check permissions
         user = self.request.user
         if not (experiment.is_public or
@@ -271,7 +276,7 @@ class DifferentialExpressionResults(generics.ListAPIView):
                 experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
                 experiment.shared_users.filter(id=user.id).exists()):
             raise ValidationError('You do not have permission to access this experiment.')
-        
+
         return experiment.results.all()
 
 
@@ -285,11 +290,11 @@ class DifferentialExpressionSignificantGenes(generics.ListAPIView):
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['adj_p_val', 'log_fc', 'p_value', 'ave_expr']
     ordering = ['adj_p_val']  # Default ordering by adjusted p-value
-    
+
     def get_queryset(self):
         experiment_id = self.kwargs.get('pk')
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
-        
+
         # Check permissions (same logic as DifferentialExpressionDetail)
         user = self.request.user
         if not (experiment.is_public or
@@ -297,18 +302,74 @@ class DifferentialExpressionSignificantGenes(generics.ListAPIView):
                 experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
                 experiment.shared_users.filter(id=user.id).exists()):
             raise ValidationError('You do not have permission to access this experiment.')
-        
+
         # Get query parameters for filtering
         try:
             p_threshold = float(self.request.query_params.get('p_threshold', 0.05))
             fc_threshold = float(self.request.query_params.get('fc_threshold', 2.0))
         except ValueError as exc:
             raise ValidationError('Invalid threshold values. Must be numeric.') from exc
-        
+
         # Validate thresholds
         if p_threshold < 0 or p_threshold > 1:
             raise ValidationError('p_threshold must be between 0 and 1')
         if fc_threshold < 0:
             raise ValidationError('fc_threshold must be positive')
-        
+
         return experiment.get_significant_genes(p_threshold, fc_threshold)
+
+
+class DifferentialExpressionStop(APIView):
+    """
+    Endpoint to stop a differential expression experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request):
+        experiment_id = request.GET.get('experimentId')
+        if not experiment_id:
+            raise ValidationError('experimentId is required.')
+
+        try:
+            experiment_id = int(experiment_id)
+        except (ValueError, TypeError) as exc:
+            raise ValidationError('Invalid experimentId') from exc
+
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
+
+        user = request.user
+        if not (experiment.is_public or
+                experiment.user == user or
+                experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
+                experiment.shared_users.filter(id=user.id).exists()):
+            raise ValidationError('You do not have permission to access this experiment.')
+
+        # Validaciones de estado y task
+        if not experiment.task_id:
+            return Response({'ok': False, 'detail': 'The experiment does not have an associated task.'})
+
+        # Si ya no está en curso, no hay nada que detener
+        if experiment.state in [
+            DifferentialExpressionExperimentState.COMPLETED,
+            DifferentialExpressionExperimentState.STOPPED,
+            DifferentialExpressionExperimentState.FINISHED_WITH_ERROR,
+            DifferentialExpressionExperimentState.TIMEOUT_EXCEEDED,
+            DifferentialExpressionExperimentState.REACHED_ATTEMPTS_LIMIT,
+            DifferentialExpressionExperimentState.EMPTY_DATASET,
+            DifferentialExpressionExperimentState.NO_SAMPLES_IN_COMMON,
+            DifferentialExpressionExperimentState.NO_FEATURES_FOUND,
+        ]:
+            return Response({'ok': False, 'detail': f'The experiment is not running. Status: {experiment.state}'})
+
+        # Intentar abortar la tarea AbortableTask
+        try:
+            async_res = AbortableAsyncResult(experiment.task_id)
+            aborted = async_res.abort()  # Señala a la tarea que debe abortar (self.is_aborted() == True)
+        except Exception as e:
+            return Response({'ok': False, 'detail': f'The task could not be stopped: {e}'})
+
+        # Marcar el experimento como STOPPING; la tarea lo marcará como STOPPED en el finally
+        experiment.state = DifferentialExpressionExperimentState.STOPPING
+        experiment.save(update_fields=['state'])
+
+        return Response({'ok': bool(aborted)})
