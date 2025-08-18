@@ -330,7 +330,6 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @returns True if everything is OK, false otherwise
      */
     datasetIsValid (dataset: Nullable<DjangoCGDSDataset>): boolean {
-        console.log(dataset)
         return dataset === null || (
             dataset !== null &&
             this.datasetFieldsAreValid(dataset)

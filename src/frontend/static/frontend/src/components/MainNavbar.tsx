@@ -240,7 +240,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                             <Dropdown.Menu>
                                 {/* User's Datasets panel */}
                                 <Dropdown.Item
-                                    text='Multiomix'
+                                    text='My datasets'
                                     icon='database'
                                     as='a' href={urlDatasets}
                                     active={props.activeItem === 'files'}

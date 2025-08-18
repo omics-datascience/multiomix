@@ -2,7 +2,6 @@ import React from 'react'
 import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
-import { NameOfCGDSDataset } from '../../../../utils/interfaces'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
 
 /** ManualForm's props. */
@@ -12,8 +11,6 @@ interface ManualFormProps {
     checkedIgnoreProposedAlias: boolean,
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
-    removeSurvivalFormTuple: (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => void,
-    handleSurvivalFormDatasetChanges: (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void,
     cleanForm: () => void,
     isFormEmpty: () => boolean,
     handleChangeMoleculeSelected: (value: BiomarkerType) => void,

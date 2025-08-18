@@ -55,10 +55,17 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
      * @param value New value.
      */
     const handleChangesLabel = (idx: number, name: string, value: any) => {
+        let valueCheck = value
+
+        // This validation is needed because if the user slides the default value, the value is #NanNanNan.
+        if (name === 'color' && !/^#(?:[0-9A-Fa-f]{3}){1,2}$/.test(String(value))) {
+            valueCheck = '#ffffff'
+        }
+
         const labels = [...newClusterLabelsSet.labels]
         labels[idx] = {
             ...labels[idx],
-            [name]: value
+            [name]: valueCheck
         }
 
         setNewClusterLabelsSet({
