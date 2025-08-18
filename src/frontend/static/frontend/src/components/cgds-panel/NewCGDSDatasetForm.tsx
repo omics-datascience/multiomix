@@ -40,26 +40,6 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
         (name, value) => props.handleFormDatasetChanges(props.datasetName, name, value)
     )
 
-    /*
-     * Generates a MongoDB collection name using the study name, a shortened description,
-     * dataset type, and version, ensuring a clean and formatted output.
-     */
-    const generateMongoCollectionName = (): string => {
-        const name = props.newCGDSStudy.name.split(' ')[0]
-            .replace(/[(),]/g, '') || ''
-        const description = props.newCGDSStudy.description
-            .replace(/[(),]/g, '')
-            .trim()
-            .replace(/\s+/g, ' ')
-            .split(/\s+/)
-            .slice(0, 3)
-            .join('_') || ''
-        const datasetType = props.datasetName || ''
-        const version = props.newCGDSStudy.version || 1
-
-        return `${name}_${description}_${datasetType}_version_${version}`.replace(/^_+|_+$/g, '')
-    }
-
     const formContent = (props.newCGDSDataset !== null)
         ? (
             <div>
@@ -133,7 +113,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     fluid
                     name='mongo_collection_name'
                     className={`margin-top-2 ${props.showSurvivalTuplesForm ? 'margin-bottom-5' : ''}`}
-                    value={generateMongoCollectionName()}
+                    value={props.newCGDSDataset.mongo_collection_name}
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}

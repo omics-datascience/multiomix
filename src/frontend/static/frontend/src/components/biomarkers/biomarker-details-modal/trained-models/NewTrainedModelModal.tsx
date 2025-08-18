@@ -145,7 +145,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      * @param lookForOptimalNClusters New value.
      */
     const handleChangeOptimalNClusters = (lookForOptimalNClusters: boolean) => {
-        const newParameters: ClusteringParameters = { ...form.modelParameters.clusteringParameters, lookForOptimalNClusters }
+        const newParameters: ClusteringParameters = { ...form.modelParameters.clusteringParameters, lookForOptimalNClusters, nClusters: lookForOptimalNClusters ? 2 : form.modelParameters.clusteringParameters.nClusters }
         setForm({ ...form, modelParameters: { ...form.modelParameters, clusteringParameters: newParameters } })
     }
 
