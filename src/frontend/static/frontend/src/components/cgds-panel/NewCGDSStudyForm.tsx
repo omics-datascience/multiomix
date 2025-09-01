@@ -21,7 +21,6 @@ interface NewCGDSStudyFormProps {
     removeCGDSDataset: (datasetName: NameOfCGDSDataset) => void,
     canAddCGDSStudy: () => boolean,
     addOrEditStudy: () => void,
-    isFormEmpty: () => boolean,
     cleanForm: () => void
 }
 
@@ -32,7 +31,16 @@ interface NewCGDSStudyFormProps {
  */
 export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
     const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges)
-
+    const isDisabled = props.newCGDSStudy.name.trim().length === 0 &&
+                    props.newCGDSStudy.description.trim().length === 0 &&
+                    props.newCGDSStudy.url.trim().length === 0 &&
+                    props.newCGDSStudy.url_study_info.trim().length === 0 &&
+                    props.newCGDSStudy.mrna_dataset === null &&
+                    props.newCGDSStudy.mirna_dataset === null &&
+                    props.newCGDSStudy.cna_dataset === null &&
+                    props.newCGDSStudy.methylation_dataset === null &&
+                    props.newCGDSStudy.clinical_patient_dataset === null &&
+                    props.newCGDSStudy.clinical_sample_dataset === null
     return (
         <Segment>
             <Header textAlign='center'>
@@ -207,7 +215,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 className='margin-top-2'
                 fluid
                 onClick={props.cleanForm}
-                disabled={props.isFormEmpty()}
+                disabled={isDisabled}
             />
         </Segment>
     )

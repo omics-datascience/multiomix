@@ -4,7 +4,7 @@ import { CurrentUserContext } from '../Base'
 import { getDjangoHeader } from '../../utils/util_functions'
 import ky from 'ky'
 
-declare const urlPostSwitchInstitutionPublicView
+declare const urlPostSwitchPublicView
 
 interface Props {
     publicButtonEntity: { id: number, user: { id: number }, is_public: boolean }
@@ -34,7 +34,7 @@ export const SwitchPublicButton = (props: Props) => {
             }
         }
 
-        ky.post(urlPostSwitchInstitutionPublicView, settings).then((response) => {
+        ky.post(urlPostSwitchPublicView, settings).then((response) => {
             response.json().then(() => {
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
