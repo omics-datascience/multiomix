@@ -338,7 +338,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     handleAddTagInputsChange = (name: string, value) => {
         const newTag = this.state.newTag
         newTag[name] = value
-        console.log(name, value)
         this.setState(prevState => ({
             newTag: {
                 ...prevState.newTag,
