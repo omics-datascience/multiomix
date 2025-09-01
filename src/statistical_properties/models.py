@@ -56,8 +56,16 @@ class SourceDataStatisticalProperties(models.Model):
     gem_mean = models.FloatField()
     gene_standard_deviation = models.FloatField()
     gem_standard_deviation = models.FloatField()
-    gene_normality = models.OneToOneField(NormalityTest, on_delete=models.CASCADE, related_name='gene_normality')
-    gem_normality = models.OneToOneField(NormalityTest, on_delete=models.CASCADE, related_name='gem_normality')
+    gene_normality = models.OneToOneField(
+        NormalityTest,
+        on_delete=models.CASCADE,
+        related_name='source_data_statistical_properties_as_gene_normality'
+    )
+    gem_normality = models.OneToOneField(
+        NormalityTest,
+        on_delete=models.CASCADE,
+        related_name='source_data_statistical_properties_as_gem_normality'
+    )
     heteroscedasticity_breusch_pagan = models.OneToOneField(BreuschPaganTest, on_delete=models.CASCADE)
     homoscedasticity_goldfeld_quandt = models.OneToOneField(GoldfeldQuandtTest, on_delete=models.CASCADE)
     linearity = models.OneToOneField(LinearityTest, on_delete=models.CASCADE, blank=True, null=True)
@@ -111,8 +119,13 @@ class StatisticalValidationSourceResult(models.Model):
     cox_log_likelihood = models.FloatField(null=True, blank=True)  # Log likelihood from Cox Regression (clustering)
     r2_score = models.FloatField(null=True, blank=True)  # R2 from regression models (SVM/RF)
     # Source
-    source = models.ForeignKey('api_service.ExperimentSource', on_delete=models.CASCADE, null=True, blank=True,
-                               related_name='statistical_validations_result')
+    source = models.ForeignKey(
+        'api_service.ExperimentSource',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='statistical_validation_source_results'
+    )
 
     @property
     def number_of_rows(self) -> int:
