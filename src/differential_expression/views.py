@@ -427,6 +427,7 @@ class GetCommonSamplesDifferentialExperiment(APIView):
                     FileType.CLINICAL,
                     request.user
                 )
+                print(samples_list_mrna, samples_list_clinical)
                 intersection = get_intersection(samples_list_mrna, samples_list_clinical)
                 # Gets intersection
 
@@ -539,6 +540,9 @@ def get_samples_list(
 
             # Gets the corresponding Study's Dataset
             cgds_dataset = get_cgds_dataset(cgds_study, file_type)
+
+            list_of_samples = cgds_dataset.get_column_names()
+
         except CGDSDataset.DoesNotExist:
             response = {
                 'status': ResponseStatus(
