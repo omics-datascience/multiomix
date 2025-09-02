@@ -17,6 +17,9 @@
         <script>
             const urlDifferentialExpressionList = "{% url 'differential_expression_list' %}"
             const urlDifferentialExpressionSubmit = "{% url 'differential_expression_submit' %}"
+            const urlGetCommonSamplesDiferentialExperiment = "{% url 'get_common_samples_differential_experiment' %}"
+            const urlGetCommonSamplesOneFrontDiferentialExperiment = "{% url 'get_common_samples_one_front_differential_experiment' %}"
+            const urlGetClinicalAttributes = "{% url 'user_file_headers' %}"
         </script>
         {% render_bundle 'differentialExpression' 'js' %}
 {% endblock %}

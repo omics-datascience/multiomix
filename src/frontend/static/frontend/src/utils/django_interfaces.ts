@@ -359,6 +359,16 @@ interface DjangoSamplesInCommonResultJSON {
  * JSON structure of the service that returns the number of samples in common between
  * two datasets (UserFiles or CGDSDataset)
  */
+interface DjangoSamplesInCommonResultMrnaClinicalJSON {
+    number_samples_in_common: number,
+    number_samples_mrna: number,
+    number_samples_clinical: number
+}
+
+/**
+ * JSON structure of the service that returns the number of samples in common between
+ * two datasets (UserFiles or CGDSDataset)
+ */
 interface DjangoSamplesInCommonOneFrontResultJSON {
     number_samples_in_common: number,
     number_samples_backend: number
@@ -558,6 +568,13 @@ interface DjangoCommonResponse<INTERNAL_CODE_STATUS = null> {
 /**
  * Django samples in common service Response
  */
+interface DjangoNumberSamplesInCommonMrnaClinicalResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
+    data: DjangoSamplesInCommonResultMrnaClinicalJSON
+}
+
+/**
+ * Django samples in common service Response
+ */
 interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
     data: DjangoSamplesInCommonResultJSON
 }
@@ -719,5 +736,7 @@ export {
     DjangoInstitutionUser,
     DjangoInstitutionUserLimited,
     InstitutionUser,
-    DjangoUserSimple
+    DjangoUserSimple,
+    DjangoSamplesInCommonResultMrnaClinicalJSON,
+    DjangoNumberSamplesInCommonMrnaClinicalResult
 }

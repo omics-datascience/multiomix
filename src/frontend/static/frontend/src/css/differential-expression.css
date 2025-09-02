@@ -8,3 +8,11 @@
 .diff--side--bar--container--item--margin {
     margin: 0.5rem 0;
 }
+.diff--side--container--bar--slider{
+    padding: 1rem 0;
+}
+.diff--side--bar--slider input{
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

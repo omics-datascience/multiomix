@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 from django.db.models import Q
 
@@ -9,7 +11,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api_service.enums import SourceType
+from api_service.enums import SourceType, CommonSamplesStatusErrorCode
 from api_service.utils import get_cgds_dataset
 from common.pagination import StandardResultsSetPagination
 from datasets_synchronization.models import CGDSStudy
@@ -31,6 +33,11 @@ from .tasks import eval_differential_expression_experiment
 
 from celery.contrib.abortable import AbortableAsyncResult
 from differential_expression.models import DifferentialExpressionExperimentState
+from common.functions import get_enum_from_value, get_intersection, encode_json_response_status
+from common.response import ResponseStatus
+from common.enums import ResponseCode
+from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
+from datasets_synchronization.models import CGDSDataset
 
 
 def create_differential_expression_source(
@@ -172,12 +179,15 @@ class DifferentialExpressionSubmit(APIView):
 
             # Clinical source
             clinical_source_type = post_data.get('clinicalType')
+            print(clinical_source_type)
+
             if clinical_source_type:
                 clinical_source_type = int(clinical_source_type)
                 clinical_source, clinical_aux = create_differential_expression_source(
                     clinical_source_type, request, FileType.CLINICAL, 'clinical')
                 # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
                 clinical_source = clinical_aux if clinical_aux is not None else clinical_source
+                print(clinical_source, clinical_aux)
             else:
                 clinical_source = None
 
@@ -373,3 +383,169 @@ class DifferentialExpressionStop(APIView):
         experiment.save(update_fields=['state'])
 
         return Response({'ok': bool(aborted)})
+class GetCommonSamplesDifferentialExperiment(APIView):
+    """Gets the number of in common samples between two datasets"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request):
+        mrna_source_id = request.GET.get('mRNASourceId')
+        mrna_source_type = request.GET.get('mRNASourceType')
+        clinical_source_id = request.GET.get('clinicalSourceId')
+        clinical_source_type = request.GET.get('clinicalSourceType')
+        if None in [mrna_source_id, mrna_source_type, clinical_source_id,
+                    clinical_source_type]:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params',
+                    internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+                ),
+            }
+        else:
+            # Cast parameters
+            mrna_source_id = int(mrna_source_id)
+            mrna_source_type = get_enum_from_value(
+                int(mrna_source_type), SourceType)
+
+            clinical_source_id = int(clinical_source_id)
+            clinical_source_type = get_enum_from_value(int(clinical_source_type), SourceType)
+
+            # Gets df
+            samples_list_mrna, response = get_samples_list(
+                mrna_source_id,
+                mrna_source_type,
+                FileType.MRNA,
+                request.user
+            )
+
+            # Response will be != None if an error occurred
+            if response is None:
+                samples_list_clinical, response = get_samples_list(
+                    clinical_source_id,
+                    clinical_source_type,
+                    FileType.CLINICAL,
+                    request.user
+                )
+                intersection = get_intersection(samples_list_mrna, samples_list_clinical)
+                # Gets intersection
+
+                if response is None:
+                    response = {
+                        'status': ResponseStatus(ResponseCode.SUCCESS),
+                        'data': {
+                            'number_samples_mrna': len(samples_list_mrna) if samples_list_mrna is not None else 0,
+                            'number_samples_clinical': len(
+                                samples_list_clinical) if samples_list_clinical is not None else 0,
+                            'number_samples_in_common': intersection.size
+                        }
+                    }
+
+        # Formats to JSON the ResponseStatus object
+        return encode_json_response_status(response)
+
+class GetCommonSamplesDifferentialOneFrontExperiment(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    """Gets the number of in common samples between two datasets, one in the backend and other in the frontend"""
+
+    def post(self, request: Request):
+        post_data = getattr(request, 'data', {}) or getattr(request, 'POST', {})
+        headers_in_front: Optional[List[str]] = post_data.get('headersColumnsNames')
+        other_source_id = post_data.get('otherSourceId')
+        other_source_type = post_data.get('otherSourceType')
+        other_source_file_type = post_data.get('otherSourceFileType')
+
+        if headers_in_front is None or other_source_id is None or other_source_type is None or other_source_file_type is None:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message='Invalid request params',
+                    internal_code=CommonSamplesStatusErrorCode.INVALID_PARAMS
+                ),
+            }
+        else:
+            # Cast parameters
+            other_source_id = int(other_source_id)
+            other_source_type = get_enum_from_value(
+                int(other_source_type), SourceType)
+
+            # Gets df
+            samples_list_1, response = get_samples_list(
+                other_source_id,
+                other_source_type,
+                other_source_file_type,
+                request.user
+            )
+
+            # Response will be != None if an error occurred
+            if response is None:
+                intersection: np.ndarray = get_intersection(
+                    samples_list_1, headers_in_front)
+                response = {
+                    'status': ResponseStatus(ResponseCode.SUCCESS),
+                    'data': {
+                        'number_samples_backend': len(samples_list_1) if samples_list_1 else 0,
+                        'number_samples_in_common': intersection.size
+                    }
+                }
+
+        # Formats to JSON the ResponseStatus object
+        return encode_json_response_status(response)
+
+def get_samples_list(
+        id_source: int,
+        type_source: Optional[SourceType],
+        file_type: Optional[FileType],
+        user
+) -> Tuple[Optional[List[str]], Optional[Dict]]:
+    """
+    Gets a DataFrame from the file retrieve from DB or MongoDB with an id and SourceType.
+    @param id_source: ID of the UserFile/CGDSDataset to retrieve.
+    @param type_source: Source type to check if it's a UserFile or a CGDSDataset.
+    @param file_type: FileType (mRNA, miRNA, etc.) to get the corresponding CGDSDataset.
+    @param user: Current logged user to retrieve only his datasets.
+    @return: A DataFrame (if corresponds) and a Response dict (the dataset doesn't exist).
+    """
+    list_of_samples = None
+    response = None
+    if type_source is None:
+        response = {
+            'status': ResponseStatus(
+                ResponseCode.ERROR,
+                message=f'The source type {type_source} does not exist',
+                internal_code=CommonSamplesStatusErrorCode.SOURCE_TYPE_DOES_NOT_EXISTS
+            ),
+        }
+    elif type_source == SourceType.UPLOADED_DATASETS:
+        try:
+            user_file = get_an_user_file(user=user, user_file_pk=id_source)
+            print(user_file)
+            if file_type == FileType.CLINICAL:
+                list_of_samples = user_file.get_first_column_of_all_rows()
+            else:
+                list_of_samples = user_file.get_column_names()
+        except UserFile.DoesNotExist:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message=f'The UserFile with id = {id_source} does not exist',
+                    internal_code=CommonSamplesStatusErrorCode.DATASET_DOES_NOT_EXISTS
+                ),
+            }
+    elif type_source == SourceType.CGDS:
+        try:
+            # Gets the CGDS Study
+            cgds_study = CGDSStudy.objects.get(pk=id_source)
+
+            # Gets the corresponding Study's Dataset
+            cgds_dataset = get_cgds_dataset(cgds_study, file_type)
+        except CGDSDataset.DoesNotExist:
+            response = {
+                'status': ResponseStatus(
+                    ResponseCode.ERROR,
+                    message=f'The CGDS dataset with id = {id_source} does not exist',
+                    internal_code=CommonSamplesStatusErrorCode.DATASET_DOES_NOT_EXISTS
+                ),
+            }
+
+    return list_of_samples, response

@@ -1,14 +1,23 @@
-import React, { useState } from 'react'
-import { Form, Header, Icon, Input, Label, Segment, TextArea } from 'semantic-ui-react'
+import React, { useRef, useState } from 'react'
+import { Button, Form, Header, Icon, Label, PopupContentProps, Segment, SemanticShorthandItem } from 'semantic-ui-react'
 import { SourceForm } from '../pipeline/SourceForm'
 import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
-import { FileType, Source, SourceType } from '../../utils/interfaces'
-import { cleanRef, getDefaultSource, getFilenameFromSource } from '../../utils/util_functions'
-import { DjangoCGDSStudy, DjangoUserFile } from '../../utils/django_interfaces'
+import { FileType, KySearchParams, Nullable, Source, SourceType } from '../../utils/interfaces'
+import { cleanRef, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns } from '../../utils/util_functions'
+import { DjangoCGDSStudy, DjangoNumberSamplesInCommonMrnaClinicalResult, DjangoNumberSamplesInCommonOneFrontResult, DjangoResponseCode, DjangoUserFile } from '../../utils/django_interfaces'
+import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import ky from 'ky'
+import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
+import { intersection } from 'lodash'
+import { DifferentialExpressionInputClinicalAttribute } from './DifferentialExpressionInputClinicalAttribute'
 
-interface IDifferentialExpressionForm extends IDifferentialExpressionFormData {
-    isEditing: boolean
-}
+// Define the possible field names for number of samples
+type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesClinical'
+
+declare const urlDifferentialExpressionSubmit: string
+declare const urlGetCommonSamplesDiferentialExperiment: string
+declare const urlGetCommonSamplesOneFrontDiferentialExperiment: string
+declare const urlGetClinicalAttributes: string
 
 /** Available types of Sources for a DifferentialExpressionForm. */
 type SourceStateDifferentialExpression = 'clinicalSource' | 'mRNASource'
@@ -23,9 +32,23 @@ interface IDifferentialExpressionFormData {
     differentialExpressionDescription: string,
     /** Differential Expression description. */
     differentialExpressionName: string,
-    /** Percentile threshold. */
-    percentileThreshold: number,
+    /** Umbral de Percentil para el filtrado de genes de baja expresión. */
+    thresholdPercentile: number,
+    /** Umbral de varianza para el filtrado de genes. */
+    thresholdStd: number
+    /** top */
+    top: number,
 
+    numberOfSamplesMRNA: number,
+    numberOfSamplesClinical: number,
+    numberOfSamplesInCommon: number,
+    gettingCommonSamples: boolean,
+    clinicalAttribute: string,
+}
+interface IDifferentialExpressionForm extends IDifferentialExpressionFormData {
+    isEditing: boolean,
+    isLoading: boolean,
+    optionsClinicalAttributes: string[],
 }
 const cleanForm: IDifferentialExpressionForm = {
     mRNASource: getDefaultSource(),
@@ -33,11 +56,21 @@ const cleanForm: IDifferentialExpressionForm = {
     isEditing: false,
     differentialExpressionDescription: '',
     differentialExpressionName: '',
-    percentileThreshold: 0.15,
+    clinicalAttribute: '',
+    thresholdPercentile: 0.15,
+    thresholdStd: 0.0001,
+    top: 100,
+    isLoading: false,
+    numberOfSamplesMRNA: 0,
+    numberOfSamplesClinical: 0,
+    numberOfSamplesInCommon: 0,
+    gettingCommonSamples: false,
+    optionsClinicalAttributes: [],
 }
 
 export const DifferentialExpressionForm = () => {
-    const [form, setForm] = useState<IDifferentialExpressionForm>(cleanForm);
+    const [form, setForm] = useState<IDifferentialExpressionForm>(cleanForm)
+    const abortController = useRef(new AbortController())
 
     /**
      * Change the source state to submit a pipeline
@@ -54,15 +87,11 @@ export const DifferentialExpressionForm = () => {
         source.selectedExistingFile = null
         source.CGDSStudy = null
         cleanRef(source.newUploadedFileRef)
-        console.log(source)
-        console.log('---')
         // After update state
         setForm(prevState => ({
             ...prevState,
             [sourceStateName]: source,
         }))
-        console.log(form)
-        console.log('---')
 
         updateSourceFilenamesAndCommonSamples()
     }
@@ -103,6 +132,30 @@ export const DifferentialExpressionForm = () => {
         updateSourceFilenamesAndCommonSamples()
     }
 
+    /**
+     * function to handle the update de select clinical attribute.
+     */
+    const updateSelectClinicalAttribute = () => {
+        if (form.clinicalSource.newUploadedFileRef.current && form.clinicalSource.selectedExistingFile === null) {
+            getInputFileCSVColumns(form.clinicalSource.newUploadedFileRef.current.files[0]).then((clinicalHeadersColumnsNames) => {
+                setForm(prevState => ({ ...prevState, optionsClinicalAttributes: clinicalHeadersColumnsNames }))
+            })
+        } else if (form.clinicalSource.selectedExistingFile?.id || form.clinicalSource.CGDSStudy?.id) {
+            const idToSearch = form.clinicalSource.selectedExistingFile?.id ?? form.clinicalSource.CGDSStudy?.id
+            const myHeaders = getDjangoHeader()
+            ky.get(urlGetClinicalAttributes + `${idToSearch}/`, { timeout: 60000, headers: myHeaders, signal: abortController.current.signal }).then((response) => {
+                response.json().then((clinicalAttributes: string[]) => {
+                    setForm(prevState => ({ ...prevState, optionsClinicalAttributes: clinicalAttributes }))
+                }).catch((err) => {
+                    console.error('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                if (!abortController.current.signal.aborted) {
+                    console.error('Error getting clinical attributes', err)
+                }
+            })
+        }
+    }
 
     /**
      * Handles file input changes to set data to show in form
@@ -122,6 +175,7 @@ export const DifferentialExpressionForm = () => {
             },
 
         }))
+        updateSelectClinicalAttribute()
     }
 
     /**
@@ -130,122 +184,518 @@ export const DifferentialExpressionForm = () => {
      */
     const updateSourceFilenamesAndCommonSamples = () => {
         updateSourceFilenames()
+        checkCommonSamples()
     }
 
-
     /**
- * Callback when a new file is selected in the uncontrolled component
- * (input type=file)
- */
-    const selectNewFile = () => { updateSourceFilenamesAndCommonSamples() }
+     * Callback when a new file is selected in the uncontrolled component
+     * (input type=file)
+     */
+    const selectNewFile = (e:any) => { 
+        console.log(e)
+        updateSourceFilenamesAndCommonSamples() }
 
     /**
      * change name or description of manual form
      * @param value new value for input form
      * @param name type of input to change
      */
-    const handleChangeForm = (value: string | number, name: 'differentialExpressionName' | 'differentialExpressionDescription' | 'coefficientThreshold') => {
+    const handleChangeForm = (value: string | number, name: keyof IDifferentialExpressionFormData) => {
         setForm(prevState => ({
             ...prevState,
             [name]: value,
         }))
     }
 
+    /**
+     * Function to convert a number to scientific notation
+     * @param value Number to convert
+     * @param sigfigs Significant figures to use in the conversion
+     * @returns String in scientific notation
+     */
+    function toScientific (value: string, sigfigs?: number): string {
+        const num = Number(String(value).trim().replace(',', '.'))
+
+        if (!Number.isFinite(num)) {
+            throw new Error('Número inválido')
+        }
+
+        // toExponential(n) usa n dígitos después del punto ⇒ sigfigs - 1
+        return sigfigs && sigfigs > 0
+            ? num.toExponential(sigfigs - 1)
+            : num.toExponential()
+    }
+
+    const handleSubmit = () => {
+        const myHeaders = getDjangoHeader()
+        const body = {
+            name: form.differentialExpressionName,
+            description: form.differentialExpressionDescription,
+            clinicalType: form.clinicalSource.type,
+            mRNAType: form.mRNASource.type,
+            clinicalAttribute: form.clinicalAttribute,
+            thresholdPercentile: form.thresholdPercentile,
+            threshold: form.thresholdStd,
+            top: form.top,
+        }
+        ky.post(urlDifferentialExpressionSubmit, { headers: myHeaders, json: body }).then((response) => {
+            response.json().then(() => {
+                console.log(response)
+            }).catch((err) => {
+                console.error('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error getting users ->', err)
+        })
+    }
+
+    /**
+     * Gets the id of the source hosted in backend to send to the service
+     * of number of samples in common
+     * @param source Source to get its id
+     * @returns Id of the source or null if it's not been selected yet
+     */
+    const getIdInBackend = (source: Source): Nullable<number> => {
+        if (source.type === SourceType.UPLOADED_DATASETS && source.selectedExistingFile !== null) {
+            return source.selectedExistingFile.id ?? null
+        }
+
+        if (source.type === SourceType.CGDS && source.CGDSStudy !== null) {
+            return source.CGDSStudy.id ?? null
+        }
+
+        return null
+    }
+
+    /**
+     * General method to avoid duplicated code when the reading
+     * of a loaded user's file fails
+     * @param event Event of error
+     */
+    const errorReadingFileInInput = (event) => {
+        resetAllNumberOfSamples()
+        console.log('Error reading user\'s file')
+        console.log(event.target.error.name)
+    }
+
+    /**
+     * Gets the number of samples in common between both selected datasets
+     * one in frontend, other in backend
+     * @param mRNASourceIsInBackend Flag to know which dataset is in frontend and backend
+     */
+    const checkCommonSamplesOneFrontOneBack = (mRNASourceIsInBackend: boolean) => {
+        let sourceInFront: Source
+        let sourceFrontNumberOfSampleName: NumberOfSamplesFields, sourceBackNumberOfSampleName: NumberOfSamplesFields
+        let otherSourceId: number, otherSourceType: Nullable<SourceType>
+        let otherSourceFileType: FileType
+        const mRNASource = form.mRNASource
+        const clinicalSource = form.clinicalSource
+
+        if (mRNASourceIsInBackend) {
+            // If mRNA is in backend, GEM is in frontend
+            const idInBackend = getIdInBackend(mRNASource)
+
+            if (idInBackend === null) {
+                return
+            }
+
+            sourceInFront = clinicalSource
+            sourceFrontNumberOfSampleName = 'numberOfSamplesClinical'
+            sourceBackNumberOfSampleName = 'numberOfSamplesMRNA'
+            otherSourceId = idInBackend
+            otherSourceType = mRNASource.type
+            otherSourceFileType = FileType.CLINICAL
+        } else {
+            const idInBackend = getIdInBackend(clinicalSource)
+
+            if (idInBackend === null) {
+                return
+            }
+
+            sourceInFront = mRNASource
+            sourceFrontNumberOfSampleName = 'numberOfSamplesMRNA'
+            sourceBackNumberOfSampleName = 'numberOfSamplesClinical'
+            otherSourceId = idInBackend
+            otherSourceType = clinicalSource.type
+            otherSourceFileType = FileType.MRNA
+        }
+
+        // We need both datasets!
+        const sourceCurrentRef = sourceInFront.newUploadedFileRef.current
+
+        if (!sourceCurrentRef || sourceCurrentRef.files.length === 0) {
+            resetAllNumberOfSamples()
+            return
+        }
+
+        const fileSizeInMB = getFileSizeInMB(sourceInFront.newUploadedFileRef.current.files[0].size)
+
+        if (fileSizeInMB < MAX_FILE_SIZE_IN_MB_WARN) {
+            const file = sourceInFront.newUploadedFileRef.current.files[0]
+            getInputFileCSVColumns(file).then((headersColumnsNames) => {
+                // Sets the Request's Headers
+                const myHeaders = getDjangoHeader()
+
+                // Sends an array of headers to compare in server
+                const jsonData = {
+                    headersColumnsNames,
+                    otherSourceId,
+                    otherSourceType,
+                    otherSourceFileType
+                }
+                setForm(prevState => ({ ...prevState, gettingCommonSamples: true }))
+                ky.post(urlGetCommonSamplesOneFrontDiferentialExperiment, { json: jsonData, headers: myHeaders }).then((response) => {
+                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonOneFrontResult) => {
+                        if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                            // For front Source subtracts 1 to not have in count the first column of the file
+                            setForm(prevState => ({
+                                ...prevState,
+                                gettingCommonSamples: false,
+                                [sourceFrontNumberOfSampleName]: Math.max(headersColumnsNames.length - 1, 0),
+                                [sourceBackNumberOfSampleName]: jsonResponse.data.number_samples_backend,
+                                numberOfSamplesInCommon: jsonResponse.data.number_samples_in_common
+                            }))
+                        }
+                    }).catch((err) => {
+                        console.error('Error parsing JSON ->', err)
+                    })
+                }).catch((err) => {
+                    setForm(prevState => ({ ...prevState, gettingCommonSamples: false }))
+                    console.error('Error getting user experiments', err)
+                })
+            }).catch(errorReadingFileInInput)
+        }
+    }
+
+    /**
+     * Gets the number of samples in common between both selected datasets
+     * hosted in backend
+     */
+    const checkCommonSamplesInBackend = () => {
+        const mRNASourceId = getIdInBackend(form.mRNASource)
+        const clinicalSourceId = getIdInBackend(form.clinicalSource)
+
+        if (mRNASourceId !== null && clinicalSourceId !== null) {
+            const searchParams = {
+                mRNASourceId,
+                mRNASourceType: form.mRNASource.type,
+                clinicalSourceId,
+                clinicalSourceType: form.clinicalSource.type,
+            }
+            setForm(prevState => ({ ...prevState, gettingCommonSamples: true }))
+
+            ky.get(urlGetCommonSamplesDiferentialExperiment, { signal: abortController.current.signal, searchParams: searchParams as KySearchParams }).then((response) => {
+                setForm(prevState => ({
+                    ...prevState,
+                    gettingCommonSamples: false
+                }))
+                response.json().then((jsonResponse: DjangoNumberSamplesInCommonMrnaClinicalResult) => {
+                    if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
+                        setForm(prevState => ({
+                            ...prevState,
+                            numberOfSamplesMRNA: jsonResponse.data.number_samples_mrna,
+                            numberOfSamplesClinical: jsonResponse.data.number_samples_clinical,
+                            numberOfSamplesInCommon: jsonResponse.data.number_samples_in_common
+                        }))
+                    }
+                }).catch((err) => {
+                    console.error('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                if (!abortController.current.signal.aborted) {
+                    setForm(prevState => ({
+                        ...prevState,
+                        gettingCommonSamples: false
+                    }))
+                }
+
+                console.error('Error getting user experiments', err)
+            })
+        }
+    }
+
+    /**
+     * Check if a Source is hosted in the backend
+     * @param source Source to check
+     * @returns True if the Source is hosted in the backend. False otherwise
+     */
+    const isDatasetInBackend = (source: Source): boolean => {
+        return source.type === SourceType.UPLOADED_DATASETS || source.type === SourceType.CGDS
+    }
+
+    /**
+     * Resets all the number of samples
+     */
+    const resetAllNumberOfSamples = () => {
+        setForm(prevState => ({
+            ...prevState,
+            numberOfSamplesMRNA: 0,
+            numberOfSamplesClinical: 0,
+            numberOfSamplesInCommon: 0
+        })
+        )
+    }
+
+    /**
+     * Checks if there are common samples between two selected sources
+     * to show in the new experiment form
+     */
+    const checkCommonSamples = () => {
+        // It needs both sources!
+        if (form.mRNASource.type === SourceType.NONE || form.clinicalSource.type === SourceType.NONE) {
+            resetAllNumberOfSamples()
+            return
+        }
+
+        const mRNASourceIsInBackend = isDatasetInBackend(form.mRNASource)
+        const clinicalSourceIsInBackend = isDatasetInBackend(form.clinicalSource)
+        // If both datasets are hosted in backend, checks in server
+
+        if (mRNASourceIsInBackend && clinicalSourceIsInBackend) {
+            checkCommonSamplesInBackend()
+        } else if (mRNASourceIsInBackend || clinicalSourceIsInBackend) {
+            checkCommonSamplesOneFrontOneBack(mRNASourceIsInBackend)
+        } else {
+            checkCommonSamplesInFrontend()
+        }
+    }
+
+    /**
+     * Gets the number of samples in common between both selected datasets
+     * loaded in HTML file inputs
+     */
+    const checkCommonSamplesInFrontend = () => {
+        const mRNASource = form.mRNASource
+        const clinicalSource = form.clinicalSource
+
+        // We need both datasets!
+        if (mRNASource.newUploadedFileRef.current.files.length === 0 ||
+            clinicalSource.newUploadedFileRef.current.files.length === 0) {
+            resetAllNumberOfSamples()
+            return
+        }
+
+        // Reads first file
+        const mRNAFile = mRNASource.newUploadedFileRef.current.files[0]
+        getInputFileCSVColumns(mRNAFile).then((mRNAHeadersColumnsNames) => {
+            // Reads second file
+            const clinicalFile = clinicalSource.newUploadedFileRef.current.files[0]
+            getInputFileCSVColumns(clinicalFile).then((clinicalHeadersColumnsNames) => {
+                // Gets length of sources and their intersection
+                // For mRNA and GEM removes first element to not have in count the first column of the file (the index)
+                mRNAHeadersColumnsNames.shift()
+                clinicalHeadersColumnsNames.shift()
+
+                setForm(prevState => ({
+                    ...prevState,
+                    numberOfSamplesMRNA: mRNAHeadersColumnsNames.length,
+                    numberOfSamplesClinial: clinicalHeadersColumnsNames.length,
+                    numberOfSamplesInCommon: intersection(
+                        mRNAHeadersColumnsNames,
+                        clinicalHeadersColumnsNames
+                    ).length
+                }))
+            }).catch(errorReadingFileInInput)
+        }).catch(errorReadingFileInInput)
+    }
+
     return (
         <Segment className='diff--side--bar--container table-bordered'>
             <Header textAlign='center' className='margin-top-0'>
-                <Icon name='th' />
+                <Icon name='buromobelexperte' />
                 <Header.Content>New Differential Expression</Header.Content>
             </Header>
-            <Input
-                onChange={(e) => handleChangeForm(e.target.value, 'differentialExpressionName')}
-                type='text'
-                placeholder='Name'
-                className='diff--side--bar--container--item--margin'
-                value={form.differentialExpressionName}
-                icon='asterisk'
-            />
-
-            <TextArea
-                style={{ maxWidth: '100%', minWidth: '100%' }}
-                rows={3}
-                onChange={(_, e) => handleChangeForm(e.value ? e.value.toString() : '', 'differentialExpressionDescription')}
-                placeholder='Description'
-                className='diff--side--bar--container--item--margin'
-                value={form.differentialExpressionDescription}
-            />
-            {/* mRNA SourceForm */}
-            <SourceForm
-                source={form.mRNASource}
-                headerTitle='mRNA profile'
-                headerIcon={{
-                    type: 'img',
-                    src: 'static/frontend/img/profiles/mRNA.svg'
-                }}
-                fileType={FileType.MRNA}
-                disabled={form.isEditing}
-                tagOptions={[]}
-                handleChangeSourceType={(selectedSourceType) => {
-                    handleChangeSourceType(selectedSourceType, 'mRNASource')
-                }}
-                selectNewFile={selectNewFile}
-                selectUploadedFile={(selectedFile) => {
-                    selectUploadedFile(selectedFile, 'mRNASource')
-                }}
-                selectStudy={(selectedStudy) => {
-                    selectStudy(selectedStudy, 'mRNASource')
-                }}
-            />
-            {/* Clinical SourceForm */}
-            <SourceForm
-                source={form.clinicalSource}
-                headerTitle='Clinical profile'
-                headerIcon={{
-                    type: 'img',
-                    src: '/static/frontend/img/profiles/mRNA.svg'
-                }}
-                fileType={FileType.CLINICAL}
-                disabled={form.isEditing}
-                tagOptions={[]}
-                handleChangeSourceType={(selectedSourceType) => {
-                    handleChangeSourceType(selectedSourceType, 'clinicalSource')
-                }}
-                selectNewFile={selectNewFile}
-                selectUploadedFile={(selectedFile) => {
-                    selectUploadedFile(selectedFile, 'clinicalSource')
-                }}
-                selectStudy={(selectedStudy) => {
-                    selectStudy(selectedStudy, 'clinicalSource')
-                }}
-            />
-
-            <Form.Field width={6}>
-                <Label
-                    id='slider-cor-filter-label'
-                    className='align-center bolder'
-                >
-                    Percentile threshold {form.percentileThreshold.toFixed(2)}
-                </Label>
-
-                <SingleRangeSlider
-                    value={form.percentileThreshold}
-                    color='green'
-                    defaultMinValue={0}
-                    className='margin-bottom-5'
-                    defaultMaxValue={1}
-                    step={0.05}
-                    onChange={(value: number) => handleChangeForm(value, 'coefficientThreshold')}
+            <Form>
+                <Form.Input
+                    onChange={(e) => handleChangeForm(e.target.value, 'differentialExpressionName')}
+                    type='text'
+                    placeholder='Name'
+                    className='diff--side--bar--container--item--margin'
+                    value={form.differentialExpressionName}
+                    icon='asterisk'
                 />
 
-                <Label
-                    id='label-minimum-threshold'
+                <Form.TextArea
+                    style={{ maxWidth: '100%', minWidth: '100%' }}
+                    rows={3}
+                    onChange={(_, e) => handleChangeForm(e.value ? e.value.toString() : '', 'differentialExpressionDescription')}
+                    placeholder='Description'
+                    className='diff--side--bar--container--item--margin'
+                    value={form.differentialExpressionDescription}
+                />
+                {/* mRNA SourceForm */}
+                <Form.Field>
+                    <SourceForm
+                        source={form.mRNASource}
+                        headerTitle='mRNA profile'
+                        headerIcon={{
+                            type: 'img',
+                            src: 'static/frontend/img/profiles/mRNA.svg'
+                        }}
+                        fileType={FileType.MRNA}
+                        disabled={form.isEditing}
+                        tagOptions={[]}
+                        handleChangeSourceType={(selectedSourceType) => {
+                            handleChangeSourceType(selectedSourceType, 'mRNASource')
+                        }}
+                        selectNewFile={selectNewFile}
+                        selectUploadedFile={(selectedFile) => {
+                            selectUploadedFile(selectedFile, 'mRNASource')
+                        }}
+                        selectStudy={(selectedStudy) => {
+                            selectStudy(selectedStudy, 'mRNASource')
+                        }}
+                    />
+                </Form.Field>
+                {/* Clinical SourceForm */}
+                <Form.Field>
+                    <SourceForm
+                        source={form.clinicalSource}
+                        headerTitle='Clinical profile'
+                        headerIcon={{
+                            type: 'img',
+                            src: '/static/frontend/img/profiles/mRNA.svg'
+                        }}
+                        fileType={FileType.CLINICAL}
+                        disabled={form.isEditing}
+                        tagOptions={[]}
+                        handleChangeSourceType={(selectedSourceType) => {
+                            handleChangeSourceType(selectedSourceType, 'clinicalSource')
+                        }}
+                        selectNewFile={selectNewFile}
+                        selectUploadedFile={(selectedFile) => {
+                            selectUploadedFile(selectedFile, 'clinicalSource')
+                        }}
+                        selectStudy={(selectedStudy) => {
+                            selectStudy(selectedStudy, 'clinicalSource')
+                        }}
+                    />
+                </Form.Field>
+                <Form.Field>
+                    <Label className='full-width align-left'>
+                        <p>Samples mRNA: {form.numberOfSamplesMRNA}</p>
+                        <p>Samples clinical: {form.numberOfSamplesClinical}</p>
+                        <p>Samples in common: {form.numberOfSamplesInCommon}</p>
+                    </Label>
+                </Form.Field>
+                <Form.Field>
+                    <DifferentialExpressionInputClinicalAttribute
+                        optionsClinicalAttributes={form.optionsClinicalAttributes}
+                        clinicalAttribute={form.clinicalAttribute}
+                        onChange={(value: string) => handleChangeForm(value, 'clinicalAttribute')}
+                    />
+                </Form.Field>
+                {/* Coefficient threshold slider */}{/* Minimum Standard Deviation for Genes */}
+                <Form.Field className='diff--side--container--bar--slider'>
+                    <LabelWithInfoPopup
+                        labelText={`Threshold percentile: ${form.thresholdPercentile.toFixed(2)}`}
+                        popupContent='Percentile threshold for filtering low-expression genes (default 0.15)'
+                        centered
+                    />
+
+                    <SingleRangeSlider
+                        defaultMaxValue={1}
+                        defaultMinValue={0}
+                        step={0.05}
+                        value={form.thresholdPercentile}
+                        onChange={(value) => handleChangeForm(value, 'thresholdPercentile')}
+                        className='diff--side--bar--slider'
+                        color='blue'
+                    />
+
+                    <Label color='blue' className='pull-left'>0</Label>
+                    <Label color='blue' className='pull-right'>1</Label>
+                </Form.Field>
+                <Form.Field className='diff--side--container--bar--slider'>
+                    <LabelWithInfoPopup
+                        labelText={`Threshold std: ${toScientific(form.thresholdStd.toString())}`}
+                        popupContent='Variance threshold for gene filtering (default 1e-4)'
+                        centered
+                    />
+
+                    <SingleRangeSlider
+                        defaultMaxValue={0.01}
+                        defaultMinValue={0.0001}
+                        step={0.0001}
+                        value={form.thresholdStd}
+                        onChange={(value) => handleChangeForm(value, 'thresholdStd')}
+                        className='diff--side--bar--slider'
+                        color='blue'
+                    />
+
+                    <Label color='blue' className='pull-left'>1e-4</Label>
+                    <Label color='blue' className='pull-right'>1e-2</Label>
+                </Form.Field>
+                <Form.Field className='diff--side--container--bar--slider'>
+                    <LabelWithInfoPopup
+                        labelText={`Top: ${form.top}`}
+                        popupContent='Most significant number of genes to keep as result'
+                        centered
+                    />
+
+                    <SingleRangeSlider
+                        defaultMaxValue={1000}
+                        defaultMinValue={10}
+                        step={10}
+                        value={form.top}
+                        onChange={(value) => handleChangeForm(value, 'top')}
+                        className='diff--side--bar--slider'
+                        color='blue'
+                    />
+
+                    <Label color='blue' className='pull-left'>10</Label>
+                    <Label color='blue' className='pull-right'>1000</Label>
+                </Form.Field>
+
+                <Button
+                    type='submit'
+                    fluid
+                    primary
+                    className='margin-top-10'
+                    /*  disabled={(!formData.email.trim() && !formData.location.trim() && !formData.name.trim() && !formData.telephone_number.trim()) || formData.isLoading} */
+                    onClick={handleSubmit}
                     color='green'
-                    className='pull-left'
+                    loading={form.isLoading}
                 >
-                    {form.percentileThreshold.toFixed(2)}
-                </Label>
-                <Label color='green' className='pull-right'>1</Label>
-            </Form.Field>
+                    {form.isEditing ? 'Edit experiment' : 'Create experiment'}
+                </Button>
+            </Form>
+            <Button
+                className='margin-top-5'
+                fluid
+                primary
+                disabled={form.isLoading}
+                color='red'
+                onClick={() => setForm(cleanForm)}
+            >
+                {form.isEditing ? 'Cancel edit' : 'Reset form'}
+            </Button>
         </Segment>
     )
 }
+
+/**
+ * LabelWithInfoPopup's props
+ */
+interface LabelWithInfoPopupProps {
+    labelText: string,
+    popupContent: SemanticShorthandItem<PopupContentProps>,
+    centered?: boolean
+}
+
+/**
+ * Renders an label with an info popup. It's defined here for simplicity and reusability
+ * @param props Component's props
+ * @returns Component
+ */
+const LabelWithInfoPopup = (props: LabelWithInfoPopupProps) => (
+    <Label className={'full-width' + (props.centered ? ' align-center' : '')}>
+        {props.labelText}
+
+        <InfoPopup
+            content={props.popupContent}
+            onTop={false}
+            extraClassName='margin-left-2 no-margin-right pull-right'
+        />
+    </Label>
+)

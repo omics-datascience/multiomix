@@ -235,7 +235,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 {/* Differential Expression panel */}
                                 <Dropdown.Item
                                     text='Differential expression'
-                                    icon='list layout'
+                                    icon='buromobelexperte'
                                     as='a' href={urlDifferentialExpression}
                                     active={props.activeItem === 'differential-expression'}
                                 />
