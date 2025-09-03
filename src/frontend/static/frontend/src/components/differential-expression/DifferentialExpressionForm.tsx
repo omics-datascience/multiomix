@@ -2,13 +2,13 @@ import React, { useRef, useState } from 'react'
 import { Button, Form, Header, Icon, Label, PopupContentProps, Segment, SemanticShorthandItem } from 'semantic-ui-react'
 import { SourceForm } from '../pipeline/SourceForm'
 import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
-import { FileType, KySearchParams, Nullable, Source, SourceType } from '../../utils/interfaces'
+import { CustomAlertTypes, FileType, KySearchParams, Nullable, Source, SourceType } from '../../utils/interfaces'
 import { cleanRef, getDefaultSource, getDjangoHeader, getFilenameFromSource, getFileSizeInMB, getInputFileCSVColumns } from '../../utils/util_functions'
 import { DjangoCGDSStudy, DjangoNumberSamplesInCommonMrnaClinicalResult, DjangoNumberSamplesInCommonOneFrontResult, DjangoResponseCode, DjangoUserFile } from '../../utils/django_interfaces'
 import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import ky from 'ky'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
-import { intersection } from 'lodash'
+import { intersection, isEqual } from 'lodash'
 import { DifferentialExpressionInputClinicalAttribute } from './DifferentialExpressionInputClinicalAttribute'
 
 // Define the possible field names for number of samples
@@ -67,8 +67,11 @@ const cleanForm: IDifferentialExpressionForm = {
     gettingCommonSamples: false,
     optionsClinicalAttributes: [],
 }
+interface DifferentialExpressionFormProps {
+    updateAlert: (type: CustomAlertTypes, msg: string) => void,
+}
 
-export const DifferentialExpressionForm = () => {
+export const DifferentialExpressionForm = (props: DifferentialExpressionFormProps) => {
     const [form, setForm] = useState<IDifferentialExpressionForm>(cleanForm)
     const abortController = useRef(new AbortController())
 
@@ -237,15 +240,20 @@ export const DifferentialExpressionForm = () => {
             thresholdPercentile: form.thresholdPercentile,
             threshold: form.thresholdStd,
             top: form.top,
+            clinicalCGDSStudyPk: form.clinicalSource.CGDSStudy?.id,
+            mRNACGDSStudyPk: form.mRNASource.CGDSStudy?.id,
+            clinicalExistingFilePk: form.clinicalSource.selectedExistingFile?.id,
+            mRNAExistingFilePk: form.mRNASource.selectedExistingFile?.id
         }
         ky.post(urlDifferentialExpressionSubmit, { headers: myHeaders, json: body }).then((response) => {
             response.json().then(() => {
-                console.log(response)
+                props.updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment created successfully!')
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
             console.error('Error getting users ->', err)
+            props.updateAlert(CustomAlertTypes.ERROR, 'Error creating Differential Expression experiment!')
         })
     }
 
@@ -274,8 +282,7 @@ export const DifferentialExpressionForm = () => {
      */
     const errorReadingFileInInput = (event) => {
         resetAllNumberOfSamples()
-        console.log('Error reading user\'s file')
-        console.log(event.target.error.name)
+        console.error('Error reading user\'s file', event.target.error.name)
     }
 
     /**
@@ -499,6 +506,17 @@ export const DifferentialExpressionForm = () => {
         }).catch(errorReadingFileInInput)
     }
 
+    /**
+     * Checks if the form can be submitted
+     * @returns True if the submit button is disabled.
+     */
+    const submitDisabled = (form.differentialExpressionName.trim() === '' ||
+            form.clinicalAttribute.trim() === '' ||
+            form.differentialExpressionDescription.trim() === '' ||
+            isEqual(form.mRNASource, () => getDefaultSource()) ||
+            isEqual(form.clinicalSource, () => getDefaultSource())
+    )
+
     return (
         <Segment className='diff--side--bar--container table-bordered'>
             <Header textAlign='center' className='margin-top-0'>
@@ -652,7 +670,7 @@ export const DifferentialExpressionForm = () => {
                     fluid
                     primary
                     className='margin-top-10'
-                    /*  disabled={(!formData.email.trim() && !formData.location.trim() && !formData.name.trim() && !formData.telephone_number.trim()) || formData.isLoading} */
+                    disabled={submitDisabled || form.isLoading}
                     onClick={handleSubmit}
                     color='green'
                     loading={form.isLoading}
@@ -664,7 +682,7 @@ export const DifferentialExpressionForm = () => {
                 className='margin-top-5'
                 fluid
                 primary
-                disabled={form.isLoading}
+                disabled={isEqual(form, cleanForm) || form.isLoading}
                 color='red'
                 onClick={() => setForm(cleanForm)}
             >
