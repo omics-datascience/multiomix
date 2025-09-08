@@ -1,8 +1,9 @@
-import json
+from typing import Optional, Dict, Tuple, List
 
+import numpy as np
+from celery.contrib.abortable import AbortableAsyncResult
 from django.db import transaction
 from django.db.models import Q
-
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions
 from rest_framework.exceptions import ValidationError
@@ -13,13 +14,18 @@ from rest_framework.views import APIView
 
 from api_service.enums import SourceType, CommonSamplesStatusErrorCode
 from api_service.utils import get_cgds_dataset
+from common.enums import ResponseCode
+from common.functions import get_enum_from_value, get_intersection, encode_json_response_status
 from common.pagination import StandardResultsSetPagination
+from common.response import ResponseStatus
+from datasets_synchronization.models import CGDSDataset
 from datasets_synchronization.models import CGDSStudy
 from differential_expression.models import (
     DifferentialExpressionClinicalSource,
     DifferentialExpressionExperiment,
     DifferentialExpressionSource,
 )
+from differential_expression.models import DifferentialExpressionExperimentState
 from differential_expression.serializers import (
     DifferentialExpressionExperimentDetailSerializer,
     DifferentialExpressionExperimentResultSerializer,
@@ -28,31 +34,24 @@ from differential_expression.serializers import (
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from user_files.views import get_an_user_file
-
 from .tasks import eval_differential_expression_experiment
-
-from celery.contrib.abortable import AbortableAsyncResult
-from differential_expression.models import DifferentialExpressionExperimentState
-from common.functions import get_enum_from_value, get_intersection, encode_json_response_status
-from common.response import ResponseStatus
-from common.enums import ResponseCode
-from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
-from datasets_synchronization.models import CGDSDataset
 
 
 def create_differential_expression_source(
-    source_type: int,
-    request: Request,
-    file_type: FileType,
-    prefix: str
-) -> tuple[DifferentialExpressionSource | DifferentialExpressionClinicalSource | None, DifferentialExpressionClinicalSource | None]:
+        source_type: int,
+        request: Request,
+        file_type: FileType,
+        prefix: str
+) -> tuple[
+    DifferentialExpressionSource | DifferentialExpressionClinicalSource | None, DifferentialExpressionClinicalSource | None
+]:
     """
     Creates a Source object for differential expression experiments.
     """
     is_clinical = prefix == 'clinical'
     source = DifferentialExpressionClinicalSource() if is_clinical else DifferentialExpressionSource()
     clinical_source = None
-    
+
     if source_type == SourceType.NEW_DATASET.value:
         # Adds a new User's file and uses it
         source_file = getattr(request, 'FILES', {}).get(f'{prefix}File')
@@ -69,16 +68,16 @@ def create_differential_expression_source(
         user_file.save()
         user_file.compute_post_saved_field()
         source.user_file = user_file
-        
+
     elif source_type == SourceType.CGDS.value:
         # Gets the CGDS Study
         post_data = getattr(request, 'data', {}) or getattr(request, 'POST', {})
         cgds_study_pk = post_data.get(f'{prefix}CGDSStudyPk')
         if not cgds_study_pk:
             return None, None
-            
+
         cgds_study = CGDSStudy.objects.get(pk=int(cgds_study_pk))
-        
+
         if is_clinical:
             # For clinical sources, we need both datasets
             if cgds_study.clinical_patient_dataset and cgds_study.clinical_sample_dataset:
@@ -92,14 +91,14 @@ def create_differential_expression_source(
                 source.cgds_dataset = cgds_dataset
             else:
                 return None, None
-        
+
     else:
         # Uses an existing User's file
         post_data = getattr(request, 'data', {}) or getattr(request, 'POST', {})
         existing_file_pk = post_data.get(f'{prefix}ExistingFilePk')
         if not existing_file_pk:
             return None, None
-            
+
         user_file = get_an_user_file(user=request.user, user_file_pk=int(existing_file_pk))
         source.user_file = user_file
 
@@ -150,7 +149,6 @@ class DifferentialExpressionList(generics.ListAPIView):
             Q(shared_users=user)
         ).distinct()
 
-
         return experiments
 
     serializer_class = DifferentialExpressionExperimentSerializer
@@ -166,7 +164,8 @@ class DifferentialExpressionSubmit(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request: Request):
+    @staticmethod
+    def post(request: Request):
         """
         Endpoint to submit a differential expression experiment.
         """
@@ -179,7 +178,6 @@ class DifferentialExpressionSubmit(APIView):
 
             # Clinical source
             clinical_source_type = post_data.get('clinicalType')
-            print(clinical_source_type)
 
             if clinical_source_type:
                 clinical_source_type = int(clinical_source_type)
@@ -187,7 +185,6 @@ class DifferentialExpressionSubmit(APIView):
                     clinical_source_type, request, FileType.CLINICAL, 'clinical')
                 # Select the valid one (if it's a CGDSStudy it needs clinical_aux as it has both needed CGDSDatasets)
                 clinical_source = clinical_aux if clinical_aux is not None else clinical_source
-                print(clinical_source, clinical_aux)
             else:
                 clinical_source = None
 
@@ -335,7 +332,8 @@ class DifferentialExpressionStop(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request: Request):
+    @staticmethod
+    def get(request: Request):
         experiment_id = request.GET.get('experimentId')
         if not experiment_id:
             raise ValidationError('experimentId is required.')
@@ -354,7 +352,7 @@ class DifferentialExpressionStop(APIView):
                 experiment.shared_users.filter(id=user.id).exists()):
             raise ValidationError('You do not have permission to access this experiment.')
 
-        # Validaciones de estado y task
+        # Task state and validation
         if not experiment.task_id:
             return Response({'ok': False, 'detail': 'The experiment does not have an associated task.'})
 
@@ -383,6 +381,8 @@ class DifferentialExpressionStop(APIView):
         experiment.save(update_fields=['state'])
 
         return Response({'ok': bool(aborted)})
+
+
 class GetCommonSamplesDifferentialExperiment(APIView):
     """Gets the number of in common samples between two datasets"""
 
@@ -427,7 +427,6 @@ class GetCommonSamplesDifferentialExperiment(APIView):
                     FileType.CLINICAL,
                     request.user
                 )
-                print(samples_list_mrna, samples_list_clinical)
                 intersection = get_intersection(samples_list_mrna, samples_list_clinical)
                 # Gets intersection
 
@@ -445,11 +444,13 @@ class GetCommonSamplesDifferentialExperiment(APIView):
         # Formats to JSON the ResponseStatus object
         return encode_json_response_status(response)
 
+
 class GetCommonSamplesDifferentialOneFrontExperiment(APIView):
     permission_classes = [permissions.IsAuthenticated]
     """Gets the number of in common samples between two datasets, one in the backend and other in the frontend"""
 
-    def post(self, request: Request):
+    @staticmethod
+    def post(request: Request):
         post_data = getattr(request, 'data', {}) or getattr(request, 'POST', {})
         headers_in_front: Optional[List[str]] = post_data.get('headersColumnsNames')
         other_source_id = post_data.get('otherSourceId')
@@ -493,6 +494,7 @@ class GetCommonSamplesDifferentialOneFrontExperiment(APIView):
         # Formats to JSON the ResponseStatus object
         return encode_json_response_status(response)
 
+
 def get_samples_list(
         id_source: int,
         type_source: Optional[SourceType],
@@ -520,7 +522,6 @@ def get_samples_list(
     elif type_source == SourceType.UPLOADED_DATASETS:
         try:
             user_file = get_an_user_file(user=user, user_file_pk=id_source)
-            print(user_file)
             if file_type == FileType.CLINICAL:
                 list_of_samples = user_file.get_first_column_of_all_rows()
             else:

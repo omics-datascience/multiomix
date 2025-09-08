@@ -11,11 +11,11 @@ from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
 from .enums import SyncCGDSStudyResponseCode, SyncStrategy
-from .models import CGDSStudy, CGDSDatasetSynchronizationState, CGDSStudySynchronizationState
+from .models import CGDSStudy, CGDSDatasetSynchronizationState, CGDSStudySynchronizationState, CGDSDataset
 from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 
 @login_required
@@ -214,3 +214,14 @@ class StopCGDSSync(APIView):
 
         # Formats to JSON the ResponseStatus object
         return Response(response)
+
+
+class CGDSDatasetClinicalAttributes(APIView):
+    """REST endpoint: list for CGDSDataset header."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request, pk: int):
+        """Gets the clinical attributes of a CGDSDataset."""
+        cgds_dataset: CGDSDataset = get_object_or_404(CGDSDataset, pk=pk)
+        return Response(cgds_dataset.get_column_names())

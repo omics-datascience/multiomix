@@ -104,6 +104,7 @@ class CGDSDataset(models.Model):
             return cast(Optional['CGDSDataset'], self.clinical_patient_dataset)
         elif hasattr(self, 'clinical_sample_dataset'):
             return cast(Optional['CGDSDataset'], self.clinical_sample_dataset)
+        return None
 
     @property
     def study(self) -> Optional['CGDSDataset']:
