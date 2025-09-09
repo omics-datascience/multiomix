@@ -10,4 +10,5 @@ urlpatterns = [
     path('stop-experiment', views.DifferentialExpressionStop.as_view(), name='differential_expression_stop'),
     path('get-common-samples-differential-experiment', views.GetCommonSamplesDifferentialExperiment.as_view(), name='get_common_samples_differential_experiment'),
     path('get-common-samples-one-front-differential-experiment', views.GetCommonSamplesDifferentialOneFrontExperiment.as_view(), name='get_common_samples_one_front_differential_experiment'),
+    path('switch-institution-public-view', views.ToggleDiffExperimentPublicView.as_view(), name='switch-diff-experiment-public-view'),
     ]

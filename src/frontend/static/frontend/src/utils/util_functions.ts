@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileType, StateIconInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix } from './interfaces'
+import { FileType, StateIconInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix, ConfirmModal, CustomAlert, CustomAlertTypes } from './interfaces'
 import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
@@ -769,6 +769,32 @@ const getFileTypeName = (type: FileType): string => {
     return fileType
 }
 
+/**
+ * Generates a default confirm modal structure
+ * @returns Default confirmModal object
+ */
+const getDefaultConfirmModal = (): ConfirmModal => {
+    return {
+        confirmModal: false,
+        headerText: '',
+        contentText: '',
+        onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+    }
+}
+
+/**
+ * Generates a default alert structure
+ * @returns Default the default Alert
+ */
+const getDefaultAlertProps = (): CustomAlert => {
+    return {
+        message: '', // This have to change during cycle of component
+        isOpen: false,
+        type: CustomAlertTypes.SUCCESS,
+        duration: 500
+    }
+}
+
 export {
     getDjangoHeader,
     alertGeneralError,
@@ -805,5 +831,7 @@ export {
     getScoreClassData,
     generateBinData,
     getFileTypeName,
-    getInputFileCSVFirstColumnAllRows
+    getInputFileCSVFirstColumnAllRows,
+    getDefaultConfirmModal,
+    getDefaultAlertProps
 }

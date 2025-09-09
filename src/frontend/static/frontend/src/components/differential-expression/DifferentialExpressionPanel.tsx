@@ -1,37 +1,34 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Base } from '../Base'
 import { DifferentialExpressionForm } from './DifferentialExpressionForm'
-import { DropdownItemProps, Grid, Icon, Table, TableCell } from 'semantic-ui-react'
+import { Confirm, DropdownItemProps, Grid, Icon, Table, TableCell } from 'semantic-ui-react'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { Alert } from '../common/Alert'
-import { CustomAlert, CustomAlertTypes, GenesColors } from '../../utils/interfaces'
+import { ConfirmModal, CustomAlert, CustomAlertTypes, GenesColors } from '../../utils/interfaces'
 import { DifferentialExpressionAnalysis, DifferentialExpressionAnalysisExperimentState } from './types'
-import { formatDateLocale, getExperimentStateObj } from '../../utils/util_functions'
+import { formatDateLocale, getDefaultAlertProps, getDefaultConfirmModal, getDjangoHeader, getExperimentStateObj } from '../../utils/util_functions'
 import { SourcePopup } from '../pipeline/all-experiments-view/SourcePopup'
 import { PopupIcons } from '../common/PopupIcons'
 import { DeleteButton } from '../common/DeleteButton'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
+import ky from 'ky'
 
 declare const urlDifferentialExpressionList:string
+declare const urlDifferentialExpressionStop:string
+
+interface DiferentialExpressionPanelState {
+    alert: CustomAlert
+    modal: ConfirmModal
+    stoppingExperiment: boolean
+}
 
 export const DiferentialExpressionPanel = () => {
-    /**
-     * Generates a default alert structure
-     * @returns Default the default Alert
-     */
-    const getDefaultAlertProps = (): CustomAlert => {
-        return {
-            message: '', // This have to change during cycle of component
-            isOpen: false,
-            type: CustomAlertTypes.SUCCESS,
-            duration: 500
-        }
-    }
-
-    const [state, setState] = React.useState({
-        alert: getDefaultAlertProps()
+    const [state, setState] = useState<DiferentialExpressionPanelState>({
+        alert: getDefaultAlertProps(),
+        modal: getDefaultConfirmModal(),
+        stoppingExperiment: false
     })
 
     /**
@@ -76,9 +73,25 @@ export const DiferentialExpressionPanel = () => {
         ]
     }
 
-    const confirmExperimentStop = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
-        // To implement
-        console.log(differentialExpressionAnalysis)
+    const confirmExperimentStop = (experimentId: number) => {
+        const myHeaders = getDjangoHeader()
+
+        ky.get(urlDifferentialExpressionStop, {
+            headers: myHeaders,
+            searchParams: { experimentId }
+        }).then((response) => {
+            // If OK closes the modal
+            if (response.ok) {
+                updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment stopped successfully!')
+            } else {
+                updateAlert(CustomAlertTypes.ERROR, 'Error stopping Differential Expression experiment!')
+            }
+        }).catch((err) => {
+            updateAlert(CustomAlertTypes.ERROR, 'Error stopping Differential Expression experiment!')
+            console.error('Error stopping FSExperiment ->', err)
+        }).finally(() => {
+            setState(prevState => ({ ...prevState, stoppingExperiment: false }))
+        })
     }
 
     const confirmExperimentDeletion = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
@@ -86,8 +99,34 @@ export const DiferentialExpressionPanel = () => {
         console.log(differentialExpressionAnalysis)
     }
 
-    const handleChangeConfirmModalState = () => {
-        // To implement
+    /**
+     * Reset the confirm modal, to be used again
+     */
+    const handleCancelConfirmModalState = () => {
+        setState(prevState => ({
+            ...prevState,
+            modal: getDefaultConfirmModal()
+        }))
+    }
+
+    /**
+     * Changes confirm modal state
+     * @param setOption New state of option
+     * @param headerText Optional text of header in confirm modal, by default will be empty
+     * @param contentText optional text of content in confirm modal, by default will be empty
+     * @param onConfirm Modal onConfirm callback
+     */
+    const handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
+        setState(prevState => ({
+            ...prevState,
+            modal: {
+                ...prevState.modal,
+                confirmModal: setOption,
+                headerText,
+                contentText,
+                onConfirm
+            }
+        }))
     }
 
     return (
@@ -151,19 +190,26 @@ export const DiferentialExpressionPanel = () => {
                                     </TableCell>
                                     <TableCell>
                                         {/* Download mRNA */}
-                                        {/* <SourcePopup
-                                            source={differentialExpressionAnalysis.mrna_source}
-                                            iconName='file'
-                                            iconColor={GenesColors.MRNA}
-                                            downloadButtonTitle='Download source mRNA file'
-                                        />
+                                        {
+                                            differentialExpressionAnalysis.mrna_source.user_file && (
+                                                <>
+                                                    <SourcePopup
+                                                        source={differentialExpressionAnalysis.mrna_source}
+                                                        iconName='file'
+                                                        iconColor={GenesColors.MRNA}
+                                                        downloadButtonTitle='Download source mRNA file'
+                                                    />
 
-                                        <SourcePopup
-                                            source={differentialExpressionAnalysis.clinical_source}
-                                            iconName='file alternate'
-                                            iconColor={GenesColors.CLINICAL}
-                                            downloadButtonTitle='Download Clinical source file'
-                                        /> */}
+                                                    <SourcePopup
+                                                        source={differentialExpressionAnalysis.clinical_source}
+                                                        iconName='file alternate'
+                                                        iconColor={GenesColors.CLINICAL}
+                                                        downloadButtonTitle='Download Clinical source file'
+                                                    />
+                                                </>
+                                            )
+                                        }
+
                                     </TableCell>
                                     <TableCell textAlign='center'>
                                         {
@@ -198,11 +244,15 @@ export const DiferentialExpressionPanel = () => {
                                             content={(
                                                 <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
                                                     {/* Stop button */}
-                                                    <StopExperimentButton
-                                                        title='Stop experiment'
-                                                        onClick={() => confirmExperimentStop(differentialExpressionAnalysis)}
-                                                        ownerId={differentialExpressionAnalysis.user.id as number}
-                                                    />
+                                                    {
+                                                        isInProcess && (
+                                                            <StopExperimentButton
+                                                                title='Stop experiment'
+                                                                onClick={() => handleChangeConfirmModalState(true, 'Stop Experiment', 'Are you sure to stop experiment?', () => confirmExperimentStop(differentialExpressionAnalysis.id))}
+                                                                ownerId={differentialExpressionAnalysis.user.id as number}
+                                                            />
+                                                        )
+                                                    }
 
                                                     {/* Delete button */}
                                                     {!isInProcess && !differentialExpressionAnalysis.is_public && (
@@ -240,6 +290,23 @@ export const DiferentialExpressionPanel = () => {
                 message={state.alert.message}
                 type={state.alert.type}
                 duration={state.alert.duration}
+            />
+            <Confirm
+                open={state.modal.confirmModal}
+                header={state.modal.headerText}
+                content={state.modal.contentText}
+                size='large'
+                onCancel={() => handleCancelConfirmModalState()}
+                onConfirm={() => {
+                    state.modal.onConfirm()
+                    setState(prevState => ({
+                        ...prevState,
+                        modal: {
+                            ...prevState.modal,
+                            confirmModal: false
+                        }
+                    }))
+                }}
             />
         </Base>
     )

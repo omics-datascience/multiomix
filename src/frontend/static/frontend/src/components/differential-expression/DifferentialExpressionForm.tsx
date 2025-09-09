@@ -166,6 +166,8 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
      * and doesn't trigger an update of the state fields
      */
     const updateSourceFilenames = () => {
+        const updateClinicalAtt = getFilenameFromSource(form.clinicalSource) !== form.clinicalSource.filename
+
         setForm(prevState => ({
             ...prevState,
             clinicalSource: {
@@ -178,7 +180,10 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
             },
 
         }))
-        updateSelectClinicalAttribute()
+
+        if (updateClinicalAtt) {
+            updateSelectClinicalAttribute()
+        }
     }
 
     /**
@@ -194,9 +199,9 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
      * Callback when a new file is selected in the uncontrolled component
      * (input type=file)
      */
-    const selectNewFile = (e:any) => { 
-        console.log(e)
-        updateSourceFilenamesAndCommonSamples() }
+    const selectNewFile = () => {
+        updateSourceFilenamesAndCommonSamples()
+    }
 
     /**
      * change name or description of manual form
@@ -230,6 +235,10 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
     }
 
     const handleSubmit = () => {
+        setForm(prevState => ({
+            ...prevState,
+            isLoading: true
+        }))
         const myHeaders = getDjangoHeader()
         const body = {
             name: form.differentialExpressionName,
@@ -254,6 +263,11 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
         }).catch((err) => {
             console.error('Error getting users ->', err)
             props.updateAlert(CustomAlertTypes.ERROR, 'Error creating Differential Expression experiment!')
+        }).finally(() => {
+            setForm(prevState => ({
+                ...prevState,
+                isLoading: false
+            }))
         })
     }
 

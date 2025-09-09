@@ -127,6 +127,9 @@ class UserFileHeaders(APIView):
         """
         user = request.user
         user_file = get_an_user_file(user=user, user_file_pk=pk)
+        """
+        
+        """
         list_of_header = user_file.get_column_names()
         return Response(list_of_header)
 

@@ -493,6 +493,34 @@ class GetCommonSamplesDifferentialOneFrontExperiment(APIView):
         # Formats to JSON the ResponseStatus object
         return encode_json_response_status(response)
 
+class ToggleDiffExperimentPublicView(APIView):
+    """
+    API endpoint to toggle the 'is_public' field of an experiment.
+    Only the owner of the experiment can perform this action.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Toggle the 'is_public' field of the experiment.
+        """
+        data = request.data
+        experiment_id = data.get('experimentId')
+        experiment = get_object_or_404(DifferentialExpressionExperiment, id=experiment_id)
+        if experiment.user.id != request.user.id:
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        experiment.is_public = not experiment.is_public
+        experiment.save(update_fields=['is_public'])
+
+        return Response(
+            {"id": experiment.id, "is_public": experiment.is_public}
+        )
+
+
 def get_samples_list(
         id_source: int,
         type_source: Optional[SourceType],
@@ -520,7 +548,6 @@ def get_samples_list(
     elif type_source == SourceType.UPLOADED_DATASETS:
         try:
             user_file = get_an_user_file(user=user, user_file_pk=id_source)
-            print(user_file)
             if file_type == FileType.CLINICAL:
                 list_of_samples = user_file.get_first_column_of_all_rows()
             else:
