@@ -15,7 +15,7 @@ This document is focused on the **development** of the system. If you are lookin
 - Node JS >= `20.x` (tested version: `20.x`)
 - [Modulector][modulector] `2.2.0`
 - [BioAPI][bioapi] `1.2.1`
-- R `4.4.2` (requerido para `differential-expression`)
+- R `4.4.2` (required for `differential-expression`)
 
 
 ## Installation 

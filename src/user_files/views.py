@@ -43,7 +43,7 @@ class UserFileChunkedUploadCompleteView(ChunkedUploadCompleteView):
     def get_response_data(self, chunked_upload: ChunkedUpload, request):
         """Final response, returns the created UserFile object"""
         if self.raised_exception is None:
-            return { 'ok': True }
+            return {'ok': True}
 
         error_msg = self.raised_exception.detail['file_obj']['status']['message']
         return {
@@ -77,8 +77,8 @@ def get_own_or_as_admin_user_files(user: AbstractBaseUser):
     @return: User's Files
     """
     return UserFile.objects.filter(Q(user=user) | (
-        Q(institutions__institutionadministration__user=user)
-        & Q(institutions__institutionadministration__is_institution_admin=True)
+            Q(institutions__institutionadministration__user=user)
+            & Q(institutions__institutionadministration__is_institution_admin=True)
     )).distinct()
 
 
@@ -113,17 +113,18 @@ def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool
 
     return user_files_objects.filter(filter_condition).select_related('tag').distinct()
 
+
 class UserFileHeaders(APIView):
     permission_classes = [permissions.IsAuthenticated]
     """REST endpoint: list for UserFile header. """
 
     @staticmethod
-    def get(request, pk: int) -> QuerySet:
+    def get(request, pk: int):
         """
-        Returns the User's files headers from DB
-        @param user: User to retrieve his Datasets
-        @param pk: Id from file
-        @return: File's headers
+        Returns the User's files headers from DB.
+        @param user: User to retrieve his Datasets.
+        @param pk: ID from file.
+        @return: File's headers.
         """
         user = request.user
         user_file = get_an_user_file(user=user, user_file_pk=pk)
@@ -133,8 +134,10 @@ class UserFileHeaders(APIView):
         list_of_header = user_file.get_column_names()
         return Response(list_of_header)
 
+
 class UserFileList(generics.ListAPIView):
     """REST endpoint: list for UserFile model. """
+
     def get_queryset(self):
         # Returns own Datasets if explicitly requested...
         visibility = self.request.GET.get('visibility')
@@ -183,30 +186,32 @@ class DownloadUserFile(APIView):
 
         return response
 
+
 class ToggleFilePublicView(APIView):
     """
-    API endpoint to toggle the 'is_public' field of an a user file.
+    API endpoint to toggle the 'is_public' field of a UseFile.
     Only the owner of the user file can perform this action.
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Toggle the 'is_public' field of the userFiles.
         """
         data = request.data
-       
-        userFile_id = data.get('userFileId')
-        userFile = get_object_or_404(UserFile, id=userFile_id)
-        if userFile.user.id != request.user.id:
+
+        user_file_id = data.get('userFileId')
+        user_file: UserFile = get_object_or_404(UserFile, id=user_file_id)
+        if user_file.user.id != request.user.id:
             return Response(
                 {"error": "You do not have permission to modify this user file."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        userFile.is_public = not userFile.is_public
-        userFile.save(update_fields=['is_public'])  
+        user_file.is_public = not user_file.is_public
+        user_file.save(update_fields=['is_public'])
 
         return Response(
-            {"id": userFile.id, "is_public": userFile.is_public}
+            {"id": user_file.pk, "is_public": user_file.is_public}
         )
