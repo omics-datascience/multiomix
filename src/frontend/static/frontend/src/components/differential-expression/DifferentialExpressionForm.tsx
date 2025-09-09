@@ -18,6 +18,7 @@ declare const urlDifferentialExpressionSubmit: string
 declare const urlGetCommonSamplesDiferentialExperiment: string
 declare const urlGetCommonSamplesOneFrontDiferentialExperiment: string
 declare const urlGetClinicalAttributes: string
+declare const urlCGDSDatasetClinicalAttributes: string
 
 /** Available types of Sources for a DifferentialExpressionForm. */
 type SourceStateDifferentialExpression = 'clinicalSource' | 'mRNASource'
@@ -146,7 +147,8 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
         } else if (form.clinicalSource.selectedExistingFile?.id || form.clinicalSource.CGDSStudy?.id) {
             const idToSearch = form.clinicalSource.selectedExistingFile?.id ?? form.clinicalSource.CGDSStudy?.id
             const myHeaders = getDjangoHeader()
-            ky.get(urlGetClinicalAttributes + `${idToSearch}/`, { timeout: 60000, headers: myHeaders, signal: abortController.current.signal }).then((response) => {
+            const url = form.clinicalSource.selectedExistingFile?.id ? urlGetClinicalAttributes + `${idToSearch}/` : urlCGDSDatasetClinicalAttributes + `${idToSearch}/`
+            ky.get(url, { timeout: 60000, headers: myHeaders, signal: abortController.current.signal }).then((response) => {
                 response.json().then((clinicalAttributes: string[]) => {
                     setForm(prevState => ({ ...prevState, optionsClinicalAttributes: clinicalAttributes }))
                 }).catch((err) => {
