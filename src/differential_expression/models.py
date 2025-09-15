@@ -15,17 +15,17 @@ class DifferentialExpressionSource(models.Model):
     A source could be a user file or a CGDS Dataset.
     """
     user_file = models.ForeignKey(
-        'user_files.UserFile', 
-        on_delete=models.CASCADE, 
-        blank=True, 
+        'user_files.UserFile',
+        on_delete=models.CASCADE,
+        blank=True,
         null=True,
         related_name='differential_expression_sources'
     )
     cgds_dataset = models.ForeignKey(
-        'datasets_synchronization.CGDSDataset', 
-        on_delete=models.CASCADE, 
+        'datasets_synchronization.CGDSDataset',
+        on_delete=models.CASCADE,
         blank=True,
-        null=True, 
+        null=True,
         related_name='differential_expression_sources'
     )
 

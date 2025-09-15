@@ -130,20 +130,51 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
         return obj.adj_p_val <= 0.05 and abs(obj.log_fc) >= 1.0
 
 
+class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer):
+    """
+    Serializer para la lista general de experimentos de expresión diferencial.
+    Devuelve solo los campos solicitados: id, User, Name, Description, Date, State, Sources y si es publico.
+    """
+    # Sources - información de las fuentes de datos
+    clinical_source = DifferentialExpressionClinicalSourceSerializer(read_only=True)
+    mrna_source = DifferentialExpressionSourceSerializer(read_only=True)
+
+    # State information
+    state_display = serializers.CharField(source='get_state_display', read_only=True)
+
+    class Meta:
+        model = DifferentialExpressionExperiment
+        fields = [
+            'id',           # ID del experimento
+            'user',         # Información del usuario
+            'name',         # Nombre del experimento 
+            'description',  # Descripción del experimento
+            'created_at',   # Fecha de creación
+            'state',        # Estado del experimento
+            'state_display', # Estado legible
+            'clinical_source', # Fuente de datos clínicos
+            'mrna_source',     # Fuente de datos mRNA
+            'is_public'     # Si es público
+        ]
+        read_only_fields = [
+            'id', 'created_at', 'state', 'state_display'
+        ]
+
+
 class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
     """
-    Serializer for Differential Expression Experiment (List view).
+    Serializer for Differential Expression Experiment (General view with all fields).
     """
     user = UserSimpleSerializer(read_only=True)
     clinical_source = DifferentialExpressionClinicalSourceSerializer(read_only=True)
     mrna_source = DifferentialExpressionSourceSerializer(read_only=True)
-    
+
     # Computed fields
     has_results = serializers.SerializerMethodField()
     results_count = serializers.SerializerMethodField()
     significant_genes_count = serializers.SerializerMethodField()
     state_display = serializers.CharField(source='get_state_display', read_only=True)
-    
+
     class Meta:
         model = DifferentialExpressionExperiment
         fields = [

@@ -29,7 +29,7 @@ from differential_expression.models import DifferentialExpressionExperimentState
 from differential_expression.serializers import (
     DifferentialExpressionExperimentDetailSerializer,
     DifferentialExpressionExperimentResultSerializer,
-    DifferentialExpressionExperimentSerializer,
+    DifferentialExpressionExperimentSerializer, DifferentialExpressionExperimentListSerializer,
 )
 from user_files.models import UserFile
 from user_files.models_choices import FileType
@@ -135,6 +135,7 @@ class DifferentialExpressionDetail(generics.RetrieveAPIView):
 class DifferentialExpressionList(generics.ListAPIView):
     """
     Endpoint to list all differential expression experiments.
+    Devuelve solo los campos: id, Name, Description, Date, State, Sources y si es publico.
     """
 
     def get_queryset(self):
@@ -151,7 +152,7 @@ class DifferentialExpressionList(generics.ListAPIView):
 
         return experiments
 
-    serializer_class = DifferentialExpressionExperimentSerializer
+    serializer_class = DifferentialExpressionExperimentListSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
