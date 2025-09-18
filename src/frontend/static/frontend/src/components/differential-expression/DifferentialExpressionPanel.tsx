@@ -166,7 +166,7 @@ export const DiferentialExpressionPanel = () => {
                         searchLabel='Name'
                         searchPlaceholder='Search by name'
                         urlToRetrieveData={urlDifferentialExpressionList}
-                        updateWSKey='update_biomarkers'
+                        updateWSKey='update_differential_expression_experiments'
                         mapFunction={(differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
                             console.log(differentialExpressionAnalysis)
                             const isInProcess = differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.IN_PROCESS ||

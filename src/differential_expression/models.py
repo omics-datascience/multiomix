@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import math
 
+from api_service.websocket_functions import send_update_differential_expression_experiments_command
 from common.constants import PATIENT_ID_COLUMN
 
 class DifferentialExpressionSource(models.Model):
@@ -277,6 +278,7 @@ class DifferentialExpressionExperiment(models.Model):
     def save(self, *args, **kwargs):
         """
         Override the save method to ensure that the name is unique.
+        Every time the experiment status changes, uses websockets to update state in the frontend.
         """
         if not self.name:
             raise ValueError("Experiment name cannot be empty.")
@@ -286,6 +288,9 @@ class DifferentialExpressionExperiment(models.Model):
         #     raise ValueError(f"An experiment with the name '{self.name}' already exists.")
 
         super().save(*args, **kwargs)
+
+        # Sends a websockets message to update the experiment state in the frontend
+        send_update_differential_expression_experiments_command(self.user.id)
 
     def save_results(self, dataframe):
         """
@@ -366,6 +371,16 @@ class DifferentialExpressionExperiment(models.Model):
             Q(adj_p_val__lte=p_value_threshold) &
             (Q(log_fc__gte=log_fc_threshold) | Q(log_fc__lte=-log_fc_threshold))
         )
+
+    def delete(self, *args, **kwargs):
+        """
+        Deletes the instance and sends a websockets message to update state in the frontend
+        """
+        user_id = self.user.id  # Store user_id before deletion
+        super().delete(*args, **kwargs)
+
+        # Sends a websockets message to update the experiment state in the frontend
+        send_update_differential_expression_experiments_command(user_id)
 
 
 class DifferentialExpressionExperimentResult(models.Model):

@@ -1,100 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from institutions.models import Institution
+from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
 from differential_expression.models import (
-    DifferentialExpressionExperiment, 
+    DifferentialExpressionExperiment,
     DifferentialExpressionExperimentResult,
-    DifferentialExpressionSource,
     DifferentialExpressionClinicalSource
 )
 
-
-class DifferentialExpressionSourceSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Differential Expression Source.
-    """
-    source_type = serializers.SerializerMethodField()
-    source_name = serializers.SerializerMethodField()
-    file_type = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = DifferentialExpressionSource
-        fields = ['id', 'source_type', 'source_name', 'file_type', 'number_of_samples', 'number_of_rows']
-        read_only_fields = ['id', 'number_of_samples', 'number_of_rows']
-    
-    def get_source_type(self, obj):
-        """Returns the type of source."""
-        if obj.user_file:
-            return 'user_file'
-        elif obj.cgds_dataset:
-            return 'cgds_dataset'
-        return 'unknown'
-    
-    def get_source_name(self, obj):
-        """Returns the name of the source."""
-        try:
-            valid_source = obj.get_valid_source()
-            return getattr(valid_source, 'name', str(valid_source))
-        except:
-            return 'No source'
-    
-    def get_file_type(self, obj):
-        """Returns the file type of the source."""
-        try:
-            valid_source = obj.get_valid_source()
-            return getattr(valid_source, 'file_type', None)
-        except:
-            return None
-
-
-class DifferentialExpressionClinicalSourceSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Differential Expression Clinical Source.
-    """
-    source_type = serializers.SerializerMethodField()
-    source_name = serializers.SerializerMethodField()
-    attributes_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = DifferentialExpressionClinicalSource
-        fields = ['id', 'source_type', 'source_name', 'attributes_count', 'number_of_samples', 'number_of_rows']
-        read_only_fields = ['id', 'number_of_samples', 'number_of_rows']
-    
-    def get_source_type(self, obj):
-        """Returns the type of clinical source."""
-        if obj.user_file:
-            return 'user_file'
-        elif obj.cgds_dataset and obj.extra_cgds_dataset:
-            return 'cgds_clinical_combined'
-        elif obj.cgds_dataset:
-            return 'cgds_clinical'
-        return 'unknown'
-    
-    def get_source_name(self, obj):
-        """Returns the name of the clinical source."""
-        try:
-            if obj.user_file:
-                return obj.user_file.name
-            elif obj.cgds_dataset and obj.extra_cgds_dataset:
-                # For combined CGDS clinical sources, show both dataset names
-                main_name = str(obj.cgds_dataset)
-                extra_name = str(obj.extra_cgds_dataset)
-                return f"Clinical Combined: {main_name} + {extra_name}"
-            elif obj.cgds_dataset:
-                return str(obj.cgds_dataset)
-            return 'No source'
-        except Exception as e:
-            # More detailed error logging for debugging
-            import logging
-            logging.error(f"Error getting clinical source name: {e}")
-            return 'No source'
-    
-    def get_attributes_count(self, obj):
-        """Returns the number of clinical attributes."""
-        try:
-            return len(obj.get_attributes())
-        except:
-            return 0
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
@@ -132,12 +45,14 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
 
 class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer):
     """
-    Serializer para la lista general de experimentos de expresión diferencial.
-    Devuelve solo los campos solicitados: id, User, Name, Description, Date, State, Sources y si es publico.
+    Optimized serializer for differential expression experiments list view.
+    Returns essential fields for table display: id, user, name, description, created_at,
+    state, clinical_source, mrna_source, and is_public.
+    Uses compatible source serializers that match frontend DjangoExperimentSource interface.
     """
-    # Sources - información de las fuentes de datos
-    clinical_source = DifferentialExpressionClinicalSourceSerializer(read_only=True)
-    mrna_source = DifferentialExpressionSourceSerializer(read_only=True)
+    # Sources - using standard API serializers compatible with frontend interfaces
+    clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
+    mrna_source = ExperimentSourceSerializer(read_only=True)
 
     # State information
     state_display = serializers.CharField(source='get_state_display', read_only=True)
@@ -145,16 +60,16 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
     class Meta:
         model = DifferentialExpressionExperiment
         fields = [
-            'id',           # ID del experimento
-            'user',         # Información del usuario
-            'name',         # Nombre del experimento 
-            'description',  # Descripción del experimento
-            'created_at',   # Fecha de creación
-            'state',        # Estado del experimento
-            'state_display', # Estado legible
-            'clinical_source', # Fuente de datos clínicos
-            'mrna_source',     # Fuente de datos mRNA
-            'is_public'     # Si es público
+            'id',              # Experiment ID
+            'user',            # User ID (compatible with frontend expectations)
+            'name',            # Experiment name
+            'description',     # Experiment description
+            'created_at',      # Creation date
+            'state',           # Experiment state
+            'state_display',   # Human-readable state
+            'clinical_source', # Clinical data source (ExperimentClinicalSourceSerializer)
+            'mrna_source',     # mRNA data source (ExperimentSourceSerializer)
+            'is_public'        # Public visibility flag
         ]
         read_only_fields = [
             'id', 'created_at', 'state', 'state_display'
@@ -166,8 +81,8 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
     Serializer for Differential Expression Experiment (General view with all fields).
     """
     user = UserSimpleSerializer(read_only=True)
-    clinical_source = DifferentialExpressionClinicalSourceSerializer(read_only=True)
-    mrna_source = DifferentialExpressionSourceSerializer(read_only=True)
+    clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
+    mrna_source = ExperimentSourceSerializer(read_only=True)
 
     # Computed fields
     has_results = serializers.SerializerMethodField()

@@ -84,6 +84,18 @@ def send_update_trained_models_command(user_id: int):
     send_message(user_group_name, message)
 
 
+def send_update_differential_expression_experiments_command(user_id: int):
+    """
+    Sends a message indicating that a DifferentialExpressionExperiment state update has occurred
+    @param user_id: DifferentialExpressionExperiment's user's id to send the WS message
+    """
+    user_group_name = f'notifications_{user_id}'
+    message = {
+        'command': 'update_differential_expression_experiments'
+    }
+    send_message(user_group_name, message)
+
+
 def send_update_prediction_experiment_command(user_id: int):
     """
     Sends a message indicating that a InferenceExperiment state update has occurred
