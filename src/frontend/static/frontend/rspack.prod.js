@@ -1,4 +1,4 @@
-import { common } from './'
+import { common } from './rspack.common.js'
 
 export default {
     ...common,
