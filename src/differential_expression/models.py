@@ -6,6 +6,7 @@ from typing import List, Optional, Iterable
 import pandas as pd
 import numpy as np
 import math
+from django.db.models import Q
 
 from api_service.websocket_functions import send_update_differential_expression_experiments_command
 from common.constants import PATIENT_ID_COLUMN
@@ -365,7 +366,6 @@ class DifferentialExpressionExperiment(models.Model):
         Returns:
             QuerySet: QuerySet of DifferentialExpressionExperimentResult objects meeting the criteria
         """
-        from django.db.models import Q
         
         return self.results.filter(
             Q(adj_p_val__lte=p_value_threshold) &

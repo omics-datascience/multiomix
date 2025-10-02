@@ -264,7 +264,8 @@ class DifferentialExpressionSubmit(APIView):
 
 class DifferentialExpressionResults(generics.ListAPIView):
     """
-    Endpoint to get all results for a differential expression experiment.
+    Endpoint to get results for a differential expression experiment.
+    Supports filtering by p-value and fold-change thresholds via query parameters.
     """
     serializer_class = DifferentialExpressionExperimentResultSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -285,46 +286,28 @@ class DifferentialExpressionResults(generics.ListAPIView):
                 experiment.shared_users.filter(id=user.id).exists()):
             raise ValidationError('You do not have permission to access this experiment.')
 
+        # Get query parameters for filtering (optional)
+        p_threshold = self.request.query_params.get('p_threshold')
+        fc_threshold = self.request.query_params.get('fc_threshold')
+
+        # If filtering parameters are provided, apply filtering
+        if p_threshold is not None or fc_threshold is not None:
+            try:
+                p_threshold = float(p_threshold) if p_threshold is not None else 0.05
+                fc_threshold = float(fc_threshold) if fc_threshold is not None else 2.0
+            except ValueError as exc:
+                raise ValidationError('Invalid threshold values. Must be numeric.') from exc
+
+            # Validate thresholds
+            if p_threshold < 0 or p_threshold > 1:
+                raise ValidationError('p_threshold must be between 0 and 1')
+            if fc_threshold < 0:
+                raise ValidationError('fc_threshold must be positive')
+
+            return experiment.get_significant_genes(p_threshold, fc_threshold)
+
+        # Return all results if no filtering parameters
         return experiment.results.all()
-
-
-class DifferentialExpressionSignificantGenes(generics.ListAPIView):
-    """
-    Endpoint to get significant genes for a differential expression experiment.
-    """
-    serializer_class = DifferentialExpressionExperimentResultSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['adj_p_val', 'log_fc', 'p_value', 'ave_expr']
-    ordering = ['adj_p_val']  # Default ordering by adjusted p-value
-
-    def get_queryset(self):
-        experiment_id = self.kwargs.get('pk')
-        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
-
-        # Check permissions (same logic as DifferentialExpressionDetail)
-        user = self.request.user
-        if not (experiment.is_public or
-                experiment.user == user or
-                experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
-                experiment.shared_users.filter(id=user.id).exists()):
-            raise ValidationError('You do not have permission to access this experiment.')
-
-        # Get query parameters for filtering
-        try:
-            p_threshold = float(self.request.query_params.get('p_threshold', 0.05))
-            fc_threshold = float(self.request.query_params.get('fc_threshold', 2.0))
-        except ValueError as exc:
-            raise ValidationError('Invalid threshold values. Must be numeric.') from exc
-
-        # Validate thresholds
-        if p_threshold < 0 or p_threshold > 1:
-            raise ValidationError('p_threshold must be between 0 and 1')
-        if fc_threshold < 0:
-            raise ValidationError('fc_threshold must be positive')
-
-        return experiment.get_significant_genes(p_threshold, fc_threshold)
 
 
 class DifferentialExpressionStop(APIView):
