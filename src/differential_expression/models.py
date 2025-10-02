@@ -210,6 +210,11 @@ class DifferentialExpressionExperimentState(models.IntegerChoices):
     EMPTY_DATASET = 10
     TIMEOUT_EXCEEDED = 11
 
+class DifferentialExpressionTool(models.TextChoices):
+    """Tool choices for differential expression analysis."""
+    DESEQ = 'DESEQ'
+    LIMMA = 'LIMMA'
+
 class DifferentialExpressionExperiment(models.Model):
     """
     Model to create and manage differential expression data.
@@ -237,6 +242,15 @@ class DifferentialExpressionExperiment(models.Model):
     )
 
     clinical_attribute = models.CharField(max_length=100, blank=False, null=False)
+
+    tool = models.CharField(
+        max_length=10,
+        choices=DifferentialExpressionTool.choices,
+        default=DifferentialExpressionTool.DESEQ,
+        blank=False,
+        null=False,
+        help_text='Tool to use for differential expression analysis'
+    )
 
     threshold_percentile = models.FloatField(default=0.15, blank=False, null=False)
 

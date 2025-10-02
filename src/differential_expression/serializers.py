@@ -94,7 +94,7 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
         model = DifferentialExpressionExperiment
         fields = [
             'id', 'name', 'description', 'user', 'clinical_source', 'mrna_source',
-            'clinical_attribute', 'threshold_percentile', 'threshold', 'top', 'state', 'state_display',
+            'clinical_attribute', 'tool', 'threshold_percentile', 'threshold', 'top', 'state', 'state_display',
             'execution_time', 'created_at', 'updated_at', 'is_public',
             'has_results', 'results_count', 'significant_genes_count'
         ]

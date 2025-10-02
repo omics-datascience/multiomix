@@ -101,7 +101,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
     """Admin configuration for DifferentialExpressionExperiment model."""
     
     list_display = (
-        'id', 'name', 'user', 'state', 'clinical_attribute', 
+        'id', 'name', 'user', 'state', 'clinical_attribute', 'tool',
         'threshold_percentile', 'threshold', 'top', 'execution_time', 'created_at'
     )
     list_filter = (
@@ -110,7 +110,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'user__username', 'clinical_attribute')
     readonly_fields = (
         'id', 'task_id', 'execution_time', 'attempt', 'created_at', 'updated_at',
-        'get_results_count', 'get_significant_genes_count'
+        'get_results_count'
     )
     filter_horizontal = ('shared_institutions', 'shared_users')
     
@@ -122,14 +122,14 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
             'fields': ('clinical_source', 'mrna_source')
         }),
         ('Analysis Parameters', {
-            'fields': ('clinical_attribute', 'threshold_percentile', 'threshold', 'top')
+            'fields': ('clinical_attribute', 'tool', 'threshold_percentile', 'threshold', 'top')
         }),
         ('Execution Information', {
             'fields': ('state', 'task_id', 'execution_time', 'attempt', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
         ('Results Statistics', {
-            'fields': ('get_results_count', 'get_significant_genes_count'),
+            'fields': ('get_results_count',),
             'classes': ('collapse',)
         }),
         ('Sharing', {
@@ -145,14 +145,6 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
         except:
             return 0
     get_results_count.short_description = 'Total Results'
-    
-    def get_significant_genes_count(self, obj):
-        """Returns the number of significant genes with default thresholds."""
-        try:
-            return obj.get_significant_genes().count()
-        except:
-            return 0
-    get_significant_genes_count.short_description = 'Significant Genes (p<0.05, |logFC|>1)'
 
 
 @admin.register(DifferentialExpressionExperimentResult)
