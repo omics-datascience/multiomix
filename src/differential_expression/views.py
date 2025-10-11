@@ -5,7 +5,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.db import transaction
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, permissions
+from rest_framework import filters, generics, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
@@ -504,6 +504,121 @@ class ToggleDiffExperimentPublicView(APIView):
         return Response(
             {"id": experiment.id, "is_public": experiment.is_public}
         )
+
+class DifferentialExpressionUpdate(APIView):
+    """
+    Endpoint to update name and description of a differential expression experiment.
+    Only the owner can update the experiment.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def patch(request: Request, pk: int):
+        """
+        Update name and/or description of a differential expression experiment.
+        """
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
+
+        # Only the owner can update the experiment
+        if experiment.user.id != request.user.id:
+            return Response(
+                {'ok': False, 'detail': 'You do not have permission to update this experiment.'},
+                status=403
+            )
+
+        # Get the data from request
+        data = request.data
+        name = data.get('name')
+        description = data.get('description')
+
+        # Validate that at least one field is provided
+        if name is None and description is None:
+            return Response(
+                {'ok': False, 'detail': 'At least one field (name or description) must be provided.'},
+                status=400
+            )
+
+        # Validate that name is not empty if provided
+        if name is not None and not name:
+            return Response(
+                {'ok': False, 'detail': 'Experiment name cannot be empty.'},
+                status=400
+            )
+
+        # Update fields if provided
+        fields_to_update = []
+        if name is not None:
+            experiment.name = name
+            fields_to_update.append('name')
+        if description is not None:
+            experiment.description = description
+            fields_to_update.append('description')
+
+        # Save the experiment
+        experiment.save(update_fields=fields_to_update)
+
+        return Response({
+            'ok': True,
+            'data': {
+                'id': experiment.id,
+                'name': experiment.name,
+                'description': experiment.description
+            }
+        })
+
+
+class DifferentialExpressionDelete(APIView):
+    """
+    Endpoint to delete a differential expression experiment.
+    Only the owner can delete the experiment.
+    The experiment must not be running (must be completed, stopped, or in an error state).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def delete(request: Request, pk: int):
+        """
+        Delete a differential expression experiment.
+        """
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
+
+        # Only the owner can delete the experiment
+        if experiment.user.id != request.user.id:
+            return Response(
+                {'ok': False, 'detail': 'You do not have permission to delete this experiment.'},
+                status=403
+            )
+
+        # Check if the experiment is currently running
+        running_states = [
+            DifferentialExpressionExperimentState.IN_PROCESS,
+            DifferentialExpressionExperimentState.WAITING_FOR_QUEUE,
+            DifferentialExpressionExperimentState.STOPPING,
+        ]
+
+        if experiment.state in running_states:
+            return Response(
+                {
+                    'ok': False,
+                    'detail': f'Cannot delete experiment while it is running. Current state: {experiment.get_state_display()}. Please stop the experiment first.'
+                },
+                status=400
+            )
+
+        # If the experiment has a task_id and is somehow still active, abort it
+        if experiment.task_id:
+            try:
+                async_res = AbortableAsyncResult(experiment.task_id)
+                if async_res.state in ['PENDING', 'STARTED', 'RETRY']:
+                    async_res.abort()
+            except Exception:
+                # If we can't abort, continue with deletion anyway since state shows it's not running
+                pass
+
+        # Delete the experiment (cascade will delete related objects)
+        experiment.delete()
+
+        return Response({'ok': True})
 
 
 def get_samples_list(
