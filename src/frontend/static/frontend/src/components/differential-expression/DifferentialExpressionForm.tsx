@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button, Form, Header, Icon, Label, PopupContentProps, Segment, SemanticShorthandItem } from 'semantic-ui-react'
 import { SourceForm } from '../pipeline/SourceForm'
 import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
@@ -10,6 +10,7 @@ import ky from 'ky'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
 import { intersection, isEqual } from 'lodash'
 import { DifferentialExpressionInputClinicalAttribute } from './DifferentialExpressionInputClinicalAttribute'
+import { DifferentialExpressionAnalysis } from './types'
 
 // Define the possible field names for number of samples
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesClinical'
@@ -19,6 +20,7 @@ declare const urlGetCommonSamplesDiferentialExperiment: string
 declare const urlGetCommonSamplesOneFrontDiferentialExperiment: string
 declare const urlGetClinicalAttributes: string
 declare const urlCGDSDatasetClinicalAttributes: string
+declare const urlUpdateExperiment: string
 
 /** Available types of Sources for a DifferentialExpressionForm. */
 type SourceStateDifferentialExpression = 'clinicalSource' | 'mRNASource'
@@ -70,6 +72,8 @@ const cleanForm: IDifferentialExpressionForm = {
 }
 interface DifferentialExpressionFormProps {
     updateAlert: (type: CustomAlertTypes, msg: string) => void,
+    experimentToEdit: Nullable<DifferentialExpressionAnalysis>
+    handleCleanExperimentToEdit: () => void;
 }
 
 export const DifferentialExpressionForm = (props: DifferentialExpressionFormProps) => {
@@ -236,12 +240,47 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
             : num.toExponential()
     }
 
+    /**
+     * Handles the submit when is editting an experiment
+     * It sends only the fields that can be edited: name and description
+     */
+    const handleEditSubmit = () => {
+        setForm(prevState => ({
+            ...prevState,
+            isLoading: true
+        }))
+        const myHeaders = getDjangoHeader()
+
+        const body = {
+            name: form.differentialExpressionName,
+            description: form.differentialExpressionDescription
+        }
+
+        ky.patch(urlUpdateExperiment + `/${props.experimentToEdit?.id}/`, { headers: myHeaders, json: body }).then((response) => {
+            response.json().then(() => {
+                props.updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment updated successfully!')
+                setForm(cleanForm)
+            }).catch((err) => {
+                console.error('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error to update experiment ->', err)
+            props.updateAlert(CustomAlertTypes.ERROR, 'Error to update Differential Expression experiment!')
+        }).finally(() => {
+            setForm(prevState => ({
+                ...prevState,
+                isLoading: false
+            }))
+        })
+    }
+
     const handleSubmit = () => {
         setForm(prevState => ({
             ...prevState,
             isLoading: true
         }))
         const myHeaders = getDjangoHeader()
+
         const body = {
             name: form.differentialExpressionName,
             description: form.differentialExpressionDescription,
@@ -259,6 +298,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
         ky.post(urlDifferentialExpressionSubmit, { headers: myHeaders, json: body }).then((response) => {
             response.json().then(() => {
                 props.updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment created successfully!')
+                setForm(cleanForm)
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
@@ -531,7 +571,22 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
             form.differentialExpressionDescription.trim() === '' ||
             isEqual(form.mRNASource, () => getDefaultSource()) ||
             isEqual(form.clinicalSource, () => getDefaultSource())
-    )
+    ) && !(form.isEditing && form.differentialExpressionName.trim().length !== 0 && form.differentialExpressionDescription.trim().length !== 0)
+
+    /**
+     * Use effect to handle when is editting
+     */
+    useEffect(() => {
+        if (props.experimentToEdit) {
+            setForm(prevState => ({
+                ...prevState,
+                ...cleanForm,
+                isEditing: true,
+                differentialExpressionName: props.experimentToEdit?.name as string,
+                differentialExpressionDescription: props.experimentToEdit?.description as string
+            }))
+        }
+    }, [props.experimentToEdit])
 
     return (
         <Segment className='diff--side--bar--container table-bordered'>
@@ -617,6 +672,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         optionsClinicalAttributes={form.optionsClinicalAttributes}
                         clinicalAttribute={form.clinicalAttribute}
                         onChange={(value: string) => handleChangeForm(value, 'clinicalAttribute')}
+                        isEditing={form.isEditing}
                     />
                 </Form.Field>
                 {/* Coefficient threshold slider */}{/* Minimum Standard Deviation for Genes */}
@@ -635,6 +691,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         onChange={(value) => handleChangeForm(value, 'thresholdPercentile')}
                         className='diff--side--bar--slider'
                         color='blue'
+                        disabled={form.isEditing}
                     />
 
                     <Label color='blue' className='pull-left'>0</Label>
@@ -655,6 +712,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         onChange={(value) => handleChangeForm(value, 'thresholdStd')}
                         className='diff--side--bar--slider'
                         color='blue'
+                        disabled={form.isEditing}
                     />
 
                     <Label color='blue' className='pull-left'>1e-4</Label>
@@ -675,6 +733,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         onChange={(value) => handleChangeForm(value, 'top')}
                         className='diff--side--bar--slider'
                         color='blue'
+                        disabled={form.isEditing}
                     />
 
                     <Label color='blue' className='pull-left'>10</Label>
@@ -687,7 +746,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                     primary
                     className='margin-top-10'
                     disabled={submitDisabled || form.isLoading}
-                    onClick={handleSubmit}
+                    onClick={form.isEditing ? handleEditSubmit : handleSubmit}
                     color='green'
                     loading={form.isLoading}
                 >
@@ -698,9 +757,12 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 className='margin-top-5'
                 fluid
                 primary
-                disabled={isEqual(form, cleanForm) || form.isLoading}
+                disabled={(isEqual(form, cleanForm)) || form.isLoading}
                 color='red'
-                onClick={() => setForm(cleanForm)}
+                onClick={() => {
+                    setForm(cleanForm)
+                    props.handleCleanExperimentToEdit()
+                }}
             >
                 {form.isEditing ? 'Cancel edit' : 'Reset form'}
             </Button>

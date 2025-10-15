@@ -13,7 +13,7 @@ import { DeleteButton } from '../../common/DeleteButton'
 import { SharedInstitutions, SharedInstitutionsProps } from './SharedInstitutions'
 import { SwitchPublicButton } from '../../common/SwitchPublicButton'
 import { SharedUsers, SharedUsersProps } from './SharedUsers'
-import { EditExperimentIcon } from './EditExperimentIcon'
+import { EditIcon } from '../../common/EditIcon'
 import { PopupIcons } from '../../common/PopupIcons'
 
 declare const urlUserExperiments: string
@@ -316,10 +316,10 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SeeResultButton experiment={experiment} seeResult={this.props.seeResult} />
 
                                     {/* Edit button */}
-                                    <EditExperimentIcon
-                                        editExperiment={this.props.editExperiment}
-                                        experiment={experiment}
+                                    <EditIcon
+                                        editExperiment={() => this.props.editExperiment(experiment)}
                                         ownerId={experiment.user.id}
+                                        disabled={experiment.state !== ExperimentState.COMPLETED}
                                     />
 
                                     <PopupIcons

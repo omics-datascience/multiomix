@@ -241,7 +241,7 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
 }
 
 /**
- * Django Model api_service.ExperimentSource
+ * Django Model api_service.ExperimentSource todo agregar opcional update_differential_expression_experiments
  */
 interface DjangoExperimentSource {
     id?: number,
@@ -249,6 +249,7 @@ interface DjangoExperimentSource {
     cgds_dataset: SourceSimpleCGDSDataset,
     number_of_rows: number,
     number_of_samples: number
+    extra_cgds_dataset?: SourceSimpleCGDSDataset;
 }
 
 /**

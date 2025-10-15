@@ -21,17 +21,8 @@ export interface DifferentialExpressionAnalysis {
     user: DjangoUser;
     clinical_source: DjangoExperimentSource;
     mrna_source: DjangoExperimentSource;
-    clinical_attribute: string;
-    threshold_percentile: number;
-    threshold: number;
-    top: number;
     state: DifferentialExpressionAnalysisExperimentState;
     state_display: string;
-    execution_time: number;
     created_at: string;
-    updated_at: string;
     is_public: boolean;
-    has_results: boolean;
-    results_count: number;
-    significant_genes_count: number;
 }

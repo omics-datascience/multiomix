@@ -16,6 +16,8 @@ from rest_framework import generics, permissions, filters
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render, get_object_or_404
+from api_service.utils import get_cgds_dataset
+from user_files.models_choices import FileType
 
 
 @login_required
@@ -223,5 +225,8 @@ class CGDSDatasetClinicalAttributes(APIView):
     @staticmethod
     def get(request, pk: int):
         """Gets the clinical attributes of a CGDSDataset."""
-        cgds_dataset: CGDSDataset = get_object_or_404(CGDSDataset, pk=pk)
-        return Response(cgds_dataset.get_column_names())
+        cgds_study = CGDSStudy.objects.get(pk=pk)
+        # Gets the corresponding Study's Dataset
+        cgds_dataset = get_cgds_dataset(cgds_study, FileType.CLINICAL)
+        list_of_samples = cgds_dataset.get_column_names()
+        return Response(list_of_samples)

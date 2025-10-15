@@ -6,6 +6,7 @@ interface DifferentialExpressionInputClinicalAttributeProps {
     optionsClinicalAttributes: string[],
     clinicalAttribute: string,
     onChange: (value: string) => void,
+    isEditing: boolean,
 }
 
 export const DifferentialExpressionInputClinicalAttribute = (props: DifferentialExpressionInputClinicalAttributeProps) => {
@@ -24,7 +25,7 @@ export const DifferentialExpressionInputClinicalAttribute = (props: Differential
                 value={props.clinicalAttribute}
                 onChange={(_, { value }) => { props.onChange(value as string) }}
                 placeholder='Clinical attribute to group by'
-                disabled={false}
+                disabled={props.isEditing}
             />
         </>
     )

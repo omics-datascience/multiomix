@@ -53,6 +53,7 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
     # Sources - using standard API serializers compatible with frontend interfaces
     clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
     mrna_source = ExperimentSourceSerializer(read_only=True)
+    user = UserSimpleSerializer(read_only=True)
 
     # State information
     state_display = serializers.CharField(source='get_state_display', read_only=True)
@@ -69,7 +70,8 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
             'state_display',   # Human-readable state
             'clinical_source', # Clinical data source (ExperimentClinicalSourceSerializer)
             'mrna_source',     # mRNA data source (ExperimentSourceSerializer)
-            'is_public'        # Public visibility flag
+            'is_public',        # Public visibility flag
+            'tool'
         ]
         read_only_fields = [
             'id', 'created_at', 'state', 'state_display'

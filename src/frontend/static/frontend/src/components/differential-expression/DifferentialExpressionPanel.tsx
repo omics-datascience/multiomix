@@ -5,7 +5,7 @@ import { Confirm, DropdownItemProps, Grid, Icon, Table, TableCell } from 'semant
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { Alert } from '../common/Alert'
-import { ConfirmModal, CustomAlert, CustomAlertTypes, GenesColors } from '../../utils/interfaces'
+import { ConfirmModal, CustomAlert, CustomAlertTypes, GenesColors, Nullable } from '../../utils/interfaces'
 import { DifferentialExpressionAnalysis, DifferentialExpressionAnalysisExperimentState } from './types'
 import { formatDateLocale, getDefaultAlertProps, getDefaultConfirmModal, getDjangoHeader, getExperimentStateObj } from '../../utils/util_functions'
 import { SourcePopup } from '../pipeline/all-experiments-view/SourcePopup'
@@ -14,22 +14,33 @@ import { DeleteButton } from '../common/DeleteButton'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import ky from 'ky'
+import { EditIcon } from '../common/EditIcon'
 
 declare const urlDifferentialExpressionList:string
 declare const urlDifferentialExpressionStop:string
+declare const urlDeleteExperiment: string
 
 interface DiferentialExpressionPanelState {
     alert: CustomAlert
     modal: ConfirmModal
     stoppingExperiment: boolean
+    experimentToEdit: Nullable<DifferentialExpressionAnalysis>
 }
 
 export const DiferentialExpressionPanel = () => {
     const [state, setState] = useState<DiferentialExpressionPanelState>({
         alert: getDefaultAlertProps(),
         modal: getDefaultConfirmModal(),
-        stoppingExperiment: false
+        stoppingExperiment: false,
+        experimentToEdit: null
     })
+
+    const handleEdit = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
+        setState(prevState => ({
+            ...prevState,
+            experimentToEdit: differentialExpressionAnalysis
+        }))
+    }
 
     /**
      * Reset the confirm modal, to be used again
@@ -61,18 +72,22 @@ export const DiferentialExpressionPanel = () => {
      * @returns Default object for table's Filters
      */
     const getDefaultFilters = (): PaginationCustomFilter[] => {
-        const tagOptions: DropdownItemProps[] = [{ id: 1, name: 'asd' }].map((tag) => {
+        const methodsOptions: DropdownItemProps[] = [{ id: 1, name: 'Lima' }, { id: 2, name: 'Deseq2' }].map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+        methodsOptions.unshift({ key: 'no_method', text: 'No method' })
 
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 }
+            { label: 'Method', keyForServer: 'method', defaultValue: '', placeholder: 'Select an existing method', options: methodsOptions, width: 3 }
         ]
     }
 
+    /**
+     * Stop experiment
+     * @param experimentId experiment to stop
+     */
     const confirmExperimentStop = (experimentId: number) => {
         const myHeaders = getDjangoHeader()
 
@@ -94,9 +109,25 @@ export const DiferentialExpressionPanel = () => {
         })
     }
 
+    /**
+     * Delete experiment
+     * @param differentialExpressionAnalysis experiment to delete
+     */
     const confirmExperimentDeletion = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
-        // To implement
-        console.log(differentialExpressionAnalysis)
+        const myHeaders = getDjangoHeader()
+
+        ky.delete(urlDeleteExperiment + `/${differentialExpressionAnalysis.id}/`, {
+            headers: myHeaders,
+        }).then((response) => {
+            if (response.ok) {
+                updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment deleted successfully!')
+            } else {
+                updateAlert(CustomAlertTypes.ERROR, 'Error deleting Differential Expression experiment!')
+            }
+        }).catch((err) => {
+            updateAlert(CustomAlertTypes.ERROR, 'Error deleting Differential Expression experiment!')
+            console.error('Error deleting FSExperiment ->', err)
+        })
     }
 
     /**
@@ -129,13 +160,22 @@ export const DiferentialExpressionPanel = () => {
         }))
     }
 
+    const handleCleanExperimentToEdit = () => {
+        setState(prevState => ({
+            ...prevState,
+            experimentToEdit: null
+        }))
+    }
+
     return (
         <Base activeItem='differential-expression' wrapperClass='wrapper'>
             <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
                 <Grid.Column width={4} textAlign='center'>
-
-                    <DifferentialExpressionForm updateAlert={updateAlert} />
-
+                    <DifferentialExpressionForm
+                        updateAlert={updateAlert}
+                        experimentToEdit={state.experimentToEdit}
+                        handleCleanExperimentToEdit={handleCleanExperimentToEdit}
+                    />
                 </Grid.Column>
                 <Grid.Column width={12}>
                     <PaginatedTable<DifferentialExpressionAnalysis>
@@ -149,7 +189,7 @@ export const DiferentialExpressionPanel = () => {
                             { name: 'Public', width: 1 },
                             { name: 'Actions', width: 2 }
                         ]}
-                        defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
+                        defaultSortProp={{ sortField: 'created_at', sortOrderAscendant: false }}
                         customFilters={getDefaultFilters()}
                         showSearchInput
                         customElements={[
@@ -163,12 +203,11 @@ export const DiferentialExpressionPanel = () => {
                                 </Button>
                             </Form.Field> */
                         ]}
-                        searchLabel='Name'
-                        searchPlaceholder='Search by name'
+                        searchLabel='Name/Description'
+                        searchPlaceholder='Search by name/description'
                         urlToRetrieveData={urlDifferentialExpressionList}
                         updateWSKey='update_differential_expression_experiments'
                         mapFunction={(differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
-                            console.log(differentialExpressionAnalysis)
                             const isInProcess = differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.IN_PROCESS ||
                             differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.WAITING_FOR_QUEUE
 
@@ -234,11 +273,11 @@ export const DiferentialExpressionPanel = () => {
                                         {/* See results button */}
 
                                         {/* Edit button */}
-                                        {/* <EditExperimentIcon
-                                            editExperiment={this.props.editExperiment}
-                                            experiment={experiment}
-                                            ownerId={experiment.user.id}
-                                        /> */}
+                                        <EditIcon
+                                            editExperiment={() => handleEdit(differentialExpressionAnalysis)}
+                                            ownerId={differentialExpressionAnalysis.user.id}
+                                            disabled={differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.COMPLETED}
+                                        />
 
                                         <PopupIcons
                                             content={(
