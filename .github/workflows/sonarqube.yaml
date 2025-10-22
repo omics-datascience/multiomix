@@ -13,12 +13,12 @@ jobs:
     name: SonarQube Backend Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: SonarQube Scan - Backend
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
           SONAR_HOST_URL: https://sonarcloud.io
@@ -32,7 +32,7 @@ jobs:
     name: SonarQube Frontend Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
@@ -48,7 +48,7 @@ jobs:
         run: npm --prefix src/frontend/static/frontend run check-all
 
       - name: SonarQube Scan - Frontend
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
           SONAR_HOST_URL: https://sonarcloud.io
