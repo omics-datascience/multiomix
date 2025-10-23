@@ -17,6 +17,19 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Debug - Show directory structure
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Root files ==="
+          ls -la
+          echo "=== src/ directory ==="
+          ls -la src/
+          echo "=== Python files count ==="
+          find src/ -name "*.py" -type f | grep -v __pycache__ | grep -v migrations | wc -l
+          echo "=== First 20 Python files ==="
+          find src/ -name "*.py" -type f | grep -v __pycache__ | grep -v migrations | head -20
+
       - name: SonarQube Scan - Backend
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -27,6 +40,7 @@ jobs:
           args: >
             -Dsonar.projectKey=omics-datascience_multiomix-backend
             -Dsonar.organization=omics-datascience
+            -Dsonar.verbose=true
 
   sonarqube-frontend:
     name: SonarQube Frontend Analysis
@@ -47,6 +61,17 @@ jobs:
       - name: Run linter and type checks
         run: npm --prefix src/frontend/static/frontend run check-all
 
+      - name: Debug - Show frontend structure
+        run: |
+          echo "=== Frontend directory ==="
+          pwd
+          echo "=== Frontend src files ==="
+          ls -la src/frontend/static/frontend/
+          echo "=== TypeScript files count ==="
+          find src/frontend/static/frontend/src -type f \( -name "*.ts" -o -name "*.tsx" \) | wc -l
+          echo "=== First 20 TypeScript files ==="
+          find src/frontend/static/frontend/src -type f \( -name "*.ts" -o -name "*.tsx" \) | head -20
+
       - name: SonarQube Scan - Frontend
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -57,3 +82,4 @@ jobs:
           args: >
             -Dsonar.projectKey=omics-datascience_multiomix-frontend
             -Dsonar.organization=omics-datascience
+            -Dsonar.verbose=true
