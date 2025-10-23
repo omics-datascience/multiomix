@@ -1,0 +1,48 @@
+name: SonarQube Frontend Analysis
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+    paths:
+      - 'src/frontend/static/frontend/src/**'
+      - 'src/frontend/static/frontend/sonar-project.properties'
+      - '.github/workflows/sonarqube-frontend.yaml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/frontend/static/frontend/src/**'
+      - 'src/frontend/static/frontend/sonar-project.properties'
+      - '.github/workflows/sonarqube-frontend.yaml'
+
+jobs:
+  sonarqube-frontend:
+    name: SonarQube Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend/static/frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter and type checks
+        run: npm run check-all
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          projectBaseDir: ${{ github.workspace }}/src/frontend/static/frontend
