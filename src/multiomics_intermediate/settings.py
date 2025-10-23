@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'biomarkers',
     'feature_selection',
     'statistical_properties',
+    'differential_expression',
     'webpack_loader',
     'django_email_verification',
     'genes',

@@ -158,7 +158,6 @@ class Pipeline extends React.Component<any, PipelineState> {
      * to show in the new experiment form
      */
     checkCommonSamples () {
-        // funcion que me ayuda
         const newExperiment = this.state.newExperiment
 
         // It needs both sources!

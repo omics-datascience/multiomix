@@ -191,7 +191,7 @@ class ToggleFilePublicView(APIView):
         """
         Toggle the 'is_public' field of the userFiles.
         """
-        data = request.dat
+        data = request.data
        
         userFile_id = data.get('userFileId')
         userFile = get_object_or_404(UserFile, id=userFile_id)

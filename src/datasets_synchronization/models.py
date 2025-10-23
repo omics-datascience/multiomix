@@ -250,42 +250,42 @@ class CGDSStudy(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='mrna_dataset'
+        related_name='cgds_studies_as_mrna_dataset'
     )
     mirna_dataset = models.OneToOneField(
         CGDSDataset,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='mirna_dataset'
+        related_name='cgds_studies_as_mirna_dataset'
     )
     cna_dataset = models.OneToOneField(
         CGDSDataset,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='cna_dataset'
+        related_name='cgds_studies_as_cna_dataset'
     )
     methylation_dataset = models.OneToOneField(
         CGDSDataset,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='methylation_dataset'
+        related_name='cgds_studies_as_methylation_dataset'
     )
     clinical_patient_dataset = models.OneToOneField(
         CGDSDataset,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='clinical_patient_dataset'
+        related_name='cgds_studies_as_clinical_patient_dataset'
     )
     clinical_sample_dataset = models.OneToOneField(
         CGDSDataset,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='clinical_sample_dataset'
+        related_name='cgds_studies_as_clinical_sample_dataset'
     )
     task_id: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
