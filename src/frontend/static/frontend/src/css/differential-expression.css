@@ -16,3 +16,13 @@
     margin-top: 10px;
     margin-bottom: 10px;
 }
+.large-modal {
+    min-height: 92% !important;
+    width: 92% !important;
+}
+
+.space-modal:nth-child(1) {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
+}

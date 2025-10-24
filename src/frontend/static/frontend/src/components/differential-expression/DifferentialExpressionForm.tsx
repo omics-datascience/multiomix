@@ -423,10 +423,14 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         console.error('Error parsing JSON ->', err)
                     })
                 }).catch((err) => {
-                    setForm(prevState => ({ ...prevState, gettingCommonSamples: false }))
                     console.error('Error getting user experiments', err)
                 })
-            }).catch(errorReadingFileInInput)
+            }).catch(errorReadingFileInInput).finally(() => {
+                setForm(prevState => ({
+                    ...prevState,
+                    gettingCommonSamples: false
+                }))
+            })
         }
     }
 
@@ -473,6 +477,11 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 }
 
                 console.error('Error getting user experiments', err)
+            }).finally(() => {
+                setForm(prevState => ({
+                    ...prevState,
+                    gettingCommonSamples: false
+                }))
             })
         }
     }
@@ -688,7 +697,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         defaultMinValue={0}
                         step={0.05}
                         value={form.thresholdPercentile}
-                        onChange={(value) => handleChangeForm(value, 'thresholdPercentile')}
+                        onChange={(value) => form.isEditing && handleChangeForm(value, 'thresholdPercentile')}
                         className='diff--side--bar--slider'
                         color='blue'
                         disabled={form.isEditing}
@@ -709,7 +718,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         defaultMinValue={0.0001}
                         step={0.0001}
                         value={form.thresholdStd}
-                        onChange={(value) => handleChangeForm(value, 'thresholdStd')}
+                        onChange={(value) => form.isEditing && handleChangeForm(value, 'thresholdStd')}
                         className='diff--side--bar--slider'
                         color='blue'
                         disabled={form.isEditing}
@@ -730,7 +739,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                         defaultMinValue={10}
                         step={10}
                         value={form.top}
-                        onChange={(value) => handleChangeForm(value, 'top')}
+                        onChange={(value) => form.isEditing && handleChangeForm(value, 'top')}
                         className='diff--side--bar--slider'
                         color='blue'
                         disabled={form.isEditing}

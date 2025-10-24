@@ -3,8 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.DifferentialExpressionList.as_view(), name='differential_expression_list'),
-    path('<int:pk>/', views.DifferentialExpressionDetail.as_view()),
-    path('<int:pk>/results/', views.DifferentialExpressionResults.as_view()),
+    path('results/', views.DifferentialExpressionDetail.as_view(), name='differential_expression_results'),
+    path('results/<int:pk>/', views.DifferentialExpressionResults.as_view()),
     path('submit-experiment', views.DifferentialExpressionSubmit.as_view(), name='differential_expression_submit'),
     path('stop-experiment', views.DifferentialExpressionStop.as_view(), name='differential_expression_stop'),
     path('update', views.DifferentialExpressionUpdate.as_view(), name='differential_expression_update'),

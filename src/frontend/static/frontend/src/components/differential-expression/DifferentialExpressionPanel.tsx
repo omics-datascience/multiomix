@@ -7,7 +7,7 @@ import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { Alert } from '../common/Alert'
 import { ConfirmModal, CustomAlert, CustomAlertTypes, GenesColors, Nullable } from '../../utils/interfaces'
 import { DifferentialExpressionAnalysis, DifferentialExpressionAnalysisExperimentState } from './types'
-import { formatDateLocale, getDefaultAlertProps, getDefaultConfirmModal, getDjangoHeader, getExperimentStateObj } from '../../utils/util_functions'
+import { formatDateLocale, getDefaultAlertProps, getDefaultConfirmModal, getDjangoHeader, getExperimentStateObjDiffExperiment } from '../../utils/util_functions'
 import { SourcePopup } from '../pipeline/all-experiments-view/SourcePopup'
 import { PopupIcons } from '../common/PopupIcons'
 import { DeleteButton } from '../common/DeleteButton'
@@ -15,6 +15,7 @@ import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import ky from 'ky'
 import { EditIcon } from '../common/EditIcon'
+import { DifferentialExpressionModalResults } from './DifferentialExpressionModalResults'
 
 declare const urlDifferentialExpressionList:string
 declare const urlDifferentialExpressionStop:string
@@ -25,6 +26,10 @@ interface DiferentialExpressionPanelState {
     modal: ConfirmModal
     stoppingExperiment: boolean
     experimentToEdit: Nullable<DifferentialExpressionAnalysis>
+    modalResult: {
+        differentialExpressionAnalysis: DifferentialExpressionAnalysis | null
+        isOpen: boolean
+    }
 }
 
 export const DiferentialExpressionPanel = () => {
@@ -32,7 +37,11 @@ export const DiferentialExpressionPanel = () => {
         alert: getDefaultAlertProps(),
         modal: getDefaultConfirmModal(),
         stoppingExperiment: false,
-        experimentToEdit: null
+        experimentToEdit: null,
+        modalResult: {
+            differentialExpressionAnalysis: null,
+            isOpen: false
+        }
     })
 
     const handleEdit = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
@@ -72,8 +81,8 @@ export const DiferentialExpressionPanel = () => {
      * @returns Default object for table's Filters
      */
     const getDefaultFilters = (): PaginationCustomFilter[] => {
-        const methodsOptions: DropdownItemProps[] = [{ id: 1, name: 'Lima' }, { id: 2, name: 'Deseq2' }].map((tag) => {
-            const id = tag.id as number
+        const methodsOptions: DropdownItemProps[] = [{ id: 'LIMMA', name: 'Lima' }, { id: 'DESEQ', name: 'Deseq2' }].map((tag) => {
+            const id = tag.id
             return { key: id, value: id, text: tag.name }
         })
 
@@ -82,6 +91,13 @@ export const DiferentialExpressionPanel = () => {
         return [
             { label: 'Method', keyForServer: 'method', defaultValue: '', placeholder: 'Select an existing method', options: methodsOptions, width: 3 }
         ]
+    }
+
+    const openInferenceResult = (differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
+        setState(prevState => ({
+            ...prevState,
+            modalResult: { differentialExpressionAnalysis, isOpen: true }
+        }))
     }
 
     /**
@@ -210,8 +226,7 @@ export const DiferentialExpressionPanel = () => {
                         mapFunction={(differentialExpressionAnalysis: DifferentialExpressionAnalysis) => {
                             const isInProcess = differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.IN_PROCESS ||
                             differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.WAITING_FOR_QUEUE
-
-                            const experimentState = getExperimentStateObj(differentialExpressionAnalysis.state as any)
+                            const experimentState = getExperimentStateObjDiffExperiment(differentialExpressionAnalysis.state as any)
 
                             return (
                                 <Table.Row key={differentialExpressionAnalysis.id as number}>
@@ -271,7 +286,15 @@ export const DiferentialExpressionPanel = () => {
                                     </TableCell>
                                     <TableCell>
                                         {/* See results button */}
-
+                                        {differentialExpressionAnalysis.state !== DifferentialExpressionAnalysisExperimentState.COMPLETED && (
+                                            <Icon
+                                                name='chart area'
+                                                onClick={() => { openInferenceResult(differentialExpressionAnalysis) }}
+                                                className='clickable'
+                                                color='blue'
+                                                title='See results'
+                                            />
+                                        )}
                                         {/* Edit button */}
                                         <EditIcon
                                             editExperiment={() => handleEdit(differentialExpressionAnalysis)}
@@ -346,6 +369,13 @@ export const DiferentialExpressionPanel = () => {
                         }
                     }))
                 }}
+            />
+            <DifferentialExpressionModalResults
+                isOpen={state.modalResult.isOpen} differentialExpressionAnalysis={state.modalResult.differentialExpressionAnalysis}
+                closeModal={() => setState(prevState => ({
+                    ...prevState,
+                    modalResult: { differentialExpressionAnalysis: null, isOpen: false }
+                }))}
             />
         </Base>
     )

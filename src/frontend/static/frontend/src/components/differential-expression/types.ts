@@ -4,14 +4,17 @@ import { DjangoExperimentSource, DjangoUser } from '../../utils/django_interface
  * Possible states for experiment evaluation
  */
 export enum DifferentialExpressionAnalysisExperimentState {
-    WAITING_FOR_QUEUE = 1,
-    IN_PROCESS = 2,
-    COMPLETED = 3,
-    FINISHED_WITH_ERROR = 4,
+    COMPLETED = 1,
+    FINISHED_WITH_ERROR = 2,
+    IN_PROCESS = 3,
+    WAITING_FOR_QUEUE = 4,
     NO_SAMPLES_IN_COMMON = 5,
+    STOPPING = 6,
     STOPPED = 7,
     REACHED_ATTEMPTS_LIMIT = 8,
-    TIMEOUT_EXCEEDED = 9,
+    NO_FEATURES_FOUND = 9,
+    EMPTY_DATASET = 10,
+    TIMEOUT_EXCEEDED = 11,
 }
 
 export interface DifferentialExpressionAnalysis {
