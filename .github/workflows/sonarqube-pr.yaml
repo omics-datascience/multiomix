@@ -51,7 +51,7 @@ jobs:
           args: >
             -Dsonar.projectKey=omics-datascience_multiomix-django
             -Dsonar.organization=omics-datascience
-            -Dsonar.projectName=Multiomix Django
+            -Dsonar.projectName='Multiomix Django'
             -Dsonar.sources=src
             -Dsonar.exclusions=**/node_modules/**,**/migrations/**,**/__pycache__/**,**/venv/**,**/.venv/**,**/htmlcov/**,**/staticfiles/**,**/*.pyc,**/email/**,**/dist/**
             -Dsonar.python.version=3.12
