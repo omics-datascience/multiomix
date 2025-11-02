@@ -3,6 +3,10 @@
 # Multiomix
 
 [![Last Build & Push](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml/badge.svg)](https://github.com/omics-datascience/multiomix/actions/workflows/main-wf.yaml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=omics-datascience_multiomix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=omics-datascience_multiomix)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=omics-datascience_multiomix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=omics-datascience_multiomix)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=omics-datascience_multiomix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=omics-datascience_multiomix)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=omics-datascience_multiomix&metric=coverage)](https://sonarcloud.io/summary/new_code?id=omics-datascience_multiomix)
 
 Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation.
 

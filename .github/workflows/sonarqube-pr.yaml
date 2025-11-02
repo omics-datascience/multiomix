@@ -49,7 +49,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=omicsdatascience_multiomix
+            -Dsonar.projectKey=omics-datascience_multiomix
             -Dsonar.organization=omics-datascience
             -Dsonar.projectName=multiomix
             -Dsonar.sources=src
