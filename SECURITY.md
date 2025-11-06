@@ -314,18 +314,21 @@ on:
 ```properties
 sonar.projectKey=omics-datascience_multiomix
 sonar.organization=omics-datascience
-sonar.projectName=Multiomix
+sonar.projectName=multiomix
 sonar.projectVersion=1.0
 
-# Sources - scan both backend and frontend
+# Sources - scan everything in src/
 sonar.sources=src
 
-# Exclude migrations, tests, build artifacts, and dependencies
-sonar.exclusions=**/migrations/**,**/node_modules/**,**/__pycache__/**,**/venv/**,**/.venv/**,**/htmlcov/**,**/staticfiles/**,**/dist/**,**/coverage/**,**/email/**
+# Exclude only node_modules, migrations and build artifacts
+sonar.exclusions=**/node_modules/**,**/migrations/**,**/__pycache__/**,**/venv/**,**/.venv/**,**/htmlcov/**,**/staticfiles/**,**/*.pyc,**/email/**,**/dist/**
 
 # Python settings
-sonar.python.version=3.7,3.8,3.9,3.10,3.11
+sonar.python.version=3.12
 sonar.sourceEncoding=UTF-8
+
+# JavaScript/TypeScript settings
+sonar.javascript.node.maxspace=4096
 ```
 
 **Explicación:**
@@ -932,5 +935,5 @@ Si tienes dudas sobre SonarQube en Multiomix:
 
 ---
 
-**Última actualización**: Octubre 2025
+**Última actualización**: Noviembre 2025
 **Mantenido por**: Equipo de Multiomix
