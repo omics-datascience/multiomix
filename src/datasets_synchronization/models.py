@@ -112,7 +112,7 @@ class CGDSDataset(models.Model):
 
     def __str__(self) -> str:
         study_name = self.study.name if self.study else '-'
-        return f'File: {self.file_path} | Col: {self.mongo_collection_name} | Assigned to study: {study_name}'
+        return f'PK: {self.pk} | File: {self.file_path} | Col: {self.mongo_collection_name} | Assigned to study: {study_name}'
 
     def __compute_number_of_row_and_samples_and_save(self) -> None:
         """

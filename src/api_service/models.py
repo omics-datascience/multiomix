@@ -396,10 +396,8 @@ class Experiment(models.Model):
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema
     correlate_with_all_genes: bool = models.BooleanField(blank=False, null=False, default=True)
 
-    shared_institutions = models.ManyToManyField(Institution, blank=True,
-                                                 related_name='shared_correlation_analysis')
-    shared_users = models.ManyToManyField(User, blank=True,
-                                                 related_name='shared_users_correlation_analysis')
+    shared_institutions = models.ManyToManyField(Institution, blank=True, related_name='shared_correlation_analysis')
+    shared_users = models.ManyToManyField(User, blank=True, related_name='shared_users_correlation_analysis')
     is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property
@@ -417,7 +415,7 @@ class Experiment(models.Model):
         """
         return get_combination_class(self.type)
 
-    def get_clinical_columns(self):
+    def get_clinical_columns(self) -> list[str]:
         """
         Gets a list of columns from the clinical data
         @return: List of fields in clinical data

@@ -28,7 +28,7 @@ class SurvivalColumnsTupleCGDSSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'time_column', 'event_column']
 
     def get_fields(self, *args, **kwargs):
-        fields = super(SurvivalColumnsTupleCGDSSimpleSerializer, self).get_fields(*args, **kwargs)
+        fields = super(SurvivalColumnsTupleCGDSSimpleSerializer, self).get_fields()
         request = self.context.get('request', None)
         if request and getattr(request, 'method', None) == "POST":
             fields['id'].required = False
@@ -123,9 +123,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             })
 
     def __update_cgds_dataset(
-        self,
-        cgds_dataset_instance: CGDSDataset,
-        validated_data_pop
+            self,
+            cgds_dataset_instance: CGDSDataset,
+            validated_data_pop
     ) -> Optional[CGDSDataset]:
         """
         Updates a CGDSDataset instance from a request data
@@ -186,10 +186,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
                 # If there's an existing id, updates the element
                 if 'id' in survival_column:
                     try:
-                        survival_column_obj: SurvivalColumnsTupleCGDSDataset = SurvivalColumnsTupleCGDSDataset. \
-                            objects.get(
-                                pk=survival_column['id']
-                            )
+                        survival_column_obj: SurvivalColumnsTupleCGDSDataset = SurvivalColumnsTupleCGDSDataset.objects.get(
+                            pk=survival_column['id']
+                        )
                         survival_column_obj.time_column = survival_column['time_column']
                         survival_column_obj.event_column = survival_column['event_column']
                         survival_column_obj.save()

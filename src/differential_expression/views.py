@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Dict, Tuple, List
 
 import numpy as np
@@ -29,7 +30,7 @@ from differential_expression.models import DifferentialExpressionExperimentState
 from differential_expression.serializers import (
     DifferentialExpressionExperimentDetailSerializer,
     DifferentialExpressionExperimentResultSerializer,
-    DifferentialExpressionExperimentSerializer, DifferentialExpressionExperimentListSerializer,
+    DifferentialExpressionExperimentListSerializer,
 )
 from user_files.models import UserFile
 from user_files.models_choices import FileType
@@ -374,7 +375,8 @@ class GetCommonSamplesDifferentialExperiment(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request: Request):
+    @staticmethod
+    def get(request: Request):
         mrna_source_id = request.GET.get('mRNASourceId')
         mrna_source_type = request.GET.get('mRNASourceType')
         clinical_source_id = request.GET.get('clinicalSourceId')
@@ -480,6 +482,7 @@ class GetCommonSamplesDifferentialOneFrontExperiment(APIView):
         # Formats to JSON the ResponseStatus object
         return encode_json_response_status(response)
 
+
 class ToggleDiffExperimentPublicView(APIView):
     """
     API endpoint to toggle the 'is_public' field of an experiment.
@@ -487,7 +490,8 @@ class ToggleDiffExperimentPublicView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Toggle the 'is_public' field of the experiment.
         """
@@ -506,6 +510,7 @@ class ToggleDiffExperimentPublicView(APIView):
         return Response(
             {"id": experiment.id, "is_public": experiment.is_public}
         )
+
 
 class DifferentialExpressionUpdate(APIView):
     """
@@ -613,9 +618,9 @@ class DifferentialExpressionDelete(APIView):
                 async_res = AbortableAsyncResult(experiment.task_id)
                 if async_res.state in ['PENDING', 'STARTED', 'RETRY']:
                     async_res.abort()
-            except Exception:
+            except Exception as ex:
                 # If we can't abort, continue with deletion anyway since state shows it's not running
-                pass
+                logging.exception(ex)
 
         # Delete the experiment (cascade will delete related objects)
         experiment.delete()

@@ -6,10 +6,11 @@ from typing import List, Optional, Iterable
 import pandas as pd
 import numpy as np
 import math
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from api_service.websocket_functions import send_update_differential_expression_experiments_command
 from common.constants import PATIENT_ID_COLUMN
+
 
 class DifferentialExpressionSource(models.Model):
     """
@@ -101,8 +102,8 @@ class DifferentialExpressionClinicalSource(DifferentialExpressionSource):
     """
     extra_cgds_dataset = models.ForeignKey(
         'datasets_synchronization.CGDSDataset',
-        on_delete=models.CASCADE, 
-        blank=True, 
+        on_delete=models.CASCADE,
+        blank=True,
         null=True,
         related_name='differential_expression_clinical_sources_extra'
     )
@@ -135,11 +136,11 @@ class DifferentialExpressionClinicalSource(DifferentialExpressionSource):
         if self.cgds_dataset:
             first_clinical_source_columns = self.cgds_dataset.get_column_names()
             columns_distinct.update(first_clinical_source_columns)
-        
+
         if self.extra_cgds_dataset:
             second_clinical_source_columns = self.extra_cgds_dataset.get_column_names()
             columns_distinct.update(second_clinical_source_columns)
-        
+
         # Remove special columns
         special_columns = ['SAMPLE_ID', 'PATIENT_ID']
         for column_to_remove in special_columns:
@@ -168,7 +169,7 @@ class DifferentialExpressionClinicalSource(DifferentialExpressionSource):
             result = df[clinical_attributes].to_numpy()
             return result if len(clinical_attributes) > 1 else result[:, 0]
 
-    def _get_cgds_datasets_joined_df(self) -> pd.DataFrame:
+    def _get_cgds_datasets_joined_df(self) -> pd.DataFrame | None:
         """
         Gets a joined DataFrame from both CGDS datasets (patient and sample data)
         @return: Joined DataFrame
@@ -184,6 +185,8 @@ class DifferentialExpressionClinicalSource(DifferentialExpressionSource):
             df2 = df2.reset_index().set_index([PATIENT_ID_COLUMN])
 
             return df1.join(df2)
+
+        return None
 
     def get_df(self, only_matching: bool = False) -> pd.DataFrame:
         """
@@ -210,15 +213,18 @@ class DifferentialExpressionExperimentState(models.IntegerChoices):
     EMPTY_DATASET = 10
     TIMEOUT_EXCEEDED = 11
 
+
 class DifferentialExpressionTool(models.TextChoices):
     """Tool choices for differential expression analysis."""
     DESEQ = 'DESEQ'
     LIMMA = 'LIMMA'
 
+
 class DifferentialExpressionExperiment(models.Model):
     """
     Model to create and manage differential expression data.
     """
+    results: QuerySet['DifferentialExpressionExperimentResult']
 
     name = models.CharField(max_length=300)
     description = models.TextField(blank=True, null=True)
@@ -226,17 +232,17 @@ class DifferentialExpressionExperiment(models.Model):
     # Clinical and mRNA sources
     # These are used to link the experiment to the clinical and mRNA data sources
     clinical_source = models.ForeignKey(
-        'DifferentialExpressionClinicalSource', 
-        on_delete=models.CASCADE, 
+        'DifferentialExpressionClinicalSource',
+        on_delete=models.CASCADE,
         null=False,
-        blank=False, 
+        blank=False,
         related_name='differential_expression_experiments_as_clinical'
     )
 
     mrna_source = models.ForeignKey(
-        'DifferentialExpressionSource', 
-        on_delete=models.CASCADE, 
-        null=False, 
+        'DifferentialExpressionSource',
+        on_delete=models.CASCADE,
+        null=False,
         blank=False,
         related_name='differential_expression_experiments_as_mrna'
     )
@@ -257,8 +263,8 @@ class DifferentialExpressionExperiment(models.Model):
     threshold = models.FloatField(default=0.0001, blank=False, null=False)
 
     top = models.IntegerField(
-        default=100, 
-        blank=False, 
+        default=100,
+        blank=False,
         null=False,
         help_text='Number of significant results to keep (max 1000)'
     )
@@ -274,11 +280,12 @@ class DifferentialExpressionExperiment(models.Model):
         default=DifferentialExpressionExperimentState.WAITING_FOR_QUEUE,
         help_text='Current state of the differential expression experiment'
     )
-    
+
     # Timestamp fields
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True, help_text='When the experiment was created')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True,
+                                      help_text='When the experiment was created')
     updated_at = models.DateTimeField(auto_now=True, help_text='When the experiment was last updated')
-    
+
     # User and sharing information
     # This is used to track the user who created the experiment and to share it with other users or institutions
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -316,7 +323,7 @@ class DifferentialExpressionExperiment(models.Model):
         """
         # Clear existing results
         self.results.all().delete()
-        
+
         # Create new result records
         results_to_create = []
         for gene_name, row in dataframe.iterrows():
@@ -329,7 +336,7 @@ class DifferentialExpressionExperiment(models.Model):
                     return float(value)
                 except (ValueError, TypeError):
                     return default
-            
+
             result = DifferentialExpressionExperimentResult(
                 experiment=self,
                 gene=str(gene_name),  # The gene identifier from the DataFrame index
@@ -341,10 +348,10 @@ class DifferentialExpressionExperiment(models.Model):
                 b_statistic=safe_float(row.get('B', 0.0), 0.0)
             )
             results_to_create.append(result)
-        
+
         # Bulk create for efficiency
         DifferentialExpressionExperimentResult.objects.bulk_create(results_to_create)
-    
+
     def get_results_dataframe(self):
         """
         Retrieve results as a pandas DataFrame.
@@ -352,7 +359,7 @@ class DifferentialExpressionExperiment(models.Model):
         results = self.results.all()
         if not results.exists():
             return None
-            
+
         data = []
         for result in results:
             data.append({
@@ -364,11 +371,11 @@ class DifferentialExpressionExperiment(models.Model):
                 't': result.t_statistic,
                 'B': result.b_statistic
             })
-        
+
         df = pd.DataFrame(data)
         df.set_index('gene', inplace=True)
         return df
-    
+
     def get_significant_genes(self, p_value_threshold=0.05, log_fc_threshold=1.0):
         """
         Get significantly differentially expressed genes.
@@ -380,7 +387,7 @@ class DifferentialExpressionExperiment(models.Model):
         Returns:
             QuerySet: QuerySet of DifferentialExpressionExperimentResult objects meeting the criteria
         """
-        
+
         return self.results.filter(
             Q(adj_p_val__lte=p_value_threshold) &
             (Q(log_fc__gte=log_fc_threshold) | Q(log_fc__lte=-log_fc_threshold))
@@ -401,10 +408,10 @@ class DifferentialExpressionExperimentResult(models.Model):
     """
     Model to store individual differential expression results for each gene.
     """
-    
+
     experiment = models.ForeignKey(
-        'DifferentialExpressionExperiment', 
-        on_delete=models.CASCADE, 
+        'DifferentialExpressionExperiment',
+        on_delete=models.CASCADE,
         related_name='results'
     )
     gene = models.CharField(max_length=100, help_text='Gene identifier')
@@ -414,7 +421,7 @@ class DifferentialExpressionExperimentResult(models.Model):
     log_fc = models.FloatField(help_text='Log fold change')
     t_statistic = models.FloatField(help_text='t-statistic from the test')
     b_statistic = models.FloatField(help_text='B-statistic (log-odds of differential expression)')
-    
+
     class Meta:
         unique_together = ('experiment', 'gene')
         indexes = [
@@ -422,12 +429,12 @@ class DifferentialExpressionExperimentResult(models.Model):
             models.Index(fields=['experiment', 'log_fc']),
             models.Index(fields=['gene']),
         ]
-    
+
     def __str__(self):
         return f"{self.gene} - {self.experiment.name}"
-    
+
     @property
     def is_significant(self, p_threshold=0.05, fc_threshold=1.0):
         """Check if this gene is significantly differentially expressed."""
-        return (self.adj_p_val <= p_threshold and 
+        return (self.adj_p_val <= p_threshold and
                 abs(self.log_fc) >= fc_threshold)

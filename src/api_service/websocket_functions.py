@@ -40,7 +40,7 @@ def send_update_cgds_studies_command():
 
 def send_update_biomarkers_command(user_id: int):
     """
-    Sends a message indicating that an Biomarker's state update has occurred
+    Sends a message indicating that a Biomarker's state update has occurred
     """
     user_group_name = f'notifications_{user_id}'
     message = {
@@ -51,7 +51,7 @@ def send_update_biomarkers_command(user_id: int):
 
 def send_update_user_file_command(user_id: int):
     """
-    Sends a message indicating that an user file's state update has occurred
+    Sends a message indicating that a user file's state update has occurred
     """
     user_group_name = f'notifications_{user_id}'
     message = {
@@ -119,9 +119,10 @@ def send_update_cluster_label_set_command(user_id: int):
     }
     send_message(user_group_name, message)
 
+
 def send_update_institutions_command(user_id: int):
     """
-    Sends a message indicating that a Institution state update has occurred
+    Sends a message indicating that an Institution state update has occurred
     @param user_id: Institution's user's id to send the WS message
     """
     user_group_name = f'notifications_{user_id}'
@@ -130,9 +131,10 @@ def send_update_institutions_command(user_id: int):
     }
     send_message(user_group_name, message)
 
+
 def send_update_user_for_institution_command(user_id: int):
     """
-    Sends a message indicating that a Institution_user state update has occurred
+    Sends a message indicating that an Institution_user state update has occurred
     @param user_id: Institution's user's id to send the WS message
     """
     user_group_name = f'notifications_{user_id}'

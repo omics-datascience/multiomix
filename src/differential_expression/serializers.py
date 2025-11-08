@@ -1,17 +1,17 @@
-from rest_framework import serializers
 from django.contrib.auth.models import User
-from institutions.models import Institution
+from rest_framework import serializers
+
 from api_service.serializers import ExperimentSourceSerializer, ExperimentClinicalSourceSerializer
 from differential_expression.models import (
     DifferentialExpressionExperiment,
-    DifferentialExpressionExperimentResult,
-    DifferentialExpressionClinicalSource
+    DifferentialExpressionExperimentResult
 )
-
+from institutions.models import Institution
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
     """Simple serializer for User model."""
+
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
@@ -20,6 +20,7 @@ class UserSimpleSerializer(serializers.ModelSerializer):
 
 class InstitutionSimpleSerializer(serializers.ModelSerializer):
     """Simple serializer for Institution model."""
+
     class Meta:
         model = Institution
         fields = ['id', 'name']
@@ -31,14 +32,14 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
     Serializer for Differential Expression Experiment Results.
     """
     is_significant = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = DifferentialExpressionExperimentResult
-        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic', 'is_significant'
-        ]
-        read_only_fields = ['id']
-    
-    def get_is_significant(self, obj):
+        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic',
+                  'is_significant']
+
+    @staticmethod
+    def get_is_significant(obj):
         """Check if this gene is significantly differentially expressed."""
         return obj.adj_p_val <= 0.05 and abs(obj.log_fc) >= 1.0
 
@@ -61,16 +62,16 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
     class Meta:
         model = DifferentialExpressionExperiment
         fields = [
-            'id',              # Experiment ID
-            'user',            # User ID (compatible with frontend expectations)
-            'name',            # Experiment name
-            'description',     # Experiment description
-            'created_at',      # Creation date
-            'state',           # Experiment state
-            'state_display',   # Human-readable state
-            'clinical_source', # Clinical data source (ExperimentClinicalSourceSerializer)
-            'mrna_source',     # mRNA data source (ExperimentSourceSerializer)
-            'is_public',        # Public visibility flag
+            'id',  # Experiment ID
+            'user',  # User ID (compatible with frontend expectations)
+            'name',  # Experiment name
+            'description',  # Experiment description
+            'created_at',  # Creation date
+            'state',  # Experiment state
+            'state_display',  # Human-readable state
+            'clinical_source',  # Clinical data source (ExperimentClinicalSourceSerializer)
+            'mrna_source',  # mRNA data source (ExperimentSourceSerializer)
+            'is_public',  # Public visibility flag
             'tool'
         ]
         read_only_fields = [
@@ -87,9 +88,9 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
     mrna_source = ExperimentSourceSerializer(read_only=True)
 
     # Computed fields
-    has_results = serializers.SerializerMethodField()
-    results_count = serializers.SerializerMethodField()
-    significant_genes_count = serializers.SerializerMethodField()
+    has_results = serializers.SerializerMethodField(method_name='get_has_results')
+    results_count = serializers.SerializerMethodField(method_name='get_results_count')
+    significant_genes_count = serializers.SerializerMethodField(method_name='get_significant_genes_count')
     state_display = serializers.CharField(source='get_state_display', read_only=True)
 
     class Meta:
@@ -101,30 +102,24 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
             'has_results', 'results_count', 'significant_genes_count'
         ]
         read_only_fields = [
-            'id', 'execution_time', 'created_at', 'updated_at', 
+            'id', 'execution_time', 'created_at', 'updated_at',
             'has_results', 'results_count', 'significant_genes_count'
         ]
-    
-    def get_has_results(self, obj):
+
+    @staticmethod
+    def get_has_results(obj: DifferentialExpressionExperiment) -> bool:
         """Check if the experiment has results."""
-        try:
-            return obj.results.exists()
-        except:
-            return False
-    
-    def get_results_count(self, obj):
+        return obj.results.exists()
+
+    @staticmethod
+    def get_results_count(obj: DifferentialExpressionExperiment) -> int:
         """Get the total number of genes in results."""
-        try:
-            return obj.results.count()
-        except:
-            return 0
-    
-    def get_significant_genes_count(self, obj):
+        return obj.results.count()
+
+    @staticmethod
+    def get_significant_genes_count(obj: DifferentialExpressionExperiment) -> int:
         """Get the number of significant genes (adj.P.Val <= 0.05 and |logFC| >= 1.0)."""
-        try:
-            return obj.get_significant_genes().count()
-        except:
-            return 0
+        return obj.get_significant_genes().count()
 
 
 class DifferentialExpressionExperimentDetailSerializer(DifferentialExpressionExperimentSerializer):
@@ -134,7 +129,7 @@ class DifferentialExpressionExperimentDetailSerializer(DifferentialExpressionExp
     """
     shared_users = UserSimpleSerializer(many=True, read_only=True)
     shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
-    
+
     class Meta(DifferentialExpressionExperimentSerializer.Meta):
         fields = DifferentialExpressionExperimentSerializer.Meta.fields + [
             'shared_users', 'shared_institutions', 'task_id', 'attempt'
