@@ -577,7 +577,6 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
      */
     const submitDisabled = (form.differentialExpressionName.trim() === '' ||
             form.clinicalAttribute.trim() === '' ||
-            form.differentialExpressionDescription.trim() === '' ||
             isEqual(form.mRNASource, () => getDefaultSource()) ||
             isEqual(form.clinicalSource, () => getDefaultSource())
     ) && !(form.isEditing && form.differentialExpressionName.trim().length !== 0 && form.differentialExpressionDescription.trim().length !== 0)
