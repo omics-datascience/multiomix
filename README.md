@@ -1,4 +1,4 @@
-<img align="right" src="src/frontend/static/frontend/img/logo-readme.png" alt="Multiomix logo">
+<img style="float: right" src="src/frontend/static/frontend/img/logo-readme.png" alt="Multiomix logo">
 
 # Multiomix
 
