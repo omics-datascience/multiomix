@@ -308,21 +308,17 @@ class CGDSStudySerializer(serializers.ModelSerializer):
 
 
 class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
+    """CGDSDataset serializer with few fields for list views."""
+    name = serializers.CharField(source='study.name', read_only=True)
+    description = serializers.CharField(source='study.description', read_only=True)
+    version = serializers.CharField(source='study.version', read_only=True)
+    file_obj = serializers.SerializerMethodField(method_name='get_file_obj')
+
     class Meta:
         model = CGDSDataset
-        fields = []
+        fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj']
 
-    def to_representation(self, instance):
-        # Gets the file content for user_file
-        data = super(SimpleCGDSDatasetSerializer, self).to_representation(instance)
-
-        # Serialize the study
-        study = instance.study
-        data['name'] = study.name
-        data['description'] = study.description
-        data['version'] = study.version
-        data['date_last_synchronization'] = instance.date_last_synchronization
-        data['file_type'] = instance.file_type
-        data['file_obj'] = None
-
-        return data
+    @staticmethod
+    def get_file_obj(_instance: CGDSDataset):
+        """Returns None to avoid sending the file in list views."""
+        return None
