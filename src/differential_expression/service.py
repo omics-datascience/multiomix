@@ -251,11 +251,25 @@ class DataProcessingService:
         # Antes de la intersección, normalizar los SAMPLE_ID extrayendo solo la parte base
         self.clinical_df['SAMPLE_ID'] = self.clinical_df['SAMPLE_ID'].str.rsplit('.', n=1).str[0]
 
+        # Normalizar también las columnas del mrna_dataset para machear con SAMPLE_ID
+        # Crear un mapeo de columnas normalizadas a columnas originales
+        normalized_columns = {}
+        for col in mrna_dataset.columns:
+            if col != 'Standard_Symbol':
+                # Extraer la parte base del nombre de la columna
+                normalized_col = col.rsplit('.', 1)[0] if '.' in col else col
+                normalized_columns[col] = normalized_col
+
         # Obtener valores de SAMPLE_ID del DataFrame de metadatos
-        valid_columns = list(set(mrna_dataset.columns) & set(self.clinical_df['SAMPLE_ID']))
-        
+        valid_sample_ids = set(self.clinical_df['SAMPLE_ID'])
+        valid_columns = [col for col, norm_col in normalized_columns.items() if norm_col in valid_sample_ids]
+
         # Filtrar el dataset de RNA-Seq para mantener solo las columnas válidas
         mrna_dataset = mrna_dataset[['Standard_Symbol'] + valid_columns]
+
+        # Renombrar las columnas para que coincidan con los SAMPLE_ID normalizados
+        rename_mapping = {col: normalized_columns[col] for col in valid_columns}
+        mrna_dataset = mrna_dataset.rename(columns=rename_mapping)
         
         # Eliminar filas con NA en los datos de expresión génica
         # Eliminar filas donde Standard_Symbol es NA
