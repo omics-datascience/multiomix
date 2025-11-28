@@ -309,6 +309,14 @@ const getExperimentStateObjDiffExperiment = (state: DifferentialExpressionAnalys
                 title: 'The analysis has reached the timeout limit. Try changing some parameters and try again'
             }
             break
+        case DifferentialExpressionAnalysisExperimentState.NO_FEATURES_FOUND:
+            stateIconDiffExp = {
+                iconName: 'user outline',
+                color: 'red',
+                loading: false,
+                title: 'Datasets don\'t have samples in common'
+            }
+            break
         default:
             stateIconDiffExp = {
                 iconName: 'times',

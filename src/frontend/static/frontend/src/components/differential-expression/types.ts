@@ -29,3 +29,15 @@ export interface DifferentialExpressionAnalysis {
     created_at: string;
     is_public: boolean;
 }
+
+export interface DiffExpExperimentDetail {
+    id: number;
+    gene: string;
+    ave_expr: number;
+    p_value: number;
+    adj_p_val: number;
+    log_fc: number;
+    t_statistic: number;
+    b_statistic: number;
+    is_significant: boolean;
+}

@@ -244,25 +244,21 @@ export const DiferentialExpressionPanel = () => {
                                     </TableCell>
                                     <TableCell>
                                         {/* Download mRNA */}
-                                        {
-                                            differentialExpressionAnalysis.mrna_source.user_file && (
-                                                <>
-                                                    <SourcePopup
-                                                        source={differentialExpressionAnalysis.mrna_source}
-                                                        iconName='file'
-                                                        iconColor={GenesColors.MRNA}
-                                                        downloadButtonTitle='Download source mRNA file'
-                                                    />
+                                        <>
+                                            <SourcePopup
+                                                source={differentialExpressionAnalysis.mrna_source}
+                                                iconName='file'
+                                                iconColor={GenesColors.MRNA}
+                                                downloadButtonTitle='Download source mRNA file'
+                                            />
 
-                                                    <SourcePopup
-                                                        source={differentialExpressionAnalysis.clinical_source}
-                                                        iconName='file alternate'
-                                                        iconColor={GenesColors.CLINICAL}
-                                                        downloadButtonTitle='Download Clinical source file'
-                                                    />
-                                                </>
-                                            )
-                                        }
+                                            <SourcePopup
+                                                source={differentialExpressionAnalysis.clinical_source}
+                                                iconName='file alternate'
+                                                iconColor={GenesColors.CLINICAL}
+                                                downloadButtonTitle='Download Clinical source file'
+                                            />
+                                        </>
 
                                     </TableCell>
                                     <TableCell textAlign='center'>
@@ -286,15 +282,17 @@ export const DiferentialExpressionPanel = () => {
                                     </TableCell>
                                     <TableCell>
                                         {/* See results button */}
-                                        {differentialExpressionAnalysis.state !== DifferentialExpressionAnalysisExperimentState.COMPLETED && (
-                                            <Icon
-                                                name='chart area'
-                                                onClick={() => { openInferenceResult(differentialExpressionAnalysis) }}
-                                                className='clickable'
-                                                color='blue'
-                                                title='See results'
-                                            />
-                                        )}
+                                        {
+                                            differentialExpressionAnalysis.state === DifferentialExpressionAnalysisExperimentState.COMPLETED && (
+                                                <Icon
+                                                    name='chart area'
+                                                    onClick={() => { openInferenceResult(differentialExpressionAnalysis) }}
+                                                    className='clickable'
+                                                    color='blue'
+                                                    title='See results'
+                                                />
+                                            )
+                                        }
                                         {/* Edit button */}
                                         <EditIcon
                                             editExperiment={() => handleEdit(differentialExpressionAnalysis)}
@@ -317,7 +315,7 @@ export const DiferentialExpressionPanel = () => {
                                                     }
 
                                                     {/* Delete button */}
-                                                    {!isInProcess && !differentialExpressionAnalysis.is_public && (
+                                                    {(!isInProcess && !differentialExpressionAnalysis.is_public) && (
                                                         <DeleteButton
                                                             title='Delete experiment'
                                                             onClick={() => confirmExperimentDeletion(differentialExpressionAnalysis)}

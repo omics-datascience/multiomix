@@ -122,18 +122,14 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
         return obj.get_significant_genes().count()
 
 
-class DifferentialExpressionExperimentDetailSerializer(DifferentialExpressionExperimentSerializer):
+class DifferentialExpressionExperimentDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer for Differential Expression Experiment (Detail view).
     Includes additional information like shared users and institutions.
     """
-    shared_users = UserSimpleSerializer(many=True, read_only=True)
-    shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
+    #shared_users = UserSimpleSerializer(many=True, read_only=True)
+    #shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
 
-    class Meta(DifferentialExpressionExperimentSerializer.Meta):
-        fields = DifferentialExpressionExperimentSerializer.Meta.fields + [
-            'shared_users', 'shared_institutions', 'task_id', 'attempt'
-        ]
-        read_only_fields = DifferentialExpressionExperimentSerializer.Meta.read_only_fields + [
-            'task_id', 'attempt'
-        ]
+    class Meta:#DifferentialExpressionExperimentSerializer.Meta):
+        fields = '__all__'
+        model = DifferentialExpressionExperimentResult

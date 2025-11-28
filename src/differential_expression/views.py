@@ -112,14 +112,13 @@ class DifferentialExpressionDetail(generics.RetrieveAPIView):
     Endpoint to retrieve a differential expression experiment.
     """
 
-    def get_object(self) -> DifferentialExpressionExperiment:
+    def get_queryset(self) -> DifferentialExpressionExperiment:
         """
         Retrieve the differential expression experiment by its ID.
         """
         user = self.request.user
         experiment_id = self.kwargs.get('pk')
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
-
         # Check if the user has access to the experiment
         if not (experiment.is_public or
                 experiment.user == user or
@@ -127,8 +126,9 @@ class DifferentialExpressionDetail(generics.RetrieveAPIView):
                 experiment.shared_users.filter(id=user.id).exists()):
             raise ValidationError('You do not have permission to access this experiment.')
 
-        return experiment
-
+        return experiment.results.all()
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['gene']
     serializer_class = DifferentialExpressionExperimentDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
