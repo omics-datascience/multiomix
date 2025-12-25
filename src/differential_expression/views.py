@@ -2,9 +2,13 @@ import logging
 from typing import Optional, Dict, Tuple, List
 
 import numpy as np
+import pandas as pd
 from celery.contrib.abortable import AbortableAsyncResult
+from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status
 from rest_framework.exceptions import ValidationError
@@ -311,6 +315,49 @@ class DifferentialExpressionResults(generics.ListAPIView):
 
         # Return all results if no filtering parameters
         return experiment.results.all()
+
+
+class DifferentialExpressionVolcanoData(APIView):
+    """
+    Endpoint to get all results for a volcano plot visualization.
+    Returns all results without pagination in a format suitable for volcano plots.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def get(request: Request, pk: int):
+        """
+        Returns all experiment results formatted for volcano plot.
+        Returns: List of {id, label, log2FC, pValue}
+        """
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
+
+        # Check permissions
+        user = request.user
+        if not (experiment.is_public or
+                experiment.user == user or
+                experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
+                experiment.shared_users.filter(id=user.id).exists()):
+            return Response(
+                {'error': 'You do not have permission to access this experiment.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all results (no pagination)
+        results = experiment.results.all()
+
+        # Format data for volcano plot
+        volcano_data = [
+            {
+                'id': str(result.id),
+                'label': result.gene,
+                'log2FC': result.log_fc,
+                'pValue': result.adj_p_val
+            }
+            for result in results
+        ]
+
+        return Response(volcano_data)
 
 
 class DifferentialExpressionStop(APIView):
@@ -687,3 +734,50 @@ def get_samples_list(
             }
 
     return list_of_samples, response
+
+
+@login_required
+def download_differential_expression_results(request, pk: int):
+    """
+    Downloads all the differential expression results for a specific experiment.
+    Returns a TSV file with all results (no pagination).
+    """
+    experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
+
+    # Check permissions
+    user = request.user
+    if not (experiment.is_public or
+            experiment.user == user or
+            experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
+            experiment.shared_users.filter(id=user.id).exists()):
+        return HttpResponse('Unauthorized', status=401)
+
+    # Get all results (no pagination)
+    results = experiment.results.all().order_by('adj_p_val')
+
+    if not results.exists():
+        return HttpResponse('No results found for this experiment', status=404)
+
+    # Convert results to list of dictionaries
+    results_data = []
+    for result in results:
+        results_data.append({
+            'gene': result.gene,
+            'log_fc': result.log_fc,
+            'ave_expr': result.ave_expr,
+            't_statistic': result.t_statistic,
+            'p_value': result.p_value,
+            'adj_p_val': result.adj_p_val,
+            'b_statistic': result.b_statistic
+        })
+
+    # Create DataFrame and convert to TSV
+    df = pd.DataFrame(results_data)
+    file_to_send = ContentFile(df.to_csv(sep='\t', decimal='.', index=False))
+
+    # Generate HTTP response for file download
+    response = HttpResponse(file_to_send, 'text/csv')
+    response['Content-Length'] = file_to_send.size
+    response['Content-Disposition'] = f'attachment; filename="{experiment.name}_results.tsv"'
+
+    return response
