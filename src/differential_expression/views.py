@@ -35,6 +35,7 @@ from differential_expression.serializers import (
     DifferentialExpressionExperimentDetailSerializer,
     DifferentialExpressionExperimentResultSerializer,
     DifferentialExpressionExperimentListSerializer,
+    DifferentialExpressionVolcanoPlotSerializer,
 )
 from user_files.models import UserFile
 from user_files.models_choices import FileType
@@ -317,47 +318,31 @@ class DifferentialExpressionResults(generics.ListAPIView):
         return experiment.results.all()
 
 
-class DifferentialExpressionVolcanoData(APIView):
+class DifferentialExpressionVolcanoData(generics.ListAPIView):
     """
     Endpoint to get all results for a volcano plot visualization.
     Returns all results without pagination in a format suitable for volcano plots.
+    Format: [{id, label, log2FC, pValue}, ...]
     """
+    serializer_class = DifferentialExpressionVolcanoPlotSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None  # Disable pagination for volcano plot
 
-    @staticmethod
-    def get(request: Request, pk: int):
-        """
-        Returns all experiment results formatted for volcano plot.
-        Returns: List of {id, label, log2FC, pValue}
-        """
+    def get_queryset(self):
+        """Get all results for the specified experiment with permission checks."""
+        pk = self.kwargs.get('pk')
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
 
         # Check permissions
-        user = request.user
+        user = self.request.user
         if not (experiment.is_public or
                 experiment.user == user or
                 experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
                 experiment.shared_users.filter(id=user.id).exists()):
-            return Response(
-                {'error': 'You do not have permission to access this experiment.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise ValidationError('You do not have permission to access this experiment.')
 
-        # Get all results (no pagination)
-        results = experiment.results.all()
-
-        # Format data for volcano plot
-        volcano_data = [
-            {
-                'id': str(result.id),
-                'label': result.gene,
-                'log2FC': result.log_fc,
-                'pValue': result.adj_p_val
-            }
-            for result in results
-        ]
-
-        return Response(volcano_data)
+        # Return all results (no pagination)
+        return experiment.results.all()
 
 
 class DifferentialExpressionStop(APIView):

@@ -44,6 +44,20 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
         return obj.adj_p_val <= 0.05 and abs(obj.log_fc) >= 1.0
 
 
+class DifferentialExpressionVolcanoPlotSerializer(serializers.ModelSerializer):
+    """
+    Serializer for volcano plot visualization.
+    Returns minimal fields needed for plotting: id, label (gene name), log2FC, and pValue (adj.P.Val).
+    """
+    label = serializers.CharField(source='gene', read_only=True)
+    log2FC = serializers.FloatField(source='log_fc', read_only=True)
+    pValue = serializers.FloatField(source='adj_p_val', read_only=True)
+
+    class Meta:
+        model = DifferentialExpressionExperimentResult
+        fields = ['id', 'label', 'log2FC', 'pValue']
+
+
 class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer):
     """
     Optimized serializer for differential expression experiments list view.
