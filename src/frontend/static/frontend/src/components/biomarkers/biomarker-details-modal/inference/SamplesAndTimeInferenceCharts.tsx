@@ -8,6 +8,7 @@ import { alertGeneralError } from '../../../../utils/util_functions'
 import { ResultPlaceholder } from '../stat-validations/result/ResultPlaceholder'
 import { BoxPlotChart } from '../../../pipeline/experiment-result/gene-gem-details/stats/BoxPlotChart'
 import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
+import { useIntl } from 'react-intl'
 
 declare const urlClinicalSourceAddOrEditInferenceExperiment: string
 declare const urlUnlinkClinicalSourceInferenceExperiment: string
@@ -36,6 +37,7 @@ interface SamplesAndTimeInferenceChartsProps {
  * @returns Component.
  */
 export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChartsProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [loadingChartData, setLoadingChartData] = useState(false)
     const [chartData, setChartData] = useState<ChartData[]>([])
@@ -80,10 +82,10 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
             <Header size='huge' icon textAlign='center'>
                 <Icon name='object group outline' />
 
-                No clinical attribute selected
+                {intl.formatMessage({ id: 'inference.charts.noAttribute' })}
 
                 <Header.Subheader>
-                    Please, select one in the right Select.
+                    {intl.formatMessage({ id: 'inference.charts.selectAttribute' })}
                 </Header.Subheader>
             </Header>
         )

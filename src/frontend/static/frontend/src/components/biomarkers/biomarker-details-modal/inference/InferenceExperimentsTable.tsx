@@ -11,6 +11,7 @@ import { Nullable } from '../../../../utils/interfaces'
 import { StopExperimentButton } from '../../../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkerInferenceExperiments: string
 declare const urlStopInferenceExperiment: string
@@ -31,6 +32,7 @@ interface InferenceExperimentsTableProps {
  * @returns Component.
  */
 export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps) => {
+    const intl = useIntl()
     const [stoppingInferenceExperiment, setStoppingInferenceExperiment] = useState(false)
     const [inferenceExperimentToStop, setInferenceExperimentToStop] = useState<Nullable<InferenceExperimentForTable>>(null)
 
@@ -109,13 +111,13 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
 
         return (
             <Modal size='small' open={inferenceExperimentToStop !== null} onClose={handleCloseStopInferenceExperiment} centered={false}>
-                <Header icon='stop' content='Stop inference experiment' />
+                <Header icon='stop' content={intl.formatMessage({ id: 'inference.stop.title' })} />
                 <Modal.Content>
-                    Are you sure you want to stop the inference experiment <strong>{inferenceExperimentToStop.name}</strong>?
+                    {intl.formatMessage({ id: 'inference.stop.confirm' }, { name: inferenceExperimentToStop.name })}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseStopInferenceExperiment}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button
                         color='red'
@@ -123,7 +125,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                         loading={stoppingInferenceExperiment}
                         disabled={stoppingInferenceExperiment}
                     >
-                        Stop
+                        {intl.formatMessage({ id: 'common.stop' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -141,16 +143,16 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
 
         return (
             <Modal size='small' open={inferenceExperimentToRemove !== null} onClose={handleCloseRemoveInferenceExperiment} centered={false}>
-                <Header icon='trash' content='Delete experiment' />
+                <Header icon='trash' content={intl.formatMessage({ id: 'inference.delete.title' })} />
                 <Modal.Content>
-                    Are you sure you want to delete the inference experiment <strong>{inferenceExperimentToRemove.name}</strong>?
+                    {intl.formatMessage({ id: 'inference.delete.confirm' }, { name: inferenceExperimentToRemove.name })}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseRemoveInferenceExperiment}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={deleteInferenceExperiment} loading={deletingInferenceExperiment} disabled={deletingInferenceExperiment}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -165,24 +167,25 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             {/* Modal to confirm deleting the InferenceExperiment */}
             {getDeletionConfirmModal()}
             <PaginatedTable<InferenceExperimentForTable>
-                headerTitle='Inference experiments'
+                headerTitle={intl.formatMessage({ id: 'inference.experiments.table.title' })}
                 headers={[
-                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                    { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                    { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
-                    { name: 'Model', serverCodeToSort: 'model', width: 1 },
-                    { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Datasets' },
-                    { name: 'Actions' }
+                    { name: intl.formatMessage({ id: 'inference.table.columns.name' }), serverCodeToSort: 'name', width: 3 },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.description' }), serverCodeToSort: 'description', width: 4 },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.state' }), serverCodeToSort: 'state', textAlign: 'center' },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.model' }), serverCodeToSort: 'model', width: 1 },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.date' }), serverCodeToSort: 'created' },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.dataset' }) },
+                    { name: intl.formatMessage({ id: 'inference.table.columns.actions' }) }
+
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 showSearchInput
-                searchLabel='Name'
-                searchPlaceholder='Search by name or description'
+                searchLabel={intl.formatMessage({ id: 'inference.search.label' })}
+                searchPlaceholder={intl.formatMessage({ id: 'inference.search.placeholder' })}
                 urlToRetrieveData={urlBiomarkerInferenceExperiments}
                 customElements={[
-                    <Form.Field key={1} className='custom-table-field' title='New inference experiment'>
+                    <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'inference.new.title' })}>
                         <Button primary icon onClick={() => { props.setOpenModalNewInferenceExperiment(true) }}>
                             <Icon name='add' />
                         </Button>
@@ -219,14 +222,15 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                         onClick={() => { props.openInferenceResult(inferenceExperiment) }}
                                         className='clickable'
                                         color='blue'
-                                        title='See results'
+                                        title={intl.formatMessage({ id: 'inference.results.tooltip' })}
+
                                     />
                                 )}
 
                                 {/* Stop button */}
                                 {isInProcess && (
                                     <StopExperimentButton
-                                        title='Stop experiment'
+                                        title={intl.formatMessage({ id: 'inference.stop.title' })}
                                         onClick={() => setInferenceExperimentToStop(inferenceExperiment)}
                                     />
                                 )}
@@ -235,7 +239,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                                 {/* Todo: Revisar ownerid */}
                                 {!isInProcess && (
                                     <DeleteButton
-                                        title='Delete experiment'
+                                        title={intl.formatMessage({ id: 'inference.delete.title' })}
                                         onClick={() => setInferenceExperimentToRemove(inferenceExperiment)}
                                         ownerId={null}
                                     />

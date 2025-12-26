@@ -2,6 +2,7 @@ import React from 'react'
 import { Header, Segment } from 'semantic-ui-react'
 import { InferenceExperimentForTable } from '../../types'
 import { ModelDetailsPanel } from '../ModelDetailsPanels'
+import { useIntl } from 'react-intl'
 
 // declare const urlInferenceExperimentMetrics: string
 
@@ -17,15 +18,16 @@ interface InferenceExperimentResultMetricsProps {
  * @returns Component
  */
 export const InferenceExperimentResultMetrics = (props: InferenceExperimentResultMetricsProps) => {
+    const intl = useIntl()
     return (
         <>
             <Header textAlign='center' dividing as='h1'>
-                "{props.selectedInferenceExperiment.name}" metrics
+                {intl.formatMessage({ id: 'inference.metrics.title' }, { name: props.selectedInferenceExperiment.name })}
             </Header>
 
             {/* Model details. */}
             <Segment>
-                <Header as='h2' dividing>Model details</Header>
+                <Header as='h2' dividing>{intl.formatMessage({ id: 'inference.model.details' })}</Header>
 
                 {props.selectedInferenceExperiment.trained_model !== null &&
                     <ModelDetailsPanel trainedModelPk={props.selectedInferenceExperiment.trained_model} />}

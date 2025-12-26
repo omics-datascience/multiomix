@@ -6,6 +6,7 @@ import { Nullable } from '../../../../../utils/interfaces'
 import { GeneData } from './types'
 import { Grid, Header, Icon } from 'semantic-ui-react'
 import { MetabolicPathways } from './MetabolicPathways'
+import { useIntl } from 'react-intl'
 
 declare const urlPathwaysInformation: string
 
@@ -21,6 +22,7 @@ interface PathwaysInformationProps {
  * @returns Component.
  */
 export const PathwaysInformation = (props: PathwaysInformationProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [pathwaysData, setPathwaysData] = useState<Nullable<GeneData>>(null)
     const [loadingData, setLoadingData] = useState(false)
@@ -76,9 +78,9 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
                         <Grid.Column textAlign='center'>
                             <Header as='h2' icon>
                                 <Icon name='search minus' />
-                                No pathways found
+                                {intl.formatMessage({ id: 'pathwaysInformation.noPathways.title' })}
                                 <Header.Subheader>
-                                    No pathways were found for this gene.
+                                    {intl.formatMessage({ id: 'pathwaysInformation.noPathways.subtitle' })}
                                 </Header.Subheader>
                             </Header>
                         </Grid.Column>
