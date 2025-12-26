@@ -6,6 +6,7 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTermToTermSearchParams, GoTermToTermForm } from './types'
 import { Button, Form, Grid } from 'semantic-ui-react'
 import '../../../../../css/cytoscape.css'
+import { useIntl } from 'react-intl'
 
 declare const urlGOTermToTerms: string
 
@@ -20,18 +21,27 @@ const COLORS_BY_ONTOLOGY_RELATION = {
  * Renders the legends for the Cytoscape instance.
  * @returns Component.
  */
-const CytoscapeLegends = () => (
-    <div className='cytoscape-legends'>
-        <div className='legend-title'>Relations</div>
-        <div className='legend-scale'>
-            <ul className='legend-labels' id='legend'>
-                {Object.entries(COLORS_BY_ONTOLOGY_RELATION).map(([_, [relationDescription, color]]) => (
-                    <li key={relationDescription}><span style={{ backgroundColor: color }} />{relationDescription}</li>
-                ))}
-            </ul>
+const CytoscapeLegends = () => {
+    const intl = useIntl()
+
+    return (
+        <div className='cytoscape-legends'>
+            <div className='legend-title'>
+                {intl.formatMessage({ id: 'geneOntology.legend.relations' })}
+            </div>
+            <div className='legend-scale'>
+                <ul className='legend-labels' id='legend'>
+                    {Object.entries(COLORS_BY_ONTOLOGY_RELATION).map(([_, [relationDescription, color]]) => (
+                        <li key={relationDescription}>
+                            <span style={{ backgroundColor: color }} />
+                            {relationDescription}
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
-    </div>
-)
+    )
+}
 
 /** GeneOntologyCytoscapeChart props. */
 interface GeneOntologyCytoscapeChartProps {
@@ -47,6 +57,7 @@ interface GeneOntologyCytoscapeChartProps {
  * @returns Component.
  */
 export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProps) => {
+    const intl = useIntl()
     const abortControllerTerm = useRef(new AbortController())
     const [termsRelatedToTermForm, setTermsRelatedToTermForm] = useState<GoTermToTermForm>({
         relations: [OntologyRelationTermToTermFilter.PART_OF, OntologyRelationTermToTermFilter.REGULATES, OntologyRelationTermToTermFilter.HAS_PART],
@@ -188,12 +199,12 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
         <Grid.Row columns={2}>
             <Grid.Column width={3}>
                 {/* Go back button. */}
-                <Button onClick={props.goBack} icon='arrow left' content='Go back' />
+                <Button onClick={props.goBack} icon='arrow left' content={intl.formatMessage({ id: 'geneOntology.goBack' })} />
 
                 {/* Form for termsRelatedToTermForm */}
                 <Form className='margin-top-5'>
                     <Form.Field>
-                        <label>Relations</label>
+                        <label>{intl.formatMessage({ id: 'geneOntology.form.relations' })}</label>
                         {Object.entries(OntologyRelationTermToTermFilter)
                             .filter(([_key, value]) => value !== OntologyRelationTermToTermFilter.IS_A)
                             .map(([key, value]) => (
@@ -206,7 +217,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                             ))}
                     </Form.Field>
                     <Form.Field>
-                        <label>Ontology type</label>
+                        <label>{intl.formatMessage({ id: 'geneOntology.form.ontologyType' })}</label>
                         {Object.entries(OntologyType).map(([key, value]) => (
                             <Form.Checkbox
                                 key={key}
@@ -217,19 +228,19 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                         ))}
                     </Form.Field>
                     <Form.Input
-                        label='General depth'
+                        label={intl.formatMessage({ id: 'geneOntology.form.generalDepth' })}
                         type='number'
                         value={termsRelatedToTermForm.general_depth}
                         onChange={(e) => handleChangesInForm('general_depth', parseInt(e.target.value))}
                     />
                     <Form.Input
-                        label='Hierarchical depth to children'
+                        label={intl.formatMessage({ id: 'geneOntology.form.hierarchicalDepth' })}
                         type='number'
                         value={termsRelatedToTermForm.hierarchical_depth_to_children}
                         onChange={(e) => handleChangesInForm('hierarchical_depth_to_children', parseInt(e.target.value))}
                     />
                     <Form.Checkbox
-                        label='To root'
+                        label={intl.formatMessage({ id: 'geneOntology.form.toRoot' })}
                         checked={termsRelatedToTermForm.to_root === 1}
                         onChange={() => handleChangesInForm('to_root', termsRelatedToTermForm.to_root === 1 ? 0 : 1)}
                     />

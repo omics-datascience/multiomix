@@ -7,6 +7,7 @@ import { Nullable } from '../../../../../utils/interfaces'
 import { GeneOntologyCytoscapeChart } from './GeneOntologyCytoscapeChart'
 import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchParams, GoTerm, OntologyType, TermsRelatedToGene } from './types'
 import { debounce } from 'lodash'
+import { useIntl } from 'react-intl'
 
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
@@ -18,6 +19,7 @@ interface GeneOntologyPanelProps {
 }
 
 export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [terms, setTerms] = useState<Nullable<GoTerm[]>>(null)
     const [selectedTerm, setSelectedTerm] = useState<Nullable<string>>(null)
@@ -121,9 +123,9 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                         <Form>
                             <Form.Group grouped>
                                 <Form.Field>
-                                    <label>Filter type</label>
+                                    <label>{intl.formatMessage({ id: 'geneOntology.panel.filterType' })}</label>
                                     <Form.Radio
-                                        label='Intersection'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.filterType.intersection' })}
                                         value={GeneToTermFilterType.INTERSECTION}
                                         checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.INTERSECTION}
                                         onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.INTERSECTION)}
@@ -131,7 +133,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Radio
-                                        label='Union'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.filterType.union' })}
                                         value={GeneToTermFilterType.UNION}
                                         checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.UNION}
                                         onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.UNION)}
@@ -139,7 +141,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Radio
-                                        label='Enrichment'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.filterType.enrichment' })}
                                         value={GeneToTermFilterType.ENRICHMENT}
                                         checked={termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT}
                                         onChange={() => handleChangesInForm('filter_type', GeneToTermFilterType.ENRICHMENT)}
@@ -149,17 +151,17 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                             {termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT && (
                                 <>
                                     <Form.Input
-                                        label='P-value threshold'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.pValueThreshold' })}
                                         type='number'
                                         value={termsRelatedToGeneForm.p_value_threshold}
                                         onChange={(_e, { value }) => handleChangesInForm('p_value_threshold', value)}
                                     />
                                     <Form.Select
-                                        label='Correction method'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.correctionMethod' })}
                                         options={[
-                                            { key: 'analytical', text: 'Analytical', value: 'analytical' },
-                                            { key: 'bonferroni', text: 'Bonferroni', value: 'bonferroni' },
-                                            { key: 'false_discovery_rate', text: 'False discovery rate', value: 'false_discovery_rate' }
+                                            { key: 'analytical', text: intl.formatMessage({ id: 'geneOntology.panel.correctionMethod.analytical' }), value: 'analytical' },
+                                            { key: 'bonferroni', text: intl.formatMessage({ id: 'geneOntology.panel.correctionMethod.bonferroni' }), value: 'bonferroni' },
+                                            { key: 'false_discovery_rate', text: intl.formatMessage({ id: 'geneOntology.panel.correctionMethod.falseDiscoveryRate' }), value: 'false_discovery_rate' }
                                         ]}
                                         value={termsRelatedToGeneForm.correction_method}
                                         onChange={(_e, { value }) => handleChangesInForm('correction_method', value)}
@@ -168,9 +170,9 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                             )}
                             <Form.Group grouped>
                                 <Form.Field>
-                                    <label>Relation type</label>
+                                    <label>{intl.formatMessage({ id: 'geneOntology.panel.relationType' })}</label>
                                     <Form.Checkbox
-                                        label='Enables'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.relationType.enables' })}
                                         value={GORelationType.ENABLES}
                                         checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.ENABLES)}
                                         onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
@@ -178,7 +180,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Checkbox
-                                        label='Involved in'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.relationType.involvedIn' })}
                                         value={GORelationType.INVOLVED_IN}
                                         checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.INVOLVED_IN)}
                                         onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
@@ -186,7 +188,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Checkbox
-                                        label='Part of'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.relationType.locatedIn' })}
                                         value={GORelationType.PART_OF}
                                         checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.PART_OF)}
                                         onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
@@ -194,7 +196,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Checkbox
-                                        label='Located in'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.relationType.partOf' })}
                                         value={GORelationType.LOCATED_IN}
                                         checked={termsRelatedToGeneForm.relation_type.includes(GORelationType.LOCATED_IN)}
                                         onChange={(_e, { value }) => handleCheckboxChange('relation_type', value)}
@@ -205,7 +207,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 <Form.Field>
                                     <label>Ontology type</label>
                                     <Form.Checkbox
-                                        label='Biological process'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.ontologyType.biologicalProcess' })}
                                         value={OntologyType.BIOLOGICAL_PROCESS}
                                         checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.BIOLOGICAL_PROCESS)}
                                         onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
@@ -213,7 +215,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Checkbox
-                                        label='Molecular function'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.ontologyType.molecularFunction' })}
                                         value={OntologyType.MOLECULAR_FUNCTION}
                                         checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.MOLECULAR_FUNCTION)}
                                         onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
@@ -221,7 +223,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Form.Checkbox
-                                        label='Cellular component'
+                                        label={intl.formatMessage({ id: 'geneOntology.panel.ontologyType.cellularComponent' })}
                                         value={OntologyType.CELLULAR_COMPONENT}
                                         checked={termsRelatedToGeneForm.ontology_type.includes(OntologyType.CELLULAR_COMPONENT)}
                                         onChange={(_e, { value }) => handleCheckboxChange('ontology_type', value)}
@@ -238,8 +240,8 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                             <Table celled selectable>
                                 <Table.Header>
                                     <Table.Row>
-                                        <Table.HeaderCell>Term</Table.HeaderCell>
-                                        <Table.HeaderCell>Ontology type</Table.HeaderCell>
+                                        <Table.HeaderCell>{intl.formatMessage({ id: 'geneOntology.panel.table.term' })}</Table.HeaderCell>
+                                        <Table.HeaderCell>{intl.formatMessage({ id: 'geneOntology.panel.table.ontologyType' })}</Table.HeaderCell>
                                     </Table.Row>
                                 </Table.Header>
                                 <Table.Body>

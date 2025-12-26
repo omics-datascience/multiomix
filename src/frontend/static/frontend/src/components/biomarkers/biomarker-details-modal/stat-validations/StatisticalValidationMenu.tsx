@@ -2,6 +2,7 @@ import React from 'react'
 import { Menu } from 'semantic-ui-react'
 import { StatisticalValidationForTable, ActiveStatValidationsItemMenu } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { useIntl } from 'react-intl'
 
 /** StatisticalValidationMenu props. */
 interface StatisticalValidationMenuProps {
@@ -19,13 +20,14 @@ interface StatisticalValidationMenuProps {
  * @returns Component.
  */
 export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps) => {
+    const intl = useIntl()
     return (
         <Menu className='margin-top-0'>
             <Menu.Item
                 active={props.activeItem === ActiveStatValidationsItemMenu.BEST_FEATURES}
                 onClick={() => props.setActiveItem(ActiveStatValidationsItemMenu.BEST_FEATURES)}
             >
-                Most significant features
+                {intl.formatMessage({ id: 'statValidationMenu.bestFeatures' })}
 
                 <InfoPopup
                     content='Most significant features for the survival analysis'
@@ -39,10 +41,10 @@ export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps)
                 active={props.activeItem === ActiveStatValidationsItemMenu.KAPLAN_MEIER}
                 onClick={() => props.setActiveItem(ActiveStatValidationsItemMenu.KAPLAN_MEIER)}
             >
-                Kaplan-Meier
+                {intl.formatMessage({ id: 'statValidationMenu.kaplanMeier' })}
 
                 <InfoPopup
-                    content='Kaplan-Meier curve showing survival or hazard ratio'
+                    content={intl.formatMessage({ id: 'statValidationMenu.kaplanMeier.info' })}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -53,10 +55,10 @@ export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps)
                 active={props.activeItem === ActiveStatValidationsItemMenu.HEATMAP}
                 onClick={() => props.setActiveItem(ActiveStatValidationsItemMenu.HEATMAP)}
             >
-                Heatmap
+                {intl.formatMessage({ id: 'statValidationMenu.heatmap' })}
 
                 <InfoPopup
-                    content='Heatmap for every sample and molecule'
+                    content={intl.formatMessage({ id: 'statValidationMenu.heatmap.info' })}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'

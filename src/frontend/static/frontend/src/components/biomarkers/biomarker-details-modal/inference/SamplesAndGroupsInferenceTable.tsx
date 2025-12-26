@@ -5,6 +5,7 @@ import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { ClusterLabelsSetSelect } from '../../../common/cluster-labels/ClusterLabelsSetSelect'
 import { NewClusterLabelsSetModal } from '../../../common/cluster-labels/NewClusterLabelsSetModal'
+import { useIntl } from 'react-intl'
 
 declare const urlInferenceExperimentSamplesAndClusters: string
 declare const urlInferenceExperimentSamplesAndClustersDownload: string
@@ -22,6 +23,7 @@ interface SamplesAndGroupsInferenceTableProps {
  * @returns Component.
  */
 export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceTableProps) => {
+    const intl = useIntl()
     const [selectedClusterSetPk, setSelectedClusterSetPk] = useState<number | undefined>(undefined)
     const [openClusterLabelsSetModal, setOpenClusterLabelsSetModal] = useState(false)
 
@@ -47,15 +49,16 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                 <Grid.Column width={12}>
                     <PaginatedTable<SampleAndCluster>
                         headers={[
-                            { name: 'Sample', serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
-                            { name: 'Cluster', serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
+                            { name: intl.formatMessage({ id: 'inference.table.columns.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
+                            { name: intl.formatMessage({ id: 'inference.table.columns.cluster' }), serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
+
                         ]}
                         queryParams={{
                             inference_experiment_pk: props.selectedInferenceExperiment.id,
                             ...extraQueryParams
                         }}
                         customElements={[
-                            <Form.Field key='download-csv-button' className='custom-table-field' title='Download results in a CSV file'>
+                            <Form.Field key='download-csv-button' className='custom-table-field' title={intl.formatMessage({ id: 'inference.table.download.tooltip' })}>
                                 <Button color='green' icon as='a' href={downloadUrl}>
                                     <Icon name='file excel' />
                                 </Button>
@@ -63,10 +66,10 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                         ]}
                         customFilters={[
                             {
-                                label: 'Cluster',
+                                label: intl.formatMessage({ id: 'inference.table.filter.cluster.label' }),
                                 keyForServer: 'cluster',
                                 defaultValue: '',
-                                placeholder: 'Filter by cluster',
+                                placeholder: intl.formatMessage({ id: 'inference.table.filter.cluster.placeholder' }),
                                 allowZero: true,
                                 urlToRetrieveOptions: `${urlClustersUniqueInferenceExperiment}/${props.selectedInferenceExperiment.id}/`
                             }
@@ -74,8 +77,8 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput
                         defaultPageSize={25}
-                        searchLabel='Sample'
-                        searchPlaceholder='Search by sample'
+                        searchLabel={intl.formatMessage({ id: 'inference.table.search.label' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'inference.table.search.placeholder' })}
                         urlToRetrieveData={urlInferenceExperimentSamplesAndClusters}
                         mapFunction={(sampleAndCluster: SampleAndCluster) => {
                             return (
@@ -102,7 +105,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                                 setSelectedClusterSetPk={setSelectedClusterSetPk}
                             />
 
-                            <Button className='margin-top-2' primary fluid onClick={() => { setOpenClusterLabelsSetModal(true) }}>Add Cluster labels</Button>
+                            <Button className='margin-top-2' primary fluid onClick={() => { setOpenClusterLabelsSetModal(true) }}>{intl.formatMessage({ id: 'inference.table.addClusterLabels' })}</Button>
                         </>
                     )}
                 </Grid.Column>
