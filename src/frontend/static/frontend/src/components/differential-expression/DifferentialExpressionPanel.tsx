@@ -89,7 +89,7 @@ export const DiferentialExpressionPanel = () => {
         methodsOptions.unshift({ key: 'no_method', text: 'No method' })
 
         return [
-            { label: 'Method', keyForServer: 'method', defaultValue: '', placeholder: 'Select an existing method', options: methodsOptions, width: 3 }
+            { label: 'Method', keyForServer: 'tool', defaultValue: '', placeholder: 'Select an existing method', options: methodsOptions, width: 3 }
         ]
     }
 
@@ -197,8 +197,9 @@ export const DiferentialExpressionPanel = () => {
                     <PaginatedTable<DifferentialExpressionAnalysis>
                         headerTitle='Differential Expressions Analyses'
                         headers={[
-                            { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                            { name: 'Description', serverCodeToSort: 'description', width: 4 },
+                            { name: 'Name', serverCodeToSort: 'name', width: 2 },
+                            { name: 'Description', serverCodeToSort: 'description', width: 3 },
+                            { name: 'Method', serverCodeToSort: 'tool' },
                             { name: 'Date', serverCodeToSort: 'created_at' },
                             { name: 'State', serverCodeToSort: 'state', width: 1, textAlign: 'center' },
                             { name: 'Sources' },
@@ -232,6 +233,7 @@ export const DiferentialExpressionPanel = () => {
                                 <Table.Row key={differentialExpressionAnalysis.id as number}>
                                     <TableCellWithTitle value={differentialExpressionAnalysis.name} />
                                     <TableCellWithTitle value={differentialExpressionAnalysis.description} />
+                                    <TableCellWithTitle value={differentialExpressionAnalysis.tool} />
                                     <TableCellWithTitle value={formatDateLocale(differentialExpressionAnalysis.created_at as string, 'L')} />
                                     <TableCell textAlign='center'>
                                         <Icon

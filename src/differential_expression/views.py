@@ -163,7 +163,7 @@ class DifferentialExpressionList(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['name', 'description']
-    filterset_fields = ['tool', ]
+    filterset_fields = ['tool']
 
 
 class DifferentialExpressionSubmit(APIView):

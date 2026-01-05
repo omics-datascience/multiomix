@@ -17,8 +17,9 @@
     margin-bottom: 10px;
 }
 .large-modal {
-    min-height: 92% !important;
-    width: 92% !important;
+    min-height: 76% !important;
+    width: 88% !important;
+    padding: 1rem !important;
 }
 
 .space-modal:nth-child(1) {

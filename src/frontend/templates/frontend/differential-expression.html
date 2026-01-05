@@ -27,6 +27,8 @@
             const urlDeleteExperiment = "{% url 'differential_expression_delete' %}"
             const urlUpdateExperiment = "{% url 'differential_expression_update' %}"
             const urlDifferentialExpressionExperimentResults = "{% url 'differential_expression_results' %}"
+            const urlDownloadDifferentialExpressionResults = "{% url 'download_differential_expression_results' %}"
+            const urlDifferentialExpressionVolcanoData = "{% url 'differential_expression_volcano_data' %}"
         </script>
         {% render_bundle 'differentialExpression' 'js' %}
 {% endblock %}

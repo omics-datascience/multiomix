@@ -21,6 +21,7 @@ export interface DifferentialExpressionAnalysis {
     id: number;
     name: string;
     description: string;
+    tool: string;
     user: DjangoUser;
     clinical_source: DjangoExperimentSource;
     mrna_source: DjangoExperimentSource;
@@ -40,4 +41,11 @@ export interface DiffExpExperimentDetail {
     t_statistic: number;
     b_statistic: number;
     is_significant: boolean;
+}
+
+export type VolcanoPoint = {
+    id: string;
+    label: string;
+    log2FC: number;
+    pValue: number; // adj.P.Val
 }
