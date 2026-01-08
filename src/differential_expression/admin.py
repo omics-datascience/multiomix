@@ -182,7 +182,7 @@ class DifferentialExpressionExperimentResultAdmin(admin.ModelAdmin):
     is_significant_display.boolean = True
 
 
-# Custom admin site configuration
+
 admin.site.site_header = "Multiomix Administration"
 admin.site.site_title = "Multiomix Admin"
 admin.site.index_title = "Welcome to Multiomix Administration"

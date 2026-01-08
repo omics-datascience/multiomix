@@ -225,7 +225,7 @@ class CGDSDatasetClinicalAttributes(APIView):
     @staticmethod
     def get(request, pk: int):
         """Gets the clinical attributes of a CGDSDataset."""
-        cgds_study = CGDSStudy.objects.get(pk=pk)
+        cgds_study = get_object_or_404(CGDSStudy, pk=pk)
         # Gets the corresponding Study's Dataset
         cgds_dataset = get_cgds_dataset(cgds_study, FileType.CLINICAL)
         list_of_samples = cgds_dataset.get_column_names()

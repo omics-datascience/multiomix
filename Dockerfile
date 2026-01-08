@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev l
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs && mkdir /config \
     && mkdir /src
 
-# Instalar R 4.4.2 desde CRAN (Debian bookworm) y dependencias del sistema
+# Install R 4.4.2 from CRAN (Debian bookworm) and system dependencies
 RUN set -eux; \
   echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/debian-unstable.list; \
   printf 'APT::Default-Release "%s";\n' "bookworm" > /etc/apt/apt.conf.d/00default-release; \
@@ -56,7 +56,7 @@ RUN set -eux; \
     r-base=4.2.2.20221110-2 r-base-dev=4.2.2.20221110-2 r-recommended=4.2.2.20221110-2; \
   rm -rf /var/lib/apt/lists/*
 
-# Instalar Bioconductor limma (stats y base vienen con R)
+# Install Bioconductor limma (stats and base come with R)
 RUN R -q -e 'options(repos=c(CRAN="https://cloud.r-project.org")); install.packages("BiocManager"); BiocManager::install(version="3.16", ask=FALSE); BiocManager::install("limma", ask=FALSE, update=FALSE)'
 
 # Installs Python dependencies and compiles the frontend
