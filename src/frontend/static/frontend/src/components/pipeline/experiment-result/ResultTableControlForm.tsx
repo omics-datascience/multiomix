@@ -5,6 +5,7 @@ import { InfoPopup } from './gene-gem-details/InfoPopup'
 import { generatesOrderingQueryMultiField } from '../../../utils/util_functions'
 import { DjangoExperiment } from '../../../utils/django_interfaces'
 import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
+import { BiomarkerFromCorrelationModal } from './BiomarkerFromCorrelationModal'
 
 declare const urlDownloadResultWithFilters: string
 
@@ -29,9 +30,9 @@ interface ResultTableControlFormProps {
     /** Callback for changes in (adjusted) p-values precision only */
     changePrecisionState: (showHighPrecision: boolean) => void,
     /** Callback for reset filters and sorting */
-    resetFiltersAndSorting: (experiment: DjangoExperiment) => void
+    resetFiltersAndSorting: (experiment: DjangoExperiment) => void,
     /** Callback for reset only filters */
-    resetFilters: (experiment: ExperimentInfo) => void
+    resetFilters: (experiment: ExperimentInfo) => void,
 }
 
 /**
@@ -70,140 +71,152 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
     }
 
     return (
-        <Form>
-            <Form.Group>
-                {/* Number of showing/total combinations */}
-                <Form.Field width='3' className='margin-left-2'>
-                    <Statistic size='tiny'>
-                        <Statistic.Value id='stats-number-of-combinations'>
-                            <Icon name='dna' />
-                            <span>
-                                {props.numberOfShowingCombinations} / {props.totalNumberOfCombinations}
-                            </span>
-                        </Statistic.Value>
-                        <Statistic.Label>SHOWING/TOTAL</Statistic.Label>
-                    </Statistic>
+        <>
+            <Form>
+                <Form.Group>
+                    <div style={{ width: '100%', alignItems: 'center', display: 'flex' }}>
 
-                    <InfoPopup
-                        onTop={false}
-                        content='Number of significantly correlated features  according to the applied filters over the total significantly correlated'
-                    />
-                </Form.Field>
+                        {/* Number of showing/total combinations */}
+                        <Form.Field width='4' className='margin-left-2' style={{ display: 'flex', alignItems: 'center' }}>
+                            <Statistic size='mini'>
+                                <Statistic.Value id='stats-number-of-combinations'>
+                                    <Icon name='dna' />
+                                    <span>
+                                        {props.numberOfShowingCombinations} / {props.totalNumberOfCombinations}
+                                    </span>
+                                </Statistic.Value>
+                                <Statistic.Label>SHOWING/TOTAL</Statistic.Label>
+                            </Statistic>
 
-                {/* mRNA/MiRNA search */}
-                <Form.Input
-                    width={5}
-                    icon='search' iconPosition='left'
-                    label={`${props.gemDescription}/mRNA`}
-                    placeholder={`Search by ${props.gemDescription} or mRNA`}
-                    name='textFilter'
-                    value={props.tableControl.textFilter}
-                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
-                />
+                            <InfoPopup
+                                extraClassName='margin-left-2'
+                                onTop={false}
+                                content='Number of significantly correlated features  according to the applied filters over the total significantly correlated'
+                            />
+                        </Form.Field>
 
-                {/* Correlation threshold */}
-                <Form.Field width={6}>
-                    <Label
-                        id='slider-cor-filter-label'
-                        className='align-center bolder'
-                    >
-                        Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}
-                    </Label>
+                        {/* mRNA/MiRNA search */}
+                        <Form.Input
+                            width={5}
+                            icon='search' iconPosition='left'
+                            label={`${props.gemDescription}/mRNA`}
+                            placeholder={`Search by ${props.gemDescription} or mRNA`}
+                            name='textFilter'
+                            value={props.tableControl.textFilter}
+                            onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
+                            className='no-margin-right-form-field'
+                        />
 
-                    <SingleRangeSlider
-                        value={props.tableControl.coefficientThreshold}
-                        color='green'
-                        defaultMinValue={props.minimumCoefficientThreshold}
-                        className='margin-bottom-5'
-                        defaultMaxValue={0.95}
-                        step={0.05}
-                        onChange={(value: number) => props.onHandleTableControlChanges('coefficientThreshold', value)}
-                    />
+                        {/* Correlation threshold */}
+                        <Form.Field width={6}>
+                            <Label
+                                id='slider-cor-filter-label'
+                                className='align-center bolder'
+                            >
+                                Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}
+                            </Label>
 
-                    <Label
-                        id='label-minimum-threshold'
-                        color='green'
-                        className='pull-left'
-                    >
-                        {props.minimumCoefficientThreshold.toFixed(2)}
-                    </Label>
-                    <Label color='green' className='pull-right'>0.95</Label>
-                </Form.Field>
+                            <SingleRangeSlider
+                                value={props.tableControl.coefficientThreshold}
+                                color='green'
+                                defaultMinValue={props.minimumCoefficientThreshold}
+                                className='margin-bottom-5'
+                                defaultMaxValue={0.95}
+                                step={0.05}
+                                onChange={(value: number) => props.onHandleTableControlChanges('coefficientThreshold', value)}
+                            />
 
-                {/* Correlation type */}
-                <Form.Select
-                    width={2}
-                    fluid
-                    selectOnBlur={false}
-                    label='Correlation type'
-                    options={selectCorrelationTypeOptions}
-                    name='correlationType'
-                    value={props.tableControl.correlationType}
-                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
-                />
+                            <Label
+                                id='label-minimum-threshold'
+                                color='green'
+                                className='pull-left'
+                            >
+                                {props.minimumCoefficientThreshold.toFixed(2)}
+                            </Label>
+                            <Label color='green' className='pull-right'>0.95</Label>
+                        </Form.Field>
 
-                {/* Page size */}
-                <Form.Select
-                    width={2}
-                    fluid
-                    selectOnBlur={false}
-                    label='Number of entries'
-                    options={selectPageSizeOptions}
-                    name='pageSize'
-                    value={props.tableControl.pageSize}
-                    onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
-                />
+                        {/* Correlation type */}
+                        <Form.Select
+                            width={2}
+                            fluid
+                            selectOnBlur={false}
+                            label='Correlation type'
+                            options={selectCorrelationTypeOptions}
+                            name='correlationType'
+                            value={props.tableControl.correlationType}
+                            onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
+                            className='no-margin-right-form-field'
+                        />
 
-                <Form.Button
-                    width={1}
-                    label={isShowingHighPrecision ? '1.234e-5' : 'p < .001'}
-                    icon={isShowingHighPrecision ? 'eye slash' : 'eye'}
-                    title={`${isShowingHighPrecision ? 'Less' : 'More'} precise p-value`}
-                    onClick={() => props.changePrecisionState(!isShowingHighPrecision)}
-                />
+                        {/* Page size */}
+                        <Form.Select
+                            width={2}
+                            fluid
+                            selectOnBlur={false}
+                            label='Number of entries'
+                            options={selectPageSizeOptions}
+                            name='pageSize'
+                            value={props.tableControl.pageSize}
+                            onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
+                            className='no-margin-right-form-field'
+                        />
 
-                <Form.Button
-                    width={1}
-                    label='Filters'
-                    icon='filter'
-                    color='yellow'
-                    title='Reset filters only'
-                    className='no-margin-right-form-field'
-                    onClick={() => props.resetFilters(props.experimentInfo)}
-                />
+                        <Form.Button
+                            width={2}
+                            label={isShowingHighPrecision ? '1.234e-5' : 'p < .001'}
+                            icon={isShowingHighPrecision ? 'eye slash' : 'eye'}
+                            title={`${isShowingHighPrecision ? 'Les s' : 'More'} precise p-value`}
+                            onClick={() => props.changePrecisionState(!isShowingHighPrecision)}
+                        />
 
-                <Form.Button
-                    width={1}
-                    label='Clean'
-                    icon='trash'
-                    color='red'
-                    title='Reset filters and sorting'
-                    className='no-margin-right-form-field'
-                    onClick={() => props.resetFiltersAndSorting(props.experimentInfo.experiment)}
-                />
+                        <BiomarkerFromCorrelationModal
+                            experimentInfo={props.experimentInfo}
+                            tableControl={props.tableControl}
+                            onCreateBiomarker={({ experimentInfo, selectAll, tableControl }) => {
+                                console.log('filtros del biomarker', {
+                                    selectAll,
+                                    experimentInfo,
+                                    tableControl
+                                })
+                            }}
+                        />
 
-                <Form.Button
-                    width={1}
-                    label='Download'
-                    icon='cloud download'
-                    color='blue'
-                    title='Download result with filters applied'
-                    className='no-margin-right-form-field'
-                    onClick={() => window.open(generateDownloadWithFiltersQuery(), '_blank')}
-                    disabled={!props.experimentInfo.rows.length}
-                />
+                        <Form.Button
+                            width={2}
+                            label='Clean'
+                            icon='trash'
+                            color='red'
+                            title='Reset filters and sorting'
+                            className='no-margin-right-form-field'
+                            onClick={() => props.resetFiltersAndSorting(props.experimentInfo.experiment)}
+                        />
 
-                <Form.Field width={1}>
-                    <InfoPopup
-                        id='experiment-result-info-popup'
-                        content={(
-                            <p>
-                                This table shows all the combinations whose correlation coefficient was more or equal than selected threshold ({props.minimumCoefficientThreshold}). Choose some of the options listed in <i>Actions</i> column
-                            </p>
-                        )}
-                    />
-                </Form.Field>
-            </Form.Group>
-        </Form>
+                        <Form.Button
+                            width={2}
+                            label='Download'
+                            icon='cloud download'
+                            color='blue'
+                            title='Download result with filters applied'
+                            className='no-margin-right-form-field'
+                            onClick={() => window.open(generateDownloadWithFiltersQuery(), '_blank')}
+                            disabled={!props.experimentInfo.rows.length}
+                        />
+
+                        <Form.Field width={1} className='margin-left-2'>
+                            <InfoPopup
+                                id='experiment-result-info-popup'
+                                content={(
+                                    <p>
+                                        This table shows all the combinations whose correlation coefficient was more or equal than selected threshold ({props.minimumCoefficientThreshold}). Choose some of the options listed in <i>Actions</i> column
+                                    </p>
+                                )}
+                            />
+                        </Form.Field>
+                    </div>
+                </Form.Group>
+            </Form>
+        </>
+
     )
 }
