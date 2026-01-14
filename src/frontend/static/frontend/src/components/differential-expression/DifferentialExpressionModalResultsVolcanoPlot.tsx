@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import VolcanoPlot from './VolcanoPlot'
+import { VolcanoPlot } from './VolcanoPlot'
 import ky from 'ky'
 import { VolcanoPoint } from './types'
 import { Form } from 'semantic-ui-react'
@@ -65,6 +65,8 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                             { key: 1, text: '1', value: 1 },
                             { key: 2, text: '2', value: 2 },
                             { key: 3, text: '3', value: 3 },
+                            { key: 4, text: '4', value: 4 },
+                            { key: 5, text: '5', value: 5 }
                         ]}
                         value={fcThreshold}
                         onChange={(_, data) =>

@@ -2,97 +2,89 @@ import React from 'react'
 import Plot from 'react-plotly.js'
 
 type VolcanoPoint = {
-    id: string | number;
-    label?: string;
-    log2FC: number; // X axis
-    pValue: number;// it converts to Y axis -log10(pValue)
+    id: string | number
+    label?: string
+    log2FC: number // X axis
+    pValue: number // p-value (we plot -log10(p))
 }
 
 interface VolcanoPlotProps {
-    data: VolcanoPoint[];
-    fcThreshold?: number; // umbral of |log2FC|
-    pThreshold?: number; // umbral of p-value
+    data: VolcanoPoint[]
+    fcThreshold?: number
+    pThreshold?: number
 }
 
-const VolcanoPlot: React.FC<VolcanoPlotProps> = ({
+export const VolcanoPlot = ({
     data,
-    fcThreshold = 1, // default |log2FC| > 1
-    pThreshold = 0.05, // default p < 0.05
-}) => {
-    // Converts tp -log10(p)
+    fcThreshold = 1,
+    pThreshold = 0.05,
+}: VolcanoPlotProps) => {
     const transformP = (p: number) => -Math.log10(p)
 
-    // Separate in 3 groups: up, down, no significativos
-    const upregulated = data.filter(
-        d => d.log2FC >= fcThreshold && d.pValue <= pThreshold
+    const significant = data.filter(
+        (d) => Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold
     )
-    const downregulated = data.filter(
-        d => d.log2FC <= -fcThreshold && d.pValue <= pThreshold
-    )
+
     const nonsignificant = data.filter(
-        d => !upregulated.includes(d) && !downregulated.includes(d)
+        (d) => !(Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold)
     )
 
     return (
         <Plot
+            key={`${fcThreshold}-${pThreshold}`}
             data={[
                 {
-                    x: upregulated.map(d => d.log2FC),
-                    y: upregulated.map(d => transformP(d.pValue)),
-                    text: upregulated.map(d => d.label ?? d.id),
+                    x: significant.map((d) => d.log2FC),
+                    y: significant.map((d) => transformP(d.pValue)),
+                    text: significant.map((d) => d.label ?? d.id),
                     mode: 'markers',
                     type: 'scattergl',
-                    name: 'Up',
+                    name: 'Significant',
                     marker: { size: 6 },
                     hovertemplate:
-                    'log2FC: %{x:.2f}<br>-log10(p): %{y:.2f}<br>%{text}<extra></extra>',
+            '<b>Significant</b><br>' +
+            'log2FC: %{x:.2f}<br>' +
+            '-log10(p): %{y:.2f}<br>' +
+            '%{text}' +
+            '<extra></extra>',
                 },
                 {
-                    x: downregulated.map(d => d.log2FC),
-                    y: downregulated.map(d => transformP(d.pValue)),
-                    text: downregulated.map(d => d.label ?? d.id),
+                    x: nonsignificant.map((d) => d.log2FC),
+                    y: nonsignificant.map((d) => transformP(d.pValue)),
+                    text: nonsignificant.map((d) => d.label ?? d.id),
                     mode: 'markers',
                     type: 'scattergl',
-                    name: 'Down',
-                    marker: { size: 6 },
-                    hovertemplate:
-                        'log2FC: %{x:.2f}<br>-log10(p): %{y:.2f}<br>%{text}<extra></extra>',
-                },
-                {
-                    x: nonsignificant.map(d => d.log2FC),
-                    y: nonsignificant.map(d => transformP(d.pValue)),
-                    text: nonsignificant.map(d => d.label ?? d.id),
-                    mode: 'markers',
-                    type: 'scattergl',
-                    name: 'No sig.',
+                    name: 'Not significant',
                     marker: { size: 4, opacity: 0.6 },
                     hovertemplate:
-                    'log2FC: %{x:.2f}<br>-log10(p): %{y:.2f}<br>%{text}<extra></extra>',
+            '<b>Not significant</b><br>' +
+            'log2FC: %{x:.2f}<br>' +
+            '-log10(p): %{y:.2f}<br>' +
+            '%{text}' +
+            '<extra></extra>',
                 },
             ]}
             layout={{
-                title: 'Volcano plot',
-                xaxis: {
-                    title: 'log2(Fold Change)',
-                    zeroline: true,
-                    zerolinewidth: 1,
-                },
-                yaxis: {
-                    title: '-log10(p-value)',
-                    zeroline: false,
-                },
+                title: 'Volcano Plot',
                 hovermode: 'closest',
                 showlegend: true,
-                margin: { l: 60, r: 20, t: 40, b: 50 },
+                margin: { l: 90, r: 40, t: 50, b: 70 },
+
+                // Axis labels (normal, not floating)
+                xaxis: {
+                    title: { text: 'log2(Fold Change)', standoff: 20 },
+                    zeroline: false,
+                },
+                yaxis: {
+                    title: { text: '-log10(p-value)', standoff: 10 },
+                    zeroline: false,
+                },
             }}
             config={{
                 responsive: true,
                 displayModeBar: true,
             }}
-            key={`${fcThreshold}-${pThreshold}`}
             style={{ width: '100%', height: '500px' }}
         />
     )
 }
-
-export default VolcanoPlot

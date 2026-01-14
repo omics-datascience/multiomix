@@ -39,7 +39,14 @@ export const DifferentialExpressionModalResults = (props: DifferentialExpression
             className='space-modal large-modal'
             onClose={props.closeModal}
         >
-            <Tab panes={panes} />
+            <>
+                <Modal.Header>
+                    Differential Expression Analysis Results - {props.differentialExpressionAnalysis?.name}
+                </Modal.Header>
+                <Modal.Content scrolling>
+                    <Tab panes={panes} />
+                </Modal.Content>
+            </>
         </Modal>
     )
 }

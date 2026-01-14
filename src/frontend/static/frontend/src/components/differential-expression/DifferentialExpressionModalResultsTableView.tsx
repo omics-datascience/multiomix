@@ -24,7 +24,7 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
     return (
         <>
             <PaginatedTable<DiffExpExperimentDetail>
-                headerTitle='Differential Expressions experiment result'
+                headerTitle='Experiment results'
                 headers={[
                     { name: 'Gene', serverCodeToSort: 'gene' },
                     { name: 'adj_p_val', serverCodeToSort: 'adj_p_val' },
@@ -61,11 +61,11 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
                         <TableCellWithTitle
                             value={differentialExpressionAnalysis.adj_p_val.toString()}
                         />
-                        <TableCell>{differentialExpressionAnalysis.ave_expr}</TableCell>
+                        <TableCell>{differentialExpressionAnalysis.ave_expr.toFixed(4)}</TableCell>
                         <TableCell>
-                            {differentialExpressionAnalysis.b_statistic}
+                            {differentialExpressionAnalysis.b_statistic.toFixed(4)}
                         </TableCell>
-                        <TableCell>{differentialExpressionAnalysis.log_fc}</TableCell>
+                        <TableCell>{differentialExpressionAnalysis.log_fc.toFixed(4)}</TableCell>
                         <TableCell textAlign='center'>
                             {differentialExpressionAnalysis.is_significant
                                 ? (
@@ -77,7 +77,7 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
                         </TableCell>
                         <TableCell>{differentialExpressionAnalysis.p_value}</TableCell>
                         <TableCell>
-                            {differentialExpressionAnalysis.t_statistic}
+                            {differentialExpressionAnalysis.t_statistic.toFixed(4)}
                         </TableCell>
                     </Table.Row>
                 )}
