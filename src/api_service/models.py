@@ -335,7 +335,9 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         if self.user_file:
             return self.user_file.number_of_rows
-        return self.__get_cgds_datasets_joined_df().shape[0]
+        if self.cgds_dataset:
+            return self.__get_cgds_datasets_joined_df().shape[0]
+        return 0
 
     @property
     def number_of_samples(self) -> int:
@@ -345,7 +347,9 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         if self.user_file:
             return self.user_file.number_of_samples
-        return self.__get_cgds_datasets_joined_df().shape[1]
+        if self.cgds_dataset:
+            return self.__get_cgds_datasets_joined_df().shape[1]
+        return 0
 
 
 class Experiment(models.Model):
