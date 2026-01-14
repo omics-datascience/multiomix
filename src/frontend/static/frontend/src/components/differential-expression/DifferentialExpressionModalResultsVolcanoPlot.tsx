@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import VolcanoPlot from './VolcanoPlot'
+import { VolcanoPlot } from './VolcanoPlot'
 import ky from 'ky'
 import { VolcanoPoint } from './types'
 import { Form } from 'semantic-ui-react'
@@ -14,6 +14,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
     const [volcanoPoints, setVolcanoPoints] = useState<VolcanoPoint[]>([])
     const [fcThreshold, setFcThreshold] = useState<number>(1)
     const [pThreshold, setPThreshold] = useState<number>(0.05)
+    const [showThresholds, setShowThresholds] = useState(true)
 
     const getVolcanoPlotData = (signal: AbortSignal) => {
         if (!props.differentialExpressionAnalysisId) {
@@ -65,6 +66,8 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                             { key: 1, text: '1', value: 1 },
                             { key: 2, text: '2', value: 2 },
                             { key: 3, text: '3', value: 3 },
+                            { key: 4, text: '4', value: 4 },
+                            { key: 5, text: '5', value: 5 }
                         ]}
                         value={fcThreshold}
                         onChange={(_, data) =>
@@ -81,12 +84,19 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                         onChange={(_, data) =>
                             setPThreshold(Number(data.value))}
                     />
+                    <Form.Checkbox
+                        label='Show thresholds'
+                        checked={showThresholds}
+                        onChange={(_, data) =>
+                            setShowThresholds(Boolean(data.checked))}
+                    />
                 </Form.Group>
             </Form>
 
             {/* 📊 Plot */}
             {volcanoPoints.length > 0 && (
                 <VolcanoPlot
+                    showThresholds={showThresholds}
                     data={volcanoPoints}
                     fcThreshold={fcThreshold}
                     pThreshold={pThreshold}
