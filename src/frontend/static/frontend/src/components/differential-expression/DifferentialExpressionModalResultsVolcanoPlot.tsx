@@ -14,6 +14,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
     const [volcanoPoints, setVolcanoPoints] = useState<VolcanoPoint[]>([])
     const [fcThreshold, setFcThreshold] = useState<number>(1)
     const [pThreshold, setPThreshold] = useState<number>(0.05)
+    const [showThresholds, setShowThresholds] = useState(true)
 
     const getVolcanoPlotData = (signal: AbortSignal) => {
         if (!props.differentialExpressionAnalysisId) {
@@ -83,12 +84,19 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                         onChange={(_, data) =>
                             setPThreshold(Number(data.value))}
                     />
+                    <Form.Checkbox
+                        label='Show thresholds'
+                        checked={showThresholds}
+                        onChange={(_, data) =>
+                            setShowThresholds(Boolean(data.checked))}
+                    />
                 </Form.Group>
             </Form>
 
             {/* 📊 Plot */}
             {volcanoPoints.length > 0 && (
                 <VolcanoPlot
+                    showThresholds={showThresholds}
                     data={volcanoPoints}
                     fcThreshold={fcThreshold}
                     pThreshold={pThreshold}

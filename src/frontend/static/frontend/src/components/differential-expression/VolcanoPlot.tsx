@@ -12,12 +12,14 @@ interface VolcanoPlotProps {
     data: VolcanoPoint[]
     fcThreshold?: number
     pThreshold?: number
+    showThresholds: boolean
 }
 
 export const VolcanoPlot = ({
     data,
     fcThreshold = 1,
     pThreshold = 0.05,
+    showThresholds
 }: VolcanoPlotProps) => {
     const transformP = (p: number) => -Math.log10(p)
 
@@ -28,6 +30,45 @@ export const VolcanoPlot = ({
     const nonsignificant = data.filter(
         (d) => !(Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold)
     )
+    const pLineY = transformP(pThreshold)
+
+    const thresholdShapes = showThresholds
+        ? [
+        // p-value threshold (horizontal)
+            {
+                type: 'line',
+                xref: 'paper',
+                x0: 0,
+                x1: 1,
+                yref: 'y',
+                y0: pLineY,
+                y1: pLineY,
+                line: { dash: 'dash', width: 1 },
+            },
+            // +log2FC threshold
+            {
+                type: 'line',
+                xref: 'x',
+                x0: fcThreshold,
+                x1: fcThreshold,
+                yref: 'paper',
+                y0: 0,
+                y1: 1,
+                line: { dash: 'dash', width: 1 },
+            },
+            // -log2FC threshold
+            {
+                type: 'line',
+                xref: 'x',
+                x0: -fcThreshold,
+                x1: -fcThreshold,
+                yref: 'paper',
+                y0: 0,
+                y1: 1,
+                line: { dash: 'dash', width: 1 },
+            },
+        ]
+        : []
 
     return (
         <Plot
@@ -79,6 +120,7 @@ export const VolcanoPlot = ({
                     title: { text: '-log10(p-value)', standoff: 10 },
                     zeroline: false,
                 },
+                shapes: thresholdShapes,
             }}
             config={{
                 responsive: true,
