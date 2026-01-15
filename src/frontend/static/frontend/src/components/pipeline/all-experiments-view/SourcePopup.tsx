@@ -30,6 +30,11 @@ export const SourcePopup = (props: SourcePopupProps) => {
     const isUserFile = props.source.user_file !== null
     const datasetObj = props.source.user_file ?? props.source.cgds_dataset
 
+    // If there's no valid source, don't render anything
+    if (!datasetObj) {
+        return null
+    }
+
     // Gets file's type description in plural to show the number of rows
     const datasetRowDescriptionInPlural = getFileRowDescriptionInPlural(datasetObj.file_type)
 

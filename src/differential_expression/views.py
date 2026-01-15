@@ -23,14 +23,13 @@ from common.enums import ResponseCode
 from common.functions import get_enum_from_value, get_intersection, encode_json_response_status
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
+from api_service.models import ExperimentClinicalSource, ExperimentSource
 from datasets_synchronization.models import CGDSDataset
 from datasets_synchronization.models import CGDSStudy
 from differential_expression.models import (
-    DifferentialExpressionClinicalSource,
     DifferentialExpressionExperiment,
-    DifferentialExpressionSource,
+    DifferentialExpressionExperimentState,
 )
-from differential_expression.models import DifferentialExpressionExperimentState
 from differential_expression.serializers import (
     DifferentialExpressionExperimentDetailSerializer,
     DifferentialExpressionExperimentResultSerializer,
@@ -49,13 +48,13 @@ def create_differential_expression_source(
         file_type: FileType,
         prefix: str
 ) -> tuple[
-    DifferentialExpressionSource | DifferentialExpressionClinicalSource | None, DifferentialExpressionClinicalSource | None
+    ExperimentSource | ExperimentClinicalSource | None, ExperimentClinicalSource | None
 ]:
     """
     Creates a Source object for differential expression experiments.
     """
     is_clinical = prefix == 'clinical'
-    source = DifferentialExpressionClinicalSource() if is_clinical else DifferentialExpressionSource()
+    source = ExperimentClinicalSource() if is_clinical else ExperimentSource()
     clinical_source = None
 
     if source_type == SourceType.NEW_DATASET.value:
@@ -278,7 +277,8 @@ class DifferentialExpressionResults(generics.ListAPIView):
     serializer_class = DifferentialExpressionExperimentResultSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['gene']
     ordering_fields = ['adj_p_val', 'log_fc', 'p_value', 'ave_expr']
     ordering = ['adj_p_val']  # Default ordering by adjusted p-value
 
@@ -726,6 +726,8 @@ def download_differential_expression_results(request, pk: int):
     """
     Downloads all the differential expression results for a specific experiment.
     Returns a TSV file with all results (no pagination).
+    Supports optional filtering via query parameter:
+    - p_value: adjusted p-value threshold (returns genes with adj_p_val <= p_value)
     """
     experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
 
@@ -737,8 +739,27 @@ def download_differential_expression_results(request, pk: int):
             experiment.shared_users.filter(id=user.id).exists()):
         return HttpResponse('Unauthorized', status=401)
 
-    # Get all results (no pagination)
-    results = experiment.results.all().order_by('adj_p_val')
+    # Get filter parameter from query string
+    p_value = request.GET.get('p_value')
+
+    # Apply filter if provided
+    if p_value is not None:
+        try:
+            p_value = float(p_value)
+        except ValueError:
+            return HttpResponse('Invalid p_value. Must be numeric.', status=400)
+
+        # Validate p_value
+        if p_value < 0 or p_value > 1:
+            return HttpResponse('p_value must be between 0 and 1', status=400)
+
+        # Filter results: adj_p_val <= p_value (significant genes)
+        results = experiment.results.filter(adj_p_val__lte=p_value).order_by('adj_p_val')
+        filename_suffix = f'_filtered_p{p_value}'
+    else:
+        # Get all results (no filtering)
+        results = experiment.results.all().order_by('adj_p_val')
+        filename_suffix = '_all'
 
     if not results.exists():
         return HttpResponse('No results found for this experiment', status=404)
@@ -763,6 +784,6 @@ def download_differential_expression_results(request, pk: int):
     # Generate HTTP response for file download
     response = HttpResponse(file_to_send, 'text/csv')
     response['Content-Length'] = file_to_send.size
-    response['Content-Disposition'] = f'attachment; filename="{experiment.name}_results.tsv"'
+    response['Content-Disposition'] = f'attachment; filename="{experiment.name}_results{filename_suffix}.tsv"'
 
     return response

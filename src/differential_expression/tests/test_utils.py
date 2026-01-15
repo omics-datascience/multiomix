@@ -1,10 +1,9 @@
 import os
 from typing import Optional
 from django.contrib.auth.models import User
+from api_service.models import ExperimentSource, ExperimentClinicalSource
 from common.tests_utils import create_user_file
 from differential_expression.models import (
-    DifferentialExpressionSource,
-    DifferentialExpressionClinicalSource,
     DifferentialExpressionExperiment,
     DifferentialExpressionExperimentState,
     DifferentialExpressionTool
@@ -24,30 +23,30 @@ def get_test_file_path(filename: str) -> str:
     return file_path
 
 
-def create_differential_expression_source(user_file: UserFile) -> DifferentialExpressionSource:
+def create_differential_expression_source(user_file: UserFile) -> ExperimentSource:
     """
-    Creates a new instance of DifferentialExpressionSource saved in DB
-    @param user_file: UserFile to create the DifferentialExpressionSource
-    @return: DifferentialExpressionSource saved instance
+    Creates a new instance of ExperimentSource saved in DB
+    @param user_file: UserFile to create the ExperimentSource
+    @return: ExperimentSource saved instance
     """
-    source = DifferentialExpressionSource.objects.create(user_file=user_file)
+    source = ExperimentSource.objects.create(user_file=user_file)
     return source
 
 
-def create_differential_expression_clinical_source(user_file: UserFile) -> DifferentialExpressionClinicalSource:
+def create_differential_expression_clinical_source(user_file: UserFile) -> ExperimentClinicalSource:
     """
-    Creates a new instance of DifferentialExpressionClinicalSource saved in DB
-    @param user_file: UserFile to create the DifferentialExpressionClinicalSource
-    @return: DifferentialExpressionClinicalSource saved instance
+    Creates a new instance of ExperimentClinicalSource saved in DB
+    @param user_file: UserFile to create the ExperimentClinicalSource
+    @return: ExperimentClinicalSource saved instance
     """
-    source = DifferentialExpressionClinicalSource.objects.create(user_file=user_file)
+    source = ExperimentClinicalSource.objects.create(user_file=user_file)
     return source
 
 
 def create_test_differential_expression_experiment(
         name: str,
-        clinical_source: DifferentialExpressionClinicalSource,
-        mrna_source: DifferentialExpressionSource,
+        clinical_source: ExperimentClinicalSource,
+        mrna_source: ExperimentSource,
         user: User,
         state: DifferentialExpressionExperimentState = DifferentialExpressionExperimentState.WAITING_FOR_QUEUE,
         description: str = 'Test experiment',
