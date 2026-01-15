@@ -31,6 +31,10 @@ interface DiferentialExpressionPanelState {
         isOpen: boolean
     }
 }
+/**
+ *  Differential Expression Panel component
+ * @returns JSX.Element
+ */
 
 export const DiferentialExpressionPanel = () => {
     const [state, setState] = useState<DiferentialExpressionPanelState>({

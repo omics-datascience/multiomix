@@ -241,8 +241,9 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
 }
 
 /**
- * Django Model api_service.ExperimentSource todo agregar opcional update_differential_expression_experiments
+ * Django Model api_service.ExperimentSource
  */
+// Todo: agregar opcional update_differential_expression_experiments
 interface DjangoExperimentSource {
     id?: number,
     user_file: DjangoSimpleUserFile,

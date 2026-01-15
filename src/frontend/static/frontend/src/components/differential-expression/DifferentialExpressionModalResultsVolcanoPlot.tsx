@@ -16,26 +16,6 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
     const [pThreshold, setPThreshold] = useState<number>(0.05)
     const [showThresholds, setShowThresholds] = useState(true)
 
-    const getVolcanoPlotData = (signal: AbortSignal) => {
-        if (!props.differentialExpressionAnalysisId) {
-            return
-        }
-
-        const url =
-            `${urlDifferentialExpressionVolcanoData}/` +
-            `${props.differentialExpressionAnalysisId}/`
-
-        ky.get(url, { retry: 5, signal }).then((response) => {
-            response.json().then((volcanoPointsResponse: VolcanoPoint[]) => {
-                setVolcanoPoints(volcanoPointsResponse)
-            }).catch((err) => {
-                console.error('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.error('Error getting volcanoPoints ->', err)
-        })
-    }
-
     useEffect(() => {
         const id = props.differentialExpressionAnalysisId
 
@@ -44,7 +24,20 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
         }
 
         const controller = new AbortController()
-        getVolcanoPlotData(controller.signal)
+
+        const url =
+            `${urlDifferentialExpressionVolcanoData}/` +
+            `${props.differentialExpressionAnalysisId}/`
+
+        ky.get(url, { retry: 5, signal: controller.signal }).then((response) => {
+            response.json().then((volcanoPointsResponse: VolcanoPoint[]) => {
+                setVolcanoPoints(volcanoPointsResponse)
+            }).catch((err) => {
+                console.error('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.error('Error getting volcanoPoints ->', err)
+        })
 
         return () => {
             controller.abort()
