@@ -119,7 +119,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
                     <Input
                         icon='search'
                         fluid
-                        placeholder={intl.formatMessage({ id: 'metabolicPathways.searchPlaceholder' })}
+                        placeholder={intl.formatMessage({ id: 'common.search' })}
                         onChange={handleSearch}
                         value={searchInput}
                         disabled={selectedSource === undefined}

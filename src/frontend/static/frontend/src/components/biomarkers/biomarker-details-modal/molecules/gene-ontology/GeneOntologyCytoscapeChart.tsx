@@ -199,7 +199,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
         <Grid.Row columns={2}>
             <Grid.Column width={3}>
                 {/* Go back button. */}
-                <Button onClick={props.goBack} icon='arrow left' content={intl.formatMessage({ id: 'geneOntology.goBack' })} />
+                <Button onClick={props.goBack} icon='arrow left' content={intl.formatMessage({ id: 'common.goBack' })} />
 
                 {/* Form for termsRelatedToTermForm */}
                 <Form className='margin-top-5'>

@@ -171,19 +171,19 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
             <PaginatedTable<StatisticalValidationForTable>
                 headerTitle={intl.formatMessage({ id: 'statValidationsTable.headerTitle' })}
                 headers={[
-                    { name: intl.formatMessage({ id: 'statValidationsTable.headers.name' }), serverCodeToSort: 'name', width: 3 },
-                    { name: intl.formatMessage({ id: 'statValidationsTable.headers.description' }), serverCodeToSort: 'description', width: 4 },
+                    { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                    { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
                     { name: intl.formatMessage({ id: 'statValidationsTable.headers.state' }), serverCodeToSort: 'state', textAlign: 'center' },
                     { name: intl.formatMessage({ id: 'statValidationsTable.headers.model' }), textAlign: 'center', width: 2 },
                     { name: intl.formatMessage({ id: 'statValidationsTable.headers.date' }), serverCodeToSort: 'created' },
                     { name: intl.formatMessage({ id: 'statValidationsTable.headers.datasets' }) },
-                    { name: 'Actions' }
+                    { name: intl.formatMessage({ id: 'common.actions' }) }
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 showSearchInput
-                searchLabel={intl.formatMessage({ id: 'statValidationsTable.search.label' })}
-                searchPlaceholder={intl.formatMessage({ id: 'statValidationsTable.search.placeholder' })}
+                searchLabel={intl.formatMessage({ id: 'common.name' })}
+                searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'common.name' }) + ' / ' + intl.formatMessage({ id: 'common.description' })}
                 urlToRetrieveData={urlBiomarkerStatisticalValidations}
                 customElements={[
                     <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'statValidationsTable.newStatValidation' })}>

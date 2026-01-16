@@ -49,7 +49,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                 <Grid.Column width={12}>
                     <PaginatedTable<SampleAndCluster>
                         headers={[
-                            { name: intl.formatMessage({ id: 'inference.table.columns.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
+                            { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
                             { name: intl.formatMessage({ id: 'inference.table.columns.cluster' }), serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
 
                         ]}
@@ -66,7 +66,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                         ]}
                         customFilters={[
                             {
-                                label: intl.formatMessage({ id: 'inference.table.filter.cluster.label' }),
+                                label: intl.formatMessage({ id: 'common.sample' }),
                                 keyForServer: 'cluster',
                                 defaultValue: '',
                                 placeholder: intl.formatMessage({ id: 'inference.table.filter.cluster.placeholder' }),
@@ -77,8 +77,8 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput
                         defaultPageSize={25}
-                        searchLabel={intl.formatMessage({ id: 'inference.table.search.label' })}
-                        searchPlaceholder={intl.formatMessage({ id: 'inference.table.search.placeholder' })}
+                        searchLabel={intl.formatMessage({ id: 'common.sample' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'common.search' })}
                         urlToRetrieveData={urlInferenceExperimentSamplesAndClusters}
                         mapFunction={(sampleAndCluster: SampleAndCluster) => {
                             return (

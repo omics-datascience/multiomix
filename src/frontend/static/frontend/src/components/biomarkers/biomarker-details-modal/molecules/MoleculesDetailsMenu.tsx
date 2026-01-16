@@ -36,7 +36,7 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
      */
     const items: ItemMenuProp[] = [
         {
-            name: intl.formatMessage({ id: 'moleculesDetailsMenu.details' }),
+            name: intl.formatMessage({ id: 'common.details' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
             popupInfo: `Details of ${props.selectedMolecule.identifier} obtained from different standardized sources`,

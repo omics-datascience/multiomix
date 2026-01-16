@@ -78,7 +78,7 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                             <Header size='huge' icon>
                                 <Icon name='folder outline' />
 
-                                {intl.formatMessage({ id: 'methylationInformation.noDetails' })}
+                                {intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'methylationInformation.context.site' })}
 
                             </Header>
                         </Grid.Column>

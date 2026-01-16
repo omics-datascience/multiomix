@@ -136,7 +136,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
             max: Math.ceil(Math.max(...coefficients) + EPSILON)
         },
         noData: {
-            text: intl.formatMessage({ id: 'statValidationBestFeatures.noData' })
+            text: intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'statValidationBestFeatures.context.features' })
 
         }
     }

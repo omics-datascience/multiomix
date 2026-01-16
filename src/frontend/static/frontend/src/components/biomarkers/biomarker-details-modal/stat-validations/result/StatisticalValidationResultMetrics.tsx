@@ -79,7 +79,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
 
             {/* Model details. */}
             <Segment>
-                <Header as='h2' dividing>{intl.formatMessage({ id: 'statValidationMetrics.header.modelDetails' })}</Header>
+                <Header as='h2' dividing>{intl.formatMessage({ id: 'common.details' }) + ' ' + intl.formatMessage({ id: 'statValidationMetrics.header.model' })}</Header>
 
                 {props.selectedStatisticalValidation.trained_model !== null &&
                     <ModelDetailsPanel trainedModelPk={props.selectedStatisticalValidation.trained_model} />}

@@ -78,9 +78,9 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
                         <Grid.Column textAlign='center'>
                             <Header as='h2' icon>
                                 <Icon name='search minus' />
-                                {intl.formatMessage({ id: 'pathwaysInformation.noPathways.title' })}
+                                {intl.formatMessage({ id: 'common.noDetails' })}
                                 <Header.Subheader>
-                                    {intl.formatMessage({ id: 'pathwaysInformation.noPathways.subtitle' })}
+                                    {intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'pathwaysInformation.context.gene' })}
                                 </Header.Subheader>
                             </Header>
                         </Grid.Column>

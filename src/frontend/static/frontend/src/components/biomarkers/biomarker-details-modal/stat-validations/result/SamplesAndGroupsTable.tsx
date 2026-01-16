@@ -24,7 +24,7 @@ export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
     return (
         <PaginatedTable<SampleAndCluster>
             headers={[
-                { name: intl.formatMessage({ id: 'samplesAndGroupsTable.header.sample' }), serverCodeToSort: 'sample', width: 3 },
+                { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3 },
                 { name: intl.formatMessage({ id: 'samplesAndGroupsTable.header.cluster' }), serverCodeToSort: 'cluster', width: 2 }
             ]}
             queryParams={{ statistical_validation_pk: props.selectedStatisticalValidation.id }}
@@ -41,8 +41,8 @@ export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
             defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
             showSearchInput
             defaultPageSize={25}
-            searchLabel={intl.formatMessage({ id: 'samplesAndGroupsTable.search.label' })}
-            searchPlaceholder={intl.formatMessage({ id: 'samplesAndGroupsTable.search.placeholder' })}
+            searchLabel={intl.formatMessage({ id: 'common.sample' })}
+            searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'common.sample' })}
             urlToRetrieveData={urlStatisticalValidationSamplesAndClusters}
             mapFunction={(sampleAndCluster: SampleAndCluster) => {
                 return (
