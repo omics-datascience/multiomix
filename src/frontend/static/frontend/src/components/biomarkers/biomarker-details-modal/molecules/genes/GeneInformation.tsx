@@ -340,10 +340,10 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     <Grid.Column textAlign='center'>
                         <Header as='h2' icon>
                             <Icon name='search minus' />
-                            {intl.formatMessage({ id: 'geneInformation.noDetails.title' })}
+                            {intl.formatMessage({ id: 'common.noDetails' })}
 
                             <Header.Subheader>
-                                {intl.formatMessage({ id: 'geneInformation.noDetails.subtitle' })}
+                                {intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'geneInformation.context.gene' })}
                             </Header.Subheader>
                         </Header>
                     </Grid.Column>
@@ -365,11 +365,11 @@ export const GeneInformation = (props: GeneInformationProps) => {
                             extra={(
                                 <Grid textAlign='center'>
                                     <Grid.Row columns={1}>
-                                        <Grid.Column><strong><strong>{intl.formatMessage({ id: 'geneInformation.grch37' })}:</strong></strong></Grid.Column>
+                                        <Grid.Column><strong><strong>GRCh37:</strong></strong></Grid.Column>
                                         <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_GRCh37}-{geneData.end_GRCh37}</Grid.Column>
                                     </Grid.Row>
                                     <Grid.Row columns={1}>
-                                        <Grid.Column><strong>{intl.formatMessage({ id: 'geneInformation.grch38' })}:</strong></Grid.Column>
+                                        <Grid.Column><strong>GRCh38:</strong></Grid.Column>
                                         <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_position}-{geneData.end_position}</Grid.Column>
                                     </Grid.Row>
                                 </Grid>

@@ -57,8 +57,8 @@ export const AboutUs = () => {
                                 </Header>
 
                                 <List>
-                                    <List.Item icon='user' content={intl.formatMessage({ id: 'about.coordinator.Abba' })} />
-                                    <List.Item icon='user' content={intl.formatMessage({ id: 'about.coordinator.Butti' })} />
+                                    <List.Item icon='user' content='PhD Martín Abba' />
+                                    <List.Item icon='user' content='Dr. MSc. Matias Butti' />
                                 </List>
                             </Grid.Column>
                         </Grid.Row>
@@ -70,14 +70,16 @@ export const AboutUs = () => {
                             <Grid.Column>
                                 <Header as='h1'>
                                     {intl.formatMessage({ id: 'about.members.title' })}
+
                                 </Header>
 
                                 <Header as='h3'>
-                                    {intl.formatMessage({ id: 'about.members.main' })}
+                                    {intl.formatMessage({ id: 'about.members.main' })} B.Comp.Sc. Genaro Camele
                                 </Header>
 
                                 <Header as='h3'>
-                                    {intl.formatMessage({ id: 'about.members.collaborators' })}
+                                    {intl.formatMessage({ id: 'about.members.collaborators' })} Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, B.Comp.Sc. Julián Muhlberger, St. Ramiro Lasorsa, PhD. Waldo Hasperué
+
                                 </Header>
                             </Grid.Column>
                         </Grid.Row>

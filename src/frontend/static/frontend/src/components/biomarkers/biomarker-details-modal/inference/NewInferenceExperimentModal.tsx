@@ -322,7 +322,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                         name='name'
                                         value={form.name}
                                         icon='asterisk'
-                                        placeholder={intl.formatMessage({ id: 'inference.new.name' })}
+                                        placeholder={intl.formatMessage({ id: 'common.name' })}
                                         onChange={handleInputChange}
                                     />
 
@@ -383,7 +383,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
-                        {intl.formatMessage({ id: 'inference.new.goBack' })}
+                        {intl.formatMessage({ id: 'common.goBack' })}
                     </Button>
                 )}
 
@@ -411,7 +411,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         }}
                         disabled={!formIsValid()}
                     >
-                        {intl.formatMessage({ id: 'inference.new.confirm' })}
+                        {intl.formatMessage({ id: 'common.confirm' })}
                     </Button>
                 )}
             </Modal.Actions>

@@ -169,19 +169,19 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             <PaginatedTable<InferenceExperimentForTable>
                 headerTitle={intl.formatMessage({ id: 'inference.experiments.table.title' })}
                 headers={[
-                    { name: intl.formatMessage({ id: 'inference.table.columns.name' }), serverCodeToSort: 'name', width: 3 },
-                    { name: intl.formatMessage({ id: 'inference.table.columns.description' }), serverCodeToSort: 'description', width: 4 },
+                    { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                    { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
                     { name: intl.formatMessage({ id: 'inference.table.columns.state' }), serverCodeToSort: 'state', textAlign: 'center' },
                     { name: intl.formatMessage({ id: 'inference.table.columns.model' }), serverCodeToSort: 'model', width: 1 },
                     { name: intl.formatMessage({ id: 'inference.table.columns.date' }), serverCodeToSort: 'created' },
                     { name: intl.formatMessage({ id: 'inference.table.columns.dataset' }) },
-                    { name: intl.formatMessage({ id: 'inference.table.columns.actions' }) }
+                    { name: intl.formatMessage({ id: 'common.actions' }) }
 
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 showSearchInput
-                searchLabel={intl.formatMessage({ id: 'inference.search.label' })}
+                searchLabel={intl.formatMessage({ id: 'common.name' })}
                 searchPlaceholder={intl.formatMessage({ id: 'inference.search.placeholder' })}
                 urlToRetrieveData={urlBiomarkerInferenceExperiments}
                 customElements={[

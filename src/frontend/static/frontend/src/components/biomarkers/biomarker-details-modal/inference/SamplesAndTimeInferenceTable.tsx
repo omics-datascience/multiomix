@@ -50,7 +50,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 return (
                     <PaginatedTable<SampleAndTime>
                         headers={[
-                            { name: intl.formatMessage({ id: 'inference.timeTable.columns.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
+                            { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
                             { name: intl.formatMessage({ id: 'inference.timeTable.columns.predictedTime' }), serverCodeToSort: 'prediction', width: 2, textAlign: 'center' }
 
                         ]}
@@ -70,8 +70,8 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput
                         defaultPageSize={25}
-                        searchLabel={intl.formatMessage({ id: 'inference.timeTable.search.label' })}
-                        searchPlaceholder={intl.formatMessage({ id: 'inference.timeTable.search.placeholder' })}
+                        searchLabel={intl.formatMessage({ id: 'common.sample' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'common.search' })}
                         searchWidth={5}
                         entriesSelectWidth={3}
                         urlToRetrieveData={urlInferenceExperimentSamplesAndTime}

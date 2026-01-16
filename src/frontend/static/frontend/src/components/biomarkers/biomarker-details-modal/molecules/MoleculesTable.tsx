@@ -46,8 +46,8 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
             defaultSortProp={{ sortField: 'identifier', sortOrderAscendant: true }}
             showSearchInput
             defaultPageSize={25}
-            searchLabel={intl.formatMessage({ id: 'moleculesTable.search.label' })}
-            searchPlaceholder={intl.formatMessage({ id: 'moleculesTable.search.placeholder' })}
+            searchLabel={intl.formatMessage({ id: 'common.sample' })}
+            searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'moleculesTable.header.identifier' })}
             urlToRetrieveData={urlBiomarkerMolecules}
             searchWidth={6}
             entriesSelectWidth={3}
@@ -62,7 +62,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
                             name='chart bar'
                             className='clickable'
                             color='blue'
-                            title={intl.formatMessage({ id: 'moleculesTable.details' })}
+                            title={intl.formatMessage({ id: 'common.details' })}
                             onClick={() => props.openMoleculeDetails(molecule)}
                         />
                     </Table.Cell>

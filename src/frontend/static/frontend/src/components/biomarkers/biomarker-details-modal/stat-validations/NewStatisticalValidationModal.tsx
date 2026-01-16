@@ -327,7 +327,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                         name='name'
                                         value={form.name}
                                         icon='asterisk'
-                                        placeholder={intl.formatMessage({ id: 'newStatValidation.form.name' })}
+                                        placeholder={intl.formatMessage({ id: 'common.name' })}
                                         onChange={handleInputChange}
                                     />
 
@@ -415,7 +415,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         }}
                         disabled={!formIsValid()}
                     >
-                        {intl.formatMessage({ id: 'newStatValidation.button.confirm' })}
+                        {intl.formatMessage({ id: 'common.confirm' })}
                     </Button>
                 )}
             </Modal.Actions>
