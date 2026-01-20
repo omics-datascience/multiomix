@@ -1,17 +1,22 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { DifferentialExpressionAnalysis } from './types'
 import { Icon, Modal, Tab, TabPane } from 'semantic-ui-react'
 import { DifferentialExpressionModalResultsTableView } from './DifferentialExpressionModalResultsTableView'
 import { DifferentialExpressionModalResultsVolcanoPlot } from './DifferentialExpressionModalResultsVolcanoPlot'
 
 interface DifferentialExpressionModalResultsProps {
+    /* Whether the results modal is open */
     isOpen: boolean
+    /* Differential expression analysis results to display */
     differentialExpressionAnalysis: DifferentialExpressionAnalysis | null
+    /* Callback to close the modal */
     closeModal: () => void
 }
 
+/* Differential expression results modal component */
 export const DifferentialExpressionModalResults = (props: DifferentialExpressionModalResultsProps) => {
-    const panes = useMemo(() => [
+    /* Tab panes for results modal */
+    const panes = [
         {
             menuItem: 'Table',
             render: () => (
@@ -28,7 +33,8 @@ export const DifferentialExpressionModalResults = (props: DifferentialExpression
                 </TabPane>
             )
         },
-    ], [props.differentialExpressionAnalysis?.id])
+    ]
+
     return (
         <Modal
             open={props.isOpen}

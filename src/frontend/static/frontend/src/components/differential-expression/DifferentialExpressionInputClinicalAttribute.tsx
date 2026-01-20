@@ -3,9 +3,13 @@ import { Form } from 'semantic-ui-react'
 import { InputLabel } from '../common/InputLabel'
 
 interface DifferentialExpressionInputClinicalAttributeProps {
+    /* List of clinical attributes available for selection */
     optionsClinicalAttributes: string[],
+    /* Currently selected clinical attribute */
     clinicalAttribute: string,
+    /* Callback when clinical attribute selection changes */
     onChange: (value: string) => void,
+    /* Whether the input is in editing mode */
     isEditing: boolean,
 }
 
