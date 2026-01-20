@@ -9,12 +9,17 @@ type VolcanoPoint = {
 }
 
 interface VolcanoPlotProps {
+    /* Data points for the volcano plot */
     data: VolcanoPoint[]
+    /* log2FC threshold for significance */
     fcThreshold?: number
+    /* p-value threshold for significance */
     pThreshold?: number
+    /* Whether to show threshold lines on the plot */
     showThresholds: boolean
 }
 
+/* Volcano plot component */
 export const VolcanoPlot = ({
     data,
     fcThreshold = 1,

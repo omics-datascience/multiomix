@@ -16,6 +16,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
     const [pThreshold, setPThreshold] = useState<number>(0.05)
     const [showThresholds, setShowThresholds] = useState(true)
 
+    /* Fetch volcano plot data if analysis ID is provided */
     useEffect(() => {
         const id = props.differentialExpressionAnalysisId
 
@@ -50,7 +51,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
         <div style={{ padding: 20 }}>
             <h3>Volcano Plot</h3>
 
-            {/* 🔽 Selects */}
+            {/* Selects */}
             <Form>
                 <Form.Group widths='equal'>
                     <Form.Select
@@ -86,7 +87,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                 </Form.Group>
             </Form>
 
-            {/* 📊 Plot */}
+            {/* Plot */}
             {volcanoPoints.length > 0 && (
                 <VolcanoPlot
                     showThresholds={showThresholds}
