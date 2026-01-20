@@ -16,6 +16,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
     const [pThreshold, setPThreshold] = useState<number>(0.05)
     const [showThresholds, setShowThresholds] = useState(true)
 
+    /** Gets volano plot data on mount. */
     useEffect(() => {
         const id = props.differentialExpressionAnalysisId
 
