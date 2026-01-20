@@ -128,9 +128,7 @@ class DifferentialExpressionExperiment(models.Model):
     def save_results(self, dataframe):
         """
         Save the differential expression DataFrame results.
-        
-        Args:
-            dataframe: pandas DataFrame with differential expression results
+        @param dataframe: pandas DataFrame with differential expression results.
         """
         # Clear existing results
         self.results.all().delete()
@@ -171,17 +169,15 @@ class DifferentialExpressionExperiment(models.Model):
         if not results.exists():
             return None
 
-        data = []
-        for result in results:
-            data.append({
-                'gene': result.gene,
-                'AveExpr': result.ave_expr,
-                'P.Value': result.p_value,
-                'adj.P.Val': result.adj_p_val,
-                'logFC': result.log_fc,
-                't': result.t_statistic,
-                'B': result.b_statistic
-            })
+        data = [{
+            'gene': result.gene,
+            'AveExpr': result.ave_expr,
+            'P.Value': result.p_value,
+            'adj.P.Val': result.adj_p_val,
+            'logFC': result.log_fc,
+            't': result.t_statistic,
+            'B': result.b_statistic
+        } for result in results]
 
         df = pd.DataFrame(data)
         df.set_index('gene', inplace=True)
@@ -190,13 +186,9 @@ class DifferentialExpressionExperiment(models.Model):
     def get_significant_genes(self, p_value_threshold=0.05, log_fc_threshold=1.0):
         """
         Get significantly differentially expressed genes.
-        
-        Args:
-            p_value_threshold: Maximum adjusted p-value (default 0.05)
-            log_fc_threshold: Minimum absolute log fold change (default 1.0)
-            
-        Returns:
-            QuerySet: QuerySet of DifferentialExpressionExperimentResult objects meeting the criteria
+        @param p_value_threshold: Maximum adjusted p-value (default 0.05).
+        @param log_fc_threshold: Minimum absolute log fold change (default 1.0).
+        @return QuerySet of DifferentialExpressionExperimentResult objects meeting the criteria.
         """
 
         return self.results.filter(

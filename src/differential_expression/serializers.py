@@ -9,8 +9,8 @@ from differential_expression.models import (
 from institutions.models import Institution
 
 
-class UserSimpleSerializer(serializers.ModelSerializer):
-    """Simple serializer for User model."""
+class UserSimpleForDiffExpExperiments(serializers.ModelSerializer):
+    """Simple serializer of User model for some differential expression analysis serializers."""
 
     class Meta:
         model = User
@@ -18,8 +18,8 @@ class UserSimpleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 
-class InstitutionSimpleSerializer(serializers.ModelSerializer):
-    """Simple serializer for Institution model."""
+class InstitutionSimpleForDiffExpExperiments(serializers.ModelSerializer):
+    """Simple serializer of Institution model for some differential expression analysis serializers."""
 
     class Meta:
         model = Institution
@@ -68,7 +68,7 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
     # Sources - using standard API serializers compatible with frontend interfaces
     clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
     mrna_source = ExperimentSourceSerializer(read_only=True)
-    user = UserSimpleSerializer(read_only=True)
+    user = UserSimpleForDiffExpExperiments(read_only=True)
 
     # State information
     state_display = serializers.CharField(source='get_state_display', read_only=True)
@@ -97,7 +97,7 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
     """
     Serializer for Differential Expression Experiment (General view with all fields).
     """
-    user = UserSimpleSerializer(read_only=True)
+    user = UserSimpleForDiffExpExperiments(read_only=True)
     clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
     mrna_source = ExperimentSourceSerializer(read_only=True)
 
@@ -141,8 +141,6 @@ class DifferentialExpressionExperimentDetailSerializer(serializers.ModelSerializ
     Detailed serializer for Differential Expression Experiment (Detail view).
     Includes additional information like shared users and institutions.
     """
-    #shared_users = UserSimpleSerializer(many=True, read_only=True)
-    #shared_institutions = InstitutionSimpleSerializer(many=True, read_only=True)
 
     class Meta:#DifferentialExpressionExperimentSerializer.Meta):
         fields = '__all__'

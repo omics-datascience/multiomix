@@ -162,6 +162,42 @@ class DifferentialExpressionList(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['name', 'description']
+
+
+class DifferentialExpressionRetrieve(generics.RetrieveAPIView):
+    """
+    Endpoint to retrieve a single differential expression experiment by ID.
+    """
+    serializer_class = DifferentialExpressionExperimentListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Returns experiments the user has access to.
+        """
+        user = self.request.user
+        return DifferentialExpressionExperiment.objects.filter(
+            Q(is_public=True) |
+            Q(user=user) |
+            Q(shared_institutions__institutionadministration__user=user) |
+            Q(shared_users=user)
+        ).distinct()
+
+    def get_object(self):
+        """
+        Retrieves the experiment and checks permissions.
+        """
+        experiment = get_object_or_404(DifferentialExpressionExperiment, pk=self.kwargs.get('pk'))
+        user = self.request.user
+
+        # Check if the user has access to the experiment
+        if not (experiment.is_public or
+                experiment.user == user or
+                experiment.shared_institutions.filter(institutionadministration__user=user).exists() or
+                experiment.shared_users.filter(id=user.id).exists()):
+            raise ValidationError('You do not have permission to access this experiment.')
+
+        return experiment
     filterset_fields = ['tool']
 
 

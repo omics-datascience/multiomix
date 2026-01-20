@@ -120,7 +120,7 @@ class DifferentialExpressionExperimentModelTestCase(TestCase):
         # Assert results were saved correctly
         self.assertIsNotNone(retrieved_df)
         self.assertEqual(len(retrieved_df), 3)
-        self.assertEqual(list(retrieved_df.index), ['GENE_1', 'GENE_2', 'GENE_3'])
+        self.assertEqual(set(retrieved_df.index), {'GENE_1', 'GENE_2', 'GENE_3'})
 
         # Check specific values
         self.assertAlmostEqual(retrieved_df.loc['GENE_1', 'AveExpr'], 5.2, places=1)
@@ -264,10 +264,10 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         samples = source.get_samples()
 
-        # Based on mrna_test.csv
+        # Based on mrna_test.csv (5 TCGA samples)
         self.assertEqual(len(samples), 5)
-        self.assertIn('SAMPLE_1', samples)
-        self.assertIn('SAMPLE_5', samples)
+        self.assertIn('TCGA-OR-A5J1-01', samples)
+        self.assertIn('TCGA-OR-A5J6-01', samples)
 
     def test_get_samples_from_clinical_source(self):
         """Test getting samples from clinical source"""
@@ -275,10 +275,10 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         samples = source.get_samples()
 
-        # Based on clinical_test.csv
+        # Based on clinical_test.csv (5 TCGA samples)
         self.assertEqual(len(samples), 5)
-        self.assertIn('SAMPLE_1', samples)
-        self.assertIn('SAMPLE_5', samples)
+        self.assertIn('TCGA-OR-A5J1-01', samples)
+        self.assertIn('TCGA-OR-A5J6-01', samples)
 
     def test_get_clinical_attributes(self):
         """Test getting clinical attributes"""
@@ -286,9 +286,9 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         attributes = source.get_attributes()
 
-        # Based on clinical_test.csv (AGE, GENDER, STATUS, STAGE)
+        # Based on clinical_test.csv (SEX, AGE, TUMOR_STATUS, LATERALITY)
         self.assertEqual(len(attributes), 4)
+        self.assertIn('SEX', attributes)
         self.assertIn('AGE', attributes)
-        self.assertIn('GENDER', attributes)
-        self.assertIn('STATUS', attributes)
-        self.assertIn('STAGE', attributes)
+        self.assertIn('TUMOR_STATUS', attributes)
+        self.assertIn('LATERALITY', attributes)

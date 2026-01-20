@@ -48,7 +48,7 @@ def eval_differential_expression_experiment(self, experiment_pk: int, ):
 
         compute_differential_expression = DifferentialExpressionService(experiment, is_aborted=self.is_aborted)
         result = compute_differential_expression.perform_differential_expression()
-        print(f'Result of differential expression computation: {result}')
+
         total_execution_time = time.time() - start
         logging.info(f'DifferentialExpressionExperiment {experiment.pk} processed in {total_execution_time:.2f} seconds.')
         
