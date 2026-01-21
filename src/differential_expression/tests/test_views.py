@@ -467,7 +467,7 @@ class DifferentialExpressionUpdateTestCase(TestCase):
         self.assertEqual(experiment.name, 'Updated Name')
         self.assertEqual(experiment.description, 'Updated Description')
 
-    def 3test_update_experiment_name_only_success(self):
+    def test_update_experiment_name_only_success(self):
         """Test successfully updating only the name"""
         # Create experiment
         experiment = create_test_differential_expression_experiment(

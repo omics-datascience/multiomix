@@ -50,7 +50,7 @@ def create_test_differential_expression_experiment(
         user: User,
         state: DifferentialExpressionExperimentState = DifferentialExpressionExperimentState.WAITING_FOR_QUEUE,
         description: str = 'Test experiment',
-        clinical_attribute: str = 'TUMOR_STATUS',
+        clinical_attribute: str = 'SEX',
         tool: DifferentialExpressionTool = DifferentialExpressionTool.DESEQ,
         threshold_percentile: float = 0.15,
         threshold: float = 0.0001,

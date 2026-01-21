@@ -264,10 +264,10 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         samples = source.get_samples()
 
-        # Based on mrna_test.csv (5 TCGA samples)
-        self.assertEqual(len(samples), 5)
+        # Based on mrna_test.csv (6 TCGA samples as columns)
+        self.assertEqual(len(samples), 6)
         self.assertIn('TCGA-OR-A5J1-01', samples)
-        self.assertIn('TCGA-OR-A5J6-01', samples)
+        self.assertIn('TCGA-OR-A5J8-01', samples)
 
     def test_get_samples_from_clinical_source(self):
         """Test getting samples from clinical source"""
@@ -275,10 +275,10 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         samples = source.get_samples()
 
-        # Based on clinical_test.csv (5 TCGA samples)
-        self.assertEqual(len(samples), 5)
-        self.assertIn('TCGA-OR-A5J1-01', samples)
-        self.assertIn('TCGA-OR-A5J6-01', samples)
+        # Based on clinical_test.csv (6 TCGA samples as row indices - PATIENT_ID)
+        self.assertEqual(len(samples), 6)
+        self.assertIn('TCGA-OR-A5J1', samples)
+        self.assertIn('TCGA-OR-A5J8', samples)
 
     def test_get_clinical_attributes(self):
         """Test getting clinical attributes"""
@@ -286,9 +286,9 @@ class DifferentialExpressionSourceModelTestCase(TestCase):
 
         attributes = source.get_attributes()
 
-        # Based on clinical_test.csv (SEX, AGE, TUMOR_STATUS, LATERALITY)
-        self.assertEqual(len(attributes), 4)
+        # Based on clinical_test.csv (OTHER_PATIENT_ID, SEX, OS_STATUS, OS_MONTHS, SAMPLE_ID, OTHER_SAMPLE_ID)
+        self.assertEqual(len(attributes), 6)
         self.assertIn('SEX', attributes)
-        self.assertIn('AGE', attributes)
-        self.assertIn('TUMOR_STATUS', attributes)
-        self.assertIn('LATERALITY', attributes)
+        self.assertIn('OS_STATUS', attributes)
+        self.assertIn('OS_MONTHS', attributes)
+        self.assertIn('SAMPLE_ID', attributes)
