@@ -140,7 +140,7 @@ class DifferentialExpressionDetail(generics.RetrieveAPIView):
 class DifferentialExpressionList(generics.ListAPIView):
     """
     Endpoint to list all differential expression experiments.
-    Devuelve solo los campos: id, Name, Description, Date, State, Sources y si es publico.
+    Returns only the fields: id, Name, Description, Date, State, Sources and if it is public.
     """
 
     def get_queryset(self):
@@ -393,11 +393,6 @@ class DifferentialExpressionStop(APIView):
         if not experiment_id:
             raise ValidationError('experimentId is required.')
 
-        try:
-            experiment_id = int(experiment_id)
-        except (ValueError, TypeError) as exc:
-            raise ValidationError('Invalid experimentId') from exc
-
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
 
         user = request.user
@@ -411,7 +406,7 @@ class DifferentialExpressionStop(APIView):
         if not experiment.task_id:
             return Response({'ok': False, 'detail': 'The experiment does not have an associated task.'})
 
-        # Si ya no está en curso, no hay nada que detener
+        # If it's no running, there's nothing to stop
         if experiment.state in [
             DifferentialExpressionExperimentState.COMPLETED,
             DifferentialExpressionExperimentState.STOPPED,
@@ -424,14 +419,14 @@ class DifferentialExpressionStop(APIView):
         ]:
             return Response({'ok': False, 'detail': f'The experiment is not running. Status: {experiment.state}'})
 
-        # Intentar abortar la tarea AbortableTask
+        # Try to abort the AbortableTask
         try:
             async_res = AbortableAsyncResult(experiment.task_id)
-            aborted = async_res.abort()  # Señala a la tarea que debe abortar (self.is_aborted() == True)
+            aborted = async_res.abort()  # Signals the task to abort (self.is_aborted() == True)
         except Exception as e:
             return Response({'ok': False, 'detail': f'The task could not be stopped: {e}'})
 
-        # Marcar el experimento como STOPPING; la tarea lo marcará como STOPPED en el finally
+        # Mark the experiment as STOPPING; the task will mark it as STOPPED in the finally block
         experiment.state = DifferentialExpressionExperimentState.STOPPING
         experiment.save(update_fields=['state'])
 
