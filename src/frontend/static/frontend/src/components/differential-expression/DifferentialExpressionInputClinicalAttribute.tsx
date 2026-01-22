@@ -13,6 +13,11 @@ interface DifferentialExpressionInputClinicalAttributeProps {
     isEditing: boolean,
 }
 
+/**
+ * Renders a Select to select a clinical attribute.
+ * @param props Component props.
+ * @returns Component.
+ */
 export const DifferentialExpressionInputClinicalAttribute = (props: DifferentialExpressionInputClinicalAttributeProps) => {
     return (
         <>
