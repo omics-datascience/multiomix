@@ -110,15 +110,10 @@ class DifferentialExpressionExperiment(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override the save method to ensure that the name is unique.
         Every time the experiment status changes, uses websockets to update state in the frontend.
         """
         if not self.name:
             raise ValueError("Experiment name cannot be empty.")
-
-        # # Ensure the name is unique
-        # if DifferentialExpressionExperiment.objects.filter(name=self.name).exists():
-        #     raise ValueError(f"An experiment with the name '{self.name}' already exists.")
 
         super().save(*args, **kwargs)
 
@@ -242,3 +237,4 @@ class DifferentialExpressionExperimentResult(models.Model):
                 self.log_fc is not None and
                 self.adj_p_val <= p_threshold and
                 abs(self.log_fc) >= fc_threshold)
+
