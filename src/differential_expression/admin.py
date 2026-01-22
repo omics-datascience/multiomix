@@ -89,9 +89,3 @@ class DifferentialExpressionExperimentResultAdmin(admin.ModelAdmin):
             return False
     is_significant_display.short_description = 'Is Significant (p<0.05, |logFC|>1)'
     is_significant_display.boolean = True
-
-
-
-admin.site.site_header = "Multiomix Administration"
-admin.site.site_title = "Multiomix Admin"
-admin.site.index_title = "Welcome to Multiomix Administration"
