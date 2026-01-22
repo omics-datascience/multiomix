@@ -6,10 +6,16 @@ import { Form } from 'semantic-ui-react'
 
 declare const urlDifferentialExpressionVolcanoData: string
 
+/** DifferentialExpressionModalResultsVolcanoPlot props. */
 interface DifferentialExpressionModalResultsVolcanoPlotProps {
     differentialExpressionAnalysisId?: number;
 }
 
+/**
+ * Renders a Volcano plot.
+ * @param props Component props.
+ * @returns Component.
+ */
 export const DifferentialExpressionModalResultsVolcanoPlot = (props: DifferentialExpressionModalResultsVolcanoPlotProps) => {
     const [volcanoPoints, setVolcanoPoints] = useState<VolcanoPoint[]>([])
     const [fcThreshold, setFcThreshold] = useState<number>(1)
