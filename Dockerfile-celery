@@ -1,46 +1,63 @@
 FROM python:3.12-slim-bookworm
 
 # Docker Files Vars
-ARG LISTEN_PORT 8000
-ARG LISTEN_IP "0.0.0.0"
+ARG LISTEN_PORT=8000
+ARG LISTEN_IP="0.0.0.0"
 
 # Default values for deploying with multiomix image
-ENV LISTEN_PORT $LISTEN_PORT
-ENV LISTEN_IP $LISTEN_IP
-ENV DJANGO_SETTINGS_MODULE "multiomics_intermediate.settings_prod"
-ENV RESULT_DATAFRAME_LIMIT_ROWS 500
-ENV TABLE_PAGE_SIZE 10
+ENV LISTEN_PORT=$LISTEN_PORT
+ENV LISTEN_IP=$LISTEN_IP
+ENV DJANGO_SETTINGS_MODULE="multiomics_intermediate.settings_prod"
+ENV RESULT_DATAFRAME_LIMIT_ROWS=500
+ENV TABLE_PAGE_SIZE=10
 
 # Modulector connection parameters
-ENV MODULECTOR_HOST "127.0.0.1"
-ENV MODULECTOR_PORT "8001"
+ENV MODULECTOR_HOST="127.0.0.1"
+ENV MODULECTOR_PORT="8001"
 
 # BioAPI connection parameters
-ENV BIOAPI_HOST "127.0.0.1"
-ENV BIOAPI_PORT "8002"
+ENV BIOAPI_HOST="127.0.0.1"
+ENV BIOAPI_PORT="8002"
 
 # PostgreSQL DB connection parameters
-ENV POSTGRES_USERNAME "multiomics"
-ENV POSTGRES_PASSWORD "multiomics"
-ENV POSTGRES_HOST "db"
-ENV POSTGRES_PORT 5432
-ENV POSTGRES_DB "multiomics"
+ENV POSTGRES_USERNAME="multiomics"
+ENV POSTGRES_PASSWORD="multiomics"
+ENV POSTGRES_HOST="db"
+ENV POSTGRES_PORT=5432
+ENV POSTGRES_DB="multiomics"
     
 # Mongo DB connection parameters
-ENV MONGO_USERNAME "multiomics"
-ENV MONGO_PASSWORD "multiomics"
-ENV MONGO_HOST "mongo"
-ENV MONGO_PORT 27017
-ENV MONGO_DB "multiomics"
+ENV MONGO_USERNAME="multiomics"
+ENV MONGO_PASSWORD="multiomics"
+ENV MONGO_HOST="mongo"
+ENV MONGO_PORT=27017
+ENV MONGO_DB="multiomics"
 
 # Redis
-ENV REDIS_HOST "redis"
-ENV REDIS_PORT 6379
+ENV REDIS_HOST="redis"
+ENV REDIS_PORT=6379
 
 # Installs system dependencies
 RUN apt-get update && apt-get install -y python3-pip curl libcurl4-openssl-dev libssl-dev libxml2-dev \
     && mkdir /config \
     && mkdir /src
+
+# Install R 4.4.2 from CRAN (Debian bookworm) and system dependencies
+RUN set -eux; \
+  echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/debian-unstable.list; \
+  printf 'APT::Default-Release "%s";\n' "bookworm" > /etc/apt/apt.conf.d/00default-release; \
+  echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/90no-recommends; \
+  printf 'Package: *\nPin: release a=unstable\nPin-Priority: 50\n' > /etc/apt/preferences.d/99pin-unstable; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    ca-certificates curl gnupg build-essential gfortran libblas-dev liblapack-dev git \
+    libssl-dev libcurl4-openssl-dev libxml2-dev; \
+  apt-get install -y \
+    r-base=4.2.2.20221110-2 r-base-dev=4.2.2.20221110-2 r-recommended=4.2.2.20221110-2; \
+  rm -rf /var/lib/apt/lists/*
+
+# Install Bioconductor limma (stats and base come with R)
+RUN R -q -e 'options(repos=c(CRAN="https://cloud.r-project.org")); install.packages("BiocManager"); BiocManager::install(version="3.16", ask=FALSE); BiocManager::install("limma", ask=FALSE, update=FALSE)'
 
 # Installs Python dependencies
 ADD config/requirements_celery.txt /config/requirements.txt

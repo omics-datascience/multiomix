@@ -32,6 +32,7 @@ urlpatterns = [
     path('biomarkers/', include('biomarkers.urls')),
     path('statistical-props/', include('statistical_properties.urls')),
     path('feature-selection/', include('feature_selection.urls')),
+    path('differential-expression/', include('differential_expression.urls')),
     path('inference/', include('inferences.urls')),
     path('molecules/', include('molecules_details.urls')),
     path('admin/', admin.site.urls),

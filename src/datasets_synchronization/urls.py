@@ -7,6 +7,9 @@ urlpatterns = [
     # CGDS Studies
     path('studies', views.CGDSStudyList.as_view(), name='cgds_studies'),
     path('studies/<int:pk>/', views.CGDSStudyDetail.as_view()),
+    # CGDS Datasets
+    path('cgds-dataset-clinical-attributes/', views.CGDSDatasetClinicalAttributes.as_view(), name='cgds_dataset_clinical_attributes'),
+    path('cgds-dataset-clinical-attributes/<int:pk>/', views.CGDSDatasetClinicalAttributes.as_view()),
     # Synchronization
     path('sync', views.SyncCGDSStudy.as_view(), name='sync_cgds_study'),
     path('stop-sync', views.StopCGDSSync.as_view(), name='stop_cgds_study_sync')

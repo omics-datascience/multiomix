@@ -1,0 +1,34 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}| Differential Expression{% endblock %}
+{% block meta_description %}Perform differential gene expression analysis to identify significantly expressed genes between different conditions. Configure parameters, visualize results, and export comprehensive reports for your research.{% endblock %}
+
+{% block css %}
+        {% render_bundle 'differentialExpression' 'css' %}
+{% endblock %}
+
+{% block content %}
+        <main id="differential-expression-app"></main>
+{% endblock %}
+
+{% block js %}
+        <script>
+            const urlDifferentialExpressionList = "{% url 'differential_expression_list' %}"
+            const urlDifferentialExpressionSubmit = "{% url 'differential_expression_submit' %}"
+            const urlGetCommonSamplesDiferentialExperiment = "{% url 'get_common_samples_differential_experiment' %}"
+            const urlGetCommonSamplesOneFrontDiferentialExperiment = "{% url 'get_common_samples_one_front_differential_experiment' %}"
+            const urlGetClinicalAttributes = "{% url 'user_file_headers' %}"
+            const urlPostSwitchPublicView = "{% url 'switch-diff-experiment-public-view' %}"
+            const urlDifferentialExpressionStop = "{% url 'differential_expression_stop' %}"
+            const urlCGDSDatasetClinicalAttributes = "{% url 'cgds_dataset_clinical_attributes' %}"
+            const downloadFileURL = "{% url 'download_user_file' %}"
+            const urlDeleteExperiment = "{% url 'differential_expression_delete' %}"
+            const urlUpdateExperiment = "{% url 'differential_expression_update' %}"
+            const urlDifferentialExpressionExperimentResults = "{% url 'differential_expression_results' %}"
+            const urlDownloadDifferentialExpressionResults = "{% url 'download_differential_expression_results' %}"
+            const urlDifferentialExpressionVolcanoData = "{% url 'differential_expression_volcano_data' %}"
+        </script>
+        {% render_bundle 'differentialExpression' 'js' %}
+{% endblock %}
