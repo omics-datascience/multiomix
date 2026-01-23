@@ -50,9 +50,9 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 <Form.Input
                     type='number'
                     label={(
-                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.numberOfClusters' })}>
+                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.nClusters' })}>
                             <InfoPopup
-                                content={intl.formatMessage({ id: 'newClusteringForm.info.numberOfClusters' })}
+                                content={intl.formatMessage({ id: 'newClusteringForm.info.nClusters' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder

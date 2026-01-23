@@ -90,7 +90,6 @@ export default {
     'inference.new.description': 'Descripción (opcional)',
     'inference.newInference.title': 'Crear nuevo experimento de inferencia',
     'inference.new.basicData': 'Datos básicos',
-    'inference.new.requiredField': 'Campo obligatorio',
     'inference.new.step1': 'Paso 1: Modelo entrenado',
     'inference.new.step2': 'Paso 2: Conjuntos de datos de moléculas',
     'inference.new.continue': 'Continuar',
@@ -237,15 +236,13 @@ export default {
     'newStatValidation.header.create': 'Crear nueva validación estadística',
     'newStatValidation.header.basicData': 'Datos básicos',
     'newStatValidation.form.descriptionOptional': 'Descripción (opcional)',
-    'newStatValidation.form.requiredField': 'Campo obligatorio',
     'newStatValidation.step.trainedModel': 'Paso 1: Modelo entrenado',
     'newStatValidation.step.validationDatasets': 'Paso 2: Conjuntos de validación',
     'newStatValidation.button.continue': 'Continuar',
     // 26.StatisticalValidationMenu.tsx
     'statValidationMenu.bestFeatures': 'Características más significativas',
     'statValidationMenu.bestFeatures.info': 'Características más significativas para el análisis de supervivencia',
-    'statValidationMenu.kaplanMeier': 'Kaplan-Meier',
-    'statValidationMenu.kaplanMeier.info': 'Curva Kaplan-Meier mostrando supervivencia o hazard ratio',
+    'statValidationMenu.kaplanMeier.info': 'Curva mostrando supervivencia o hazard ratio',
     'statValidationMenu.heatmap': 'Mapa de calor',
     'statValidationMenu.heatmap.info': 'Mapa de calor para cada muestra y molécula',
     // 27.StatisticalValidationsTable.tsx
@@ -281,4 +278,23 @@ export default {
     'newClusteringForm.info.scoringMethod': 'C-Index: medida de concordancia entre resultados predichos y observados; valores altos indican mejor desempeño. Log Likelihood: probabilidad de observar los datos dado el modelo; valores bajos indican mejor desempeño.',
     'newClusteringForm.info.randomState': 'Semilla usada por el generador aleatorio para asegurar reproducibilidad.',
     'newClusteringForm.info.penalizer': 'Útil cuando hay pocas muestras o eventos observados; aumenta la robustez del modelo evitando problemas con valores NaN.',
+    // 29.NewRFModelForm.tsx
+    'newRFForm.label.searchOptimalTrees': 'Buscar el número óptimo de árboles',
+    'newRFForm.info.searchOptimalTrees': 'Esta opción es útil cuando el número de muestras en los datos clínicos es pequeño o hay pocos eventos observados; establecer este valor aumenta la robustez del modelo en tales casos, evitando problemas con valores NaN.',
+    'newRFForm.label.maxDepth': 'Profundidad máxima',
+    'newRFForm.info.maxDepth': 'La profundidad máxima del árbol',
+    'newRFForm.label.randomState': 'Estado aleatorio',
+    'newRFForm.info.randomState': 'Semilla utilizada por el generador de números aleatorios',
+    'newRFForm.label.nEstimators': 'Número de árboles',
+    'newRFForm.info.nEstimators': 'El número de árboles (estimadores) utilizados en el modelo Random Forest.',
+    // 30.NewSVMModelForm.tsx
+    'newSVMForm.info.kernel.linear': 'Kernel lineal: Mejor para datos linealmente separables; comúnmente usado para clasificación simple de características genómicas o clínicas.',
+    'newSVMForm.info.kernel.polynomial': 'Kernel polinomial: Captura patrones no lineales; efectivo para relaciones complejas en datos multi-ómicos.',
+    'newSVMForm.info.kernel.rbf': 'Kernel RBF: Mapea los datos a un espacio de mayor dimensión; ideal para manejar separaciones no lineales en análisis de ARN y metilación.',
+    'newSVMForm.placeholder.kernel': 'Seleccionar un kernel',
+    'newSVMForm.label.maxIterations': 'Iteraciones máximas',
+    'newSVMForm.info.maxIterations': 'El número máximo de iteraciones a ejecutar',
+    'newSVMForm.label.randomState': 'Estado aleatorio',
+    'newSVMForm.info.randomState': 'Semilla utilizada por el generador de números aleatorios',
+
 }
