@@ -70,11 +70,10 @@ export const AboutUs = () => {
                             <Grid.Column>
                                 <Header as='h1'>
                                     {intl.formatMessage({ id: 'about.members.title' })}
-
                                 </Header>
 
                                 <Header as='h3'>
-                                    {intl.formatMessage({ id: 'about.members.main' })} B.Comp.Sc. Genaro Camele
+                                    {intl.formatMessage({ id: 'about.members.main' })} PhD in Computer Science Genaro Camele
                                 </Header>
 
                                 <Header as='h3'>
