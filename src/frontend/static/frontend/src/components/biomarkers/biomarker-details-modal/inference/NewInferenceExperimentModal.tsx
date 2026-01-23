@@ -335,7 +335,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                 </Form>
 
                                 <div className='margin-top-2'>
-                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'inference.new.requiredField' })}
+                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
 
                                 </div>
                             </Segment>

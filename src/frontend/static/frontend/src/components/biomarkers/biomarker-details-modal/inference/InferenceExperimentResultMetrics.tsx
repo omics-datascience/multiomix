@@ -27,7 +27,7 @@ export const InferenceExperimentResultMetrics = (props: InferenceExperimentResul
 
             {/* Model details. */}
             <Segment>
-                <Header as='h2' dividing>{intl.formatMessage({ id: 'inference.model.details' })}</Header>
+                <Header as='h2' dividing>{intl.formatMessage({ id: 'common.details' }) + ' ' + intl.formatMessage({ id: 'inference.model' })}</Header>
 
                 {props.selectedInferenceExperiment.trained_model !== null &&
                     <ModelDetailsPanel trainedModelPk={props.selectedInferenceExperiment.trained_model} />}

@@ -88,7 +88,6 @@ export default {
     'inference.new.description': 'Description (optional)',
     'inference.newInference.title': 'Create new inference experiment',
     'inference.new.basicData': 'Basic data',
-    'inference.new.requiredField': 'Required field',
     'inference.new.step1': 'Step 1: Trained model',
     'inference.new.step2': 'Step 2: molecules datasets',
     'inference.new.continue': 'Continue',
@@ -231,7 +230,6 @@ export default {
     'newStatValidation.header.create': 'Create new statistical validation',
     'newStatValidation.header.basicData': 'Basic data',
     'newStatValidation.form.descriptionOptional': 'Description (optional)',
-    'newStatValidation.form.requiredField': 'Required field',
     'newStatValidation.step.trainedModel': 'Step 1: Trained model',
     'newStatValidation.step.validationDatasets': 'Step 2: Validation datasets',
     'newStatValidation.button.continue': 'Continue',
@@ -239,7 +237,7 @@ export default {
     'statValidationMenu.bestFeatures': 'Most significant features',
     'statValidationMenu.bestFeatures.info': 'Most significant features for the survival analysis',
     'statValidationMenu.kaplanMeier': 'Kaplan-Meier',
-    'statValidationMenu.kaplanMeier.info': 'Kaplan-Meier curve showing survival or hazard ratio',
+    'statValidationMenu.kaplanMeier.info': 'curve showing survival or hazard ratio',
     'statValidationMenu.heatmap': 'Heatmap',
     'statValidationMenu.heatmap.info': 'Heatmap for every sample and molecule',
     // 27.StatisticalValidationsTable.tsx
@@ -276,4 +274,23 @@ export default {
     'newClusteringForm.info.scoringMethod': 'C-Index: A measure of concordance between predicted and observed survival outcomes; higher values indicate better performance. Log Likelihood: The probability of observing the data given the model; lower values indicate better performance.',
     'newClusteringForm.info.randomState': 'The seed used by the random number generator to ensure reproducibility.',
     'newClusteringForm.info.penalizer': 'Useful when clinical data has few samples or events; increases robustness and avoids NaN values.',
+    // 29.NewRFModelForm.tsx
+    'newRFForm.label.searchOptimalTrees': 'Search for the optimal number of trees',
+    'newRFForm.info.searchOptimalTrees': 'This option is useful when the number of samples in the clinical data is small or there are few observed events; setting this value increases the robustness of the model in such cases, avoiding problems with NaN values.',
+    'newRFForm.label.maxDepth': 'Max depth',
+    'newRFForm.info.maxDepth': 'The maximum depth of the tree',
+    'newRFForm.label.randomState': 'Random state',
+    'newRFForm.info.randomState': 'Seed used by the random number generator',
+    'newRFForm.label.nEstimators': 'Number of trees',
+    'newRFForm.info.nEstimators': 'The number of trees (estimators) used in the Random Forest model.',
+    // 30.NewSVMModelForm.tsx
+    'newSVMForm.info.kernel.linear': 'Linear Kernel: Best for linearly separable data; commonly used for simple genomic or clinical feature classification.',
+    'newSVMForm.info.kernel.polynomial': 'Polynomial Kernel: Captures non-linear patterns; effective for complex relationships in multi-omics data.',
+    'newSVMForm.info.kernel.rbf': 'RBF Kernel: Maps data to a higher-dimensional space; ideal for handling non-linear separations in RNA and methylation analyses.',
+    'newSVMForm.placeholder.kernel': 'Select a kernel',
+    'newSVMForm.label.maxIterations': 'Max iterations',
+    'newSVMForm.info.maxIterations': 'The maximum number of iterations to be run',
+    'newSVMForm.label.randomState': 'Random state',
+    'newSVMForm.info.randomState': 'Seed used by the random number generator',
+
 }

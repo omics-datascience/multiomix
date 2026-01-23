@@ -340,7 +340,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                 </Form>
 
                                 <div className='margin-top-2'>
-                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'newStatValidation.form.requiredField' })}
+                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
                                 </div>
                             </Segment>
                         </Grid.Column>

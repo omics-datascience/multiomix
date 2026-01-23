@@ -41,7 +41,7 @@ export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps)
                 active={props.activeItem === ActiveStatValidationsItemMenu.KAPLAN_MEIER}
                 onClick={() => props.setActiveItem(ActiveStatValidationsItemMenu.KAPLAN_MEIER)}
             >
-                {intl.formatMessage({ id: 'statValidationMenu.kaplanMeier' })}
+                Kaplan-Meier
 
                 <InfoPopup
                     content={intl.formatMessage({ id: 'statValidationMenu.kaplanMeier.info' })}
