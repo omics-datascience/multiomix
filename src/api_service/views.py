@@ -210,10 +210,10 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
             experiment: Experiment = Experiment.objects.filter(
                 Q(pk=experiment_id) &
                 (
-                    Q(user=user) |
-                    Q(is_public=True) |
-                    Q(shared_institutions__institutionadministration__user=user) |
-                    Q(shared_users=user)
+                        Q(user=user) |
+                        Q(is_public=True) |
+                        Q(shared_institutions__institutionadministration__user=user) |
+                        Q(shared_users=user)
                 )
             ).distinct().get()
             combinations_queryset = experiment.combinations
@@ -293,6 +293,7 @@ class ExperimentDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ExperimentSerializerDetail
     permission_classes = [permissions.IsAuthenticated, ExperimentIsNotRunning]
 
+
 class RemoveInstitutionFromExperimentView(APIView):
     """
     API endpoint to remove an institution from an experiment.
@@ -300,7 +301,8 @@ class RemoveInstitutionFromExperimentView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Remove an institution from the experiment.
         """
@@ -328,14 +330,16 @@ class RemoveInstitutionFromExperimentView(APIView):
             {"message": f"Institution {institution.id} removed from experiment {experiment.id}."}
         )
 
+
 class RemoveUserFromExperimentView(APIView):
     """
-    API endpoint to remove an user from an experiment.
+    API endpoint to remove a user from an experiment.
     Only the owner of the experiment can perform this action.
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Remove an institution from the experiment.
         """
@@ -363,6 +367,7 @@ class RemoveUserFromExperimentView(APIView):
             {"message": f"User {user.id} removed from experiment {experiment.id}."}
         )
 
+
 class ToggleExperimentPublicView(APIView):
     """
     API endpoint to toggle the 'is_public' field of an experiment.
@@ -370,7 +375,8 @@ class ToggleExperimentPublicView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Toggle the 'is_public' field of the experiment.
         """
@@ -389,6 +395,7 @@ class ToggleExperimentPublicView(APIView):
         return Response(
             {"id": experiment.id, "is_public": experiment.is_public}
         )
+
 
 class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
     """
@@ -409,6 +416,7 @@ class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
             id__in=experiment.shared_institutions.values_list('id', flat=True)
         )
 
+
 class UsersNonExperimentsSharedListView(generics.ListAPIView):
     """
     REST endpoint: Get all users NOT associated with a specific experiment.
@@ -426,6 +434,7 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
         associated_user_ids = experiment.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
 
+
 class UsersExperimentsSharedListView(generics.ListAPIView):
     """
     REST endpoint: Get all institution associated with a specific experiment.
@@ -440,6 +449,7 @@ class UsersExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         return experiment.shared_users
+
 
 class InstitutionExperimentsSharedListView(generics.ListAPIView):
     """
@@ -456,13 +466,15 @@ class InstitutionExperimentsSharedListView(generics.ListAPIView):
         experiment = get_object_or_404(Experiment, id=experiment_id)
         return experiment.shared_institutions
 
+
 class AddInstitutionToExperimentView(APIView):
     """
     API endpoint to add an institution to an experiment.
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         data = request.data
         institution_id = data.get('institutionId')
         experiment_id = data.get('experimentId')
@@ -472,7 +484,7 @@ class AddInstitutionToExperimentView(APIView):
                 {"error": "Both 'institutionId' and 'experimentId' are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         experiment = get_object_or_404(Experiment, id=experiment_id)
         institution = get_object_or_404(Institution, id=institution_id)
 
@@ -481,13 +493,15 @@ class AddInstitutionToExperimentView(APIView):
         serializer = InstitutionSerializer(institution)
         return Response(serializer.data)
 
+
 class AddUserToExperimentView(APIView):
     """
     API endpoint to add an institution to an experiment.
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         data = request.data
         user_id = data.get('userId')
         experiment_id = data.get('experimentId')
@@ -497,7 +511,7 @@ class AddUserToExperimentView(APIView):
                 {"error": "Both 'institutionId' and 'experimentId' are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         experiment = get_object_or_404(Experiment, id=experiment_id)
         user = get_object_or_404(User, id=user_id)
 
@@ -1201,14 +1215,14 @@ class SurvivalDataDetails(APIView):
             # Gets Gene and GEM expression with time values
             gene_values, gem_values, clinical_time_values, _gene_samples, _gem_samples, \
                 clinical_samples = pipelines.get_valid_data_from_sources(
-                experiment,
-                gene,
-                gem,
-                round_values=False,
-                return_samples_identifiers=True,
-                clinical_attribute=time_attribute,
-                fill_clinical_missing_samples=False
-            )
+                    experiment,
+                    gene,
+                    gem,
+                    round_values=False,
+                    return_samples_identifiers=True,
+                    clinical_attribute=time_attribute,
+                    fill_clinical_missing_samples=False
+                )
 
             # Gets event values
             clinical_event_values: np.ndarray = experiment.clinical_source.get_specific_samples_and_attributes(
