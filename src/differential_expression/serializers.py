@@ -31,17 +31,9 @@ class DifferentialExpressionExperimentResultSerializer(serializers.ModelSerializ
     """
     Serializer for Differential Expression Experiment Results.
     """
-    is_significant = serializers.SerializerMethodField()
-
     class Meta:
         model = DifferentialExpressionExperimentResult
-        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic',
-                  'is_significant']
-
-    @staticmethod
-    def get_is_significant(obj):
-        """Check if this gene is significantly differentially expressed."""
-        return obj.adj_p_val <= 0.05 and abs(obj.log_fc) >= 1.0
+        fields = ['id', 'gene', 'ave_expr', 'p_value', 'adj_p_val', 'log_fc', 't_statistic', 'b_statistic']
 
 
 class DifferentialExpressionVolcanoPlotSerializer(serializers.ModelSerializer):

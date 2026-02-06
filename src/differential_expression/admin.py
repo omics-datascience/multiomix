@@ -61,13 +61,13 @@ class DifferentialExpressionExperimentResultAdmin(admin.ModelAdmin):
     """Admin configuration for DifferentialExpressionExperimentResult model."""
     
     list_display = (
-        'id', 'experiment', 'gene', 'adj_p_val', 'log_fc', 
-        'p_value', 'ave_expr', 'is_significant_display'
+        'id', 'experiment', 'gene', 'adj_p_val', 'log_fc',
+        'p_value', 'ave_expr'
     )
     list_filter = ('experiment__state', 'experiment__user')
     search_fields = ('gene', 'experiment__name', 'experiment__user__username')
-    readonly_fields = ('id', 'is_significant_display')
-    
+    readonly_fields = ('id',)
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('id', 'experiment', 'gene')
@@ -75,17 +75,4 @@ class DifferentialExpressionExperimentResultAdmin(admin.ModelAdmin):
         ('Statistical Results', {
             'fields': ('p_value', 'adj_p_val', 'log_fc', 'ave_expr', 't_statistic', 'b_statistic')
         }),
-        ('Significance', {
-            'fields': ('is_significant_display',),
-            'classes': ('collapse',)
-        }),
     )
-    
-    def is_significant_display(self, obj):
-        """Display if the gene is significant with default thresholds."""
-        try:
-            return obj.is_significant()
-        except:
-            return False
-    is_significant_display.short_description = 'Is Significant (p<0.05, |logFC|>1)'
-    is_significant_display.boolean = True
