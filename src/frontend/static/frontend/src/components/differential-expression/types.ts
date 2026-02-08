@@ -70,8 +70,6 @@ export interface DiffExpExperimentDetail {
     t_statistic: number;
     /* B statistic */
     b_statistic: number;
-    /* Is significant */
-    is_significant: boolean;
 }
 
 export type VolcanoPoint = {
