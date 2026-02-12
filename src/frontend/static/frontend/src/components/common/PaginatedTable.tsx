@@ -65,6 +65,9 @@ type PaginationCustomFilter = {
     urlToRetrieveOptions?: string,
     /** Receives all the current custom filter's values and must return the current `disabled` prop of the filter */
     disabledFunction?: (actualValues: { [key: string]: any }) => boolean
+
+    /** Callback when the filter value changes */
+    onChangeFilterEvent?: (value: any) => void
 }
 
 /**
@@ -387,6 +390,10 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                         disabled={filter.disabledFunction ? filter.disabledFunction(this.state.tableControl.filters) : false}
                         onChange={(_, { value }) => {
                             this.handleTableControlChanges(filter.keyForServer, value, true, true)
+
+                            if (filter.onChangeFilterEvent) {
+                                filter.onChangeFilterEvent(value)
+                            }
                         }}
                     />
                 )

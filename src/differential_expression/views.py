@@ -757,8 +757,9 @@ def download_differential_expression_results(request, pk: int):
     """
     Downloads all the differential expression results for a specific experiment.
     Returns a TSV file with all results (no pagination).
-    Supports optional filtering via query parameter:
-    - p_value: adjusted p-value threshold (returns genes with adj_p_val <= p_value)
+    Supports optional filtering via query parameters:
+    - adj_p_val: adjusted p-value threshold (returns genes with adj_p_val <= adj_p_val)
+    - log_fc: log fold change threshold (returns genes with |log_fc| >= log_fc)
     """
     experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
 
@@ -770,27 +771,45 @@ def download_differential_expression_results(request, pk: int):
             experiment.shared_users.filter(id=user.id).exists()):
         return HttpResponse('Unauthorized', status=401)
 
-    # Get filter parameter from query string
-    p_value = request.GET.get('p_value')
+    # Get filter parameters from query string
+    adj_p_val = request.GET.get('adj_p_val')
+    log_fc = request.GET.get('log_fc')
 
-    # Apply filter if provided
-    if p_value is not None:
+    results = experiment.results.all()
+    filename_suffix = ''
+
+    # Apply adj_p_val filter if provided
+    if adj_p_val is not None:
         try:
-            p_value = float(p_value)
+            adj_p_val = float(adj_p_val)
         except ValueError:
-            return HttpResponse('Invalid p_value. Must be numeric.', status=400)
+            return HttpResponse('Invalid adj_p_val. Must be numeric.', status=400)
 
-        # Validate p_value
-        if p_value < 0 or p_value > 1:
-            return HttpResponse('p_value must be between 0 and 1', status=400)
+        if adj_p_val < 0 or adj_p_val > 1:
+            return HttpResponse('adj_p_val must be between 0 and 1', status=400)
 
-        # Filter results: adj_p_val <= p_value (significant genes)
-        results = experiment.results.filter(adj_p_val__lte=p_value).order_by('adj_p_val')
-        filename_suffix = f'_filtered_p{p_value}'
-    else:
-        # Get all results (no filtering)
-        results = experiment.results.all().order_by('adj_p_val')
+        results = results.filter(adj_p_val__lte=adj_p_val)
+        filename_suffix += f'_p{adj_p_val}'
+
+    # Apply log_fc filter if provided
+    if log_fc is not None:
+        try:
+            log_fc = float(log_fc)
+        except ValueError:
+            return HttpResponse('Invalid log_fc. Must be numeric.', status=400)
+
+        if log_fc < 0:
+            return HttpResponse('log_fc must be >= 0', status=400)
+
+        results = results.filter(
+            Q(log_fc__gte=log_fc) | Q(log_fc__lte=-log_fc)
+        )
+        filename_suffix += f'_fc{log_fc}'
+
+    if not filename_suffix:
         filename_suffix = '_all'
+
+    results = results.order_by('adj_p_val')
 
     if not results.exists():
         return HttpResponse('No results found for this experiment', status=404)

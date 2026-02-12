@@ -231,10 +231,4 @@ class DifferentialExpressionExperimentResult(models.Model):
     def __str__(self):
         return f"{self.gene} - {self.experiment.name}"
 
-    def is_significant(self, p_threshold=0.05, fc_threshold=1.0):
-        """Check if this gene is significantly differentially expressed."""
-        return (self.adj_p_val is not None and
-                self.log_fc is not None and
-                self.adj_p_val <= p_threshold and
-                abs(self.log_fc) >= fc_threshold)
 
