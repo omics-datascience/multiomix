@@ -40,7 +40,7 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
                 className='space-modal large-modal'
                 labelPosition='left'
                 onClick={() => setOpen(true)}
-                {...buttonProps} // <-- se propagan las props aquí
+                {...buttonProps}
             >
                 <Icon name='plus' />
                 Create Biomarker
@@ -49,7 +49,8 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
             {/* Modal con opciones */}
             <Modal
                 size='tiny'
-                open={open}
+                // open={open}
+                open={false}
                 onClose={() => setOpen(false)}
             >
                 <Modal.Header>Create Biomarker</Modal.Header>
