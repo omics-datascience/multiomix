@@ -570,8 +570,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
     handleSelectAllBiomarker = () => {
         const allMolecules = this.state.experimentInfoWithoutFilters.rows
 
-        console.log('handleSelectAllBiomarker Filtrado', this.props.experimentInfo)
-        console.log('handleSelectAllBiomarker Sin filtrar', allMolecules)
         this.setState({
             biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
             openCreateEditBiomarkerModal: true,
