@@ -85,7 +85,8 @@ interface BiomarkerFromCorrelationModalState {
     submittingFSExperiment: boolean,
     openDetailsModal2: boolean,
     selectedOption: SelectedOption,
-    openSelectOptionModal: boolean
+    openSelectOptionModal: boolean,
+    experimentInfoWithoutFilters: ExperimentInfo
 }
 
 /**
@@ -120,7 +121,11 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             submittingFSExperiment: false,
             openDetailsModal2: false,
             selectedOption: 'selectAll',
-            openSelectOptionModal: false
+            openSelectOptionModal: false,
+            experimentInfoWithoutFilters: {
+                ...props.experimentInfo,
+                rows: [...props.experimentInfo.rows]
+            }
         }
     }
 
@@ -563,10 +568,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
     }
 
     handleSelectAllBiomarker = () => {
-        const { experimentInfo } = this.props
+        const allMolecules = this.state.experimentInfoWithoutFilters.rows
 
-        const allMolecules = experimentInfo.rows
-
+        console.log('handleSelectAllBiomarker Filtrado', this.props.experimentInfo)
+        console.log('handleSelectAllBiomarker Sin filtrar', allMolecules)
         this.setState({
             biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
             openCreateEditBiomarkerModal: true,
@@ -1215,12 +1220,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             methylations: [],
             mirnas: [],
             cnas: [],
-            mrnas: [],
-            user: {
-                id: 0,
-                username: ''
-            },
-            is_public: false,
+            mrnas: []
         }
     }
 
@@ -1530,7 +1530,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    className='space-modal large-modal'
+                    // className='space-modal large-modal'
                     onClose={() => this.closeBiomarkerModal()}
                 >
                     <ManualForm
@@ -1540,6 +1540,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         biomarkerForm={this.state.formBiomarker}
                         checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
                         handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
+                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                         cleanForm={this.cleanForm}
                         isFormEmpty={this.isFormEmpty}
                         handleAddMoleculeToSection={this.handleAddMoleculeToSection}
@@ -1555,6 +1557,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleRestartSection={this.handleRestartSection}
                     />
                 </Modal>
+
             </>
         )
     }
