@@ -15,7 +15,7 @@ interface CreateBiomarkerButtonProps extends Partial<ButtonProps> {
 const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
     experimentInfo,
     onCreateBiomarker,
-    ...buttonProps // <-- todas las props extra van acá
+    ...buttonProps
 }) => {
     const [open, setOpen] = useState(false)
     const [selectedOption, setSelectedOption] = useState<BiomarkerOption>('selectAll')
@@ -49,8 +49,7 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
             {/* Modal con opciones */}
             <Modal
                 size='tiny'
-                // open={open}
-                open={false}
+                open={open}
                 onClose={() => setOpen(false)}
             >
                 <Modal.Header>Create Biomarker</Modal.Header>

@@ -173,13 +173,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                         <BiomarkerFromCorrelationModal
                             experimentInfo={props.experimentInfo}
                             tableControl={props.tableControl}
-                            onCreateBiomarker={({ experimentInfo, selectAll, tableControl }) => {
-                                console.log('filtros del biomarker', {
-                                    selectAll,
-                                    experimentInfo,
-                                    tableControl
-                                })
-                            }}
+                            onCreateBiomarker={() => { }}
                         />
 
                         <Form.Button
