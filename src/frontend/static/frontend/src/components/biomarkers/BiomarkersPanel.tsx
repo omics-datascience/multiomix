@@ -20,7 +20,6 @@ import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters, getNumberOfMoleculesOfBiomarker } from './utils'
 
 // Styles
-import './../../css/biomarkers.css'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
 

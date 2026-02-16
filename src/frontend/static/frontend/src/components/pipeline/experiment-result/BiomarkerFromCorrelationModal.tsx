@@ -1,6 +1,6 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
-import { Modal, DropdownItemProps, Icon, Form, Button } from 'semantic-ui-react'
+import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
@@ -10,8 +10,10 @@ import { ManualForm } from '../../biomarkers/modalContentBiomarker/manualForm/Ma
 import { PaginationCustomFilter } from '../../common/PaginatedTable'
 import { isEqual } from 'lodash'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../biomarkers/utils'
+import { BiomarkerDetailsModal } from '../../biomarkers/BiomarkerDetailsModal'
+import { Alert } from '../../common/Alert'
 
-// URLs defined in biomarkers.html
+// URLs defined in gem.html
 declare const urlBiomarkersCRUD: string
 declare const urlBiomarkersSimpleUpdate: string
 declare const urlBiomarkersCreate: string
@@ -1139,6 +1141,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * @param value Value to add to the molecules section that is selected
      */
     handleAddMoleculeToSection = (value: MoleculesSectionData) => {
+        console.debug('handleAddMoleculeToSection', value)
         const genesSymbolsFinder = this.state.formBiomarker.moleculesSymbolsFinder
         genesSymbolsFinder.data = []
         this.setState({
@@ -1528,7 +1531,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     closeOnEscape={false}
                     closeOnDimmerClick={false}
                     closeOnDocumentClick={false}
-                    // className='space-modal large-modal'
+                    className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
+                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
                     onClose={() => this.closeBiomarkerModal()}
                 >
                     <ManualForm
@@ -1555,6 +1559,37 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleRestartSection={this.handleRestartSection}
                     />
                 </Modal>
+
+                {/* Biomarker details modal. */}
+                <Modal
+                    className='large-modal'
+                    closeIcon={<Icon name='close' size='large' />}
+                    closeOnEscape={false}
+                    closeOnDimmerClick={false}
+                    closeOnDocumentClick={false}
+                    centered={false}
+                    onClose={this.closeBiomarkerDetailsModal}
+                    open={this.state.openDetailsModal}
+                >
+                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker} />
+                </Modal>
+
+                <Confirm
+                    open={this.state.confirmModal.confirmModal}
+                    header={this.state.confirmModal.headerText}
+                    content={this.state.confirmModal.contentText}
+                    size='large'
+                    onCancel={() => this.handleCancelConfirmModalState()}
+                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                />
+
+                <Alert
+                    onClose={this.handleCloseAlert}
+                    isOpen={this.state.alert.isOpen}
+                    message={this.state.alert.message}
+                    type={this.state.alert.type}
+                    duration={this.state.alert.duration}
+                />
 
             </>
         )
