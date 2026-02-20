@@ -4,6 +4,7 @@ import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-de
 import { advanceBBHAOptions, improvedBBHACoeff1Options, improvedBBHACoeff2Options } from '../../../../utils'
 import { AdvancedBBHA, BBHAVersion } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
+import { useIntl } from 'react-intl'
 
 declare const sparkIntegrationIsEnabled: boolean
 declare const minIterationsMetaheuristics: number
@@ -21,12 +22,17 @@ interface BBHAAdvancedProps {
  * Simple component for explanation over coeff1 and coeff2 parameters
  * @returns Component.
  */
-const CoeffExplanation = () => (
-    <p>
-        Coefficient specified in the
-        <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>improved Binary Black Hole Algorithm</ExternalLink>
-    </p>
-)
+const CoeffExplanation = () => {
+    const intl = useIntl()
+    return (
+        <p>
+            {intl.formatMessage({ id: 'bbha.coefficientExplanation' })}{' '}
+            <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>
+                improved Binary Black Hole Algorithm
+            </ExternalLink>
+        </p>
+    )
+}
 
 /**
  * Renders a form to set some advanced parameters for the BBHA algorithm.
@@ -34,6 +40,7 @@ const CoeffExplanation = () => (
  * @returns Component.
  */
 export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
+    const intl = useIntl()
     const { advancedData, handleChangeAdvanceAlgorithm } = props
     return (
         <Grid>
@@ -41,8 +48,8 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Form.Input
                         fluid
-                        label='Number of stars'
-                        placeholder='An integer number'
+                        label={intl.formatMessage({ id: 'bbha.numberOfStars' })}
+                        placeholder={intl.formatMessage({ id: 'bbha.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minStarsBBHA}
@@ -62,7 +69,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content='Number of stars in the Binary Black Hole Algorithm. Each of these stars evaluates a different subset of features. Increasing this number increases the chances of evaluating the most optimal subset but delays more the result of the experiment'
+                        content={intl.formatMessage({ id: 'bbha.numberOfStars.info' })}
                         onTop={false}
                     />
                 </Grid.Column>
@@ -71,8 +78,8 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Form.Input
                         fluid
-                        label='Number of iterations'
-                        placeholder='An integer number'
+                        label={intl.formatMessage({ id: 'bbha.numberOfIterations' })}
+                        placeholder={intl.formatMessage({ id: 'bbha.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minIterationsMetaheuristics}
@@ -93,7 +100,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content='Number of iterations in the Binary Black Hole Algorithm. In each of the iterations, the fitness function for each of the stars with its corresponding subset of features is computed. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment'
+                        content={intl.formatMessage({ id: 'bbha.numberOfIterations.info' })}
                         onTop={false}
                     />
                 </Grid.Column>
@@ -101,7 +108,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
                     <Form.Select
-                        label='BBHA Version'
+                        label={intl.formatMessage({ id: 'bbha.version' })}
                         className='selection-select'
                         options={advanceBBHAOptions}
                         value={advancedData.BBHAVersion}
@@ -113,10 +120,12 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                         content={(
                             <>
                                 <p>
-                                    The <i>Original</i> approach executes the original Binary Black Hole Algorithm as defined in <ExternalLink href='https://www.sciencedirect.com/science/article/pii/S1568494617301242?via%3Dihub'>this article</ExternalLink>.
+                                    {intl.formatMessage({ id: 'bbha.version.original' })}{' '}
+                                    <ExternalLink href='https://www.sciencedirect.com/science/article/pii/S1568494617301242?via%3Dihub'>this article</ExternalLink>.
                                 </p>
                                 <p>
-                                    <i>Version 2</i> it is an improved version defined in this <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>newer article</ExternalLink>
+                                    {intl.formatMessage({ id: 'bbha.version.v2' })}{' '}
+                                    <ExternalLink href='https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697'>newer article</ExternalLink>
                                 </p>
                             </>
                         )}
@@ -131,7 +140,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     <Grid.Row columns={2}>
                         <Grid.Column width={14}>
                             <Form.Select
-                                label='Coefficient 1'
+                                label={`${intl.formatMessage({ id: 'bbha.coefficient' })} 1`}
                                 className='selection-select'
                                 options={improvedBBHACoeff1Options}
                                 value={advancedData.coeff1}
@@ -148,7 +157,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     <Grid.Row columns={2}>
                         <Grid.Column width={14}>
                             <Form.Select
-                                label='Coefficient 2'
+                                label={`${intl.formatMessage({ id: 'bbha.coefficient' })} 2`}
                                 className='selection-select'
                                 options={improvedBBHACoeff2Options}
                                 value={advancedData.coeff2}

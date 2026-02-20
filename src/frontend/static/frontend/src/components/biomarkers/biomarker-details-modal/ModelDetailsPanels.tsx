@@ -9,6 +9,7 @@ import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails,
 import { Nullable } from '../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
+import { useIntl } from 'react-intl'
 
 declare const urlStatisticalValidationModalDetails: string
 
@@ -21,13 +22,14 @@ type GeneralMetricsProps = { data: ModelDetails, fitness_function: FitnessFuncti
  * @returns Component.
  */
 const GeneralMetrics = (props: GeneralMetricsProps) => {
+    const intl = useIntl()
     return (
         <>
             <List.Item>
                 <List.Icon name='cogs' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Model:
+                        {intl.formatMessage({ id: 'common.model' })}
 
                         <FitnessFunctionLabel
                             fluid={false}
@@ -41,7 +43,7 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Icon name='star outline' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Best fitness value: {props.data.best_fitness.toFixed(4)}
+                        {intl.formatMessage({ id: 'modelDetails.general.bestFitnessValue' })} {props.data.best_fitness.toFixed(4)}
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -49,7 +51,7 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Icon name='random' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Random state: {props.data.random_state ?? '-'}
+                        {intl.formatMessage({ id: 'modelDetails.general.randomState' })} {props.data.random_state ?? '-'}
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -66,6 +68,7 @@ type ClusteringModelDetailsPanelProps = { data: ClusteringModelDetails, fitness_
  * @returns Component.
  */
 const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) => {
+    const intl = useIntl()
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -74,7 +77,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Icon name='lab' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Algorithm:
+                        {intl.formatMessage({ id: 'modelDetails.clustering.algorithm' })}
 
                         <ClusteringAlgorithmLabel clusteringAlgorithm={props.data.algorithm} className='margin-left-2' />
                     </List.Header>
@@ -84,7 +87,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Icon name='lightning' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Scoring method:
+                        {intl.formatMessage({ id: 'modelDetails.clustering.scoringMethod' })}
 
                         <ClusteringScoringMethodLabel scoreMethod={props.data.scoring_method} className='margin-left-2' />
                     </List.Header>
@@ -93,7 +96,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
             <List.Item>
                 <List.Icon name='grid layout' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>Number of clusters: {props.data.n_clusters}</List.Header>
+                    <List.Header>{intl.formatMessage({ id: 'modelDetails.clustering.numberOfClusters' })} {props.data.n_clusters}</List.Header>
                 </List.Content>
             </List.Item>
         </List>
@@ -109,6 +112,7 @@ type SVMModelDetailsPanelProps = { data: SVMModelDetails, fitness_function: Fitn
  * @returns Component.
  */
 const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
+    const intl = useIntl()
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -127,7 +131,7 @@ const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
                 <List.Icon name='tasks' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        Task:
+                        {intl.formatMessage({ id: 'modelDetails.svm.task' })}
 
                         <SVMKernelTask task={props.data.task} className='margin-left-2' />
                     </List.Header>
@@ -146,6 +150,7 @@ type RFModelDetailsPanelProps = { data: RFModelDetails, fitness_function: Fitnes
  * @returns Component.
  */
 const RFModelDetailsPanel = (props: RFModelDetailsPanelProps) => {
+    const intl = useIntl()
     return (
         <List divided relaxed>
             <GeneralMetrics {...props} />
@@ -153,13 +158,13 @@ const RFModelDetailsPanel = (props: RFModelDetailsPanelProps) => {
             <List.Item>
                 <List.Icon name='tree' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>Number of estimators: {props.data.n_estimators}</List.Header>
+                    <List.Header>{intl.formatMessage({ id: 'modelDetails.rf.numberOfEstimators' })} {props.data.n_estimators}</List.Header>
                 </List.Content>
             </List.Item>
             <List.Item>
                 <List.Icon name='angle double down' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>Max. depth: {props.data.max_depth ?? '-'}</List.Header>
+                    <List.Header>{intl.formatMessage({ id: 'modelDetails.rf.maxDepth' })} {props.data.max_depth ?? '-'}</List.Header>
                 </List.Content>
             </List.Item>
         </List>

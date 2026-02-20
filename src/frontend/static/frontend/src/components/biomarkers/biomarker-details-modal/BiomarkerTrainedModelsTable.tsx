@@ -13,6 +13,7 @@ import ky from 'ky'
 import { StopExperimentButton } from '../../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteButton } from '../../common/DeleteButton'
 import { TableCellSources } from '../../common/TableCellSources'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkerTrainedModels: string
 declare const urlStopTrainedModel: string
@@ -37,6 +38,7 @@ interface BiomarkerTrainedModelsPanelProps {
  * @returns Component.
  */
 export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelProps) => {
+    const intl = useIntl()
     const [showNewTrainedModelModal, setShowNewTrainedModelModal] = useState(false)
 
     const [stoppingTrainedModel, setStoppingTrainedModel] = useState(false)
@@ -117,13 +119,16 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
 
         return (
             <Modal size='small' open={trainedModelToStop !== null} onClose={handleCloseStopTrainedModel} centered={false}>
-                <Header icon='stop' content='Stop training' />
+                <Header icon='stop' content={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.stopTraining' })} />
                 <Modal.Content>
-                    Are you sure you want to stop the training of model <strong>{trainedModelToStop.name}</strong>?
+                    {intl.formatMessage(
+                        { id: 'biomarkerTrainedModelsTable.confirm.stopTraining' },
+                        { modelName: trainedModelToStop.name }
+                    )}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseStopTrainedModel}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button
                         color='red'
@@ -131,7 +136,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                         loading={stoppingTrainedModel}
                         disabled={stoppingTrainedModel}
                     >
-                        Stop
+                        {intl.formatMessage({ id: 'biomarkerTrainedModelsTable.button.stop' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -149,16 +154,20 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
 
         return (
             <Modal size='small' open={trainedModelToRemove !== null} onClose={handleCloseRemoveTrainedModel} centered={false}>
-                <Header icon='trash' content='Delete Biomarker' />
+                <Header icon='trash' content={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.deleteBiomarker' })} />
                 <Modal.Content>
-                    Are you sure you want to delete the Biomarker <strong>{trainedModelToRemove.name}</strong>?
+                    {intl.formatMessage(
+                        { id: 'biomarkerTrainedModelsTable.confirm.deleteBiomarker' },
+                        { modelName: trainedModelToRemove.name }
+                    )}
+
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseRemoveTrainedModel}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={deleteTrainedModel} loading={deletingTrainedModel} disabled={deletingTrainedModel}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -205,26 +214,27 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
 
             {/* TrainedModels table. */}
             <PaginatedTable<TrainedModelForTable>
-                headerTitle='Trained models'
+                headerTitle={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.trainedModels' })}
                 headers={[
-                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                    { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                    { name: 'State', serverCodeToSort: 'state', width: 1 },
-                    { name: 'Model', serverCodeToSort: 'fitness_function', width: 1 },
-                    { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Metric', serverCodeToSort: 'fitness_metric' },
-                    { name: 'Best CV metric', serverCodeToSort: 'best_fitness_value' },
-                    { name: 'Datasets' },
+                    { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                    { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.state' }), serverCodeToSort: 'state', width: 1 },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.model' }), serverCodeToSort: 'fitness_function', width: 1 },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.date' }), serverCodeToSort: 'created' },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.metric' }), serverCodeToSort: 'fitness_metric' },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.bestCVMetric' }), serverCodeToSort: 'best_fitness_value' },
+                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.datasets' }) },
                     ...actionColumn
+
                 ]}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id, ...extraQueryParams }}
                 customFilters={[
                     {
-                        label: 'Model type',
+                        label: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.filter.modelType' }),
                         keyForServer: 'fitness_function',
                         defaultValue: '',
-                        placeholder: 'Model type',
+                        placeholder: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.filter.modelType' }),
                         options: fitnessFunctionsOptions,
                         width: 3
                     },
@@ -233,7 +243,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 customElements={
                     props.allowFullManagement
                         ? [
-                            <Form.Field key={1} className='custom-table-field' title='New trained model'>
+                            <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.button.newTrainedModel' })}>
                                 <Button primary icon onClick={() => { setShowNewTrainedModelModal(true) }}>
                                     <Icon name='add' />
                                 </Button>
@@ -242,8 +252,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                         : undefined
                 }
                 showSearchInput
-                searchLabel='Name'
-                searchPlaceholder='Search by name or description'
+                searchLabel={intl.formatMessage({ id: 'common.name' })}
+                searchPlaceholder={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.search.placeholder' })}
                 searchWidth={4}
                 entriesSelectWidth={2}
                 urlToRetrieveData={urlBiomarkerTrainedModels}
@@ -289,7 +299,7 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                     {/* Stop button */}
                                     {isInProcess && (
                                         <StopExperimentButton
-                                            title='Stop trained model'
+                                            title={intl.formatMessage({ id: 'biomarkerTrainedModelsTable.button.stopTrainedModel' })}
                                             onClick={() => setTrainedModelToStop(trainedModel)}
                                         />
                                     )}
@@ -300,8 +310,8 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                                         <DeleteButton
                                             disabled={!trainedModel.can_be_deleted}
                                             title={trainedModel.can_be_deleted
-                                                ? 'Delete trained model'
-                                                : 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments'}
+                                                ? intl.formatMessage({ id: 'biomarkerTrainedModelsTable.button.deleteTrainedModel' })
+                                                : intl.formatMessage({ id: 'biomarkerTrainedModelsTable.button.deleteTrainedModelNotAllowed' })}
                                             onClick={() => setTrainedModelToRemove(trainedModel)}
                                             ownerId={null}
                                         />
