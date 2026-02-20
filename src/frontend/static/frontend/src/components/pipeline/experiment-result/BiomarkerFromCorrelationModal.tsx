@@ -45,11 +45,6 @@ type ValidationForm = {
 interface BiomarkerFromCorrelationModalProps {
     experimentInfo: ExperimentInfo;
     tableControl: ExperimentResultTableControl;
-    onCreateBiomarker: (options: {
-        experimentInfo: ExperimentInfo;
-        selectAll: boolean;
-        tableControl?: ExperimentResultTableControl;
-    }) => void;
 }
 
 /** BiomarkersPanel's state */
