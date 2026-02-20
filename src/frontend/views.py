@@ -4,26 +4,20 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework import permissions
-from copy import deepcopy
 from typing import List, Optional, Dict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
-from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from api_service.models import Experiment
 from api_service.mrna_service import global_mrna_service
-from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin, MoleculeIdentifier
-from biomarkers.serializers import BiomarkerFromCorrelationAnalysisSerializer, BiomarkerSerializer, MoleculeIdentifierSerializer, \
-    BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
+from biomarkers.models import Biomarker, BiomarkerState, BiomarkerOrigin
+from biomarkers.serializers import BiomarkerSerializer, BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
-from django.db.models import QuerySet, Q
+from django.db.models import Q
 
 def index_action(request):
     """Index view"""
