@@ -166,7 +166,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                             width={2}
                             label={isShowingHighPrecision ? '1.234e-5' : 'p < .001'}
                             icon={isShowingHighPrecision ? 'eye slash' : 'eye'}
-                            title={`${isShowingHighPrecision ? 'Les s' : 'More'} precise p-value`}
+                            title={`${isShowingHighPrecision ? 'Less' : 'More'} precise p-value`}
                             onClick={() => props.changePrecisionState(!isShowingHighPrecision)}
                         />
 
