@@ -16,8 +16,6 @@
 8. [Quality Gates](#-quality-gates)
 9. [Quality Profiles](#-quality-profiles)
 10. [Rules (Reglas)](#-rules-reglas)
-11. [Mejores Prácticas](#-mejores-prácticas)
-
 ---
 
 ## 🎯 Fundamentos de Calidad de Código
@@ -843,78 +841,6 @@ Si una regla detecta algo que **no es un problema real**:
 
 ---
 
-## 🏆 Mejores Prácticas
-
-### Para Desarrolladores
-
-1. **🔍 Revisa SonarQube antes de abrir PR**
-   - Ve a SonarQube Cloud
-   - Mira los issues en tu rama
-   - Arregla al menos los Blockers y Criticals
-
-2. **✅ Haz que el Quality Gate pase**
-   - Si falla, revisa qué condición no se cumple
-   - Arregla antes de mergear
-
-3. **🔥 Revisa Security Hotspots**
-   - No los ignores
-   - Evalúa si son seguros o no
-   - Márcalos como Safe o Vulnerability
-
-4. **📝 No desactives reglas sin razón**
-   - Si una regla molesta, discútelo con el equipo
-   - Documenta por qué la desactivas
-
-5. **🧪 Escribe tests**
-   - Coverage no lo es todo, pero ayuda
-   - Usa pytest para backend, Jest para frontend
-
-### Para el Equipo
-
-1. **📊 Revisen métricas en retrospectivas**
-   - ¿Technical Debt está creciendo?
-   - ¿Coverage está bajando?
-   - ¿Más bugs en código nuevo?
-
-2. **🎯 Definan Quality Gates realistas**
-   - No exijan 100% coverage de golpe
-   - Suban el estándar gradualmente
-
-3. **🔄 Actualicen Quality Profiles**
-   - Revisen reglas nuevas cada trimestre
-   - Activen reglas que agreguen valor
-
-4. **📚 Eduquen sobre reglas**
-   - Compartan reglas importantes en el equipo
-   - Hagan code reviews enfocados en calidad
-
-5. **🚀 Celebren mejoras**
-   - Si suben coverage de 10% → 30%, celebren
-   - Reconozcan a quien arregla Technical Debt
-
-### Para DevOps/Tech Leads
-
-1. **🔒 Bloqueen merges si Quality Gate falla**
-   ```yaml
-   # En GitHub branch protection rules
-   Require status checks to pass:
-   ✅ SonarQube Analysis
-   ```
-
-2. **📧 Configuren notificaciones**
-   - Slack cuando Quality Gate falla
-   - Email con reporte semanal
-
-3. **📈 Tracen tendencias**
-   - Usen el workflow de reportes
-   - Compartan con stakeholders
-
-4. **🎓 Den training al equipo**
-   - Sesión sobre SonarQube
-   - Demo de cómo leer issues
-
----
-
 ## 🔗 Enlaces Útiles
 
 - 📚 [SonarQube Docs](https://docs.sonarqube.org/)
@@ -929,9 +855,8 @@ Si una regla detecta algo que **no es un problema real**:
 ## 📞 Soporte
 
 Si tienes dudas sobre SonarQube en Multiomix:
-- 💬 Pregunta en el canal de Slack del equipo
-- 📧 Contacta al tech lead
-- 📝 Abre un issue en GitHub con la etiqueta `sonarqube`
+- 💬 Podes enviarnos un mail a [multiomix@gmail.com](mailto:multiomix@gmail.com?subject=Contultas%SonarQube%Multiomix)
+- 📝 Abre un issue en GitHub en el repositorio de [Multiomix](https://github.com/omics-datascience/multiomix)
 
 ---
 
