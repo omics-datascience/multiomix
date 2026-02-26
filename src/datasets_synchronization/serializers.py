@@ -8,6 +8,8 @@ from common.enums import ResponseCode
 from common.response import ResponseStatus
 from .enums import CreateCGDSStudyResponseCode
 from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset
+from tissues.models import Tissue
+from tissues.serializers import TissueSerializer
 from django.db.models import Q
 
 
@@ -54,6 +56,13 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     clinical_sample_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     version = serializers.IntegerField(read_only=True)
     is_last_version = serializers.SerializerMethodField(method_name='get_is_last_version')
+    # tissue_id: writable PK field; tissue: read-only nested (set in to_representation)
+    tissue_id = serializers.PrimaryKeyRelatedField(
+        queryset=Tissue.objects.all(),
+        source='tissue',
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = CGDSStudy
@@ -62,6 +71,12 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_last_version(study: CGDSStudy) -> bool:
         return study.version == study.get_last_version()
+
+    def to_representation(self, instance: CGDSStudy):
+        """Makes a nested representation of the tissue field on GET requests."""
+        data = super().to_representation(instance)
+        data['tissue'] = TissueSerializer(instance.tissue).data if instance.tissue else None
+        return data
 
     def __create_cgds_dataset(self, validated_data_pop: OrderedDict) -> Optional[CGDSDataset]:
         """
@@ -293,6 +308,7 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.description = validated_data.get('description', instance.description)
             instance.url = validated_data.get('url', instance.url)
             instance.url_study_info = validated_data.get('url_study_info', instance.url_study_info)
+            instance.tissue = validated_data.get('tissue', instance.tissue)
 
             # Updates datasets
             instance.mrna_dataset = mrna_dataset

@@ -10,6 +10,7 @@ from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_
 from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
+from tissues.serializers import TissueSerializer
 from user_files.models import UserFile
 
 
@@ -39,9 +40,9 @@ class UserFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFile
-        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'upload_date', 'institutions',
-                  'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values', 'column_used_as_index',
-                  'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
+        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissue', 'tissue_id',
+                  'upload_date', 'institutions', 'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values',
+                  'column_used_as_index', 'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
 
     def validate_file_obj(self, value: InMemoryUploadedFile):
         """
@@ -64,6 +65,8 @@ class UserFileSerializer(serializers.ModelSerializer):
 
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
+
+        data['tissue'] = TissueSerializer(instance.tissue).data if instance.tissue else None
 
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
@@ -122,6 +125,7 @@ class UserFileSerializer(serializers.ModelSerializer):
             instance.file_type = validated_data.get('file_type', instance.file_type)
             instance.description = validated_data.get('description', instance.description)
             instance.tag = validated_data.get('tag')
+            instance.tissue = validated_data.get('tissue')
             instance.institutions.set(validated_data.get('institutions', []))
             instance.is_cpg_site_id = validated_data.get('is_cpg_site_id')
             instance.platform = validated_data.get('platform')

@@ -10,6 +10,7 @@ from api_service.websocket_functions import send_update_cgds_studies_command
 from common.methylation import MethylationPlatform
 from feature_selection.models import TrainedModel
 from statistical_properties.models import StatisticalValidation
+from tissues.models import Tissue
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from pandas import DataFrame
@@ -288,6 +289,7 @@ class CGDSStudy(models.Model):
         null=True,
         related_name='cgds_studies_as_clinical_sample_dataset'
     )
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, blank=True, null=True)
     task_id: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     def __str__(self) -> str:
