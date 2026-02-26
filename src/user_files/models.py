@@ -15,6 +15,7 @@ from common.methylation import MethylationPlatform
 from institutions.models import Institution
 from tags.models import Tag
 from tissues.models import Tissue
+from tissues.models import Tissue
 from user_files.models_choices import FileType, FileDecimalSeparator
 from user_files.utils import get_decimal_separator_and_numerical_data, read_excel_in_chunks
 
@@ -33,7 +34,7 @@ class UserFile(models.Model):
     file_obj = models.FileField(upload_to=user_directory_path)
     file_type = models.IntegerField(choices=FileType.choices)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, blank=True, null=True)
-    tissues = models.ManyToManyField(Tissue, blank=True)
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, blank=True, null=True)
     upload_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     institutions = models.ManyToManyField(Institution, blank=True)

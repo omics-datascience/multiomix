@@ -14,6 +14,7 @@ from .enums import SyncCGDSStudyResponseCode, SyncStrategy
 from .models import CGDSStudy, CGDSDatasetSynchronizationState, CGDSStudySynchronizationState, CGDSDataset
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render, get_object_or_404
@@ -84,7 +85,7 @@ class CGDSStudyList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['tissues']
+    filterset_fields = ['tissue']
     search_fields = ['name', 'description']
     ordering_fields = '__all__'
 

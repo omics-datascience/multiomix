@@ -5,7 +5,6 @@ from django.db import models
 class Tissue(models.Model):
     """Reference model for tissue types. Tissues are read-only and cannot be deleted."""
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=100, unique=True)  # noqa: populated by migration 0003
 
     class Meta:
         ordering = ['name']
