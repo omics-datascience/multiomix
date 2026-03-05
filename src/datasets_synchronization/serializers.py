@@ -56,11 +56,11 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     clinical_sample_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     version = serializers.IntegerField(read_only=True)
     is_last_version = serializers.SerializerMethodField(method_name='get_is_last_version')
-    # tissue_id: writable PK field; tissue: read-only nested (set in to_representation)
-    tissue_id = serializers.PrimaryKeyRelatedField(
+    # tissue_ids: writable list of PKs; tissues: read-only nested list (set in to_representation)
+    tissue_ids = serializers.PrimaryKeyRelatedField(
         queryset=Tissue.objects.all(),
-        source='tissue',
-        allow_null=True,
+        source='tissues',
+        many=True,
         required=False
     )
 
@@ -73,9 +73,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
         return study.version == study.get_last_version()
 
     def to_representation(self, instance: CGDSStudy):
-        """Makes a nested representation of the tissue field on GET requests."""
+        """Makes a nested representation of the tissues field on GET requests."""
         data = super().to_representation(instance)
-        data['tissue'] = TissueSerializer(instance.tissue).data if instance.tissue else None
+        data['tissues'] = TissueSerializer(instance.tissues.all(), many=True).data
         return data
 
     def __create_cgds_dataset(self, validated_data_pop: OrderedDict) -> Optional[CGDSDataset]:
@@ -239,9 +239,10 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             methylation_dataset = self.__create_cgds_dataset(validated_data.pop('methylation_dataset'))
             clinical_patient_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_patient_dataset'))
             clinical_sample_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_sample_dataset'))
+            tissues = validated_data.pop('tissues', [])
 
             # Creates the CGDSStudy
-            return CGDSStudy.objects.create(
+            cgds_study = CGDSStudy.objects.create(
                 mrna_dataset=mrna_dataset,
                 mirna_dataset=mirna_dataset,
                 cna_dataset=cna_dataset,
@@ -250,6 +251,8 @@ class CGDSStudySerializer(serializers.ModelSerializer):
                 clinical_sample_dataset=clinical_sample_dataset,
                 **validated_data
             )
+            cgds_study.tissues.set(tissues)
+            return cgds_study
 
     @staticmethod
     def __set_clinical_datasets_to_existing_experiments(cgds_study: CGDSStudy):
@@ -308,7 +311,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.description = validated_data.get('description', instance.description)
             instance.url = validated_data.get('url', instance.url)
             instance.url_study_info = validated_data.get('url_study_info', instance.url_study_info)
-            instance.tissue = validated_data.get('tissue', instance.tissue)
 
             # Updates datasets
             instance.mrna_dataset = mrna_dataset
@@ -317,6 +319,10 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.methylation_dataset = methylation_dataset
             instance.clinical_patient_dataset = clinical_patient_dataset
             instance.clinical_sample_dataset = clinical_sample_dataset
+
+            # Updates M2M tissues if provided
+            if 'tissues' in validated_data:
+                instance.tissues.set(validated_data['tissues'])
 
             # Saves new changes and returns instance
             instance.save()
