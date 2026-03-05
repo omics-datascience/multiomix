@@ -149,7 +149,7 @@ class UserFileList(generics.ListAPIView):
     serializer_class = UserFileWithoutFileObjSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['tag', 'file_type', 'institutions', 'tissue']
+    filterset_fields = ['tag', 'file_type', 'institutions', 'tissues']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user', 'file_type']
     pagination_class = StandardResultsSetPagination
