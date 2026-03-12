@@ -21,7 +21,7 @@ import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmPa
 
 // Styles
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
-import { DeleteExperimentButton } from '../pipeline/all-experiments-view/DeleteExperimentButton'
+import { DeleteButton } from '../common/DeleteButton'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -1710,7 +1710,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
                                         {/* Delete button */}
                                         {!isInProcess && (
-                                            <DeleteExperimentButton
+                                            <DeleteButton
                                                 title='Delete biomarker'
                                                 disabled={currentBiomarkerIsLoading}
                                                 onClick={() => this.confirmBiomarkerDeletion(biomarker)}

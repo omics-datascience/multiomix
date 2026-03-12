@@ -30,11 +30,10 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
 
     return (
         <>
-            {/* Botón que abre el modal */}
+            {/* Button that opens the modal */}
             <Button
                 label='Create Biomarker'
                 icon='dna'
-                // className='clickable margin-left-5'
                 title='Create Biomarker from result'
                 color='green'
                 className='space-modal large-modal'
@@ -46,7 +45,7 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = ({
                 Create Biomarker
             </Button>
 
-            {/* Modal con opciones */}
+            {/* Modal with options */}
             <Modal
                 size='tiny'
                 open={open}

@@ -123,10 +123,7 @@
 }
 
 .no-margin-right-form-field * {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    align-items: center;
+    margin-right: 0 !important;
 }
 
 #sorting-order-data {
