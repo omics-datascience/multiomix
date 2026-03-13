@@ -1,10 +1,11 @@
 import React from 'react'
-import { FileType, StateIconInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix } from './interfaces'
+import { FileType, StateIconInfo, GEMImageAndLabelInfo, CorrelationType, ExperimentResultTableControl, GeneralTableControl, Source, SourceType, HandleChangesCallback, Nullable, SortField, MirDIPScoreClass, ScoreClassData, BinData, ExperimentRequestPrefix, ConfirmModal, CustomAlert, CustomAlertTypes } from './interfaces'
 import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
 import countBy from 'lodash/countBy'
 import { MAX_FILE_SIZE_IN_MB_ERROR } from './constants'
+import { DifferentialExpressionAnalysisExperimentState } from '../components/differential-expression/types'
 
 /** User locale extracted from the browser. */
 const USER_LOCALE: readonly string[] | string = navigator.languages !== undefined && navigator.languages.length > 0
@@ -233,6 +234,100 @@ const getExperimentStateObj = (state: ExperimentState): StateIconInfo => {
     }
 
     return stateIcon
+}
+
+/**
+ * Gets info about the state of a specific Experiment to display in the card
+ * @param state Experiment state
+ * @returns The corresponding info of the current experiment's state of a differential expressione
+ */
+const getExperimentStateObjDiffExperiment = (state: DifferentialExpressionAnalysisExperimentState): StateIconInfo => {
+    let stateIconDiffExp: StateIconInfo | null = null
+
+    switch (state) {
+        case DifferentialExpressionAnalysisExperimentState.COMPLETED:
+            stateIconDiffExp = {
+                iconName: 'check',
+                color: 'green',
+                loading: false,
+                title: 'The analysis is complete'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.FINISHED_WITH_ERROR:
+            stateIconDiffExp = {
+                iconName: 'times',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has finished with errors. Try again'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.WAITING_FOR_QUEUE:
+            stateIconDiffExp = {
+                iconName: 'wait',
+                color: 'yellow',
+                loading: false,
+                title: 'The process of this analysis will start soon'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.NO_SAMPLES_IN_COMMON:
+            stateIconDiffExp = {
+                iconName: 'user outline',
+                color: 'red',
+                loading: false,
+                title: 'Datasets don\'t have samples in common'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.IN_PROCESS:
+            stateIconDiffExp = {
+                iconName: 'sync alternate',
+                color: 'yellow',
+                loading: true,
+                title: 'The analysis is being processed'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.STOPPING:
+            stateIconDiffExp = {
+                iconName: 'stop',
+                color: 'red',
+                loading: false,
+                title: 'The analysis was stopped'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.REACHED_ATTEMPTS_LIMIT:
+            stateIconDiffExp = {
+                iconName: 'undo',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has failed several times. Try changing some parameters and try again'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.TIMEOUT_EXCEEDED:
+            stateIconDiffExp = {
+                iconName: 'wait',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has reached the timeout limit. Try changing some parameters and try again'
+            }
+            break
+        case DifferentialExpressionAnalysisExperimentState.NO_FEATURES_FOUND:
+            stateIconDiffExp = {
+                iconName: 'user outline',
+                color: 'red',
+                loading: false,
+                title: 'Datasets don\'t have samples in common'
+            }
+            break
+        default:
+            stateIconDiffExp = {
+                iconName: 'times',
+                color: 'red',
+                loading: false,
+                title: 'The analysis has finished with errors. Try again'
+            }
+            break
+    }
+
+    return stateIconDiffExp
 }
 
 /**
@@ -769,6 +864,32 @@ const getFileTypeName = (type: FileType): string => {
     return fileType
 }
 
+/**
+ * Generates a default confirm modal structure
+ * @returns Default confirmModal object
+ */
+const getDefaultConfirmModal = (): ConfirmModal => {
+    return {
+        confirmModal: false,
+        headerText: '',
+        contentText: '',
+        onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+    }
+}
+
+/**
+ * Generates a default alert structure
+ * @returns Default the default Alert
+ */
+const getDefaultAlertProps = (): CustomAlert => {
+    return {
+        message: '', // This have to change during cycle of component
+        isOpen: false,
+        type: CustomAlertTypes.SUCCESS,
+        duration: 500
+    }
+}
+
 export {
     getDjangoHeader,
     alertGeneralError,
@@ -805,5 +926,8 @@ export {
     getScoreClassData,
     generateBinData,
     getFileTypeName,
-    getInputFileCSVFirstColumnAllRows
+    getInputFileCSVFirstColumnAllRows,
+    getDefaultConfirmModal,
+    getDefaultAlertProps,
+    getExperimentStateObjDiffExperiment,
 }

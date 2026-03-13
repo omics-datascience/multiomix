@@ -2,12 +2,15 @@
 {% load static %}
 {% load render_bundle from webpack_loader %}
 
+{% block title %}| My experiments{% endblock %}
+{% block meta_description %}Leverage the GEM Panel to perform gene expression and methylation correlation analyses. Configure parameters, visualize results, and export comprehensive reports for your cancer research.{% endblock %}
+
 {% block css %}
         {% render_bundle 'gem' 'css' %}
 {% endblock %}
 
 {% block content %}
-        <div id="gem-app"></div>
+        <main id="gem-app"></main>
 {% endblock %}
 
 {% block js %}
@@ -25,14 +28,14 @@
             const urlMethylationSites = "{% url 'methylation_sites' %}"
             const urlMethylationSitesFinder = "{% url 'methylation_sites_finder' %}"
             const urlGetFullUserExperiment = "{% url 'get_full_experiment' %}"
-            const urlGetUsersCandidatesLimited = "{% url 'user_candidates_limited' %}"
+            const urlGetUsersCandidatesLimited = "{% url 'user_candidates_limited_institution' %}"
             const urlGetInstitutionsNonInExperiment = "{% url 'institution-non-experiments-list' %}"
             const urlGetUsersNonInExperiment = "{% url 'user-non-experiments-list' %}"
             const urlShareExperimentToInstitution = "{% url 'share-experiment-to-institution' %}"
             const urlShareExperimentToUser = "{% url 'share-experiment-to-user' %}"
             const urlGetSharedInstitution = "{% url 'shared-institution' %}"
             const urlGetSharedUsers = "{% url 'shared-users' %}"
-            const urlPostSwitchInstitutionPublicView = "{% url 'switch-experiment-public-view' %}"
+            const urlPostSwitchPublicView = "{% url 'switch-experiment-public-view' %}"
             const urlPostRemoveInstitution = "{% url 'remove-institution' %}"
             const urlPostRemoveUser = "{% url 'remove-user' %}"
             const urlLastExperiments = "{% url 'last_experiments' %}"

@@ -3,13 +3,14 @@
 {% load render_bundle from webpack_loader %}
 
 {% block title %}| CGDS Panel{% endblock %}
+{% block meta_description %}Use the CGDS Panel to retrieve and explore clinical and genomic profiles from TCGA. Build custom cohorts, visualize mutation and copy-number alterations, and download datasets for advanced cancer research.{% endblock %}
 
 {% block css %}
         {% render_bundle 'cgds' 'css' %}
 {% endblock %}
 
 {% block content %}
-        <div id="cgds-app"></div>
+        <main id="cgds-app"></main>
 {% endblock %}
 
 {% block js %}

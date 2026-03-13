@@ -40,8 +40,10 @@ const InstitutionForm = (props: Props) => {
      * @param param.value key value to edit field in form
      */
 
-    const handleChange = (e, { name, value }) => {
-        setFormData({ ...formData, [name]: value })
+    const handleChange = (_, { name, value }) => {
+        setFormData(prevState => ({
+            ...prevState, [name]: value
+        }))
     }
 
     /**

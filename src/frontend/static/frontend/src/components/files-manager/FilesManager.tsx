@@ -11,8 +11,9 @@ import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
-import { PopupExperiment } from '../pipeline/all-experiments-view/PopupExperiment'
-import { SwitchPublicButton } from '../pipeline/all-experiments-view/SwitchPublicButton'
+import { PopupIcons } from '../common/PopupIcons'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { DeleteButton } from '../common/DeleteButton'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -337,7 +338,12 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     handleAddTagInputsChange = (name: string, value) => {
         const newTag = this.state.newTag
         newTag[name] = value
-        this.setState({ newTag })
+        this.setState(prevState => ({
+            newTag: {
+                ...prevState.newTag,
+                [name]: value,
+            }
+        }))
     }
 
     /**
@@ -667,10 +673,15 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * Adds a Survival data tuple
      */
     addSurvivalFormTuple = () => {
-        const newFile = this.state.newFile
-        const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
-        newFile.survivalColumns.push(newElement)
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: [
+                    ...prevState.newFile.survivalColumns,
+                    { event_column: '', time_column: '' }
+                ],
+            },
+        }))
     }
 
     /**
@@ -678,9 +689,12 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @param idxSurvivalTuple Index in survival tuple
      */
     removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
-        const newFile = this.state.newFile
-        newFile.survivalColumns.splice(idxSurvivalTuple, 1)
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
+            },
+        }))
     }
 
     /**
@@ -690,9 +704,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @param value Value to assign to the specified field
      */
     handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
-        const newFile = this.state.newFile
-        newFile.survivalColumns[idxSurvivalTuple][name] = value
-        this.setState({ newFile })
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
+                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
+                ),
+            },
+        }))
     }
 
     /**
@@ -886,39 +905,37 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             </>
                                         )}
 
-                                        <PopupExperiment
+                                        <PopupIcons
                                             content={(
-                                                <>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                        {/* Shows a download button if specified */}
-                                                        <Icon
-                                                            name='cloud download'
-                                                            color='blue'
-                                                            className='clickable margin-left-5'
-                                                            title='Download file'
-                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
-                                                        />
-                                                        {/* Public switch */}
-                                                        <SwitchPublicButton
-                                                            publicButtonEntity={{
-                                                                id: userFileRow.id as number,
-                                                                user: { id: userFileRow.user.id },
-                                                                is_public: userFileRow.is_public
-                                                            }}
-                                                            nameEntity='file'
-                                                            publicKey='userFileId'
-                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
-                                                        />
-                                                        {/* Shows a delete button if specified */}
-                                                        <Icon
-                                                            name='trash'
-                                                            className='clickable margin-left-5'
-                                                            color='red'
-                                                            title='Delete experiment'
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Shows a download button if specified */}
+                                                    <Icon
+                                                        name='cloud download'
+                                                        color='blue'
+                                                        className='clickable margin-left-5'
+                                                        title='Download file'
+                                                        onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                    />
+                                                    {/* Public switch */}
+                                                    <SwitchPublicButton
+                                                        publicButtonEntity={{
+                                                            id: userFileRow.id as number,
+                                                            user: { id: userFileRow.user.id },
+                                                            is_public: userFileRow.is_public
+                                                        }}
+                                                        nameEntity='file'
+                                                        publicKey='userFileId'
+                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                    />
+                                                    {/* Shows a delete button if specified */}
+                                                    {!userFileRow.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete file'
                                                             onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                            ownerId={userFileRow.user.id}
                                                         />
-                                                    </div>
-                                                </>
+                                                    )}
+                                                </div>
                                             )}
                                         />
 

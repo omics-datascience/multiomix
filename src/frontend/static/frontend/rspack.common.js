@@ -2,6 +2,7 @@ import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import BundleTracker from 'webpack-bundle-tracker'
 import { rspack } from '@rspack/core'
+import babelConfig from './babel.config.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -13,6 +14,7 @@ const PATHS = {
 
 export const common = {
     entry: {
+        differentialExpression: `${PATHS.src}/differential-expression.tsx`,
         base: `${PATHS.src}/base.tsx`,
         gem: `${PATHS.src}/gem.tsx`,
         main: `${PATHS.src}/index.tsx`,
@@ -23,6 +25,7 @@ export const common = {
         cgds: `${PATHS.src}/cgds.tsx`,
         survival: `${PATHS.src}/survival.tsx`,
         aboutUs: `${PATHS.src}/about-us.tsx`,
+        openSource: `${PATHS.src}/open-source.tsx`,
         sitePolicy: `${PATHS.src}/site-policy.tsx`
     },
     output: {
@@ -38,13 +41,10 @@ export const common = {
             {
                 test: /\.ts(x)?$/,
                 exclude: /node_modules/,
-                loader: 'builtin:swc-loader',
-                options: {
-                    jsc: {
-                        parser: {
-                            syntax: 'typescript'
-                        }
-                    }
+                // TODO: Migrate to SWC when React 19 is available.
+                use:{
+                    loader: 'babel-loader',
+                    options: babelConfig
                 },
                 type: 'javascript/auto'
             },

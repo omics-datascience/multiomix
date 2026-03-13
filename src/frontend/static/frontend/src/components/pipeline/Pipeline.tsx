@@ -130,11 +130,6 @@ class Pipeline extends React.Component<any, PipelineState> {
         const newExperiment = this.state.newExperiment
         newExperiment[name] = value
 
-        // TODO: remove this after Kendall performance issue is solved
-        if (name === 'correlationMethod' && value === CorrelationMethod.KENDALL) {
-            newExperiment.correlateWithAllGenes = false
-        }
-
         this.setState({ newExperiment })
     }
 
@@ -163,7 +158,6 @@ class Pipeline extends React.Component<any, PipelineState> {
      * to show in the new experiment form
      */
     checkCommonSamples () {
-        // funcion que me ayuda
         const newExperiment = this.state.newExperiment
 
         // It needs both sources!

@@ -9,12 +9,12 @@ import { SourcePopup } from './SourcePopup'
 import { ClinicalSourcePopup } from './ClinicalSourcePopup'
 import { SeeResultButton } from './SeeResultButton'
 import { StopExperimentButton } from './StopExperimentButton'
-import { DeleteExperimentButton } from './DeleteExperimentButton'
+import { DeleteButton } from '../../common/DeleteButton'
 import { SharedInstitutions, SharedInstitutionsProps } from './SharedInstitutions'
-import { SwitchPublicButton } from './SwitchPublicButton'
+import { SwitchPublicButton } from '../../common/SwitchPublicButton'
 import { SharedUsers, SharedUsersProps } from './SharedUsers'
-import { EditExperimentIcon } from './EditExperimentIcon'
-import { PopupExperiment } from './PopupExperiment'
+import { EditIcon } from '../../common/EditIcon'
+import { PopupIcons } from '../../common/PopupIcons'
 
 declare const urlUserExperiments: string
 declare const urlDownloadFullResult: string
@@ -68,6 +68,10 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         }
     }
 
+    /**
+     * default modal user
+     * @returns default modal shared user object
+     */
     defaultModalUsers (): SharedUsersProps {
         return {
             isOpen: false,
@@ -312,50 +316,48 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                     <SeeResultButton experiment={experiment} seeResult={this.props.seeResult} />
 
                                     {/* Edit button */}
-                                    <EditExperimentIcon
-                                        editExperiment={this.props.editExperiment}
-                                        experiment={experiment}
+                                    <EditIcon
+                                        editExperiment={() => this.props.editExperiment(experiment)}
                                         ownerId={experiment.user.id}
+                                        disabled={experiment.state !== ExperimentState.COMPLETED}
                                     />
 
-                                    <PopupExperiment
+                                    <PopupIcons
                                         content={(
-                                            <>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    {/* Download button */}
-                                                    <Icon
-                                                        name='cloud download'
-                                                        color='blue'
-                                                        className='clickable margin-left-5'
-                                                        title='Download result'
-                                                        onClick={() => window.open(`${urlDownloadFullResult}/${experiment.id}`, '_blank')}
-                                                        disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
-                                                    />
-                                                    {/* Stop button */}
-                                                    <StopExperimentButton
-                                                        title='Stop experiment'
-                                                        onClick={() => this.props.confirmExperimentStop(experiment)}
+                                            <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                {/* Download button */}
+                                                <Icon
+                                                    name='cloud download'
+                                                    color='blue'
+                                                    className='clickable margin-left-5'
+                                                    title='Download result'
+                                                    onClick={() => window.open(`${urlDownloadFullResult}/${experiment.id}`, '_blank')}
+                                                    disabled={experiment.state !== ExperimentState.COMPLETED || !experiment.result_final_row_count}
+                                                />
+                                                {/* Stop button */}
+                                                <StopExperimentButton
+                                                    title='Stop experiment'
+                                                    onClick={() => this.props.confirmExperimentStop(experiment)}
+                                                    ownerId={experiment.user.id}
+                                                />
+
+                                                {/* Delete button */}
+                                                {!isInProcess && !experiment.is_public && (
+                                                    <DeleteButton
+                                                        title='Delete experiment'
+                                                        onClick={() => this.props.confirmExperimentDeletion(experiment)}
                                                         ownerId={experiment.user.id}
                                                     />
+                                                )}
 
-                                                    {/* Delete button */}
-                                                    {!isInProcess && !experiment.is_public && (
-                                                        <DeleteExperimentButton
-                                                            title='Delete experiment'
-                                                            onClick={() => this.props.confirmExperimentDeletion(experiment)}
-                                                        />
-                                                    )}
-
-                                                    {/* Public switch */}
-                                                    <SwitchPublicButton
-                                                        publicButtonEntity={experiment}
-                                                        publicKey='experimentId'
-                                                        nameEntity='experiment'
-                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
-                                                    />
-                                                </div>
-
-                                            </>
+                                                {/* Public switch */}
+                                                <SwitchPublicButton
+                                                    publicButtonEntity={experiment}
+                                                    publicKey='experimentId'
+                                                    nameEntity='experiment'
+                                                    handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                />
+                                            </div>
                                         )}
                                     />
                                 </TableCell>

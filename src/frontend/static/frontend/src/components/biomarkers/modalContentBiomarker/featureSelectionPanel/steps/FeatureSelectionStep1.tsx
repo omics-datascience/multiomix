@@ -6,7 +6,6 @@ import { PaginatedTable, PaginationCustomFilter } from '../../../../common/Pagin
 import { TableCellWithTitle } from '../../../../common/TableCellWithTitle'
 import { TagLabel } from '../../../../common/TagLabel'
 import { Biomarker, FeatureSelectionPanelData } from '../../../types'
-import './../featureSelection.css'
 
 declare const urlBiomarkersCRUD: string
 

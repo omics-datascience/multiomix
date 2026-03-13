@@ -4,9 +4,6 @@ import { SourceType } from '../../../../../utils/interfaces'
 import { FeatureSelectionPanelData, SourceStateBiomarker } from '../../../types'
 import { SourceSelectors } from '../../../../common/SourceSelectors'
 
-// Styles
-import './../featureSelection.css'
-
 /** FeatureSelectionStep2 props. */
 interface FeatureSelectionStep2Props {
     featureSelection: FeatureSelectionPanelData,

@@ -19,9 +19,13 @@ import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters, getNumberOfMoleculesOfBiomarker } from './utils'
 
-// Styles
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteButton } from '../common/DeleteButton'
+import { SharedUsersBiomarker, SharedUsersBiomarkerPropsExtend } from './SharedUsersBiomarker'
+import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } from './SharedInstitutionsBiomarker'
+import { EditBiomarkerIcon } from './EditBiomarkerIcon'
+import { SwitchPublicButton } from '../common/SwitchPublicButton'
+import { PopupIcons } from '../common/PopupIcons'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -90,8 +94,11 @@ interface BiomarkersPanelState {
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
     submittingFSExperiment: boolean,
-    openDetailsModal2: boolean
-
+    openDetailsModal2: boolean,
+    /** modal to handle shared institutions */
+    modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
+    /** modal to handle shared users */
+    modalUsers: SharedUsersBiomarkerPropsExtend,
 }
 
 /**
@@ -125,7 +132,9 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
             submittingFSExperiment: false,
-            openDetailsModal2: false
+            openDetailsModal2: false,
+            modalInstitutions: this.defaultModalInstitutions(),
+            modalUsers: this.defaultModalUsers()
         }
     }
 
@@ -135,6 +144,54 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * default modal institution
+     */
+    handleCloseModalModalInstitution = () => {
+        this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * default modal institution
+     * @returns default modal shared institution object
+     */
+    defaultModalInstitutions = (): SharedInstitutionsBiomarkerPropsExtend => {
+        return {
+            isOpen: false,
+            institutions: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     * @returns default modal shared user object
+     */
+    defaultModalUsers (): SharedUsersBiomarkerPropsExtend {
+        return {
+            isOpen: false,
+            users: [],
+            biomarkerId: 0,
+            isAdding: false,
+            user: {
+                id: 0,
+                username: ''
+            }
+        }
+    }
+
+    /**
+     * default modal user
+     */
+    handleCloseModalModalUser = () => {
+        this.setState({ modalUsers: this.defaultModalUsers() })
     }
 
     /**
@@ -194,10 +251,16 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     handleChangeIgnoreProposedAlias = (checkedIgnoreProposedAlias: boolean) => {
         // Clear all the proposed molecules as they are not valid anymore (they are computed on search only)
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker.moleculesSymbolsFinder.data = []
-
-        this.setState({ checkedIgnoreProposedAlias, formBiomarker })
+        this.setState(prevState => ({
+            checkedIgnoreProposedAlias,
+            formBiomarker: {
+                ...prevState.formBiomarker,
+                moleculesSymbolsFinder: {
+                    ...prevState.formBiomarker.moleculesSymbolsFinder,
+                    data: []
+                }
+            }
+        }))
     }
 
     /**
@@ -320,9 +383,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * Toggle if advance is active or not
      */
     handleSwitchAdvanceAlgorithm = () => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.advancedAlgorithmParameters.isActive = !featureSelection.advancedAlgorithmParameters.isActive
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                advancedAlgorithmParameters: {
+                    ...prevState.featureSelection.advancedAlgorithmParameters,
+                    isActive: !prevState.featureSelection.advancedAlgorithmParameters.isActive
+                }
+            }
+        }))
     }
 
     /**
@@ -332,9 +401,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value value to set
      */
     handleChangeAdvanceAlgorithm = (advanceAlgorithm: string, name: string, value: any) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.advancedAlgorithmParameters[advanceAlgorithm][name] = value
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                advancedAlgorithmParameters: {
+                    ...prevState.featureSelection.advancedAlgorithmParameters,
+                    [advanceAlgorithm]: {
+                        ...prevState.featureSelection.advancedAlgorithmParameters[advanceAlgorithm],
+                        [name]: value
+                    }
+                }
+            }
+        }))
     }
 
     /**
@@ -348,9 +426,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param algorithm algorithm selected
      */
     handleChangeAlgorithm = (algorithm: FeatureSelectionAlgorithm) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.algorithm = algorithm
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                algorithm
+            }
+        }))
     }
 
     /**
@@ -358,9 +439,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param fitnessFunction Fitness function selected
      */
     handleChangeFitnessFunction = (fitnessFunction: FitnessFunction) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.fitnessFunction = fitnessFunction
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                fitnessFunction
+            }
+        }))
     }
 
     /**
@@ -370,9 +454,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value value selected typed depends of what fitness function and key is being changing
      */
     handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.fitnessFunctionParameters[fitnessFunction][key] = value
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                fitnessFunctionParameters: {
+                    ...prevState.featureSelection.fitnessFunctionParameters,
+                    [fitnessFunction]: {
+                        ...prevState.featureSelection.fitnessFunctionParameters[fitnessFunction],
+                        [key]: value
+                    }
+                }
+            }
+        }))
     }
 
     /**
@@ -381,9 +474,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value value selected.
      */
     handleChangeCrossValidation = <T extends keyof CrossValidationParameters>(key: T, value: any) => {
-        const featureSelection = this.state.featureSelection
-        featureSelection.crossValidationParameters[key] = value
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                crossValidationParameters: {
+                    ...prevState.featureSelection.crossValidationParameters,
+                    [key]: value
+                }
+            }
+        }))
     }
 
     /**
@@ -393,12 +492,16 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     selectStudy = (selectedStudy: DjangoCGDSStudy, sourceStateName: SourceStateBiomarker) => {
         // Selects source to update
-        const featureSelection = this.state.featureSelection
-        const source = featureSelection[sourceStateName]
-
-        source.type = SourceType.CGDS
-        source.CGDSStudy = selectedStudy
-        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                [sourceStateName]: {
+                    ...prevState.featureSelection[sourceStateName],
+                    type: SourceType.CGDS,
+                    CGDSStudy: selectedStudy
+                }
+            }
+        }), this.updateSourceFilenamesAndCommonSamples)
     }
 
     /**
@@ -408,12 +511,17 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     selectUploadedFile = (selectedFile: DjangoUserFile, sourceStateName: SourceStateBiomarker) => {
         // Selects source to update
-        const featureSelection = this.state.featureSelection
-        const source = featureSelection[sourceStateName]
-
-        source.type = SourceType.UPLOADED_DATASETS
-        source.selectedExistingFile = selectedFile
-        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                [sourceStateName]: {
+                    ...prevState.featureSelection[sourceStateName],
+                    type: SourceType.UPLOADED_DATASETS,
+                    selectedExistingFile: selectedFile,
+                }
+            }
+        })
+        , this.updateSourceFilenamesAndCommonSamples)
     }
 
     /**
@@ -422,19 +530,23 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param sourceStateName Source's name in state object to update
      */
     handleChangeSourceType = (sourceType: SourceType, sourceStateName: SourceStateBiomarker) => {
-        // Selects source to update
-        const featureSelection = this.state.featureSelection
-        const source = featureSelection[sourceStateName]
-        // Change source type
-        source.type = sourceType
-
-        // Resets all source values
-        source.selectedExistingFile = null
-        source.CGDSStudy = null
-        cleanRef(source.newUploadedFileRef)
-
         // After update state
-        this.setState({ featureSelection }, this.updateSourceFilenamesAndCommonSamples)
+        this.setState(prevState => {
+            // Selects source to update
+            cleanRef(prevState.featureSelection[sourceStateName].newUploadedFileRef)
+            return {
+                featureSelection: {
+                    ...prevState.featureSelection,
+                    [sourceStateName]: {
+                        ...prevState.featureSelection[sourceStateName],
+                        type: sourceType,
+                        selectedExistingFile: null,
+                        CGDSStudy: null
+                    }
+                }
+            }
+        }
+        , this.updateSourceFilenamesAndCommonSamples)
     }
 
     /**
@@ -452,13 +564,31 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     updateSourceFilenames = () => {
         // Updates state filenames
-        const featureSelection = this.state.featureSelection
-        featureSelection.mRNASource.filename = getFilenameFromSource(featureSelection.mRNASource)
-        featureSelection.clinicalSource.filename = getFilenameFromSource(featureSelection.clinicalSource)
-        featureSelection.cnaSource.filename = getFilenameFromSource(featureSelection.cnaSource)
-        featureSelection.methylationSource.filename = getFilenameFromSource(featureSelection.methylationSource)
-        featureSelection.mirnaSource.filename = getFilenameFromSource(featureSelection.mirnaSource)
-        this.setState({ featureSelection })
+        this.setState(prevState => ({
+            featureSelection: {
+                ...prevState.featureSelection,
+                mRNASource: {
+                    ...prevState.featureSelection.mRNASource,
+                    filename: getFilenameFromSource(prevState.featureSelection.mRNASource)
+                },
+                clinicalSource: {
+                    ...prevState.featureSelection.clinicalSource,
+                    filename: getFilenameFromSource(prevState.featureSelection.clinicalSource)
+                },
+                cnaSource: {
+                    ...prevState.featureSelection.cnaSource,
+                    filename: getFilenameFromSource(prevState.featureSelection.cnaSource)
+                },
+                mirnaSource: {
+                    ...prevState.featureSelection.mirnaSource,
+                    filename: getFilenameFromSource(prevState.featureSelection.mirnaSource)
+                },
+                methylationSource: {
+                    ...prevState.featureSelection.methylationSource,
+                    filename: getFilenameFromSource(prevState.featureSelection.methylationSource)
+                }
+            }
+        }))
     }
 
     /**
@@ -469,12 +599,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param onConfirm Modal onConfirm callback
      */
     handleChangeConfirmModalState = (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => {
-        const confirmModal = this.state.confirmModal
-        confirmModal.confirmModal = setOption
-        confirmModal.headerText = headerText
-        confirmModal.contentText = contentText
-        confirmModal.onConfirm = onConfirm
-        this.setState({ confirmModal })
+        this.setState(prevState => ({
+            confirmModal: {
+                ...prevState.confirmModal,
+                confirmModal: setOption,
+                headerText,
+                contentText,
+                onConfirm
+            }
+        }))
     }
 
     /**
@@ -484,30 +617,30 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param selectedOption Selected option.
      */
     handleSelectOptionMolecule = (moleculeToDisambiguate: MoleculesSectionData, section: BiomarkerType, selectedOption: string) => {
-        const formBiomarker = this.state.formBiomarker
-        const indexToSelect = formBiomarker.moleculesSection[section].data.findIndex((item) => isEqual(item.value, moleculeToDisambiguate.value))
+        this.setState(prevState => {
+            const indexToSelect = prevState.formBiomarker.moleculesSection[section].data.findIndex((item) => isEqual(item.value, moleculeToDisambiguate.value))
 
-        // Checks if the molecule is already a valid one
-        const exists = formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
-        const data: MoleculesSectionData[] = formBiomarker.moleculesSection[section].data
-        data.splice(indexToSelect, 1)
+            // Checks if the molecule is already a valid one
+            const exists = prevState.formBiomarker.moleculesSection[section].data.some((item) => item.value === selectedOption)
+            const data: MoleculesSectionData[] = prevState.formBiomarker.moleculesSection[section].data
+            data.splice(indexToSelect, 1)
 
-        if (!exists) {
-            data.push({
-                isValid: true,
-                value: selectedOption
-            })
-        }
+            if (!exists) {
+                data.push({
+                    isValid: true,
+                    value: selectedOption
+                })
+            }
 
-        this.setState({
-            ...this.state,
-            formBiomarker: {
-                ...this.state.formBiomarker,
-                moleculesSection: {
-                    ...this.state.formBiomarker.moleculesSection,
-                    [section]: {
-                        ...this.state.formBiomarker.moleculesSection[section],
-                        data
+            return {
+                formBiomarker: {
+                    ...prevState.formBiomarker,
+                    moleculesSection: {
+                        ...prevState.formBiomarker.moleculesSection,
+                        [section]: {
+                            ...prevState.formBiomarker.moleculesSection[section],
+                            data
+                        }
                     }
                 }
             }
@@ -635,40 +768,57 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param query string that is sending to the api
      */
     handleGenesSymbolsFinder = (query: string): void => {
-        // loading aca
-        const formBiomarkerPreLoad = this.state.formBiomarker
-        formBiomarkerPreLoad.moleculesSymbolsFinder.isLoading = true
         let urlToFind = urlGeneSymbolsFinder
 
-        switch (this.state.formBiomarker.moleculeSelected) {
-            case BiomarkerType.MIRNA:
-                urlToFind = urlMiRNACodesFinder
-                break
-            case BiomarkerType.METHYLATION:
-                urlToFind = urlMethylationSitesFinder
-                break
-            default:
-                break
-        }
+        //  True for loading
 
-        this.setState({ formBiomarker: formBiomarkerPreLoad })
+        this.setState(prevState => {
+            switch (prevState.formBiomarker.moleculeSelected) {
+                case BiomarkerType.MIRNA:
+                    urlToFind = urlMiRNACodesFinder
+                    break
+                case BiomarkerType.METHYLATION:
+                    urlToFind = urlMethylationSitesFinder
+                    break
+                default:
+                    break
+            }
+
+            return {
+                formBiomarker: {
+                    ...prevState.formBiomarker,
+                    moleculesSymbolsFinder: {
+                        ...prevState.formBiomarker.moleculesSymbolsFinder,
+                        isLoading: true
+                    }
+                }
+            }
+        })
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
             response.json().then((jsonResponse: MoleculeFinderResult[]) => {
-                const formBiomarker = this.state.formBiomarker
-                const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
-
-                formBiomarker.moleculesSymbolsFinder.data = jsonResponse.map(molecule => {
-                    const text = checkedIgnoreProposedAlias || molecule.molecule === molecule.standard
-                        ? molecule.molecule
-                        : `${molecule.molecule} (${molecule.standard})`
-
+                this.setState(prevState => {
+                    const checkedIgnoreProposedAlias = prevState.checkedIgnoreProposedAlias // For short
                     return {
-                        key: molecule.molecule,
-                        text,
-                        value: checkedIgnoreProposedAlias ? molecule.molecule : molecule.standard
+                        formBiomarker: {
+                            ...prevState.formBiomarker,
+                            moleculesSymbolsFinder: {
+                                ...prevState.formBiomarker.moleculesSymbolsFinder,
+                                data: jsonResponse.map(molecule => {
+                                    const text = checkedIgnoreProposedAlias || molecule.molecule === molecule.standard
+                                        ? molecule.molecule
+                                        : `${molecule.molecule} (${molecule.standard})`
+
+                                    return {
+                                        key: molecule.molecule,
+                                        text,
+                                        value: checkedIgnoreProposedAlias ? molecule.molecule : molecule.standard
+                                    }
+                                }),
+                                isLoading: false
+                            }
+                        }
                     }
                 })
-                this.setState({ formBiomarker })
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
@@ -676,9 +826,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             console.error('Error getting genes ->', err)
         }).finally(() => {
             if (!this.abortController.signal.aborted) {
-                const formBiomarker = this.state.formBiomarker
-                formBiomarker.moleculesSymbolsFinder.isLoading = false
-                this.setState({ formBiomarker })
+                this.setState(prevState => ({
+                    formBiomarker: {
+                        ...prevState.formBiomarker,
+                        moleculesSymbolsFinder: {
+                            ...prevState.formBiomarker.moleculesSymbolsFinder,
+                            isLoading: false
+                        }
+                    }
+                }))
             }
         })
     }
@@ -688,19 +844,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param sector string of the sector selected to change state
      */
     handleRemoveInvalidGenes = (sector: BiomarkerType): void => {
-        this.setState({
-            ...this.state,
+        this.setState(prevState => ({
             formBiomarker: {
-                ...this.state.formBiomarker,
+                ...prevState.formBiomarker,
                 moleculesSection: {
-                    ...this.state.formBiomarker.moleculesSection,
+                    ...prevState.formBiomarker.moleculesSection,
                     [sector]: {
-                        ...this.state.formBiomarker.moleculesSection[sector],
-                        data: this.state.formBiomarker.moleculesSection[sector].data.filter(gen => gen.isValid || Array.isArray(gen.value))
+                        ...prevState.formBiomarker.moleculesSection[sector],
+                        data: prevState.formBiomarker.moleculesSection[sector].data.filter(gen => gen.isValid || Array.isArray(gen.value))
                     }
                 }
             }
-        })
+        }))
     }
 
     /**
@@ -708,19 +863,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param sector string of the sector selected to change state
      */
     handleRestartSection = (sector: BiomarkerType): void => {
-        this.setState({
-            ...this.state,
+        this.setState(prevState => ({
             formBiomarker: {
-                ...this.state.formBiomarker,
+                ...prevState.formBiomarker,
                 moleculesSection: {
-                    ...this.state.formBiomarker.moleculesSection,
+                    ...prevState.formBiomarker.moleculesSection,
                     [sector]: {
-                        ...this.state.formBiomarker.moleculesSection[sector],
+                        ...prevState.formBiomarker.moleculesSection[sector],
                         data: []
                     }
                 }
             }
-        })
+        }))
     }
 
     /**
@@ -772,21 +926,23 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param molecules array of strings that is sending to the api
      */
     handleGeneSymbols = async (molecules: string[]): Promise<void> => {
-        const moleculesSectionPreload = {
-            ...this.state.formBiomarker.moleculesSection,
-            [this.state.formBiomarker.moleculeSelected]: {
-                isLoading: true,
-                data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data]
+        this.setState(prevState => {
+            const moleculesSectionPreload = {
+                ...prevState.formBiomarker.moleculesSection,
+                [prevState.formBiomarker.moleculeSelected]: {
+                    isLoading: true,
+                    data: [...prevState.formBiomarker.moleculesSection[prevState.formBiomarker.moleculeSelected].data]
+                }
             }
-        }
-        this.setState({
-            formBiomarker: {
-                ...this.state.formBiomarker,
-                moleculesSymbolsFinder: {
-                    ...this.state.formBiomarker.moleculesSymbolsFinder,
-                    isLoading: true
-                },
-                moleculesSection: moleculesSectionPreload
+            return {
+                formBiomarker: {
+                    ...prevState.formBiomarker,
+                    moleculesSymbolsFinder: {
+                        ...prevState.formBiomarker.moleculesSymbolsFinder,
+                        isLoading: true
+                    },
+                    moleculesSection: moleculesSectionPreload
+                }
             }
         })
         let urlToFind: string
@@ -934,9 +1090,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value new value to set
      */
     handleChangeCheckBox = (value: boolean) => {
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker.validation.checkBox = value
-        this.setState({ formBiomarker })
+        this.setState(prevState => ({
+            formBiomarker: {
+                ...prevState.formBiomarker,
+                validation: {
+                    ...prevState.formBiomarker.validation,
+                    checkBox: value
+                }
+            }
+        }))
     }
 
     /**
@@ -1008,8 +1170,15 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     handleSendForm = () => {
         const formBiomarker = this.state.formBiomarker
-        formBiomarker.validation.isLoading = true
-        this.setState({ formBiomarker })
+        this.setState(prevState => ({
+            formBiomarker: {
+                ...prevState.formBiomarker,
+                validation: {
+                    ...prevState.formBiomarker.validation,
+                    isLoading: true
+                }
+            }
+        }))
 
         // Gets name and description
         const simpleBiomarker: BiomarkerNameAndDesc = {
@@ -1040,18 +1209,28 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                 response.json().then((_jsonResponse: Biomarker) => {
                     this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
+                    console.error('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                console.log('Error adding Biomarker ->', err)
-                const alert = this.state.alert
-                alert.isOpen = true
-                alert.type = CustomAlertTypes.ERROR
-                alert.message = 'Error creating biomarker!'
-                this.setState({ alert })
+                console.error('Error adding Biomarker ->', err)
+                this.setState(prevState => ({
+                    alert: {
+                        ...prevState.alert,
+                        isOpen: true,
+                        type: CustomAlertTypes.ERROR,
+                        message: 'Error creating biomarker!'
+                    }
+                }))
             }).finally(() => {
-                formBiomarker.validation.isLoading = false
-                this.setState({ formBiomarker })
+                this.setState(prevState => ({
+                    formBiomarker: {
+                        ...prevState.formBiomarker,
+                        validation: {
+                            ...prevState.formBiomarker.validation,
+                            isLoading: false
+                        }
+                    }
+                }))
             })
         } else {
             const url = formBiomarker.canEditMolecules ? urlBiomarkersCRUD : urlBiomarkersSimpleUpdate
@@ -1059,18 +1238,28 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                 response.json().then((_jsonResponse: Biomarker) => {
                     this.closeModalWithSuccessMsg('Biomarker edited successfully')
                 }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
+                    console.error('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                console.log('Error getting genes ->', err)
-                const alert = this.state.alert
-                alert.isOpen = true
-                alert.type = CustomAlertTypes.ERROR
-                alert.message = 'Error editing biomarker!'
-                this.setState({ alert })
+                console.error('Error getting genes ->', err)
+                this.setState(prevState => ({
+                    alert: {
+                        ...prevState.alert,
+                        isOpen: true,
+                        type: CustomAlertTypes.ERROR,
+                        message: 'Error editing biomarker!'
+                    }
+                }))
             }).finally(() => {
-                formBiomarker.validation.isLoading = false
-                this.setState({ formBiomarker })
+                this.setState(prevState => ({
+                    formBiomarker: {
+                        ...prevState.formBiomarker,
+                        validation: {
+                            ...prevState.formBiomarker.validation,
+                            isLoading: false
+                        }
+                    }
+                }))
             })
         }
     }
@@ -1081,9 +1270,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param name type of input to change
      */
     handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
-        const formBiomarker = this.state.formBiomarker
-        formBiomarker[name] = value
-        this.setState({ formBiomarker })
+        this.setState(prevState => ({
+            formBiomarker: {
+                ...prevState.formBiomarker,
+                [name]: value
+            }
+        }))
     }
 
     /**
@@ -1097,6 +1289,16 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         this.setState({
             formBiomarker
         })
+        this.setState(prevState => ({
+            formBiomarker: {
+                ...prevState.formBiomarker,
+                moleculeSelected: value,
+                moleculesSymbolsFinder: {
+                    ...prevState.formBiomarker.moleculesSymbolsFinder,
+                    data: []
+                }
+            }
+        }))
     }
 
     /**
@@ -1104,12 +1306,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value Value to set to the state moleculesTypeOfSelection in formBiomarkerState
      */
     handleChangeMoleculeInputSelected = (value: MoleculesTypeOfSelection) => {
-        this.setState({
+        this.setState(prevState => ({
             formBiomarker: {
-                ...this.state.formBiomarker,
+                ...prevState.formBiomarker,
                 moleculesTypeOfSelection: value
             }
-        })
+        }))
     }
 
     /**
@@ -1119,12 +1321,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     handleAddMoleculeToSection = (value: MoleculesSectionData) => {
         const genesSymbolsFinder = this.state.formBiomarker.moleculesSymbolsFinder
         genesSymbolsFinder.data = []
-        this.setState({
+        this.setState(prevState => ({
             formBiomarker: {
-                ...this.state.formBiomarker,
+                ...prevState.formBiomarker,
                 moleculesSymbolsFinder: genesSymbolsFinder
             }
-        })
+        }))
 
         const sectionFound = this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data.find((item: MoleculesSectionData) => value.value === item.value)
 
@@ -1132,17 +1334,19 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             return
         }
 
-        const moleculesSection = {
-            ...this.state.formBiomarker.moleculesSection,
-            [this.state.formBiomarker.moleculeSelected]: {
-                isLoading: false,
-                data: [...this.state.formBiomarker.moleculesSection[this.state.formBiomarker.moleculeSelected].data, value]
+        this.setState(prevState => {
+            const moleculesSection = {
+                ...prevState.formBiomarker.moleculesSection,
+                [prevState.formBiomarker.moleculeSelected]: {
+                    isLoading: false,
+                    data: [...prevState.formBiomarker.moleculesSection[prevState.formBiomarker.moleculeSelected].data, value]
+                }
             }
-        }
-        this.setState({
-            formBiomarker: {
-                ...this.state.formBiomarker,
-                moleculesSection
+            return {
+                formBiomarker: {
+                    ...prevState.formBiomarker,
+                    moleculesSection
+                }
             }
         })
     }
@@ -1158,19 +1362,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             return item.value !== molecule.value
         })
 
-        this.setState({
-            ...this.state,
+        this.setState(prevState => ({
             formBiomarker: {
-                ...this.state.formBiomarker,
+                ...prevState.formBiomarker,
                 moleculesSection: {
-                    ...this.state.formBiomarker.moleculesSection,
+                    ...prevState.formBiomarker.moleculesSection,
                     [section]: {
                         isLoading: false,
                         data
                     }
                 }
             }
-        })
+        }))
     }
 
     /**
@@ -1196,7 +1399,12 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             methylations: [],
             mirnas: [],
             cnas: [],
-            mrnas: []
+            mrnas: [],
+            user: {
+                id: 0,
+                username: ''
+            },
+            is_public: false,
         }
     }
 
@@ -1298,45 +1506,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             }
 
             dataset.survival_columns.push(newElement)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (
-        datasetName: NameOfCGDSDataset,
-        idxSurvivalTuple: number,
-        name: string,
-        value: any
-    ) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
             this.setState({ newBiomarker })
         }
     }
@@ -1626,6 +1795,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
                         { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
                         { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                        { name: 'Public', width: 1 },
+                        { name: 'Shared', width: 1 },
                         { name: 'Actions', width: 2 }
                     ]}
                     defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
@@ -1665,6 +1836,51 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
                                 <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                <Table.Cell textAlign='center'>
+                                    {
+                                        biomarker.is_public
+                                            ? (
+                                                <Icon
+                                                    title='All users of the platform can see this experiment'
+                                                    name='check'
+                                                    color='green'
+                                                />
+                                            )
+                                            : (
+                                                <Icon
+                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                    name='close'
+                                                    color='red'
+                                                />
+                                            )
+                                    }
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared institutions'
+                                            name='building'
+                                            color='green'
+                                        />
+                                    </Button>
+                                    <Button
+                                        basic
+                                        icon
+                                        className='borderless-button'
+                                        onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                    >
+                                        <Icon
+                                            title='shared users'
+                                            name='users'
+                                            color='teal'
+                                        />
+                                    </Button>
+                                </Table.Cell>
                                 <Table.Cell width={1}>
                                     {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
                                     <>
@@ -1680,42 +1896,58 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                         />
 
                                         {/* Edit button */}
-                                        <Icon
-                                            name={currentBiomarkerIsLoading ? 'spinner' : 'pencil'}
-                                            className='clickable margin-left-5'
-                                            color={canEditMolecules ? 'yellow' : 'orange'}
-                                            loading={currentBiomarkerIsLoading}
-                                            disabled={isLoadingFullBiomarker}
-                                            title={`Edit (${canEditMolecules ? 'full' : 'name and description'}) biomarker`}
-                                            onClick={() => this.handleOpenEditBiomarker(biomarker)}
+                                        <EditBiomarkerIcon
+                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker}
+                                            biomarker={biomarker}
+                                            ownerId={biomarker.user.id}
+                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading}
+                                            canEditMolecules={canEditMolecules}
+                                            isLoadingFullBiomarker={isLoadingFullBiomarker}
                                         />
+                                        <PopupIcons
+                                            content={(
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                    {/* Clone button */}
+                                                    <Icon
+                                                        name='copy'
+                                                        color='teal'
+                                                        className='clickable margin-left-5'
+                                                        disabled={currentBiomarkerIsLoading}
+                                                        title='Clone biomarker'
+                                                        onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    />
 
-                                        {/* Clone button */}
-                                        <Icon
-                                            name='copy'
-                                            color='teal'
-                                            className='clickable margin-left-5'
-                                            disabled={currentBiomarkerIsLoading}
-                                            title='Clone biomarker'
-                                            onClick={() => this.setState({ biomarkerToClone: biomarker })}
+                                                    {/* Stop button */}
+                                                    {isInProcess && (
+                                                        <StopExperimentButton
+                                                            title='Stop biomarker'
+                                                            onClick={() => this.setState({ biomarkerToStop: biomarker })}
+                                                        />
+                                                    )}
+
+                                                    {/* Delete button */}
+                                                    {!isInProcess && !biomarker.is_public && (
+                                                        <DeleteButton
+                                                            title='Delete biomarker'
+                                                            disabled={currentBiomarkerIsLoading}
+                                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                                            ownerId={biomarker.user.id}
+                                                        />
+                                                    )}
+                                                    {/* Public switch */}
+                                                    {
+                                                        biomarker.id && (
+                                                            <SwitchPublicButton
+                                                                publicButtonEntity={{ id: biomarker.id ?? 0, user: { id: biomarker.user.id }, is_public: biomarker.is_public }}
+                                                                publicKey='biomarkerId'
+                                                                nameEntity='biomarker'
+                                                                handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                                            />
+                                                        )
+                                                    }
+                                                </div>
+                                            )}
                                         />
-
-                                        {/* Stop button */}
-                                        {isInProcess && (
-                                            <StopExperimentButton
-                                                title='Stop biomarker'
-                                                onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                            />
-                                        )}
-
-                                        {/* Delete button */}
-                                        {!isInProcess && (
-                                            <DeleteButton
-                                                title='Delete biomarker'
-                                                disabled={currentBiomarkerIsLoading}
-                                                onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                            />
-                                        )}
                                     </>
                                 </Table.Cell>
                             </Table.Row>
@@ -1776,8 +2008,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                             biomarkerForm={this.state.formBiomarker}
                             checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
                             handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
-                            removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                            handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                             cleanForm={this.cleanForm}
                             isFormEmpty={this.isFormEmpty}
                             handleAddMoleculeToSection={this.handleAddMoleculeToSection}
@@ -1839,7 +2069,32 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                     content={this.state.confirmModal.contentText}
                     size='large'
                     onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => this.state.confirmModal.onConfirm()}
+                    onConfirm={() => {
+                        this.state.confirmModal.onConfirm()
+
+                        this.setState(prevState => {
+                            return {
+                                confirmModal: {
+                                    ...prevState.confirmModal,
+                                    confirmModal: false
+                                }
+                            }
+                        })
+                    }}
+                />
+                <SharedUsersBiomarker
+                    {...this.state.modalUsers}
+                    handleClose={this.handleCloseModalModalUser}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                />
+                <SharedInstitutionsBiomarker
+                    user={this.state.modalInstitutions.user}
+                    isOpen={this.state.modalInstitutions.isOpen}
+                    institutions={this.state.modalInstitutions.institutions}
+                    handleClose={this.handleCloseModalModalInstitution}
+                    biomarkerId={this.state.modalInstitutions.biomarkerId}
+                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                    isAdding={this.state.modalInstitutions.isAdding}
                 />
 
                 <Alert

@@ -12,11 +12,12 @@ declare const urlLogin: string
 declare const urlLogout: string
 declare const urlPipeline: string
 declare const urlDatasets: string
-// declare const urlSurvival: string
 declare const urlBiomarkers: string
 declare const urlInstitutions: string
 declare const urlCGDSPanel: string
 declare const urlAboutUs: string
+declare const urlOpenSource: string
+declare const urlDifferentialExpression: string
 
 /** Component's Props */
 interface LogInLogOutPanelProps {
@@ -118,7 +119,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // Logged user
     return (
         <>
-            <Dropdown text={`Hi, ${props.currentUser.username}`} className='link item'>
+            <Dropdown text={`Hi, ${props.currentUser.username}`} className='link item' aria-label='Login/Logout'>
                 <Dropdown.Menu>
                     <Dropdown.Item icon='user' text='Edit profile' onClick={() => setModal({ ...modal, isOpen: true })} />
                     <Dropdown.Item icon='power off' text='Exit' as='a' href={urlLogout} />
@@ -149,7 +150,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers'
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source' | 'differential-expression'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions,
@@ -175,15 +176,15 @@ const MainNavbar = (props: MainNavbarProps) => {
     )
 
     return (
-        <Menu className='margin-bottom-0' inverted borderless>
+        <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
             {/* Logo */}
             <Menu.Item as='a' header href={urlIndex} title='Multiomix homepage'>
-                <Image size='tiny' src='/static/frontend/img/logo.png' />
+                <Image size='tiny' src='/static/frontend/img/logo.png' alt='Multiomix homepage' />
             </Menu.Item>
 
             {/* Loading spinners while user is fetch */}
             {props.isLoadingUser && (
-                <Menu.Menu>
+                <Menu.Item>
                     <Menu.Item style={{ padding: '0 1.72rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
@@ -196,13 +197,13 @@ const MainNavbar = (props: MainNavbarProps) => {
                     <Menu.Item style={{ padding: '0 1.7rem' }}>
                         <Loader active inline='centered' />
                     </Menu.Item>
-                </Menu.Menu>
+                </Menu.Item>
             )}
             {/* Analysis menu */}
             {currentUser && !currentUser.is_anonymous && (
                 <>
-                    <Menu.Menu as='h2'>
-                        <Dropdown text='Analysis' className='link item' icon={null}>
+                    <Menu.Menu>
+                        <Dropdown item text='Analysis' className='link item' icon={null} aria-label='Analysis'>
                             <Dropdown.Menu>
                                 {/* GEM panel */}
                                 <Dropdown.Item
@@ -230,17 +231,25 @@ const MainNavbar = (props: MainNavbarProps) => {
                                     as='a' href={urlBiomarkers}
                                     active={props.activeItem === 'biomarkers'}
                                 />
+
+                                {/* Differential Expression panel */}
+                                <Dropdown.Item
+                                    text='Differential expression'
+                                    icon='buromobelexperte'
+                                    as='a' href={urlDifferentialExpression}
+                                    active={props.activeItem === 'differential-expression'}
+                                />
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
 
                     {/* Datasets menu */}
-                    <Menu.Menu as='h2'>
-                        <Dropdown text='Datasets' className='link item' icon={null}>
+                    <Menu.Menu>
+                        <Dropdown text='Datasets' className='link item' icon={null} aria-label='Datasets'>
                             <Dropdown.Menu>
                                 {/* User's Datasets panel */}
                                 <Dropdown.Item
-                                    text='Multiomix'
+                                    text='My datasets'
                                     icon='database'
                                     as='a' href={urlDatasets}
                                     active={props.activeItem === 'files'}
@@ -251,13 +260,20 @@ const MainNavbar = (props: MainNavbarProps) => {
                             </Dropdown.Menu>
                         </Dropdown>
                     </Menu.Menu>
+
+                    {/* Institutions  */}
+                    <Menu.Menu>
+                        <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
+                            Institutions
+                        </Menu.Item>
+                    </Menu.Menu>
                 </>
             )}
 
             {/* Only admin options */}
             {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) && (
-                <Menu.Menu as='h2'>
-                    <Dropdown text='Admin' className='link item' icon={null}>
+                <Menu.Menu>
+                    <Dropdown text='Admin' className='link item' icon={null} aria-label='Admin'>
                         <Dropdown.Menu>
                             {currentUser.is_superuser && (
                                 <>
@@ -275,24 +291,21 @@ const MainNavbar = (props: MainNavbarProps) => {
                 </Menu.Menu>
             )}
 
-            {/* Institutions */}
-            {currentUser && (
-                <Menu.Menu as='h2'>
-                    <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
-                        Institutions
-                    </Menu.Item>
-                </Menu.Menu>
-            )}
-
             {/* About us */}
-            <Menu.Menu as='h2'>
+            <Menu.Menu>
                 <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
                     About us
                 </Menu.Item>
             </Menu.Menu>
 
+            <Menu.Menu>
+                <Menu.Item as='a' href={urlOpenSource} style={{ fontSize: '1rem' }}>
+                    Open source
+                </Menu.Item>
+            </Menu.Menu>
+
             {/* LogIn/LogOut panel */}
-            <Menu.Menu as='h2' position='right'>
+            <Menu.Menu position='right'>
                 <LogInLogOutPanel currentUser={currentUser} />
             </Menu.Menu>
         </Menu>

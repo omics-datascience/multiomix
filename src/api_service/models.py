@@ -1,13 +1,16 @@
 import datetime
 from typing import Iterable, List, Optional, Type, Set, Any
 
-from django.contrib.auth.base_user import AbstractBaseUser
+import numpy as np
+import pandas as pd
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.auth import get_user_model
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
+
 from common.constants import PATIENT_ID_COLUMN, SAMPLE_ID_COLUMN, SAMPLES_TYPE_COLUMN, PRIMARY_TYPE_VALUE
 from common.methylation import get_methylation_platform_dataframe
+from datasets_synchronization.models import CGDSDataset
 from genes.models import Gene
 from inferences.models import InferenceExperiment
 from institutions.models import Institution
@@ -16,9 +19,6 @@ from user_files.models import UserFile
 from user_files.models_choices import FileType
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
 from .websocket_functions import send_update_experiments_command
-from datasets_synchronization.models import CGDSDataset
-import pandas as pd
-import numpy as np
 
 
 def get_combination_class(experiment_type: ExperimentType):
@@ -45,10 +45,21 @@ class ExperimentSource(models.Model):
     inference_experiments_as_mrna: QuerySet[InferenceExperiment]
     gem_source: QuerySet['Experiment']
     mrna_source: QuerySet['Experiment']
-    user_file = models.ForeignKey(UserFile, on_delete=models.CASCADE, blank=True, null=True,
-                                  related_name='user_file')
-    cgds_dataset: CGDSDataset = models.ForeignKey(CGDSDataset, on_delete=models.CASCADE, blank=True,
-                                                  null=True, related_name='cgds_dataset')
+
+    user_file = models.ForeignKey(
+        UserFile,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='experiment_sources_as_user_file'
+    )
+    cgds_dataset: CGDSDataset = models.ForeignKey(
+        CGDSDataset,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='experiment_sources_as_cgds_dataset'
+    )
 
     def get_valid_source(self) -> UserFile | CGDSDataset:
         """
@@ -134,8 +145,13 @@ class ExperimentClinicalSource(ExperimentSource):
     """
     inference_experiments: QuerySet[InferenceExperiment]
     clinical_source: QuerySet['Experiment']
-    extra_cgds_dataset: CGDSDataset = models.ForeignKey('datasets_synchronization.CGDSDataset',
-                                                        on_delete=models.CASCADE, blank=True, null=True)
+    extra_cgds_dataset: CGDSDataset = models.ForeignKey(
+        'datasets_synchronization.CGDSDataset',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='experiment_clinical_sources_as_extra_cgds_dataset'
+    )
 
     def get_methylation_platform_df(self):
         """
@@ -320,7 +336,9 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         if self.user_file:
             return self.user_file.number_of_rows
-        return self.__get_cgds_datasets_joined_df().shape[0]
+        if self.cgds_dataset:
+            return self.__get_cgds_datasets_joined_df().shape[0]
+        return 0
 
     @property
     def number_of_samples(self) -> int:
@@ -330,7 +348,9 @@ class ExperimentClinicalSource(ExperimentSource):
         """
         if self.user_file:
             return self.user_file.number_of_samples
-        return self.__get_cgds_datasets_joined_df().shape[1]
+        if self.cgds_dataset:
+            return self.__get_cgds_datasets_joined_df().shape[1]
+        return 0
 
 
 class Experiment(models.Model):
@@ -338,14 +358,23 @@ class Experiment(models.Model):
 
     name: str = models.CharField(max_length=100)
     description: Optional[str] = models.TextField(blank=True, null=True)
-    mRNA_source = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
-                                    related_name='mrna_source')
-    gem_source: ExperimentSource = models.ForeignKey('ExperimentSource', on_delete=models.CASCADE,
-                                                     related_name='gem_source')
-    clinical_source: ExperimentClinicalSource = models.ForeignKey('api_service.ExperimentClinicalSource',
-                                                                  on_delete=models.SET_NULL,
-                                                                  related_name='clinical_source', blank=True,
-                                                                  null=True)
+    mRNA_source = models.ForeignKey(
+        'ExperimentSource',
+        on_delete=models.CASCADE,
+        related_name='experiments_as_mrna_source'
+    )
+    gem_source: ExperimentSource = models.ForeignKey(
+        'ExperimentSource',
+        on_delete=models.CASCADE,
+        related_name='experiments_as_gem_source'
+    )
+    clinical_source: ExperimentClinicalSource = models.ForeignKey(
+        'api_service.ExperimentClinicalSource',
+        on_delete=models.SET_NULL,
+        related_name='experiments_as_clinical_source',
+        blank=True,
+        null=True
+    )
     submit_date: datetime.datetime = models.DateTimeField(auto_now_add=True, blank=False, null=True)
     minimum_coefficient_threshold: float = models.FloatField(default=0.7)
     minimum_std_gene: float = models.FloatField(default=0.0)
@@ -372,10 +401,8 @@ class Experiment(models.Model):
     # TODO: this can be stored in the Methylation type entity. Set the corresponding nullity in the new schema
     correlate_with_all_genes: bool = models.BooleanField(blank=False, null=False, default=True)
 
-    shared_institutions = models.ManyToManyField(Institution, blank=True,
-                                                 related_name='shared_correlation_analysis')
-    shared_users = models.ManyToManyField(User, blank=True,
-                                                 related_name='shared_users_correlation_analysis')
+    shared_institutions = models.ManyToManyField(Institution, blank=True, related_name='shared_correlation_analysis')
+    shared_users = models.ManyToManyField(User, blank=True, related_name='shared_users_correlation_analysis')
     is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property
@@ -393,7 +420,7 @@ class Experiment(models.Model):
         """
         return get_combination_class(self.type)
 
-    def get_clinical_columns(self):
+    def get_clinical_columns(self) -> list[str]:
         """
         Gets a list of columns from the clinical data
         @return: List of fields in clinical data
@@ -423,12 +450,22 @@ class GeneGEMCombination(models.Model):
     id = models.BigAutoField(primary_key=True)
     # It's set as string foreign key to sort by Django Rest Framework
     # No DB constraint due to missing genes extra data
-    gene = models.ForeignKey(Gene, db_column='gene', on_delete=models.DO_NOTHING, db_constraint=False)
+    gene = models.ForeignKey(
+        Gene,
+        db_column='gene',
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        related_name='%(class)ss_as_gene'
+    )
     gem = models.CharField(max_length=50)
     correlation = models.FloatField()
     p_value = models.FloatField()
     adjusted_p_value = models.FloatField(blank=True, null=True)
-    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    experiment = models.ForeignKey(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name='%(class)ss'
+    )
 
     source_statistical_data = models.OneToOneField(
         'statistical_properties.SourceDataStatisticalProperties',

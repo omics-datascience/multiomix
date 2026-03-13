@@ -8,7 +8,6 @@ from django.contrib.auth.hashers import make_password
 from multiomics_intermediate import settings
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
@@ -31,13 +30,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
-    """User serializer with fewer data"""
+    """User serializer with fewer data."""
+
     class Meta:
         model = get_user_model()
         fields = ['id', 'username']
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """"fields that are received to update the user"""
+    """Required fields to update the user."""
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     password = serializers.CharField(write_only=True, required=False, min_length=8)
@@ -45,7 +46,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['first_name', 'last_name', 'password']
-    
+
     def update(self, instance, validated_data):
         """Updates the users first_name, last_name, and password fields."""
         with transaction.atomic():
@@ -54,19 +55,21 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
             password = validated_data.pop('password', '')
             password_length = len(password)
-            
+
             if password_length != 0:
                 minimum_password_len = settings.MIN_PASSWORD_LEN
                 if password_length < minimum_password_len:
                     raise ValidationError(f'Password must be at least {minimum_password_len} chars long')
                 else:
                     instance.set_password(password)
-                     
+
             instance.save()
         return instance
-       
+
+
 class UserInfoSerializer(serializers.ModelSerializer):
     """User serializer with info about him"""
+
     class Meta:
-        model=get_user_model()
-        fields=['id','first_name','last_name','email']
+        model = get_user_model()
+        fields = ['id', 'first_name', 'last_name', 'email']

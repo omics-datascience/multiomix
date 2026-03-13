@@ -131,5 +131,7 @@ def get_cgds_dataset(cgds_study: CGDSStudy, file_type: FileType) -> Optional[CGD
         return cgds_study.cna_dataset
     elif file_type == FileType.METHYLATION:
         return cgds_study.methylation_dataset
+    elif file_type == FileType.CLINICAL:
+        return cgds_study.clinical_patient_dataset
     else:
         return None

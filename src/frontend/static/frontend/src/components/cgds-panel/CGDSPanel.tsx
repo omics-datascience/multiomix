@@ -396,13 +396,23 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @param value Value to assign to the specified field
      */
     handleFormDatasetChanges = (datasetName: NameOfCGDSDataset, name: string, value: any) => {
-        const newCGDSStudy = this.state.newCGDSStudy
-        const dataset = newCGDSStudy[datasetName]
+        this.setState(prevState => {
+            const dataset = prevState.newCGDSStudy[datasetName]
 
-        if (dataset !== null) {
-            dataset[name] = value
-            this.setState({ newCGDSStudy })
-        }
+            if (!dataset) {
+                return null
+            }
+
+            return {
+                newCGDSStudy: {
+                    ...prevState.newCGDSStudy,
+                    [datasetName]: {
+                        ...prevState.newCGDSStudy[datasetName],
+                        [name]: value
+                    }
+                }
+            }
+        })
     }
 
     /**
@@ -410,10 +420,13 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @param datasetName Name of the edited CGDS dataset
      */
     addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
-        const newCGDSStudy = this.state.newCGDSStudy
-        const dataset = newCGDSStudy[datasetName]
+        this.setState(prevState => {
+            const dataset = prevState.newCGDSStudy[datasetName]
 
-        if (dataset !== null) {
+            if (!dataset) {
+                return null
+            }
+
             const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
 
             /** These tuples are very common, so they are set by default the first time. */
@@ -422,13 +435,16 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                 newElement.time_column = 'OS_MONTH'
             }
 
-            if (dataset.survival_columns === undefined) {
-                dataset.survival_columns = []
+            return {
+                newCGDSStudy: {
+                    ...prevState.newCGDSStudy,
+                    [datasetName]: {
+                        ...prevState.newCGDSStudy[datasetName],
+                        survival_columns: [...prevState.newCGDSStudy[datasetName]?.survival_columns || [], newElement]
+                    }
+                }
             }
-
-            dataset.survival_columns.push(newElement)
-            this.setState({ newCGDSStudy })
-        }
+        })
     }
 
     /**
@@ -459,13 +475,43 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
         name: string,
         value: any
     ) => {
-        const newCGDSStudy = this.state.newCGDSStudy
-        const dataset = newCGDSStudy[datasetName]
+        this.setState(prevState => {
+            const prevStudy = prevState.newCGDSStudy
+            const dataset = prevStudy[datasetName]
 
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
-            this.setState({ newCGDSStudy })
-        }
+            // Validaciones básicas
+            if (!dataset || !dataset.survival_columns) {
+                return null
+            }
+
+            if (idxSurvivalTuple < 0 || idxSurvivalTuple >= dataset.survival_columns.length) {
+                return null
+            }
+
+            const updatedTuple = {
+                ...dataset.survival_columns[idxSurvivalTuple],
+                [name]: value,
+            }
+
+            // Copia inmutable del array
+            const survival_columns = dataset.survival_columns.map((t, i) =>
+                i === idxSurvivalTuple ? updatedTuple : t
+            )
+
+            // Copia inmutable del dataset
+            const updatedDataset = {
+                ...dataset,
+                survival_columns,
+            }
+
+            // Copia inmutable del objeto raíz
+            return {
+                newCGDSStudy: {
+                    ...prevStudy,
+                    [datasetName]: updatedDataset,
+                },
+            }
+        })
     }
 
     /**
@@ -581,19 +627,45 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @param datasetName Name of the dataset to add
      */
     addCGDSDataset = (datasetName: NameOfCGDSDataset) => {
-        const newCGDSStudy = this.state.newCGDSStudy
+        const headerRowIndex =
+            datasetName === 'clinical_patient_dataset' || datasetName === 'clinical_sample_dataset'
+                ? 4
+                : 0
 
-        const headerRowIndex = (datasetName === 'clinical_patient_dataset' || datasetName === 'clinical_sample_dataset') ? 4 : 0
-        newCGDSStudy[datasetName] = {
-            file_path: '',
-            separator: CGDSDatasetSeparator.TAB,
-            observation: '',
-            header_row_index: headerRowIndex,
-            mongo_collection_name: '',
-            is_cpg_site_id: true, // Always is true for CGDS
-            platform: DjangoMethylationPlatform.PLATFORM_450
-        }
-        this.setState({ newCGDSStudy })
+        this.setState(prev => ({
+            newCGDSStudy: {
+                ...prev.newCGDSStudy,
+                [datasetName]: {
+                    file_path: '',
+                    separator: CGDSDatasetSeparator.TAB,
+                    observation: '',
+                    header_row_index: headerRowIndex,
+                    mongo_collection_name: this.generateMongoCollectionName(datasetName),
+                    is_cpg_site_id: true, // siempre true para CGDS
+                    platform: DjangoMethylationPlatform.PLATFORM_450,
+                },
+            },
+        }))
+    }
+
+    /*
+     * Generates a MongoDB collection name using the study name, a shortened description,
+     * dataset type, and version, ensuring a clean and formatted output.
+     */
+    generateMongoCollectionName = (datasetName: string): string => {
+        const name = this.state.newCGDSStudy.name.split(' ')[0]
+            .replace(/[(),]/g, '') || ''
+        const description = this.state.newCGDSStudy.description
+            .replace(/[(),]/g, '')
+            .trim()
+            .replace(/\s+/g, ' ')
+            .split(/\s+/)
+            .slice(0, 3)
+            .join('_') || ''
+        const datasetType = datasetName || ''
+        const version = this.state.newCGDSStudy.version || 1
+
+        return `${name}_${description}_${datasetType}_version_${version}`.replace(/^_+|_+$/g, '')
     }
 
     /**
@@ -601,26 +673,12 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @param datasetName Name of the dataset to remove
      */
     removeCGDSDataset = (datasetName: NameOfCGDSDataset) => {
-        const newCGDSStudy = this.state.newCGDSStudy
-        newCGDSStudy[datasetName] = null
-        this.setState({ newCGDSStudy })
-    }
-
-    /**
-     * Checks if the form is entirely empty. Useful to enable 'Cancel' button
-     * @returns True is any of the form's field contains any data. False otherwise
-     */
-    isFormEmpty = (): boolean => {
-        return this.state.newCGDSStudy.name.trim().length === 0 &&
-            this.state.newCGDSStudy.description.trim().length === 0 &&
-            this.state.newCGDSStudy.url.trim().length === 0 &&
-            this.state.newCGDSStudy.url_study_info.trim().length === 0 &&
-            this.state.newCGDSStudy.mrna_dataset === null &&
-            this.state.newCGDSStudy.mirna_dataset === null &&
-            this.state.newCGDSStudy.cna_dataset === null &&
-            this.state.newCGDSStudy.methylation_dataset === null &&
-            this.state.newCGDSStudy.clinical_patient_dataset === null &&
-            this.state.newCGDSStudy.clinical_sample_dataset === null
+        this.setState(prevState => ({
+            newCGDSStudy: {
+                ...prevState.newCGDSStudy,
+                [datasetName]: null
+            }
+        }))
     }
 
     /**
@@ -906,7 +964,6 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                             canAddCGDSStudy={this.canAddCGDSStudy}
                                             addOrEditStudy={this.addOrEditStudy}
                                             cleanForm={this.cleanForm}
-                                            isFormEmpty={this.isFormEmpty}
                                         />
                                     </Grid.Column>
                                 )}

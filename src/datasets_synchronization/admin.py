@@ -42,9 +42,9 @@ class CGDSDatasetAdmin(admin.ModelAdmin):
                      'mirna_dataset__name', 'mrna_dataset__name')
 
 
-
 class SurvivalColumnsTupleAdmin(admin.ModelAdmin):
     """Useful for SurvivalColumnsTupleCGDSDataset and SurvivalColumnsTupleUserFile models."""
+
     @staticmethod
     @admin.display(description='CGDS Dataset')
     def dataset(obj: Union[SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile]) -> str:
@@ -52,6 +52,7 @@ class SurvivalColumnsTupleAdmin(admin.ModelAdmin):
 
     list_display = ('pk', 'dataset', 'time_column', 'event_column')
     search_fields = ('time_column', 'event_column')
+
 
 # IMPORTANT: these models should be managed in the CGDS Panel in the frontend!
 admin.site.register(CGDSStudy, CGDSStudyAdmin)

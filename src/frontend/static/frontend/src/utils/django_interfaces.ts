@@ -243,12 +243,14 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
 /**
  * Django Model api_service.ExperimentSource
  */
+// Todo: agregar opcional update_differential_expression_experiments
 interface DjangoExperimentSource {
     id?: number,
     user_file: DjangoSimpleUserFile,
     cgds_dataset: SourceSimpleCGDSDataset,
     number_of_rows: number,
     number_of_samples: number
+    extra_cgds_dataset?: SourceSimpleCGDSDataset;
 }
 
 /**
@@ -353,6 +355,16 @@ interface DjangoSamplesInCommonResultJSON {
     number_samples_in_common: number,
     number_samples_mrna: number,
     number_samples_gem: number
+}
+
+/**
+ * JSON structure of the service that returns the number of samples in common between
+ * two datasets (UserFiles or CGDSDataset)
+ */
+interface DjangoSamplesInCommonResultMrnaClinicalJSON {
+    number_samples_in_common: number,
+    number_samples_mrna: number,
+    number_samples_clinical: number
 }
 
 /**
@@ -558,6 +570,13 @@ interface DjangoCommonResponse<INTERNAL_CODE_STATUS = null> {
 /**
  * Django samples in common service Response
  */
+interface DjangoNumberSamplesInCommonMrnaClinicalResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
+    data: DjangoSamplesInCommonResultMrnaClinicalJSON
+}
+
+/**
+ * Django samples in common service Response
+ */
 interface DjangoNumberSamplesInCommonResult extends DjangoCommonResponse<DjangoSamplesInCommonResultInternalCode> {
     data: DjangoSamplesInCommonResultJSON
 }
@@ -718,5 +737,8 @@ export {
     DjangoNumberSamplesInCommonClinicalValidationResult,
     DjangoInstitutionUser,
     DjangoInstitutionUserLimited,
-    InstitutionUser
+    InstitutionUser,
+    DjangoUserSimple,
+    DjangoSamplesInCommonResultMrnaClinicalJSON,
+    DjangoNumberSamplesInCommonMrnaClinicalResult
 }

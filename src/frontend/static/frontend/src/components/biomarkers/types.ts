@@ -1,4 +1,4 @@
-import { DjangoExperimentSource, DjangoTag } from '../../utils/django_interfaces'
+import { DjangoExperimentSource, DjangoTag, DjangoUserSimple } from '../../utils/django_interfaces'
 import { MoleculeType, Nullable, Source } from '../../utils/interfaces'
 import { KaplanMeierData } from '../pipeline/experiment-result/gene-gem-details/survival-analysis/KaplanMeierUtils'
 
@@ -88,7 +88,9 @@ interface BiomarkerSimple {
     origin: BiomarkerOrigin,
     state: BiomarkerState,
     contains_nan_values: boolean,
-    column_used_as_index: string
+    column_used_as_index: string,
+    user: DjangoUserSimple,
+    is_public: boolean,
 }
 
 /** Django Biomarker model. */

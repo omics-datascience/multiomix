@@ -5,7 +5,6 @@ import { NewExperiment, FileType } from '../../utils/interfaces'
 import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } from '../../utils/util_functions'
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
-import { CorrelationMethod } from '../../utils/django_interfaces'
 import { ExternalLink } from '../common/ExternalLink'
 
 // Slider styles
@@ -157,8 +156,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                                 name='correlateWithAllGenes'
                                 checked={props.newExperiment.correlateWithAllGenes}
                                 onChange={(_, { name }) => props.handleFormInputsChange(name as string, true)}
-                                /* FIXME: disabled all vs all for Kendall until https://github.com/zolkko/kendalls/issues/2 is fixed */
-                                disabled={props.isEditing || props.newExperiment.correlationMethod === CorrelationMethod.KENDALL}
+                                disabled={props.isEditing}
                             />
                         </>
                     )}

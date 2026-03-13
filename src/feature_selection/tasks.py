@@ -62,7 +62,7 @@ def eval_feature_selection_experiment(self, experiment_pk: int, fit_fun_enum: Fi
         start = time.time()
         molecules_temp_file_path, clinical_temp_file_path, running_in_spark = prepare_and_compute_fs_experiment(
             experiment, fit_fun_enum, fitness_function_parameters, algorithm_parameters,
-            cross_validation_parameters, self.is_aborted
+            cross_validation_parameters, is_aborted=self.is_aborted
         )
         total_execution_time = time.time() - start
         logging.warning(f'FSExperiment {experiment.pk} total time -> {total_execution_time} seconds')

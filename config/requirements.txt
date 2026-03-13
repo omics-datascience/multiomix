@@ -5,7 +5,6 @@ daphne==3.0.2  # This is the needed version to run channels and channels-redis
 django-chunked-upload==2.0.0
 django-email-verification==0.0.7
 django-filter==23.5
-django-generate-secret-key==1.0.2
 django-object-actions==4.2.0
 django-querysetsequence==0.16
 django-stubs==4.2.7
@@ -29,3 +28,5 @@ scipy==1.13.0
 statsmodels==0.14.2
 xlrd==2.0.1
 openpyxl==3.1.5
+rpy2==3.6.1
+urllib3==2.5.0

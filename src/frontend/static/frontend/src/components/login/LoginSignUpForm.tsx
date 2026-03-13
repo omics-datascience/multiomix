@@ -45,7 +45,7 @@ const GeneralForm = (props: GeneralFormProps) => {
             <div className='wrap-login'>
                 <Form className='login-form validate-form' action={props.url} method='POST'>
                     <span className='login-form-logo'>
-                        <Image circular size='large' src='/static/frontend/img/logo-login.png' />
+                        <Image circular size='large' src='/static/frontend/img/logo-login.png' alt='logo-login' />
                     </span>
 
                     <span className='login-form-title'>
