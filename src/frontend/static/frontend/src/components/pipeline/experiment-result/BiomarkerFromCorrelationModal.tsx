@@ -1199,25 +1199,30 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      */
     getDefaultNewBiomarker (): Biomarker {
         return {
-            id: null,
-            name: '',
-            description: '',
-            tag: null,
-            number_of_mrnas: 0,
-            number_of_mirnas: 0,
-            number_of_cnas: 0,
-            number_of_methylations: 0,
-            has_fs_experiment: false,
-            was_already_used: false,
-            origin: BiomarkerOrigin.BASE,
-            state: BiomarkerState.COMPLETED,
-            contains_nan_values: false,
-            column_used_as_index: '',
-            methylations: [],
-            mirnas: [],
-            cnas: [],
-            mrnas: []
-        }
+    id: null,
+    name: '',
+    description: '',
+    tag: null,
+    number_of_mrnas: 0,
+    number_of_mirnas: 0,
+    number_of_cnas: 0,
+    number_of_methylations: 0,
+    has_fs_experiment: false,
+    was_already_used: false,
+    origin: BiomarkerOrigin.BASE,
+    state: BiomarkerState.COMPLETED,
+    contains_nan_values: false,
+    column_used_as_index: '',
+    methylations: [],
+    mirnas: [],
+    cnas: [],
+    mrnas: [],
+    is_public: false,
+    user:{
+        id: 0,
+        username: ''
+    }
+    }
     }
 
     /**
@@ -1537,8 +1542,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         biomarkerForm={this.state.formBiomarker}
                         checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
                         handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
-                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                         cleanForm={this.cleanForm}
                         isFormEmpty={this.isFormEmpty}
                         handleAddMoleculeToSection={this.handleAddMoleculeToSection}
