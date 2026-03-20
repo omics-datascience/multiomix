@@ -11,7 +11,7 @@ class UserFileAdmin(admin.ModelAdmin):
     filter_horizontal = ('tissues',)
 
     def tissue_list(self, obj):
-        return ', '.join(t.name for t in obj.tissues.all())
+        return ', '.join(obj.tissues.values_list('name', flat=True))
     tissue_list.short_description = 'Tissues'
 
 
