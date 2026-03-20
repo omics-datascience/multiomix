@@ -11,6 +11,7 @@ import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPan
 import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
 import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
+import { GeneExpressionRegulationNetworkPanel } from './genes/GeneAssociationsNetwork'
 
 // const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
 const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS
@@ -52,6 +53,8 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
+            case ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS:
+                return <GeneExpressionRegulationNetworkPanel />
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
