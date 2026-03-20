@@ -78,7 +78,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                     style: {
                         'curve-style': 'bezier',
                         'target-arrow-shape': 'triangle',
-                        'line-color': function (edge) {
+                        'line-color': function (edge): any {
                             // Sets the color of the edge depending on the relation_type attribute
                             const relationType: OntologyRelationTermToTermFilter = edge.data('relation_type')
 
