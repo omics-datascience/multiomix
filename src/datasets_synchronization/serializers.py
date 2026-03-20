@@ -8,8 +8,6 @@ from common.enums import ResponseCode
 from common.response import ResponseStatus
 from .enums import CreateCGDSStudyResponseCode
 from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset
-from tissues.models import Tissue
-from tissues.serializers import TissueSerializer
 from django.db.models import Q
 
 
@@ -56,13 +54,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     clinical_sample_dataset = CGDSDatasetSerializer(required=False, allow_null=True)
     version = serializers.IntegerField(read_only=True)
     is_last_version = serializers.SerializerMethodField(method_name='get_is_last_version')
-    # tissue_ids: writable list of PKs; tissues: read-only nested list (set in to_representation)
-    tissue_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Tissue.objects.all(),
-        source='tissues',
-        many=True,
-        required=False
-    )
 
     class Meta:
         model = CGDSStudy
@@ -71,12 +62,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_last_version(study: CGDSStudy) -> bool:
         return study.version == study.get_last_version()
-
-    def to_representation(self, instance: CGDSStudy):
-        """Makes a nested representation of the tissues field on GET requests."""
-        data = super().to_representation(instance)
-        data['tissues'] = TissueSerializer(instance.tissues.all(), many=True).data
-        return data
 
     def __create_cgds_dataset(self, validated_data_pop: OrderedDict) -> Optional[CGDSDataset]:
         """

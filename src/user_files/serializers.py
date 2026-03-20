@@ -10,8 +10,6 @@ from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_
 from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
-from tissues.models import Tissue
-from tissues.serializers import TissueSerializer
 from user_files.models import UserFile
 
 
@@ -38,16 +36,10 @@ class SimpleUserFileSerializer(serializers.ModelSerializer):
 class UserFileSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(many=False, read_only=True)
     survival_columns = SurvivalColumnsTupleUserFileSimpleSerializer(many=True, read_only=True)
-    tissue_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Tissue.objects.all(),
-        source='tissues',
-        many=True,
-        required=False
-    )
 
     class Meta:
         model = UserFile
-        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissues', 'tissue_ids',
+        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissues',
                   'upload_date', 'institutions', 'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values',
                   'column_used_as_index', 'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
 
@@ -72,8 +64,6 @@ class UserFileSerializer(serializers.ModelSerializer):
 
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
-
-        data['tissues'] = TissueSerializer(instance.tissues.all(), many=True).data
 
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
