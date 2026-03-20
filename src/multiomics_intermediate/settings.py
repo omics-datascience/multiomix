@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'molecules_details',
     'chunked_upload',
     'users',
+    'tissues',
 ]
 
 MIDDLEWARE = [
