@@ -314,7 +314,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                             {/* Basic data */}
                             <Segment>
                                 <Header dividing as='h2'>
-                                    {intl.formatMessage({ id: 'inference.new.basicData' })}
+                                    {intl.formatMessage({ id: 'common.basicData' })}
                                 </Header>
 
                                 <Form>
@@ -329,7 +329,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                     <Form.TextArea
                                         name='description'
                                         value={form.description ?? ''}
-                                        placeholder={intl.formatMessage({ id: 'inference.new.description' })}
+                                        placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                         onChange={handleInputChange}
                                     />
                                 </Form>
@@ -397,7 +397,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         }}
                         disabled={!selectedTrainedModelIsValid}
                     >
-                        {intl.formatMessage({ id: 'inference.new.continue' })}
+                        {intl.formatMessage({ id: 'common.continue' })}
                     </Button>
                 )}
 

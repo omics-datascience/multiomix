@@ -87,7 +87,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
             <Form.Input
                 fluid
                 label={(
-                    <InputLabel label={intl.formatMessage({ id: 'newRFForm.label.randomState' })}>
+                    <InputLabel label={intl.formatMessage({ id: 'common.randomState' })}>
                         <InfoPopup
                             content={intl.formatMessage({ id: 'newRFForm.info.randomState' })}
                             onTop={false}

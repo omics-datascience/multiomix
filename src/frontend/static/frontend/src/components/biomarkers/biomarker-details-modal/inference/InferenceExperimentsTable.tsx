@@ -171,9 +171,9 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
                 headers={[
                     { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
                     { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
-                    { name: intl.formatMessage({ id: 'inference.table.columns.state' }), serverCodeToSort: 'state', textAlign: 'center' },
+                    { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', textAlign: 'center' },
                     { name: intl.formatMessage({ id: 'inference.table.columns.model' }), serverCodeToSort: 'model', width: 1 },
-                    { name: intl.formatMessage({ id: 'inference.table.columns.date' }), serverCodeToSort: 'created' },
+                    { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'created' },
                     { name: intl.formatMessage({ id: 'inference.table.columns.dataset' }) },
                     { name: intl.formatMessage({ id: 'common.actions' }) }
 

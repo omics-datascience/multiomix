@@ -36,7 +36,7 @@ export const RFPanel = (props: RFPanelProps) => {
             <Form.Input
                 type='number'
                 label={intl.formatMessage({ id: 'rf.maxDepth' })}
-                placeholder={intl.formatMessage({ id: 'rf.integerPlaceholder' })}
+                placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                 name='maxDepth'
                 min={3}
                 value={parameters.maxDepth ?? ''}

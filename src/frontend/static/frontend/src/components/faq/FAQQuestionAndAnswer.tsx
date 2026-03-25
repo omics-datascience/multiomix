@@ -1,5 +1,5 @@
-import React from "react";
-import { Segment, Header } from "semantic-ui-react";
+import React from 'react'
+import { Segment, Header } from 'semantic-ui-react'
 
 /**
  * Props for the FAQQuestionAndAnswer component.
@@ -15,12 +15,11 @@ interface FAQQuestionAndAnswerProps {
 
 /**
  * Reusable component for displaying a FAQ question and its answer.
- * 
  *  @param props - Object containing  `segmentId`,  `headerTitle`, and  `answer`
  *  @returns A React component that displays a FAQ question and its answer.
-*/
+ */
 export const FAQQuestionAndAnswer = (props: FAQQuestionAndAnswerProps) => {
-    const { segmentId, headerTitle, answer } = props;
+    const { segmentId, headerTitle, answer } = props
     return (
         <Segment id={segmentId} basic>
             <Header as='h2'>{headerTitle}</Header>

@@ -30,7 +30,7 @@ export const CoxRegressionAdvanced = (props: CoxRegressionAdvancedProps) => {
                     <Form.Input
                         fluid
                         label={intl.formatMessage({ id: 'coxRegression.keepTopN' })}
-                        placeholder={intl.formatMessage({ id: 'coxRegression.integerPlaceholder' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={1}

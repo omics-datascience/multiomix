@@ -49,7 +49,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     <Form.Input
                         fluid
                         label={intl.formatMessage({ id: 'bbha.numberOfStars' })}
-                        placeholder={intl.formatMessage({ id: 'bbha.integerPlaceholder' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minStarsBBHA}
@@ -78,8 +78,8 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Form.Input
                         fluid
-                        label={intl.formatMessage({ id: 'bbha.numberOfIterations' })}
-                        placeholder={intl.formatMessage({ id: 'bbha.integerPlaceholder' })}
+                        label={intl.formatMessage({ id: 'common.numberOfIterations' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minIterationsMetaheuristics}
@@ -140,7 +140,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     <Grid.Row columns={2}>
                         <Grid.Column width={14}>
                             <Form.Select
-                                label={`${intl.formatMessage({ id: 'bbha.coefficient' })} 1`}
+                                label={`${intl.formatMessage({ id: 'common.coefficient' })} 1`}
                                 className='selection-select'
                                 options={improvedBBHACoeff1Options}
                                 value={advancedData.coeff1}
@@ -157,7 +157,7 @@ export const BBHAAdvanced = (props: BBHAAdvancedProps) => {
                     <Grid.Row columns={2}>
                         <Grid.Column width={14}>
                             <Form.Select
-                                label={`${intl.formatMessage({ id: 'bbha.coefficient' })} 2`}
+                                label={`${intl.formatMessage({ id: 'common.coefficient' })} 2`}
                                 className='selection-select'
                                 options={improvedBBHACoeff2Options}
                                 value={advancedData.coeff2}

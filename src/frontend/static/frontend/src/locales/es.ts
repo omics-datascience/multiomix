@@ -16,6 +16,26 @@ export default {
     'common.description': 'Descripción',
     'common.requiredField': 'Campo obligatorio',
     'common.model': 'Modelo:',
+    'common.date': 'Fecha',
+    'common.datasets': 'Conjuntos de datos',
+    // Common Labels
+    'common.algorithm': 'Algoritmo',
+    'common.nClusters': 'Número de clusters',
+    'common.metric': 'Métrica',
+    'common.scoringMethod': 'Método de puntuación',
+    'common.randomState': 'Estado aleatorio',
+    'common.penalizer': 'Penalizador',
+    'common.integerPlaceholder': 'Un número entero',
+    'common.numberOfIterations': 'Número de iteraciones',
+    'common.coefficient': 'Coeficiente',
+    // Forms and steps
+    'common.basicData': 'Datos básicos',
+    'common.descriptionOptional': 'Descripción (opcional)',
+    'common.continue': 'Continuar',
+    // common Tables and states
+    'common.state': 'Estado',
+    'common.cluster': 'Cluster',
+    'common.relations': 'Relaciones',
 
     // Auth/usuario
     'auth.login': 'Iniciar sesión',
@@ -76,9 +96,7 @@ export default {
     'inference.delete.button': '{common.delete}',
 
     'inference.table.title': 'Experimentos de inferencia',
-    'inference.table.columns.state': 'Estado',
     'inference.table.columns.model': 'Modelo',
-    'inference.table.columns.date': 'Fecha',
     'inference.table.columns.dataset': 'Conjuntos de datos',
     'inference.table.columns.actions': 'Acciones',
 
@@ -88,16 +106,11 @@ export default {
     'inference.results.title': 'Ver resultados',
     'inference.results.tooltip': 'Eliminar experimento',
     // 6.NewInferenceExperimentModal.tsx
-    'inference.new.description': 'Descripción (opcional)',
     'inference.newInference.title': 'Crear nuevo experimento de inferencia',
-    'inference.new.basicData': 'Datos básicos',
     'inference.new.step1': 'Paso 1: Modelo entrenado',
     'inference.new.step2': 'Paso 2: Conjuntos de datos de moléculas',
-    'inference.new.continue': 'Continuar',
     // 7.SamplesAndGroupsInferenceTable.tsx
-    'inference.table.columns.cluster': 'Grupo',
     'inference.table.download.tooltip': 'Descargar resultados en un archivo CSV',
-    'inference.table.filter.cluster.label': 'Grupo',
     'inference.table.filter.cluster.placeholder': 'Filtrar por grupo',
     'inference.table.addClusterLabels': 'Agregar etiquetas de grupo',
     // 8.SamplesAndTimeInferenceCharts.tsx
@@ -113,8 +126,6 @@ export default {
     'inference.timeTable.menu.charts.info': 'Muestra gráficos con las muestras y su tiempo de riesgo/supervivencia predicho agrupado por alguna condición',
     'inference.timeTable.addRangeLabels': 'Agregar etiquetas de rango',
     // 10.molecules/GeneOntologyCytoscapeChart.tsx
-    'geneOntology.legend.relations': 'Relaciones',
-    'geneOntology.form.relations': 'Relaciones',
     'geneOntology.form.ontologyType': 'Tipo de ontología',
     'geneOntology.form.generalDepth': 'Profundidad general',
     'geneOntology.form.hierarchicalDepth': 'Profundidad jerárquica hacia hijos',
@@ -147,7 +158,6 @@ export default {
     // 12GENES.ActionableCancerGenesPanel.tsx
     'actionableGenes.panel.title': 'Panel de genes de cáncer accionables',
     // 13.GeneAssociationsNetworkPanel
-    'geneAssociations.legend.relations': 'Relaciones',
     'geneAssociations.relation.fusion': 'Fusión',
     'geneAssociations.relation.coOccurrence': 'Co-ocurrencia',
     'geneAssociations.relation.experimental': 'Experimental',
@@ -206,14 +216,10 @@ export default {
     'moleculesTable.search.label': 'Muestra',
     // 21.SamplesAndGroupsTable.tsx
     'samplesAndGroupsTable.header.sample': 'Muestra',
-    'samplesAndGroupsTable.header.cluster': 'Cluster',
-    'samplesAndGroupsTable.filter.cluster': 'Cluster',
     'samplesAndGroupsTable.filter.cluster.placeholder': 'Filtrar por cluster',
     'samplesAndGroupsTable.search.label': 'Muestra',
     // 22.StatisticalValidationResultBestFeatures.tsx
-    'statValidationBestFeatures.series.coefficient': 'Coeficiente',
     'statValidationBestFeatures.axis.molecule': 'Molécula',
-    'statValidationBestFeatures.axis.coefficient': 'Coeficiente',
     'statValidationBestFeatures.context.features': 'características significativas para esta validación estadística',
     // 23.StatisticalValidationResultKaplanMeier.tsx
     'kaplanMeier.axis.time': 'Tiempo',
@@ -235,11 +241,8 @@ export default {
     'statValidationMetrics.header.model': 'Modelo',
     // 25.NewStatisticalValidationModal.tsx
     'newStatValidation.header.create': 'Crear nueva validación estadística',
-    'newStatValidation.header.basicData': 'Datos básicos',
-    'newStatValidation.form.descriptionOptional': 'Descripción (opcional)',
     'newStatValidation.step.trainedModel': 'Paso 1: Modelo entrenado',
     'newStatValidation.step.validationDatasets': 'Paso 2: Conjuntos de validación',
-    'newStatValidation.button.continue': 'Continuar',
     // 26.StatisticalValidationMenu.tsx
     'statValidationMenu.bestFeatures': 'Características más significativas',
     'statValidationMenu.bestFeatures.info': 'Características más significativas para el análisis de supervivencia',
@@ -252,9 +255,7 @@ export default {
     'statValidationsTable.deleteValidation.header': 'Eliminar validación estadística',
     'statValidationsTable.deleteValidation.confirm': '¿Está seguro de que desea eliminar la validación estadística {name}?',
     'statValidationsTable.headerTitle': 'Validaciones estadísticas',
-    'statValidationsTable.headers.state': 'Estado',
     'statValidationsTable.headers.model': 'Modelo',
-    'statValidationsTable.headers.date': 'Fecha',
     'statValidationsTable.headers.datasets': 'Conjuntos de datos',
     'statValidationsTable.headers.actions': 'Acciones',
     'statValidationsTable.newValidation': 'Nueva validación estadística',
@@ -262,18 +263,11 @@ export default {
     'statValidationsTable.actions.stopValidation': 'Detener validación estadística',
     'statValidationsTable.actions.deleteValidation': 'Eliminar validación estadística',
     // 28.NewClusteringModelForm.tsx
-    'newClusteringForm.label.algorithm': 'Algoritmo',
     'newClusteringForm.placeholder.algorithm': 'Seleccione un algoritmo',
     'newClusteringForm.label.searchOptimalClusters': 'Buscar el número óptimo de clusters',
-    'newClusteringForm.label.nClusters': 'Número de clusters',
     'newClusteringForm.info.nClusters': 'Número de clusters para agrupar los datos. El número óptimo puede encontrarse buscando el codo en la curva de la suma de distancias cuadradas entre muestras y su centro de cluster más cercano.',
-    'newClusteringForm.label.metric': 'Métrica',
     'newClusteringForm.placeholder.metric': 'Seleccione una métrica',
-    'newClusteringForm.label.scoringMethod': 'Método de puntuación',
     'newClusteringForm.placeholder.scoringMethod': 'Seleccione un método',
-    'newClusteringForm.label.randomState': 'Semilla aleatoria',
-    'newClusteringForm.label.penalizer': 'Penalizador',
-    'newClusteringForm.placeholder.integer': 'Un número entero',
     'newClusteringForm.info.algorithm': 'K-Means: agrupa datos minimizando la varianza intra-cluster; útil para RNA y miRNA. Spectral Clustering: usa similitud basada en grafos para patrones complejos; ideal para metilación y CNA. BK-Means: variación jerárquica de K-Means, adecuada para datasets clínicos y multi-ómicos. Método de Ward: minimiza la varianza en clustering jerárquico; útil para combinar RNA y metilación.',
     'newClusteringForm.info.metric': 'Cox Regression: modelo de riesgos proporcionales para asociaciones entre multi-ómicos y resultados clínicos. Log-Rank Test: prueba no paramétrica para comparar distribuciones de supervivencia; actualmente no disponible.',
     'newClusteringForm.info.scoringMethod': 'C-Index: medida de concordancia entre resultados predichos y observados; valores altos indican mejor desempeño. Log Likelihood: probabilidad de observar los datos dado el modelo; valores bajos indican mejor desempeño.',
@@ -284,7 +278,6 @@ export default {
     'newRFForm.info.searchOptimalTrees': 'Esta opción es útil cuando el número de muestras en los datos clínicos es pequeño o hay pocos eventos observados; establecer este valor aumenta la robustez del modelo en tales casos, evitando problemas con valores NaN.',
     'newRFForm.label.maxDepth': 'Profundidad máxima',
     'newRFForm.info.maxDepth': 'La profundidad máxima del árbol',
-    'newRFForm.label.randomState': 'Estado aleatorio',
     'newRFForm.info.randomState': 'Semilla utilizada por el generador de números aleatorios',
     'newRFForm.label.nEstimators': 'Número de árboles',
     'newRFForm.info.nEstimators': 'El número de árboles (estimadores) utilizados en el modelo Random Forest.',
@@ -295,23 +288,17 @@ export default {
     'newSVMForm.placeholder.kernel': 'Seleccionar un kernel',
     'newSVMForm.label.maxIterations': 'Iteraciones máximas',
     'newSVMForm.info.maxIterations': 'El número máximo de iteraciones a ejecutar',
-    'newSVMForm.label.randomState': 'Estado aleatorio',
     'newSVMForm.info.randomState': 'Semilla utilizada por el generador de números aleatorios',
     // 31.NewTrainedModelModal
     'newTrainedModelModal.header.create': 'Crear nuevo modelo entrenado',
-    'newTrainedModelModal.header.basicData': 'Datos básicos',
-    'newTrainedModelModal.placeholder.descriptionOptional': 'Descripción (opcional)',
 
     'newTrainedModelModal.step1.trainingParameters': 'Paso 1: Parámetros de entrenamiento',
     'newTrainedModelModal.step2.trainingDatasets': 'Paso 2: Conjuntos de datos de entrenamiento',
-
-    'newTrainedModelModal.button.continue': 'Continuar',
 
     'newTrainedModelModal.header.selectModel': 'Seleccionar un nuevo modelo para entrenar',
     'newTrainedModelModal.placeholder.selectModel': 'Seleccionar un modelo',
     'newTrainedModelModal.header.selectModelParameters': 'Seleccionar parámetros del modelo',
     'newTrainedModelModal.header.selectCVParameters': 'Seleccionar parámetros de validación cruzada',
-    'newTrainedModelModal.label.numberOfFolds': 'Número de particiones',
     'newTrainedModelModal.info.numberOfFolds': 'Define el número de divisiones de datos para la validación cruzada; asegura una evaluación robusta del modelo y previene el sobreajuste.',
     // 32.BiomarkerTrainedModelsTable
     'biomarkerTrainedModelsTable.header.stopTraining': 'Detener entrenamiento',
@@ -320,10 +307,7 @@ export default {
     'biomarkerTrainedModelsTable.header.deleteBiomarker': 'Eliminar biomarcador',
     'biomarkerTrainedModelsTable.confirm.deleteBiomarker': '¿Está seguro de que desea eliminar el biomarcador {modelName}?',
     'biomarkerTrainedModelsTable.header.trainedModels': 'Modelos entrenados',
-    'biomarkerTrainedModelsTable.header.state': 'Estado',
     'biomarkerTrainedModelsTable.header.model': 'Modelo',
-    'biomarkerTrainedModelsTable.header.date': 'Fecha',
-    'biomarkerTrainedModelsTable.header.metric': 'Métrica',
     'biomarkerTrainedModelsTable.header.bestCVMetric': 'Mejor métrica de validación cruzada',
     'biomarkerTrainedModelsTable.header.datasets': 'Conjuntos de datos',
     'biomarkerTrainedModelsTable.header.actions': 'Acciones',
@@ -335,10 +319,6 @@ export default {
     'biomarkerTrainedModelsTable.button.deleteTrainedModelNotAllowed': 'El modelo entrenado no puede eliminarse porque tiene validaciones estadísticas y/o experimentos de inferencia relacionados',
     // 33.ModelDetailsPanels
     'modelDetails.general.bestFitnessValue': 'Mejor valor de fitness:',
-    'modelDetails.general.randomState': 'Estado aleatorio:',
-    'modelDetails.clustering.algorithm': 'Algoritmo:',
-    'modelDetails.clustering.scoringMethod': 'Método de puntuación:',
-    'modelDetails.clustering.numberOfClusters': 'Número de clusters:',
     'modelDetails.svm.task': 'Tarea:',
     'modelDetails.rf.numberOfEstimators': 'Número de estimadores:',
     'modelDetails.rf.maxDepth': 'Profundidad máxima:',
@@ -383,59 +363,52 @@ export default {
     'biomarkerType.featureSelection.description': 'Como punto de partida, puedes seleccionar un Biomarker previamente descubierto, un Biomarker reconocido, o un conjunto de genes que quieras probar. Este método seleccionará el subconjunto molecular que mejor se ajuste a la predicción',
     // 38.BBHAAdvanced
     'bbha.numberOfStars': 'Número de estrellas',
-    'bbha.integerPlaceholder': 'Un número entero',
     'bbha.numberOfStars.info': 'Número de estrellas en el Binary Black Hole Algorithm. Cada una de estas estrellas evalúa un subconjunto diferente de features. Aumentar este número incrementa las chances de evaluar el subconjunto más óptimo pero retrasa más el resultado del experimento',
-    'bbha.numberOfIterations': 'Número de iteraciones',
     'bbha.numberOfIterations.info': 'Número de iteraciones en el Binary Black Hole Algorithm. En cada iteración se calcula la función de fitness para cada estrella con su correspondiente subconjunto de features. Aumentar este número permite evaluar más combinaciones de features pero retrasa más el resultado del experimento',
     'bbha.version': 'Versión de BBHA',
     'bbha.version.original': 'El enfoque Original ejecuta el Binary Black Hole Algorithm tal como se definió en',
     'bbha.version.v2': 'La Versión 2 es una versión mejorada definida en este',
-    'bbha.coefficient': 'Coeficiente',
     'bbha.coefficientExplanation': 'Coeficiente especificado en el',
     'bbha.useSpark': 'Intentar optimizar usando Apache Spark',
     'bbha.useSpark.info': 'Si esta opción está habilitada, el experimento se ejecutará (si es posible) usando Apache Spark para optimizar los tiempos de ejecución',
     // 39.CoxRegressionAdvanced
     'coxRegression.keepTopN': 'Mantener los N principales',
-    'coxRegression.integerPlaceholder': 'Un número entero',
     'coxRegression.keepTopN.info': 'Número máximo de features que se conservarán después del procesamiento. Las features se ordenan en orden descendente según sus coeficientes, manteniendo primero las más significativas. Si este valor se deja vacío, se conservarán todas aquellas cuyos coeficientes sean distintos de 0',
     // 40.GAAdvanced
     'ga.populationSize': 'Tamaño de la población',
-    'ga.integerPlaceholder': 'Un número entero',
     'ga.populationSize.info': 'Número de soluciones candidatas (individuos o posibles soluciones) que coexisten en cada generación del Genetic Algorithm. Aumentar este número permite evaluar más combinaciones de features pero retrasa más el resultado del experimento',
     'ga.mutationRate': 'Tasa de mutación',
     'ga.floatPlaceholder': 'Un número decimal',
     'ga.mutationRate.info': 'Determina la probabilidad de que un bit (dígito binario) en una solución candidata sea alterado o cambiado aleatoriamente durante el proceso de evolución. Esta opción introduce pequeños cambios aleatorios para explorar nuevas posibilidades.',
-    'ga.numberOfIterations': 'Número de iteraciones',
     'ga.numberOfIterations.info': 'Número de iteraciones en el Genetic Algorithm. En cada iteración se calcula la función de fitness para cada solución candidata con su correspondiente subconjunto de features. Aumentar este número permite evaluar más combinaciones de features pero retrasa más el resultado del experimento',
     'ga.useSpark': 'Intentar optimizar usando Apache Spark',
     'ga.useSpark.info': 'Si esta opción está habilitada, el experimento se ejecutará (si es posible) usando',
     // 41.ClusteringPanel
-    'clustering.algorithm': 'Algoritmo',
     'clustering.algorithm.placeholder': 'Algoritmo de Clustering',
-    'clustering.metric': 'Métrica',
-    'clustering.scoringMethod': 'Método de puntuación',
     // 42.RFPanel
     'rf.numberOfEstimators': 'Número de estimadores',
     'rf.maxDepth': 'Profundidad máxima',
-    'rf.integerPlaceholder': 'Un número entero',
     // 43.SVMPanel
     'svm.kernel.placeholder': 'Seleccionar un Kernel',
     // 44.FeatureSelectionForm
     'featureSelection.fitnessFunction': 'Función de fitness',
     'featureSelection.searchOptimalClusters': 'Buscar el número óptimo de clusters (próximamente)',
-    'featureSelection.numberOfClusters': 'Número de clusters',
-    'featureSelection.penalizer': 'Penalizador',
     'featureSelection.maxIterations': 'Máximo de iteraciones',
     // 45.FeatureSelectionStep1
     'featureSelectionStep1.headerTitle': 'Biomarcadores',
     'featureSelectionStep1.searchPlaceholder': 'Buscar por nombre',
     // 46.FeatureSelectionStep3
-    'featureSelectionStep3.algorithm': 'Algoritmo',
     'featureSelectionStep3.blindSearch': 'Búsqueda exhaustiva',
     'featureSelectionStep3.expertMode': 'Modo experto',
     'featureSelectionStep3.geneticAlgorithms': 'Algoritmos genéticos',
     // 47.CrossValidationInput
-    'crossValidation.numberOfFolds': 'Número de particiones',
     'crossValidation.integerPlaceholder': 'Un número entero',
+    // 48.FeatureSelectionPanel
+    'featureSelectionPanel.tag': 'Etiqueta',
+    'featureSelectionPanel.step1': 'Paso 1',
+    'featureSelectionPanel.step2': 'Paso 2: Conjuntos de datos',
+    'featureSelectionPanel.step3': 'Paso 3: Selección de características',
+    'featureSelectionPanel.selectBiomarker': 'Seleccionar biomarcador',
+    'featureSelectionPanel.selectedBiomarker': 'Seleccionado {biomarker}',
 
 }

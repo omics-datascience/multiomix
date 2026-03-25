@@ -32,7 +32,7 @@ const CytoscapeLegends = () => {
     return (
         <div className='cytoscape-legends'>
             <div className='legend-title'>
-                {intl.formatMessage({ id: 'geneAssociations.legend.relations' })}
+                {intl.formatMessage({ id: 'common.relations' })}
             </div>
             <div className='legend-scale'>
                 <ul className='legend-labels' id='legend'>
