@@ -50,7 +50,7 @@ export const SamplesAndGroupsInferenceTable = (props: SamplesAndGroupsInferenceT
                     <PaginatedTable<SampleAndCluster>
                         headers={[
                             { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
-                            { name: intl.formatMessage({ id: 'inference.table.columns.cluster' }), serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
+                            { name: intl.formatMessage({ id: 'common.cluster' }), serverCodeToSort: 'cluster', width: 2, textAlign: 'center' }
 
                         ]}
                         queryParams={{

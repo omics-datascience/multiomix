@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button, Grid, Icon, Modal, Segment, Step } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 import { DjangoCGDSStudy, DjangoUserFile, RowHeader } from '../../../../utils/django_interfaces'
 import { Source, SourceType } from '../../../../utils/interfaces'
 import { PaginationCustomFilter } from '../../../common/PaginatedTable'
@@ -38,6 +39,8 @@ interface FeatureSelectionPanelProps {
  * @returns Component.
  */
 export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
+    const intl = useIntl()
+
     /**
      * Generates default table's headers
      * @returns Default object for table's headers
@@ -45,7 +48,7 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
     const getDefaultHeaders = (): RowHeader<Biomarker>[] => [
         { name: 'Name', serverCodeToSort: 'name', width: 3 },
         { name: 'Description', serverCodeToSort: 'description', width: 4 },
-        { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
+        { name: intl.formatMessage({ id: 'featureSelectionPanel.tag' }), serverCodeToSort: 'tag', width: 2 },
         { name: 'Date', serverCodeToSort: 'upload_date' },
         { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
         { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
@@ -183,19 +186,23 @@ export const FeatureSelectionPanel = (props: FeatureSelectionPanelProps) => {
                                 <Step active={props.featureSelection.step === 1} completed={props.featureSelection.step > 1} onClick={() => handleGoBackPanel(props.handleGoBackStep1, props.featureSelection.step > 1)}>
                                     <Icon name='list' />
                                     <Step.Content>
-                                        <Step.Title>Step 1: {props.featureSelection.biomarker?.id ? `Selected ${props.featureSelection.biomarker?.name}` : 'Select biomarker'}</Step.Title>
+                                        <Step.Title>
+                                            {intl.formatMessage({ id: 'featureSelectionPanel.step1' })}: {props.featureSelection.biomarker?.id
+                                                ? intl.formatMessage({ id: 'featureSelectionPanel.selectedBiomarker' }, { biomarker: props.featureSelection.biomarker?.name })
+                                                : intl.formatMessage({ id: 'featureSelectionPanel.selectBiomarker' })}
+                                        </Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step active={props.featureSelection.step === 2} completed={props.featureSelection.step > 2} disabled={props.featureSelection.step === 1} onClick={() => handleGoBackPanel(props.handleGoBackStep2, props.featureSelection.step > 2)}>
                                     <Icon name='boxes' />
                                     <Step.Content>
-                                        <Step.Title>Step 2: Datasets</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'featureSelectionPanel.step2' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step active={props.featureSelection.step === 3} completed={props.featureSelection.step > 3} disabled={props.featureSelection.step < 3}>
                                     <Icon name='lab' />
                                     <Step.Content>
-                                        <Step.Title>Step 3: Feature selection</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'featureSelectionPanel.step3' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                             </Step.Group>

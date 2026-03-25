@@ -440,7 +440,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 <Form.Input
                                     fluid
                                     label={(
-                                        <InputLabel label={intl.formatMessage({ id: 'newTrainedModelModal.label.numberOfFolds' })}>
+                                        <InputLabel label={intl.formatMessage({ id: 'common.numberOfFolds' })}>
                                             <InfoPopup
                                                 content={intl.formatMessage({ id: 'newTrainedModelModal.info.numberOfFolds' })}
                                                 onTop={false}
@@ -523,7 +523,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                 <Grid>
                     <Grid.Row columns={2} divided>
                         <Grid.Column width={4}>
-                            <Header dividing as='h2'>{intl.formatMessage({ id: 'newTrainedModelModal.header.basicData' })}</Header>
+                            <Header dividing as='h2'>{intl.formatMessage({ id: 'common.basicData' })}</Header>
 
                             <Form>
                                 <Form.Input
@@ -536,7 +536,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 />
 
                                 <Form.TextArea
-                                    placeholder={intl.formatMessage({ id: 'newTrainedModelModal.placeholder.descriptionOptional' })}
+                                    placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                     name='description'
                                     value={form.description ?? undefined}
                                     onChange={(_, { name, value }) => handleInputChanges(name, value as string | undefined)}
@@ -598,7 +598,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                     }}
                     disabled={isLastStep ? !formIsValid() : !modelIsValid}
                 >
-                    {isLastStep ? intl.formatMessage({ id: 'common.confirm' }) : intl.formatMessage({ id: 'newTrainedModelModal.button.continue' })}
+                    {isLastStep ? intl.formatMessage({ id: 'common.confirm' }) : intl.formatMessage({ id: 'common.continue' })}
 
                 </Button>
             </Modal.Actions>

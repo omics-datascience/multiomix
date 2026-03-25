@@ -78,7 +78,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
     const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
 
     const chartSeries: ApexAxisChartSeries = [{
-        name: intl.formatMessage({ id: 'statValidationBestFeatures.series.coefficient' }),
+        name: intl.formatMessage({ id: 'common.coefficient' }),
         data: coefficients
     }]
 
@@ -128,7 +128,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         xaxis: {
             categories: moleculesNames,
             title: {
-                text: intl.formatMessage({ id: 'statValidationBestFeatures.axis.coefficient' })
+                text: intl.formatMessage({ id: 'common.coefficient' })
 
             },
             type: 'category',

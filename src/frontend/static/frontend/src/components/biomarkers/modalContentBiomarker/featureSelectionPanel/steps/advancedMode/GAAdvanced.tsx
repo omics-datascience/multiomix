@@ -33,7 +33,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                     <Input
                         fluid
                         label={intl.formatMessage({ id: 'ga.populationSize' })}
-                        placeholder={intl.formatMessage({ id: 'ga.integerPlaceholder' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minPopulationSizeGA}
@@ -91,8 +91,8 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Input
                         fluid
-                        label={intl.formatMessage({ id: 'ga.numberOfIterations' })}
-                        placeholder={intl.formatMessage({ id: 'ga.integerPlaceholder' })}
+                        label={intl.formatMessage({ id: 'common.numberOfIterations' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minIterationsMetaheuristics}

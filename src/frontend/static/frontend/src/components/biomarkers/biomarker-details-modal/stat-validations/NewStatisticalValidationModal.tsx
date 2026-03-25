@@ -320,7 +320,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         <Grid.Column width={4}>
                             {/* Basic data */}
                             <Segment>
-                                <Header dividing as='h2'>{intl.formatMessage({ id: 'newStatValidation.header.basicData' })}</Header>
+                                <Header dividing as='h2'>{intl.formatMessage({ id: 'common.basicData' })}</Header>
 
                                 <Form>
                                     <Form.Input
@@ -334,7 +334,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                     <Form.TextArea
                                         name='description'
                                         value={form.description ?? ''}
-                                        placeholder={intl.formatMessage({ id: 'newStatValidation.form.descriptionOptional' })}
+                                        placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                         onChange={handleInputChange}
                                     />
                                 </Form>
@@ -401,7 +401,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         }}
                         disabled={!selectedTrainedModelIsValid}
                     >
-                        {intl.formatMessage({ id: 'newStatValidation.button.continue' })}
+                        {intl.formatMessage({ id: 'common.continue' })}
                     </Button>
                 )}
 

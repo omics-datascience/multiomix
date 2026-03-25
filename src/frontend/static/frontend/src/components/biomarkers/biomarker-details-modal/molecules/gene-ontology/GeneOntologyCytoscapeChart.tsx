@@ -27,7 +27,7 @@ const CytoscapeLegends = () => {
     return (
         <div className='cytoscape-legends'>
             <div className='legend-title'>
-                {intl.formatMessage({ id: 'geneOntology.legend.relations' })}
+                {intl.formatMessage({ id: 'common.relations' })}
             </div>
             <div className='legend-scale'>
                 <ul className='legend-labels' id='legend'>
@@ -204,7 +204,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                 {/* Form for termsRelatedToTermForm */}
                 <Form className='margin-top-5'>
                     <Form.Field>
-                        <label>{intl.formatMessage({ id: 'geneOntology.form.relations' })}</label>
+                        <label>{intl.formatMessage({ id: 'common.relations' })}</label>
                         {Object.entries(OntologyRelationTermToTermFilter)
                             .filter(([_key, value]) => value !== OntologyRelationTermToTermFilter.IS_A)
                             .map(([key, value]) => (

@@ -22,8 +22,8 @@ export const CrossValidationInput = (props: CrossValidationInputProps) => {
         <Form.Input
             fluid
             style={{ minWidth: '180px', maxWidth: '100% ' }}
-            label={intl.formatMessage({ id: 'crossValidation.numberOfFolds' })}
-            placeholder={intl.formatMessage({ id: 'crossValidation.integerPlaceholder' })}
+            label={intl.formatMessage({ id: 'common.numberOfFolds' })}
+            placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
             type='number'
             step={1}
             min={3}

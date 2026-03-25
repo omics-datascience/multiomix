@@ -218,10 +218,10 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 headers={[
                     { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
                     { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
-                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.state' }), serverCodeToSort: 'state', width: 1 },
+                    { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', width: 1 },
                     { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.model' }), serverCodeToSort: 'fitness_function', width: 1 },
-                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.date' }), serverCodeToSort: 'created' },
-                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.metric' }), serverCodeToSort: 'fitness_metric' },
+                    { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'created' },
+                    { name: intl.formatMessage({ id: 'common.metric' }), serverCodeToSort: 'fitness_metric' },
                     { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.bestCVMetric' }), serverCodeToSort: 'best_fitness_value' },
                     { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.datasets' }) },
                     ...actionColumn

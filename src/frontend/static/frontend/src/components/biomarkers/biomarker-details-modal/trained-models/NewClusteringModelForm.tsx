@@ -23,7 +23,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 fluid
                 selectOnBlur={false}
                 label={(
-                    <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.algorithm' })}>
+                    <InputLabel label={intl.formatMessage({ id: 'common.algorithm' })}>
                         <InfoPopup
                             content={intl.formatMessage({ id: 'newClusteringForm.info.algorithm' })}
                             onTop={false}
@@ -34,7 +34,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     </InputLabel>
                 )}
                 options={clusteringAlgorithmOptions}
-                placeholder={intl.formatMessage({ id: 'newClusteringForm.placeholder.algorithm' })}
+                placeholder={intl.formatMessage({ id: 'common.algorithm' })}
                 name='algorithm'
                 value={props.parameters.algorithm}
                 onChange={props.handleChangeParams}
@@ -50,7 +50,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 <Form.Input
                     type='number'
                     label={(
-                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.nClusters' })}>
+                        <InputLabel label={intl.formatMessage({ id: 'common.nClusters' })}>
                             <InfoPopup
                                 content={intl.formatMessage({ id: 'newClusteringForm.info.nClusters' })}
                                 onTop={false}
@@ -72,7 +72,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 fluid
                 selectOnBlur={false}
                 label={(
-                    <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.metric' })}>
+                    <InputLabel label={intl.formatMessage({ id: 'common.metric' })}>
                         <InfoPopup
                             content={intl.formatMessage({ id: 'newClusteringForm.info.metric' })}
                             onTop={false}
@@ -95,7 +95,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     fluid
                     selectOnBlur={false}
                     label={(
-                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.scoringMethod' })}>
+                        <InputLabel label={intl.formatMessage({ id: 'common.scoringMethod' })}>
                             <InfoPopup
                                 content={intl.formatMessage({ id: 'newClusteringForm.info.scoringMethod' })}
                                 onTop={false}
@@ -116,7 +116,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             <Form.Group widths='equal'>
                 <Form.Input
                     label={(
-                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.randomState' })}>
+                        <InputLabel label={intl.formatMessage({ id: 'common.randomState' })}>
                             <InfoPopup
                                 content={intl.formatMessage({ id: 'newClusteringForm.info.randomState' })}
                                 onTop={false}
@@ -126,7 +126,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder={intl.formatMessage({ id: 'newClusteringForm.placeholder.integer' })}
+                    placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                     type='number'
                     step={1}
                     min={0}
@@ -137,7 +137,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
 
                 <Form.Input
                     label={(
-                        <InputLabel label={intl.formatMessage({ id: 'newClusteringForm.label.penalizer' })}>
+                        <InputLabel label={intl.formatMessage({ id: 'common.penalizer' })}>
                             <InfoPopup
                                 content={intl.formatMessage({ id: 'newClusteringForm.info.penalizer' })}
                                 onTop={false}
@@ -147,7 +147,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder={intl.formatMessage({ id: 'newClusteringForm.placeholder.integer' })}
+                    placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                     type='number'
                     step={0.1}
                     min={0}

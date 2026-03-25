@@ -51,7 +51,7 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Icon name='random' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        {intl.formatMessage({ id: 'modelDetails.general.randomState' })} {props.data.random_state ?? '-'}
+                        {intl.formatMessage({ id: 'common.randomState' })} {props.data.random_state ?? '-'}
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -77,7 +77,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Icon name='lab' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        {intl.formatMessage({ id: 'modelDetails.clustering.algorithm' })}
+                        {intl.formatMessage({ id: 'common.algorithm' })}
 
                         <ClusteringAlgorithmLabel clusteringAlgorithm={props.data.algorithm} className='margin-left-2' />
                     </List.Header>
@@ -87,7 +87,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Icon name='lightning' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        {intl.formatMessage({ id: 'modelDetails.clustering.scoringMethod' })}
+                        {intl.formatMessage({ id: 'common.scoringMethod' })}
 
                         <ClusteringScoringMethodLabel scoreMethod={props.data.scoring_method} className='margin-left-2' />
                     </List.Header>
@@ -96,7 +96,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
             <List.Item>
                 <List.Icon name='grid layout' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>{intl.formatMessage({ id: 'modelDetails.clustering.numberOfClusters' })} {props.data.n_clusters}</List.Header>
+                    <List.Header>{intl.formatMessage({ id: 'common.nClusters' })} {props.data.n_clusters}</List.Header>
                 </List.Content>
             </List.Item>
         </List>

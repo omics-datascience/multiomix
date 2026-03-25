@@ -68,7 +68,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                                         fluid
                                         style={{ minWidth: '180px', maxWidth: '100% ' }}
                                         type='number'
-                                        label={intl.formatMessage({ id: 'featureSelection.numberOfClusters' })}
+                                        label={intl.formatMessage({ id: 'common.nClusters' })}
                                         name='nClusters'
                                         min={2}
                                         max={10}
@@ -92,7 +92,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                                     fluid
                                     style={{ minWidth: '180px', maxWidth: '100% ' }}
                                     type='number'
-                                    label={intl.formatMessage({ id: 'featureSelection.penalizer' })}
+                                    label={intl.formatMessage({ id: 'common.penalizer' })}
                                     name='penalizer'
                                     min={0}
                                     value={fitnessFunctionParameters.clusteringParameters.penalizer}

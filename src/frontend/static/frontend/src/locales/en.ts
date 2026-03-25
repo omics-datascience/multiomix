@@ -16,6 +16,27 @@ export default {
     'common.description': 'Description',
     'common.requiredField': 'Required field',
     'common.model': 'Model:',
+    'common.date': 'Date',
+    'common.datasets': 'Datasets',
+    // common Labels
+    'common.algorithm': 'Algorithm',
+    'common.nClusters': 'Number of clusters',
+    'common.metric': 'Metric',
+    'common.scoringMethod': 'Scoring method',
+    'common.randomState': 'Random state',
+    'common.penalizer': 'Penalizer',
+    'common.integerPlaceholder': 'An integer number',
+    'common.numberOfIterations': 'Number of iterations',
+    'common.coefficient': 'Coefficient',
+    // common Forms and steps
+    'common.basicData': 'Basic data',
+    'common.descriptionOptional': 'Description (optional)',
+    'common.continue': 'Continue',
+    'common.numberOfFolds': 'Number of folds',
+    // common Tables and states
+    'common.state': 'State',
+    'common.cluster': 'Cluster',
+    'common.relations': 'Relations',
 
     // Auth/user
     'auth.login': 'Log in',
@@ -75,9 +96,7 @@ export default {
     'inference.delete.button': '{common.delete}',
 
     'inference.table.title': 'Inference experiments',
-    'inference.table.columns.state': 'State',
     'inference.table.columns.model': 'Model',
-    'inference.table.columns.date': 'Date',
     'inference.table.columns.dataset': 'Datasets',
 
     'inference.search.placeholder': 'Search by name or description',
@@ -86,16 +105,11 @@ export default {
     'inference.results.title': 'See results',
     'inference.results.tooltip': 'View experiment results',
     // 6.NewInferenceExperimentModal.tsx
-    'inference.new.description': 'Description (optional)',
     'inference.newInference.title': 'Create new inference experiment',
-    'inference.new.basicData': 'Basic data',
     'inference.new.step1': 'Step 1: Trained model',
     'inference.new.step2': 'Step 2: molecules datasets',
-    'inference.new.continue': 'Continue',
     // 7.SamplesAndGroupsInferenceTable.tsx
-    'inference.table.columns.cluster': 'Cluster',
     'inference.table.download.tooltip': 'Download results in a CSV file',
-    'inference.table.filter.cluster.label': 'Cluster',
     'inference.table.filter.cluster.placeholder': 'Filter by cluster',
     'inference.table.addClusterLabels': 'Add Cluster labels',
     // 8.SamplesAndTimeInferenceCharts.tsx
@@ -111,8 +125,6 @@ export default {
     'inference.timeTable.menu.charts.info': 'Shows some charts with the samples and their predicted hazard/survival time grouped by some condition',
     'inference.timeTable.addRangeLabels': 'Add Range labels',
     // 10.molecules/GeneOntologyCytoscapeChart.tsx
-    'geneOntology.legend.relations': 'Relations',
-    'geneOntology.form.relations': 'Relations',
     'geneOntology.form.ontologyType': 'Ontology type',
     'geneOntology.form.generalDepth': 'General depth',
     'geneOntology.form.hierarchicalDepth': 'Hierarchical depth to children',
@@ -145,7 +157,6 @@ export default {
     // 12.GENES.ActionableCancerGenesPanel.tsx
     'actionableCancerGenes.panel.title': 'Actionable Cancer Genes Panel',
     // 13.GeneAssociationsNetworkPanel
-    'geneAssociations.legend.relations': 'Relations',
     'geneAssociations.relation.fusion': 'Fusion',
     'geneAssociations.relation.coOccurrence': 'Co-occurrence',
     'geneAssociations.relation.experimental': 'Experimental',
@@ -202,13 +213,9 @@ export default {
     'moleculesTable.header.type': 'Type',
     'moleculesTable.header.actions': 'Actions',
     // 21.SamplesAndGroupsTable.tsx
-    'samplesAndGroupsTable.header.cluster': 'Cluster',
-    'samplesAndGroupsTable.filter.cluster': 'Cluster',
     'samplesAndGroupsTable.filter.cluster.placeholder': 'Filter by cluster',
     // 22.StatisticalValidationResultBestFeatures.tsx
-    'statValidationBestFeatures.series.coefficient': 'Coefficient',
     'statValidationBestFeatures.axis.molecule': 'Molecule',
-    'statValidationBestFeatures.axis.coefficient': 'Coefficient',
     'statValidationBestFeatures.context.features': 'significant features found for this statistical validation',
     // 23.StatisticalValidationResultKaplanMeier.tsx
     'kaplanMeier.axis.time': 'Time',
@@ -229,11 +236,8 @@ export default {
     'statValidationMetrics.metric.r2Score': 'R2 score',
     // 25.NewStatisticalValidationModal.tsx
     'newStatValidation.header.create': 'Create new statistical validation',
-    'newStatValidation.header.basicData': 'Basic data',
-    'newStatValidation.form.descriptionOptional': 'Description (optional)',
     'newStatValidation.step.trainedModel': 'Step 1: Trained model',
     'newStatValidation.step.validationDatasets': 'Step 2: Validation datasets',
-    'newStatValidation.button.continue': 'Continue',
     // 26.StatisticalValidationMenu.tsx
     'statValidationMenu.bestFeatures': 'Most significant features',
     'statValidationMenu.bestFeatures.info': 'Most significant features for the survival analysis',
@@ -248,9 +252,7 @@ export default {
     'statValidationsTable.deleteValidation.header': 'Delete statistical validation',
     'statValidationsTable.deleteValidation.confirm': 'Are you sure you want to delete the statistical validation {name}?',
     'statValidationsTable.headerTitle': 'Statistical validations',
-    'statValidationsTable.headers.state': 'State',
     'statValidationsTable.headers.model': 'Model',
-    'statValidationsTable.headers.date': 'Date',
     'statValidationsTable.headers.datasets': 'Datasets',
     'statValidationsTable.headers.actions': 'Actions',
     'statValidationsTable.newValidation': 'New statistical validation',
@@ -258,18 +260,11 @@ export default {
     'statValidationsTable.actions.stopValidation': 'Stop statistical validation',
     'statValidationsTable.actions.deleteValidation': 'Delete statistical validation',
     // 28.NewClusteringModelForm.tsx
-    'newClusteringForm.label.algorithm': 'Algorithm',
     'newClusteringForm.placeholder.algorithm': 'Select an algorithm',
     'newClusteringForm.label.searchOptimalClusters': 'Search for the optimal number of clusters',
-    'newClusteringForm.label.nClusters': 'Number of clusters',
     'newClusteringForm.info.nClusters': 'The number of clusters to group the data into. The optimal number can be found by looking for the elbow in the curve of the sum of squared distances between samples and their closest cluster center.',
-    'newClusteringForm.label.metric': 'Metric',
     'newClusteringForm.placeholder.metric': 'Select a metric',
-    'newClusteringForm.label.scoringMethod': 'Scoring method',
     'newClusteringForm.placeholder.scoringMethod': 'Select a method',
-    'newClusteringForm.label.randomState': 'Random state',
-    'newClusteringForm.label.penalizer': 'Penalizer',
-    'newClusteringForm.placeholder.integer': 'An integer number',
     'newClusteringForm.info.algorithm': 'K-Means: Groups data by minimizing intra-cluster variance; effective for RNA and miRNA. Spectral Clustering: Uses graph-based similarity to identify complex patterns; ideal for methylation and CNA. BK-Means: A hierarchical variation of K-Means, suitable for layered clustering of clinical and multi-omics datasets. Ward’s Method: Minimizes variance in hierarchical clustering; well-suited for combining RNA and methylation data.',
     'newClusteringForm.info.metric': 'Cox Regression: A proportional hazards model to identify associations between multi-omics features and clinical outcomes. Log-Rank Test: A non-parametric test to compare survival distributions; currently not available.',
     'newClusteringForm.info.scoringMethod': 'C-Index: A measure of concordance between predicted and observed survival outcomes; higher values indicate better performance. Log Likelihood: The probability of observing the data given the model; lower values indicate better performance.',
@@ -280,7 +275,6 @@ export default {
     'newRFForm.info.searchOptimalTrees': 'This option is useful when the number of samples in the clinical data is small or there are few observed events; setting this value increases the robustness of the model in such cases, avoiding problems with NaN values.',
     'newRFForm.label.maxDepth': 'Max depth',
     'newRFForm.info.maxDepth': 'The maximum depth of the tree',
-    'newRFForm.label.randomState': 'Random state',
     'newRFForm.info.randomState': 'Seed used by the random number generator',
     'newRFForm.label.nEstimators': 'Number of trees',
     'newRFForm.info.nEstimators': 'The number of trees (estimators) used in the Random Forest model.',
@@ -291,23 +285,17 @@ export default {
     'newSVMForm.placeholder.kernel': 'Select a kernel',
     'newSVMForm.label.maxIterations': 'Max iterations',
     'newSVMForm.info.maxIterations': 'The maximum number of iterations to be run',
-    'newSVMForm.label.randomState': 'Random state',
     'newSVMForm.info.randomState': 'Seed used by the random number generator',
     // 31.NewTrainedModelModal
     'newTrainedModelModal.header.create': 'Create new trained model',
-    'newTrainedModelModal.header.basicData': 'Basic data',
-    'newTrainedModelModal.placeholder.descriptionOptional': 'Description (optional)',
 
     'newTrainedModelModal.step1.trainingParameters': 'Step 1: Training parameters',
     'newTrainedModelModal.step2.trainingDatasets': 'Step 2: Training datasets',
-
-    'newTrainedModelModal.button.continue': 'Continue',
 
     'newTrainedModelModal.header.selectModel': 'Select a new model to train',
     'newTrainedModelModal.placeholder.selectModel': 'Select a model',
     'newTrainedModelModal.header.selectModelParameters': 'Select model parameters',
     'newTrainedModelModal.header.selectCVParameters': 'Select Cross Validation parameters',
-    'newTrainedModelModal.label.numberOfFolds': 'Number of folds',
     'newTrainedModelModal.info.numberOfFolds': 'Defines the number of data splits for cross-validation; ensures robust model evaluation and prevents overfitting.',
     // 32.BiomarkerTrainedModelsTable
     'biomarkerTrainedModelsTable.header.stopTraining': 'Stop training',
@@ -316,10 +304,7 @@ export default {
     'biomarkerTrainedModelsTable.header.deleteBiomarker': 'Delete Biomarker',
     'biomarkerTrainedModelsTable.confirm.deleteBiomarker': 'Are you sure you want to delete the Biomarker {modelName}?',
     'biomarkerTrainedModelsTable.header.trainedModels': 'Trained models',
-    'biomarkerTrainedModelsTable.header.state': 'State',
     'biomarkerTrainedModelsTable.header.model': 'Model',
-    'biomarkerTrainedModelsTable.header.date': 'Date',
-    'biomarkerTrainedModelsTable.header.metric': 'Metric',
     'biomarkerTrainedModelsTable.header.bestCVMetric': 'Best CV metric',
     'biomarkerTrainedModelsTable.header.datasets': 'Datasets',
     'biomarkerTrainedModelsTable.header.actions': 'Actions',
@@ -331,10 +316,6 @@ export default {
     'biomarkerTrainedModelsTable.button.deleteTrainedModelNotAllowed': 'Trained model cannot be deleted as it has related statistical validations and/or inference experiments',
     // 33.ModelDetailsPanels
     'modelDetails.general.bestFitnessValue': 'Best fitness value:',
-    'modelDetails.general.randomState': 'Random state:',
-    'modelDetails.clustering.algorithm': 'Algorithm:',
-    'modelDetails.clustering.scoringMethod': 'Scoring method:',
-    'modelDetails.clustering.numberOfClusters': 'Number of clusters:',
     'modelDetails.svm.task': 'Task:',
     'modelDetails.rf.numberOfEstimators': 'Number of estimators:',
     'modelDetails.rf.maxDepth': 'Max. depth:',
@@ -379,59 +360,52 @@ export default {
     'biomarkerType.featureSelection.description': 'As a starting point, you can select a previously discovered Biomarker, a well-known Biomarker, or a superset of genes that you would like to test. This method will select the molecular subset that fits the better prediction',
     // 38.BBHAAdvanced
     'bbha.numberOfStars': 'Number of stars',
-    'bbha.integerPlaceholder': 'An integer number',
     'bbha.numberOfStars.info': 'Number of stars in the Binary Black Hole Algorithm. Each of these stars evaluates a different subset of features. Increasing this number increases the chances of evaluating the most optimal subset but delays more the result of the experiment',
-    'bbha.numberOfIterations': 'Number of iterations',
     'bbha.numberOfIterations.info': 'Number of iterations in the Binary Black Hole Algorithm. In each of the iterations, the fitness function for each of the stars with its corresponding subset of features is computed. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment',
     'bbha.version': 'BBHA Version',
     'bbha.version.original': 'The Original approach executes the original Binary Black Hole Algorithm as defined in',
     'bbha.version.v2': 'Version 2 is an improved version defined in this',
-    'bbha.coefficient': 'Coefficient',
     'bbha.coefficientExplanation': 'Coefficient specified in the',
     'bbha.useSpark': 'Try to optimize using Apache Spark',
     'bbha.useSpark.info': 'If this option is enabled, the experiment will be executed (if possible) using Apache Spark to optimize execution times',
     // 39.CoxRegressionAdvanced
     'coxRegression.keepTopN': 'Keep top N',
-    'coxRegression.integerPlaceholder': 'An integer number',
     'coxRegression.keepTopN.info': 'Maximum number of features to be retained after processing. The features are ordered in descending order by their coefficients, keeping the most significant ones first. If this value is left empty, all those whose coefficients are different from 0 will be retained',
     // 40.GAAdvanced
     'ga.populationSize': 'Population size',
-    'ga.integerPlaceholder': 'An integer number',
     'ga.populationSize.info': 'Number of candidate solutions (individuals or potential solutions) that coexist in each generation of the genetic algorithm. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment',
     'ga.mutationRate': 'Mutation rate',
     'ga.floatPlaceholder': 'A float number',
     'ga.mutationRate.info': 'Determines the probability that a bit (binary digit) in a candidate solution will be altered or flipped randomly during the evolution process. This option introduces small random changes to explore new possibilities.',
-    'ga.numberOfIterations': 'Number of iterations',
     'ga.numberOfIterations.info': 'Number of iterations in the Genetic Algorithms. In each of the iterations, the fitness function for each candidate solution with its corresponding subset of features is computed. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment',
     'ga.useSpark': 'Try to optimize using Apache Spark',
     'ga.useSpark.info': 'If this option is enabled, the experiment will be executed (if possible) using',
     // 41.ClusteringPanel
-    'clustering.algorithm': 'Algorithm',
     'clustering.algorithm.placeholder': 'Clustering Algorithm',
-    'clustering.metric': 'Metric',
-    'clustering.scoringMethod': 'Scoring method',
     // 42.RFPanel
     'rf.numberOfEstimators': 'Number of estimators',
     'rf.maxDepth': 'Maximum depth',
-    'rf.integerPlaceholder': 'An integer number',
     // 43.SVMPanel
     'svm.kernel.placeholder': 'Select a Kernel',
     // 44.FeatureSelectionForm
     'featureSelection.fitnessFunction': 'Fitness function',
     'featureSelection.searchOptimalClusters': 'Search for the optimal number of clusters (soon)',
-    'featureSelection.numberOfClusters': 'Number of clusters',
-    'featureSelection.penalizer': 'Penalizer',
     'featureSelection.maxIterations': 'Max iterations',
     // 45.FeatureSelectionStep1
     'featureSelectionStep1.headerTitle': 'Biomarkers',
     'featureSelectionStep1.searchPlaceholder': 'Search by name',
     // 46.FeatureSelectionStep3
-    'featureSelectionStep3.algorithm': 'Algorithm',
     'featureSelectionStep3.blindSearch': 'Blind Search',
     'featureSelectionStep3.expertMode': 'Expert mode',
     'featureSelectionStep3.geneticAlgorithms': 'Genetic Algorithms',
     // 47.CrossValidationInput
-    'crossValidation.numberOfFolds': 'Number of folds',
     'crossValidation.integerPlaceholder': 'An integer number',
+    // 48.FeatureSelectionPanel
+    'featureSelectionPanel.tag': 'Tag',
+    'featureSelectionPanel.step1': 'Step 1',
+    'featureSelectionPanel.step2': 'Step 2: Datasets',
+    'featureSelectionPanel.step3': 'Step 3: Feature selection',
+    'featureSelectionPanel.selectBiomarker': 'Select biomarker',
+    'featureSelectionPanel.selectedBiomarker': 'Selected {biomarker}',
 
 }

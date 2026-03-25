@@ -137,10 +137,10 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         <Form className='selection-step-container selection-step-algorithm'>
             <div className='selection-step-container-selection-confg'>
                 <Form.Select
-                    label={intl.formatMessage({ id: 'featureSelectionStep3.algorithm' })}
+                    label={intl.formatMessage({ id: 'common.algorithm' })}
                     selectOnBlur={false}
                     className='selection-select selection-all-space'
-                    placeholder={intl.formatMessage({ id: 'featureSelectionStep3.algorithm' })}
+                    placeholder={intl.formatMessage({ id: 'common.algorithm' })}
                     name='moleculeSelected'
                     options={[
                         {

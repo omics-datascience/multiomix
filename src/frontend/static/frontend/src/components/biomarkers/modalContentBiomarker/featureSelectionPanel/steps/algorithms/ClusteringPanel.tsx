@@ -22,7 +22,7 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
     return (
         <>
             <Form.Select
-                label={intl.formatMessage({ id: 'clustering.algorithm' })}
+                label={intl.formatMessage({ id: 'common.algorithm' })}
                 selectOnBlur={false}
                 placeholder={intl.formatMessage({ id: 'clustering.algorithm.placeholder' })}
                 name='moleculeSelected'
@@ -34,7 +34,7 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
             <Form.Group className='form-group-button'>
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>
-                        {intl.formatMessage({ id: 'clustering.metric' })}
+                        {intl.formatMessage({ id: 'common.metric' })}
 
                     </Label>
                     <Button.Group
@@ -59,7 +59,7 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
 
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>
-                        {intl.formatMessage({ id: 'clustering.scoringMethod' })}
+                        {intl.formatMessage({ id: 'common.scoringMethod' })}
                     </Label>
                     <Button.Group
                         compact
