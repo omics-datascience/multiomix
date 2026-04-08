@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@types/react-plotly.js": "^2.6.4",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "react-plotly.js": "^2.6.0"
+  }
+}
