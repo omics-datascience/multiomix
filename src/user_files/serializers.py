@@ -39,9 +39,9 @@ class UserFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFile
-        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'upload_date', 'institutions',
-                  'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values', 'column_used_as_index',
-                  'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
+        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissues',
+                  'upload_date', 'institutions', 'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values',
+                  'column_used_as_index', 'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
 
     def validate_file_obj(self, value: InMemoryUploadedFile):
         """
@@ -95,10 +95,12 @@ class UserFileSerializer(serializers.ModelSerializer):
         """
         with transaction.atomic():
             institutions_ids = validated_data.pop('institutions', [])
+            tissues = validated_data.pop('tissues', [])
 
             # User file and institutions
             user_file = UserFile.objects.create(user=self.context['request'].user, **validated_data)
             user_file.institutions.set(institutions_ids)
+            user_file.tissues.set(tissues)
             user_file.save()
 
             # Survival columns
@@ -122,6 +124,7 @@ class UserFileSerializer(serializers.ModelSerializer):
             instance.file_type = validated_data.get('file_type', instance.file_type)
             instance.description = validated_data.get('description', instance.description)
             instance.tag = validated_data.get('tag')
+            instance.tissues.set(validated_data.get('tissues', []))
             instance.institutions.set(validated_data.get('institutions', []))
             instance.is_cpg_site_id = validated_data.get('is_cpg_site_id')
             instance.platform = validated_data.get('platform')
