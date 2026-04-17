@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'chunked_upload',
     'users',
     'tissues',
+    'assistant',
 ]
 
 MIDDLEWARE = [
@@ -331,6 +332,15 @@ EMR_DEBUG_IS_ENABLED: bool = os.getenv('EMR_DEBUG_IS_ENABLED', 'false') == 'true
 
 # Value used to indicate tha data is not present in a dataset
 NON_DATA_VALUE: str = 'NA'
+
+# AI Assistant settings
+OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
+ASSISTANT_LLM_MODEL: str = os.getenv('ASSISTANT_LLM_MODEL', 'gpt-4o-mini')
+ASSISTANT_LLM_TEMPERATURE: float = float(os.getenv('ASSISTANT_LLM_TEMPERATURE', '0.0'))
+ASSISTANT_EMBEDDING_MODEL: str = os.getenv('ASSISTANT_EMBEDDING_MODEL', 'sentence-transformers/all-MiniLM-L6-v2')
+ASSISTANT_EMBEDDING_DIMENSIONS: int = int(os.getenv('ASSISTANT_EMBEDDING_DIMENSIONS', '384'))
+ASSISTANT_RECENT_MESSAGES_COUNT: int = int(os.getenv('ASSISTANT_RECENT_MESSAGES_COUNT', '15'))
+ASSISTANT_SEMANTIC_MESSAGES_COUNT: int = int(os.getenv('ASSISTANT_SEMANTIC_MESSAGES_COUNT', '5'))
 
 
 # Feature Selection settings

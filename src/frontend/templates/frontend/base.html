@@ -61,6 +61,8 @@
         const urlSearchUser = "{% url 'search_user' %}" {# URL to search user view #}
         const urlUpdateUser = "{% url 'update_user' %}" {# URL to update user view #}
         const currentUserId = "{{ user.id }}"
+        const urlAssistantChat = "{% url 'assistant_chat' %}" {# URL for AI assistant chat endpoint #}
+        const urlAssistantConversations = "{% url 'assistant_conversations' %}" {# URL for AI assistant conversations #}
     </script>
 
     {% render_bundle 'base' 'js' %}
