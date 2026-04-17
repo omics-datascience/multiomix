@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Icon } from 'semantic-ui-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { ChatMessage } from './types'
 
 interface MessageThreadProps {
@@ -10,6 +12,7 @@ interface MessageThreadProps {
 
 const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
     const [input, setInput] = useState('')
+    const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -17,6 +20,14 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
     }, [messages, isLoading])
+
+    // Close lightbox with Escape key
+    useEffect(() => {
+        if (!lightboxSrc) return
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxSrc(null) }
+        document.addEventListener('keydown', onKey)
+        return () => document.removeEventListener('keydown', onKey)
+    }, [lightboxSrc])
 
     const handleSend = () => {
         const trimmed = input.trim()
@@ -32,8 +43,36 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
         }
     }
 
+    // Custom renderer for images inside markdown — adds click-to-enlarge
+    const mdComponents = {
+        img: ({ src, alt }: { src?: string; alt?: string }) => (
+            <img
+                src={src}
+                alt={alt ?? ''}
+                className="chat-md-image"
+                onClick={() => src && setLightboxSrc(src)}
+                title="Click to enlarge"
+            />
+        ),
+    }
+
     return (
         <div className="chat-message-thread">
+            {/* Lightbox overlay */}
+            {lightboxSrc && (
+                <div className="chat-lightbox" onClick={() => setLightboxSrc(null)}>
+                    <button className="chat-lightbox-close" onClick={() => setLightboxSrc(null)}>
+                        <Icon name="close" />
+                    </button>
+                    <img
+                        src={lightboxSrc}
+                        alt="Enlarged"
+                        className="chat-lightbox-img"
+                        onClick={e => e.stopPropagation()}
+                    />
+                </div>
+            )}
+
             <div className="chat-messages-scroll" ref={scrollRef}>
                 {messages.length === 0 && !isLoading && (
                     <div style={{ textAlign: 'center', color: '#aaa', fontSize: '0.85em', marginTop: '20px' }}>
@@ -42,7 +81,10 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
                 )}
                 {messages.map((msg, idx) => (
                     <div key={msg.id != null ? `db-${msg.id}` : `opt-${idx}`} className={`chat-message ${msg.role}`}>
-                        {msg.content}
+                        {msg.role === 'assistant'
+                            ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{msg.content}</ReactMarkdown>
+                            : msg.content
+                        }
                     </div>
                 ))}
                 {isLoading && (

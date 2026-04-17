@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Header, Icon } from 'semantic-ui-react'
 import ky from 'ky'
 import { getDjangoHeader } from '../../utils/util_functions'
@@ -10,6 +10,19 @@ declare const urlAssistantChat: string
 declare const urlAssistantConversations: string
 
 const ACTIVE_CONV_KEY = 'multiomix_chat_conv_id'
+const WIDTH_KEY = 'multiomix_chat_width'
+const HEIGHT_KEY = 'multiomix_chat_height'
+
+const MIN_W = 380
+const MIN_H = 300
+
+interface DragState {
+    dir: 'w' | 'h' | 'both'
+    startX: number
+    startY: number
+    startW: number
+    startH: number
+}
 
 interface ChatPanelProps {
     onClose: () => void
@@ -23,6 +36,58 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     })
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isLoading, setIsLoading] = useState(false)
+
+    // Panel size — persisted in localStorage
+    const [panelW, setPanelW] = useState(() => {
+        const s = localStorage.getItem(WIDTH_KEY)
+        const saved = s ? parseInt(s, 10) : 700
+        return Math.max(MIN_W, Math.min(window.innerWidth - 60, saved))
+    })
+    const [panelH, setPanelH] = useState(() => {
+        const s = localStorage.getItem(HEIGHT_KEY)
+        const saved = s ? parseInt(s, 10) : 520
+        return Math.max(MIN_H, Math.min(window.innerHeight - 140, saved))
+    })
+
+    // Resize drag state stored in a ref to avoid re-renders during drag
+    const dragRef = useRef<DragState | null>(null)
+
+    useEffect(() => {
+        const onMove = (e: MouseEvent) => {
+            const d = dragRef.current
+            if (!d) return
+            const maxW = Math.min(1100, window.innerWidth - 60)
+            const maxH = Math.min(900, window.innerHeight - 140)
+            if (d.dir === 'w' || d.dir === 'both') {
+                const w = Math.max(MIN_W, Math.min(maxW, d.startW - (e.clientX - d.startX)))
+                setPanelW(w)
+                localStorage.setItem(WIDTH_KEY, String(w))
+            }
+            if (d.dir === 'h' || d.dir === 'both') {
+                const h = Math.max(MIN_H, Math.min(maxH, d.startH - (e.clientY - d.startY)))
+                setPanelH(h)
+                localStorage.setItem(HEIGHT_KEY, String(h))
+            }
+        }
+        const onUp = () => {
+            dragRef.current = null
+            document.body.style.userSelect = ''
+            document.body.style.cursor = ''
+        }
+        document.addEventListener('mousemove', onMove)
+        document.addEventListener('mouseup', onUp)
+        return () => {
+            document.removeEventListener('mousemove', onMove)
+            document.removeEventListener('mouseup', onUp)
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+    const startDrag = (e: React.MouseEvent, dir: 'w' | 'h' | 'both') => {
+        e.preventDefault()
+        dragRef.current = { dir, startX: e.clientX, startY: e.clientY, startW: panelW, startH: panelH }
+        document.body.style.userSelect = 'none'
+        document.body.style.cursor = dir === 'w' ? 'ew-resize' : dir === 'h' ? 'ns-resize' : 'nwse-resize'
+    }
 
     const loadConversations = useCallback(() => {
         ky.get(urlAssistantConversations).json<ConversationSummary[]>().then(data => {
@@ -41,13 +106,12 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                 if (exists) {
                     loadConvMessages(id)
                 } else {
-                    // Conversation was deleted; clear storage
                     localStorage.removeItem(ACTIVE_CONV_KEY)
                     setActiveConvId(null)
                 }
             }
         }).catch(err => console.error('Error loading conversations', err))
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadConvMessages = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
@@ -122,10 +186,8 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
             position: 'fixed',
             bottom: '96px',
             right: '28px',
-            width: '700px',
-            maxWidth: 'calc(100vw - 40px)',
-            height: '520px',
-            maxHeight: 'calc(100vh - 120px)',
+            width: `${panelW}px`,
+            height: `${panelH}px`,
             zIndex: 8999,
             display: 'flex',
             flexDirection: 'column',
@@ -135,6 +197,20 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
             backgroundColor: '#fff',
             border: '1px solid rgba(34,36,38,.15)',
         }}>
+            {/* Resize handles */}
+            <div
+                className="chat-resize-handle chat-resize-left"
+                onMouseDown={e => startDrag(e, 'w')}
+            />
+            <div
+                className="chat-resize-handle chat-resize-top"
+                onMouseDown={e => startDrag(e, 'h')}
+            />
+            <div
+                className="chat-resize-handle chat-resize-corner"
+                onMouseDown={e => startDrag(e, 'both')}
+            />
+
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid rgba(34,36,38,.15)', flexShrink: 0, backgroundColor: '#fff' }}>
                 <Header as="h5" style={{ margin: 0 }}>

@@ -197,6 +197,123 @@ def make_tools(user_id: int):
         return json.dumps(data, default=str)
 
     @tool
+    def get_string_interaction_partners(gene_name: str, limit: int = 10) -> str:
+        """
+        Returns the top protein-protein interaction partners for a gene from the STRING database.
+        Results include partner gene name and interaction scores (combined, experimental,
+        textmining, databases, coexpression).
+        Use this when the user asks about protein interactions, interaction networks,
+        or which proteins interact with a specific gene.
+        Only human proteins (species 9606) are queried.
+        """
+        import urllib.request
+        import urllib.parse
+
+        params = urllib.parse.urlencode({
+            'identifiers': gene_name,
+            'species': 9606,
+            'limit': min(limit, 20),
+            'caller_identity': 'multiomix_platform',
+        })
+        url = f'https://string-db.org/api/json/interaction_partners?{params}'
+        try:
+            with urllib.request.urlopen(url, timeout=12) as resp:
+                data = json.loads(resp.read().decode())
+        except Exception as e:
+            return json.dumps({'error': f'STRING API error: {str(e)}'})
+
+        if not data:
+            return json.dumps({'gene': gene_name, 'partners': [], 'message': 'No interactions found.'})
+
+        partners = [{
+            'partner': item.get('preferredName_B', ''),
+            'combined_score': round(item.get('score', 0), 3),
+            'experimental': round(item.get('escore', 0), 3),
+            'textmining': round(item.get('tscore', 0), 3),
+            'databases': round(item.get('dscore', 0), 3),
+            'coexpression': round(item.get('ascore', 0), 3),
+        } for item in data]
+
+        return json.dumps({'gene': gene_name, 'partners_shown': len(partners), 'partners': partners})
+
+    @tool
+    def get_string_functional_enrichment(gene_names: str) -> str:
+        """
+        Returns functional enrichment analysis (GO Biological Process, GO Molecular Function,
+        GO Cellular Component, KEGG, Reactome, etc.) for a list of genes using the STRING database.
+        Provide gene_names as a comma-separated string (e.g., "TP53,BRCA1,MYC").
+        Returns the top enriched terms sorted by false discovery rate (FDR).
+        Use this when the user asks about pathways, biological processes, molecular functions,
+        or wants to functionally annotate a gene set from their experiments.
+        """
+        import urllib.request
+        import urllib.parse
+
+        genes = [g.strip() for g in gene_names.split(',') if g.strip()]
+        if not genes:
+            return json.dumps({'error': 'No gene names provided.'})
+
+        # STRING accepts multiple identifiers separated by carriage return (\r → %0D)
+        params = urllib.parse.urlencode({
+            'identifiers': '\r'.join(genes),
+            'species': 9606,
+            'caller_identity': 'multiomix_platform',
+        })
+        url = f'https://string-db.org/api/json/enrichment?{params}'
+        try:
+            with urllib.request.urlopen(url, timeout=15) as resp:
+                data = json.loads(resp.read().decode())
+        except Exception as e:
+            return json.dumps({'error': f'STRING API error: {str(e)}'})
+
+        if not data:
+            return json.dumps({'genes': genes, 'enrichment': [], 'message': 'No enrichment results found.'})
+
+        top = sorted(data, key=lambda x: float(x.get('fdr', 1)))[:15]
+        enrichment = [{
+            'category': item.get('category', ''),
+            'term': item.get('term', ''),
+            'description': item.get('description', ''),
+            'fdr': item.get('fdr'),
+            'p_value': item.get('p_value'),
+            'gene_count': item.get('number_of_genes'),
+        } for item in top]
+
+        return json.dumps({'genes': genes, 'total_enriched_terms': len(data), 'top_terms': enrichment})
+
+    @tool
+    def get_string_network_url(gene_names: str) -> str:
+        """
+        Returns the URL of a STRING protein interaction network image for a list of genes.
+        Provide gene_names as a comma-separated string (e.g., "TP53,BRCA1,MYC").
+        Maximum 10 genes recommended for a readable network image.
+        IMPORTANT: after calling this tool, ALWAYS include the image in your reply using
+        markdown image syntax: ![STRING Network](url) — this will display the network
+        directly in the chat so the user can see it.
+        Use this when the user asks to visualize a protein network or wants a graphical
+        view of gene/protein interactions.
+        """
+        import urllib.parse
+
+        genes = [g.strip() for g in gene_names.split(',') if g.strip()][:10]
+        if not genes:
+            return json.dumps({'error': 'No gene names provided.'})
+
+        params = urllib.parse.urlencode({
+            'identifiers': '\r'.join(genes),
+            'species': 9606,
+            'caller_identity': 'multiomix_platform',
+            'network_flavor': 'confidence',
+        })
+        url = f'https://string-db.org/api/image/network?{params}'
+
+        return json.dumps({
+            'genes': genes,
+            'network_image_url': url,
+            'markdown': f'![STRING Protein Network]({url})',
+        })
+
+    @tool
     def search_curated_knowledge(query: str) -> str:
         """
         Searches the curated knowledge base using semantic similarity.
@@ -316,6 +433,9 @@ def make_tools(user_id: int):
         get_gene_annotations,
         get_mirna_modulators,
         get_drugs_regulating_gene,
+        get_string_interaction_partners,
+        get_string_functional_enrichment,
+        get_string_network_url,
         search_curated_knowledge,
         get_user_files,
         get_differential_expression_experiments,
