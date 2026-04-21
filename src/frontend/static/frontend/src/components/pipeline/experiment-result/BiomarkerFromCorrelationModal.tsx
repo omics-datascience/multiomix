@@ -83,7 +83,8 @@ interface BiomarkerFromCorrelationModalState {
     openDetailsModal2: boolean,
     selectedOption: SelectedOption,
     openSelectOptionModal: boolean,
-    experimentInfoWithoutFilters: ExperimentInfo
+    experimentInfoWithoutFilters: ExperimentInfo,
+    modalReady: boolean,
 }
 
 /**
@@ -119,6 +120,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             openDetailsModal2: false,
             selectedOption: 'selectAll',
             openSelectOptionModal: false,
+            modalReady: false,
             experimentInfoWithoutFilters: {
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
@@ -460,7 +462,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         return new Promise((resolve, reject) => {
             this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
             ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/', { signal: this.abortController.signal }).then((response) => {
-                response.json().then((jsonResponse: Biomarker | PromiseLike<Biomarker>) => {
+                response.json<Biomarker>().then((jsonResponse) => {
                     resolve(jsonResponse)
                 }).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
@@ -672,7 +674,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         this.setState({ formBiomarker: formBiomarkerPreLoad })
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((jsonResponse: MoleculeFinderResult[]) => {
+            response.json<MoleculeFinderResult[]>().then((jsonResponse) => {
                 const formBiomarker = this.state.formBiomarker
                 const checkedIgnoreProposedAlias = this.state.checkedIgnoreProposedAlias // For short
 
@@ -832,7 +834,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         const genesArray: MoleculesSectionData[] = []
         ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((jsonResponse: { [key: string]: string[] }) => {
+            response.json<{ [key: string]: string[] }>().then((jsonResponse) => {
                 const genes = Object.entries(jsonResponse)
 
                 for (const gene of genes) {
@@ -1056,7 +1058,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         // Checks if it's a creation or an update
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCreate, settings).then((response) => {
-                response.json().then((_jsonResponse: Biomarker) => {
+                response.json<Biomarker>().then((_jsonResponse) => {
                     this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
@@ -1075,7 +1077,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         } else {
             const url = formBiomarker.canEditMolecules ? urlBiomarkersCRUD : urlBiomarkersSimpleUpdate
             ky.patch(`${url}/${formBiomarker.id}/`, settings).then((response) => {
-                response.json().then((_jsonResponse: Biomarker) => {
+                response.json<Biomarker>().then((_jsonResponse) => {
                     this.closeModalWithSuccessMsg('Biomarker edited successfully')
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
@@ -1216,7 +1218,12 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             methylations: [],
             mirnas: [],
             cnas: [],
-            mrnas: []
+            mrnas: [],
+            is_public: false,
+            user: {
+                id: 0,
+                username: ''
+            }
         }
     }
 
@@ -1438,7 +1445,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             featureSelection: this.getDefaultFeatureSelectionProps(),
             openCreateEditBiomarkerModal: false,
             confirmModal: this.getDefaultConfirmModal(),
-            biomarkerTypeSelected: BiomarkerOrigin.BASE
+            biomarkerTypeSelected: BiomarkerOrigin.BASE,
+            modalReady: false
         })
     }
 
@@ -1529,6 +1537,11 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
                     style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
                     onClose={() => this.closeBiomarkerModal()}
+                    onOpen={() => {
+                        this.setState({ modalReady: true }, () => {
+                            window.dispatchEvent(new Event('resize'))
+                        })
+                    }}
                 >
                     <ManualForm
                         handleChangeInputForm={this.handleChangeInputForm}
@@ -1553,6 +1566,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
                     />
+
                 </Modal>
 
                 {/* Biomarker details modal. */}
