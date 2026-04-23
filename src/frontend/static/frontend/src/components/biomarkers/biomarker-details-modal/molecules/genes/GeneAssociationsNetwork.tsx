@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import cytoscape, { Core, ElementDefinition, NodeSingular } from 'cytoscape'
 import { Button, Dropdown, Icon, Label } from 'semantic-ui-react'
 
-type NodeKind = 'mRNA' | 'miRNA' | 'CNA' | 'Methylation' | 'Drug'
+type NodeKind = 'Gene' | 'miRNA' | 'CNA' | 'Methylation' | 'Drug'
 
 type Props = {
     height?: number | string;
@@ -32,7 +32,7 @@ type DepthSummaryItem = {
 type TraversalMode = 'outgoing' | 'incoming' | 'both'
 
 const NODE_COLORS: Record<NodeKind, string> = {
-    mRNA: '#4f46e5',
+    Gene: '#4f46e5',
     miRNA: '#db2777',
     CNA: '#f59e0b',
     Methylation: '#10b981',
@@ -50,9 +50,7 @@ const roundThreshold = (value: number) => Number(value.toFixed(1))
 
 const getEdgeColor = (correlation: number, threshold: number) => {
     if (correlation <= -threshold) { return '#dc2626' }
-
     if (correlation >= threshold) { return '#2563eb' }
-
     return 'transparent'
 }
 
@@ -60,9 +58,7 @@ const getEdgeOpacity = (correlation: number, threshold: number) => {
     const abs = Math.abs(correlation)
 
     if (abs < threshold) { return 0 }
-
     if (abs >= 0.8) { return 0.95 }
-
     if (abs >= 0.6) { return 0.8 }
 
     return 0.7
@@ -72,11 +68,8 @@ const getEdgeWidth = (correlation: number, threshold: number) => {
     const abs = Math.abs(correlation)
 
     if (abs < threshold) { return 0 }
-
     if (abs >= 0.9) { return 6 }
-
     if (abs >= 0.8) { return 5 }
-
     if (abs >= 0.7) { return 4 }
 
     return 3
@@ -87,7 +80,6 @@ const getDirectionLabel = (
     threshold: number
 ): SelectedEdgeInfo['direction'] => {
     if (correlation <= -threshold) { return 'Down regulate' }
-
     return 'Up regulate'
 }
 
@@ -106,6 +98,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
 
     const [threshold, setThreshold] = useState<number>(0.5)
     const [traversalMode, setTraversalMode] = useState<TraversalMode>('outgoing')
+    const [maxLevels, setMaxLevels] = useState<number>(3)
 
     const [tooltip, setTooltip] = useState<TooltipState>({
         visible: false,
@@ -115,78 +108,58 @@ export const GeneExpressionRegulationNetworkPanel = ({
     })
 
     const [selectedEdges, setSelectedEdges] = useState<SelectedEdgeInfo[]>([])
-    const [selectedRootNode, setSelectedRootNode] = useState<string | null>(null)
+    const [selectedRootNode, setSelectedRootNode] = useState<string | null>('BRAF')
     const [depthSummary, setDepthSummary] = useState<DepthSummaryItem[]>([])
     const [incomingSummary, setIncomingSummary] = useState<DepthSummaryItem[]>([])
 
     const elements = useMemo<ElementDefinition[]>(() => {
         const nodes: ElementDefinition[] = [
-            { data: { id: 'mrna_pcna', label: 'PCNA', type: 'mRNA', size: 58 } },
-            { data: { id: 'mrna_fen1', label: 'FEN1', type: 'mRNA', size: 54 } },
-            { data: { id: 'mrna_rad51', label: 'RAD51', type: 'mRNA', size: 36 } },
-            { data: { id: 'mrna_pold1', label: 'POLD1', type: 'mRNA', size: 32 } },
-            { data: { id: 'mrna_lig1', label: 'LIG1', type: 'mRNA', size: 30 } },
+            { data: { id: 'gene_braf', label: 'BRAF', type: 'Gene', size: 64, isRoot: true } },
+            { data: { id: 'gene_mek1', label: 'MEK1', type: 'Gene', size: 44 } },
+            { data: { id: 'gene_erk1', label: 'ERK1', type: 'Gene', size: 40 } },
+            { data: { id: 'gene_myc', label: 'MYC', type: 'Gene', size: 38 } },
+            { data: { id: 'gene_ccnd1', label: 'CCND1', type: 'Gene', size: 38 } },
+            { data: { id: 'gene_dusp6', label: 'DUSP6', type: 'Gene', size: 34 } },
+            { data: { id: 'gene_fos', label: 'FOS', type: 'Gene', size: 34 } },
+            { data: { id: 'gene_elk1', label: 'ELK1', type: 'Gene', size: 32 } },
+            { data: { id: 'gene_map3k8', label: 'MAP3K8', type: 'Gene', size: 30 } },
+            { data: { id: 'gene_spry2', label: 'SPRY2', type: 'Gene', size: 30 } },
+            { data: { id: 'mir_17', label: 'miR-17', type: 'miRNA', size: 28 } },
             { data: { id: 'mir_21', label: 'miR-21', type: 'miRNA', size: 28 } },
-            { data: { id: 'mir_34a', label: 'miR-34a', type: 'miRNA', size: 28 } },
-            { data: { id: 'mir_155', label: 'miR-155', type: 'miRNA', size: 28 } },
-            { data: { id: 'mir_200c', label: 'miR-200c', type: 'miRNA', size: 28 } },
-            { data: { id: 'cna_8q24', label: 'CNA 8q24', type: 'CNA', size: 34 } },
-            { data: { id: 'cna_17p_loss', label: '17p loss', type: 'CNA', size: 34 } },
-            { data: { id: 'cna_1q_gain', label: '1q gain', type: 'CNA', size: 34 } },
-            { data: { id: 'meth_mlh1', label: 'MLH1 meth', type: 'Methylation', size: 32 } },
-            { data: { id: 'meth_mgmt', label: 'MGMT meth', type: 'Methylation', size: 32 } },
-            { data: { id: 'drug_olaparib', label: 'Olaparib', type: 'Drug', size: 34 } },
-            { data: { id: 'drug_cisplatin', label: 'Cisplatin', type: 'Drug', size: 34 } },
-            { data: { id: 'drug_temozolomide', label: 'Temozolomide', type: 'Drug', size: 34 } },
-            { data: { id: 'mrna_apex2', label: 'APEX2', type: 'mRNA', size: 32 } },
+            { data: { id: 'cna_7q34', label: '7q34 gain', type: 'CNA', size: 34 } },
+            { data: { id: 'meth_rassf1', label: 'RASSF1 meth', type: 'Methylation', size: 34 } },
+            { data: { id: 'drug_vemurafenib', label: 'Vemurafenib', type: 'Drug', size: 34 } },
         ]
 
         const rawEdges = [
-            ['mrna_pcna', 'mrna_fen1', 0.92],
-            ['mrna_pcna', 'mrna_rad51', 0.87],
-            ['mrna_pcna', 'mrna_pold1', 0.83],
-            ['mrna_pcna', 'mrna_lig1', 0.79],
-            ['mrna_pcna', 'mrna_apex2', 0.72],
-            ['mrna_fen1', 'mrna_rad51', 0.76],
-            ['mrna_fen1', 'mrna_pold1', 0.81],
-            ['mrna_fen1', 'mrna_apex2', 0.69],
-            ['mrna_rad51', 'mrna_apex2', 0.64],
-            ['mrna_pold1', 'mrna_lig1', 0.71],
-            ['mrna_lig1', 'mrna_apex2', 0.58],
+            ['gene_braf', 'gene_mek1', 0.92],
+            ['gene_braf', 'gene_erk1', 0.84],
+            ['gene_braf', 'gene_dusp6', 0.72],
+            ['gene_braf', 'gene_fos', 0.69],
 
-            ['mir_21', 'mrna_pcna', -0.74],
-            ['mir_21', 'mrna_fen1', -0.68],
-            ['mir_21', 'mrna_rad51', -0.61],
-            ['mir_34a', 'mrna_pcna', -0.71],
-            ['mir_34a', 'mrna_pold1', -0.66],
-            ['mir_155', 'mrna_rad51', -0.78],
-            ['mir_155', 'mrna_apex2', -0.57],
-            ['mir_200c', 'mrna_lig1', -0.63],
-            ['mir_200c', 'mrna_fen1', -0.55],
+            ['gene_mek1', 'gene_erk1', 0.88],
+            ['gene_mek1', 'gene_elk1', 0.76],
+            ['gene_mek1', 'gene_ccnd1', 0.67],
 
-            ['cna_8q24', 'mrna_pcna', 0.67],
-            ['cna_8q24', 'mrna_fen1', 0.54],
-            ['cna_17p_loss', 'mrna_rad51', -0.58],
-            ['cna_17p_loss', 'mrna_apex2', -0.52],
-            ['cna_1q_gain', 'mrna_pold1', 0.62],
-            ['cna_1q_gain', 'mrna_lig1', 0.57],
-            ['meth_mlh1', 'mrna_pcna', -0.53],
-            ['meth_mlh1', 'mrna_apex2', -0.64],
-            ['meth_mgmt', 'mrna_rad51', -0.59],
-            ['meth_mgmt', 'mrna_fen1', -0.51],
+            ['gene_erk1', 'gene_myc', 0.81],
+            ['gene_erk1', 'gene_fos', 0.79],
+            ['gene_erk1', 'gene_spry2', 0.62],
 
-            ['drug_olaparib', 'mrna_rad51', -0.69],
-            ['drug_olaparib', 'mrna_fen1', -0.56],
-            ['drug_cisplatin', 'mrna_pcna', -0.52],
-            ['drug_cisplatin', 'mrna_lig1', -0.55],
-            ['drug_temozolomide', 'meth_mgmt', 0.73],
-            ['drug_temozolomide', 'mrna_apex2', -0.51],
+            ['gene_fos', 'gene_ccnd1', 0.58],
+            ['gene_elk1', 'gene_myc', 0.61],
 
-            ['mir_21', 'cna_8q24', 0.22],
-            ['mir_34a', 'meth_mlh1', -0.18],
-            ['drug_olaparib', 'drug_cisplatin', 0.31],
-            ['mrna_pcna', 'drug_temozolomide', -0.27],
-            ['cna_1q_gain', 'mrna_apex2', 0.33],
+            ['mir_17', 'gene_braf', -0.66],
+            ['mir_21', 'gene_mek1', -0.57],
+
+            ['cna_7q34', 'gene_braf', 0.73],
+            ['meth_rassf1', 'gene_braf', -0.54],
+            ['drug_vemurafenib', 'gene_braf', -0.89],
+
+            ['gene_map3k8', 'gene_mek1', 0.55],
+            ['gene_braf', 'gene_map3k8', 0.52],
+
+            ['gene_spry2', 'gene_braf', -0.32],
+            ['drug_vemurafenib', 'gene_mek1', -0.41],
         ] as const
 
         const edges: ElementDefinition[] = rawEdges
@@ -216,7 +189,6 @@ export const GeneExpressionRegulationNetworkPanel = ({
         }
 
         setSelectedEdges([])
-        setSelectedRootNode(null)
         setDepthSummary([])
         setIncomingSummary([])
         setTooltip({
@@ -256,10 +228,10 @@ export const GeneExpressionRegulationNetworkPanel = ({
                     },
                 },
                 {
-                    selector: 'node[type = "mRNA"]',
+                    selector: 'node[type = "Gene"]',
                     style: {
-                        'background-color': NODE_COLORS.mRNA,
-                        'text-outline-color': NODE_COLORS.mRNA,
+                        'background-color': NODE_COLORS.Gene,
+                        'text-outline-color': NODE_COLORS.Gene,
                     },
                 },
                 {
@@ -357,6 +329,13 @@ export const GeneExpressionRegulationNetworkPanel = ({
                     },
                 },
                 {
+                    selector: 'node.depth-level-4, node.depth-level-5, node.depth-level-6, node.depth-level-7, node.depth-level-8, node.depth-level-9, node.depth-level-10',
+                    style: {
+                        'border-color': '#94a3b8',
+                        'border-width': 5,
+                    },
+                },
+                {
                     selector: 'node.incoming-level-1',
                     style: {
                         'border-style': 'double',
@@ -377,6 +356,14 @@ export const GeneExpressionRegulationNetworkPanel = ({
                     style: {
                         'border-style': 'double',
                         'border-color': LEVEL_COLORS.level3,
+                        'border-width': 5,
+                    },
+                },
+                {
+                    selector: 'node.incoming-level-4, node.incoming-level-5, node.incoming-level-6, node.incoming-level-7, node.incoming-level-8, node.incoming-level-9, node.incoming-level-10',
+                    style: {
+                        'border-style': 'double',
+                        'border-color': '#94a3b8',
                         'border-width': 5,
                     },
                 },
@@ -456,18 +443,21 @@ export const GeneExpressionRegulationNetworkPanel = ({
         const clearTraversal = () => {
             cy.batch(() => {
                 cy.nodes().forEach((node: any) => {
-                    node.removeClass('depth-root')
-                    node.removeClass('depth-level-1')
-                    node.removeClass('depth-level-2')
-                    node.removeClass('depth-level-3')
-                    node.removeClass('incoming-level-1')
-                    node.removeClass('incoming-level-2')
-                    node.removeClass('incoming-level-3')
-                    node.removeClass('fade-unrelated')
-                    node.removeClass('fade-level-1')
-                    node.removeClass('fade-level-2')
-                    node.removeClass('fade-level-3')
-                    node.removeClass('fade-level-4plus')
+                    const classesToRemove = [
+                        'depth-root',
+                        'fade-unrelated',
+                        'fade-level-1',
+                        'fade-level-2',
+                        'fade-level-3',
+                        'fade-level-4plus',
+                    ]
+
+                    classesToRemove.forEach((cls) => node.removeClass(cls))
+
+                    for (let i = 1; i <= 10; i += 1) {
+                        node.removeClass(`depth-level-${i}`)
+                        node.removeClass(`incoming-level-${i}`)
+                    }
                 })
 
                 cy.edges().forEach((edge: any) => {
@@ -572,7 +562,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
             })
         }
 
-        const walkOutgoing = (root: NodeSingular) => {
+        const walkOutgoing = (root: NodeSingular, maxDepth: number) => {
             const visitedNodes = new Map<string, number>()
             const summaryMap = new Map<number, string[]>()
 
@@ -585,24 +575,22 @@ export const GeneExpressionRegulationNetworkPanel = ({
                 if (!current) { continue }
 
                 const { node, depth } = current
+
+                if (depth >= maxDepth) { continue }
+
                 const outgoers = node.outgoers('edge')
 
                 outgoers.forEach((edge: any) => {
                     const target = edge.target()
                     const nextDepth = depth + 1
 
+                    if (nextDepth > maxDepth) { return }
+
                     edge.addClass('depth-path-outgoing')
 
                     if (!visitedNodes.has(target.id()) || nextDepth < visitedNodes.get(target.id())!) {
                         visitedNodes.set(target.id(), nextDepth)
-
-                        if (nextDepth === 1) {
-                            target.addClass('depth-level-1')
-                        } else if (nextDepth === 2) {
-                            target.addClass('depth-level-2')
-                        } else {
-                            target.addClass('depth-level-3')
-                        }
+                        target.addClass(`depth-level-${nextDepth}`)
 
                         const arr = summaryMap.get(nextDepth) || []
                         const label = target.data('label')
@@ -624,7 +612,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
             return { visitedNodes, summary }
         }
 
-        const walkIncoming = (root: NodeSingular) => {
+        const walkIncoming = (root: NodeSingular, maxDepth: number) => {
             const visitedNodes = new Map<string, number>()
             const summaryMap = new Map<number, string[]>()
 
@@ -637,24 +625,22 @@ export const GeneExpressionRegulationNetworkPanel = ({
                 if (!current) { continue }
 
                 const { node, depth } = current
+
+                if (depth >= maxDepth) { continue }
+
                 const incomers = node.incomers('edge')
 
                 incomers.forEach((edge: any) => {
                     const source = edge.source()
                     const nextDepth = depth + 1
 
+                    if (nextDepth > maxDepth) { return }
+
                     edge.addClass('depth-path-incoming')
 
                     if (!visitedNodes.has(source.id()) || nextDepth < visitedNodes.get(source.id())!) {
                         visitedNodes.set(source.id(), nextDepth)
-
-                        if (nextDepth === 1) {
-                            source.addClass('incoming-level-1')
-                        } else if (nextDepth === 2) {
-                            source.addClass('incoming-level-2')
-                        } else {
-                            source.addClass('incoming-level-3')
-                        }
+                        source.addClass(`incoming-level-${nextDepth}`)
 
                         const arr = summaryMap.get(nextDepth) || []
                         const label = source.data('label')
@@ -676,7 +662,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
             return { visitedNodes, summary }
         }
 
-        const applyTraversal = (root: NodeSingular, mode: TraversalMode) => {
+        const applyTraversal = (root: NodeSingular, mode: TraversalMode, levels: number) => {
             clearTraversal()
 
             cy.batch(() => {
@@ -684,11 +670,11 @@ export const GeneExpressionRegulationNetworkPanel = ({
             })
 
             const outgoing = mode === 'outgoing' || mode === 'both'
-                ? walkOutgoing(root)
+                ? walkOutgoing(root, levels)
                 : { visitedNodes: new Map<string, number>(), summary: [] }
 
             const incoming = mode === 'incoming' || mode === 'both'
-                ? walkIncoming(root)
+                ? walkIncoming(root, levels)
                 : { visitedNodes: new Map<string, number>(), summary: [] }
 
             applyProgressiveFading(root, outgoing.visitedNodes, incoming.visitedNodes)
@@ -700,7 +686,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
 
         cy.on('tap', 'node', (evt) => {
             const node = evt.target
-            applyTraversal(node, traversalMode)
+            applyTraversal(node, traversalMode, maxLevels)
         })
 
         cy.on('tap', 'edge', (evt) => {
@@ -752,11 +738,17 @@ export const GeneExpressionRegulationNetworkPanel = ({
             }
         })
 
+        const defaultRoot = cy.getElementById('gene_braf')
+        if (defaultRoot && defaultRoot.nonempty()) {
+            applyTraversal(defaultRoot, traversalMode, maxLevels)
+            cy.center(defaultRoot)
+        }
+
         return () => {
             cy.destroy()
             cyRef.current = null
         }
-    }, [elements, traversalMode])
+    }, [elements, traversalMode, maxLevels])
 
     const removeSelectedEdgeFromList = (edgeId: string) => {
         const cy = cyRef.current
@@ -845,6 +837,55 @@ export const GeneExpressionRegulationNetworkPanel = ({
                     </div>
                 </div>
 
+                <div style={{ display: 'grid', gap: 10 }}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                        }}
+                    >
+                        <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                            Cantidad máxima de niveles
+                        </div>
+
+                        <Label>
+                            {maxLevels} nivel{maxLevels > 1 ? 'es' : ''}
+                        </Label>
+                    </div>
+
+                    <input
+                        type='range'
+                        min={1}
+                        max={10}
+                        step={1}
+                        value={maxLevels}
+                        onChange={(e) => {
+                            setMaxLevels(Number(e.target.value))
+                        }}
+                        style={{
+                            width: '100%',
+                            accentColor: '#16a34a',
+                            cursor: 'pointer',
+                        }}
+                    />
+
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: 12,
+                            color: '#64748b',
+                        }}
+                    >
+                        <span>1</span>
+                        <span>5</span>
+                        <span>10</span>
+                    </div>
+                </div>
+
                 <div
                     style={{
                         display: 'flex',
@@ -865,10 +906,14 @@ export const GeneExpressionRegulationNetworkPanel = ({
                             options={traversalOptions}
                             onChange={(_, data) => setTraversalMode(data.value as TraversalMode)}
                         />
+
+                        <Label color='orange'>
+                            Nodo inicial: BRAF
+                        </Label>
                     </div>
 
                     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <LegendDot color={NODE_COLORS.mRNA} label='mRNA' />
+                        <LegendDot color={NODE_COLORS.Gene} label='Gene' />
                         <LegendDot color={NODE_COLORS.miRNA} label='miRNA' />
                         <LegendDot color={NODE_COLORS.CNA} label='CNA' />
                         <LegendDot color={NODE_COLORS.Methylation} label='Methylation' />
@@ -1028,6 +1073,10 @@ export const GeneExpressionRegulationNetworkPanel = ({
                                     Nodo raíz: <strong>{selectedRootNode}</strong>
                                 </div>
 
+                                <div style={{ fontSize: 13, color: '#334155' }}>
+                                    Límite de búsqueda: <strong>{maxLevels}</strong> nivel{maxLevels > 1 ? 'es' : ''}
+                                </div>
+
                                 {(traversalMode === 'outgoing' || traversalMode === 'both') && (
                                     <div style={{ display: 'grid', gap: 8 }}>
                                         <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
@@ -1113,7 +1162,9 @@ const LevelBadge = ({ depth, incoming = false }: { depth: number; incoming?: boo
             ? LEVEL_COLORS.level1
             : depth === 2
                 ? LEVEL_COLORS.level2
-                : LEVEL_COLORS.level3
+                : depth === 3
+                    ? LEVEL_COLORS.level3
+                    : '#94a3b8'
 
     return (
         <span
