@@ -41,6 +41,10 @@ export const GraphControls = ({
             }}
         >
             <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ color: '#64748b', fontSize: 12 }}>
+                    These values update the BRAF root while it is the only active filter. After expanding nodes, they are used for the next right-click expansion.
+                </div>
+
                 <div
                     style={{
                         display: 'flex',

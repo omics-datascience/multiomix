@@ -16,6 +16,13 @@ export type GraphEdge = {
     correlation: number;
 }
 
+export type GraphQueryFilter = {
+    rootNodeId: string;
+    threshold: number;
+    traversalMode: TraversalMode;
+    maxLevels: number;
+}
+
 export type SelectedEdgeInfo = {
     id: string;
     source: string;
@@ -30,10 +37,7 @@ export type DepthSummaryItem = {
 }
 
 export type FetchGeneGraphParams = {
-    rootNodeId: string;
-    threshold: number;
-    traversalMode: TraversalMode;
-    maxLevels: number;
+    filters: GraphQueryFilter[];
 }
 
 export type FetchGeneGraphResponse = {
@@ -42,4 +46,5 @@ export type FetchGeneGraphResponse = {
     edges: GraphEdge[];
     outgoingSummary: DepthSummaryItem[];
     incomingSummary: DepthSummaryItem[];
+    filters: GraphQueryFilter[];
 }

@@ -1,16 +1,31 @@
-import { MOCK_EDGES, MOCK_NODES } from './mockNetworkData'
+import { MOCK_EDGES, MOCK_EXPANSION_EDGES_BY_ROOT, MOCK_NODES } from './mockNetworkData'
 import {
     DepthSummaryItem,
     FetchGeneGraphParams,
     FetchGeneGraphResponse,
     GraphEdge,
-    TraversalMode,
+    GraphQueryFilter,
 } from './types'
+
+const FALLBACK_FILTER: GraphQueryFilter = {
+    rootNodeId: 'gene_braf',
+    threshold: 0.5,
+    traversalMode: 'both',
+    maxLevels: 3,
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const passesThreshold = (correlation: number, threshold: number) =>
     Math.abs(correlation) >= threshold
+
+const getNodeLabel = (nodeId: string) =>
+    MOCK_NODES.find((node) => node.id === nodeId)?.label ?? nodeId
+
+const getEdgesForFilter = (rootNodeId: string) => [
+    ...MOCK_EDGES,
+    ...(MOCK_EXPANSION_EDGES_BY_ROOT[rootNodeId] ?? []),
+]
 
 const buildSummary = (map: Map<number, string[]>) =>
     Array.from(map.entries())
@@ -20,12 +35,36 @@ const buildSummary = (map: Map<number, string[]>) =>
             nodes: [...nodes].sort((a, b) => a.localeCompare(b)),
         }))
 
+const mergeSummaries = (summaries: DepthSummaryItem[][]) => {
+    const summaryMap = new Map<number, Set<string>>()
+
+    for (const summary of summaries) {
+        for (const item of summary) {
+            const nodes = summaryMap.get(item.depth) ?? new Set<string>()
+
+            for (const node of item.nodes) {
+                nodes.add(node)
+            }
+
+            summaryMap.set(item.depth, nodes)
+        }
+    }
+
+    return Array.from(summaryMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([depth, nodes]): DepthSummaryItem => ({
+            depth,
+            nodes: Array.from(nodes).sort((a, b) => a.localeCompare(b)),
+        }))
+}
+
 const walkOutgoing = (rootNodeId: string, edges: GraphEdge[], maxLevels: number) => {
     const visitedNodes = new Map<string, number>()
     const includedEdgeIds = new Set<string>()
     const summaryMap = new Map<number, string[]>()
 
     const queue: Array<{ nodeId: string; depth: number }> = [{ nodeId: rootNodeId, depth: 0 }]
+
     visitedNodes.set(rootNodeId, 0)
 
     while (queue.length > 0) {
@@ -49,7 +88,7 @@ const walkOutgoing = (rootNodeId: string, edges: GraphEdge[], maxLevels: number)
             if (!visitedNodes.has(edge.target) || nextDepth < visitedNodes.get(edge.target)!) {
                 visitedNodes.set(edge.target, nextDepth)
 
-                const targetLabel = MOCK_NODES.find((node) => node.id === edge.target)?.label ?? edge.target
+                const targetLabel = getNodeLabel(edge.target)
                 const arr = summaryMap.get(nextDepth) || []
 
                 if (!arr.includes(targetLabel)) {
@@ -75,6 +114,7 @@ const walkIncoming = (rootNodeId: string, edges: GraphEdge[], maxLevels: number)
     const summaryMap = new Map<number, string[]>()
 
     const queue: Array<{ nodeId: string; depth: number }> = [{ nodeId: rootNodeId, depth: 0 }]
+
     visitedNodes.set(rootNodeId, 0)
 
     while (queue.length > 0) {
@@ -98,7 +138,7 @@ const walkIncoming = (rootNodeId: string, edges: GraphEdge[], maxLevels: number)
             if (!visitedNodes.has(edge.source) || nextDepth < visitedNodes.get(edge.source)!) {
                 visitedNodes.set(edge.source, nextDepth)
 
-                const sourceLabel = MOCK_NODES.find((node) => node.id === edge.source)?.label ?? edge.source
+                const sourceLabel = getNodeLabel(edge.source)
                 const arr = summaryMap.get(nextDepth) || []
 
                 if (!arr.includes(sourceLabel)) {
@@ -118,26 +158,21 @@ const walkIncoming = (rootNodeId: string, edges: GraphEdge[], maxLevels: number)
     }
 }
 
-const collectResponse = (
-    rootNodeId: string,
-    traversalMode: TraversalMode,
-    threshold: number,
-    maxLevels: number
-): FetchGeneGraphResponse => {
-    const thresholdEdges = MOCK_EDGES.filter((edge) =>
-        passesThreshold(edge.correlation, threshold)
+const collectFilterResponse = (filter: GraphQueryFilter): FetchGeneGraphResponse => {
+    const thresholdEdges = getEdgesForFilter(filter.rootNodeId).filter((edge) =>
+        passesThreshold(edge.correlation, filter.threshold)
     )
 
-    const outgoing = traversalMode === 'outgoing' || traversalMode === 'both'
-        ? walkOutgoing(rootNodeId, thresholdEdges, maxLevels)
+    const outgoing = filter.traversalMode === 'outgoing' || filter.traversalMode === 'both'
+        ? walkOutgoing(filter.rootNodeId, thresholdEdges, filter.maxLevels)
         : {
             visitedNodes: new Map<string, number>(),
             includedEdgeIds: new Set<string>(),
             summary: [] as DepthSummaryItem[],
         }
 
-    const incoming = traversalMode === 'incoming' || traversalMode === 'both'
-        ? walkIncoming(rootNodeId, thresholdEdges, maxLevels)
+    const incoming = filter.traversalMode === 'incoming' || filter.traversalMode === 'both'
+        ? walkIncoming(filter.rootNodeId, thresholdEdges, filter.maxLevels)
         : {
             visitedNodes: new Map<string, number>(),
             includedEdgeIds: new Set<string>(),
@@ -150,7 +185,6 @@ const collectResponse = (
     ])
 
     const edges = thresholdEdges.filter((edge) => includedEdgeIds.has(edge.id))
-
     const includedNodeIdsFromEdges = new Set<string>()
 
     for (const edge of edges) {
@@ -158,11 +192,9 @@ const collectResponse = (
         includedNodeIdsFromEdges.add(edge.target)
     }
 
-    // Keep the root visible even when no edges match the current filters.
-    includedNodeIdsFromEdges.add(rootNodeId)
+    includedNodeIdsFromEdges.add(filter.rootNodeId)
 
     const nodes = MOCK_NODES.filter((node) => includedNodeIdsFromEdges.has(node.id))
-
     const validLabels = new Set(nodes.map((node) => node.label))
 
     const outgoingSummary = outgoing.summary
@@ -180,11 +212,38 @@ const collectResponse = (
         .filter((item) => item.nodes.length > 0)
 
     return {
-        rootNodeId,
+        rootNodeId: filter.rootNodeId,
         nodes,
         edges,
         outgoingSummary,
         incomingSummary,
+        filters: [filter],
+    }
+}
+
+const collectResponse = (filters: GraphQueryFilter[]): FetchGeneGraphResponse => {
+    const safeFilters = filters.length > 0 ? filters : [FALLBACK_FILTER]
+    const responses = safeFilters.map(collectFilterResponse)
+    const nodeIds = new Set<string>()
+    const edgesById = new Map<string, GraphEdge>()
+
+    for (const response of responses) {
+        for (const node of response.nodes) {
+            nodeIds.add(node.id)
+        }
+
+        for (const edge of response.edges) {
+            edgesById.set(edge.id, edge)
+        }
+    }
+
+    return {
+        rootNodeId: safeFilters[0].rootNodeId,
+        nodes: MOCK_NODES.filter((node) => nodeIds.has(node.id)),
+        edges: Array.from(edgesById.values()),
+        outgoingSummary: mergeSummaries(responses.map((response) => response.outgoingSummary)),
+        incomingSummary: mergeSummaries(responses.map((response) => response.incomingSummary)),
+        filters: safeFilters,
     }
 }
 
@@ -193,10 +252,5 @@ export const fetchGeneGraph = async (
 ): Promise<FetchGeneGraphResponse> => {
     await sleep(350)
 
-    return collectResponse(
-        params.rootNodeId,
-        params.traversalMode,
-        params.threshold,
-        params.maxLevels
-    )
+    return collectResponse(params.filters)
 }

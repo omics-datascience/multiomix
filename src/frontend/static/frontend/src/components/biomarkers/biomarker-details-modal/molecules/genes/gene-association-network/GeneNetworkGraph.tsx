@@ -1,7 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import cytoscape, { Core, ElementDefinition } from 'cytoscape'
 import { NODE_COLORS, REGULATION_COLORS } from './graphStyle'
-import { FetchGeneGraphResponse, SelectedEdgeInfo } from './types'
+import { LegendArrow, LegendDot } from './legend'
+import { FetchGeneGraphResponse, GraphQueryFilter, SelectedEdgeInfo, TraversalMode } from './types'
+
+const MIN_ZOOM = 0.4
+const MAX_ZOOM = 2
+const ZOOM_STEP = 1.2
+
+const traversalLabels: Record<TraversalMode, string> = {
+    outgoing: 'Regulates',
+    incoming: 'Regulated by',
+    both: 'Both',
+}
 
 const getEdgeColor = (correlation: number) => {
     if (correlation < 0) { return REGULATION_COLORS.down }
@@ -44,12 +55,26 @@ type TooltipState = {
     content: string;
 }
 
+type ContextMenuState = {
+    visible: boolean;
+    x: number;
+    y: number;
+    nodeId: string;
+    nodeLabel: string;
+    threshold: number;
+    traversalMode: TraversalMode;
+    maxLevels: number;
+}
+
 type Props = {
     data: FetchGeneGraphResponse | null;
     height?: number | string;
     width?: number | string;
     selectedEdges: SelectedEdgeInfo[];
     onSelectedEdgesChange: (edges: SelectedEdgeInfo[]) => void;
+    expandedNodeIds: string[];
+    defaultExpansionFilter: Omit<GraphQueryFilter, 'rootNodeId'>;
+    onExpandNode: (filter: GraphQueryFilter) => void;
 }
 
 export const GeneNetworkGraph = ({
@@ -58,9 +83,13 @@ export const GeneNetworkGraph = ({
     width = '100%',
     selectedEdges,
     onSelectedEdgesChange,
+    expandedNodeIds,
+    defaultExpansionFilter,
+    onExpandNode,
 }: Props): JSX.Element => {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const cyRef = useRef<Core | null>(null)
+    const defaultExpansionFilterRef = useRef(defaultExpansionFilter)
 
     const [tooltip, setTooltip] = useState<TooltipState>({
         visible: false,
@@ -68,6 +97,20 @@ export const GeneNetworkGraph = ({
         y: 0,
         content: '',
     })
+    const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+        visible: false,
+        x: 0,
+        y: 0,
+        nodeId: '',
+        nodeLabel: '',
+        threshold: defaultExpansionFilter.threshold,
+        traversalMode: defaultExpansionFilter.traversalMode,
+        maxLevels: defaultExpansionFilter.maxLevels,
+    })
+
+    useEffect(() => {
+        defaultExpansionFilterRef.current = defaultExpansionFilter
+    }, [defaultExpansionFilter])
 
     const elements = useMemo<ElementDefinition[]>(() => {
         if (!data) { return [] }
@@ -177,11 +220,11 @@ export const GeneNetworkGraph = ({
                 {
                     selector: 'edge.edge-picked',
                     style: {
-                        opacity: 1,
-                        'underlay-color': '#000000',
-                        'underlay-opacity': 1,
-                        'underlay-padding': 9,
-                        width: 'mapData(edgeWidth, 3, 6, 5, 8)',
+                        opacity: 0.82,
+                        'underlay-color': '#64748b',
+                        'underlay-opacity': 0.22,
+                        'underlay-padding': 5,
+                        width: 'mapData(edgeWidth, 3, 6, 4, 6)',
                         'z-index': 999,
                     },
                 },
@@ -208,10 +251,17 @@ export const GeneNetworkGraph = ({
 
         cyRef.current = cy
 
+        for (const filter of data.filters) {
+            const expandedRootNode = cy.getElementById(filter.rootNodeId)
+
+            if (expandedRootNode.nonempty()) {
+                expandedRootNode.addClass('root-node')
+            }
+        }
+
         const rootNode = cy.getElementById(data.rootNodeId)
 
         if (rootNode.nonempty()) {
-            rootNode.addClass('root-node')
             cy.center(rootNode)
         }
 
@@ -233,6 +283,11 @@ export const GeneNetworkGraph = ({
         cy.on('tap', 'edge', (evt) => {
             const edge = evt.target
 
+            setContextMenu((prev) => ({
+                ...prev,
+                visible: false,
+            }))
+
             if (edge.hasClass('edge-picked')) {
                 edge.removeClass('edge-picked')
             } else {
@@ -240,6 +295,35 @@ export const GeneNetworkGraph = ({
             }
 
             syncSelectedEdges()
+        })
+
+        cy.on('tap', 'node', () => {
+            setContextMenu((prev) => ({
+                ...prev,
+                visible: false,
+            }))
+        })
+
+        cy.on('cxttap', 'node', (evt) => {
+            evt.originalEvent?.preventDefault()
+
+            const node = evt.target
+
+            setTooltip((prev) => ({
+                ...prev,
+                visible: false,
+            }))
+
+            setContextMenu({
+                visible: true,
+                x: evt.renderedPosition?.x ?? 0,
+                y: evt.renderedPosition?.y ?? 0,
+                nodeId: node.id(),
+                nodeLabel: node.data('label') || node.id(),
+                threshold: defaultExpansionFilterRef.current.threshold,
+                traversalMode: defaultExpansionFilterRef.current.traversalMode,
+                maxLevels: defaultExpansionFilterRef.current.maxLevels,
+            })
         })
 
         cy.on('mouseover', 'edge', (evt) => {
@@ -293,8 +377,29 @@ export const GeneNetworkGraph = ({
         }
     }, [selectedEdges])
 
+    const zoomGraph = (direction: 'in' | 'out') => {
+        const cy = cyRef.current
+
+        if (!cy) { return }
+
+        const nextZoom = direction === 'in'
+            ? Math.min(MAX_ZOOM, cy.zoom() * ZOOM_STEP)
+            : Math.max(MIN_ZOOM, cy.zoom() / ZOOM_STEP)
+
+        cy.zoom({
+            level: nextZoom,
+            renderedPosition: {
+                x: cy.width() / 2,
+                y: cy.height() / 2,
+            },
+        })
+    }
+
     return (
-        <div style={{ position: 'relative' }}>
+        <div
+            style={{ position: 'relative' }}
+            onContextMenu={(event) => event.preventDefault()}
+        >
             <div
                 ref={containerRef}
                 style={{
@@ -305,6 +410,89 @@ export const GeneNetworkGraph = ({
                     background: '#f8fafc',
                 }}
             />
+
+            <div
+                style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: 12,
+                    display: 'grid',
+                    gap: 6,
+                    zIndex: 1000,
+                }}
+            >
+                <button
+                    type='button'
+                    onClick={() => zoomGraph('in')}
+                    title='Zoom in'
+                    style={{
+                        width: 34,
+                        height: 34,
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        cursor: 'pointer',
+                        fontSize: 18,
+                        fontWeight: 700,
+                        boxShadow: '0 4px 12px rgba(15,23,42,0.12)',
+                    }}
+                >
+                    +
+                </button>
+
+                <button
+                    type='button'
+                    onClick={() => zoomGraph('out')}
+                    title='Zoom out'
+                    style={{
+                        width: 34,
+                        height: 34,
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 8,
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        cursor: 'pointer',
+                        fontSize: 20,
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        boxShadow: '0 4px 12px rgba(15,23,42,0.12)',
+                    }}
+                >
+                    -
+                </button>
+            </div>
+
+            <div
+                style={{
+                    position: 'absolute',
+                    left: 12,
+                    bottom: 12,
+                    display: 'grid',
+                    gap: 6,
+                    padding: '8px 10px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.95)',
+                    boxShadow: '0 4px 12px rgba(15,23,42,0.08)',
+                    zIndex: 1000,
+                }}
+            >
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>Nodes:</span>
+                    <LegendDot color={NODE_COLORS.Gene} label='Gene' />
+                    <LegendDot color={NODE_COLORS.miRNA} label='miRNA' />
+                    <LegendDot color={NODE_COLORS.CNA} label='CNA' />
+                    <LegendDot color={NODE_COLORS.Methylation} label='Methylation' />
+                    <LegendDot color={NODE_COLORS.Drug} label='Drug' />
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>Edges:</span>
+                    <LegendArrow color={REGULATION_COLORS.down} label='Down-regulation' />
+                    <LegendArrow color={REGULATION_COLORS.up} label='Up-regulation' />
+                </div>
+            </div>
 
             {tooltip.visible && (
                 <div
@@ -324,6 +512,123 @@ export const GeneNetworkGraph = ({
                     }}
                 >
                     {tooltip.content}
+                </div>
+            )}
+
+            {contextMenu.visible && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: contextMenu.x + 12,
+                        top: contextMenu.y + 12,
+                        width: 260,
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 10,
+                        boxShadow: '0 12px 30px rgba(15,23,42,0.18)',
+                        padding: 10,
+                        zIndex: 10000,
+                    }}
+                >
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+                        {contextMenu.nodeLabel}
+                    </div>
+
+                    <div style={{ color: '#64748b', fontSize: 12, marginBottom: 10 }}>
+                        Configure this expansion before adding it to the graph request.
+                    </div>
+
+                    <div style={{ display: 'grid', gap: 10, marginBottom: 10 }}>
+                        <div style={{ display: 'grid', gap: 5 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#334155' }}>
+                                <span>Threshold</span>
+                                <strong>{contextMenu.threshold.toFixed(1)}</strong>
+                            </div>
+                            <input
+                                type='range'
+                                min={0.1}
+                                max={0.9}
+                                step={0.1}
+                                value={contextMenu.threshold}
+                                disabled={expandedNodeIds.includes(contextMenu.nodeId)}
+                                onChange={(event) => setContextMenu((prev) => ({
+                                    ...prev,
+                                    threshold: Number(Number(event.target.value).toFixed(1)),
+                                }))}
+                            />
+                        </div>
+
+                        <div style={{ display: 'grid', gap: 5 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#334155' }}>
+                                <span>Depth</span>
+                                <strong>{contextMenu.maxLevels}</strong>
+                            </div>
+                            <input
+                                type='range'
+                                min={1}
+                                max={10}
+                                step={1}
+                                value={contextMenu.maxLevels}
+                                disabled={expandedNodeIds.includes(contextMenu.nodeId)}
+                                onChange={(event) => setContextMenu((prev) => ({
+                                    ...prev,
+                                    maxLevels: Number(event.target.value),
+                                }))}
+                            />
+                        </div>
+
+                        <div style={{ display: 'grid', gap: 5 }}>
+                            <span style={{ fontSize: 12, color: '#334155' }}>Regulation mode</span>
+                            <select
+                                value={contextMenu.traversalMode}
+                                disabled={expandedNodeIds.includes(contextMenu.nodeId)}
+                                onChange={(event) => setContextMenu((prev) => ({
+                                    ...prev,
+                                    traversalMode: event.target.value as TraversalMode,
+                                }))}
+                                style={{
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: 8,
+                                    padding: '7px 8px',
+                                    background: '#ffffff',
+                                    color: '#0f172a',
+                                }}
+                            >
+                                <option value='outgoing'>{traversalLabels.outgoing}</option>
+                                <option value='incoming'>{traversalLabels.incoming}</option>
+                                <option value='both'>{traversalLabels.both}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button
+                        type='button'
+                        disabled={expandedNodeIds.includes(contextMenu.nodeId)}
+                        onClick={() => {
+                            onExpandNode({
+                                rootNodeId: contextMenu.nodeId,
+                                threshold: contextMenu.threshold,
+                                traversalMode: contextMenu.traversalMode,
+                                maxLevels: contextMenu.maxLevels,
+                            })
+                            setContextMenu((prev) => ({
+                                ...prev,
+                                visible: false,
+                            }))
+                        }}
+                        style={{
+                            width: '100%',
+                            border: '1px solid #2563eb',
+                            borderRadius: 8,
+                            padding: '7px 10px',
+                            background: expandedNodeIds.includes(contextMenu.nodeId) ? '#e2e8f0' : '#2563eb',
+                            color: expandedNodeIds.includes(contextMenu.nodeId) ? '#64748b' : '#ffffff',
+                            cursor: expandedNodeIds.includes(contextMenu.nodeId) ? 'not-allowed' : 'pointer',
+                            fontWeight: 700,
+                        }}
+                    >
+                        {expandedNodeIds.includes(contextMenu.nodeId) ? 'Already expanded' : 'Expand graph'}
+                    </button>
                 </div>
             )}
         </div>

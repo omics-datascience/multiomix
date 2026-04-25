@@ -1,55 +1,109 @@
 import React, { useMemo, useState } from 'react'
 import { Loader, Message } from 'semantic-ui-react'
-import { GraphControls } from './GraphControls'
+import { ActiveGraphFiltersPanel } from './ActiveGraphFiltersPanel'
 import { GeneNetworkGraph } from './GeneNetworkGraph'
 import { SelectedEdgesPanel } from './SelectedEdgesPanel'
 import { TraversalSummaryPanel } from './TraversalSummaryPanel'
 import { useGeneGraphQuery } from './useGeneGraphQuery'
-import { SelectedEdgeInfo, TraversalMode } from './types'
+import { GraphQueryFilter, SelectedEdgeInfo } from './types'
 
 type Props = {
     height?: number | string;
     width?: number | string;
 }
 
+const DEFAULT_ROOT_FILTER: GraphQueryFilter = {
+    rootNodeId: 'gene_braf',
+    threshold: 0.5,
+    traversalMode: 'both',
+    maxLevels: 3,
+}
+
 export const GeneExpressionRegulationAssociationNetworkPanel = ({
     height = 650,
     width = '100%',
 }: Props) => {
-    const [threshold, setThreshold] = useState<number>(0.5)
-    const [traversalMode, setTraversalMode] = useState<TraversalMode>('outgoing')
-    const [maxLevels, setMaxLevels] = useState<number>(3)
     const [selectedEdges, setSelectedEdges] = useState<SelectedEdgeInfo[]>([])
+    const [filters, setFilters] = useState<GraphQueryFilter[]>([DEFAULT_ROOT_FILTER])
+    const [draftFilters, setDraftFilters] = useState<GraphQueryFilter[]>([DEFAULT_ROOT_FILTER])
+
+    const defaultExpansionFilter = useMemo(() => ({
+        threshold: draftFilters[0]?.threshold ?? DEFAULT_ROOT_FILTER.threshold,
+        traversalMode: draftFilters[0]?.traversalMode ?? DEFAULT_ROOT_FILTER.traversalMode,
+        maxLevels: draftFilters[0]?.maxLevels ?? DEFAULT_ROOT_FILTER.maxLevels,
+    }), [draftFilters])
 
     const queryParams = useMemo(() => ({
-        rootNodeId: 'gene_braf',
-        threshold,
-        traversalMode,
-        maxLevels,
-    }), [threshold, traversalMode, maxLevels])
+        filters,
+    }), [filters])
 
     const { data, loading, error } = useGeneGraphQuery(queryParams)
+    const hasPendingFilterChanges = filters.length !== draftFilters.length || filters.some((filter, index) => {
+        const draftFilter = draftFilters[index]
+
+        if (!draftFilter) { return true }
+
+        return filter.rootNodeId !== draftFilter.rootNodeId ||
+            filter.threshold !== draftFilter.threshold ||
+            filter.traversalMode !== draftFilter.traversalMode ||
+            filter.maxLevels !== draftFilter.maxLevels
+    })
+
+    const handleExpandNode = (filter: GraphQueryFilter) => {
+        setSelectedEdges([])
+        setDraftFilters((prev) => {
+            if (prev.some((item) => item.rootNodeId === filter.rootNodeId)) {
+                setFilters(prev)
+                return prev
+            }
+
+            const nextFilters = [
+                ...prev,
+                filter,
+            ]
+
+            setFilters(nextFilters)
+
+            return nextFilters
+        })
+    }
+
+    const handleUpdateFilter = (rootNodeId: string, partialFilter: Partial<GraphQueryFilter>) => {
+        setDraftFilters((prev) => prev.map((filter) => {
+            if (filter.rootNodeId !== rootNodeId) { return filter }
+
+            return {
+                ...filter,
+                ...partialFilter,
+            }
+        }))
+    }
+
+    const handleRemoveFilter = (rootNodeId: string) => {
+        setDraftFilters((prev) => prev.filter((filter, index) => index === 0 || filter.rootNodeId !== rootNodeId))
+    }
+
+    const handleClearExpansions = () => {
+        setDraftFilters((prev) => {
+            if (prev.length === 0) { return [DEFAULT_ROOT_FILTER] }
+
+            return [prev[0]]
+        })
+    }
+
+    const handleResetFilters = () => {
+        setDraftFilters(filters.map((filter) => ({
+            ...filter,
+        })))
+    }
+
+    const handleApplyFilters = () => {
+        setSelectedEdges([])
+        setFilters(draftFilters)
+    }
 
     return (
         <div style={{ display: 'grid', gap: 12 }}>
-            <GraphControls
-                threshold={threshold}
-                onThresholdChange={(value) => {
-                    setSelectedEdges([])
-                    setThreshold(value)
-                }}
-                maxLevels={maxLevels}
-                onMaxLevelsChange={(value) => {
-                    setSelectedEdges([])
-                    setMaxLevels(value)
-                }}
-                traversalMode={traversalMode}
-                onTraversalModeChange={(value) => {
-                    setSelectedEdges([])
-                    setTraversalMode(value)
-                }}
-            />
-
             {loading && (
                 <div
                     style={{
@@ -77,6 +131,22 @@ export const GeneExpressionRegulationAssociationNetworkPanel = ({
                     width={width}
                     selectedEdges={selectedEdges}
                     onSelectedEdgesChange={setSelectedEdges}
+                    expandedNodeIds={filters.map((filter) => filter.rootNodeId)}
+                    defaultExpansionFilter={defaultExpansionFilter}
+                    onExpandNode={handleExpandNode}
+                />
+            )}
+
+            {!loading && !error && data && (
+                <ActiveGraphFiltersPanel
+                    filters={draftFilters}
+                    hasPendingChanges={hasPendingFilterChanges}
+                    getNodeLabel={(nodeId) => data.nodes.find((node) => node.id === nodeId)?.label ?? nodeId}
+                    onUpdateFilter={handleUpdateFilter}
+                    onClearExpansions={handleClearExpansions}
+                    onRemoveFilter={handleRemoveFilter}
+                    onResetFilters={handleResetFilters}
+                    onApplyFilters={handleApplyFilters}
                 />
             )}
 
@@ -95,9 +165,9 @@ export const GeneExpressionRegulationAssociationNetworkPanel = ({
                     />
 
                     <TraversalSummaryPanel
-                        traversalMode={traversalMode}
+                        traversalMode={filters[0]?.traversalMode ?? DEFAULT_ROOT_FILTER.traversalMode}
                         selectedRootNode={data.nodes.find((node) => node.id === data.rootNodeId)?.label ?? null}
-                        maxLevels={maxLevels}
+                        maxLevels={filters[0]?.maxLevels ?? DEFAULT_ROOT_FILTER.maxLevels}
                         depthSummary={data.outgoingSummary}
                         incomingSummary={data.incomingSummary}
                     />

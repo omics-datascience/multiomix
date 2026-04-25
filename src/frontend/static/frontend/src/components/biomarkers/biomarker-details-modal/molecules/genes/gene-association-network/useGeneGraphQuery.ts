@@ -47,12 +47,7 @@ export const useGeneGraphQuery = (params: FetchGeneGraphParams) => {
         return () => {
             cancelled = true
         }
-    }, [
-        params.rootNodeId,
-        params.threshold,
-        params.traversalMode,
-        params.maxLevels,
-    ])
+    }, [params])
 
     return state
 }
