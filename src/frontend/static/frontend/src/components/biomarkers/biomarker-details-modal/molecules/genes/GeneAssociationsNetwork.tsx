@@ -50,7 +50,9 @@ const roundThreshold = (value: number) => Number(value.toFixed(1))
 
 const getEdgeColor = (correlation: number, threshold: number) => {
     if (correlation <= -threshold) { return '#dc2626' }
+
     if (correlation >= threshold) { return '#2563eb' }
+
     return 'transparent'
 }
 
@@ -58,7 +60,9 @@ const getEdgeOpacity = (correlation: number, threshold: number) => {
     const abs = Math.abs(correlation)
 
     if (abs < threshold) { return 0 }
+
     if (abs >= 0.8) { return 0.95 }
+
     if (abs >= 0.6) { return 0.8 }
 
     return 0.7
@@ -68,8 +72,11 @@ const getEdgeWidth = (correlation: number, threshold: number) => {
     const abs = Math.abs(correlation)
 
     if (abs < threshold) { return 0 }
+
     if (abs >= 0.9) { return 6 }
+
     if (abs >= 0.8) { return 5 }
+
     if (abs >= 0.7) { return 4 }
 
     return 3
@@ -80,6 +87,7 @@ const getDirectionLabel = (
     threshold: number
 ): SelectedEdgeInfo['direction'] => {
     if (correlation <= -threshold) { return 'Down regulate' }
+
     return 'Up regulate'
 }
 
@@ -739,6 +747,7 @@ export const GeneExpressionRegulationNetworkPanel = ({
         })
 
         const defaultRoot = cy.getElementById('gene_braf')
+
         if (defaultRoot && defaultRoot.nonempty()) {
             applyTraversal(defaultRoot, traversalMode, maxLevels)
             cy.center(defaultRoot)

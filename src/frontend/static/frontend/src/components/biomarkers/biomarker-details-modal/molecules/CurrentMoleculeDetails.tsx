@@ -10,7 +10,7 @@ import { GeneOntologyPanel } from './gene-ontology/GeneOntologyPanel'
 import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
 import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
-import { GeneExpressionRegulationAssociationNetworkPanel } from './genes/gene-association-network/GeneExpressionRegulationNetworkPanel'
+/* import { GeneExpressionRegulationAssociationNetworkPanel } from './genes/gene-association-network/GeneExpressionRegulationNetworkPanel' */
 import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPanel'
 
 // const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
@@ -53,8 +53,9 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
-            case ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS:
-                return <GeneExpressionRegulationAssociationNetworkPanel />
+            /* Todo: implement when experiment regulation associations are available
+             case ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS:
+                return <GeneExpressionRegulationAssociationNetworkPanel /> */
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
