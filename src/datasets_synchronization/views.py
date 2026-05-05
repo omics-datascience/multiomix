@@ -14,7 +14,6 @@ from .enums import SyncCGDSStudyResponseCode, SyncStrategy
 from .models import CGDSStudy, CGDSDatasetSynchronizationState, CGDSStudySynchronizationState, CGDSDataset
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import DjangoFilterBackend
 from user_files.models_choices import FileType
 from .serializers import CGDSStudySerializer
 from django.shortcuts import render, get_object_or_404

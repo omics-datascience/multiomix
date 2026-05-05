@@ -15,7 +15,6 @@ from common.methylation import MethylationPlatform
 from institutions.models import Institution
 from tags.models import Tag
 from tissues.models import Tissue
-from tissues.models import Tissue
 from user_files.models_choices import FileType, FileDecimalSeparator
 from user_files.utils import get_decimal_separator_and_numerical_data, read_excel_in_chunks
 
