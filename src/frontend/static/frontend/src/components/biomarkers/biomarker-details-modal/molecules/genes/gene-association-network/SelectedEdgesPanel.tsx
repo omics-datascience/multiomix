@@ -2,17 +2,26 @@ import React from 'react'
 import { Button, Icon } from 'semantic-ui-react'
 import { SelectedEdgeInfo } from './types'
 
-type Props = {
+interface SelectedEdgesPanelProps {
     selectedEdges: SelectedEdgeInfo[];
     onRemoveEdge: (edgeId: string) => void;
     onClearAll: () => void;
 }
 
-export const SelectedEdgesPanel = ({
-    selectedEdges,
-    onRemoveEdge,
-    onClearAll,
-}: Props) => {
+/**
+ * Lists the edges selected by the user and exposes quick cleanup actions.
+ * @param props Component props.
+ * @param props.selectedEdges Edges currently selected in the graph.
+ * @param props.onRemoveEdge Callback used to deselect a single edge.
+ * @param props.onClearAll Callback used to clear the entire edge selection.
+ * @returns The selected edges panel rendered below the graph.
+ */
+export const SelectedEdgesPanel = (props: SelectedEdgesPanelProps): JSX.Element => {
+    const {
+        selectedEdges,
+        onRemoveEdge,
+        onClearAll,
+    } = props
     return (
         <div
             style={{

@@ -1,15 +1,24 @@
 import { useEffect, useState } from 'react'
-import { fetchGeneGraph } from './graphApi'
-import { FetchGeneGraphParams, FetchGeneGraphResponse } from './types'
+import { fetchGeneRegulationGraph } from './graphApi'
+import { FetchGeneRegulationGraphParams, FetchGeneRegulationGraphResponse } from './types'
 
-type QueryState = {
-    data: FetchGeneGraphResponse | null;
+/** State handled by the gene regulation graph query hook. */
+type GeneRegulationGraphQueryState = {
+    /** Resolved graph payload returned by the mock API. */
+    data: FetchGeneRegulationGraphResponse | null;
+    /** Indicates whether the query is currently in flight. */
     loading: boolean;
+    /** Error message displayed by the panel when the query fails. */
     error: string | null;
 }
 
-export const useGeneGraphQuery = (params: FetchGeneGraphParams) => {
-    const [state, setState] = useState<QueryState>({
+/**
+ * Fetches graph data for the currently applied list of filters.
+ * @param params Request payload with all active graph filters.
+ * @returns Loading, error, and graph data state for the panel.
+ */
+export const useGeneRegulationGraphQuery = (params: FetchGeneRegulationGraphParams) => {
+    const [state, setState] = useState<GeneRegulationGraphQueryState>({
         data: null,
         loading: true,
         error: null,
@@ -24,7 +33,7 @@ export const useGeneGraphQuery = (params: FetchGeneGraphParams) => {
             error: null,
         })
 
-        fetchGeneGraph(params)
+        fetchGeneRegulationGraph(params)
             .then((data) => {
                 if (cancelled) { return }
 

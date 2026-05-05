@@ -1,5 +1,6 @@
 import { GraphEdge, GraphNode } from './types'
 
+/** Base nodes and expansion-only nodes used by the mock graph API. */
 export const MOCK_NODES: GraphNode[] = [
     { id: 'gene_braf', label: 'BRAF', type: 'Gene', size: 66 },
     { id: 'gene_mek1', label: 'MEK1', type: 'Gene', size: 46 },
@@ -62,6 +63,7 @@ export const MOCK_NODES: GraphNode[] = [
     { id: 'gene_dusp1', label: 'DUSP1', type: 'Gene', size: 30 },
 ]
 
+/** Base relationships rendered by the initial BRAF graph query. */
 export const MOCK_EDGES: GraphEdge[] = [
     { id: 'e_1', source: 'gene_braf', target: 'gene_mek1', correlation: 0.92 },
     { id: 'e_2', source: 'gene_braf', target: 'gene_mek2', correlation: 0.83 },
@@ -93,6 +95,7 @@ export const MOCK_EDGES: GraphEdge[] = [
     { id: 'e_23', source: 'drug_vemurafenib', target: 'gene_mek1', correlation: -0.41 },
 ]
 
+/** Expansion branches available when the user right-clicks a visible root node. */
 export const MOCK_EXPANSION_EDGES_BY_ROOT: Record<string, GraphEdge[]> = {
     gene_mek1: [
         { id: 'e_exp_mek1_1', source: 'gene_raf1', target: 'gene_mek1', correlation: 0.86 },

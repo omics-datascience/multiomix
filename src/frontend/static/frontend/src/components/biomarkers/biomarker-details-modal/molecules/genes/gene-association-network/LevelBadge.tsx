@@ -7,13 +7,23 @@ const LEVEL_COLORS = {
     other: '#94a3b8',
 }
 
-export const LevelBadge = ({
-    depth,
-    incoming = false,
-}: {
+interface LevelBadgeProps {
     depth: number;
     incoming?: boolean;
-}) => {
+}
+
+/**
+ * Displays the visual badge used to identify a traversal depth level.
+ * @param props Component props.
+ * @param props.depth Depth level represented by the badge.
+ * @param props.incoming Whether the badge should use the incoming traversal style.
+ * @returns The colored level badge rendered inline.
+ */
+export const LevelBadge = (props: LevelBadgeProps): JSX.Element => {
+    const {
+        depth,
+        incoming = false,
+    } = props
     const color =
         depth === 1
             ? LEVEL_COLORS.level1

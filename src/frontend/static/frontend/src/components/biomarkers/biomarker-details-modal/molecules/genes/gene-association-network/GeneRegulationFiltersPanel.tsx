@@ -14,27 +14,51 @@ const traversalOptions = [
     { key: 'both', value: 'both', text: traversalLabels.both },
 ]
 
-type Props = {
-    filters: GraphQueryFilter[];
+/** Props accepted by the editable graph filters panel. */
+interface GeneRegulationFiltersPanelProps {
+    /** Draft filters currently being edited by the user. */
+    editableFilters: GraphQueryFilter[];
+    /** Indicates whether the draft differs from the last applied filters. */
     hasPendingChanges: boolean;
+    /** Resolves the visible label for a node identifier. */
     getNodeLabel: (nodeId: string) => string;
+    /** Updates one draft filter without querying the graph yet. */
     onUpdateFilter: (rootNodeId: string, partialFilter: Partial<GraphQueryFilter>) => void;
+    /** Clears every expansion while keeping the root filter. */
     onClearExpansions: () => void;
+    /** Removes a specific expansion from the draft filter list. */
     onRemoveFilter: (rootNodeId: string) => void;
+    /** Restores the draft state from the last applied filters. */
     onResetFilters: () => void;
+    /** Applies the draft filter list to the graph query. */
     onApplyFilters: () => void;
 }
 
-export const ActiveGraphFiltersPanel = ({
-    filters,
-    hasPendingChanges,
-    getNodeLabel,
-    onUpdateFilter,
-    onClearExpansions,
-    onRemoveFilter,
-    onResetFilters,
-    onApplyFilters,
-}: Props) => {
+/**
+ * Renders the editable list of filters used to build the graph request payload.
+ * @param props Component props.
+ * @param props.editableFilters Draft filters currently being edited in the UI.
+ * @param props.hasPendingChanges Indicates whether the draft differs from the applied graph filters.
+ * @param props.getNodeLabel Resolves the visible label for a graph node identifier.
+ * @param props.onUpdateFilter Updates a single draft filter without querying the graph yet.
+ * @param props.onClearExpansions Removes every draft expansion except for the root filter.
+ * @param props.onRemoveFilter Removes a specific expansion from the draft request payload.
+ * @param props.onResetFilters Restores the draft state from the last applied filters.
+ * @param props.onApplyFilters Applies the current draft filters to the graph query.
+ * @returns The editable filters panel rendered below the graph.
+ */
+export const GeneRegulationFiltersPanel = (props: GeneRegulationFiltersPanelProps): JSX.Element => {
+    const {
+        editableFilters,
+        hasPendingChanges,
+        getNodeLabel,
+        onUpdateFilter,
+        onClearExpansions,
+        onRemoveFilter,
+        onResetFilters,
+        onApplyFilters,
+    } = props
+
     return (
         <div
             style={{
@@ -64,7 +88,7 @@ export const ActiveGraphFiltersPanel = ({
             </div>
 
             <div style={{ display: 'grid', gap: 10 }}>
-                {filters.map((filter, index) => (
+                {editableFilters.map((filter, index) => (
                     <div
                         key={filter.rootNodeId}
                         style={{
@@ -183,7 +207,7 @@ export const ActiveGraphFiltersPanel = ({
                         icon
                         labelPosition='left'
                         onClick={onClearExpansions}
-                        disabled={filters.length <= 1}
+                        disabled={editableFilters.length <= 1}
                     >
                         <Icon name='trash alternate outline' />
                         Clear expansions

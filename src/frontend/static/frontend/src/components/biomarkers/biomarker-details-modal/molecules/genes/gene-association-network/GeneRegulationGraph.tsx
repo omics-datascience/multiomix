@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import cytoscape, { Core, ElementDefinition } from 'cytoscape'
 import { NODE_COLORS, REGULATION_COLORS } from './graphStyle'
 import { LegendArrow, LegendDot } from './legend'
-import { FetchGeneGraphResponse, GraphQueryFilter, SelectedEdgeInfo, TraversalMode } from './types'
+import { FetchGeneRegulationGraphResponse, GraphQueryFilter, SelectedEdgeInfo, TraversalMode } from './types'
 
 const MIN_ZOOM = 0.4
 const MAX_ZOOM = 2
@@ -14,12 +14,22 @@ const traversalLabels: Record<TraversalMode, string> = {
     both: 'Both',
 }
 
+/**
+ * Resolves the edge color according to the correlation sign.
+ * @param correlation Correlation value stored in the graph edge.
+ * @returns The color used to render the edge.
+ */
 const getEdgeColor = (correlation: number) => {
     if (correlation < 0) { return REGULATION_COLORS.down }
 
     return REGULATION_COLORS.up
 }
 
+/**
+ * Maps the edge correlation strength into the rendered edge opacity.
+ * @param correlation Correlation value stored in the graph edge.
+ * @returns The opacity used to render the edge.
+ */
 const getEdgeOpacity = (correlation: number) => {
     const abs = Math.abs(correlation)
 
@@ -30,6 +40,11 @@ const getEdgeOpacity = (correlation: number) => {
     return 0.7
 }
 
+/**
+ * Maps the edge correlation strength into the rendered edge width.
+ * @param correlation Correlation value stored in the graph edge.
+ * @returns The width used to render the edge.
+ */
 const getEdgeWidth = (correlation: number) => {
     const abs = Math.abs(correlation)
 
@@ -42,51 +57,93 @@ const getEdgeWidth = (correlation: number) => {
     return 3
 }
 
+/**
+ * Converts the edge correlation sign into the label shown by the UI.
+ * @param correlation Correlation value stored in the graph edge.
+ * @returns The semantic direction label shown in tooltips and panels.
+ */
 const getDirectionLabel = (correlation: number): SelectedEdgeInfo['direction'] => {
     if (correlation < 0) { return 'Down-regulation' }
 
     return 'Up-regulation'
 }
 
+/** Tooltip state used while hovering graph edges. */
 type TooltipState = {
+    /** Whether the tooltip is currently visible. */
     visible: boolean;
+    /** Horizontal position relative to the graph container. */
     x: number;
+    /** Vertical position relative to the graph container. */
     y: number;
+    /** Text shown inside the tooltip. */
     content: string;
 }
 
+/** Context menu state used when expanding a node from the graph. */
 type ContextMenuState = {
+    /** Whether the expansion menu is currently visible. */
     visible: boolean;
+    /** Horizontal position relative to the graph container. */
     x: number;
+    /** Vertical position relative to the graph container. */
     y: number;
+    /** Node identifier being expanded. */
     nodeId: string;
+    /** Visible label of the node being expanded. */
     nodeLabel: string;
+    /** Threshold draft shown in the expansion form. */
     threshold: number;
+    /** Traversal mode draft shown in the expansion form. */
     traversalMode: TraversalMode;
+    /** Max depth draft shown in the expansion form. */
     maxLevels: number;
 }
 
-type Props = {
-    data: FetchGeneGraphResponse | null;
+/** Props accepted by the Cytoscape-based regulation graph. */
+interface GeneRegulationGraphProps {
+    /** Graph payload currently rendered in Cytoscape. */
+    data: FetchGeneRegulationGraphResponse | null;
+    /** Height assigned to the graph area. */
     height?: number | string;
+    /** Width assigned to the graph area. */
     width?: number | string;
+    /** Edges currently selected by the user. */
     selectedEdges: SelectedEdgeInfo[];
+    /** Callback used to sync edge selections with the side panel. */
     onSelectedEdgesChange: (edges: SelectedEdgeInfo[]) => void;
+    /** Node identifiers already expanded into the current request. */
     expandedNodeIds: string[];
+    /** Default expansion values reused when opening the node context menu. */
     defaultExpansionFilter: Omit<GraphQueryFilter, 'rootNodeId'>;
+    /** Callback used to append a new node expansion to the query. */
     onExpandNode: (filter: GraphQueryFilter) => void;
 }
 
-export const GeneNetworkGraph = ({
-    data,
-    height = 650,
-    width = '100%',
-    selectedEdges,
-    onSelectedEdgesChange,
-    expandedNodeIds,
-    defaultExpansionFilter,
-    onExpandNode,
-}: Props): JSX.Element => {
+/**
+ * Renders the Cytoscape graph along with local zoom and expansion controls.
+ * @param props Component props.
+ * @param props.data Graph payload rendered in Cytoscape.
+ * @param props.height Graph container height.
+ * @param props.width Graph container width.
+ * @param props.selectedEdges Edges currently selected by the user.
+ * @param props.onSelectedEdgesChange Callback used to sync the selected edge panel.
+ * @param props.expandedNodeIds Node identifiers already expanded into the request payload.
+ * @param props.defaultExpansionFilter Filter values used to initialize the context-menu expansion form.
+ * @param props.onExpandNode Callback used to add a new expansion from the graph context menu.
+ * @returns The rendered graph with overlays for legend, zoom and node expansion.
+ */
+export const GeneRegulationGraph = (props: GeneRegulationGraphProps): JSX.Element => {
+    const {
+        data,
+        height = 650,
+        width = '100%',
+        selectedEdges,
+        onSelectedEdgesChange,
+        expandedNodeIds,
+        defaultExpansionFilter,
+        onExpandNode,
+    } = props
     const containerRef = useRef<HTMLDivElement | null>(null)
     const cyRef = useRef<Core | null>(null)
     const defaultExpansionFilterRef = useRef(defaultExpansionFilter)
@@ -265,6 +322,7 @@ export const GeneNetworkGraph = ({
             cy.center(rootNode)
         }
 
+        /** Synchronizes the selected edge list shown in the side panel. */
         const syncSelectedEdges = () => {
             const picked = cy
                 .edges('.edge-picked')
@@ -377,7 +435,11 @@ export const GeneNetworkGraph = ({
         }
     }, [selectedEdges])
 
-    const zoomGraph = (direction: 'in' | 'out') => {
+    /**
+     * Applies a centered zoom step from the overlay controls.
+     * @param direction Zoom direction requested by the user.
+     */
+    const handleGraphZoom = (direction: 'in' | 'out') => {
         const cy = cyRef.current
 
         if (!cy) { return }
@@ -423,7 +485,7 @@ export const GeneNetworkGraph = ({
             >
                 <button
                     type='button'
-                    onClick={() => zoomGraph('in')}
+                    onClick={() => handleGraphZoom('in')}
                     title='Zoom in'
                     style={{
                         width: 34,
@@ -443,7 +505,7 @@ export const GeneNetworkGraph = ({
 
                 <button
                     type='button'
-                    onClick={() => zoomGraph('out')}
+                    onClick={() => handleGraphZoom('out')}
                     title='Zoom out'
                     style={{
                         width: 34,
