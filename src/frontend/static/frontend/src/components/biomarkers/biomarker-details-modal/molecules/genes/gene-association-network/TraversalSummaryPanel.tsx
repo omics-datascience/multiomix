@@ -2,22 +2,23 @@ import React from 'react'
 import { LevelBadge } from './LevelBadge'
 import { DepthSummaryItem, TraversalMode } from './types'
 
+/** TraversalSummaryPanel props. */
 interface TraversalSummaryPanelProps {
+    /** Active traversal mode applied to the root filter. */
     traversalMode: TraversalMode;
+    /** Visible label of the current root node. */
     selectedRootNode: string | null;
+    /** Maximum depth configured for the root filter. */
     maxLevels: number;
+    /** Outgoing traversal summary grouped by level. */
     depthSummary: DepthSummaryItem[];
+    /** Incoming traversal summary grouped by level. */
     incomingSummary: DepthSummaryItem[];
 }
 
 /**
  * Summarizes the traversal results for the active root graph filter.
  * @param props Component props.
- * @param props.traversalMode Active traversal mode applied to the root filter.
- * @param props.selectedRootNode Visible label of the current root node.
- * @param props.maxLevels Maximum depth configured for the root filter.
- * @param props.depthSummary Outgoing traversal summary grouped by level.
- * @param props.incomingSummary Incoming traversal summary grouped by level.
  * @returns The traversal summary panel rendered below the graph.
  */
 export const TraversalSummaryPanel = (props: TraversalSummaryPanelProps): JSX.Element => {
