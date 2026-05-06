@@ -1,18 +1,19 @@
 import React from 'react'
 
-type LegendItemProps = {
+/** LegendDotProps props. */
+type LegendDotProps = {
+    /** Color shown in the legend swatch. */
     color: string;
+    /** Visible legend label. */
     label: string;
 }
 
 /**
  * Renders a colored dot item used by the graph legend.
  * @param props Component props.
- * @param props.color Color shown in the legend swatch.
- * @param props.label Visible legend label.
  * @returns The node legend item.
  */
-export const LegendDot = (props: LegendItemProps): JSX.Element => {
+export const LegendDot = (props: LegendDotProps): JSX.Element => {
     const { color, label } = props
 
     return (
@@ -38,7 +39,7 @@ export const LegendDot = (props: LegendItemProps): JSX.Element => {
  * @param props.label Visible legend label.
  * @returns The edge legend item.
  */
-export const LegendArrow = (props: LegendItemProps): JSX.Element => {
+export const LegendArrow = (props: LegendDotProps): JSX.Element => {
     const { color, label } = props
 
     return (
