@@ -59,7 +59,7 @@
     "@visx/tooltip": "^3.3.0",
     "apexcharts": "^3.52.0",
     "axios": "^1.8.4",
-    "cytoscape": "^3.30.2",
+    "cytoscape": "^3.33.1",
     "d3": "^7.9.0",
     "dayjs": "^1.11.13",
     "fomantic-ui-css": "^2.9.4",

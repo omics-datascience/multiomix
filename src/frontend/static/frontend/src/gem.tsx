@@ -1,5 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import './css/biomarkers-form.css'
 import './css/gem.css'
 
 import { Pipeline } from './components/pipeline/Pipeline'
