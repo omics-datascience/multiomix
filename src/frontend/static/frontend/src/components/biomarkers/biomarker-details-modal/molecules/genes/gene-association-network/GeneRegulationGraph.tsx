@@ -123,14 +123,6 @@ interface GeneRegulationGraphProps {
 /**
  * Renders the Cytoscape graph along with local zoom and expansion controls.
  * @param props Component props.
- * @param props.data Graph payload rendered in Cytoscape.
- * @param props.height Graph container height.
- * @param props.width Graph container width.
- * @param props.selectedEdges Edges currently selected by the user.
- * @param props.onSelectedEdgesChange Callback used to sync the selected edge panel.
- * @param props.expandedNodeIds Node identifiers already expanded into the request payload.
- * @param props.defaultExpansionFilter Filter values used to initialize the context-menu expansion form.
- * @param props.onExpandNode Callback used to add a new expansion from the graph context menu.
  * @returns The rendered graph with overlays for legend, zoom and node expansion.
  */
 export const GeneRegulationGraph = (props: GeneRegulationGraphProps): JSX.Element => {
