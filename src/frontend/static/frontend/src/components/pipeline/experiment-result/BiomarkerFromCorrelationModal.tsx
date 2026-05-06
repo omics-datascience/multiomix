@@ -1391,11 +1391,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         this.setState({ openSelectOptionModal: false }, () => {
             if (selectedOption === 'selectAll') {
-            // ver de si hacer un endpoint que traiga todos los genes y no solo los de la pagina
                 this.handleSelectAllBiomarker()
             } else {
-            // Select with Filters: usamos solo la página actual y filtros
                 this.setState({
+                    biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
                     openCreateEditBiomarkerModal: true,
                     formBiomarker: this.buildFormBiomarkerFromCurrentPageFilteredRows()
                 })
@@ -1550,8 +1549,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         biomarkerForm={this.state.formBiomarker}
                         checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
                         handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
-                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
-                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                         cleanForm={this.cleanForm}
                         isFormEmpty={this.isFormEmpty}
                         handleAddMoleculeToSection={this.handleAddMoleculeToSection}
