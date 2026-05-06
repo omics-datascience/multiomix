@@ -37,14 +37,6 @@ interface GeneRegulationFiltersPanelProps {
 /**
  * Renders the editable list of filters used to build the graph request payload.
  * @param props Component props.
- * @param props.editableFilters Draft filters currently being edited in the UI.
- * @param props.hasPendingChanges Indicates whether the draft differs from the applied graph filters.
- * @param props.getNodeLabel Resolves the visible label for a graph node identifier.
- * @param props.onUpdateFilter Updates a single draft filter without querying the graph yet.
- * @param props.onClearExpansions Removes every draft expansion except for the root filter.
- * @param props.onRemoveFilter Removes a specific expansion from the draft request payload.
- * @param props.onResetFilters Restores the draft state from the last applied filters.
- * @param props.onApplyFilters Applies the current draft filters to the graph query.
  * @returns The editable filters panel rendered below the graph.
  */
 export const GeneRegulationFiltersPanel = (props: GeneRegulationFiltersPanelProps): JSX.Element => {
