@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 
+import './css/biomarkers-form.css'
 import './css/biomarkers.css'
 
 import { BiomarkersPanel } from './components/biomarkers/BiomarkersPanel'

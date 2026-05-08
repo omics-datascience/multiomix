@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-
+from django.shortcuts import render
 
 def index_action(request):
     """Index view"""

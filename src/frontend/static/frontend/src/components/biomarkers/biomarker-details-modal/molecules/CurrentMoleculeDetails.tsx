@@ -53,8 +53,8 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
-            /* Todo: implement when experiment regulation associations are available
-             case ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS:
+            /* Todo: implement wEhen experiment regulation associations are available
+             case ActiveBiomarkerMolecuWleItemMenu.GENE_REGULATION_ASSOCIATIONS:
                 return <GeneRegulationAssociationsPanel /> */
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} />
