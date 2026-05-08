@@ -25,8 +25,6 @@ const DEFAULT_BRAF_GRAPH_FILTER: GraphQueryFilter = {
 /**
  * Renders the mock gene regulation associations experience for the selected biomarker molecule.
  * @param props Component props.
- * @param props.height Graph container height.
- * @param props.width Graph container width.
  * @returns The complete gene regulation associations tab.
  */
 export const GeneRegulationAssociationsPanel = (props: GeneRegulationAssociationsPanelProps): JSX.Element => {

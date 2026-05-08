@@ -35,8 +35,6 @@ export const LegendDot = (props: LegendDotProps): JSX.Element => {
 /**
  * Renders an arrow item used by the graph edge legend.
  * @param props Component props.
- * @param props.color Color shown in the legend arrow.
- * @param props.label Visible legend label.
  * @returns The edge legend item.
  */
 export const LegendArrow = (props: LegendDotProps): JSX.Element => {
