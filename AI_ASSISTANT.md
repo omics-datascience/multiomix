@@ -1,48 +1,48 @@
 # Multiomix AI Assistant
 
-Documentación técnica del asistente de IA integrado en la plataforma Multiomix.
+Technical documentation for the AI assistant integrated into the Multiomix platform.
 
 ---
 
-## Tabla de contenidos
+## Table of contents
 
-1. [Visión general](#1-visión-general)
-2. [Arquitectura](#2-arquitectura)
+1. [Overview](#1-overview)
+2. [Architecture](#2-architecture)
 3. [Backend — Django app `assistant`](#3-backend--django-app-assistant)
-   - [Modelos](#modelos)
-   - [API REST](#api-rest)
-   - [Servicio de embeddings](#servicio-de-embeddings)
-   - [Servicio LLM y agente](#servicio-llm-y-agente)
-   - [Memoria semántica cross-chat](#memoria-semántica-cross-chat)
-4. [Tools disponibles](#4-tools-disponibles)
-   - [Datos del usuario (Multiomix)](#datos-del-usuario-multiomix)
-   - [Información biológica (BioAPI / Modulector)](#información-biológica-bioapi--modulector)
+   - [Models](#models)
+   - [REST API](#rest-api)
+   - [Embedding service](#embedding-service)
+   - [LLM service and agent](#llm-service-and-agent)
+   - [Cross-chat semantic memory](#cross-chat-semantic-memory)
+4. [Available tools](#4-available-tools)
+   - [User data (Multiomix)](#user-data-multiomix)
+   - [Biological information (BioAPI / Modulector)](#biological-information-bioapi--modulector)
    - [STRING database](#string-database)
-   - [Base de conocimiento curada](#base-de-conocimiento-curada)
+   - [Curated knowledge base](#curated-knowledge-base)
 5. [Frontend — React widget](#5-frontend--react-widget)
-6. [Flujo completo de una consulta](#6-flujo-completo-de-una-consulta)
-7. [Variables de entorno y configuración](#7-variables-de-entorno-y-configuración)
-8. [Cómo cambiar el modelo LLM](#8-cómo-cambiar-el-modelo-llm)
-9. [Cómo agregar una nueva tool](#9-cómo-agregar-una-nueva-tool)
-10. [Cómo agregar documentación curada](#10-cómo-agregar-documentación-curada)
-11. [Dependencias](#11-dependencias)
+6. [Full query flow](#6-full-query-flow)
+7. [Environment variables and configuration](#7-environment-variables-and-configuration)
+8. [How to change the LLM model](#8-how-to-change-the-llm-model)
+9. [How to add a new tool](#9-how-to-add-a-new-tool)
+10. [How to add curated documentation](#10-how-to-add-curated-documentation)
+11. [Dependencies](#11-dependencies)
 
 ---
 
-## 1. Visión general
+## 1. Overview
 
-El asistente es un **agente LLM con tool-calling** embebido en Multiomix como widget flotante visible en todas las páginas de la plataforma (solo para usuarios autenticados). Permite a los usuarios consultar en lenguaje natural:
+The assistant is an **LLM agent with tool-calling** embedded in Multiomix as a floating widget visible on every page of the platform (authenticated users only). It allows users to query in natural language:
 
-- Sus propios experimentos, resultados y biomarkers
-- Información biológica de genes, miRNAs, drogas
-- Redes de interacción proteica y enriquecimiento funcional (STRING)
-- Documentación y conceptos generales de la plataforma
+- Their own experiments, results, and biomarkers
+- Biological information about genes, miRNAs, and drugs
+- Protein interaction networks and functional enrichment (STRING)
+- Platform documentation and general concepts
 
-El asistente **nunca inventa datos**. Siempre recupera información real vía tools conectadas a la base de datos de Multiomix y a APIs externas.
+The assistant **never fabricates data**. It always retrieves real information via tools connected to the Multiomix database and external APIs.
 
 ---
 
-## 2. Arquitectura
+## 2. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -67,23 +67,23 @@ El asistente **nunca inventa datos**. Siempre recupera información real vía to
 │                                                                      │
 │  1. EmbeddingService.embed(user_message)  ← HuggingFace local      │
 │  2. build_chat_history()                  ← PostgreSQL + pgvector   │
-│     ├─ 15 mensajes recientes (conversación actual)                  │
-│     └─ 5 mensajes semánticamente similares (TODAS las conversaciones│
-│         del usuario — memoria cross-chat)                           │
+│     ├─ 15 most recent messages (current conversation)               │
+│     └─ 5 semantically similar messages (ALL user conversations —    │
+│         cross-chat memory)                                          │
 │  3. AgentExecutor.invoke()                ← LangChain + OpenAI      │
 │     └─ create_tool_calling_agent(llm, tools, prompt)               │
-│  4. Persistir user msg + assistant reply con embeddings             │
+│  4. Persist user msg + assistant reply with embeddings              │
 └──────────┬──────────────────────────────────────────────────────────┘
            │ tool calls
            ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  TOOLS (23 tools)                                                   │
 │                                                                      │
-│  ├─ PostgreSQL (Django ORM)  → experimentos, biomarkers, archivos   │
-│  ├─ MongoDB                  → resultados de experimentos           │
-│  ├─ Modulector API           → interacciones miRNA-gen              │
-│  ├─ BioAPI                   → anotaciones génicas, drogas          │
-│  └─ STRING REST API          → interacciones proteicas, enrichment  │
+│  ├─ PostgreSQL (Django ORM)  → experiments, biomarkers, files       │
+│  ├─ MongoDB                  → experiment results                   │
+│  ├─ Modulector API           → miRNA-gene interactions              │
+│  ├─ BioAPI                   → gene annotations, drugs              │
+│  └─ STRING REST API          → protein interactions, enrichment     │
 └─────────────────────────────────────────────────────────────────────┘
            │ embeddings
            ▼
@@ -99,64 +99,64 @@ El asistente **nunca inventa datos**. Siempre recupera información real vía to
 
 ## 3. Backend — Django app `assistant`
 
-### Modelos
+### Models
 
-Ubicación: `src/assistant/models.py`
+Location: `src/assistant/models.py`
 
 #### `Conversation`
-Agrupa los mensajes de una sesión de chat.
+Groups the messages of a chat session.
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 |-------|------|-------------|
-| `user` | FK → User | Propietario de la conversación |
-| `title` | CharField | Primeros 100 caracteres del primer mensaje (se genera automáticamente) |
-| `created_at` | DateTimeField | Fecha de creación |
-| `updated_at` | DateTimeField | Se actualiza en cada turno |
+| `user` | FK → User | Conversation owner |
+| `title` | CharField | First 100 characters of the first message (auto-generated) |
+| `created_at` | DateTimeField | Creation date |
+| `updated_at` | DateTimeField | Updated on every turn |
 
 #### `Message`
-Un mensaje individual (usuario o asistente) dentro de una conversación.
+An individual message (user or assistant) within a conversation.
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 |-------|------|-------------|
-| `conversation` | FK → Conversation | Conversación a la que pertenece |
-| `role` | CharField | `user` o `assistant` |
-| `content` | TextField | Contenido del mensaje |
-| `embedding` | VectorField(384) | Embedding semántico para búsqueda |
+| `conversation` | FK → Conversation | Conversation this message belongs to |
+| `role` | CharField | `user` or `assistant` |
+| `content` | TextField | Message content |
+| `embedding` | VectorField(384) | Semantic embedding for similarity search |
 | `created_at` | DateTimeField | Timestamp |
 
 #### `CuratedDocument`
-Documentación manual sobre Multiomix que el agente puede consultar vía búsqueda semántica.
+Manual documentation about Multiomix that the agent can query via semantic search.
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 |-------|------|-------------|
-| `title` | CharField | Título del documento |
-| `content` | TextField | Contenido (texto libre / markdown) |
-| `category` | CharField | Categoría (e.g. `"platform"`, `"biology"`) |
-| `embedding` | VectorField(384) | Generado automáticamente al guardar desde el admin |
-| `is_active` | BooleanField | Si está activo para búsqueda |
+| `title` | CharField | Document title |
+| `content` | TextField | Content (free text / markdown) |
+| `category` | CharField | Category (e.g. `"platform"`, `"biology"`) |
+| `embedding` | VectorField(384) | Auto-generated on save from the admin |
+| `is_active` | BooleanField | Whether the document is active for search |
 
-> Los documentos curados se gestionan desde el **Django Admin** en `/admin/`. Al guardar, el embedding se genera automáticamente.
+> Curated documents are managed from the **Django Admin** at `/admin/`. The embedding is generated automatically on save.
 
 ---
 
-### API REST
+### REST API
 
-Todos los endpoints requieren autenticación (`IsAuthenticated`).
+All endpoints require authentication (`IsAuthenticated`).
 
-| Método | URL | Descripción |
+| Method | URL | Description |
 |--------|-----|-------------|
-| `POST` | `/assistant/api/chat/` | Enviar un mensaje y recibir respuesta |
-| `GET` | `/assistant/api/conversations/` | Listar conversaciones del usuario |
-| `GET` | `/assistant/api/conversations/<id>/` | Detalle de conversación con todos sus mensajes |
-| `DELETE` | `/assistant/api/conversations/<id>/` | Eliminar una conversación |
+| `POST` | `/assistant/api/chat/` | Send a message and receive a response |
+| `GET` | `/assistant/api/conversations/` | List the user's conversations |
+| `GET` | `/assistant/api/conversations/<id>/` | Conversation detail with all its messages |
+| `DELETE` | `/assistant/api/conversations/<id>/` | Delete a conversation |
 
 **POST `/assistant/api/chat/`**
 
 Request:
 ```json
 {
-  "message": "¿Cuáles son mis experimentos de correlación?",
-  "conversation_id": 42  // opcional; si se omite, se crea una nueva conversación
+  "message": "What are my correlation experiments?",
+  "conversation_id": 42  // optional; omit to start a new conversation
 }
 ```
 
@@ -164,183 +164,183 @@ Response:
 ```json
 {
   "conversation_id": 42,
-  "reply": "Tenés **3 experimentos** de correlación..."
+  "reply": "You have **3 correlation experiments**..."
 }
 ```
 
 ---
 
-### Servicio de embeddings
+### Embedding service
 
-Ubicación: `src/assistant/services/embedding_service.py`
+Location: `src/assistant/services/embedding_service.py`
 
-- Modelo: `sentence-transformers/all-MiniLM-L6-v2` (384 dimensiones)
-- **Inferencia 100% local** — no se envía texto a ningún servidor externo
-- Implementado como **singleton lazy-loader**: el modelo se carga en memoria la primera vez que se necesita y se reutiliza
-- Configurable via `ASSISTANT_EMBEDDING_MODEL` y `ASSISTANT_EMBEDDING_DIMENSIONS`
+- Model: `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions)
+- **100% local inference** — no text is sent to any external server
+- Implemented as a **lazy-loading singleton**: the model is loaded into memory the first time it is needed and then reused
+- Configurable via `ASSISTANT_EMBEDDING_MODEL` and `ASSISTANT_EMBEDDING_DIMENSIONS`
 
 ```python
 from assistant.services.embedding_service import embedding_service
 
 vector = embedding_service.embed("TP53 expression in breast cancer")
-# → List[float] con 384 valores
+# → List[float] with 384 values
 ```
 
-> Si el modelo no está en caché local (`~/.cache/huggingface/`), se descarga automáticamente al primer inicio.
+> If the model is not in the local cache (`~/.cache/huggingface/`), it is downloaded automatically on first startup.
 
 ---
 
-### Servicio LLM y agente
+### LLM service and agent
 
-Ubicación: `src/assistant/services/llm_service.py`
+Location: `src/assistant/services/llm_service.py`
 
-El agente usa el patrón estándar de LangChain **ReAct con tool-calling**:
+The agent uses the standard LangChain **ReAct with tool-calling** pattern:
 
 ```python
 agent = create_tool_calling_agent(llm, tools, prompt)
 executor = AgentExecutor(agent=agent, tools=tools, max_iterations=5)
 ```
 
-El prompt tiene 4 secciones:
-1. **System prompt** — scope, restricciones, instrucciones de formato markdown
-2. **Chat history** — mensajes anteriores (recientes + semánticos)
-3. **Human message** — consulta actual del usuario
-4. **Agent scratchpad** — espacio interno del agente para razonar y ejecutar tools
+The prompt has 4 sections:
+1. **System prompt** — scope, restrictions, markdown formatting instructions
+2. **Chat history** — previous messages (recent + semantic)
+3. **Human message** — current user query
+4. **Agent scratchpad** — internal space for the agent to reason and invoke tools
 
-**Restricciones del system prompt**: el agente solo responde preguntas sobre bioinformática, la plataforma Multiomix, y los datos del usuario. Si la pregunta está fuera de scope, responde con un mensaje fijo de rechazo.
+**System prompt restrictions**: the agent only answers questions about bioinformatics, the Multiomix platform, and the user's own data. Out-of-scope questions receive a fixed rejection message.
 
-**Función `get_llm()`**: punto de intercambio del modelo. Ver sección [8](#8-cómo-cambiar-el-modelo-llm).
+**`get_llm()` function**: the model swap point. See section [8](#8-how-to-change-the-llm-model).
 
 ---
 
-### Memoria semántica cross-chat
+### Cross-chat semantic memory
 
-El historial de contexto que recibe el agente en cada turno se construye así:
+The context history the agent receives on each turn is built as follows:
 
 ```
 build_chat_history(conversation, user_id, query_embedding)
 ```
 
-| Fuente | Cantidad | Filtro |
-|--------|----------|--------|
-| Mensajes recientes | Últimos 15 | Solo conversación actual |
-| Mensajes semánticos | Top 5 por similitud coseno | **Todas las conversaciones del usuario** |
+| Source | Count | Filter |
+|--------|-------|--------|
+| Recent messages | Last 15 | Current conversation only |
+| Semantic messages | Top 5 by cosine similarity | **All user conversations** |
 
-La búsqueda semántica cross-chat permite que el asistente recuerde información mencionada en chats anteriores (ej. nombre del usuario, contexto de un experimento) sin necesidad de repetirla.
+Cross-chat semantic search allows the assistant to recall information mentioned in previous chats (e.g. the user's name, context from an experiment) without having to repeat it.
 
-Configurables con `ASSISTANT_RECENT_MESSAGES_COUNT` y `ASSISTANT_SEMANTIC_MESSAGES_COUNT`.
+Configurable via `ASSISTANT_RECENT_MESSAGES_COUNT` and `ASSISTANT_SEMANTIC_MESSAGES_COUNT`.
 
 ---
 
-## 4. Tools disponibles
+## 4. Available tools
 
-Ubicación: `src/assistant/services/tools.py`
+Location: `src/assistant/services/tools.py`
 
-Las tools se construyen en `make_tools(user_id)`. El `user_id` se inyecta server-side vía closure — **el LLM nunca controla qué usuario se consulta**.
+Tools are built in `make_tools(user_id)`. The `user_id` is injected server-side via closure — **the LLM never controls which user is queried**.
 
-### Datos del usuario (Multiomix)
+### User data (Multiomix)
 
-| Tool | Descripción |
+| Tool | Description |
 |------|-------------|
-| `get_user_experiments` | Lista experimentos de correlación (nombre, estado, tipo, fecha) |
-| `get_experiment_top_results` | Top resultados de un experimento de correlación (gen, GEM, correlación, p-valor) |
-| `get_experiment_detail` | Configuración completa de un experimento: datasets usados, método de correlación, thresholds y estadísticas de ejecución |
-| `get_user_biomarkers` | Biomarkers propios y públicos del usuario |
-| `get_genes_in_biomarker` | Todos los identificadores de un biomarker agrupados por tipo: mRNAs, miRNAs, CNAs y methylations |
-| `get_statistical_validations` | Validaciones estadísticas de biomarkers (c-index, MSE) |
-| `get_survival_experiments` | Lista experimentos de validación estadística de supervivencia con métricas (c_index, cox_c_index, cox_log_likelihood, r2_score, MSE) |
-| `get_survival_results` | Detalle de una validación: métricas de supervivencia completas + moléculas con coeficientes Cox (coeficiente positivo = mayor riesgo, negativo = protector) |
-| `get_inference_experiments` | Experimentos de inferencia de ML |
-| `get_feature_selection_experiments` | Experimentos de selección de features |
-| `get_user_files` | Archivos subidos por el usuario (nombre, tipo, muestras, fecha) |
-| `get_differential_expression_experiments` | Lista experimentos DE (herramienta, estado, fecha) |
-| `get_differential_expression_results` | Top genes DE de un experimento (logFC, FDR, p-valor) |
-| `find_gene_across_experiments` | Busca un gen en todos los resultados de correlación del usuario (miRNA, CNA, Methylation) y devuelve en qué experimentos aparece junto con su GEM emparejado y estadísticas |
-| `search_cgds_studies` | Búsqueda de estudios públicos de cBioPortal por nombre |
+| `get_user_experiments` | Lists correlation experiments (name, status, type, date) |
+| `get_experiment_top_results` | Top results of a correlation experiment (gene, GEM, correlation, p-value) |
+| `get_experiment_detail` | Full configuration of an experiment: datasets used, correlation method, thresholds, and execution statistics |
+| `get_user_biomarkers` | The user's own and public biomarkers |
+| `get_genes_in_biomarker` | All identifiers in a biomarker grouped by type: mRNAs, miRNAs, CNAs, and methylations |
+| `get_statistical_validations` | Statistical validations of biomarkers (c-index, MSE) |
+| `get_survival_experiments` | Lists statistical survival validation experiments with metrics (c_index, cox_c_index, cox_log_likelihood, r2_score, MSE) |
+| `get_survival_results` | Validation detail: full survival metrics + molecules with Cox coefficients (positive coefficient = higher risk, negative = protective) |
+| `get_inference_experiments` | ML inference experiments |
+| `get_feature_selection_experiments` | Feature selection experiments |
+| `get_user_files` | Files uploaded by the user (name, type, samples, date) |
+| `get_differential_expression_experiments` | Lists DE experiments (tool, status, date) |
+| `get_differential_expression_results` | Top DE genes from an experiment (logFC, FDR, p-value) |
+| `find_gene_across_experiments` | Searches for a gene across all the user's correlation results (miRNA, CNA, Methylation) and returns which experiments it appears in along with its paired GEM and statistics |
+| `search_cgds_studies` | Search public cBioPortal studies by name |
 
-### Información biológica (BioAPI / Modulector)
+### Biological information (BioAPI / Modulector)
 
-| Tool | Fuente | Descripción |
+| Tool | Source | Description |
 |------|--------|-------------|
-| `get_gene_info` | PostgreSQL local | Info básica del gen (tipo, cromosoma, posición) |
-| `get_gene_annotations` | BioAPI | Anotaciones detalladas (alias, biotype, Ensembl, NCBI, HGNC) |
-| `get_mirna_modulators` | Modulector | miRNAs que regulan la expresión de un gen |
-| `get_drugs_regulating_gene` | BioAPI | Link a DrugBank con drogas que modulan la expresión del gen |
+| `get_gene_info` | Local PostgreSQL | Basic gene info (type, chromosome, position) |
+| `get_gene_annotations` | BioAPI | Detailed annotations (aliases, biotype, Ensembl, NCBI, HGNC) |
+| `get_mirna_modulators` | Modulector | miRNAs that regulate the expression of a gene |
+| `get_drugs_regulating_gene` | BioAPI | Link to DrugBank with drugs that modulate gene expression |
 
 ### STRING database
 
-Integración con la [STRING REST API](https://string-db.org/help/api/) pública (sin API key, `species=9606` — humano).
+Integration with the public [STRING REST API](https://string-db.org/help/api/) (no API key required, `species=9606` — human).
 
-| Tool | Descripción |
+| Tool | Description |
 |------|-------------|
-| `get_string_interaction_partners(gene_name, limit=10)` | Top interactores proteicos con scores (combined, experimental, textmining, databases, coexpresión) |
-| `get_string_functional_enrichment(gene_names)` | Enriquecimiento funcional: GO BP/MF/CC, KEGG, Reactome. `gene_names` es comma-separated. Devuelve top 15 términos por FDR |
-| `get_string_network_url(gene_names)` | URL de imagen PNG de la red de interacciones. El agente la embebe en su respuesta como `![STRING Network](url)`, que se renderiza directamente en el chat |
+| `get_string_interaction_partners(gene_name, limit=10)` | Top protein interactors with scores (combined, experimental, textmining, databases, coexpression) |
+| `get_string_functional_enrichment(gene_names)` | Functional enrichment: GO BP/MF/CC, KEGG, Reactome. `gene_names` is comma-separated. Returns top 15 terms by FDR |
+| `get_string_network_url(gene_names)` | URL of a PNG image of the interaction network. The agent embeds it in its response as `![STRING Network](url)`, which renders directly in the chat |
 
-**Ejemplo de uso en el chat:**
+**Example usage in the chat:**
 
-> *"Mostrá la red de interacciones de TP53, BRCA1 y MYC"*
+> *"Show the interaction network for TP53, BRCA1, and MYC"*
 >
-> → El agente llama `get_string_network_url("TP53,BRCA1,MYC")` y responde con la imagen embebida en markdown.
+> → The agent calls `get_string_network_url("TP53,BRCA1,MYC")` and responds with the image embedded in markdown.
 
-> *"¿Qué pathways están enriquecidos en los genes de mi experimento #5?"*
+> *"Which pathways are enriched in the genes from my experiment #5?"*
 >
-> → El agente llama `get_experiment_top_results(5)` para obtener los genes, luego `get_string_functional_enrichment("GEN1,GEN2,...")` para el enriquecimiento.
+> → The agent calls `get_experiment_top_results(5)` to retrieve the genes, then `get_string_functional_enrichment("GENE1,GENE2,...")` for enrichment.
 
-### Base de conocimiento curada
+### Curated knowledge base
 
-| Tool | Descripción |
+| Tool | Description |
 |------|-------------|
-| `search_curated_knowledge(query)` | Búsqueda semántica en `CuratedDocument`. Devuelve top 5 documentos por similitud coseno. Útil para responder preguntas sobre cómo funciona la plataforma |
+| `search_curated_knowledge(query)` | Semantic search over `CuratedDocument`. Returns the top 5 documents by cosine similarity. Useful for answering questions about how the platform works |
 
 ---
 
 ## 5. Frontend — React widget
 
-Ubicación: `src/frontend/static/frontend/src/components/assistant/`
+Location: `src/frontend/static/frontend/src/components/assistant/`
 
-### Componentes
+### Components
 
 ```
-ChatWidget.tsx          — FAB (botón flotante) + controla visibilidad del panel
-ChatPanel.tsx           — Panel principal: header, lista de conversaciones, thread
-ConversationList.tsx    — Sidebar izquierdo con historial de conversaciones
-MessageThread.tsx       — Área de mensajes + input
-types.ts                — Interfaces TypeScript
+ChatWidget.tsx          — FAB (floating action button) + controls panel visibility
+ChatPanel.tsx           — Main panel: header, conversation list, message thread
+ConversationList.tsx    — Left sidebar with conversation history
+MessageThread.tsx       — Message area + input
+types.ts                — TypeScript interfaces
 ```
 
-### Estilos
+### Styles
 
 `src/frontend/static/frontend/src/css/chat-widget.css`
 
-### Persistencia en localStorage
+### localStorage persistence
 
-| Clave | Valor | Descripción |
-|-------|-------|-------------|
-| `multiomix_chat_open` | `"1"` / `"0"` | Si el panel está abierto |
-| `multiomix_chat_conv_id` | ID numérico | Conversación activa al navegar entre páginas |
+| Key | Value | Description |
+|-----|-------|-------------|
+| `multiomix_chat_open` | `"1"` / `"0"` | Whether the panel is open |
+| `multiomix_chat_conv_id` | Numeric ID | Active conversation when navigating between pages |
 
-Al montar `ChatPanel`, se verifica que la conversación almacenada todavía exista en el servidor. Si fue eliminada, se limpia el storage y se inicia una nueva.
+When `ChatPanel` mounts, it verifies that the stored conversation still exists on the server. If it has been deleted, the storage is cleared and a new conversation is started.
 
-### Rendering de markdown
+### Markdown rendering
 
-Los mensajes del asistente se renderizan con `react-markdown` + `remark-gfm`:
-- Tablas (resultados de enriquecimiento, listas de genes)
-- Código inline y bloques de código
-- Listas y negritas
-- **Imágenes** (`![alt](url)`) — usado para redes de STRING
+Assistant messages are rendered with `react-markdown` + `remark-gfm`:
+- Tables (enrichment results, gene lists)
+- Inline code and code blocks
+- Lists and bold text
+- **Images** (`![alt](url)`) — used for STRING networks
 
-Los mensajes del usuario se muestran como texto plano con `white-space: pre-wrap`.
+User messages are displayed as plain text with `white-space: pre-wrap`.
 
-### Integración en el layout
+### Layout integration
 
-En `Base.tsx`, el widget se renderiza solo para usuarios autenticados no anónimos:
+In `Base.tsx`, the widget is rendered only for authenticated non-anonymous users:
 
 ```tsx
 {currentUser && !currentUser.is_anonymous && <ChatWidget />}
 ```
 
-Las URLs de la API se pasan como variables JS globales desde `base.html`:
+The API URLs are passed as global JS variables from `base.html`:
 ```html
 <script>
   var urlAssistantChat = "{% url 'assistant_chat' %}";
@@ -350,33 +350,33 @@ Las URLs de la API se pasan como variables JS globales desde `base.html`:
 
 ---
 
-## 6. Flujo completo de una consulta
+## 6. Full query flow
 
 ```
-Usuario escribe → Enter
+User types → Enter
         │
         ▼
 ChatPanel.sendMessage()
-  ├─ Agrega mensaje optimista a la UI (rol: user)
+  ├─ Optimistically adds message to the UI (role: user)
   └─ POST /assistant/api/chat/ { message, conversation_id }
               │ (timeout: 3 min)
               ▼
          ChatView.post()
-           ├─ Obtiene/crea Conversation
+           ├─ Gets/creates Conversation
            └─ llm_service.run_chat(conversation, message, user_id)
                     │
-                    ├─ 1. EmbeddingService.embed(message)  → vector 384D
+                    ├─ 1. EmbeddingService.embed(message)  → 384D vector
                     │
                     ├─ 2. build_chat_history()
-                    │     ├─ 15 msgs recientes (conv actual)
-                    │     └─ 5 msgs semánticos (todas las convs del user)
+                    │     ├─ 15 recent msgs (current conv)
+                    │     └─ 5 semantic msgs (all user convs)
                     │
                     ├─ 3. Message.objects.create(role=user, embedding=...)
                     │
                     ├─ 4. AgentExecutor.invoke(input, chat_history)
-                    │     ├─ LLM decide qué tools llamar
-                    │     ├─ Ejecuta tools (DB, APIs externas)
-                    │     └─ LLM genera respuesta final en markdown
+                    │     ├─ LLM decides which tools to call
+                    │     ├─ Executes tools (DB, external APIs)
+                    │     └─ LLM generates final response in markdown
                     │
                     └─ 5. Message.objects.create(role=assistant, embedding=...)
               │
@@ -384,40 +384,40 @@ ChatPanel.sendMessage()
          Response { conversation_id, reply }
               │
               ▼
-ChatPanel recibe respuesta
-  ├─ Agrega mensaje del asistente (renderizado con ReactMarkdown)
-  ├─ Guarda conversation_id en localStorage
-  └─ Recarga lista de conversaciones
+ChatPanel receives response
+  ├─ Appends assistant message (rendered with ReactMarkdown)
+  ├─ Saves conversation_id to localStorage
+  └─ Reloads conversation list
 ```
 
 ---
 
-## 7. Variables de entorno y configuración
+## 7. Environment variables and configuration
 
-En `settings.py`:
+In `settings.py`:
 
-| Variable | Default | Descripción |
+| Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | `""` | API key de OpenAI (requerida con el LLM por defecto) |
-| `ASSISTANT_LLM_MODEL` | `"gpt-4o-mini"` | Modelo LLM a usar |
-| `ASSISTANT_LLM_TEMPERATURE` | `0.0` | Temperatura (0 = determinista) |
-| `ASSISTANT_EMBEDDING_MODEL` | `"sentence-transformers/all-MiniLM-L6-v2"` | Modelo de embeddings (HuggingFace) |
-| `ASSISTANT_EMBEDDING_DIMENSIONS` | `384` | Dimensiones del vector (debe coincidir con el modelo) |
-| `ASSISTANT_RECENT_MESSAGES_COUNT` | `15` | Mensajes recientes en el contexto |
-| `ASSISTANT_SEMANTIC_MESSAGES_COUNT` | `5` | Mensajes semánticos cross-chat en el contexto |
+| `OPENAI_API_KEY` | `""` | OpenAI API key (required with the default LLM) |
+| `ASSISTANT_LLM_MODEL` | `"gpt-4o-mini"` | LLM model to use |
+| `ASSISTANT_LLM_TEMPERATURE` | `0.0` | Temperature (0 = deterministic) |
+| `ASSISTANT_EMBEDDING_MODEL` | `"sentence-transformers/all-MiniLM-L6-v2"` | Embedding model (HuggingFace) |
+| `ASSISTANT_EMBEDDING_DIMENSIONS` | `384` | Vector dimensions (must match the model) |
+| `ASSISTANT_RECENT_MESSAGES_COUNT` | `15` | Recent messages in context |
+| `ASSISTANT_SEMANTIC_MESSAGES_COUNT` | `5` | Cross-chat semantic messages in context |
 
-Variables opcionales:
+Optional variables:
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `HF_TOKEN` | Token de HuggingFace (solo necesario si el modelo requiere autenticación) |
-| `HF_CACHE_DIR` | Directorio de caché para modelos HuggingFace |
+| `HF_TOKEN` | HuggingFace token (only required if the model needs authentication) |
+| `HF_CACHE_DIR` | Cache directory for HuggingFace models |
 
 ---
 
-## 8. Cómo cambiar el modelo LLM
+## 8. How to change the LLM model
 
-La función `get_llm()` en `src/assistant/services/llm_service.py` es el único punto a modificar:
+The `get_llm()` function in `src/assistant/services/llm_service.py` is the only point to modify:
 
 ### OpenAI (default)
 ```python
@@ -442,7 +442,7 @@ def get_llm():
 ```
 Dep: `pip install langchain-anthropic`
 
-### Ollama (local, sin costo)
+### Ollama (local, no cost)
 ```python
 def get_llm():
     from langchain_ollama import ChatOllama
@@ -451,55 +451,55 @@ def get_llm():
         temperature=settings.ASSISTANT_LLM_TEMPERATURE,
     )
 ```
-Dep: `pip install langchain-ollama` + Ollama corriendo localmente.
+Dep: `pip install langchain-ollama` + Ollama running locally.
 
-> **Nota**: el modelo debe soportar **tool/function calling** para que el agente funcione correctamente.
+> **Note**: the model must support **tool/function calling** for the agent to work correctly.
 
 ---
 
-## 9. Cómo agregar una nueva tool
+## 9. How to add a new tool
 
-1. Abrir `src/assistant/services/tools.py`
-2. Agregar la función decorada con `@tool` dentro de `make_tools(user_id)`
-3. Incluirla en el `return [...]` al final de la función
+1. Open `src/assistant/services/tools.py`
+2. Add the function decorated with `@tool` inside `make_tools(user_id)`
+3. Include it in the `return [...]` at the end of the function
 
 ```python
 @tool
 def get_my_new_tool(param: str) -> str:
     """
-    Descripción clara de qué hace y CUÁNDO debe ser usada por el LLM.
-    Esto es el docstring que el LLM lee para decidir si usar la tool.
+    Clear description of what this tool does and WHEN the LLM should use it.
+    This docstring is what the LLM reads to decide whether to call the tool.
     """
-    # Seguridad: user_id siempre viene del closure, nunca del LLM
+    # Security: user_id always comes from the closure, never from the LLM
     from myapp.models import MyModel
     qs = MyModel.objects.filter(user_id=user_id, name__icontains=param)
     return json.dumps(list(qs.values(...)), default=str)
 ```
 
-**Reglas importantes:**
-- El `user_id` siempre debe venir del closure — nunca como parámetro de la tool
-- El docstring es crítico: el LLM lo usa para decidir cuándo llamar la tool
-- Devolver siempre un string JSON serializable
-- Manejar excepciones y devolver `{'error': '...'}` en caso de fallo
+**Important rules:**
+- `user_id` must always come from the closure — never as a tool parameter
+- The docstring is critical: the LLM uses it to decide when to call the tool
+- Always return a JSON-serializable string
+- Handle exceptions and return `{'error': '...'}` on failure
 
 ---
 
-## 10. Cómo agregar documentación curada
+## 10. How to add curated documentation
 
-Los `CuratedDocument` permiten agregar conocimiento específico sobre Multiomix que el agente puede consultar semánticamente.
+`CuratedDocument` entries allow adding platform-specific knowledge that the agent can query semantically.
 
-1. Ir al Django Admin: `/admin/assistant/curateddocument/add/`
-2. Completar título, contenido y categoría
-3. Guardar — el embedding se genera automáticamente
+1. Go to Django Admin: `/admin/assistant/curateddocument/add/`
+2. Fill in the title, content, and category
+3. Save — the embedding is generated automatically
 
-**Ejemplos de documentos útiles:**
-- "Cómo interpretar el C-index en validaciones estadísticas"
-- "Diferencias entre DESeq2 y limma en análisis de expresión diferencial"
-- "Cómo cargar archivos de metilación con IDs de sitios CpG"
+**Examples of useful documents:**
+- "How to interpret the C-index in statistical validations"
+- "Differences between DESeq2 and limma in differential expression analysis"
+- "How to upload methylation files with CpG site IDs"
 
 ---
 
-## 11. Dependencias
+## 11. Dependencies
 
 ### Backend (`config/requirements.txt`)
 
@@ -520,16 +520,16 @@ react-markdown
 remark-gfm
 ```
 
-### Base de datos
+### Database
 
-Requiere **PostgreSQL con extensión pgvector**. En desarrollo, usar la imagen Docker:
+Requires **PostgreSQL with the pgvector extension**. In development, use the Docker image:
 
 ```yaml
 # docker-compose.dev.yml
 image: pgvector/pgvector:pg16
 ```
 
-La extensión se crea automáticamente en la migración inicial del app `assistant`:
+The extension is created automatically in the `assistant` app's initial migration:
 
 ```python
 # src/assistant/migrations/0001_initial.py
