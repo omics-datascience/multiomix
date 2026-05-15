@@ -1,7 +1,14 @@
 from typing import List
 from django.conf import settings
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
+from assistant.models import Message
+from assistant.services.embedding_service import embedding_service
+from assistant.services.tools import make_tools
+from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from pgvector.django import CosineDistance
 
 SYSTEM_PROMPT = """You are Multiomix Assistant, a specialized AI integrated into the Multiomix platform —
 a cloud-based bioinformatics tool for inferring cancer genomic and epigenomic events associated with gene expression modulation.
@@ -43,7 +50,6 @@ Do NOT attempt to answer off-topic questions even partially.
 
 def get_llm():
     """Returns the configured LLM. Swap this function to change provider."""
-    from langchain_openai import ChatOpenAI
     return ChatOpenAI(
         model=settings.ASSISTANT_LLM_MODEL,
         temperature=settings.ASSISTANT_LLM_TEMPERATURE,
@@ -59,8 +65,6 @@ def build_chat_history(conversation, user_id: int, query_embedding: List[float])
       (cross-chat long-term memory), excluding messages already in the recent set.
     Returns LangChain message objects. SystemMessage is added separately in the prompt.
     """
-    from pgvector.django import CosineDistance
-    from assistant.models import Message
 
     # Recent messages from the current conversation
     recent_qs = Message.objects.filter(conversation=conversation).order_by('-created_at')
@@ -95,11 +99,6 @@ def run_chat(conversation, user_message: str, user_id: int) -> str:
     Run one chat turn: embed the user message, build context, invoke agent, return reply.
     Persists user + assistant messages (with embeddings) to the DB.
     """
-    from assistant.models import Message
-    from assistant.services.embedding_service import embedding_service
-    from assistant.services.tools import make_tools
-    from langchain.agents import create_tool_calling_agent, AgentExecutor
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
     # Embed user query
     query_embedding = embedding_service.embed(user_message)

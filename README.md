@@ -16,6 +16,7 @@ This document is focused on the **development** of the system. If you are lookin
 - [Modulector][modulector] `2.2.0`
 - [BioAPI][bioapi] `1.2.1`
 - R `4.4.2` (required for `differential-expression`)
+- **PostgreSQL with [pgvector](https://github.com/pgvector/pgvector)** (required for the AI assistant's semantic search). The provided Docker configuration already uses the `pgvector/pgvector:pg16` image — no manual installation needed when using Docker.
 
 
 ## Installation 
@@ -39,6 +40,7 @@ This document is focused on the **development** of the system. If you are lookin
        1. `docker volume create --name=multiomics_intermediate_media_data`
        1. `docker volume create --name=multiomics_intermediate_logs_data`
     1. Test that all the services start correctly: `docker-compose -f docker-compose.dev.yml up -d`
+       > **Note:** the PostgreSQL service now uses the `pgvector/pgvector:pg16` image instead of the standard `postgres` image. This is required for the AI assistant's vector similarity search. If you have an existing container running the standard image, recreate it with the new one.
 1. Go back to the `src` folder to create the DB and an admin user: 
     1. `python3 manage.py makemigrations`
     1. `python3 manage.py migrate`
@@ -71,6 +73,16 @@ Every time you want to work with Multiomix, you need to follow the below steps:
    1. If you want to check Task in the GUI you can run [Flower](https://flower.readthedocs.io/en/latest/index.html) `python3 -m celery -A multiomics_intermediate flower`
 
     **NOTE:** maybe in Windows is needed to add `--pool=solo` to the previous commands. Example: `python3 -m celery -A multiomics_intermediate worker -l info -Q correlation_analysis --concurrency 1 --pool=solo`
+
+
+### Dockerfile changes
+
+The production `Dockerfile` was updated in this version:
+
+- **ENV syntax**: all `ENV` declarations were migrated to the `ENV KEY=value` format (recommended since Docker 20.10).
+- **R 4.4.2 + limma**: a new build stage installs R and the `limma` Bioconductor package required for differential expression experiments.
+
+If you are building a custom image, make sure your Docker version supports the updated syntax.
 
 
 ### Linter and Typescript

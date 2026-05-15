@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -5,6 +6,7 @@ from rest_framework.views import APIView
 
 from .models import Conversation
 from .serializers import ConversationListSerializer, ConversationSerializer
+from .services.llm_service import run_chat
 
 
 class ChatView(APIView):
@@ -20,14 +22,10 @@ class ChatView(APIView):
             return Response({'error': 'message is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         if conversation_id:
-            try:
-                conversation = Conversation.objects.get(pk=conversation_id, user=request.user)
-            except Conversation.DoesNotExist:
-                return Response({'error': 'Conversation not found'}, status=status.HTTP_404_NOT_FOUND)
+            conversation = get_object_or_404(Conversation, pk=conversation_id, user=request.user)
         else:
             conversation = Conversation.objects.create(user=request.user)
 
-        from .services.llm_service import run_chat
         reply = run_chat(conversation, message, request.user.pk)
 
         return Response({
@@ -47,10 +45,18 @@ class ConversationListView(generics.ListAPIView):
 
 
 class ConversationDetailView(generics.RetrieveDestroyAPIView):
-    """GET/DELETE /assistant/api/conversations/<pk>/ — get messages or delete."""
+    """GET/DELETE/PATCH /assistant/api/conversations/<pk>/ — get messages, delete, or rename."""
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ConversationSerializer
 
     def get_queryset(self):
         return Conversation.objects.filter(user=self.request.user)
+
+    def patch(self, request, *args, **kwargs):
+        """PATCH — update the conversation title only."""
+        conversation = self.get_object()
+        title = (request.data.get('title') or '').strip() or None
+        conversation.title = title
+        conversation.save(update_fields=['title'])
+        return Response({'id': conversation.pk, 'title': conversation.title})

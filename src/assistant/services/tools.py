@@ -314,6 +314,203 @@ def make_tools(user_id: int):
         })
 
     @tool
+    def get_survival_experiments(limit: int = 20) -> str:
+        """
+        Returns the user's survival / statistical validation experiments with their metrics.
+        Each experiment belongs to one of the user's biomarkers.
+        Metrics: c_index, cox_c_index (Cox regression), cox_log_likelihood, r2_score, mean_squared_error.
+        Use this to list or find survival analysis runs before fetching detailed results.
+        """
+        from statistical_properties.models import StatisticalValidation
+        qs = StatisticalValidation.objects.filter(
+            biomarker__user_id=user_id
+        ).order_by('-created')[:limit]
+        data = list(qs.values(
+            'id', 'name', 'description', 'state', 'created',
+            'c_index', 'cox_c_index', 'cox_log_likelihood', 'r2_score', 'mean_squared_error',
+            'biomarker__id', 'biomarker__name',
+        ))
+        return json.dumps(data, default=str)
+
+    @tool
+    def get_survival_results(experiment_id: int) -> str:
+        """
+        Returns detailed survival analysis results for a specific statistical validation experiment.
+        Includes survival metrics (c_index, cox_c_index, cox_log_likelihood, r2_score, mean_squared_error)
+        and the list of molecules with their Cox regression coefficients.
+        A positive coefficient means the molecule increases risk; negative means protective.
+        Use this when the user asks about survival metrics or molecule coefficients of a specific
+        statistical validation. Always verify the experiment belongs to the user via their biomarkers.
+        """
+        from statistical_properties.models import StatisticalValidation
+
+        try:
+            sv = StatisticalValidation.objects.select_related('biomarker').get(
+                pk=experiment_id, biomarker__user_id=user_id
+            )
+        except StatisticalValidation.DoesNotExist:
+            return json.dumps({'error': f'Survival validation {experiment_id} not found or does not belong to you'})
+
+        molecules = list(sv.molecules_with_coefficients.values('identifier', 'coeff', 'type'))
+
+        return json.dumps({
+            'id': sv.id,
+            'name': sv.name,
+            'description': sv.description,
+            'state': sv.state,
+            'biomarker_id': sv.biomarker.id,
+            'biomarker_name': sv.biomarker.name,
+            'metrics': {
+                'c_index': sv.c_index,
+                'cox_c_index': sv.cox_c_index,
+                'cox_log_likelihood': sv.cox_log_likelihood,
+                'r2_score': sv.r2_score,
+                'mean_squared_error': sv.mean_squared_error,
+            },
+            'molecules_with_coefficients': molecules,
+        }, default=str)
+
+    @tool
+    def find_gene_across_experiments(gene_name: str) -> str:
+        """
+        Searches across all the user's correlation experiments (miRNA, CNA, Methylation) to find
+        which ones contain a specific gene in their results.
+        Returns the experiment name, type, paired GEM molecule, and correlation statistics.
+        Use this when the user asks "in which experiments does gene X appear?",
+        wants to explore all correlations involving a specific gene, or wants to discover
+        which GEM molecules co-correlate with a gene across multiple experiments.
+        """
+        from api_service.models import GeneMiRNACombination, GeneCNACombination, GeneMethylationCombination
+
+        results = []
+
+        for CombClass, exp_type_label in [
+            (GeneMiRNACombination, 'miRNA'),
+            (GeneCNACombination, 'CNA'),
+            (GeneMethylationCombination, 'Methylation'),
+        ]:
+            qs = (
+                CombClass.objects
+                .filter(experiment__user_id=user_id, gene__name__iexact=gene_name)
+                .values(
+                    'experiment__id', 'experiment__name', 'experiment__state',
+                    'gem', 'correlation', 'p_value', 'adjusted_p_value',
+                )
+                .order_by('-correlation')[:10]
+            )
+            for row in qs:
+                results.append({
+                    'experiment_id': row['experiment__id'],
+                    'experiment_name': row['experiment__name'],
+                    'experiment_type': exp_type_label,
+                    'gem': row['gem'],
+                    'correlation': row['correlation'],
+                    'p_value': row['p_value'],
+                    'adjusted_p_value': row['adjusted_p_value'],
+                })
+
+        if not results:
+            return json.dumps({
+                'gene': gene_name,
+                'found_in': 0,
+                'results': [],
+                'message': f'Gene "{gene_name}" not found in any of your experiments.',
+            })
+
+        return json.dumps({'gene': gene_name, 'found_in': len(results), 'results': results}, default=str)
+
+    @tool
+    def get_genes_in_biomarker(biomarker_id: int) -> str:
+        """
+        Returns all molecules contained in a specific biomarker, grouped by type:
+        mRNAs (genes), miRNAs, CNAs, and methylation identifiers.
+        Use this when the user asks which genes or molecules are part of a biomarker,
+        or wants to review the composition of a biomarker before running further analyses.
+        """
+        from django.db.models import Q
+        from biomarkers.models import Biomarker
+
+        try:
+            biomarker = Biomarker.objects.get(
+                Q(user_id=user_id) | Q(is_public=True),
+                pk=biomarker_id,
+            )
+        except Biomarker.DoesNotExist:
+            return json.dumps({'error': f'Biomarker {biomarker_id} not found or not accessible'})
+
+        return json.dumps({
+            'id': biomarker.id,
+            'name': biomarker.name,
+            'description': biomarker.description,
+            'mrnas': list(biomarker.mrnas.values_list('identifier', flat=True)),
+            'mirnas': list(biomarker.mirnas.values_list('identifier', flat=True)),
+            'cnas': list(biomarker.cnas.values_list('identifier', flat=True)),
+            'methylations': list(biomarker.methylations.values_list('identifier', flat=True)),
+        })
+
+    @tool
+    def get_experiment_detail(experiment_id: int) -> str:
+        """
+        Returns the full configuration of a correlation experiment: which datasets were used
+        (mRNA source and GEM source — whether a user file or a cBioPortal dataset), the
+        correlation and p-value adjustment methods, filtering thresholds, and execution statistics.
+        Use this when the user asks what data was used in an experiment, what parameters were
+        applied, or wants a complete summary of an experiment's setup.
+        """
+        from api_service.models import Experiment
+
+        try:
+            exp = Experiment.objects.select_related(
+                'mRNA_source__user_file',
+                'mRNA_source__cgds_dataset',
+                'gem_source__user_file',
+                'gem_source__cgds_dataset',
+            ).get(pk=experiment_id, user_id=user_id)
+        except Experiment.DoesNotExist:
+            return json.dumps({'error': f'Experiment {experiment_id} not found or does not belong to you'})
+
+        def source_info(source):
+            if source is None:
+                return None
+            if source.user_file_id:
+                uf = source.user_file
+                return {'source_type': 'user_file', 'name': uf.name, 'file_type': uf.file_type}
+            if source.cgds_dataset_id:
+                ds = source.cgds_dataset
+                return {
+                    'source_type': 'cgds_dataset',
+                    'file_path': ds.file_path,
+                    'observation': ds.observation,
+                    'number_of_samples': ds.number_of_samples,
+                }
+            return None
+
+        return json.dumps({
+            'id': exp.id,
+            'name': exp.name,
+            'description': exp.description,
+            'type': exp.get_type_display(),
+            'state': exp.get_state_display(),
+            'submit_date': str(exp.submit_date),
+            'mrna_source': source_info(exp.mRNA_source),
+            'gem_source': source_info(exp.gem_source),
+            'parameters': {
+                'correlation_method': exp.get_correlation_method_display(),
+                'p_values_adjustment_method': exp.get_p_values_adjustment_method_display(),
+                'minimum_coefficient_threshold': exp.minimum_coefficient_threshold,
+                'minimum_std_gene': exp.minimum_std_gene,
+                'minimum_std_gem': exp.minimum_std_gem,
+                'correlate_with_all_genes': exp.correlate_with_all_genes,
+            },
+            'results': {
+                'evaluated_rows': exp.evaluated_row_count,
+                'total_results': exp.result_total_row_count,
+                'final_results': exp.result_final_row_count,
+                'execution_time_seconds': exp.execution_time,
+            },
+        }, default=str)
+
+    @tool
     def search_curated_knowledge(query: str) -> str:
         """
         Searches the curated knowledge base using semantic similarity.
@@ -349,7 +546,7 @@ def make_tools(user_id: int):
         if min_score > 0:
             params['score'] = str(min_score)
 
-        data = global_mrna_service.get_modulector_service_content(
+        data = global_mrna_service.get_mdulector_service_content(
             'mirna-target-interactions',
             request_params=params,
             is_paginated=True,
@@ -424,8 +621,11 @@ def make_tools(user_id: int):
     return [
         get_user_experiments,
         get_experiment_top_results,
+        get_experiment_detail,
         get_user_biomarkers,
         get_statistical_validations,
+        get_survival_experiments,
+        get_survival_results,
         get_inference_experiments,
         get_feature_selection_experiments,
         search_cgds_studies,
@@ -440,4 +640,6 @@ def make_tools(user_id: int):
         get_user_files,
         get_differential_expression_experiments,
         get_differential_expression_results,
+        find_gene_across_experiments,
+        get_genes_in_biomarker,
     ]

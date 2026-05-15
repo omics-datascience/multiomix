@@ -77,7 +77,7 @@ El asistente **nunca inventa datos**. Siempre recupera información real vía to
            │ tool calls
            ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  TOOLS (18 tools)                                                   │
+│  TOOLS (23 tools)                                                   │
 │                                                                      │
 │  ├─ PostgreSQL (Django ORM)  → experimentos, biomarkers, archivos   │
 │  ├─ MongoDB                  → resultados de experimentos           │
@@ -244,13 +244,18 @@ Las tools se construyen en `make_tools(user_id)`. El `user_id` se inyecta server
 |------|-------------|
 | `get_user_experiments` | Lista experimentos de correlación (nombre, estado, tipo, fecha) |
 | `get_experiment_top_results` | Top resultados de un experimento de correlación (gen, GEM, correlación, p-valor) |
+| `get_experiment_detail` | Configuración completa de un experimento: datasets usados, método de correlación, thresholds y estadísticas de ejecución |
 | `get_user_biomarkers` | Biomarkers propios y públicos del usuario |
+| `get_genes_in_biomarker` | Todos los identificadores de un biomarker agrupados por tipo: mRNAs, miRNAs, CNAs y methylations |
 | `get_statistical_validations` | Validaciones estadísticas de biomarkers (c-index, MSE) |
+| `get_survival_experiments` | Lista experimentos de validación estadística de supervivencia con métricas (c_index, cox_c_index, cox_log_likelihood, r2_score, MSE) |
+| `get_survival_results` | Detalle de una validación: métricas de supervivencia completas + moléculas con coeficientes Cox (coeficiente positivo = mayor riesgo, negativo = protector) |
 | `get_inference_experiments` | Experimentos de inferencia de ML |
 | `get_feature_selection_experiments` | Experimentos de selección de features |
 | `get_user_files` | Archivos subidos por el usuario (nombre, tipo, muestras, fecha) |
 | `get_differential_expression_experiments` | Lista experimentos DE (herramienta, estado, fecha) |
 | `get_differential_expression_results` | Top genes DE de un experimento (logFC, FDR, p-valor) |
+| `find_gene_across_experiments` | Busca un gen en todos los resultados de correlación del usuario (miRNA, CNA, Methylation) y devuelve en qué experimentos aparece junto con su GEM emparejado y estadísticas |
 | `search_cgds_studies` | Búsqueda de estudios públicos de cBioPortal por nombre |
 
 ### Información biológica (BioAPI / Modulector)

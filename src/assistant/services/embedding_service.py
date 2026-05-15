@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 from django.conf import settings
 
@@ -15,30 +16,26 @@ class EmbeddingService:
 
     def _get_model(self):
         if self._model is None:
-            import os
             from langchain_huggingface import HuggingFaceEmbeddings
 
             # Use HF_TOKEN if provided, otherwise run fully offline (model cached locally).
             # Inference always runs locally — no text data is ever sent to HuggingFace.
-            hf_token = os.getenv('HF_TOKEN') or None
+            hf_token = settings.ASSISTANT_HF_TOKEN
             local_only = not hf_token and self._is_cached(settings.ASSISTANT_EMBEDDING_MODEL)
 
             self._model = HuggingFaceEmbeddings(
                 model_name=settings.ASSISTANT_EMBEDDING_MODEL,
                 model_kwargs={'device': 'cpu'},
                 encode_kwargs={'normalize_embeddings': True},
-                cache_folder=os.getenv('HF_CACHE_DIR', None),
+                cache_folder=settings.ASSISTANT_HF_CACHE_DIR,
                 **({"huggingface_api_token": hf_token} if hf_token else {}),
             )
-            # Silence future hub warnings once the model is loaded
-            os.environ.setdefault('TOKENIZERS_PARALLELISM', 'false')
         return self._model
 
     @staticmethod
     def _is_cached(model_name: str) -> bool:
         """Check if the model weights are already in the local HuggingFace cache."""
-        import os
-        cache_dir = os.getenv('HF_HOME', os.path.expanduser('~/.cache/huggingface'))
+        cache_dir = settings.ASSISTANT_HF_HOME
         model_slug = model_name.replace('/', '--')
         hub_path = os.path.join(cache_dir, 'hub', f'models--{model_slug}')
         return os.path.isdir(hub_path)

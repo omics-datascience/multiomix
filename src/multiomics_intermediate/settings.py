@@ -33,6 +33,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',')
+
 # Application definition
 INSTALLED_APPS = [
     'channels',
@@ -183,7 +185,7 @@ LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Security settings
-ENABLE_SECURITY: bool = os.getenv('ENABLE_SECURITY', 'false') == 'true'
+ENABLE_SECURITY: bool = os.getenv('ENABLE_SECURITY', 'false').lower() == 'true'
 SESSION_COOKIE_SECURE = ENABLE_SECURITY
 CSRF_COOKIE_SECURE = ENABLE_SECURITY
 SECURE_REFERRER_POLICY = 'same-origin'
@@ -335,12 +337,21 @@ NON_DATA_VALUE: str = 'NA'
 
 # AI Assistant settings
 OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
-ASSISTANT_LLM_MODEL: str = os.getenv('ASSISTANT_LLM_MODEL', 'gpt-4o-mini')
+ASSISTANT_LLM_MODEL: str = os.getenv('ASSISTANT_LLM_MODEL', 'gpt-5.4-mini')
 ASSISTANT_LLM_TEMPERATURE: float = float(os.getenv('ASSISTANT_LLM_TEMPERATURE', '0.0'))
 ASSISTANT_EMBEDDING_MODEL: str = os.getenv('ASSISTANT_EMBEDDING_MODEL', 'sentence-transformers/all-MiniLM-L6-v2')
 ASSISTANT_EMBEDDING_DIMENSIONS: int = int(os.getenv('ASSISTANT_EMBEDDING_DIMENSIONS', '384'))
 ASSISTANT_RECENT_MESSAGES_COUNT: int = int(os.getenv('ASSISTANT_RECENT_MESSAGES_COUNT', '15'))
 ASSISTANT_SEMANTIC_MESSAGES_COUNT: int = int(os.getenv('ASSISTANT_SEMANTIC_MESSAGES_COUNT', '5'))
+# HuggingFace / tokenizers settings
+ASSISTANT_HF_TOKEN: Optional[str] = os.getenv('HF_TOKEN') or None
+ASSISTANT_HF_CACHE_DIR: Optional[str] = os.getenv('HF_CACHE_DIR') or None
+ASSISTANT_HF_HOME: str = os.getenv('HF_HOME', os.path.expanduser('~/.cache/huggingface'))
+# Controls HuggingFace tokenizers parallelism to avoid deadlocks in forked workers.
+# Set at boot time so the tokenizers library picks it up from os.environ automatically.
+ASSISTANT_TOKENIZERS_PARALLELISM: str = os.getenv('TOKENIZERS_PARALLELISM', 'false')
+# Apply at boot time so the HuggingFace tokenizers library picks it up before any import.
+os.environ.setdefault('TOKENIZERS_PARALLELISM', ASSISTANT_TOKENIZERS_PARALLELISM)
 
 
 # Feature Selection settings
