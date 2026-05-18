@@ -42,7 +42,7 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
         }
 
         ky.get(urlMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
-            response.json().then((jsonResponse: DjangoMiRNADataJSON) => {
+            response.json<DjangoMiRNADataJSON>().then((jsonResponse) => {
                 setMiRNAData(jsonResponse)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)

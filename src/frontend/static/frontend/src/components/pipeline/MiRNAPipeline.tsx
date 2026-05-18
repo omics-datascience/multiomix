@@ -151,7 +151,7 @@ interface MiRNAPipelineState {
  * checkbox, submit button,, etc
  */
 class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineState> {
-    websocketClient: WebsocketClientCustom
+    websocketClient: WebsocketClientCustom | undefined = undefined
     filterTimeout: number | undefined
     abortController = new AbortController()
 
@@ -359,7 +359,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
 
         // Makes the request
         ky.get(urlGetExperimentData, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json().then((experimentResult: ResponseRequestWithPagination<DjangoMRNAxGEMResultRow>) => {
+            response.json<ResponseRequestWithPagination<DjangoMRNAxGEMResultRow>>().then((experimentResult) => {
                 const experimentTabs = this.state.experimentTabs
                 experimentTabs[experimentId].experimentInfo.rows = experimentResult.results
                 experimentTabs[experimentId].experimentInfo.totalRowCount = experimentResult.count
@@ -522,7 +522,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
     refreshExperimentInfo = (experimentId: number) => {
         const url = `${urlGetFullUserExperiment}/${experimentId}/`
         ky.get(url, { signal: this.abortController.signal }).then((response) => {
-            response.json().then((experiment: DjangoExperiment) => {
+            response.json<DjangoExperiment>().then((experiment) => {
                 this.updateTab(experimentId, experiment)
             }).catch((err) => {
                 alertGeneralError()

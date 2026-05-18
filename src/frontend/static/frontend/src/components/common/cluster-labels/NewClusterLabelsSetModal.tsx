@@ -112,7 +112,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
         }
 
         ky.post(urlClusterLabelsSets, settings).then((response) => {
-            response.json().then((_jsonResponse: ClusterLabelsSet) => {
+            response.json<ClusterLabelsSet>().then((_jsonResponse) => {
                 props.setShowNewClusterLabelsSet(false)
             }).catch((err) => {
                 alertGeneralError()

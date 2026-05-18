@@ -14,8 +14,8 @@ interface FeatureSelectionFormProps {
     fitnessFunctionParameters: FitnessFunctionParameters,
     crossValidationParameters: CrossValidationParameters,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
-    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
-    handleChangeCrossValidation: <T extends keyof CrossValidationParameters>(key: T, value: any) => void,
+    handleChangeFitnessFunctionOption: (fitnessFunction: string, key: string, value: any) => void,
+    handleChangeCrossValidation: (key: string, value: any) => void,
     isExpertOn: boolean,
 }
 

@@ -37,7 +37,7 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
             `${props.differentialExpressionAnalysisId}/`
 
         ky.get(url, { retry: 5, signal: controller.signal }).then((response) => {
-            response.json().then((volcanoPointsResponse: VolcanoPoint[]) => {
+            response.json<VolcanoPoint[]>().then((volcanoPointsResponse) => {
                 setVolcanoPoints(volcanoPointsResponse)
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)

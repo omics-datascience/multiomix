@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, InputOnChangeData } from 'semantic-ui-react'
+import { DropdownProps, Form, InputOnChangeData } from 'semantic-ui-react'
 import { clusteringAlgorithmOptions, clusteringMetricOptions, clusteringScoringMethodOptions } from '../../utils'
 import { ClusteringMetric, ClusteringParameters } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
@@ -9,7 +9,7 @@ interface NewClusteringModelFormProps {
     /** Getter of the selected params to handle in the form. */
     parameters: ClusteringParameters,
     /** Setter of the selected params to handle in the form. */
-    handleChangeParams: (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void,
+    handleChangeParams: (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps | InputOnChangeData) => void,
     /** Setter of the lookForOptimalNClusters value. */
     handleChangeOptimalNClusters: (checked: boolean) => void
 }

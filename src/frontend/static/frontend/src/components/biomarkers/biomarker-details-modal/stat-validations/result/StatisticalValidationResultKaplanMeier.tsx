@@ -88,7 +88,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationClinicalAttrs, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((clinicalAttributes: string[]) => {
+            response.json<string[]>().then((clinicalAttributes) => {
                 setClinicalAttributes(clinicalAttributes)
             }).catch((err) => {
                 alertGeneralError()
@@ -112,7 +112,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationKaplanMeierClustering, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((statValidation: KaplanMeierResultData) => {
+            response.json<KaplanMeierResultData>().then((statValidation) => {
                 setKaplanMeierData(statValidation)
             }).catch((err) => {
                 alertGeneralError()
@@ -142,7 +142,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
             clinical_attribute: clinicalAttribute
         }
         ky.get(urlStatisticalValidationKaplanMeierByAttr, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((kaplanMeierResult: KaplanMeierResultData) => {
+            response.json<KaplanMeierResultData>().then((kaplanMeierResult) => {
                 setKaplanMeierData(kaplanMeierResult)
             }).catch((err) => {
                 alertGeneralError()

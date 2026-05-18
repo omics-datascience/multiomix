@@ -42,7 +42,7 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
         }
 
         ky.get(urlMethylationData, { signal: abortController.current.signal, searchParams }).then((response) => {
-            response.json().then((jsonResponse: DjangoMethylationDataJSON) => {
+            response.json<DjangoMethylationDataJSON>().then((jsonResponse) => {
                 setMethylationData(jsonResponse)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)

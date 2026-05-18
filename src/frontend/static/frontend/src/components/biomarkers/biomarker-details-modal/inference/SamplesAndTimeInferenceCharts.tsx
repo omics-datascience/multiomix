@@ -102,7 +102,7 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
         }
 
         ky.get(urlChartDataByAttribute, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((groupedDataByAttribute: ChartData[]) => {
+            response.json<ChartData[]>().then((groupedDataByAttribute) => {
                 setChartData(groupedDataByAttribute)
                 setLoadingChartData(false)
             }).catch((err) => {

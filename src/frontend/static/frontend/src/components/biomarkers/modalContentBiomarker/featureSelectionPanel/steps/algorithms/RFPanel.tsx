@@ -1,11 +1,11 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
-import { FitnessFunctionParameters, RFParameters } from '../../../../types'
+import { RFParameters } from '../../../../types'
 
 /** RFPanel props. */
 interface RFPanelProps {
     parameters: RFParameters,
-    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeFitnessFunctionOption: (fitnessFunction: string, key: string, value: any) => void,
 }
 
 /**

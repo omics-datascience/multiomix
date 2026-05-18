@@ -161,7 +161,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
         const myHeaders = getDjangoHeader()
 
         // If exists an id then we are editing, otherwise It's a new CGDSStudy
-        let addOrEditURL, requestMethod
+        let addOrEditURL, requestMethod: typeof ky.post | typeof ky.patch
 
         if (this.state.newCGDSStudy.id) {
             addOrEditURL = `${urlCGDSStudiesCRUD}/${this.state.newCGDSStudy.id}/`
@@ -175,7 +175,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy, timeout: 20000 })
                 .then((response) => {
                     this.setState({ addingOrEditingCGDSStudy: false })
-                    response.json().then((CGDSStudy: DjangoCGDSStudy) => {
+                    response.json<DjangoCGDSStudy>().then((CGDSStudy) => {
                         if (CGDSStudy && CGDSStudy.id) {
                             // If all is OK, resets the form and gets the User's tag to refresh the list
                             this.cleanForm()
@@ -229,7 +229,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             ky.post(urlSyncCGDSStudy, { headers: myHeaders, json: jsonParams }).then((response) => {
                 this.setState({ sendingSyncRequest: false })
                 this.handleClose()
-                response.json().then((jsonResponse: DjangoResponseSyncCGDSStudyResult) => {
+                response.json<DjangoResponseSyncCGDSStudyResult>().then((jsonResponse) => {
                     switch (jsonResponse.status.code) {
                         case DjangoSyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST:
                             alert('The Study was not found, refresh the list and try with other study')

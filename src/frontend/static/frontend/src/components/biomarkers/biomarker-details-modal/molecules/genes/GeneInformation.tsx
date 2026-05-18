@@ -55,7 +55,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlGeneInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { data: GeneData | object }) => {
+            response.json<{ data: GeneData | object }>().then((jsonResponse) => {
                 if (_.isEqual(jsonResponse.data, {})) {
                     return setGeneData(null)
                 }

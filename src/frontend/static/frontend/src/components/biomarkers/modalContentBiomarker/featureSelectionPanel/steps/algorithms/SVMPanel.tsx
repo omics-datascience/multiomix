@@ -1,12 +1,12 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
-import { FitnessFunctionParameters, SVMParameters } from '../../../../types'
+import { SVMParameters } from '../../../../types'
 import { SVMKernelOptions } from '../../../../utils'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
     parameters: SVMParameters,
-    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeFitnessFunctionOption: (fitnessFunction: string, key: string, value: any) => void,
 }
 
 /**

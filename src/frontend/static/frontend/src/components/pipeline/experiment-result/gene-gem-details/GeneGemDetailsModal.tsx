@@ -415,7 +415,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             }
 
             ky.get(urlCorrelationGraph, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
-                response.json().then((jsonResponse: DjangoResponseGetCorrelationGraph) => {
+                response.json<DjangoResponseGetCorrelationGraph>().then((jsonResponse) => {
                     if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                         // For short...
                         const geneData = jsonResponse.data.gene_values
@@ -512,7 +512,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
             }
 
             ky.get(url, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
-                response.json().then((statisticalProperties: SourceDataStatisticalPropertiesResponse) => {
+                response.json<SourceDataStatisticalPropertiesResponse>().then((statisticalProperties) => {
                     const gemDataIsOrdinal = statisticalProperties.is_data_ok
                         ? this.checkIfDataIsOrdinal(statisticalProperties.gem_data)
                         : false

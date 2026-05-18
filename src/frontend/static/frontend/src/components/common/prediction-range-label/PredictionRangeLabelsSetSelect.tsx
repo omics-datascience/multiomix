@@ -37,7 +37,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
         ky.get(urlPredictionRangeLabelsSets, { searchParams, signal: abortController?.current.signal }).then((response) => {
-            response.json().then((predictionRangeLabelsSetData: PredictionRangeLabelsSet[]) => {
+            response.json<PredictionRangeLabelsSet[]>().then((predictionRangeLabelsSetData) => {
                 setPredictionRangeLabelsSets(predictionRangeLabelsSetData)
             }).catch((err) => {
                 alertGeneralError()

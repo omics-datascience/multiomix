@@ -5,7 +5,7 @@ import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUse
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal } from '../../utils/interfaces'
-import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from './types'
+import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
@@ -453,7 +453,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param key name of the fitnessFunction object that have changed
      * @param value value selected typed depends of what fitness function and key is being changing
      */
-    handleChangeFitnessFunctionOption = <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => {
+    handleChangeFitnessFunctionOption = (fitnessFunction: string, key: string, value: any) => {
         this.setState(prevState => ({
             featureSelection: {
                 ...prevState.featureSelection,
@@ -473,7 +473,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param key name of the crossValidationParameters object that have changed.
      * @param value value selected.
      */
-    handleChangeCrossValidation = <T extends keyof CrossValidationParameters>(key: T, value: any) => {
+    handleChangeCrossValidation = (key: string, value: any) => {
         this.setState(prevState => ({
             featureSelection: {
                 ...prevState.featureSelection,
@@ -659,7 +659,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         return new Promise((resolve, reject) => {
             this.setState({ loadingFullBiomarkerId: biomarkerSimple.id })
             ky.get(urlBiomarkersCRUD + '/' + biomarkerSimple.id + '/', { signal: this.abortController.signal }).then((response) => {
-                response.json().then((jsonResponse: Biomarker | PromiseLike<Biomarker>) => {
+                response.json<Biomarker>().then((jsonResponse) => {
                     resolve(jsonResponse)
                 }).catch((err) => {
                     console.error('Error parsing JSON on Biomarker retrieval:', err)
@@ -795,7 +795,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             }
         })
         ky.get(urlToFind, { searchParams: { query, limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((jsonResponse: MoleculeFinderResult[]) => {
+            response.json<MoleculeFinderResult[]>().then((jsonResponse) => {
                 this.setState(prevState => {
                     const checkedIgnoreProposedAlias = prevState.checkedIgnoreProposedAlias // For short
                     return {
@@ -969,7 +969,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
         const genesArray: MoleculesSectionData[] = []
         ky.post(urlToFind, { headers: getDjangoHeader(), json, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((jsonResponse: { [key: string]: string[] }) => {
+            response.json<{ [key: string]: string[] }>().then((jsonResponse) => {
                 const genes = Object.entries(jsonResponse)
 
                 for (const gene of genes) {
@@ -1206,7 +1206,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         // Checks if it's a creation or an update
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCreate, settings).then((response) => {
-                response.json().then((_jsonResponse: Biomarker) => {
+                response.json<Biomarker>().then((_jsonResponse) => {
                     this.closeModalWithSuccessMsg('Biomarker created successfully')
                 }).catch((err) => {
                     console.error('Error parsing JSON ->', err)
@@ -1235,7 +1235,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         } else {
             const url = formBiomarker.canEditMolecules ? urlBiomarkersCRUD : urlBiomarkersSimpleUpdate
             ky.patch(`${url}/${formBiomarker.id}/`, settings).then((response) => {
-                response.json().then((_jsonResponse: Biomarker) => {
+                response.json<Biomarker>().then((_jsonResponse) => {
                     this.closeModalWithSuccessMsg('Biomarker edited successfully')
                 }).catch((err) => {
                     console.error('Error parsing JSON ->', err)
@@ -1613,7 +1613,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
         const url = `${urlCloneBiomarker}/${this.state.biomarkerToClone.id}/`
         ky.get(url, { searchParams: { limit: 5 }, signal: this.abortController.signal, timeout: REQUEST_TIMEOUT }).then((response) => {
-            response.json().then((responseJSON: OkResponse) => {
+            response.json<OkResponse>().then((responseJSON) => {
                 if (responseJSON.ok) {
                     this.closeModalToClone()
                 } else {
@@ -1699,7 +1699,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             const headers = getDjangoHeader()
 
             ky.post(urlFeatureSelectionSubmit, { headers, body: formData }).then((response) => {
-                response.json().then((responseJSON: OkResponse) => {
+                response.json<OkResponse>().then((responseJSON) => {
                     if (responseJSON.ok) {
                         this.closeModalWithSuccessMsg('Experiment submitted!')
                         this.setState({ featureSelection: this.getDefaultFeatureSelectionProps(), openCreateEditBiomarkerModal: false })
@@ -1747,7 +1747,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         }
 
         ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json().then((tags: DjangoTag[]) => {
+            response.json<DjangoTag[]>().then((tags) => {
                 this.setState({ tags })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)

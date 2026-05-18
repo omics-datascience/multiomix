@@ -168,7 +168,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
             }
 
             ky.post(urlSurvivalData, { headers, json: jsonParams, timeout: 60000 }).then((response) => {
-                response.json().then((survivalData: SurvivalDataResponse) => {
+                response.json<SurvivalDataResponse>().then((survivalData) => {
                     this.setState({
                         geneData: this.generateKaplanMeierData(survivalData, 'gene_data'),
                         geneLogrank: survivalData.gene_data?.log_rank ?? null,
@@ -224,7 +224,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         this.setState({ unlinkingSource })
         const url = `${urlUnlinkClinicalSourceUserFile}/${this.props.experimentId}/`
         ky.patch(url, { headers: myHeaders }).then((response) => {
-            response.json().then((response: DjangoCommonResponse) => {
+            response.json<DjangoCommonResponse>().then((response) => {
                 if (response.status.code === DjangoResponseCode.SUCCESS) {
                     unlinkingSource = false
                     this.setState({ unlinkingSource })

@@ -34,13 +34,12 @@ const InstitutionForm = (props: Props) => {
     const [formData, setFormData] = useState(defaultForm)
 
     /**
-     * Handle form state data
-     * @param e event
-     * @param param.name key name to edit field in form
-     * @param param.value key value to edit field in form
+     * Handle form state data.
+     * @param _ event.
+     * @param data Data with the name and current value of the input element to update the form state.
      */
-
-    const handleChange = (_, { name, value }) => {
+    const handleChange = (_, data: any) => {
+        const { name, value } = data
         setFormData(prevState => ({
             ...prevState, [name]: value
         }))
@@ -64,7 +63,7 @@ const InstitutionForm = (props: Props) => {
 
             ky.patch(editUrl, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
-                response.json().then((jsonResponse: DjangoInstitution) => {
+                response.json<DjangoInstitution>().then((jsonResponse) => {
                     props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} Updated!`, () => setFormData(defaultForm), true)
                 }).catch((err) => {
                     setFormData(prevState => ({ ...prevState, isLoading: false }))
@@ -84,7 +83,7 @@ const InstitutionForm = (props: Props) => {
             }
             ky.post(urlCreateInstitution, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
-                response.json().then((jsonResponse: DjangoInstitution) => {
+                response.json<DjangoInstitution>().then((jsonResponse) => {
                     props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} created!`, () => setFormData(defaultForm))
                 }).catch((err) => {
                     props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))

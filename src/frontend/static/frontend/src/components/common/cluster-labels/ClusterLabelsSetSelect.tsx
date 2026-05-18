@@ -57,7 +57,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
         ky.get(urlClusterLabelsSets, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((clusterLabelsSetsData: ClusterLabelsSet[]) => {
+            response.json<ClusterLabelsSet[]>().then((clusterLabelsSetsData) => {
                 setClusterLabelsSets(clusterLabelsSetsData)
             }).catch((err) => {
                 alertGeneralError()

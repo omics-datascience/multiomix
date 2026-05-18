@@ -45,7 +45,7 @@ export const SharedUsersBiomarker = (props: SharedUsersBiomarkerProps) => {
         const url = `${urlGetUsersNonInBiomarker}/${props.biomarkerId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, username: string }[]) => {
+            response.json<{ id: number, username: string }[]>().then((jsonResponse) => {
                 setListOfUsersPart(jsonResponse.map(institution => ({ key: institution.id.toString(), value: institution.id.toString(), text: institution.username })))
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
@@ -64,7 +64,7 @@ export const SharedUsersBiomarker = (props: SharedUsersBiomarkerProps) => {
         const url = `${urlGetSharedUsersBiomarker}/${props.biomarkerId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, username: string }[]) => {
+            response.json<{ id: number, username: string }[]>().then((jsonResponse) => {
                 setUsersList(jsonResponse)
 
                 if (!(jsonResponse.map(item => item.id).includes(activeUser.id))) {

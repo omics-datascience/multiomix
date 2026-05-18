@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Biomarker, FitnessFunction, ClusteringParameters, SVMParameters, SourceStateBiomarker, RFParameters, CrossValidationParameters } from '../../types'
-import { Button, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
+import { Button, DropdownProps, Form, Grid, Header, Icon, InputOnChangeData, Modal, Segment, Select, Step } from 'semantic-ui-react'
 import { fitnessFunctionsOptions, getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../utils'
 import { Nullable, OkResponse, Source, SourceType } from '../../../../utils/interfaces'
 import { NewSVMModelForm } from './NewSVMModelForm'
@@ -90,7 +90,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      * @param model Model to edit
      * @param data Data with the name and current value of the input element.
      */
-    const handleChangeParamsGeneric = (model: keyof ModelParameters, data: InputOnChangeData) => {
+    const handleChangeParamsGeneric = (model: keyof ModelParameters, data: DropdownProps | InputOnChangeData) => {
         const { name, value } = data
         const newParameters = { ...form.modelParameters[model], [name]: value }
         setForm({ ...form, modelParameters: { ...form.modelParameters, [model]: newParameters } })
@@ -101,7 +101,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
      * @param _event Event of change of the input element.
      * @param data Data with the name and current value of the input element.
      */
-    const handleChangeParamsClustering = (_event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => {
+    const handleChangeParamsClustering = (_event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps | InputOnChangeData) => {
         handleChangeParamsGeneric('clusteringParameters', data)
     }
 
@@ -366,7 +366,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
         const headers = getDjangoHeader()
         ky.post(urlNewTrainedModel, { headers, body: formData }).then((response) => {
-            response.json().then((jsonResponse: OkResponse) => {
+            response.json<OkResponse>().then((jsonResponse) => {
                 if (jsonResponse.ok) {
                     props.setShowNewTrainedModelModal(false)
 

@@ -188,7 +188,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                         }
 
                         ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
-                            response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                            response.json<DjangoNumberSamplesInCommonClinicalValidationResult>().then((jsonResponse) => {
                                 if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                                     if (jsonResponse.data.number_samples_in_common > 0) {
                                         this.setState({
@@ -236,7 +236,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                 }
 
                 ky.get(urlGetCommonSamplesClinical, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
-                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                    response.json<DjangoNumberSamplesInCommonClinicalValidationResult>().then((jsonResponse) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                             if (jsonResponse.data.number_samples_in_common > 0) {
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
@@ -314,7 +314,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             // TODO: add type of experiment
             const url = `${this.props.urlUnlinkClinicalSource}/${this.props.experiment.id}/`
             ky.patch(url, { headers: myHeaders }).then((response) => {
-                response.json().then((response: DjangoCommonResponse) => {
+                response.json<DjangoCommonResponse>().then((response) => {
                     if (response.status.code === DjangoResponseCode.SUCCESS) {
                         this.successfulRequest()
                     } else {
@@ -344,7 +344,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         this.setState({ gettingSourceData: true }, () => {
             const url = `${urlClinicalSourceUserFileCRUD}/${this.props.experiment.clinical_source_id}`
             ky.get(url).then((response) => {
-                response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
+                response.json<DjangoExperimentClinicalSource>().then((clinicalSource) => {
                     if (clinicalSource && clinicalSource.id) {
                         this.setState({
                             clinicalSource: {
@@ -419,7 +419,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
 
         this.setState({ addingOrEditingSource: true }, () => {
             ky.post(this.props.urlClinicalSourceAddOrEdit, { headers: myHeaders, body: formData }).then((response) => {
-                response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
+                response.json<DjangoExperimentClinicalSource>().then((clinicalSource) => {
                     if (clinicalSource && clinicalSource.id) {
                         this.successfulRequest()
                     } else {

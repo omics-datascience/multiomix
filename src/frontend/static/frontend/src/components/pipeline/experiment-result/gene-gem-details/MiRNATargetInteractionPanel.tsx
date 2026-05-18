@@ -75,7 +75,7 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
 
         this.setState({ gettingData: true }, () => {
             ky.get(urlMiRNAInteraction, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
-                response.json().then((response: ResponseRequestWithPagination<DjangoMiRNAGeneInteractionJSON>) => {
+                response.json<ResponseRequestWithPagination<DjangoMiRNAGeneInteractionJSON>>().then((response) => {
                     if (response.results.length === 0) {
                         this.setState({ data: response.results[0] })
                     }

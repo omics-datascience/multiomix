@@ -49,7 +49,7 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
         }
 
         ky.get(urlGOGeneToTerms, { searchParams: searchParams as any, signal: abortController.current.signal }).then((response) => {
-            response.json().then((data: TermsRelatedToGene) => {
+            response.json<TermsRelatedToGene>().then((data) => {
                 setTerms(data.go_terms)
             }).catch((err) => {
                 alertGeneralError()

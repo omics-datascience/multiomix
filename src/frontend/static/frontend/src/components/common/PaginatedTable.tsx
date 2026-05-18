@@ -9,7 +9,7 @@ import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPo
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
 import isEqual from 'lodash/isEqual'
-import './../../css/common-styles'
+import '../../css/common-styles.css'
 
 declare const currentUserId: string
 
@@ -139,7 +139,7 @@ interface PaginatedTableState<T> {
  */
 class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, PaginatedTableState<T>> {
     private filterTimeout: number | undefined
-    websocketClient: WebsocketClientCustom
+    websocketClient: WebsocketClientCustom | undefined
     abortController = new AbortController()
     constructor (props: PaginatedTableProps<T>) {
         super(props)
@@ -221,7 +221,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     this.setState({ retrievedOptions })
 
                     ky.get(filter.urlToRetrieveOptions, { signal: this.abortController.signal, timeout: 60000 }).then((response) => {
-                        response.json().then((jsonResponse: FilterRetrievedOptions[]) => {
+                        response.json<FilterRetrievedOptions[]>().then((jsonResponse) => {
                             retrievedOptions[filter.keyForServer].data = jsonResponse.map((option) => {
                                 return {
                                     key: option.value,
@@ -307,7 +307,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             }
 
             ky.get(this.props.urlToRetrieveData, { signal: this.abortController.signal, searchParams, timeout: 60000 }).then((response) => {
-                response.json().then((jsonResponse: ResponseRequestWithPagination<T>) => {
+                response.json<ResponseRequestWithPagination<T>>().then((jsonResponse) => {
                     tableControl.totalRowCount = jsonResponse.count
                     this.setState({
                         elements: jsonResponse.results,

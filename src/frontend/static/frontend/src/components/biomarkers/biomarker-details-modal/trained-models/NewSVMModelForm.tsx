@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, InputOnChangeData } from 'semantic-ui-react'
+import { Form, FormGroupProps, FormSelectProps } from 'semantic-ui-react'
 import { SVMKernelOptions } from '../../utils'
 import { SVMParameters } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
@@ -9,7 +9,7 @@ interface NewSVMModelFormProps {
     /** Getter of the selected params to handle in the form. */
     parameters: SVMParameters,
     /** Setter of the selected params to handle in the form. */
-    handleChangeParams: (event: React.ChangeEvent<HTMLInputElement>, data: InputOnChangeData) => void
+    handleChangeParams: FormSelectProps['onChange'] | FormGroupProps['onChange']
 }
 
 export const NewSVMModelForm = (props: NewSVMModelFormProps) => {

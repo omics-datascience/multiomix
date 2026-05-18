@@ -74,7 +74,7 @@ export const SharedInstitutions = (props: Props) => {
         const url = `${urlGetInstitutionsNonInExperiment}/${props.experimentId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, name: string }[]) => {
+            response.json<{ id: number, name: string }[]>().then((jsonResponse) => {
                 setListOfInstitutionNonPart(jsonResponse.map(institution => ({ key: institution.id.toString(), value: institution.id.toString(), text: institution.name })))
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
@@ -93,7 +93,7 @@ export const SharedInstitutions = (props: Props) => {
         const url = `${urlGetSharedInstitution}/${props.experimentId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, name: string }[]) => {
+            response.json<{ id: number, name: string }[]>().then((jsonResponse) => {
                 setInstitutionList(jsonResponse)
 
                 if (!(jsonResponse.map(item => item.id).includes(activeInstitution.id))) {

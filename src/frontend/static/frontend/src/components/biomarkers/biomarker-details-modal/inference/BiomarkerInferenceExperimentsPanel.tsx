@@ -54,7 +54,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
         const url = `${urlBiomarkerInferenceExperimentsDetails}/${selectedInferenceExperiment.id}/`
         const searchParams = { biomarker_pk: props.selectedBiomarker.id as number }
         ky.get(url, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((experiment: InferenceExperimentForTable) => {
+            response.json<InferenceExperimentForTable>().then((experiment) => {
                 setSelectedInferenceExperiment(experiment)
             }).catch((err) => {
                 alertGeneralError()

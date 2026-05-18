@@ -44,7 +44,7 @@ export const PathwaysInformation = (props: PathwaysInformationProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier }
         ky.get(urlPathwaysInformation, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { data: GeneData[] }) => {
+            response.json<{ data: GeneData[] }>().then((jsonResponse) => {
                 if (jsonResponse.data.length) {
                     setPathwaysData(jsonResponse.data[0])
                 }

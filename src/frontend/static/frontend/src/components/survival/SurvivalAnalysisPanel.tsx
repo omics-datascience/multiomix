@@ -159,8 +159,8 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
         }
 
         ky.get(urlDatasetColumnName, { signal: this.abortController.signal, searchParams }).then((response) => {
-            response.json()
-                .then((columnNames: string[]) => {
+            response.json<string[]>()
+                .then((columnNames) => {
                     this.setColumnNamesAsOptions(columnNames)
                 })
                 .catch((err) => {

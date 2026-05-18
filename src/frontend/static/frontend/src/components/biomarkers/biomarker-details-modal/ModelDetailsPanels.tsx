@@ -197,7 +197,7 @@ export const ModelDetailsPanel = (props: ModelDetailsModelDetailsPanelProps) => 
 
         const searchParams = { trained_model_pk: props.trainedModelPk }
         ky.get(urlStatisticalValidationModalDetails, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((modelDetails: ModelDetails) => {
+            response.json<ModelDetails>().then((modelDetails) => {
                 setModelDetails(modelDetails)
             }).catch((err) => {
                 alertGeneralError()

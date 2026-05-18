@@ -115,7 +115,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
         }
 
         ky.post(urlPredictionRangeLabelsSets, settings).then((response) => {
-            response.json().then((_jsonResponse: PredictionRangeLabelsSet) => {
+            response.json<PredictionRangeLabelsSet>().then((_jsonResponse) => {
                 props.setShowNewPredictionRangeLabelsSet(false)
             }).catch((err) => {
                 alertGeneralError()

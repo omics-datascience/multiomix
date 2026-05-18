@@ -63,7 +63,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
 
         const searchParams = { gene: selectedMolecule.identifier, source: selectedSource ?? '' }
         ky.get(urlMetabolicPathways, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: string[]) => {
+            response.json<string[]>().then((jsonResponse) => {
                 setListOfGenes(jsonResponse)
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)

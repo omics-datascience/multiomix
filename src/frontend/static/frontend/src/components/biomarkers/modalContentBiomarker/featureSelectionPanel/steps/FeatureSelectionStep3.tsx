@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Form, Grid, Segment } from 'semantic-ui-react'
-import { CrossValidationParameters, FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction, FitnessFunctionParameters } from '../../../types'
+import { FeatureSelectionAlgorithm, FeatureSelectionPanelData, FitnessFunction } from '../../../types'
 import { FeatureSelectionForm } from './FeatureSelectionForm'
 import { BBHAAdvanced } from './advancedMode/BBHAAdvanced'
 import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
@@ -15,8 +15,8 @@ interface FeatureSelectionStep3Props {
     featureSelection: FeatureSelectionPanelData,
     handleChangeAlgorithm: (algorithm: FeatureSelectionAlgorithm) => void,
     handleChangeFitnessFunction: (fitnessFunction: FitnessFunction) => void,
-    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
-    handleChangeCrossValidation: <T extends keyof CrossValidationParameters>(key: T, value: any) => void,
+    handleChangeFitnessFunctionOption: (fitnessFunction: string, key: string, value: any) => void,
+    handleChangeCrossValidation: (key: string, value: any) => void,
     handleChangeAdvanceAlgorithm: (advancedAlgorithmParameters: string, name: string, value: any) => void,
     handleSwitchAdvanceAlgorithm: () => void,
 }

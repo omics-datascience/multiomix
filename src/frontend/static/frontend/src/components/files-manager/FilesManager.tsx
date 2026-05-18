@@ -2,7 +2,7 @@ import React from 'react'
 import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
-import ky from 'ky'
+import ky, { HTTPError } from 'ky'
 import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
 import { FileType, Nullable } from '../../utils/interfaces'
@@ -189,7 +189,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      */
     getUserInstitutions () {
         ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
-            response.json().then((userInstitutions: DjangoInstitution[]) => {
+            response.json<DjangoInstitution[]>().then((userInstitutions) => {
                 this.setState({ userInstitutions })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
@@ -209,7 +209,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         }
 
         ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json().then((tags: DjangoTag[]) => {
+            response.json<DjangoTag[]>().then((tags) => {
                 this.setState({ tags })
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
@@ -237,7 +237,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const myHeaders = getDjangoHeader()
 
         // If exists an id then we are editing, otherwise It's a new Tag
-        let addOrEditURL, requestMethod
+        let addOrEditURL, requestMethod: typeof ky.post | typeof ky.patch
 
         if (this.state.newTag.id !== null) {
             addOrEditURL = `${urlTagsCRUD}${this.state.newTag.id}/`
@@ -250,7 +250,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         this.setState({ addingTag: true }, () => {
             requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newTag }).then((response) => {
                 this.setState({ addingTag: false })
-                response.json().then((responseJSON: DjangoTag) => {
+                response.json<DjangoTag>().then((responseJSON) => {
                     if (responseJSON && responseJSON.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list
                         this.setState({ newTag: getDefaultNewTag() })
@@ -463,8 +463,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * On error callback during file upload
      * @param error Error object
      */
-    uploadError = (error) => {
-        error.response.json().then((errorBody: DjangoResponseUploadUserFileError) => {
+    uploadError = (error: HTTPError) => {
+        error.response.json<DjangoResponseUploadUserFileError>().then((errorBody) => {
             console.error(errorBody)
             // NOTE: Parses int as Django Rest Framework returns as string
             // Related issue https://github.com/encode/django-rest-framework/issues/7532
@@ -541,7 +541,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 })
             } else {
                 // In case of creation, an upload in chunks is required
-                startUpload({
+                startUpload<UploadResponse>({
                     url: urlChunkUpload,
                     urlComplete: urlChunkUploadComplete,
                     headers: myHeaders,
@@ -550,7 +550,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     onChunkUpload: (percentDone) => { this.setState({ uploadPercentage: percentDone }) },
                     onUploadStateChange: (currentState) => { this.setState({ uploadState: currentState }) }
                 }).then(this.uploadSuccess)
-                    .catch((err) => {
+                    .catch((err: HTTPError) => {
                         console.log('Error uploading file ->', err)
                         alertGeneralError()
                     })
@@ -626,7 +626,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     editFile = (fileToEdit: DjangoUserFile) => {
         if (fileToEdit.file_type === FileType.CLINICAL) {
             ky.get(`${downloadFileHeaders}${fileToEdit.id}`, { signal: this.abortController.signal }).then((response) => {
-                response.json().then((fileHeaders: string[]) => {
+                response.json<string[]>().then((fileHeaders) => {
                     // Recieve file separates by , to get array of headers
                     const survivalTuplesPossiblesValues = fileHeaders
                     this.setState({

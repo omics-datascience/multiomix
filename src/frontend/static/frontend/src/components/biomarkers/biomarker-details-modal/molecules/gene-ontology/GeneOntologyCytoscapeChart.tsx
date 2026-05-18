@@ -117,7 +117,7 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
         }
 
         ky.get(urlGOTermToTerms, { searchParams: searchParams as any, signal: abortControllerTerm.current.signal }).then((response) => {
-            response.json().then((data: { go_terms: CytoscapeElements }) => {
+            response.json<{ go_terms: CytoscapeElements }>().then((data) => {
                 // The response is a CytoscapeElements object already
                 initCytoscape(data.go_terms)
             }).catch((err) => {

@@ -1,12 +1,12 @@
 import React from 'react'
 import { Button, Form, Label, Segment } from 'semantic-ui-react'
-import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod, FitnessFunctionParameters } from '../../../../types'
+import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod } from '../../../../types'
 import { clusteringAlgorithmOptions } from '../../../../utils'
 
 /** ClusteringPanel props. */
 interface ClusteringPanelProps {
     settings: ClusteringParameters,
-    handleChangeFitnessFunctionOption: <T extends keyof FitnessFunctionParameters, M extends keyof FitnessFunctionParameters[T]>(fitnessFunction: T, key: M, value: FitnessFunctionParameters[T][M]) => void,
+    handleChangeFitnessFunctionOption: (fitnessFunction: string, key: string, value: any) => void,
 }
 
 /**

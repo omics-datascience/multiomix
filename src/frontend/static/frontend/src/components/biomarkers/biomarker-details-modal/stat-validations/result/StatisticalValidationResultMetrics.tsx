@@ -52,7 +52,7 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
 
         const url = `${urlStatisticalValidationMetrics}/${props.selectedStatisticalValidation.id}/`
         ky.get(url, { signal: abortController.current.signal }).then((response) => {
-            response.json().then((statValidation: StatisticalValidation) => {
+            response.json<StatisticalValidation>().then((statValidation) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
                 alertGeneralError()

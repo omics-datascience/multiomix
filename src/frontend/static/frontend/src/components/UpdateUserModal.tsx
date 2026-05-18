@@ -52,7 +52,7 @@ export const UpdateUserModal = (props: Props) => {
 
         setIsLoading(true)
         ky.patch(urlUpdateUser, { headers: myHeaders, json: body }).then((response) => {
-            response.json().then((_: any) => {
+            response.json<any>().then((_) => {
                 props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Credentials changed!', () => {
                     setTextError({ isOpen: false, title: '', body: '' })
                     setPassword(prevState => ({ ...prevState, text: '' }))

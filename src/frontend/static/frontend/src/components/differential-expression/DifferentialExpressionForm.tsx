@@ -153,7 +153,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
             const myHeaders = getDjangoHeader()
             const url = form.clinicalSource.selectedExistingFile?.id ? urlGetClinicalAttributes + `${idToSearch}/` : urlCGDSDatasetClinicalAttributes + `${idToSearch}/`
             ky.get(url, { timeout: 60000, headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-                response.json().then((clinicalAttributes: string[]) => {
+                response.json<string[]>().then((clinicalAttributes) => {
                     setForm(prevState => ({ ...prevState, optionsClinicalAttributes: clinicalAttributes }))
                 }).catch((err) => {
                     console.error('Error parsing JSON ->', err)
@@ -408,7 +408,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 }
                 setForm(prevState => ({ ...prevState, gettingCommonSamples: true }))
                 ky.post(urlGetCommonSamplesOneFrontDiferentialExperiment, { json: jsonData, headers: myHeaders }).then((response) => {
-                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonOneFrontResult) => {
+                    response.json<DjangoNumberSamplesInCommonOneFrontResult>().then((jsonResponse) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                             // For front Source subtracts 1 to not have in count the first column of the file
                             setForm(prevState => ({
@@ -456,7 +456,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                     ...prevState,
                     gettingCommonSamples: false
                 }))
-                response.json().then((jsonResponse: DjangoNumberSamplesInCommonMrnaClinicalResult) => {
+                response.json<DjangoNumberSamplesInCommonMrnaClinicalResult>().then((jsonResponse) => {
                     if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                         setForm(prevState => ({
                             ...prevState,

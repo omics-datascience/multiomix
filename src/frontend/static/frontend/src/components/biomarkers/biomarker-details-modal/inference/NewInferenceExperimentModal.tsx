@@ -220,7 +220,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
         const headers = getDjangoHeader()
 
         ky.post(urlSubmitInferenceExperiment, { headers, body: formData }).then((response) => {
-            response.json().then((jsonResponse: OkResponse) => {
+            response.json<OkResponse>().then((jsonResponse) => {
                 if (jsonResponse.ok) {
                     props.closeModal()
 

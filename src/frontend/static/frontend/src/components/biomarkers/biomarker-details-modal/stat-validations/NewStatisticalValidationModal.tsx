@@ -226,7 +226,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
         const headers = getDjangoHeader()
 
         ky.post(urlNewStatisticalValidation, { headers, body: formData }).then((response) => {
-            response.json().then((jsonResponse: OkResponse) => {
+            response.json<OkResponse>().then((jsonResponse) => {
                 if (jsonResponse.ok) {
                     props.closeModal()
 

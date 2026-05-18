@@ -48,7 +48,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationBestFeatures, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((statValidation: MoleculeWithCoefficient[]) => {
+            response.json<MoleculeWithCoefficient[]>().then((statValidation) => {
                 setStatValidationData(statValidation)
             }).catch((err) => {
                 alertGeneralError()

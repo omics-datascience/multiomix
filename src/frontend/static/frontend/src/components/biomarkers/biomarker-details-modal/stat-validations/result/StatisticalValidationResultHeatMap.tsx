@@ -45,7 +45,7 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
 
         const searchParams = { statistical_validation_pk: props.selectedStatisticalValidation.id }
         ky.get(urlStatisticalValidationHeatMap, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((headMapData: MoleculesExpressions) => {
+            response.json<MoleculesExpressions>().then((headMapData) => {
                 setHeatMapData(headMapData)
             }).catch((err) => {
                 alertGeneralError()

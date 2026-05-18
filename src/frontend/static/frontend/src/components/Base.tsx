@@ -48,7 +48,7 @@ const Base = (props: BaseProps) => {
      */
     function getCurrentUser () {
         ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
-            response.json().then((currentUser: DjangoUser) => {
+            response.json<DjangoUser>().then((currentUser) => {
                 setUser(currentUser)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)

@@ -33,7 +33,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
 
         const searchParams = { inference_experiment_pk: props.selectedInferenceExperiment.id }
         ky.get(urlInferenceExperimentClinicalAttrs, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((clinicalAttributes: string[]) => {
+            response.json<string[]>().then((clinicalAttributes) => {
                 setClinicalAttributes(clinicalAttributes)
             }).catch((err) => {
                 alertGeneralError()
