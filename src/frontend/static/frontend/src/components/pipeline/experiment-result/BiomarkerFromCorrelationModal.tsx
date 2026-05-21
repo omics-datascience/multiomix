@@ -568,7 +568,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     handleSelectAllBiomarker = () => {
         const allMolecules = this.state.experimentInfoWithoutFilters.rows
-
+        const genes = this.handleMapGeneFormFormat(allMolecules, 'gene')
+        const gems = this.handleMapGeneFormFormat(allMolecules, 'gem')
         this.setState({
             biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
             openCreateEditBiomarkerModal: true,
@@ -584,18 +585,12 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     [BiomarkerType.CNA]: { isLoading: false, data: [] },
                     [BiomarkerType.MIRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gem
-                        }))
+                        data: genes
                     },
                     [BiomarkerType.METHYLATION]: { isLoading: false, data: [] },
                     [BiomarkerType.MRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gene
-                        }))
+                        data: gems
                     }
                 },
                 validation: {
@@ -621,15 +616,14 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         // If there are filters applied, use the filtered rows, otherwise use all the rows
         const rowsToUse = hasFilters ? filteredRows : experimentInfo.rows
+        const genes = this.handleMapGeneFormFormat(rowsToUse, 'gene')
 
-        const genes = rowsToUse.map(r => r.gene)
-        const gems = rowsToUse.map(r => r.gem)
-
+        const gems = this.handleMapGeneFormFormat(rowsToUse, 'gem')
         return {
             ...this.getDefaultFormBiomarker(),
             moleculesSection: {
-                [BiomarkerType.MRNA]: { isLoading: false, data: genes.map(g => ({ value: g, isValid: true })) },
-                [BiomarkerType.MIRNA]: { isLoading: false, data: gems.map(g => ({ value: g, isValid: true })) },
+                [BiomarkerType.MRNA]: { isLoading: false, data: genes },
+                [BiomarkerType.MIRNA]: { isLoading: false, data: gems },
                 [BiomarkerType.CNA]: { isLoading: false, data: [] },
                 [BiomarkerType.METHYLATION]: { isLoading: false, data: [] }
             }
@@ -1388,7 +1382,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     handleConfirm = () => {
         const { selectedOption } = this.state
-
         this.setState({ openSelectOptionModal: false }, () => {
             if (selectedOption === 'selectAll') {
                 this.handleSelectAllBiomarker()
@@ -1468,6 +1461,13 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                 [BiomarkerType.METHYLATION]: { isLoading: false, data: [] }
             }
         }
+    }
+
+    handleMapGeneFormFormat = (genArray: DjangoMRNAxGEMResultRow[], type: 'gem' | 'gene'): MoleculesSectionData[] => {
+        return Array.from(
+            new Set(genArray.map(r => r[type]).filter(Boolean)),
+            g => ({ value: g, isValid: true })
+        )
     }
 
     render () {
