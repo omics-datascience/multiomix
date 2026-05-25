@@ -1,16 +1,25 @@
 import React from 'react'
-import { Grid } from 'semantic-ui-react'
+import { DropdownItemProps, Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
+import { NewFile } from '../../BiomarkerManager'
+import { DjangoTag } from '../../../../utils/django_interfaces'
 
 /** ManualForm's props. */
 interface ManualFormProps {
+    tagOptions: DropdownItemProps[]
+    tags: DjangoTag[]
+    uploadingFile: boolean
+    handleAddFileInputsChange: (name: string, value: any) => void
+    newFile: NewFile
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
+    removeSurvivalFormTuple: (idx: number) => void,
+    handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,
     cleanForm: () => void,
     isFormEmpty: () => boolean,
     handleChangeMoleculeSelected: (value: BiomarkerType) => void,
@@ -26,7 +35,7 @@ interface ManualFormProps {
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleChangeInputForm: (value: string, name: 'biomarkerName' | 'biomarkerDescription') => void,
+    handleChangeInputForm: (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => void,
 
 }
 
@@ -50,6 +59,11 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleValidateForm={props.handleValidateForm}
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
+                    tagOptions={props.tagOptions}
+                    newFile={props.newFile}
+                    uploadingFile={props.uploadingFile}
+                    handleAddFileInputsChange={props.handleAddFileInputsChange}
+                    tags={props.tags}
                 />
             </Grid.Column>
             <MoleculesSectionsContainer

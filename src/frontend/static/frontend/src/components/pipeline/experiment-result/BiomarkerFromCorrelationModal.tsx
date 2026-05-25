@@ -1,10 +1,10 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
 import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl, FileType } from '../../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from '../../biomarkers/types'
 import { ManualForm } from '../../biomarkers/modalContentBiomarker/manualForm/ManualForm'
 import { PaginationCustomFilter } from '../../common/PaginatedTable'
@@ -12,6 +12,7 @@ import { isEqual } from 'lodash'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../biomarkers/utils'
 import { BiomarkerDetailsModal } from '../../biomarkers/BiomarkerDetailsModal'
 import { Alert } from '../../common/Alert'
+import { NewFile } from '../../biomarkers/BiomarkerManager'
 
 // URLs defined in gem.html
 declare const urlBiomarkersCRUD: string
@@ -25,6 +26,7 @@ declare const urlMethylationSitesFinder: string
 declare const urlGeneSymbolsFinder: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
+const FILE_INPUT_LABEL = 'Add a new file'
 type SelectedOption = 'selectAll' | 'selectWithFilters'
 
 /** A matched molecule with the search query and the validated alias. */
@@ -85,6 +87,7 @@ interface BiomarkerFromCorrelationModalState {
     openSelectOptionModal: boolean,
     experimentInfoWithoutFilters: ExperimentInfo,
     modalReady: boolean,
+    newFile: NewFile,
 }
 
 /**
@@ -124,7 +127,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             experimentInfoWithoutFilters: {
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
-            }
+            },
+            newFile: this.getDefaultNewFile(),
         }
     }
 
@@ -134,6 +138,24 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * Generates a default new file form
+     * @returns An object with all the field with default values
+     */
+    getDefaultNewFile (): NewFile {
+        return {
+            newFileName: FILE_INPUT_LABEL,
+            newFileNameUser: '',
+            newFileDescription: '',
+            newFileType: FileType.MRNA,
+            newTag: null,
+            institutions: [],
+            isCpGSiteId: false,
+            platform: DjangoMethylationPlatform.PLATFORM_450,
+            survivalColumns: []
+        }
     }
 
     /**
@@ -1101,7 +1123,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * @param value new value for input form
      * @param name type of input to change
      */
-    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+    handleChangeInputForm = (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker[name] = value
         this.setState({ formBiomarker })
@@ -1296,42 +1318,33 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
     }
 
     /**
-     * TODO: Check if needed
      * Removes a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
      * @param idxSurvivalTuple Index in survival tuple
      */
-    removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker })
-        }
+    removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
+            },
+        }))
     }
 
     /**
-     * TODO: Check if needed
      * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param datasetName Name of the edited CGDS dataset
      * @param idxSurvivalTuple Index in survival tuple
      * @param name Field of the CGDS dataset to change
      * @param value Value to assign to the specified field
      */
-    handleSurvivalFormDatasetChanges = (
-        datasetName: NameOfCGDSDataset,
-        idxSurvivalTuple: number,
-        name: string,
-        value: any
-    ) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
-            this.setState({ newBiomarker })
-        }
+    handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
+                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
+                ),
+            },
+        }))
     }
 
     /**
@@ -1418,6 +1431,17 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             confirmModal: this.getDefaultConfirmModal(),
             biomarkerTypeSelected: BiomarkerOrigin.BASE
         })
+    }
+
+    /**
+     * Handles input changes in the New File Form
+     * @param name State field to change
+     * @param value Value to assign to the specified field
+     */
+    handleAddFileInputsChange = (name: string, value: any) => {
+        const newFileForm = this.state.newFile
+        newFileForm[name] = value
+        this.setState({ newFile: newFileForm })
     }
 
     /**
@@ -1562,6 +1586,13 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
+                        tagOptions={[]}
+                        uploadingFile={false}
+                        handleAddFileInputsChange={this.handleAddFileInputsChange}
+                        newFile={this.state.newFile}
+                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                        tags={this.state.tags}
                     />
 
                 </Modal>

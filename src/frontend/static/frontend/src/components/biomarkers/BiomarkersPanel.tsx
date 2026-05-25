@@ -1,10 +1,10 @@
 import React from 'react'
 import { Base } from '../Base'
-import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
+import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
+import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal } from '../../utils/interfaces'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
@@ -26,6 +26,7 @@ import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } f
 import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
+import { BiomarkerManager, NewFile } from './BiomarkerManager'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -45,14 +46,15 @@ declare const urlCloneBiomarker: string
 declare const urlStopFSExperiment: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
-
+const FILE_INPUT_LABEL = 'Add a new file'
 /** A matched molecule with the search query and the validated alias. */
 type MoleculeFinderResult = { molecule: string, standard: string }
 
 /** Extremely simple struct of a Biomarker (useful for simple updates). */
 type BiomarkerNameAndDesc = {
     name: string,
-    description: string
+    description: string,
+    tag?: { id: number } | null
 }
 
 /** Some flags to validate the Biomarkers form. */
@@ -99,6 +101,8 @@ interface BiomarkersPanelState {
     modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
     /** modal to handle shared users */
     modalUsers: SharedUsersBiomarkerPropsExtend,
+    newFile: NewFile,
+
 }
 
 /**
@@ -134,7 +138,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             submittingFSExperiment: false,
             openDetailsModal2: false,
             modalInstitutions: this.defaultModalInstitutions(),
-            modalUsers: this.defaultModalUsers()
+            modalUsers: this.defaultModalUsers(),
+            newFile: this.getDefaultNewFile(),
         }
     }
 
@@ -151,6 +156,24 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     handleCloseModalModalInstitution = () => {
         this.setState({ modalInstitutions: this.defaultModalInstitutions() })
+    }
+
+    /**
+     * Generates a default new file form
+     * @returns An object with all the field with default values
+     */
+    getDefaultNewFile (): NewFile {
+        return {
+            newFileName: FILE_INPUT_LABEL,
+            newFileNameUser: '',
+            newFileDescription: '',
+            newFileType: FileType.MRNA,
+            newTag: null,
+            institutions: [],
+            isCpGSiteId: false,
+            platform: DjangoMethylationPlatform.PLATFORM_450,
+            survivalColumns: []
+        }
     }
 
     /**
@@ -1183,7 +1206,8 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         // Gets name and description
         const simpleBiomarker: BiomarkerNameAndDesc = {
             name: formBiomarker.biomarkerName,
-            description: formBiomarker.biomarkerDescription
+            description: formBiomarker.biomarkerDescription,
+            ...(formBiomarker.tag && { tag: formBiomarker.tag })
         }
 
         // Adds molecules if needed
@@ -1269,7 +1293,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * @param value new value for input form
      * @param name type of input to change
      */
-    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => {
         this.setState(prevState => ({
             formBiomarker: {
                 ...prevState.formBiomarker,
@@ -1374,6 +1398,17 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                 }
             }
         }))
+    }
+
+    /**
+     * Handles input changes in the New File Form
+     * @param name State field to change
+     * @param value Value to assign to the specified field
+     */
+    handleAddFileInputsChange = (name: string, value: any) => {
+        const newFileForm = this.state.newFile
+        newFileForm[name] = value
+        this.setState({ newFile: newFileForm })
     }
 
     /**
@@ -1511,6 +1546,19 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     }
 
     /**
+     * Removes a Survival data tuple for a CGDSDataset
+     * @param idxSurvivalTuple Index in survival tuple
+     */
+    removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
+            },
+        }))
+    }
+
+    /**
      * Generates the modal to confirm a biomarker deletion
      * @returns Modal component. Null if no Tag was selected to delete
      */
@@ -1584,6 +1632,23 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         const featureSelection = this.state.featureSelection
         featureSelection.step = 3
         this.setState({ featureSelection })
+    }
+
+    /**
+     * Handles CGDS Dataset form changes in fields of Survival data tuples
+     * @param idxSurvivalTuple Index in survival tuple
+     * @param name Field of the CGDS dataset to change
+     * @param value Value to assign to the specified field
+     */
+    handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
+        this.setState(prevState => ({
+            newFile: {
+                ...prevState.newFile,
+                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
+                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
+                ),
+            },
+        }))
     }
 
     /**
@@ -1782,328 +1847,368 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                 {/* Experiment stopping confirm modal */}
                 {experimentStopConfirmModal}
 
-                <PaginatedTable<BiomarkerSimple>
-                    headerTitle='Biomarkers'
-                    headers={[
-                        { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                        { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                        { name: 'Tag', serverCodeToSort: 'tag' },
-                        { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
-                        { name: 'Origin', serverCodeToSort: 'origin', textAlign: 'center' },
-                        { name: 'Date', serverCodeToSort: 'upload_date' },
-                        { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
-                        { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
-                        { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
-                        { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
-                        { name: 'Public', width: 1 },
-                        { name: 'Shared', width: 1 },
-                        { name: 'Actions', width: 2 }
-                    ]}
-                    defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
-                    customFilters={this.getDefaultFilters()}
-                    showSearchInput
-                    customElements={[
-                        <Form.Field key={1} className='custom-table-field' title='Add new Biomarker'>
-                            <Button
-                                primary
-                                icon
-                                onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}
-                            >
-                                <Icon name='add' />
-                            </Button>
-                        </Form.Field>
-                    ]}
-                    searchLabel='Name'
-                    searchPlaceholder='Search by name'
-                    urlToRetrieveData={urlBiomarkersCRUD}
-                    updateWSKey='update_biomarkers'
-                    mapFunction={(biomarker: BiomarkerSimple) => {
-                        const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
-                        const canEditMolecules = this.canEditBiomarker(biomarker)
-                        const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
-                        const isInProcess = biomarker.state === BiomarkerState.IN_PROCESS ||
+                <Grid columns={2} padded stackable textAlign='center' divided>
+                    <Grid.Column width={3} textAlign='left'>
+                        <BiomarkerManager
+                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                            onTagsChange={(tags) => this.setState({ tags })}
+                        />
+                        <Confirm
+                            open={this.state.confirmModal.confirmModal}
+                            header={this.state.confirmModal.headerText}
+                            content={this.state.confirmModal.contentText}
+                            onCancel={() => this.handleCancelConfirmModalState()}
+                            onConfirm={() => {
+                                this.handleCancelConfirmModalState()
+                                this.state.confirmModal.onConfirm()
+                            }}
+                        />
+                    </Grid.Column>
+
+                    {/* Files overview panel */}
+                    <Grid.Column
+                        id='files-manager-result-column'
+                        width={13}
+                        textAlign='center'
+                    >
+                        <PaginatedTable<BiomarkerSimple>
+                            headerTitle='Biomarkers'
+                            headers={[
+                                { name: 'Name', serverCodeToSort: 'name', width: 3 },
+                                { name: 'Description', serverCodeToSort: 'description', width: 4 },
+                                { name: 'Tag', serverCodeToSort: 'tag' },
+                                { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
+                                { name: 'Origin', serverCodeToSort: 'origin', textAlign: 'center' },
+                                { name: 'Date', serverCodeToSort: 'upload_date' },
+                                { name: '# mRNAS', serverCodeToSort: 'number_of_mrnas', width: 1 },
+                                { name: '# miRNAS', serverCodeToSort: 'number_of_mirnas', width: 1 },
+                                { name: '# CNA', serverCodeToSort: 'number_of_cnas', width: 1 },
+                                { name: '# Methylation', serverCodeToSort: 'number_of_methylations', width: 1 },
+                                { name: 'Public', width: 1 },
+                                { name: 'Shared', width: 1 },
+                                { name: 'Actions', width: 2 }
+                            ]}
+                            defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
+                            customFilters={this.getDefaultFilters()}
+                            showSearchInput
+                            customElements={[
+                                <Form.Field key={1} className='custom-table-field' title='Add new Biomarker'>
+                                    <Button
+                                        primary
+                                        icon
+                                        onClick={() => this.setState({ formBiomarker: this.getDefaultFormBiomarker(), openCreateEditBiomarkerModal: true })}
+                                    >
+                                        <Icon name='add' />
+                                    </Button>
+                                </Form.Field>
+                            ]}
+                            searchLabel='Name'
+                            searchPlaceholder='Search by name'
+                            urlToRetrieveData={urlBiomarkersCRUD}
+                            updateWSKey='update_biomarkers'
+                            mapFunction={(biomarker: BiomarkerSimple) => {
+                                const showNumberOfMolecules = biomarker.state === BiomarkerState.COMPLETED
+                                const canEditMolecules = this.canEditBiomarker(biomarker)
+                                const currentBiomarkerIsLoading = biomarker.id === this.state.loadingFullBiomarkerId
+                                const isInProcess = biomarker.state === BiomarkerState.IN_PROCESS ||
                             biomarker.state === BiomarkerState.WAITING_FOR_QUEUE
 
-                        return (
-                            <Table.Row key={biomarker.id as number}>
-                                <TableCellWithTitle value={biomarker.name} />
-                                <TableCellWithTitle value={biomarker.description} />
-                                <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
-                                <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state} /></Table.Cell>
-                                <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin} /></Table.Cell>
-                                <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
-                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
-                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
-                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
-                                <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
-                                <Table.Cell textAlign='center'>
-                                    {
-                                        biomarker.is_public
-                                            ? (
+                                return (
+                                    <Table.Row key={biomarker.id as number}>
+                                        <TableCellWithTitle value={biomarker.name} />
+                                        <TableCellWithTitle value={biomarker.description} />
+                                        <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
+                                        <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state} /></Table.Cell>
+                                        <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin} /></Table.Cell>
+                                        <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
+                                        <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mrnas : '-'}</Table.Cell>
+                                        <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_mirnas : '-'}</Table.Cell>
+                                        <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_cnas : '-'}</Table.Cell>
+                                        <Table.Cell>{showNumberOfMolecules ? biomarker.number_of_methylations : '-'}</Table.Cell>
+                                        <Table.Cell textAlign='center'>
+                                            {
+                                                biomarker.is_public
+                                                    ? (
+                                                        <Icon
+                                                            title='All users of the platform can see this experiment'
+                                                            name='check'
+                                                            color='green'
+                                                        />
+                                                    )
+                                                    : (
+                                                        <Icon
+                                                            title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                            name='close'
+                                                            color='red'
+                                                        />
+                                                    )
+                                            }
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Button
+                                                basic
+                                                icon
+                                                className='borderless-button'
+                                                onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                            >
                                                 <Icon
-                                                    title='All users of the platform can see this experiment'
-                                                    name='check'
+                                                    title='shared institutions'
+                                                    name='building'
                                                     color='green'
                                                 />
-                                            )
-                                            : (
+                                            </Button>
+                                            <Button
+                                                basic
+                                                icon
+                                                className='borderless-button'
+                                                onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
+                                            >
                                                 <Icon
-                                                    title='If this is checked all the users in the platform can see (but not edit or remove) this element'
-                                                    name='close'
-                                                    color='red'
+                                                    title='shared users'
+                                                    name='users'
+                                                    color='teal'
                                                 />
-                                            )
-                                    }
-                                </Table.Cell>
-                                <Table.Cell>
-                                    <Button
-                                        basic
-                                        icon
-                                        className='borderless-button'
-                                        onClick={() => this.setState({ modalInstitutions: { ...this.state.modalInstitutions, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
-                                    >
-                                        <Icon
-                                            title='shared institutions'
-                                            name='building'
-                                            color='green'
-                                        />
-                                    </Button>
-                                    <Button
-                                        basic
-                                        icon
-                                        className='borderless-button'
-                                        onClick={() => this.setState({ modalUsers: { ...this.state.modalUsers, biomarkerId: biomarker.id || 0, isOpen: true, user: biomarker.user } })}
-                                    >
-                                        <Icon
-                                            title='shared users'
-                                            name='users'
-                                            color='teal'
-                                        />
-                                    </Button>
-                                </Table.Cell>
-                                <Table.Cell width={1}>
-                                    {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
-                                    <>
-                                        {/* Details button */}
-                                        <Icon
-                                            name={currentBiomarkerIsLoading ? 'spinner' : 'chart bar'}
-                                            className='clickable'
-                                            color='blue'
-                                            title='Details'
-                                            loading={currentBiomarkerIsLoading}
-                                            disabled={biomarker.state !== BiomarkerState.COMPLETED || isLoadingFullBiomarker}
-                                            onClick={() => this.openBiomarkerDetailsModal(biomarker)}
-                                        />
+                                            </Button>
+                                        </Table.Cell>
+                                        <Table.Cell width={1}>
+                                            {/* Users can modify or delete own biomarkers or the ones which the user is admin of */}
+                                            <>
+                                                {/* Details button */}
+                                                <Icon
+                                                    name={currentBiomarkerIsLoading ? 'spinner' : 'chart bar'}
+                                                    className='clickable'
+                                                    color='blue'
+                                                    title='Details'
+                                                    loading={currentBiomarkerIsLoading}
+                                                    disabled={biomarker.state !== BiomarkerState.COMPLETED || isLoadingFullBiomarker}
+                                                    onClick={() => this.openBiomarkerDetailsModal(biomarker)}
+                                                />
 
-                                        {/* Edit button */}
-                                        <EditBiomarkerIcon
-                                            handleOpenEditBiomarker={this.handleOpenEditBiomarker}
-                                            biomarker={biomarker}
-                                            ownerId={biomarker.user.id}
-                                            currentBiomarkerIsLoading={currentBiomarkerIsLoading}
-                                            canEditMolecules={canEditMolecules}
-                                            isLoadingFullBiomarker={isLoadingFullBiomarker}
-                                        />
-                                        <PopupIcons
-                                            content={(
-                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                                                    {/* Clone button */}
-                                                    <Icon
-                                                        name='copy'
-                                                        color='teal'
-                                                        className='clickable margin-left-5'
-                                                        disabled={currentBiomarkerIsLoading}
-                                                        title='Clone biomarker'
-                                                        onClick={() => this.setState({ biomarkerToClone: biomarker })}
-                                                    />
-
-                                                    {/* Stop button */}
-                                                    {isInProcess && (
-                                                        <StopExperimentButton
-                                                            title='Stop biomarker'
-                                                            onClick={() => this.setState({ biomarkerToStop: biomarker })}
-                                                        />
-                                                    )}
-
-                                                    {/* Delete button */}
-                                                    {!isInProcess && !biomarker.is_public && (
-                                                        <DeleteButton
-                                                            title='Delete biomarker'
-                                                            disabled={currentBiomarkerIsLoading}
-                                                            onClick={() => this.confirmBiomarkerDeletion(biomarker)}
-                                                            ownerId={biomarker.user.id}
-                                                        />
-                                                    )}
-                                                    {/* Public switch */}
-                                                    {
-                                                        biomarker.id && (
-                                                            <SwitchPublicButton
-                                                                publicButtonEntity={{ id: biomarker.id ?? 0, user: { id: biomarker.user.id }, is_public: biomarker.is_public }}
-                                                                publicKey='biomarkerId'
-                                                                nameEntity='biomarker'
-                                                                handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                                {/* Edit button */}
+                                                <EditBiomarkerIcon
+                                                    handleOpenEditBiomarker={this.handleOpenEditBiomarker}
+                                                    biomarker={biomarker}
+                                                    ownerId={biomarker.user.id}
+                                                    currentBiomarkerIsLoading={currentBiomarkerIsLoading}
+                                                    canEditMolecules={canEditMolecules}
+                                                    isLoadingFullBiomarker={isLoadingFullBiomarker}
+                                                />
+                                                <PopupIcons
+                                                    content={(
+                                                        <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                            {/* Clone button */}
+                                                            <Icon
+                                                                name='copy'
+                                                                color='teal'
+                                                                className='clickable margin-left-5'
+                                                                disabled={currentBiomarkerIsLoading}
+                                                                title='Clone biomarker'
+                                                                onClick={() => this.setState({ biomarkerToClone: biomarker })}
                                                             />
-                                                        )
-                                                    }
-                                                </div>
-                                            )}
-                                        />
-                                    </>
-                                </Table.Cell>
-                            </Table.Row>
-                        )
-                    }}
-                />
 
-                {/* Create/Edit modal. */}
-                <Modal
-                    open={this.state.biomarkerToClone !== null}
-                    centered={false}
-                    onClose={this.closeModalToClone}
-                >
-                    <Header icon='copy' content='Clone Biomarker' />
-                    <Modal.Content>
-                        Are you sure you want to clone the Biomarker "<strong>{this.state.biomarkerToClone?.name}</strong>"?
-                    </Modal.Content>
-                    <Modal.Actions>
-                        <Button onClick={this.closeModalToClone}>
-                            Cancel
-                        </Button>
-                        <Button color='blue' onClick={this.cloneBiomarker} loading={this.state.cloningBiomarker} disabled={this.state.cloningBiomarker}>
-                            Clone
-                        </Button>
-                    </Modal.Actions>
-                </Modal>
+                                                            {/* Stop button */}
+                                                            {isInProcess && (
+                                                                <StopExperimentButton
+                                                                    title='Stop biomarker'
+                                                                    onClick={() => this.setState({ biomarkerToStop: biomarker })}
+                                                                />
+                                                            )}
 
-                {/* Create/Edit modal. */}
-                <Modal
-                    open={this.state.openCreateEditBiomarkerModal}
-                    closeIcon={<Icon name='close' size='large' />}
-                    closeOnEscape={false}
-                    closeOnDimmerClick={false}
-                    closeOnDocumentClick={false}
-                    className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
-                    style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
-                    onClose={() => {
-                        if (this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE) {
-                            this.handleChangeConfirmModalState(
-                                true,
-                                'You are going to lose all the data inserted',
-                                'Are you sure?',
-                                this.closeBiomarkerModal
-                            )
-                        } else {
-                            this.closeBiomarkerModal()
-                        }
-                    }}
-                >
-                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
-                        <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />}
+                                                            {/* Delete button */}
+                                                            {!isInProcess && !biomarker.is_public && (
+                                                                <DeleteButton
+                                                                    title='Delete biomarker'
+                                                                    disabled={currentBiomarkerIsLoading}
+                                                                    onClick={() => this.confirmBiomarkerDeletion(biomarker)}
+                                                                    ownerId={biomarker.user.id}
+                                                                />
+                                                            )}
+                                                            {/* Public switch */}
+                                                            {
+                                                                biomarker.id && (
+                                                                    <SwitchPublicButton
+                                                                        publicButtonEntity={{ id: biomarker.id ?? 0, user: { id: biomarker.user.id }, is_public: biomarker.is_public }}
+                                                                        publicKey='biomarkerId'
+                                                                        nameEntity='biomarker'
+                                                                        handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                                                    />
+                                                                )
+                                                            }
+                                                        </div>
+                                                    )}
+                                                />
+                                            </>
+                                        </Table.Cell>
+                                    </Table.Row>
 
-                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL && (
-                        <ManualForm
-                            handleChangeInputForm={this.handleChangeInputForm}
-                            handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
-                            handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
-                            biomarkerForm={this.state.formBiomarker}
-                            checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
-                            handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
-                            cleanForm={this.cleanForm}
-                            isFormEmpty={this.isFormEmpty}
-                            handleAddMoleculeToSection={this.handleAddMoleculeToSection}
-                            handleRemoveMolecule={this.handleRemoveMolecule}
-                            handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
-                            handleGenesSymbols={this.handleGeneSymbols}
-                            handleSelectOptionMolecule={this.handleSelectOptionMolecule}
-                            handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
-                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
-                            handleValidateForm={this.handleValidateForm}
-                            handleSendForm={this.handleSendForm}
-                            handleChangeCheckBox={this.handleChangeCheckBox}
-                            handleRestartSection={this.handleRestartSection}
+                                )
+                            }}
                         />
-                    )}
 
-                    {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION && (
-                        <FeatureSelectionPanel
-                            featureSelection={this.state.featureSelection}
-                            getDefaultFilters={this.getDefaultFilters()}
-                            markBiomarkerAsSelected={this.markBiomarkerAsSelected}
-                            handleCompleteStep1={this.handleCompleteStep1}
-                            handleCompleteStep2={this.handleCompleteStep2}
-                            selectNewFile={this.selectNewFile}
-                            selectStudy={this.selectStudy}
-                            selectUploadedFile={this.selectUploadedFile}
-                            handleChangeSourceType={this.handleChangeSourceType}
-                            handleChangeAlgorithm={this.handleChangeAlgorithm}
-                            handleChangeFitnessFunction={this.handleChangeFitnessFunction}
-                            handleChangeFitnessFunctionOption={this.handleChangeFitnessFunctionOption}
-                            handleChangeCrossValidation={this.handleChangeCrossValidation}
-                            handleGoBackStep1={this.handleGoBackStep1}
-                            handleGoBackStep2={this.handleGoBackStep2}
-                            submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}
-                            handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
-                            handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
-                            cancelForm={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
-                        />
-                    )}
-                </Modal>
+                        {/* Create/Edit modal. */}
+                        <Modal
+                            open={this.state.biomarkerToClone !== null}
+                            centered={false}
+                            onClose={this.closeModalToClone}
+                        >
+                            <Header icon='copy' content='Clone Biomarker' />
+                            <Modal.Content>
+                                Are you sure you want to clone the Biomarker "<strong>{this.state.biomarkerToClone?.name}</strong>"?
+                            </Modal.Content>
+                            <Modal.Actions>
+                                <Button onClick={this.closeModalToClone}>
+                                    Cancel
+                                </Button>
+                                <Button color='blue' onClick={this.cloneBiomarker} loading={this.state.cloningBiomarker} disabled={this.state.cloningBiomarker}>
+                                    Clone
+                                </Button>
+                            </Modal.Actions>
+                        </Modal>
 
-                {/* Biomarker details modal. */}
-                <Modal
-                    className='large-modal'
-                    closeIcon={<Icon name='close' size='large' />}
-                    closeOnEscape={false}
-                    closeOnDimmerClick={false}
-                    closeOnDocumentClick={false}
-                    centered={false}
-                    onClose={this.closeBiomarkerDetailsModal}
-                    open={this.state.openDetailsModal}
-                >
-                    <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker} />
-                </Modal>
-
-                <Confirm
-                    open={this.state.confirmModal.confirmModal}
-                    header={this.state.confirmModal.headerText}
-                    content={this.state.confirmModal.contentText}
-                    size='large'
-                    onCancel={() => this.handleCancelConfirmModalState()}
-                    onConfirm={() => {
-                        this.state.confirmModal.onConfirm()
-
-                        this.setState(prevState => {
-                            return {
-                                confirmModal: {
-                                    ...prevState.confirmModal,
-                                    confirmModal: false
+                        {/* Create/Edit modal. */}
+                        <Modal
+                            open={this.state.openCreateEditBiomarkerModal}
+                            closeIcon={<Icon name='close' size='large' />}
+                            closeOnEscape={false}
+                            closeOnDimmerClick={false}
+                            closeOnDocumentClick={false}
+                            className={this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE ? 'space-modal large-modal' : undefined}
+                            style={this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE ? { width: '60%', minHeight: '60%' } : undefined}
+                            onClose={() => {
+                                if (this.state.biomarkerTypeSelected !== BiomarkerOrigin.BASE) {
+                                    this.handleChangeConfirmModalState(
+                                        true,
+                                        'You are going to lose all the data inserted',
+                                        'Are you sure?',
+                                        this.closeBiomarkerModal
+                                    )
+                                } else {
+                                    this.closeBiomarkerModal()
                                 }
-                            }
-                        })
-                    }}
-                />
-                <SharedUsersBiomarker
-                    {...this.state.modalUsers}
-                    handleClose={this.handleCloseModalModalUser}
-                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
-                />
-                <SharedInstitutionsBiomarker
-                    user={this.state.modalInstitutions.user}
-                    isOpen={this.state.modalInstitutions.isOpen}
-                    institutions={this.state.modalInstitutions.institutions}
-                    handleClose={this.handleCloseModalModalInstitution}
-                    biomarkerId={this.state.modalInstitutions.biomarkerId}
-                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
-                    isAdding={this.state.modalInstitutions.isAdding}
-                />
+                            }}
+                        >
+                            {this.state.biomarkerTypeSelected === BiomarkerOrigin.BASE &&
+                            <BiomarkerTypeSelection handleSelectModal={this.handleSelectModal} />}
 
-                <Alert
-                    onClose={this.handleCloseAlert}
-                    isOpen={this.state.alert.isOpen}
-                    message={this.state.alert.message}
-                    type={this.state.alert.type}
-                    duration={this.state.alert.duration}
-                />
+                            {this.state.biomarkerTypeSelected === BiomarkerOrigin.MANUAL && (
+                                <ManualForm
+                                    handleChangeInputForm={this.handleChangeInputForm}
+                                    handleChangeMoleculeInputSelected={this.handleChangeMoleculeInputSelected}
+                                    handleChangeMoleculeSelected={this.handleChangeMoleculeSelected}
+                                    biomarkerForm={this.state.formBiomarker}
+                                    checkedIgnoreProposedAlias={this.state.checkedIgnoreProposedAlias}
+                                    handleChangeIgnoreProposedAlias={this.handleChangeIgnoreProposedAlias}
+                                    cleanForm={this.cleanForm}
+                                    isFormEmpty={this.isFormEmpty}
+                                    handleAddMoleculeToSection={this.handleAddMoleculeToSection}
+                                    handleRemoveMolecule={this.handleRemoveMolecule}
+                                    handleGenesSymbolsFinder={this.handleGenesSymbolsFinder}
+                                    handleGenesSymbols={this.handleGeneSymbols}
+                                    handleSelectOptionMolecule={this.handleSelectOptionMolecule}
+                                    handleRemoveInvalidGenes={this.handleRemoveInvalidGenes}
+                                    handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                                    handleValidateForm={this.handleValidateForm}
+                                    handleSendForm={this.handleSendForm}
+                                    handleChangeCheckBox={this.handleChangeCheckBox}
+                                    handleRestartSection={this.handleRestartSection}
+                                    tags={this.state.tags}
+                                    tagOptions={[
+                                        { key: 'no_tag', value: '', text: 'No tag' },
+                                        ...this.state.tags.map((tag) => {
+                                            const id = tag.id as number
+                                            return { key: id, value: id, text: tag.name }
+                                        })
+                                    ]}
+                                    uploadingFile={false}
+                                    handleAddFileInputsChange={this.handleAddFileInputsChange}
+                                    newFile={this.state.newFile}
+                                    handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
+                                    removeSurvivalFormTuple={this.removeSurvivalFormTuple}
+                                />
+                            )}
+
+                            {this.state.biomarkerTypeSelected === BiomarkerOrigin.FEATURE_SELECTION && (
+                                <FeatureSelectionPanel
+                                    featureSelection={this.state.featureSelection}
+                                    getDefaultFilters={this.getDefaultFilters()}
+                                    markBiomarkerAsSelected={this.markBiomarkerAsSelected}
+                                    handleCompleteStep1={this.handleCompleteStep1}
+                                    handleCompleteStep2={this.handleCompleteStep2}
+                                    selectNewFile={this.selectNewFile}
+                                    selectStudy={this.selectStudy}
+                                    selectUploadedFile={this.selectUploadedFile}
+                                    handleChangeSourceType={this.handleChangeSourceType}
+                                    handleChangeAlgorithm={this.handleChangeAlgorithm}
+                                    handleChangeFitnessFunction={this.handleChangeFitnessFunction}
+                                    handleChangeFitnessFunctionOption={this.handleChangeFitnessFunctionOption}
+                                    handleChangeCrossValidation={this.handleChangeCrossValidation}
+                                    handleGoBackStep1={this.handleGoBackStep1}
+                                    handleGoBackStep2={this.handleGoBackStep2}
+                                    submitFeatureSelectionExperiment={this.submitFeatureSelectionExperiment}
+                                    handleChangeAdvanceAlgorithm={this.handleChangeAdvanceAlgorithm}
+                                    handleSwitchAdvanceAlgorithm={this.handleSwitchAdvanceAlgorithm}
+                                    cancelForm={() => this.handleChangeConfirmModalState(true, 'You are going to lose all the data inserted', 'Are you sure?', this.closeBiomarkerModal)}
+                                />
+                            )}
+                        </Modal>
+
+                        {/* Biomarker details modal. */}
+                        <Modal
+                            className='large-modal'
+                            closeIcon={<Icon name='close' size='large' />}
+                            closeOnEscape={false}
+                            closeOnDimmerClick={false}
+                            closeOnDocumentClick={false}
+                            centered={false}
+                            onClose={this.closeBiomarkerDetailsModal}
+                            open={this.state.openDetailsModal}
+                        >
+                            <BiomarkerDetailsModal selectedBiomarker={this.state.selectedBiomarker} />
+                        </Modal>
+
+                        <Confirm
+                            open={this.state.confirmModal.confirmModal}
+                            header={this.state.confirmModal.headerText}
+                            content={this.state.confirmModal.contentText}
+                            size='large'
+                            onCancel={() => this.handleCancelConfirmModalState()}
+                            onConfirm={() => {
+                                this.state.confirmModal.onConfirm()
+
+                                this.setState(prevState => {
+                                    return {
+                                        confirmModal: {
+                                            ...prevState.confirmModal,
+                                            confirmModal: false
+                                        }
+                                    }
+                                })
+                            }}
+                        />
+                        <SharedUsersBiomarker
+                            {...this.state.modalUsers}
+                            handleClose={this.handleCloseModalModalUser}
+                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                        />
+                        <SharedInstitutionsBiomarker
+                            user={this.state.modalInstitutions.user}
+                            isOpen={this.state.modalInstitutions.isOpen}
+                            institutions={this.state.modalInstitutions.institutions}
+                            handleClose={this.handleCloseModalModalInstitution}
+                            biomarkerId={this.state.modalInstitutions.biomarkerId}
+                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
+                            isAdding={this.state.modalInstitutions.isAdding}
+                        />
+
+                        <Alert
+                            onClose={this.handleCloseAlert}
+                            isOpen={this.state.alert.isOpen}
+                            message={this.state.alert.message}
+                            type={this.state.alert.type}
+                            duration={this.state.alert.duration}
+                        />
+                    </Grid.Column>
+                </Grid>
             </Base>
         )
     }
