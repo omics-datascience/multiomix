@@ -46,6 +46,20 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     })
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const [isFullscreen, setIsFullscreen] = useState(false)
+
+    const toggleFullscreen = () => {
+        setIsFullscreen(prev => {
+            if (prev) {
+                // Exiting fullscreen → restore default dimensions
+                setPanelW(700)
+                setPanelH(520)
+                localStorage.setItem(WIDTH_KEY, '700')
+                localStorage.setItem(HEIGHT_KEY, '520')
+            }
+            return !prev
+        })
+    }
 
     /** Panel dimensions; both values are persisted to localStorage. */
     const [panelW, setPanelW] = useState(() => {
@@ -251,10 +265,25 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
         })
     }
 
-    return (
-        <div style={{
+    const panelStyle: React.CSSProperties = isFullscreen
+        ? {
             position: 'fixed',
-            bottom: '96px',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 8999,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: 'none',
+            borderRadius: 0,
+            overflow: 'hidden',
+            backgroundColor: '#fff',
+            border: '1px solid rgba(34,36,38,.15)',
+        }
+        : {
+            position: 'fixed',
+            bottom: '76px',
             right: '28px',
             width: `${panelW}px`,
             height: `${panelH}px`,
@@ -266,29 +295,50 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
             overflow: 'hidden',
             backgroundColor: '#fff',
             border: '1px solid rgba(34,36,38,.15)',
-        }}
-        >
-            {/* Resize handles */}
-            <div
-                className='chat-resize-handle chat-resize-left'
-                onMouseDown={e => startDrag(e, 'w')}
-            />
-            <div
-                className='chat-resize-handle chat-resize-top'
-                onMouseDown={e => startDrag(e, 'h')}
-            />
-            <div
-                className='chat-resize-handle chat-resize-corner'
-                onMouseDown={e => startDrag(e, 'both')}
-            />
+        }
+
+    return (
+        <div style={panelStyle}>
+            {/* Resize handles — hidden in fullscreen */}
+            {!isFullscreen && (
+                <>
+                    <div
+                        className='chat-resize-handle chat-resize-left'
+                        onMouseDown={e => startDrag(e, 'w')}
+                    />
+                    <div
+                        className='chat-resize-handle chat-resize-top'
+                        onMouseDown={e => startDrag(e, 'h')}
+                    />
+                    <div
+                        className='chat-resize-handle chat-resize-corner'
+                        onMouseDown={e => startDrag(e, 'both')}
+                    />
+                </>
+            )}
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid rgba(34,36,38,.15)', flexShrink: 0, backgroundColor: '#fff' }}>
+            <div className='chat-panel-header'>
                 <Header as='h5' style={{ margin: 0 }}>
                     <Icon name='comment alternate outline' />
                     Multiomix Assistant
                 </Header>
-                <Icon name='close' style={{ cursor: 'pointer', opacity: 0.6 }} onClick={onClose} />
+                <div className='chat-window-controls'>
+                    <button
+                        className='chat-ctrl-btn chat-ctrl-maximize'
+                        title={isFullscreen ? 'Restaurar ventana' : 'Pantalla completa'}
+                        onClick={toggleFullscreen}
+                    >
+                        <Icon name={isFullscreen ? 'compress' : 'expand arrows alternate'} fitted />
+                    </button>
+                    <button
+                        className='chat-ctrl-btn chat-ctrl-close'
+                        title='Cerrar'
+                        onClick={onClose}
+                    >
+                        <Icon name='close' fitted />
+                    </button>
+                </div>
             </div>
 
             {/* Body */}

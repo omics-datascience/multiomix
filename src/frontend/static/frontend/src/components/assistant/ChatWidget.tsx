@@ -25,15 +25,15 @@ const ChatWidget = () => {
         <>
             {isOpen && <ChatPanel onClose={() => toggle(false)} />}
 
-            <div className='chat-widget-fab'>
+            <div className={`chat-widget-fab${isOpen ? ' chat-widget-fab--open' : ''}`}>
                 <Button
                     circular
                     primary
                     icon
-                    title={isOpen ? 'Close Assistant' : 'Open Assistant'}
+                    title={isOpen ? 'Cerrar Multiomix Assistant' : 'Abrir Multiomix Assistant'}
                     onClick={() => toggle(!isOpen)}
                 >
-                    <Icon name={isOpen ? 'close' : 'comment alternate'} />
+                    <i className='robot icon' />
                 </Button>
             </div>
         </>

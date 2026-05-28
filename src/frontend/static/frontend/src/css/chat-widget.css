@@ -7,20 +7,49 @@
     z-index: 9000;
 }
 
+/* When panel is open: smaller button, drops below panel z-index
+   (fullscreen panel at 8999 will cover it automatically) */
+.chat-widget-fab--open {
+    z-index: 8998;
+}
+
 .chat-widget-fab .ui.circular.button {
     width: 56px;
     height: 56px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    transition: box-shadow 0.2s;
+    transition: width 0.2s, height 0.2s, box-shadow 0.2s, opacity 0.2s;
+    /* Flex for proper icon centering */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.chat-widget-fab--open .ui.circular.button {
+    width: 38px;
+    height: 38px;
+    opacity: 0.75;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.chat-widget-fab .ui.circular.button i.icon {
+    margin: 0 !important;
+    line-height: 1 !important;
+    height: auto !important;
+    font-size: 1.1em;
+}
+
+.chat-widget-fab--open .ui.circular.button i.icon {
+    font-size: 0.85em;
 }
 
 .chat-widget-fab .ui.circular.button:hover {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    opacity: 1;
 }
 
 /* ── Chat Panel ──────────────────────────────────────────────── */
 
-/* Resize handles — invisible by default, highlighted on hover */
+/* Resize handles — subtly visible by default, highlighted on hover */
 .chat-resize-handle {
     position: absolute;
     z-index: 10;
@@ -34,6 +63,7 @@
     width: 5px;
     cursor: ew-resize;
     border-radius: 0 3px 3px 0;
+    background: rgba(33, 133, 208, 0.13);
 }
 
 .chat-resize-top {
@@ -43,19 +73,88 @@
     height: 5px;
     cursor: ns-resize;
     border-radius: 0 0 3px 3px;
+    background: rgba(33, 133, 208, 0.13);
 }
 
+/* Corner handle with dotted grip indicator */
 .chat-resize-corner {
     top: 0;
     left: 0;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     cursor: nwse-resize;
-    border-radius: 0 0 4px 0;
+    border-radius: 0 0 5px 0;
+    background-color: rgba(33, 133, 208, 0.13);
+    background-image:
+        radial-gradient(circle, rgba(33, 133, 208, 0.6) 1.2px, transparent 1.2px),
+        radial-gradient(circle, rgba(33, 133, 208, 0.4) 1.2px, transparent 1.2px),
+        radial-gradient(circle, rgba(33, 133, 208, 0.4) 1.2px, transparent 1.2px),
+        radial-gradient(circle, rgba(33, 133, 208, 0.25) 1.2px, transparent 1.2px);
+    background-size: 100% 100%;
+    background-position: 4px 4px, 10px 4px, 4px 10px, 10px 10px;
+    background-repeat: no-repeat;
 }
 
 .chat-resize-handle:hover {
-    background: rgba(33, 133, 208, 0.2);
+    background-color: rgba(33, 133, 208, 0.28);
+}
+
+/* ── Panel header ─────────────────────────────────────────────── */
+
+.chat-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.15);
+    flex-shrink: 0;
+    background-color: #fff;
+    user-select: none;
+}
+
+/* ── Window control buttons ───────────────────────────────────── */
+
+.chat-window-controls {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.chat-ctrl-btn {
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.12s, filter 0.12s;
+}
+
+.chat-ctrl-btn i.icon {
+    margin: 0 !important;
+    font-size: 0.55em !important;
+    color: rgba(0, 0, 0, 0) !important;
+    transition: color 0.12s;
+}
+
+.chat-ctrl-btn:hover i.icon {
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+.chat-ctrl-btn:hover {
+    transform: scale(1.1);
+    filter: brightness(0.92);
+}
+
+.chat-ctrl-maximize {
+    background: #28c840;
+}
+
+.chat-ctrl-close {
+    background: #ff5f57;
 }
 
 /* ── Lightbox ────────────────────────────────────────────────── */
