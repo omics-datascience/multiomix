@@ -1431,6 +1431,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         ]
     }
 
+    /** Closes the create/edit Biomarker modal and reset all the states related to it. */
     closeBiomarkerModal = () => {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
@@ -1441,6 +1442,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             modalReady: false
         })
     }
+    /**
+     *  Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select all" option.
+     *  @returns FormBiomarkerData object with the current page filtered rows data
+     */
 
     buildFormBiomarkerFromFilteredRows = () => {
         const { rows } = this.props.experimentInfo
@@ -1463,6 +1468,12 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         }
     }
 
+    /**
+     * Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select with filters" option.
+     * @param genArray is the array of the current page filtered rows and type is the type of molecule to map (gem or gene).
+     * @param type is the type of molecule to map (gem or gene) to show in the ManualForm when the user selects "Select with filters" option.
+     * @returns FormBiomarkerData object with the current page filtered rows data
+     */
     handleMapGeneFormFormat = (genArray: DjangoMRNAxGEMResultRow[], type: 'gem' | 'gene'): MoleculesSectionData[] => {
         return Array.from(
             new Set(genArray.map(r => r[type]).filter(Boolean)),
