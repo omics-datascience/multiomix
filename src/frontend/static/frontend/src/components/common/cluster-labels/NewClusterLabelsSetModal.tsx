@@ -5,6 +5,7 @@ import { HexAlphaColorPicker } from 'react-colorful'
 import { alertGeneralError, getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 import { InputLabel } from '../InputLabel'
+import { useIntl } from 'react-intl'
 
 declare const urlClusterLabelsSets: string
 
@@ -28,6 +29,7 @@ const getDefaultClusterLabelsSet = (trainedModelPk: number): ClusterLabelsSet =>
 export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) => {
     const [newClusterLabelsSet, setNewClusterLabelsSet] = useState<ClusterLabelsSet>(getDefaultClusterLabelsSet(props.trainedModelPk))
     const [sendingData, setSendingData] = useState(false)
+    const intl = useIntl()
 
     /** Resets the form when closes the modal. */
     useEffect(() => {
@@ -149,26 +151,26 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
         >
             <Modal.Header>
                 <Icon name='add circle' />
-                New Cluster labels sets
+                {intl.formatMessage({ id: 'newClusterLabelsSetModal.header' })}
             </Modal.Header>
             <Modal.Content>
                 <Grid>
                     <Grid.Row columns={1}>
                         <Grid.Column>
-                            <Header>New ClusterLabelsSet</Header>
+                            <Header>{intl.formatMessage({ id: 'newClusterLabelsSetModal.header' })}</Header>
 
                             <Form>
                                 <Form.Input
-                                    label='Name'
-                                    placeholder='Name'
+                                    label={intl.formatMessage({ id: 'common.name' })}
+                                    placeholder={intl.formatMessage({ id: 'common.name' })}
                                     name='name'
                                     icon='asterisk'
                                     onChange={(_, { name, value }) => handleChanges(name, value)}
                                 />
 
                                 <Form.TextArea
-                                    label='Description'
-                                    placeholder='Description'
+                                    label={intl.formatMessage({ id: 'common.description' })}
+                                    placeholder={intl.formatMessage({ id: 'common.description' })}
                                     name='description'
                                     onChange={(_, { name, value }) => handleChanges(name, value)}
                                 />
@@ -184,8 +186,8 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                             <Grid.Row columns={2}>
                                                 <Grid.Column width={8}>
                                                     <Form.Input
-                                                        label='Cluster ID'
-                                                        placeholder='Cluster ID'
+                                                        label={intl.formatMessage({ id: 'newClusterLabelsSetModal.clusterId' })}
+                                                        placeholder={intl.formatMessage({ id: 'newClusterLabelsSetModal.clusterId' })}
                                                         name='cluster_id'
                                                         icon='asterisk'
                                                         min={0}
@@ -195,8 +197,8 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                                     />
 
                                                     <Form.Input
-                                                        label='Label'
-                                                        placeholder='Label'
+                                                        label={intl.formatMessage({ id: 'newClusterLabelsSetModal.label' })}
+                                                        placeholder={intl.formatMessage({ id: 'newClusterLabelsSetModal.label' })}
                                                         icon='asterisk'
                                                         name='label'
                                                         value={label.label}
@@ -204,7 +206,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                                     />
 
                                                     <Form.Field>
-                                                        <Icon name='asterisk' /> Required field
+                                                        <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
                                                     </Form.Field>
 
                                                     <Form.Field>
@@ -214,13 +216,13 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                                             fluid
                                                             onClick={() => { removeLabel(idx) }}
                                                         >
-                                                            Delete label
+                                                            {intl.formatMessage({ id: 'newClusterLabelsSetModal.deleteLabel' })}
                                                         </Button>
                                                     </Form.Field>
                                                 </Grid.Column>
                                                 {/* Color */}
                                                 <Grid.Column width={8}>
-                                                    <InputLabel label='Color' />
+                                                    <InputLabel label={intl.formatMessage({ id: 'newClusterLabelsSetModal.color' })} />
 
                                                     <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) }} />
                                                 </Grid.Column>
@@ -229,7 +231,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                                     </Segment>
                                 ))}
 
-                                <Button primary fluid onClick={addLabel}>Add label</Button>
+                                <Button primary fluid onClick={addLabel}>{intl.formatMessage({ id: 'newClusterLabelsSetModal.addLabel' })}</Button>
                             </Form>
                         </Grid.Column>
                     </Grid.Row>
@@ -240,7 +242,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                     color='red'
                     onClick={() => props.setShowNewClusterLabelsSet(false)}
                 >
-                    Cancel
+                    {intl.formatMessage({ id: 'common.cancel' })}
                 </Button>
 
                 <Button
@@ -249,7 +251,7 @@ export const NewClusterLabelsSetModal = (props: NewClusterLabelsSetModalProps) =
                     onClick={submit}
                     disabled={!formIsValid()}
                 >
-                    Confirm
+                    {intl.formatMessage({ id: 'common.confirm' })}
                 </Button>
             </Modal.Actions>
         </Modal>

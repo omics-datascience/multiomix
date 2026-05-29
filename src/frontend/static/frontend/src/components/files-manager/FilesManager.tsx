@@ -14,6 +14,7 @@ import { TagLabel } from '../common/TagLabel'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { DeleteButton } from '../common/DeleteButton'
+import { useIntl } from 'react-intl'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -114,6 +115,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns An object with all the field with default values
      */
     getDefaultNewFile (): NewFile {
+        const { intl } = this.props
         return {
             newFileName: FILE_INPUT_LABEL,
             newFileNameUser: '',

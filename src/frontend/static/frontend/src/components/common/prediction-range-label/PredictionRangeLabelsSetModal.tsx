@@ -4,6 +4,7 @@ import { Button, Form, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { ClusterLabelsSet } from '../../biomarkers/types'
 import { NewPredictionRangeLabelsSetModal } from './NewPredictionRangeLabelsSetModal'
+import { useIntl } from 'react-intl'
 
 declare const urlPredictionRangeLabelsSetsPaginated: string
 
@@ -23,6 +24,7 @@ interface PredictionRangeLabelsSetModalProps {
  */
 export const PredictionRangeLabelsSetModal = (props: PredictionRangeLabelsSetModalProps) => {
     const [showNewPredictionRangeLabelsSet, setShowNewPredictionRangeLabelsSet] = useState(false)
+    const intl = useIntl()
 
     // TODO: show this in the TrainedModels page
 
@@ -48,27 +50,27 @@ export const PredictionRangeLabelsSetModal = (props: PredictionRangeLabelsSetMod
             >
                 <Modal.Header>
                     <Icon name='braille' /> {/* TODO: change the icon */}
-                    Prediction range labels sets
+                    {intl.formatMessage({ id: 'predictionRangeLabelsSetModal.header' })}
                 </Modal.Header>
                 <Modal.Content>
                     <PaginatedTable<ClusterLabelsSet>
-                        headerTitle='Prediction range labels sets'
+                        headerTitle={intl.formatMessage({ id: 'predictionRangeLabelsSetModal.header' })}
                         headers={[
-                            { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                            { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                            { name: 'Actions' }
+                            { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                            { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
+                            { name: intl.formatMessage({ id: 'common.actions' }) }
                         ]}
                         queryParams={{ trained_model_pk: props.trainedModelPk }}
                         customElements={[
-                            <Form.Field key={1} className='custom-table-field' title='New Cluster model'>
+                            <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'predictionRangeLabelsSetModal.newModel' })}>
                                 <Button primary icon onClick={() => { setShowNewPredictionRangeLabelsSet(true) }}>
                                     <Icon name='add' />
                                 </Button>
                             </Form.Field>
                         ]}
                         showSearchInput
-                        searchLabel='Name'
-                        searchPlaceholder='Search by name or description'
+                        searchLabel={intl.formatMessage({ id: 'common.name' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'predictionRangeLabelsSetModal.searchPlaceholder' })}
                         urlToRetrieveData={urlPredictionRangeLabelsSetsPaginated}
                         // updateWSKey='update_trained_models' // TODO: implement
                         mapFunction={(clusterLabelsSet: ClusterLabelsSet) => {
@@ -83,7 +85,7 @@ export const PredictionRangeLabelsSetModal = (props: PredictionRangeLabelsSetMod
                                             name='pencil'
                                             color='yellow'
                                             className='clickable'
-                                            title='Edit'
+                                            title={intl.formatMessage({ id: 'common.edit' })}
                                             // onClick={() => setShowNewClusterLabelsSet(clusterLabelsSet)}
                                         /> */}
                                     </Table.Cell>

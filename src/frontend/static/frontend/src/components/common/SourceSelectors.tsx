@@ -4,6 +4,7 @@ import { DjangoCGDSStudy, DjangoUserFile } from '../../utils/django_interfaces'
 import { SourceType, FileType, Source } from '../../utils/interfaces'
 import { SourceForm } from '../pipeline/SourceForm'
 import { Grid } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 /** Structure to handle a Source in this component. */
 type SourceFormData = {
@@ -41,6 +42,7 @@ interface SourceSelectorsProps {
  * @returns Component.
  */
 export const SourceSelectors = (props: SourceSelectorsProps) => {
+    const intl = useIntl()
     const {
         handleChangeSourceType,
         selectNewFile,
@@ -56,7 +58,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                         {props.clinicalSource !== undefined && (
                             <SourceForm
                                 source={props.clinicalSource.source}
-                                headerTitle='Clinical profile'
+                                headerTitle={intl.formatMessage({ id: 'sourceSelectors.clinicalProfile' })}
                                 headerIcon={{
                                     type: 'img',
                                     src: '/static/frontend/img/profiles/mRNA.svg'
@@ -82,7 +84,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                         {props.mRNASource !== undefined && (
                             <SourceForm
                                 source={props.mRNASource.source}
-                                headerTitle='mRNA profile'
+                                headerTitle={intl.formatMessage({ id: 'sourceSelectors.mRNAProfile' })}
                                 headerIcon={{
                                     type: 'img',
                                     src: '/static/frontend/img/profiles/mRNA.svg'
@@ -108,7 +110,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                         {props.mirnaSource !== undefined && (
                             <SourceForm
                                 source={props.mirnaSource.source}
-                                headerTitle='Mirna profile'
+                                headerTitle={intl.formatMessage({ id: 'sourceSelectors.mirnaProfile' })}
                                 headerIcon={{
                                     type: 'img',
                                     src: '/static/frontend/img/profiles/miRNA.svg'
@@ -134,7 +136,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                         {props.cnaSource !== undefined && (
                             <SourceForm
                                 source={props.cnaSource.source}
-                                headerTitle='CNA profile'
+                                headerTitle={intl.formatMessage({ id: 'sourceSelectors.cnaProfile' })}
                                 headerIcon={{
                                     type: 'img',
                                     src: '/static/frontend/img/profiles/CNA.svg'
@@ -160,7 +162,7 @@ export const SourceSelectors = (props: SourceSelectorsProps) => {
                         {props.methylationSource !== undefined && (
                             <SourceForm
                                 source={props.methylationSource.source}
-                                headerTitle='Methylation profile'
+                                headerTitle={intl.formatMessage({ id: 'sourceSelectors.methylationProfile' })}
                                 headerIcon={{
                                     type: 'img',
                                     src: '/static/frontend/img/profiles/methylation.svg'

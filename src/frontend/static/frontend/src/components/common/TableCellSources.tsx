@@ -2,6 +2,7 @@ import React from 'react'
 import { SourcePopup } from '../pipeline/all-experiments-view/SourcePopup'
 import { DjangoExperimentSource } from '../../utils/django_interfaces'
 import { GenesColors, Nullable } from '../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 /**
  * Component to show sourcePopups if files provides
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const TableCellSources = (props: Props) => {
+    const intl = useIntl()
     return (
         <>
             {
@@ -25,7 +27,7 @@ export const TableCellSources = (props: Props) => {
                         source={props.clinical_source}
                         iconName='file'
                         iconColor={GenesColors.CLINICAL}
-                        downloadButtonTitle='Download source clinical file'
+                        downloadButtonTitle={intl.formatMessage({ id: 'tableCellSources.downloadClinical' })}
                     />
                 )
             }
@@ -36,7 +38,7 @@ export const TableCellSources = (props: Props) => {
                         source={props.mrna_source}
                         iconName='file alternate'
                         iconColor={GenesColors.MRNA}
-                        downloadButtonTitle='Download source mRna file'
+                        downloadButtonTitle={intl.formatMessage({ id: 'tableCellSources.downloadMrna' })}
                     />
                 )
             }
@@ -47,7 +49,7 @@ export const TableCellSources = (props: Props) => {
                         source={props.mirna_source}
                         iconName='file alternate'
                         iconColor={GenesColors.MIRNA}
-                        downloadButtonTitle='Download source mirna file'
+                        downloadButtonTitle={intl.formatMessage({ id: 'tableCellSources.downloadMirna' })}
                     />
                 )
             }
@@ -58,7 +60,7 @@ export const TableCellSources = (props: Props) => {
                         source={props.cna_source}
                         iconName='file alternate'
                         iconColor={GenesColors.CNA}
-                        downloadButtonTitle='Download source cna file'
+                        downloadButtonTitle={intl.formatMessage({ id: 'tableCellSources.downloadCna' })}
                     />
                 )
             }
@@ -69,7 +71,7 @@ export const TableCellSources = (props: Props) => {
                         source={props.methylation_source}
                         iconName='file alternate'
                         iconColor={GenesColors.METHYLATION}
-                        downloadButtonTitle='Download source methylation file'
+                        downloadButtonTitle={intl.formatMessage({ id: 'tableCellSources.downloadMethylation' })}
                     />
                 )
             }

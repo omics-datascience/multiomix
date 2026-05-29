@@ -4,6 +4,7 @@ import { DjangoCGDSDataset, DjangoCGDSStudy } from '../../utils/django_interface
 import { NameOfCGDSDataset, CGDSDatasetSeparator, Nullable } from '../../utils/interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
+import { useIntl } from 'react-intl'
 
 /** For reusability */
 type HandleSurvivalChangesCallback = (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void
@@ -36,6 +37,7 @@ interface NewCGDSDatasetFormProps {
  * @returns Component
  */
 export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
+    const intl = useIntl()
     const checkedHandleFormChanges = checkedValidityCallback(
         (name, value) => props.handleFormDatasetChanges(props.datasetName, name, value)
     )
@@ -53,7 +55,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}
-                    placeholder='File Path'
+                    placeholder={intl.formatMessage({ id: 'cgdsDatasetForm.filePath.placeholder' })}
                     maxLength={150}
                 />
 
@@ -73,7 +75,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                         { key: 'colon', text: 'Colon', value: CGDSDatasetSeparator.COLON },
                         { key: 'white_space', text: 'White space', value: CGDSDatasetSeparator.WHITE_SPACE }
                     ]}
-                    placeholder='Select separator'
+                    placeholder={intl.formatMessage({ id: 'cgdsDatasetForm.separator.placeholder' })}
                     onChange={(_, { name, value }) => props.handleFormDatasetChanges(props.datasetName, name, value)}
                 />
 
@@ -86,7 +88,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}
-                    placeholder='Observation'
+                    placeholder={intl.formatMessage({ id: 'cgdsDatasetForm.observation.placeholder' })}
                     maxLength={300}
                 />
 
@@ -100,7 +102,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}
-                    placeholder='Header Row Index (0 indexed)'
+                    placeholder={intl.formatMessage({ id: 'cgdsDatasetForm.headerRowIndex.placeholder' })}
                     min={0}
 
                 />
@@ -117,7 +119,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                     onChange={checkedHandleFormChanges}
                     loading={props.addingOrEditingCGDSStudy}
                     disabled={props.addingOrEditingCGDSStudy}
-                    placeholder="Mongo Collection's name"
+                    placeholder={intl.formatMessage({ id: 'cgdsDatasetForm.mongoName.placeholder' })}
                     pattern='^[a-zA-Z]([a-zA-Z0-9]|_)*' // Starts with a letter, the letters, numbers or '_' only
                     maxLength={100}
                 />
@@ -151,7 +153,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                 name='add'
                 color='green'
                 className='clickable pull-right'
-                title='Add dataset'
+                title={intl.formatMessage({ id: 'cgdsDatasetForm.icon.add' })}
                 disabled={props.addingOrEditingCGDSStudy}
                 onClick={() => props.addCGDSDataset(props.datasetName)}
             />
@@ -161,7 +163,7 @@ export const NewCGDSDatasetForm = (props: NewCGDSDatasetFormProps) => {
                 name='trash'
                 color='red'
                 className='clickable pull-right'
-                title='Remove dataset'
+                title={intl.formatMessage({ id: 'cgdsDatasetForm.icon.remove' })}
                 disabled={props.addingOrEditingCGDSStudy}
                 onClick={() => props.removeCGDSDataset(props.datasetName)}
             />

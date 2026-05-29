@@ -1,5 +1,6 @@
 import React from 'react'
 import Plot from 'react-plotly.js'
+import { useIntl } from 'react-intl'
 
 type VolcanoPoint = {
     id: string | number
@@ -26,6 +27,7 @@ export const VolcanoPlot = ({
     pThreshold = 0.05,
     showThresholds
 }: VolcanoPlotProps) => {
+    const intl = useIntl()
     const transformP = (p: number) => -Math.log10(p)
 
     const significant = data.filter(

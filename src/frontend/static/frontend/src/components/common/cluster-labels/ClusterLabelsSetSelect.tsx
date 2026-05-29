@@ -5,6 +5,7 @@ import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
 import { InputLabel } from '../InputLabel'
 import { WebsocketClientCustom } from '../../../websockets/WebsocketClient'
+import { useIntl } from 'react-intl'
 
 declare const currentUserId: string
 declare const urlClusterLabelsSets: string
@@ -29,6 +30,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
     const [clusterLabelsSets, setClusterLabelsSets] = useState<ClusterLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
     const websocketClient = useRef<WebsocketClientCustom>()
+    const intl = useIntl()
 
     useEffect(() => {
         // Gets data
@@ -80,7 +82,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
 
     return (
         <>
-            <InputLabel label='Cluster label' />
+            <InputLabel label={intl.formatMessage({ id: 'clusterLabelsSetSelect.label' })} />
 
             <Select
                 fluid
@@ -91,7 +93,7 @@ export const ClusterLabelsSetSelect = (props: ClusterLabelsSetSelectProps) => {
                 clearable
                 value={props.selectedClusterSetPk}
                 onChange={(_, { value }) => { props.setSelectedClusterSetPk(value as number | undefined) }}
-                placeholder='Use cluster labels'
+                placeholder={intl.formatMessage({ id: 'clusterLabelsSetSelect.placeholder' })}
                 className='margin-top-2'
                 disabled={options.length === 0}
             />

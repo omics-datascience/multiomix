@@ -6,6 +6,7 @@ import { alertGeneralError, getDjangoHeader } from '../../../utils/util_function
 import ky from 'ky'
 import { Nullable } from '../../../utils/interfaces'
 import { InputLabel } from '../InputLabel'
+import { useIntl } from 'react-intl'
 
 declare const urlPredictionRangeLabelsSets: string
 
@@ -37,6 +38,7 @@ const getDefaultPredictionRangeLabelsSet = (trainedModelPk: number): PredictionR
 export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabelsSetModalProps) => {
     const [newPredictionRangeLabelsSet, setNewPredictionRangeLabelsSet] = useState<PredictionRangeLabelsSet>(getDefaultPredictionRangeLabelsSet(props.trainedModelPk))
     const [sendingData, setSendingData] = useState(false)
+    const intl = useIntl()
 
     /** Resets the form when closes the modal. */
     useEffect(() => {
@@ -135,14 +137,14 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
         let input: Input = null
 
         if (label.max_value !== null && label.max_value <= label.min_value) {
-            msg = 'Max value must be greater than min value'
+            msg = intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.error.maxValue' })
             input = 'max_value'
         } else {
             const overlapIdx = newPredictionRangeLabelsSet.labels.findIndex((label2) => label2 !== label && (label.max_value === null || (label.max_value !== null && label2.min_value <= label.max_value && label2.max_value as number >= label.min_value)))
 
             if (overlapIdx !== -1) {
                 const overlapObject = newPredictionRangeLabelsSet.labels[overlapIdx]
-                msg = `Ranges overlaps with label "${overlapObject.label}" (position ${overlapIdx + 1})`
+                msg = intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.error.overlap' }, { label: overlapObject.label, position: overlapIdx + 1 })
                 input = 'label'
             }
         }
@@ -174,26 +176,26 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
         >
             <Modal.Header>
                 <Icon name='add circle' />
-                New Cluster labels sets
+                {intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.header' })}
             </Modal.Header>
             <Modal.Content>
                 <Grid>
                     <Grid.Row columns={1}>
                         <Grid.Column>
-                            <Header>New PredictionRangeLabelsSet</Header>
+                            <Header>{intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.subHeader' })}</Header>
 
                             <Form>
                                 <Form.Input
-                                    label='Name'
-                                    placeholder='Name'
+                                    label={intl.formatMessage({ id: 'common.name' })}
+                                    placeholder={intl.formatMessage({ id: 'common.name' })}
                                     name='name'
                                     icon='asterisk'
                                     onChange={(_, { name, value }) => handleChanges(name, value)}
                                 />
 
                                 <Form.TextArea
-                                    label='Description'
-                                    placeholder='Description'
+                                    label={intl.formatMessage({ id: 'common.description' })}
+                                    placeholder={intl.formatMessage({ id: 'common.description' })}
                                     name='description'
                                     onChange={(_, { name, value }) => handleChanges(name, value)}
                                 />
@@ -201,7 +203,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                 <Divider />
 
                                 {/* List of labels */}
-                                <Header as='h2'>Labels</Header>
+                                <Header as='h2'>{intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.labelsHeader' })}</Header>
 
                                 {newPredictionRangeLabelsSet.labels.map((label, idx) => {
                                     const errorMsg = errorMessages[idx]
@@ -211,8 +213,8 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                 <Grid.Row columns={2}>
                                                     <Grid.Column width={8}>
                                                         <Form.Input
-                                                            label='Min value'
-                                                            placeholder='Min value'
+                                                            label={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.minValue' })}
+                                                            placeholder={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.minValue' })}
                                                             name='min_value'
                                                             icon='asterisk'
                                                             min={0}
@@ -222,9 +224,9 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                         />
 
                                                         <Form.Input
-                                                            label='Max value'
+                                                            label={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.maxValue' })}
                                                             allow
-                                                            placeholder='Max value'
+                                                            placeholder={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.maxValue' })}
                                                             error={errorMsg.msg && errorMsg.input === 'max_value' ? { content: errorMsg.msg } : undefined}
                                                             name='max_value'
                                                             value={label.max_value}
@@ -233,8 +235,8 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                         />
 
                                                         <Form.Input
-                                                            label='Label'
-                                                            placeholder='Label'
+                                                            label={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.label' })}
+                                                            placeholder={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.label' })}
                                                             error={errorMsg.msg && errorMsg.input === 'label' ? { content: errorMsg.msg } : undefined}
                                                             icon='asterisk'
                                                             name='label'
@@ -243,7 +245,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                         />
 
                                                         <Form.Field>
-                                                            <Icon name='asterisk' /> Required field
+                                                            <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
                                                         </Form.Field>
 
                                                         <Form.Field>
@@ -253,13 +255,13 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                                                 fluid
                                                                 onClick={() => { removeLabel(idx) }}
                                                             >
-                                                                Delete label
+                                                                {intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.deleteLabel' })}
                                                             </Button>
                                                         </Form.Field>
                                                     </Grid.Column>
                                                     {/* Color */}
                                                     <Grid.Column width={8}>
-                                                        <InputLabel label='Color' />
+                                                        <InputLabel label={intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.color' })} />
 
                                                         <HexAlphaColorPicker color={label.color} onChange={(color) => { handleChangesLabel(idx, 'color', color) }} />
                                                     </Grid.Column>
@@ -269,7 +271,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                                     )
                                 })}
 
-                                <Button primary fluid onClick={addLabel}>Add label</Button>
+                                <Button primary fluid onClick={addLabel}>{intl.formatMessage({ id: 'newPredictionRangeLabelsSetModal.addLabel' })}</Button>
                             </Form>
                         </Grid.Column>
                     </Grid.Row>
@@ -280,7 +282,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                     color='red'
                     onClick={() => props.setShowNewPredictionRangeLabelsSet(false)}
                 >
-                    Cancel
+                    {intl.formatMessage({ id: 'common.cancel' })}
                 </Button>
 
                 <Button
@@ -289,7 +291,7 @@ export const NewPredictionRangeLabelsSetModal = (props: NewPredictionRangeLabels
                     onClick={submit}
                     disabled={!formIsValid()}
                 >
-                    Confirm
+                    {intl.formatMessage({ id: 'common.confirm' })}
                 </Button>
             </Modal.Actions>
         </Modal>
