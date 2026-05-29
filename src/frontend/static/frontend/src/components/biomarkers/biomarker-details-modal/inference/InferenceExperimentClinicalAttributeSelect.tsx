@@ -67,7 +67,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
     }, [props.selectedInferenceExperiment.id])
     return (
         <>
-            <InputLabel label='Group by clinical attribute' />
+            <InputLabel label='inference.clinicalAttribute.label' />
 
             <Form.Select
                 fluid
@@ -79,7 +79,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
                 clearable
                 value={props.selectedClinicalAttribute}
                 onChange={(_, { value }) => { props.setSelectedClinicalAttribute(value as string) }}
-                placeholder='Clinical attribute to group by'
+                placeholder='inference.clinicalAttribute.placeholder'
                 disabled={clinicalAttributesOptions.length === 0}
             />
         </>

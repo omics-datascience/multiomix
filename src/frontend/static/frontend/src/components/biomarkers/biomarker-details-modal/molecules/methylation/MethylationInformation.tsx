@@ -5,6 +5,7 @@ import { DjangoMethylationDataJSON } from '../../../../../utils/django_interface
 import { Nullable, KySearchParams } from '../../../../../utils/interfaces'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ExternalLink } from '../../../../common/ExternalLink'
+import { useIntl } from 'react-intl'
 
 declare const urlMethylationData: string
 
@@ -25,6 +26,7 @@ interface MethylationInformationProps {
  * @returns Component.
  */
 export const MethylationInformation = (props: MethylationInformationProps) => {
+    const intl = useIntl()
     const [methylationData, setMethylationData] = useState<Nullable<DjangoMethylationDataJSON>>(null)
     const [loading, setLoading] = useState<boolean>(true)
 
@@ -76,7 +78,8 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                             <Header size='huge' icon>
                                 <Icon name='folder outline' />
 
-                                No details found for this methylation site
+                                {intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'methylationInformation.context.site' })}
+
                             </Header>
                         </Grid.Column>
                     </Grid.Row>
@@ -103,12 +106,12 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                 <Grid.Column textAlign='center' width={8}>
                     <Segment>
                         <InfoPopup
-                            content='Methylation aliases and chromosome position'
+                            content={intl.formatMessage({ id: 'methylationInformation.infoPopup.aliases' })}
                             onTop
                             onEvent='hover'
                         />
                         <Header size='huge' textAlign='left' className='margin-top-0'>
-                            Methylation Information
+                            {intl.formatMessage({ id: 'methylationInformation.header' })}
                         </Header>
 
                         <Divider />
@@ -119,7 +122,7 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
 
                         {methylationData.chromosome_position && (
                             <Header size='large'>
-                                Chr. Position: {methylationData.chromosome_position}
+                                {intl.formatMessage({ id: 'methylationInformation.chromosomePosition' })} {methylationData.chromosome_position}
                             </Header>
                         )}
                     </Segment>
@@ -128,20 +131,23 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                         <InfoPopup
                             content={(
                                 <span>
-                                    List of islands related to the methylation site according to the <ExternalLink href='https://genome.ucsc.edu/cgi-bin/hgTrackUi?hgsid=2155344452_RupMtKk6A9IgaOvoZvt1JA970CO7&g=cpgIsland&hgTracksConfigPage=configure'>UCSC database</ExternalLink>
+                                    {intl.formatMessage({ id: 'methylationInformation.infoPopup.ucsc' })}{' '}
+                                    <ExternalLink href='https://genome.ucsc.edu/cgi-bin/hgTrackUi?hgsid=2155344452_RupMtKk6A9IgaOvoZvt1JA970CO7&g=cpgIsland&hgTracksConfigPage=configure'>
+                                        UCSC
+                                    </ExternalLink>
                                 </span>
                             )}
                             onTop
                         />
                         <Header size='huge' textAlign='left' className='margin-top-0'>
-                            UCSC CpG Islands
+                            {intl.formatMessage({ id: 'methylationInformation.header.ucsc' })}
                         </Header>
 
                         <Table celled>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHeaderCell>CpG Island</TableHeaderCell>
-                                    <TableHeaderCell>Relation</TableHeaderCell>
+                                    <TableHeaderCell>{intl.formatMessage({ id: 'methylationInformation.table.cpgIsland' })}</TableHeaderCell>
+                                    <TableHeaderCell>{intl.formatMessage({ id: 'methylationInformation.table.relation' })}</TableHeaderCell>
                                 </TableRow>
                             </TableHeader>
 
@@ -165,14 +171,14 @@ export const MethylationInformation = (props: MethylationInformationProps) => {
                             onEvent='hover'
                         />
                         <Header size='huge' textAlign='left' className='margin-top-0'>
-                            Related genes
+                            {intl.formatMessage({ id: 'methylationInformation.header.genes' })}
                         </Header>
 
                         <Table celled>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHeaderCell>Gene</TableHeaderCell>
-                                    <TableHeaderCell>Regions</TableHeaderCell>
+                                    <TableHeaderCell>{intl.formatMessage({ id: 'methylationInformation.table.gene' })}</TableHeaderCell>
+                                    <TableHeaderCell>{intl.formatMessage({ id: 'methylationInformation.table.regions' })}</TableHeaderCell>
                                 </TableRow>
                             </TableHeader>
 

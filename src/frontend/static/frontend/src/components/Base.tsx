@@ -4,7 +4,26 @@ import ky from 'ky'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { Footer } from './Footer'
-import { ChatWidget } from './assistant/ChatWidget'
+import { IntlProvider } from 'react-intl'
+
+// Locales
+import es from '../locales/es'
+import en from '../locales/en'
+
+// Common dependencies for all the pages
+import 'fomantic-ui-css/semantic.css'
+import '../css/base.css'
+
+const messages = { en, es }
+
+interface LocaleContextType {
+    locale: 'en' | 'es',
+    setLocale: React.Dispatch<React.SetStateAction<'en' | 'es'>>
+}
+const LocaleContext = React.createContext<LocaleContextType>({
+    locale: 'es',
+    setLocale: () => {}
+})
 
 declare const urlCurrentUser: string
 
@@ -30,6 +49,8 @@ const Base = (props: BaseProps) => {
     const abortController = useRef(new AbortController())
     const [currentUser, setUser] = useState<Nullable<DjangoUser>>(null)
     const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState<boolean>(true)
+    // State that defines the current language ('es' or 'en') for <IntlProvider>, used to display the interface in the selected locale
+    const [locale, setLocale] = useState<'en' | 'es'>('es')
 
     /**
      * Method which is executed when the component has mounted
@@ -76,20 +97,21 @@ const Base = (props: BaseProps) => {
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
-            {/* Navbar */}
-            <MainNavbar activeItem={props.activeItem} isLoadingUser={isLoadingCurrentUser} />
+            <LocaleContext.Provider value={{ locale, setLocale }}>
+                <IntlProvider locale={locale} messages={messages[locale]}>
+                    {/* Navbar */}
+                    <MainNavbar activeItem={props.activeItem} isLoadingUser={isLoadingCurrentUser} />
 
-            {/* Composition part */}
-            <div className={props.wrapperClass}>
-                {props.children}
-            </div>
+                    {/* Composition part */}
+                    <div className={props.wrapperClass}>
+                        {props.children}
+                    </div>
 
-            {/* Footer */}
-            {/* TODO: add license */}
-            <Footer />
-
-            {/* AI Assistant floating widget */}
-            {currentUser && !currentUser.is_anonymous && <ChatWidget />}
+                    {/* Footer */}
+                    {/* TODO: add license */}
+                    <Footer />
+                </IntlProvider>
+            </LocaleContext.Provider>
         </CurrentUserContext.Provider>
     )
 }

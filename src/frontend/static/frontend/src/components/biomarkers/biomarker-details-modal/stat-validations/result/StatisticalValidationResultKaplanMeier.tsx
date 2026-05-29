@@ -9,6 +9,7 @@ import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-detai
 import { ResultPlaceholder } from './ResultPlaceholder'
 import { SamplesAndGroupsTable } from './SamplesAndGroupsTable'
 import { debounce } from 'lodash'
+import { useIntl } from 'react-intl'
 
 declare const urlStatisticalValidationKaplanMeierClustering: string
 declare const urlStatisticalValidationKaplanMeierByAttr: string
@@ -30,6 +31,7 @@ type KaplanMeierStrategy = 'clustering' | 'clinical_attribute'
  * @returns Component
  */
 export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidationResultKaplanMeierProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const hasClusteringModel = props.selectedStatisticalValidation.fitness_function === FitnessFunction.CLUSTERING
     const [loadingKaplanMeier, setLoadingKaplanMeier] = useState(false)
@@ -174,8 +176,8 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     data={kaplanMeierData.groups}
                     height={480}
                     width={600}
-                    xAxisLabel='Time'
-                    yAxisLabel='Probability'
+                    xAxisLabel={intl.formatMessage({ id: 'kaplanMeier.axis.time' })}
+                    yAxisLabel={intl.formatMessage({ id: 'kaplanMeier.axis.probability' })}
                 />
             )
         }
@@ -194,13 +196,13 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                 <GridColumn textAlign='center' mobile={16} tablet={16} computer={4}>
                     {/* Clustering metrics. */}
                     <InfoPopup
-                        content='This metrics are computed using Cox-Regression'
+                        content={intl.formatMessage({ id: 'kaplanMeier.info.coxRegression' })}
                         onTop
                         onEvent='click'
                         extraClassName='margin-left-5'
                     />
 
-                    <Header as='h2' dividing>Clustering metrics</Header>
+                    <Header as='h2' dividing>{intl.formatMessage({ id: 'kaplanMeier.header.clusteringMetrics' })}</Header>
 
                     <Form>
                         {hasClusteringModel && (
@@ -213,14 +215,14 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                         onClick={() => setKaplanMeierStrategy('clustering')}
                                         active={kaplanMeierStrategy === 'clustering'}
                                     >
-                                        Clustering model
+                                        {intl.formatMessage({ id: 'kaplanMeier.button.clusteringModel' })}
                                     </Button>
 
                                     <Button
                                         onClick={() => setKaplanMeierStrategy('clinical_attribute')}
                                         active={kaplanMeierStrategy === 'clinical_attribute'}
                                     >
-                                        Group by clinical
+                                        {intl.formatMessage({ id: 'kaplanMeier.button.groupByClinical' })}
                                     </Button>
                                 </Button.Group>
                             </Form.Field>
@@ -236,7 +238,7 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                                 search
                                 value={selectedClinicalAttribute}
                                 onChange={(_, { value }) => { setSelectedClinicalAttribute(value as string) }}
-                                placeholder='Clinical attribute to group by'
+                                placeholder={intl.formatMessage({ id: 'kaplanMeier.select.clinicalAttribute' })}
                                 disabled={clinicalAttributesOptions.length === 0}
                             />
                         )}
@@ -245,11 +247,11 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                     {/* TODO: add InfoPopups for every metric and their interpretation. */}
                     <Statistic className='margin-top-5 margin-bottom-5'>
                         <Statistic.Value>{kaplanMeierData ? kaplanMeierData.concordance_index.toFixed(3) : '-'}</Statistic.Value>
-                        <Statistic.Label>C-Index</Statistic.Label>
+                        <Statistic.Label>{intl.formatMessage({ id: 'kaplanMeier.metric.cIndex' })}</Statistic.Label>
                     </Statistic>
                     <Statistic>
                         <Statistic.Value>{kaplanMeierData ? kaplanMeierData.log_likelihood.toFixed(3) : '-'}</Statistic.Value>
-                        <Statistic.Label>Partial Log-Likelihood</Statistic.Label>
+                        <Statistic.Label>{intl.formatMessage({ id: 'kaplanMeier.metric.partialLogLikelihood' })}</Statistic.Label>
                     </Statistic>
 
                     {/* Samples and clusters modal. */}
@@ -259,17 +261,17 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                             onOpen={() => setShowSamplesAndClusters(true)}
                             closeIcon={<Icon name='close' size='large' />}
                             open={showSamplesAndClusters}
-                            trigger={<Button primary fluid>See samples and clusters</Button>}
+                            trigger={<Button primary fluid>{intl.formatMessage({ id: 'kaplanMeier.button.seeSamplesAndClusters' })}</Button>}
                         >
                             <Modal.Header>
                                 <Icon name='users' />
-                                Samples and clusters
+                                {intl.formatMessage({ id: 'kaplanMeier.modal.samplesAndClusters' })}
                             </Modal.Header>
                             <Modal.Content>
                                 <SamplesAndGroupsTable selectedStatisticalValidation={props.selectedStatisticalValidation} />
                             </Modal.Content>
                             <Modal.Actions>
-                                <Button onClick={() => setShowSamplesAndClusters(false)}>Close</Button>
+                                <Button onClick={() => setShowSamplesAndClusters(false)}>{intl.formatMessage({ id: 'common.close' })}</Button>
                             </Modal.Actions>
                         </Modal>
                     )}

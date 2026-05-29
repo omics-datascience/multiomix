@@ -3,6 +3,7 @@ import { Form, InputOnChangeData } from 'semantic-ui-react'
 import { RFParameters } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { InputLabel } from '../../../common/InputLabel'
+import { useIntl } from 'react-intl'
 
 interface NewSVMModelFormProps {
     /** Getter of the selected params to handle in the form. */
@@ -14,6 +15,7 @@ interface NewSVMModelFormProps {
 }
 
 export const NewRFModelForm = (props: NewSVMModelFormProps) => {
+    const intl = useIntl()
     // TODO: add an InfoPopup for all the inputs
     const lookForOptimalNEstimators = props.parameters.lookForOptimalNEstimators
     return (
@@ -23,9 +25,9 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                 checked={lookForOptimalNEstimators}
                 onChange={(_e, { checked }) => { props.handleChangeOptimalNEstimators(checked ?? false) }}
                 label={(
-                    <InputLabel label='Search for the optimal number of trees'>
+                    <InputLabel label={intl.formatMessage({ id: 'newRFForm.label.searchOptimalTrees' })}>
                         <InfoPopup
-                            content='This option is useful when the number of samples in the clinical data is small or there are few observed events, setting this value increases the robustness of the model in such cases avoiding problems with NaN values'
+                            content={intl.formatMessage({ id: 'newRFForm.info.searchOptimalTrees' })}
                             onTop={false}
                             onEvent='hover'
                             noBorder
@@ -40,9 +42,9 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                     <Form.Input
                         fluid
                         label={(
-                            <InputLabel label='Number of trees'>
+                            <InputLabel label={intl.formatMessage({ id: 'newRFForm.label.nEstimators' })}>
                                 <InfoPopup
-                                    content='The number of trees in the forest'
+                                    content={intl.formatMessage({ id: 'newRFForm.info.nEstimators' })}
                                     onTop={false}
                                     onEvent='hover'
                                     noBorder
@@ -63,9 +65,9 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                 <Form.Input
                     fluid
                     label={(
-                        <InputLabel label='Max depth'>
+                        <InputLabel label={intl.formatMessage({ id: 'newRFForm.label.maxDepth' })}>
                             <InfoPopup
-                                content='The maximum depth of the tree'
+                                content={intl.formatMessage({ id: 'newRFForm.info.maxDepth' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -73,7 +75,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder='An integer number'
+                    placeholder={intl.formatMessage({ id: 'common.integerNumber' })}
                     type='number'
                     min={3}
                     name='maxDepth'
@@ -85,9 +87,9 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
             <Form.Input
                 fluid
                 label={(
-                    <InputLabel label='Random state'>
+                    <InputLabel label={intl.formatMessage({ id: 'common.randomState' })}>
                         <InfoPopup
-                            content='Seed used by the random number generator'
+                            content={intl.formatMessage({ id: 'newRFForm.info.randomState' })}
                             onTop={false}
                             onEvent='hover'
                             noBorder
@@ -95,7 +97,7 @@ export const NewRFModelForm = (props: NewSVMModelFormProps) => {
                         />
                     </InputLabel>
                 )}
-                placeholder='An integer number'
+                placeholder={intl.formatMessage({ id: 'common.integerNumber' })}
                 type='number'
                 step={1}
                 min={0}

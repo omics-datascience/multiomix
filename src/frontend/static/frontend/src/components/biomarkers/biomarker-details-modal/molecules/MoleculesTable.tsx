@@ -5,6 +5,7 @@ import { PaginatedTable } from '../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../common/TableCellWithTitle'
 import { MoleculeTypeLabel } from '../../labels/MoleculeTypeLabel'
 import { MoleculeType, Nullable } from '../../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkerMolecules: string
 
@@ -18,35 +19,35 @@ interface MoleculesTableProps {
     openMoleculeDetails: (molecule: BiomarkerMolecule) => void
 }
 
-const moleculesTypesOptions: DropdownItemProps[] = [
-    { key: MoleculeType.MRNA, text: 'mRNA', value: MoleculeType.MRNA },
-    { key: MoleculeType.MIRNA, text: 'miRNA', value: MoleculeType.MIRNA },
-    { key: MoleculeType.CNA, text: 'CNA', value: MoleculeType.CNA },
-    { key: MoleculeType.METHYLATION, text: 'Methylation', value: MoleculeType.METHYLATION }
-]
-
 /**
  * Renders a Table with the samples and the cluster where they belong.
  * @param props Component props.
  * @returns Component.
  */
 export const MoleculesTable = (props: MoleculesTableProps) => {
+    const intl = useIntl()
+    const moleculesTypesOptions: DropdownItemProps[] = [
+        { key: MoleculeType.MRNA, text: intl.formatMessage({ id: 'moleculesTable.type.mrna' }), value: MoleculeType.MRNA },
+        { key: MoleculeType.MIRNA, text: intl.formatMessage({ id: 'moleculesTable.type.mirna' }), value: MoleculeType.MIRNA },
+        { key: MoleculeType.CNA, text: intl.formatMessage({ id: 'moleculesTable.type.cna' }), value: MoleculeType.CNA },
+        { key: MoleculeType.METHYLATION, text: intl.formatMessage({ id: 'moleculesTable.type.methylation' }), value: MoleculeType.METHYLATION }
+    ]
     return (
         <PaginatedTable<BiomarkerMolecule>
             headers={[
-                { name: 'Identifier', serverCodeToSort: 'identifier', width: 3 },
-                { name: 'Type', serverCodeToSort: 'type', width: 2 },
-                { name: 'Actions' }
+                { name: intl.formatMessage({ id: 'moleculesTable.header.identifier' }), serverCodeToSort: 'identifier', width: 3 },
+                { name: intl.formatMessage({ id: 'moleculesTable.header.type' }), serverCodeToSort: 'type', width: 2 },
+                { name: intl.formatMessage({ id: 'moleculesTable.header.actions' }) }
             ]}
             queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
             customFilters={[
-                { label: 'Type', keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions, width: 6 }
+                { label: intl.formatMessage({ id: 'moleculesTable.header.type' }), keyForServer: 'type', defaultValue: '', options: moleculesTypesOptions, width: 6 }
             ]}
             defaultSortProp={{ sortField: 'identifier', sortOrderAscendant: true }}
             showSearchInput
             defaultPageSize={25}
-            searchLabel='Sample'
-            searchPlaceholder='Search by identifier'
+            searchLabel={intl.formatMessage({ id: 'common.sample' })}
+            searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'moleculesTable.header.identifier' })}
             urlToRetrieveData={urlBiomarkerMolecules}
             searchWidth={6}
             entriesSelectWidth={3}
@@ -61,7 +62,7 @@ export const MoleculesTable = (props: MoleculesTableProps) => {
                             name='chart bar'
                             className='clickable'
                             color='blue'
-                            title='Details'
+                            title={intl.formatMessage({ id: 'common.details' })}
                             onClick={() => props.openMoleculeDetails(molecule)}
                         />
                     </Table.Cell>

@@ -3,6 +3,7 @@ import { SampleAndCluster, StatisticalValidationForTable } from '../../../types'
 import { Table } from 'semantic-ui-react'
 import { PaginatedTable } from '../../../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../../../common/TableCellWithTitle'
+import { useIntl } from 'react-intl'
 
 declare const urlStatisticalValidationSamplesAndClusters: string
 declare const urlClustersUniqueStatValidation: string
@@ -19,19 +20,20 @@ interface SamplesAndGroupsTableProps {
  */
 export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
     /* TODO: implement here the colors for background too */
+    const intl = useIntl()
     return (
         <PaginatedTable<SampleAndCluster>
             headers={[
-                { name: 'Sample', serverCodeToSort: 'sample', width: 3 },
-                { name: 'Cluster', serverCodeToSort: 'cluster', width: 2 }
+                { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3 },
+                { name: intl.formatMessage({ id: 'common.cluster' }), serverCodeToSort: 'cluster', width: 2 }
             ]}
             queryParams={{ statistical_validation_pk: props.selectedStatisticalValidation.id }}
             customFilters={[
                 {
-                    label: 'Cluster',
+                    label: intl.formatMessage({ id: 'common.cluster' }),
                     keyForServer: 'cluster',
                     defaultValue: '',
-                    placeholder: 'Filter by cluster',
+                    placeholder: intl.formatMessage({ id: 'samplesAndGroupsTable.filter.cluster.placeholder' }),
                     allowZero: true,
                     urlToRetrieveOptions: `${urlClustersUniqueStatValidation}/${props.selectedStatisticalValidation.id}/`
                 }
@@ -39,8 +41,8 @@ export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
             defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
             showSearchInput
             defaultPageSize={25}
-            searchLabel='Sample'
-            searchPlaceholder='Search by sample'
+            searchLabel={intl.formatMessage({ id: 'common.sample' })}
+            searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'common.sample' })}
             urlToRetrieveData={urlStatisticalValidationSamplesAndClusters}
             mapFunction={(sampleAndCluster: SampleAndCluster) => {
                 return (

@@ -7,6 +7,7 @@ import { SourceSelectors } from '../../../common/SourceSelectors'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
 import { BiomarkerTrainedModelsTable } from '../BiomarkerTrainedModelsTable'
 import ky from 'ky'
+import { useIntl } from 'react-intl'
 
 declare const urlSubmitInferenceExperiment: string
 
@@ -56,6 +57,7 @@ const getDefaultNewInferenceExperimentData = (): NewInferenceExperimentData => (
  * @returns Component
  */
 export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalProps) => {
+    const intl = useIntl()
     const [form, setForm] = useState<NewInferenceExperimentData>(getDefaultNewInferenceExperimentData())
     const [currentStep, setCurrentStep] = useState(1)
     const [sendingData, setSendingData] = useState(false)
@@ -292,7 +294,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
     return (
         <Modal
             className='large-modal'
-            closeIcon={<Icon name='close' size='large' />}
+            closeIcon={<Icon name='close' size='large' title={intl.formatMessage({ id: 'common.close' })} />}
             closeOnEscape={false}
             centered={false}
             closeOnDimmerClick={false}
@@ -302,7 +304,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
         >
             <Modal.Header>
                 <Icon name='sitemap' />
-                Create new inference experiment
+                {intl.formatMessage({ id: 'inference.new.title' })}
             </Modal.Header>
             <Modal.Content>
                 <Grid>
@@ -311,27 +313,30 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         <Grid.Column width={4}>
                             {/* Basic data */}
                             <Segment>
-                                <Header dividing as='h2'>Basic data</Header>
+                                <Header dividing as='h2'>
+                                    {intl.formatMessage({ id: 'common.basicData' })}
+                                </Header>
 
                                 <Form>
                                     <Form.Input
                                         name='name'
                                         value={form.name}
                                         icon='asterisk'
-                                        placeholder='Name'
+                                        placeholder={intl.formatMessage({ id: 'common.name' })}
                                         onChange={handleInputChange}
                                     />
 
                                     <Form.TextArea
                                         name='description'
                                         value={form.description ?? ''}
-                                        placeholder='Description (optional)'
+                                        placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                         onChange={handleInputChange}
                                     />
                                 </Form>
 
                                 <div className='margin-top-2'>
-                                    <Icon name='asterisk' /> Required field
+                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
+
                                 </div>
                             </Segment>
                         </Grid.Column>
@@ -341,7 +346,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
                                     <Icon name='list' />
                                     <Step.Content>
-                                        <Step.Title>Step 1: Trained model</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'inference.new.step1' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step
@@ -357,7 +362,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                                 >
                                     <Icon name='boxes' />
                                     <Step.Content>
-                                        <Step.Title>Step 2: molecules datasets</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'inference.new.step2' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                             </Step.Group>
@@ -378,7 +383,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
-                        Go back
+                        {intl.formatMessage({ id: 'common.goBack' })}
                     </Button>
                 )}
 
@@ -392,7 +397,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         }}
                         disabled={!selectedTrainedModelIsValid}
                     >
-                        Continue
+                        {intl.formatMessage({ id: 'common.continue' })}
                     </Button>
                 )}
 
@@ -406,7 +411,7 @@ export const NewInferenceExperimentModal = (props: NewInferenceExperimentModalPr
                         }}
                         disabled={!formIsValid()}
                     >
-                        Confirm
+                        {intl.formatMessage({ id: 'common.confirm' })}
                     </Button>
                 )}
             </Modal.Actions>

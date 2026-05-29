@@ -11,7 +11,7 @@ import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPan
 import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
 import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
-import { GeneExpressionRegulationNetworkPanel } from './genes/GeneAssociationsNetwork'
+import { useIntl } from 'react-intl'
 
 // const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
 const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS
@@ -32,6 +32,7 @@ interface CurrentMoleculeDetailsProps {
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(MENU_DEFAULT)
+    const intl = useIntl()
 
     /** Effect to set the active item to DETAILS when the selected molecule changes. */
     useEffect(() => {
@@ -101,10 +102,10 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             <Header size='huge' icon textAlign='center' style={{ alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Icon name='dna' />
 
-                No molecule selected
+                {intl.formatMessage({ id: 'currentMoleculeDetails.noSelection' })}
 
                 <Header.Subheader>
-                    Select one in the left panel
+                    {intl.formatMessage({ id: 'currentMoleculeDetails.selectOne' })}
                 </Header.Subheader>
             </Header>
         )

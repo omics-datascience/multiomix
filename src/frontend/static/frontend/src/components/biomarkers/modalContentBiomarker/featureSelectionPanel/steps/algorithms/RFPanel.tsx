@@ -1,6 +1,7 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
 import { RFParameters } from '../../../../types'
+import { useIntl } from 'react-intl'
 
 /** RFPanel props. */
 interface RFPanelProps {
@@ -14,6 +15,7 @@ interface RFPanelProps {
  * @returns Component.
  */
 export const RFPanel = (props: RFPanelProps) => {
+    const intl = useIntl()
     const {
         parameters,
         handleChangeFitnessFunctionOption
@@ -23,7 +25,7 @@ export const RFPanel = (props: RFPanelProps) => {
         <>
             <Form.Input
                 type='number'
-                label='Number of estimators'
+                label={intl.formatMessage({ id: 'rf.numberOfEstimators' })}
                 name='nEstimators'
                 min={10}
                 max={20}
@@ -33,8 +35,8 @@ export const RFPanel = (props: RFPanelProps) => {
 
             <Form.Input
                 type='number'
-                label='Maximum depth'
-                placeholder='An integer number'
+                label={intl.formatMessage({ id: 'rf.maxDepth' })}
+                placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                 name='maxDepth'
                 min={3}
                 value={parameters.maxDepth ?? ''}

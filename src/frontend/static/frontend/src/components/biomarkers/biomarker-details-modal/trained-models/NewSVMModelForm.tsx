@@ -4,6 +4,7 @@ import { SVMKernelOptions } from '../../utils'
 import { SVMParameters } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { InputLabel } from '../../../common/InputLabel'
+import { useIntl } from 'react-intl'
 
 interface NewSVMModelFormProps {
     /** Getter of the selected params to handle in the form. */
@@ -13,6 +14,7 @@ interface NewSVMModelFormProps {
 }
 
 export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
+    const intl = useIntl()
     return (
         <>
             <Form.Select
@@ -23,9 +25,9 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                         <InfoPopup
                             content={(
                                 <>
-                                    <p>Linear Kernel: Best for linearly separable data; commonly used for simple genomic or clinical feature classification.</p>
-                                    <p>Polynomial Kernel: Captures non-linear patterns; effective for complex relationships in multi-omics data.</p>
-                                    <p>RBF Kernel: Maps data to a higher-dimensional space; ideal for handling non-linear separations in RNA and methylation analyses.</p>
+                                    <p>{intl.formatMessage({ id: 'newSVMForm.info.kernel.linear' })}</p>
+                                    <p>{intl.formatMessage({ id: 'newSVMForm.info.kernel.polynomial' })}</p>
+                                    <p>{intl.formatMessage({ id: 'newSVMForm.info.kernel.rbf' })}</p>
                                 </>
                             )}
                             onTop={false}
@@ -36,7 +38,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                     </InputLabel>
                 )}
                 options={SVMKernelOptions}
-                placeholder='Select a kernel'
+                placeholder={intl.formatMessage({ id: 'newSVMForm.placeholder.kernel' })}
                 name='kernel'
                 value={props.parameters.kernel}
                 onChange={props.handleChangeParams}
@@ -46,9 +48,9 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                 <Form.Input
                     fluid
                     label={(
-                        <InputLabel label='Max iterations'>
+                        <InputLabel label={intl.formatMessage({ id: 'newSVMForm.label.maxIterations' })}>
                             <InfoPopup
-                                content='The maximum number of iterations to be run'
+                                content={intl.formatMessage({ id: 'newSVMForm.info.maxIterations' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -65,9 +67,9 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                 <Form.Input
                     fluid
                     label={(
-                        <InputLabel label='Random state'>
+                        <InputLabel label={intl.formatMessage({ id: 'common.randomState' })}>
                             <InfoPopup
-                                content='Seed used by the random number generator'
+                                content={intl.formatMessage({ id: 'newSVMForm.info.randomState' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -75,7 +77,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder='An integer number'
+                    placeholder={intl.formatMessage({ id: 'common.integerNumber' })}
                     type='number'
                     step={1}
                     min={0}

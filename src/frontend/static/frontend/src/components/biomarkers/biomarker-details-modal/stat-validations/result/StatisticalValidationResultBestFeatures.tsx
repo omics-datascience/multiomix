@@ -5,6 +5,7 @@ import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import ReactApexChart from 'react-apexcharts'
 import { ResultPlaceholder } from '../result/ResultPlaceholder'
+import { useIntl } from 'react-intl'
 
 /** Epsilon to add to the min/max value of coefficients. */
 const EPSILON = 1
@@ -23,6 +24,7 @@ interface StatisticalValidationResultBestFeaturesProps {
  * @returns Component
  */
 export const StatisticalValidationResultBestFeatures = (props: StatisticalValidationResultBestFeaturesProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [loading, setLoading] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<MoleculeWithCoefficient[]>>(null)
@@ -76,7 +78,7 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
     const moleculesNames = statValidationData ? statValidationData.map((elem) => elem.identifier) : []
 
     const chartSeries: ApexAxisChartSeries = [{
-        name: 'Coefficient',
+        name: intl.formatMessage({ id: 'common.coefficient' }),
         data: coefficients
     }]
 
@@ -111,7 +113,8 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         },
         yaxis: {
             title: {
-                text: 'Molecule'
+                text: intl.formatMessage({ id: 'statValidationBestFeatures.axis.molecule' })
+
             }
         },
         tooltip: {
@@ -125,14 +128,16 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
         xaxis: {
             categories: moleculesNames,
             title: {
-                text: 'Coefficient'
+                text: intl.formatMessage({ id: 'common.coefficient' })
+
             },
             type: 'category',
             min: Math.ceil(Math.min(...coefficients) - EPSILON),
             max: Math.ceil(Math.max(...coefficients) + EPSILON)
         },
         noData: {
-            text: 'No significant features found for this statistical validation'
+            text: intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'statValidationBestFeatures.context.features' })
+
         }
     }
 

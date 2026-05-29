@@ -3,6 +3,7 @@ import { Checkbox, Grid, Input } from 'semantic-ui-react'
 import { InfoPopup } from '../../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { AdvancedGA } from '../../../../types'
 import { ExternalLink } from '../../../../../common/ExternalLink'
+import { useIntl } from 'react-intl'
 
 declare const sparkIntegrationIsEnabled: boolean
 declare const minIterationsMetaheuristics: number
@@ -23,14 +24,16 @@ interface GAAdvancedProps {
  */
 export const GAAdvanced = (props: GAAdvancedProps) => {
     const { advancedData, handleChangeAdvanceAlgorithm } = props
+    const intl = useIntl()
+
     return (
         <Grid>
             <Grid.Row columns={2}>
                 <Grid.Column width={14}>
                     <Input
                         fluid
-                        label='Population size'
-                        placeholder='An integer number'
+                        label={intl.formatMessage({ id: 'ga.populationSize' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minPopulationSizeGA}
@@ -50,7 +53,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content='Number of candidate solutions (individuals or potential solutions) that coexist in each generation of the genetic algorithm. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment'
+                        content={intl.formatMessage({ id: 'ga.populationSize.info' })}
                         onTop={false}
                     />
                 </Grid.Column>
@@ -59,8 +62,8 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Input
                         fluid
-                        label='Mutation rate'
-                        placeholder='An float number'
+                        label={intl.formatMessage({ id: 'ga.mutationRate' })}
+                        placeholder={intl.formatMessage({ id: 'ga.floatPlaceholder' })}
                         type='number'
                         step={0.01}
                         name='mutationRate'
@@ -79,7 +82,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content='Determines the probability that a bit (binary digit) in a candidate solution will be altered or flipped randomly during the evolution process. This option introduces small random changes to explore new possibilities.'
+                        content={intl.formatMessage({ id: 'ga.mutationRate.info' })}
                         onTop={false}
                     />
                 </Grid.Column>
@@ -88,8 +91,8 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 <Grid.Column width={14}>
                     <Input
                         fluid
-                        label='Number of iterations'
-                        placeholder='An integer number'
+                        label={intl.formatMessage({ id: 'common.numberOfIterations' })}
+                        placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                         type='number'
                         step={1}
                         min={minIterationsMetaheuristics}
@@ -110,7 +113,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 </Grid.Column>
                 <Grid.Column width={2} className='advance-center-container'>
                     <InfoPopup
-                        content='Number of iterations in the Genetic Algorithms. In each of the iterations, the fitness function for each of the stars with its corresponding subset of features is computed. Increasing this number allows to evaluate more combinations of features but delays more the result of the experiment'
+                        content={intl.formatMessage({ id: 'ga.numberOfIterations.info' })}
                         onTop={false}
                     />
                 </Grid.Column>
@@ -121,7 +124,7 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                 <Grid.Row columns={2}>
                     <Grid.Column width={14}>
                         <Checkbox
-                            label='Try to optimize using Apache Spark'
+                            label={intl.formatMessage({ id: 'ga.useSpark' })}
                             checked={advancedData.useSpark}
                             onChange={(_e, { checked }) => { handleChangeAdvanceAlgorithm('GA', 'useSpark', checked ?? false) }}
                         />
@@ -130,7 +133,9 @@ export const GAAdvanced = (props: GAAdvancedProps) => {
                         <InfoPopup
                             content={(
                                 <p>
-                                    If this option is enabled, the experiment will be executed (if possible) using <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink> to optimize execution times
+                                    {intl.formatMessage({ id: 'ga.useSpark.info' })}{' '}
+                                    <ExternalLink href='https://spark.apache.org/'>Apache Spark</ExternalLink>
+
                                 </p>
                             )}
                             onTop={false}

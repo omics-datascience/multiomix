@@ -6,6 +6,7 @@ import { BBHAAdvanced } from './advancedMode/BBHAAdvanced'
 import { CoxRegressionAdvanced } from './advancedMode/CoxRegressionAdvanced'
 import { getNumberOfMoleculesOfBiomarker } from '../../../utils'
 import { GAAdvanced } from './advancedMode/GAAdvanced'
+import { useIntl } from 'react-intl'
 
 declare const maxFeaturesBlindSearch: number
 declare const minFeaturesMetaheuristics: number
@@ -31,6 +32,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         handleChangeAdvanceAlgorithm,
         handleSwitchAdvanceAlgorithm
     } = props
+    const intl = useIntl()
 
     const numberOfMolecules = useMemo(
         () => getNumberOfMoleculesOfBiomarker(props.featureSelection.selectedBiomarker),
@@ -135,21 +137,21 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
         <Form className='selection-step-container selection-step-algorithm'>
             <div className='selection-step-container-selection-confg'>
                 <Form.Select
-                    label='Algorithm'
+                    label={intl.formatMessage({ id: 'common.algorithm' })}
                     selectOnBlur={false}
                     className='selection-select selection-all-space'
-                    placeholder='Algorithm'
+                    placeholder={intl.formatMessage({ id: 'common.algorithm' })}
                     name='moleculeSelected'
                     options={[
                         {
                             key: FeatureSelectionAlgorithm.BLIND_SEARCH,
-                            text: 'Blind Search',
+                            text: intl.formatMessage({ id: 'featureSelectionStep3.blindSearch' }),
                             value: FeatureSelectionAlgorithm.BLIND_SEARCH,
                             disabled: blindSearchIsDisabled
                         },
                         {
                             key: FeatureSelectionAlgorithm.GA,
-                            text: 'Genetic Algorithms',
+                            text: intl.formatMessage({ id: 'featureSelectionStep3.geneticAlgorithms' }),
                             value: FeatureSelectionAlgorithm.GA,
                             disabled: metaheuristicsAreDisabled
                         },
@@ -180,7 +182,7 @@ export const FeatureSelectionStep3 = (props: FeatureSelectionStep3Props) => {
                     onClick={() => handleSwitchAdvanceAlgorithm()}
                     className='selection-step-button-advance-mode'
                 >
-                    Expert mode
+                    {intl.formatMessage({ id: 'featureSelectionStep3.expertMode' })}
                 </Form.Button>
             </div>
             <Segment>

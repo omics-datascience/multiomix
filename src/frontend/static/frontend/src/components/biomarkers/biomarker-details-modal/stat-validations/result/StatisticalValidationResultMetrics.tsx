@@ -5,6 +5,7 @@ import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Header, Placeholder, Segment, Statistic } from 'semantic-ui-react'
 import { ModelDetailsPanel } from '../../ModelDetailsPanels'
+import { useIntl } from 'react-intl'
 
 declare const urlStatisticalValidationMetrics: string
 
@@ -20,6 +21,7 @@ interface StatisticalValidationResultMetricsProps {
  * @returns Component
  */
 export const StatisticalValidationResultMetrics = (props: StatisticalValidationResultMetricsProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [loadingMetrics, setLoadingMetrics] = useState(false)
     const [statValidationData, setStatValidationData] = useState<Nullable<StatisticalValidation>>(null)
@@ -72,12 +74,12 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
     return (
         <>
             <Header textAlign='center' dividing as='h1'>
-                "{props.selectedStatisticalValidation.name}" metrics
+                "{props.selectedStatisticalValidation.name}" {intl.formatMessage({ id: 'statValidationMetrics.header.metrics' })}
             </Header>
 
             {/* Model details. */}
             <Segment>
-                <Header as='h2' dividing>Model details</Header>
+                <Header as='h2' dividing>{intl.formatMessage({ id: 'common.details' }) + ' ' + intl.formatMessage({ id: 'statValidationMetrics.header.model' })}</Header>
 
                 {props.selectedStatisticalValidation.trained_model !== null &&
                     <ModelDetailsPanel trainedModelPk={props.selectedStatisticalValidation.trained_model} />}
@@ -101,19 +103,19 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
 
                     {(!loadingMetrics && statValidationData !== null) && (
                         <>
-                            <Header as='h2' dividing textAlign='left'>Validation metrics</Header>
+                            <Header as='h2' dividing textAlign='left'>{intl.formatMessage({ id: 'statValidationMetrics.header.validationMetrics' })}</Header>
 
                             <Statistic size='tiny'>
                                 <Statistic.Value>{statValidationData.mean_squared_error ? statValidationData.mean_squared_error.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>MSE</Statistic.Label>
+                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.mse' })}</Statistic.Label>
                             </Statistic>
                             <Statistic size='tiny'>
                                 <Statistic.Value>{statValidationData.c_index ? statValidationData.c_index.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>C-Index</Statistic.Label>
+                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.cIndex' })}</Statistic.Label>
                             </Statistic>
                             <Statistic size='tiny'>
                                 <Statistic.Value>{statValidationData.r2_score ? statValidationData.r2_score.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>R2 score</Statistic.Label>
+                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.r2Score' })}</Statistic.Label>
                             </Statistic>
                         </>
                     )}

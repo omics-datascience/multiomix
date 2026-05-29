@@ -7,6 +7,8 @@ import { Nullable } from '../../../../../utils/interfaces'
 import { GeneData } from './types'
 import { Accordion, Button, Card, Grid, Header, Icon, Message, Segment } from 'semantic-ui-react'
 import _ from 'lodash'
+import { useIntl } from 'react-intl'
+
 declare const urlGeneInformation: string
 
 /** GeneInformation props. */
@@ -21,6 +23,7 @@ interface GeneInformationProps {
  * @returns Component.
  */
 export const GeneInformation = (props: GeneInformationProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [geneData, setGeneData] = useState<Nullable<GeneData>>(null)
     const [loadingData, setLoadingData] = useState(false)
@@ -337,9 +340,10 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     <Grid.Column textAlign='center'>
                         <Header as='h2' icon>
                             <Icon name='search minus' />
-                            No Details found
+                            {intl.formatMessage({ id: 'common.noDetails' })}
+
                             <Header.Subheader>
-                                No Details were found for this gene.
+                                {intl.formatMessage({ id: 'common.noDetails' }) + ' ' + intl.formatMessage({ id: 'geneInformation.context.gene' })}
                             </Header.Subheader>
                         </Header>
                     </Grid.Column>
@@ -361,7 +365,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                             extra={(
                                 <Grid textAlign='center'>
                                     <Grid.Row columns={1}>
-                                        <Grid.Column><strong>GRCh37:</strong></Grid.Column>
+                                        <Grid.Column><strong><strong>GRCh37:</strong></strong></Grid.Column>
                                         <Grid.Column><strong>chr{geneData.chromosome}</strong>: {geneData.start_GRCh37}-{geneData.end_GRCh37}</Grid.Column>
                                     </Grid.Row>
                                     <Grid.Row columns={1}>
@@ -375,7 +379,7 @@ export const GeneInformation = (props: GeneInformationProps) => {
                     </Grid.Column>
                     <Grid.Column width={12}>
                         <Message
-                            header='Summary'
+                            header={intl.formatMessage({ id: 'geneInformation.summary' })}
                             content={geneData.refseq_summary}
                         />
                     </Grid.Column>
