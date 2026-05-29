@@ -30,10 +30,10 @@ xlrd==2.0.1
 openpyxl==3.1.5
 rpy2==3.6.1
 urllib3==2.5.0
-langchain>=0.3.0
-langchain-openai>=0.2.0
-langchain-community>=0.3.0
-langchain-huggingface>=0.1.0
-pgvector>=0.3.6
-sentence-transformers>=3.0.0
-openai>=1.50.0
+langchain==0.3.0
+langchain-openai==0.2.0
+langchain-community==0.3.0
+langchain-huggingface==0.1.0
+pgvector==0.3.6
+sentence-transformers==3.0.0
+openai==1.50.0
