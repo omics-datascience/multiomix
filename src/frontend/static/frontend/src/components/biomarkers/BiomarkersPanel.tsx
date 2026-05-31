@@ -3,7 +3,7 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
-import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject } from '../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -26,7 +26,8 @@ import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } f
 import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
-import { BiomarkerManager, NewFile } from './BiomarkerManager'
+import { NewFile } from './BiomarkerManager'
+import { TagsPanel } from '../files-manager/TagsPanel'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -76,6 +77,9 @@ interface BiomarkersPanelState {
     deletingBiomarker: boolean,
     /** Indicates if there's a Biomarker being stopped. */
     stoppingExperiment: boolean,
+    newTag: DjangoTag,
+    selectedTagToDelete: Nullable<DjangoTag>,
+    addingTag: boolean,
     /** Biomarker to stop. */
     biomarkerToStop: Nullable<BiomarkerSimple>,
     addingOrEditingBiomarker: boolean,
@@ -102,7 +106,8 @@ interface BiomarkersPanelState {
     /** modal to handle shared users */
     modalUsers: SharedUsersBiomarkerPropsExtend,
     newFile: NewFile,
-
+    showDeleteTagModal: boolean,
+    deletingTag: boolean,
 }
 
 /**
@@ -126,6 +131,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             deletingBiomarker: false,
             addingOrEditingBiomarker: false,
             formBiomarker: this.getDefaultFormBiomarker(),
+            selectedTagToDelete: null,
             confirmModal: this.getDefaultConfirmModal(),
             tags: [],
             openCreateEditBiomarkerModal: false,
@@ -136,10 +142,14 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             alert: this.getDefaultAlertProps(),
             featureSelection: this.getDefaultFeatureSelectionProps(),
             submittingFSExperiment: false,
+            newTag: getDefaultNewTag(),
+            addingTag: false,
             openDetailsModal2: false,
             modalInstitutions: this.defaultModalInstitutions(),
             modalUsers: this.defaultModalUsers(),
             newFile: this.getDefaultNewFile(),
+            showDeleteTagModal: false,
+            deletingTag: false,
         }
     }
 
@@ -1832,6 +1842,153 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         })
     }
 
+    /**
+     * Generates the modal to confirm a Tag deletion
+     * @returns Modal component. Null if no Tag was selected to delete
+     */
+    getTagDeletionConfirmModals () {
+        if (!this.state.selectedTagToDelete) {
+            return null
+        }
+
+        return (
+            <Modal size='small' open={this.state.showDeleteTagModal} onClose={this.handleClose} centered={false}>
+                <Header icon='trash' content='Delete tag' />
+                <Modal.Content>
+                    <p>Are you sure you want to delete the Tag "{this.state.selectedTagToDelete.name}"?</p>
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={this.handleClose}>
+                        Cancel
+                    </Button>
+                    <Button color='red' onClick={this.deleteTag} loading={this.state.deletingTag} disabled={this.state.deletingTag}>
+                        Delete
+                    </Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
+
+    /**
+     * Handles New Tag Input changes
+     * @param name State field to change
+     * @param value Value to assign to the specified field
+     */
+    handleAddTagInputsChange = (name: string, value) => {
+        const newTag = this.state.newTag
+        newTag[name] = value
+        this.setState(prevState => ({
+            newTag: {
+                ...prevState.newTag,
+                [name]: value,
+            }
+        }))
+    }
+
+    /**
+     * Makes a request to delete a Tag
+     */
+    deleteTag = () => {
+        if (this.state.selectedTagToDelete === null) {
+            return
+        }
+
+        // Sets the Request's Headers
+        const myHeaders = getDjangoHeader()
+        const deleteURL = `${urlTagsCRUD}${this.state.selectedTagToDelete.id}`
+        this.setState({ deletingTag: true }, () => {
+            ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
+                // If OK is returned refresh the tags
+                if (response.ok) {
+                    this.setState({
+                        deletingTag: false,
+                        showDeleteTagModal: false
+                    })
+                    this.getUserTags()
+                }
+            }).catch((err) => {
+                this.setState({ deletingTag: false })
+                alertGeneralError()
+                console.log('Error deleting Tag ->', err)
+            })
+        })
+    }
+
+    /**
+     * Handles New Tag Input Key Press
+     * @param e Event of change
+     */
+    handleKeyDown = (e) => {
+        // If pressed Enter key submits the new Tag
+        if (e.which === 13 || e.keyCode === 13) {
+            this.addOrEditTag()
+        } else {
+            if (e.which === 27 || e.keyCode === 27) {
+                this.setState({ newTag: getDefaultNewTag() })
+            }
+        }
+    }
+
+    /**
+     * Show a modal to confirm a Tag deletion
+     * @param tag Selected Tag to delete
+     */
+    confirmTagDeletion = (tag: DjangoTag) => {
+        this.setState({
+            selectedTagToDelete: tag,
+            showDeleteTagModal: true
+        })
+    }
+
+    /**
+     * Does a request to add a new Tag
+     */
+    addOrEditTag () {
+        if (this.state.addingTag) {
+            return
+        }
+
+        // Sets the Request's Headers
+        const myHeaders = getDjangoHeader()
+
+        // If exists an id then we are editing, otherwise It's a new Tag
+        let addOrEditURL, requestMethod
+
+        if (this.state.newTag.id !== null) {
+            addOrEditURL = `${urlTagsCRUD}${this.state.newTag.id}/`
+            requestMethod = ky.patch
+        } else {
+            addOrEditURL = urlTagsCRUD
+            requestMethod = ky.post
+        }
+
+        this.setState({ addingTag: true }, () => {
+            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newTag }).then((response) => {
+                this.setState({ addingTag: false })
+                response.json().then((responseJSON: DjangoTag) => {
+                    if (responseJSON && responseJSON.id) {
+                        // If all is OK, resets the form and gets the User's tag to refresh the list
+                        this.setState({ newTag: getDefaultNewTag() })
+                        this.getUserTags()
+                    }
+                }).catch((err) => {
+                    alertGeneralError()
+                    console.log('Error parsing JSON ->', err)
+                })
+            }).catch((err) => {
+                this.setState({ addingTag: false })
+                alertGeneralError()
+                console.log('Error adding new Tag ->', err)
+            })
+        })
+    }
+
+    /**
+     * Selects a new Tag to edit
+     * @param selectedTag Tag to edit
+     */
+    editTag = (selectedTag: DjangoTag) => { this.setState({ newTag: copyObject(selectedTag) }) }
+
     render () {
         // Biomarker deletion modal
         const deletionConfirmModal = this.getDeletionConfirmModal()
@@ -1839,6 +1996,14 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
 
         const isLoadingFullBiomarker = this.state.loadingFullBiomarkerId !== null
 
+        // Tag and File deletion modals
+        const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
+        const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
+            const id = tag.id as number
+            return { key: id, value: id, text: tag.name }
+        })
+
+        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
         return (
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
@@ -1847,12 +2012,23 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                 {/* Experiment stopping confirm modal */}
                 {experimentStopConfirmModal}
 
+                {/* Tag deletion modal */}
+                {tagDeletionConfirmModal}
+
                 <Grid columns={2} padded stackable textAlign='center' divided>
                     <Grid.Column width={3} textAlign='left'>
-                        <BiomarkerManager
-                            handleChangeConfirmModalState={this.handleChangeConfirmModalState}
-                            onTagsChange={(tags) => this.setState({ tags })}
-                        />
+
+                        <Grid.Column width={3} textAlign='left'>
+                            <TagsPanel
+                                tags={this.state.tags}
+                                newTag={this.state.newTag}
+                                addingTag={this.state.addingTag}
+                                handleAddTagInputsChange={this.handleAddTagInputsChange}
+                                handleKeyDown={this.handleKeyDown}
+                                confirmTagDeletion={this.confirmTagDeletion}
+                                editTag={this.editTag}
+                            />
+                        </Grid.Column>
                         <Confirm
                             open={this.state.confirmModal.confirmModal}
                             header={this.state.confirmModal.headerText}
