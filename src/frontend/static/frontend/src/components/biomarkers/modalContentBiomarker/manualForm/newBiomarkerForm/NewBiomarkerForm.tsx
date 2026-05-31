@@ -5,8 +5,8 @@ import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOf
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
-import { NewFile } from '../../../BiomarkerManager'
 import { DjangoTag } from '../../../../../utils/django_interfaces'
+import { NewFile } from '../../../../files-manager/FilesManager'
 
 /** All the types of molecules in a Biomarker. */
 const BIOMARKER_OPTIONS = [

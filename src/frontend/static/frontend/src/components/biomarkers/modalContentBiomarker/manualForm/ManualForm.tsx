@@ -3,8 +3,8 @@ import { DropdownItemProps, Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
-import { NewFile } from '../../BiomarkerManager'
 import { DjangoTag } from '../../../../utils/django_interfaces'
+import { NewFile } from '../../../files-manager/FilesManager'
 
 /** ManualForm's props. */
 interface ManualFormProps {

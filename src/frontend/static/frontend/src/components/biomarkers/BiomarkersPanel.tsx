@@ -18,7 +18,6 @@ import { BiomarkerStateLabel } from './labels/BiomarkerStateLabel'
 import { BiomarkerOriginLabel } from './BiomarkerOriginLabel'
 import { BiomarkerDetailsModal } from './BiomarkerDetailsModal'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters, getNumberOfMoleculesOfBiomarker } from './utils'
-
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { DeleteButton } from '../common/DeleteButton'
 import { SharedUsersBiomarker, SharedUsersBiomarkerPropsExtend } from './SharedUsersBiomarker'
@@ -26,8 +25,8 @@ import { SharedInstitutionsBiomarker, SharedInstitutionsBiomarkerPropsExtend } f
 import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
-import { NewFile } from './BiomarkerManager'
 import { TagsPanel } from '../files-manager/TagsPanel'
+import { NewFile } from '../files-manager/FilesManager'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string

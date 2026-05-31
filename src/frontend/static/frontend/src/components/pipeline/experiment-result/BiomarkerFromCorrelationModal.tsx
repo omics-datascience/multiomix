@@ -12,7 +12,7 @@ import { isEqual } from 'lodash'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../biomarkers/utils'
 import { BiomarkerDetailsModal } from '../../biomarkers/BiomarkerDetailsModal'
 import { Alert } from '../../common/Alert'
-import { NewFile } from '../../biomarkers/BiomarkerManager'
+import { NewFile } from '../../files-manager/FilesManager'
 
 // URLs defined in gem.html
 declare const urlBiomarkersCRUD: string
