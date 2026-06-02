@@ -35,6 +35,10 @@
     margin: 0 !important;
     line-height: 1 !important;
     height: auto !important;
+    width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     font-size: 1.1em;
 }
 
@@ -308,6 +312,7 @@
     flex-shrink: 0;
     /*Commented out, it looks nicer; otherwise, each cell becomes too wide.*/
     /*padding: 11px 16px 15px;*/
+    padding-left: 14px;
     cursor: pointer;
     border-bottom: 1px solid rgba(34, 36, 38, 0.09);
     font-size: 13.5px;

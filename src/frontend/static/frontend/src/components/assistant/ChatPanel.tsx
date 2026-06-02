@@ -361,32 +361,37 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                                     Asistente de IA integrado en Multiomix que te permite explorar tus datos
                                     y acceder a bases de datos bioinformáticas externas de forma conversacional.
                                 </p>
-                                <p className='chat-help-section'>Herramientas disponibles</p>
+                                <p className='chat-help-section'>Tips para mejores resultados</p>
                                 <ul className='chat-help-list'>
-                                    <li><strong>Tus datos</strong> — experimentos, biomarkers, archivos y validaciones</li>
-                                    <li><strong>Bioinformática</strong> — genes, miRNAs, CpG, cBioPortal y redes STRING</li>
-                                    <li><strong>Literatura</strong> — PubMed, bioRxiv y ClinicalTrials.gov</li>
-                                    <li><strong>Genómica clínica</strong> — variantes y anotaciones en OncoKB</li>
+                                    <li>Mencioná nombres exactos de genes, experimentos o archivos</li>
+                                    <li>El asistente recuerda el contexto dentro de la conversación</li>
+                                    <li>Podés pedirle que amplíe, reformule o explique con más detalle</li>
+                                    <li>Si algo falla, intentá reformular la pregunta con más contexto</li>
+                                </ul>
+                                <p className='chat-help-section' style={{ marginTop: 10 }}>Atajos de teclado</p>
+                                <ul className='chat-help-list'>
+                                    <li><strong>Enter</strong> — enviar mensaje</li>
+                                    <li><strong>Shift + Enter</strong> — nueva línea</li>
                                 </ul>
                             </div>
                         )}
                     </div>
                     <div className='chat-window-controls'>
-                    <button
-                        className='chat-ctrl-btn chat-ctrl-maximize'
-                        title={isFullscreen ? 'Restaurar ventana' : 'Pantalla completa'}
-                        onClick={toggleFullscreen}
-                    >
-                        <Icon name={isFullscreen ? 'compress' : 'expand arrows alternate'} fitted />
-                    </button>
-                    <button
-                        className='chat-ctrl-btn chat-ctrl-close'
-                        title='Cerrar'
-                        onClick={onClose}
-                    >
-                        <Icon name='close' fitted />
-                    </button>
-                </div>
+                        <button
+                            className='chat-ctrl-btn chat-ctrl-maximize'
+                            title={isFullscreen ? 'Restaurar ventana' : 'Pantalla completa'}
+                            onClick={toggleFullscreen}
+                        >
+                            <Icon name={isFullscreen ? 'compress' : 'expand arrows alternate'} fitted />
+                        </button>
+                        <button
+                            className='chat-ctrl-btn chat-ctrl-close'
+                            title='Cerrar'
+                            onClick={onClose}
+                        >
+                            <Icon name='close' fitted />
+                        </button>
+                    </div>
                 </div>
             </div>
 
