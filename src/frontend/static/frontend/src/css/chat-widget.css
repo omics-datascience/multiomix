@@ -58,45 +58,31 @@
 
 .chat-resize-left {
     left: 0;
-    top: 10px;
-    bottom: 10px;
-    width: 5px;
+    top: 12px;
+    bottom: 12px;
+    width: 8px;
     cursor: ew-resize;
-    border-radius: 0 3px 3px 0;
-    background: rgba(33, 133, 208, 0.13);
 }
 
 .chat-resize-top {
     top: 0;
-    left: 10px;
-    right: 10px;
-    height: 5px;
+    left: 12px;
+    right: 12px;
+    height: 8px;
     cursor: ns-resize;
-    border-radius: 0 0 3px 3px;
-    background: rgba(33, 133, 208, 0.13);
-}
-
-/* Corner handle with dotted grip indicator */
-.chat-resize-corner {
-    top: 0;
-    left: 0;
-    width: 18px;
-    height: 18px;
-    cursor: nwse-resize;
-    border-radius: 0 0 5px 0;
-    background-color: rgba(33, 133, 208, 0.13);
-    background-image:
-        radial-gradient(circle, rgba(33, 133, 208, 0.6) 1.2px, transparent 1.2px),
-        radial-gradient(circle, rgba(33, 133, 208, 0.4) 1.2px, transparent 1.2px),
-        radial-gradient(circle, rgba(33, 133, 208, 0.4) 1.2px, transparent 1.2px),
-        radial-gradient(circle, rgba(33, 133, 208, 0.25) 1.2px, transparent 1.2px);
-    background-size: 100% 100%;
-    background-position: 4px 4px, 10px 4px, 4px 10px, 10px 10px;
-    background-repeat: no-repeat;
 }
 
 .chat-resize-handle:hover {
-    background-color: rgba(33, 133, 208, 0.28);
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Corner handle */
+.chat-resize-corner {
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
 }
 
 /* ── Panel header ─────────────────────────────────────────────── */
@@ -224,11 +210,14 @@
 /* ── Conversation list sidebar ───────────────────────────────── */
 
 .chat-conversation-list {
-    width: 200px;
-    min-width: 160px;
-    border-right: 1px solid rgba(34, 36, 38, 0.15);
+    flex: 0 0 300px;
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+    border-right: 1px solid rgba(34, 36, 38, 0.12);
     overflow-y: auto;
-    background: #f9fafb;
+    overflow-x: hidden;
+    background: #f4f6f8;
     display: flex;
     flex-direction: column;
 }
@@ -237,27 +226,36 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10px;
+    padding: 14px 16px;
     border-bottom: 1px solid rgba(34, 36, 38, 0.1);
-    font-weight: 600;
-    font-size: 0.85em;
-    color: #555;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #888;
+    flex-shrink: 0;
+    background: #f4f6f8;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .chat-conversation-list .conv-item {
-    padding: 8px 10px;
+    flex-shrink: 0;
+    /*comentado se ve mas bonito, sino se hace muy ancho cada celda*/
+    /*padding: 11px 16px 15px;*/
     cursor: pointer;
-    border-bottom: 1px solid rgba(34, 36, 38, 0.06);
-    font-size: 0.82em;
-    line-height: 1.35;
-    transition: background 0.15s;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.09);
+    font-size: 13.5px;
+    line-height: 1.5;
+    transition: background 0.12s;
     overflow: hidden;
 }
 
 .chat-conversation-list .conv-item-row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     overflow: hidden;
 }
 
@@ -266,27 +264,41 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #2d2d2d;
+    font-weight: 500;
 }
 
 .chat-conversation-list .conv-item-delete {
     flex-shrink: 0;
-    opacity: 0.4;
+    opacity: 0;
     cursor: pointer;
+    transition: opacity 0.12s;
+    color: #999;
+}
+
+.chat-conversation-list .conv-item:hover .conv-item-delete {
+    opacity: 0.55;
+}
+
+.chat-conversation-list .conv-item-delete:hover {
+    opacity: 1 !important;
+    color: #e05252;
 }
 
 .chat-conversation-list .conv-item-date {
     display: block;
-    font-size: 0.78em;
-    color: #999;
-    margin-top: 1px;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 5px;
+    margin-bottom: 4px;
 }
 
 .chat-conversation-list .conv-rename-input {
     flex: 1;
     border: 1px solid #2185d0;
     border-radius: 3px;
-    padding: 1px 5px;
-    font-size: inherit;
+    padding: 2px 6px;
+    font-size: 13.5px;
     font-family: inherit;
     outline: none;
     min-width: 0;
@@ -294,12 +306,22 @@
 }
 
 .chat-conversation-list .conv-item:hover {
-    background: #e8edf3;
+    background: #eaecf0;
 }
 
 .chat-conversation-list .conv-item.active {
     background: #dce8f5;
+    border-left: 3px solid #2185d0;
+    padding-left: 11px;
+}
+
+.chat-conversation-list .conv-item.active .conv-item-title {
+    color: #1565c0;
     font-weight: 600;
+}
+
+.chat-conversation-list .conv-item.active .conv-item-date {
+    color: #7aafd4;
 }
 
 /* ── Message thread ──────────────────────────────────────────── */
@@ -391,15 +413,77 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    padding: 24px 12px 8px;
+    padding: 16px 10px 8px;
     text-align: center;
 }
 
-.chat-empty-hint {
-    font-size: 0.84em;
-    color: #aaa;
+.chat-welcome-title {
+    font-size: 0.88em;
+    font-weight: 600;
+    color: #555;
     margin: 0;
 }
+
+/* ── Capability cards grid ────────────────────────────────────── */
+
+.chat-capabilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+    gap: 7px;
+    width: 100%;
+}
+
+.chat-capability-card {
+    background: #f8fafc;
+    border: 1px solid #e2eaf3;
+    border-radius: 8px;
+    padding: 8px 9px;
+    text-align: left;
+}
+
+.chat-capability-name {
+    font-size: 0.76em;
+    font-weight: 700;
+    color: #2185d0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 5px;
+}
+
+.chat-capability-name i.icon {
+    margin: 0 !important;
+    font-size: 0.9em !important;
+    line-height: 1 !important;
+    height: auto !important;
+}
+
+.chat-capability-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chat-capability-items li {
+    font-size: 0.71em;
+    color: #666;
+    line-height: 1.3;
+    padding-left: 9px;
+    position: relative;
+}
+
+.chat-capability-items li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: #2185d0;
+    font-weight: 700;
+}
+
+/* ── Suggested prompt chips ───────────────────────────────────── */
 
 .chat-suggested-prompts {
     display: flex;

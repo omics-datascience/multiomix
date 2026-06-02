@@ -14,8 +14,10 @@ const ACTIVE_CONV_KEY = 'multiomix_chat_conv_id'
 const WIDTH_KEY = 'multiomix_chat_width'
 const HEIGHT_KEY = 'multiomix_chat_height'
 
-const MIN_W = 380
-const MIN_H = 300
+const MIN_W = Math.max(640, Math.round(window.innerWidth * 0.42))
+const MIN_H = Math.max(420, Math.round(window.innerHeight * 0.48))
+const MAX_W = Math.min(1000, window.innerWidth - 40)
+const MAX_H = window.innerHeight - 80
 
 interface DragState {
     dir: 'w' | 'h' | 'both'
@@ -52,10 +54,12 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
         setIsFullscreen(prev => {
             if (prev) {
                 // Exiting fullscreen → restore default dimensions
-                setPanelW(700)
-                setPanelH(520)
-                localStorage.setItem(WIDTH_KEY, '700')
-                localStorage.setItem(HEIGHT_KEY, '520')
+                const w = Math.min(780, Math.round(window.innerWidth * 0.55))
+                const h = Math.min(600, Math.round(window.innerHeight * 0.65))
+                setPanelW(w)
+                setPanelH(h)
+                localStorage.setItem(WIDTH_KEY, String(w))
+                localStorage.setItem(HEIGHT_KEY, String(h))
             }
             return !prev
         })
@@ -64,13 +68,13 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /** Panel dimensions; both values are persisted to localStorage. */
     const [panelW, setPanelW] = useState(() => {
         const s = localStorage.getItem(WIDTH_KEY)
-        const saved = s ? parseInt(s, 10) : 700
-        return Math.max(MIN_W, Math.min(window.innerWidth - 60, saved))
+        const saved = s ? parseInt(s, 10) : Math.min(900, Math.round(window.innerWidth * 0.62))
+        return Math.max(MIN_W, Math.min(MAX_W, saved))
     })
     const [panelH, setPanelH] = useState(() => {
         const s = localStorage.getItem(HEIGHT_KEY)
-        const saved = s ? parseInt(s, 10) : 520
-        return Math.max(MIN_H, Math.min(window.innerHeight - 140, saved))
+        const saved = s ? parseInt(s, 10) : Math.min(600, Math.round(window.innerHeight * 0.65))
+        return Math.max(MIN_H, Math.min(MAX_H, saved))
     })
 
     /** Drag state kept in a ref so mouse-move handlers don't trigger re-renders. */
@@ -82,17 +86,14 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
 
             if (!d) { return }
 
-            const maxW = Math.min(1100, window.innerWidth - 60)
-            const maxH = Math.min(900, window.innerHeight - 140)
-
             if (d.dir === 'w' || d.dir === 'both') {
-                const w = Math.max(MIN_W, Math.min(maxW, d.startW - (e.clientX - d.startX)))
+                const w = Math.max(MIN_W, Math.min(MAX_W, d.startW - (e.clientX - d.startX)))
                 setPanelW(w)
                 localStorage.setItem(WIDTH_KEY, String(w))
             }
 
             if (d.dir === 'h' || d.dir === 'both') {
-                const h = Math.max(MIN_H, Math.min(maxH, d.startH - (e.clientY - d.startY)))
+                const h = Math.max(MIN_H, Math.min(MAX_H, d.startH - (e.clientY - d.startY)))
                 setPanelH(h)
                 localStorage.setItem(HEIGHT_KEY, String(h))
             }
@@ -319,9 +320,17 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
 
             {/* Header */}
             <div className='chat-panel-header'>
-                <Header as='h5' style={{ margin: 0 }}>
-                    <Icon name='comment alternate outline' />
-                    Multiomix Assistant
+                <Header as='h5' style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <i className='robot icon' style={{ flexShrink: 0 }} />
+                    <span style={{ flexShrink: 0 }}>Multiomix Assistant</span>
+                    {activeConvId && conversations.find(c => c.id === activeConvId)?.title && (
+                        <>
+                            <span style={{ flexShrink: 0, color: '#ccc', fontWeight: 300 }}>·</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#888', fontWeight: 400 }}>
+                                {conversations.find(c => c.id === activeConvId)?.title}
+                            </span>
+                        </>
+                    )}
                 </Header>
                 <div className='chat-window-controls'>
                     <button

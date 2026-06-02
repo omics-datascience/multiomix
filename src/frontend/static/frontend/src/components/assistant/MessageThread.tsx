@@ -11,11 +11,46 @@ interface MessageThreadProps {
     onSend: (text: string) => void
 }
 
+const TOOL_CATEGORIES = [
+    {
+        icon: 'database' as const,
+        name: 'Tus datos',
+        items: [
+            'Experimentos de correlación',
+            'Biomarkers y feature selection',
+            'Archivos subidos',
+            'Validación estadística',
+        ],
+    },
+    {
+        icon: 'lab' as const,
+        name: 'Bioinformática',
+        items: [
+            'Genes, miRNAs y sitios CpG',
+            'Datasets cBioPortal (CGDS)',
+            'Redes de interacción STRING',
+            'Métodos estadísticos',
+        ],
+    },
+    {
+        icon: 'book' as const,
+        name: 'Literatura médica',
+        items: [
+            'Papers en PubMed / bioRxiv',
+            'Ensayos clínicos (ClinicalTrials)',
+            'Variantes genómicas (OncoKB)',
+            'Anotaciones gen / fármaco',
+        ],
+    },
+]
+
 const SUGGESTED_PROMPTS = [
     'Mostrar mis experimentos recientes',
     '¿Cuáles son mis biomarkers?',
+    'Buscar papers sobre DESeq2 en PubMed',
+    'Ensayos clínicos para BRCA1',
+    'Información sobre el gen TP53',
     '¿Qué archivos tengo subidos?',
-    'Buscar información sobre el gen TP53',
 ]
 
 /**
@@ -136,9 +171,22 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             <div className='chat-messages-scroll' ref={scrollRef}>
                 {messages.length === 0 && !isLoading && (
                     <div className='chat-empty-state'>
-                        <p className='chat-empty-hint'>
-                            Preguntame sobre tus experimentos, genes o biomarkers.
-                        </p>
+                        <p className='chat-welcome-title'>¿En qué puedo ayudarte?</p>
+                        <div className='chat-capabilities-grid'>
+                            {TOOL_CATEGORIES.map(cat => (
+                                <div key={cat.name} className='chat-capability-card'>
+                                    <div className='chat-capability-name'>
+                                        <Icon name={cat.icon} size='small' />
+                                        {cat.name}
+                                    </div>
+                                    <ul className='chat-capability-items'>
+                                        {cat.items.map(item => (
+                                            <li key={item}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
                         <div className='chat-suggested-prompts'>
                             {SUGGESTED_PROMPTS.map(prompt => (
                                 <button
