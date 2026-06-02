@@ -38,4 +38,4 @@ langchain-mcp-adapters==0.2.2
 pgvector==0.4.2
 sentence-transformers==3.0.0
 openai==2.38.0
-biomcp-python==0.7.3
+biomcp-cli==0.8.22
