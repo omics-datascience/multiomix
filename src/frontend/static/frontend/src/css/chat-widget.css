@@ -98,6 +98,70 @@
     user-select: none;
 }
 
+/* ── Help button & dropdown ───────────────────────────────────── */
+
+.chat-help-btn {
+    background: none;
+    border: none;
+    padding: 2px 3px;
+    cursor: pointer;
+    color: #bbb;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    font-size: 1em;
+}
+
+.chat-help-btn:hover {
+    color: #2185d0;
+    background: rgba(33, 133, 208, 0.08);
+}
+
+.chat-help-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 290px;
+    background: #fff;
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+    padding: 14px 16px;
+    z-index: 10000;
+}
+
+.chat-help-title {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: #222;
+    margin: 0 0 6px;
+}
+
+.chat-help-desc {
+    font-size: 0.83em;
+    color: #555;
+    line-height: 1.55;
+    margin: 0 0 12px;
+}
+
+.chat-help-section {
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #999;
+    margin: 0 0 6px;
+}
+
+.chat-help-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 0.83em;
+    color: #444;
+    line-height: 1.7;
+}
+
 /* ── Window control buttons ───────────────────────────────────── */
 
 .chat-window-controls {
@@ -242,7 +306,7 @@
 
 .chat-conversation-list .conv-item {
     flex-shrink: 0;
-    /*comentado se ve mas bonito, sino se hace muy ancho cada celda*/
+    /*Commented out, it looks nicer; otherwise, each cell becomes too wide.*/
     /*padding: 11px 16px 15px;*/
     cursor: pointer;
     border-bottom: 1px solid rgba(34, 36, 38, 0.09);

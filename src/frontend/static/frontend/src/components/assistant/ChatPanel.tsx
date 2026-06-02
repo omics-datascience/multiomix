@@ -49,6 +49,19 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
+    const [helpOpen, setHelpOpen] = useState(false)
+    const helpRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!helpOpen) { return }
+        const onClickOutside = (e: MouseEvent) => {
+            if (helpRef.current && !helpRef.current.contains(e.target as Node)) {
+                setHelpOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', onClickOutside)
+        return () => document.removeEventListener('mousedown', onClickOutside)
+    }, [helpOpen])
 
     const toggleFullscreen = () => {
         setIsFullscreen(prev => {
@@ -332,7 +345,33 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                         </>
                     )}
                 </Header>
-                <div className='chat-window-controls'>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div ref={helpRef} style={{ position: 'relative' }}>
+                        <button
+                            className='chat-help-btn'
+                            title='Acerca del asistente'
+                            onClick={() => setHelpOpen(o => !o)}
+                        >
+                            <Icon name='question circle outline' style={{ margin: 0 }} />
+                        </button>
+                        {helpOpen && (
+                            <div className='chat-help-dropdown'>
+                                <p className='chat-help-title'>Multiomix Assistant</p>
+                                <p className='chat-help-desc'>
+                                    Asistente de IA integrado en Multiomix que te permite explorar tus datos
+                                    y acceder a bases de datos bioinformáticas externas de forma conversacional.
+                                </p>
+                                <p className='chat-help-section'>Herramientas disponibles</p>
+                                <ul className='chat-help-list'>
+                                    <li><strong>Tus datos</strong> — experimentos, biomarkers, archivos y validaciones</li>
+                                    <li><strong>Bioinformática</strong> — genes, miRNAs, CpG, cBioPortal y redes STRING</li>
+                                    <li><strong>Literatura</strong> — PubMed, bioRxiv y ClinicalTrials.gov</li>
+                                    <li><strong>Genómica clínica</strong> — variantes y anotaciones en OncoKB</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                    <div className='chat-window-controls'>
                     <button
                         className='chat-ctrl-btn chat-ctrl-maximize'
                         title={isFullscreen ? 'Restaurar ventana' : 'Pantalla completa'}
@@ -347,6 +386,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                     >
                         <Icon name='close' fitted />
                     </button>
+                </div>
                 </div>
             </div>
 
