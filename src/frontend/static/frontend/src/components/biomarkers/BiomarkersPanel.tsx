@@ -1,10 +1,10 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoInstitution, DjangoMethylationPlatform, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject } from '../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
+import { Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
@@ -44,6 +44,7 @@ declare const maxFeaturesBlindSearch: number
 declare const minFeaturesMetaheuristics: number
 declare const urlCloneBiomarker: string
 declare const urlStopFSExperiment: string
+declare const urlUserInstitutions: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 const FILE_INPUT_LABEL = 'Add a new file'
@@ -65,8 +66,6 @@ type ValidationForm = {
 
 /** BiomarkersPanel's state */
 interface BiomarkersPanelState {
-    biomarkers: BiomarkerSimple[],
-    newBiomarker: Biomarker,
     /** PK of the Biomarker that's being loaded. */
     loadingFullBiomarkerId: Nullable<number>,
     selectedBiomarkerToDeleteOrSync: Nullable<BiomarkerSimple>,
@@ -96,10 +95,10 @@ interface BiomarkersPanelState {
     openDetailsModal: boolean,
     /** Selected Biomarker instance to show its details. */
     selectedBiomarker: Nullable<Biomarker>,
+    /** Alert structure to display messages. */
     alert: CustomAlert,
     featureSelection: FeatureSelectionPanelData,
     submittingFSExperiment: boolean,
-    openDetailsModal2: boolean,
     /** modal to handle shared institutions */
     modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
     /** modal to handle shared users */
@@ -107,6 +106,8 @@ interface BiomarkersPanelState {
     newFile: NewFile,
     showDeleteTagModal: boolean,
     deletingTag: boolean,
+    userInstitutions: DjangoInstitution[],
+    uploadingFile: boolean,
 }
 
 /**
@@ -118,8 +119,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         super(props)
 
         this.state = {
-            biomarkers: [],
-            newBiomarker: this.getDefaultNewBiomarker(),
             loadingFullBiomarkerId: null,
             biomarkerTypeSelected: BiomarkerOrigin.BASE,
             checkedIgnoreProposedAlias: false,
@@ -128,6 +127,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             biomarkerToStop: null,
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
+            uploadingFile: false,
             addingOrEditingBiomarker: false,
             formBiomarker: this.getDefaultFormBiomarker(),
             selectedTagToDelete: null,
@@ -143,19 +143,18 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             submittingFSExperiment: false,
             newTag: getDefaultNewTag(),
             addingTag: false,
-            openDetailsModal2: false,
             modalInstitutions: this.defaultModalInstitutions(),
             modalUsers: this.defaultModalUsers(),
             newFile: this.getDefaultNewFile(),
             showDeleteTagModal: false,
             deletingTag: false,
+            userInstitutions: [],
         }
     }
 
     /**
      * Abort controller if component is render
      */
-
     componentWillUnmount () {
         this.abortController.abort()
     }
@@ -224,6 +223,42 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     handleCloseModalModalUser = () => {
         this.setState({ modalUsers: this.defaultModalUsers() })
+    }
+
+    /**
+     * When the component has been mounted, It requests for
+     * tags and files.
+     */
+    componentDidMount () {
+        window.addEventListener('beforeunload', this.onUnload)
+        this.getUserTags()
+        this.getUserInstitutions()
+    }
+
+    /**
+     * Fetches the Institutions of which the User is part of
+     */
+    getUserInstitutions () {
+        ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
+            response.json<DjangoInstitution[]>().then((userInstitutions) => {
+                this.setState({ userInstitutions })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log("Error getting user's tags ->", err)
+        })
+    }
+
+    /**
+     * Prevents users from closing browser tag when upload is in process.
+     * @param e Event
+     */
+    onUnload = e => { // the method that will be used for both add and remove event
+        if (this.state.uploadingFile) {
+            e.preventDefault()
+            e.returnValue = 'A file is being uploaded. If you close the tab the upload will be canceled.'
+        }
     }
 
     /**
@@ -1421,46 +1456,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     }
 
     /**
-     * Generates a default new file form
-     * @returns An object with all the field with default values
-     */
-    getDefaultNewBiomarker (): Biomarker {
-        return {
-            id: null,
-            name: '',
-            description: '',
-            tag: null,
-            number_of_mrnas: 0,
-            number_of_mirnas: 0,
-            number_of_cnas: 0,
-            number_of_methylations: 0,
-            has_fs_experiment: false,
-            was_already_used: false,
-            origin: BiomarkerOrigin.BASE,
-            state: BiomarkerState.COMPLETED,
-            contains_nan_values: false,
-            column_used_as_index: '',
-            methylations: [],
-            mirnas: [],
-            cnas: [],
-            mrnas: [],
-            user: {
-                id: 0,
-                username: ''
-            },
-            is_public: false,
-        }
-    }
-
-    /**
-     * When the component has been mounted, It requests for
-     * tags and files
-     */
-    componentDidMount () {
-        this.getUserTags()
-    }
-
-    /**
      * Cleans the new/edit biomarker form
      */
     cleanForm = () => {
@@ -1511,47 +1506,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     /** Closes the deletion confirm modals. */
     handleClose = () => {
         this.setState({ showDeleteBiomarkerModal: false })
-    }
-
-    /**
-     * Check if can submit the new Biomarker form
-     * @returns True if everything is OK, false otherwise
-     */
-    canSubmitBiomarkerForm = (): boolean => {
-        return !this.state.addingOrEditingBiomarker &&
-            this.state.newBiomarker.name.trim().length > 0
-    }
-
-    /**
-     * Handles Biomarker form changes
-     * @param name Name of the state field to modify
-     * @param value Value to set to the state field
-     */
-    handleFormChanges = (name: string, value) => {
-        const newBiomarker = this.state.newBiomarker
-        newBiomarker[name] = value
-        this.setState({ newBiomarker })
-    }
-
-    /**
-     * TODO: Check if needed
-     * Adds a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
-     */
-    addSurvivalFormTuple = (datasetName: NameOfCGDSDataset) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null) {
-            const newElement: DjangoSurvivalColumnsTupleSimple = { event_column: '', time_column: '' }
-
-            if (dataset.survival_columns === undefined) {
-                dataset.survival_columns = []
-            }
-
-            dataset.survival_columns.push(newElement)
-            this.setState({ newBiomarker })
-        }
     }
 
     /**

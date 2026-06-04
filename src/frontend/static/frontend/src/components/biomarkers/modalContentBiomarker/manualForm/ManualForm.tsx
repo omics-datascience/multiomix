@@ -47,7 +47,6 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleChangeInputForm={props.handleChangeInputForm}
                     biomarkerForm={props.biomarkerForm}
                     cleanForm={props.cleanForm}
-                    isFormEmpty={props.isFormEmpty}
                     checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
                     handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
                     handleChangeMoleculeSelected={props.handleChangeMoleculeSelected}
@@ -60,9 +59,6 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
                     tagOptions={props.tagOptions}
-                    newFile={props.newFile}
-                    uploadingFile={props.uploadingFile}
-                    handleAddFileInputsChange={props.handleAddFileInputsChange}
                     tags={props.tags}
                 />
             </Grid.Column>
