@@ -6,7 +6,6 @@ import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { DjangoTag } from '../../../../../utils/django_interfaces'
-import { NewFile } from '../../../../files-manager/FilesManager'
 
 /** All the types of molecules in a Biomarker. */
 const BIOMARKER_OPTIONS = [
@@ -39,14 +38,10 @@ interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
-    newFile: NewFile,
     tagOptions: DropdownItemProps[],
     tags: DjangoTag[],
-    uploadingFile: boolean,
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
-    handleAddFileInputsChange: (name: string, value: any) => void,
-    isFormEmpty: () => boolean,
     cleanForm: () => void,
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
