@@ -29,7 +29,7 @@ function formatConvDate (iso: string): string {
 
 /**
  * Sidebar list of past conversations. Each item shows the title (or
- * "Sin título") and the last-updated timestamp. Supports inline
+ * "Untitled") and the last-updated timestamp. Supports inline
  * renaming on double-click and deletion via the trash icon.
  * @param root0
  * @param root0.conversations
@@ -78,7 +78,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
                 <Button
                     icon
                     size='mini'
-                    title='Nueva conversación'
+                    title='New conversation'
                     onClick={onNew}
                     style={{ margin: 0, padding: '4px 6px' }}
                 >
@@ -113,9 +113,9 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
                                 <span
                                     className='conv-item-title'
                                     onDoubleClick={e => startEdit(conv, e)}
-                                    title='Doble clic para renombrar'
+                                    title='Double-click to rename'
                                 >
-                                    {conv.title ?? 'Sin título'}
+                                    {conv.title ?? 'Untitled'}
                                 </span>
                             )}
                         <Icon
@@ -130,7 +130,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
             ))}
             {conversations.length === 0 && (
                 <div style={{ padding: '10px', fontSize: '0.78em', color: '#888' }}>
-                    No hay conversaciones aún.
+                    No conversations yet.
                 </div>
             )}
         </div>

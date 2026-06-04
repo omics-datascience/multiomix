@@ -37,14 +37,15 @@ interface ChatPanelProps {
  * the active message thread (MessageThread). Panel dimensions are
  * persisted in localStorage and can be adjusted by dragging the
  * left/top/corner resize handles.
- * @param root0
- * @param root0.onClose
+ * @param root0 - Component props.
+ * @param root0.onClose - Callback invoked when the user closes the panel.
+ * @returns The rendered chat panel element.
  */
 const ChatPanel = ({ onClose }: ChatPanelProps) => {
     const [conversations, setConversations] = useState<ConversationSummary[]>([])
     const [activeConvId, setActiveConvId] = useState<Nullable<number>>(() => {
         const stored = localStorage.getItem(ACTIVE_CONV_KEY)
-        return stored ? parseInt(stored, 10) : null
+        return stored ? Number.parseInt(stored, 10) : null
     })
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isLoading, setIsLoading] = useState(false)
@@ -54,26 +55,33 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
 
     useEffect(() => {
         if (!helpOpen) { return }
+
         const onClickOutside = (e: MouseEvent) => {
             if (helpRef.current && !helpRef.current.contains(e.target as Node)) {
                 setHelpOpen(false)
             }
         }
+
         document.addEventListener('mousedown', onClickOutside)
         return () => document.removeEventListener('mousedown', onClickOutside)
     }, [helpOpen])
 
+    /**
+     * Toggles fullscreen mode. When exiting fullscreen, restores the panel
+     * to proportional default dimensions clamped by MIN/MAX bounds.
+     */
     const toggleFullscreen = () => {
         setIsFullscreen(prev => {
             if (prev) {
                 // Exiting fullscreen → restore default dimensions
-                const w = Math.min(780, Math.round(window.innerWidth * 0.55))
-                const h = Math.min(600, Math.round(window.innerHeight * 0.65))
+                const w = Math.max(MIN_W, Math.min(MAX_W, Math.round(window.innerWidth * 0.55)))
+                const h = Math.max(MIN_H, Math.min(MAX_H, Math.round(window.innerHeight * 0.65)))
                 setPanelW(w)
                 setPanelH(h)
                 localStorage.setItem(WIDTH_KEY, String(w))
                 localStorage.setItem(HEIGHT_KEY, String(h))
             }
+
             return !prev
         })
     }
@@ -81,12 +89,12 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /** Panel dimensions; both values are persisted to localStorage. */
     const [panelW, setPanelW] = useState(() => {
         const s = localStorage.getItem(WIDTH_KEY)
-        const saved = s ? parseInt(s, 10) : Math.min(900, Math.round(window.innerWidth * 0.62))
+        const saved = s ? Number.parseInt(s, 10) : Math.min(900, Math.round(window.innerWidth * 0.62))
         return Math.max(MIN_W, Math.min(MAX_W, saved))
     })
     const [panelH, setPanelH] = useState(() => {
         const s = localStorage.getItem(HEIGHT_KEY)
-        const saved = s ? parseInt(s, 10) : Math.min(600, Math.round(window.innerHeight * 0.65))
+        const saved = s ? Number.parseInt(s, 10) : Math.min(600, Math.round(window.innerHeight * 0.65))
         return Math.max(MIN_H, Math.min(MAX_H, saved))
     })
 
@@ -130,14 +138,14 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /**
      * Initiates a resize drag in the given direction; stores initial cursor
      * and panel dimensions.
-     * @param e
-     * @param dir
+     * @param e - The mouse event that triggered the drag.
+     * @param dir - Resize axis: 'w' (horizontal), 'h' (vertical), or 'both' (corner).
      */
     const startDrag = (e: React.MouseEvent, dir: 'w' | 'h' | 'both') => {
         e.preventDefault()
         dragRef.current = { dir, startX: e.clientX, startY: e.clientY, startW: panelW, startH: panelH }
         document.body.style.userSelect = 'none'
-        document.body.style.cursor = dir === 'w' ? 'ew-resize' : dir === 'h' ? 'ns-resize' : 'nwse-resize'
+        document.body.style.cursor = { w: 'ew-resize', h: 'ns-resize', both: 'nwse-resize' }[dir]
     }
 
     /**
@@ -156,7 +164,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
             const storedId = localStorage.getItem(ACTIVE_CONV_KEY)
 
             if (storedId) {
-                const id = parseInt(storedId, 10)
+                const id = Number.parseInt(storedId, 10)
                 const exists = data.some(c => c.id === id)
 
                 if (exists) {
@@ -171,7 +179,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
 
     /**
      * Fetches all messages for the conversation with the given ID.
-     * @param id
+     * @param id - ID of the conversation whose messages should be loaded.
      */
     const loadConvMessages = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
@@ -183,7 +191,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /**
      * Persists the selected conversation in localStorage, updates state,
      * and loads its messages.
-     * @param id
+     * @param id - ID of the conversation to activate.
      */
     const selectConversation = (id: number) => {
         localStorage.setItem(ACTIVE_CONV_KEY, String(id))
@@ -203,16 +211,17 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /**
      * DELETEs the conversation on the server, falls back to a new
      * conversation if it was active.
-     * @param id
+     * @param id - ID of the conversation to delete.
      */
     const deleteConversation = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
+        const removeConv = (prev: ConversationSummary[]) => prev.filter(c => c.id !== id)
         ky.delete(convUrl, { headers: getDjangoHeader() }).then(() => {
             if (activeConvId === id) {
                 startNewConversation()
             }
 
-            setConversations(prev => prev.filter(c => c.id !== id))
+            setConversations(removeConv)
             loadConversations()
         }).catch(err => console.error('Error deleting conversation', err))
     }
@@ -220,23 +229,24 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
     /**
      * PATCHes the conversation title on the server and updates local
      * state optimistically.
-     * @param id
-     * @param title
+     * @param id - ID of the conversation to rename.
+     * @param title - New title; empty string resets it to null on the server.
      */
     const renameConversation = (id: number, title: string) => {
         const convUrl = `${urlAssistantConversations}${id}/`
+        const applyTitle = (prev: ConversationSummary[]) => prev.map(c => c.id === id ? { ...c, title: title || null } : c)
         ky.patch(convUrl, {
             headers: getDjangoHeader(),
             json: { title: title || null },
         }).then(() => {
-            setConversations(prev => prev.map(c => c.id === id ? { ...c, title: title || null } : c))
+            setConversations(applyTitle)
         }).catch(err => console.error('Error renaming conversation', err))
     }
 
     /**
      * Appends the user message optimistically, POSTs to the chat API,
      * then appends the assistant reply or an error message.
-     * @param text
+     * @param text - The message text entered by the user.
      */
     const sendMessage = (text: string) => {
         const userMsg: ChatMessage = { role: 'user', content: text }
@@ -349,7 +359,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                     <div ref={helpRef} style={{ position: 'relative' }}>
                         <button
                             className='chat-help-btn'
-                            title='Acerca del asistente'
+                            title='About the assistant'
                             onClick={() => setHelpOpen(o => !o)}
                         >
                             <Icon name='question circle outline' style={{ margin: 0 }} />
@@ -358,20 +368,20 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                             <div className='chat-help-dropdown'>
                                 <p className='chat-help-title'>Multiomix Assistant</p>
                                 <p className='chat-help-desc'>
-                                    Asistente de IA integrado en Multiomix que te permite explorar tus datos
-                                    y acceder a bases de datos bioinformáticas externas de forma conversacional.
+                                    AI assistant integrated into Multiomix that lets you explore your data
+                                    and access external bioinformatics databases conversationally.
                                 </p>
-                                <p className='chat-help-section'>Tips para mejores resultados</p>
+                                <p className='chat-help-section'>Tips for better results</p>
                                 <ul className='chat-help-list'>
-                                    <li>Mencioná nombres exactos de genes, experimentos o archivos</li>
-                                    <li>El asistente recuerda el contexto dentro de la conversación</li>
-                                    <li>Podés pedirle que amplíe, reformule o explique con más detalle</li>
-                                    <li>Si algo falla, intentá reformular la pregunta con más contexto</li>
+                                    <li>Use exact names for genes, experiments, or files</li>
+                                    <li>The assistant remembers context within the conversation</li>
+                                    <li>You can ask it to expand, rephrase, or explain in more detail</li>
+                                    <li>If something fails, try rephrasing the question with more context</li>
                                 </ul>
-                                <p className='chat-help-section' style={{ marginTop: 10 }}>Atajos de teclado</p>
+                                <p className='chat-help-section' style={{ marginTop: 10 }}>Keyboard shortcuts</p>
                                 <ul className='chat-help-list'>
-                                    <li><strong>Enter</strong> — enviar mensaje</li>
-                                    <li><strong>Shift + Enter</strong> — nueva línea</li>
+                                    <li><strong>Enter</strong> — send message</li>
+                                    <li><strong>Shift + Enter</strong> — new line</li>
                                 </ul>
                             </div>
                         )}
@@ -379,14 +389,14 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
                     <div className='chat-window-controls'>
                         <button
                             className='chat-ctrl-btn chat-ctrl-maximize'
-                            title={isFullscreen ? 'Restaurar ventana' : 'Pantalla completa'}
+                            title={isFullscreen ? 'Restore window' : 'Full screen'}
                             onClick={toggleFullscreen}
                         >
                             <Icon name={isFullscreen ? 'compress' : 'expand arrows alternate'} fitted />
                         </button>
                         <button
                             className='chat-ctrl-btn chat-ctrl-close'
-                            title='Cerrar'
+                            title='Close'
                             onClick={onClose}
                         >
                             <Icon name='close' fitted />

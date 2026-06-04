@@ -2,9 +2,6 @@ import asyncio
 import logging
 from typing import List
 
-# Uncomment to see every tool call the agent makes in the server console:
-# from langchain_core.globals import set_debug; set_debug(True)
-
 from django.conf import settings
 
 from assistant.models import Message
@@ -12,11 +9,16 @@ from assistant.services.embedding_service import embedding_service
 from assistant.services.mcp_loader import load_mcp_config
 from assistant.services.tools import make_tools
 from langchain.agents import create_agent
+from langchain_core.globals import set_debug
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from pgvector.django import CosineDistance
 
 logger = logging.getLogger(__name__)
+
+# Enable LangChain debug output only when the root logger is at DEBUG level
+if logging.getLogger().isEnabledFor(logging.DEBUG):
+    set_debug(True)
 
 SYSTEM_PROMPT = """You are Multiomix Assistant, a specialized AI integrated into the Multiomix platform —
 a cloud-based bioinformatics tool for inferring cancer genomic and epigenomic events associated with gene expression modulation.
@@ -131,7 +133,7 @@ async def _async_agent(user_message: str, chat_history: List[BaseMessage], user_
         try:
             client = MultiServerMCPClient(mcp_config)
             mcp_tools = await client.get_tools()
-            logger.info('MCP tools loaded: %s', [t.name for t in mcp_tools])
+            logger.debug('MCP tools loaded: %s', [t.name for t in mcp_tools])
             all_tools = internal_tools + mcp_tools
             agent = create_agent(llm, all_tools, system_prompt=SYSTEM_PROMPT)
             result = await agent.ainvoke({'messages': messages})

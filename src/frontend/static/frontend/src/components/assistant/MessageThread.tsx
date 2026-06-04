@@ -11,46 +11,64 @@ interface MessageThreadProps {
     onSend: (text: string) => void
 }
 
+/**
+ * Capability groups shown in the empty-state welcome screen.
+ * Each entry represents a thematic area the assistant can help with,
+ * derived from the tool set defined in `assistant/services/tools.py`
+ * (internal Multiomix tools) and the MCP servers configured via
+ * `assistant/services/mcp_loader.py` (BioMCP, cBioPortal, etc.).
+ *
+ * Displayed as a three-column grid of cards, each card showing an icon,
+ * a category name, and a bullet list of example capabilities.
+ * Update this list whenever a new tool category is added or removed.
+ */
 const TOOL_CATEGORIES = [
     {
         icon: 'database' as const,
-        name: 'Tus datos',
+        name: 'Your data',
         items: [
-            'Experimentos de correlación',
-            'Biomarkers y feature selection',
-            'Archivos subidos',
-            'Validación estadística',
+            'Correlation experiments',
+            'Biomarkers and feature selection',
+            'Uploaded files',
+            'Statistical validation',
         ],
     },
     {
         icon: 'lab' as const,
-        name: 'Bioinformática',
+        name: 'Bioinformatics',
         items: [
-            'Genes, miRNAs y sitios CpG',
-            'Datasets cBioPortal (CGDS)',
-            'Redes de interacción STRING',
-            'Métodos estadísticos',
+            'Genes, miRNAs and CpG sites',
+            'cBioPortal (CGDS) datasets',
+            'STRING interaction networks',
+            'Statistical methods',
         ],
     },
     {
         icon: 'book' as const,
-        name: 'Literatura médica',
+        name: 'Medical literature',
         items: [
-            'Papers en PubMed / bioRxiv',
-            'Ensayos clínicos (ClinicalTrials)',
-            'Variantes genómicas (OncoKB)',
-            'Anotaciones gen / fármaco',
+            'Papers on PubMed / bioRxiv',
+            'Clinical trials (ClinicalTrials)',
+            'Genomic variants (OncoKB)',
+            'Gene / drug annotations',
         ],
     },
 ]
 
+/**
+ * One-click example prompts shown below the capability cards in the
+ * empty-state screen. Clicking a chip fires `onSend` directly with the
+ * prompt text, letting the user try the assistant without typing.
+ * These are purely illustrative — edit freely to reflect the most
+ * useful or frequently requested queries.
+ */
 const SUGGESTED_PROMPTS = [
-    'Mostrar mis experimentos recientes',
-    '¿Cuáles son mis biomarkers?',
-    'Buscar papers sobre DESeq2 en PubMed',
-    'Ensayos clínicos para BRCA1',
-    'Información sobre el gen TP53',
-    '¿Qué archivos tengo subidos?',
+    'Show my recent experiments',
+    'What are my biomarkers?',
+    'Search PubMed papers about DESeq2',
+    'Clinical trials for BRCA1',
+    'Information about the TP53 gene',
+    'What files have I uploaded?',
 ]
 
 /**
@@ -171,7 +189,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             <div className='chat-messages-scroll' ref={scrollRef}>
                 {messages.length === 0 && !isLoading && (
                     <div className='chat-empty-state'>
-                        <p className='chat-welcome-title'>¿En qué puedo ayudarte?</p>
+                        <p className='chat-welcome-title'>How can I help you?</p>
                         <div className='chat-capabilities-grid'>
                             {TOOL_CATEGORIES.map(cat => (
                                 <div key={cat.name} className='chat-capability-card'>
@@ -212,7 +230,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
                                 </div>
                                 <button
                                     className={`chat-copy-btn${copiedKey === msgKey ? ' copied' : ''}`}
-                                    title={copiedKey === msgKey ? 'Copiado' : 'Copiar'}
+                                    title={copiedKey === msgKey ? 'Copied' : 'Copy'}
                                     onClick={() => handleCopy(msgKey, msg.content)}
                                 >
                                     <Icon name={copiedKey === msgKey ? 'check' : 'copy outline'} size='small' />
@@ -235,7 +253,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             <div className='chat-input-area'>
                 <textarea
                     rows={2}
-                    placeholder='Escribí un mensaje… (Enter para enviar, Shift+Enter para nueva línea)'
+                    placeholder='Type a message… (Enter to send, Shift+Enter for new line)'
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -247,7 +265,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
                     size='small'
                     disabled={isLoading || !input.trim()}
                     onClick={handleSend}
-                    title='Enviar'
+                    title='Send'
                     style={{ alignSelf: 'flex-end' }}
                 >
                     <Icon name='send' />

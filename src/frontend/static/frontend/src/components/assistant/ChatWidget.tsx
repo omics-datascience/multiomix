@@ -30,7 +30,7 @@ const ChatWidget = () => {
                     circular
                     primary
                     icon
-                    title={isOpen ? 'Cerrar Multiomix Assistant' : 'Abrir Multiomix Assistant'}
+                    title={isOpen ? 'Close Multiomix Assistant' : 'Open Multiomix Assistant'}
                     onClick={() => toggle(!isOpen)}
                 >
                     <i className='robot icon' />
