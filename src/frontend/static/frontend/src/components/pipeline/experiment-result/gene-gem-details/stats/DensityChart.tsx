@@ -12,10 +12,9 @@ import {
     BarChart
 } from 'recharts'
 
-/**
- * Component's props
- */
+/** DensityChart props. */
 interface DensityChartProps {
+    /** Data series used to build the density chart. */
     dataObjects: StatChartData[],
     /** True to show bars in density chart */
     showBars: boolean,
@@ -55,9 +54,24 @@ type ChartData = {
 
 /** Data for a Bar component. */
 type BarData = {
+    /** Stroke color used to render the chart outline. */
     strokeColor: string | undefined,
+    /** Fill color used to render the chart bars. */
     fillColor: string | undefined,
+    /** Bars rendered for the current chart. */
     data: ChartData[]
+}
+
+/** CustomTooltip props. */
+interface CustomTooltipProps {
+    /** True when the tooltip is active. */
+    active?: boolean,
+    /** Tooltip payload provided by Recharts. */
+    payload?: any[],
+    /** Primary color used for the tooltip title. */
+    color: string | undefined,
+    /** Secondary color used when rendering the comparison series. */
+    color2: string | null | undefined
 }
 
 /**
@@ -109,14 +123,12 @@ export const DensityChart = (props: DensityChartProps) => {
 
 /**
  * Renders a custom tooltip for Density chart
- * @param props Props of tooltip
- * @param props.active if component is active
- * @param props.payload data for tooltip
- * @param props.color color for tooltip title
- * @param props.color2 color for tooltip title
+ * @param props Component props.
  * @returns Component
  */
-const CustomTooltip = ({ active, payload, color, color2 }: any) => {
+const CustomTooltip = (props: CustomTooltipProps) => {
+    const { active, payload, color, color2 } = props
+
     if (active && payload && payload.length) {
         return (
             <div style={{ background: '#fafafa', border: '1px solid #808080', borderWidth: '2px' }}>
@@ -142,10 +154,9 @@ const CustomTooltip = ({ active, payload, color, color2 }: any) => {
     }
 }
 
-/**
- * Component's props
- */
+/** DensityChartMix props. */
 interface DensityChartMixProps {
+    /** Data series used to build the mixed density chart. */
     dataObjects: StatChartData[],
     /** True to show bars in density chart */
     showBars: boolean,

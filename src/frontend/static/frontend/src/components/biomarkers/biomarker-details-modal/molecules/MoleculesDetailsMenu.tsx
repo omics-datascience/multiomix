@@ -63,13 +63,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
             popupInfo: 'Gene Ontology (GO) is a powerful tool for understanding the biological processes, molecular functions, and cellular components associated with a gene',
             isVisible: isGene
         },
+        /* TODO: implement when experiment regulation associations are available
         {
             name: 'Gene regulation associations',
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS,
             popupInfo: 'Gene regulation associations provide insights into the regulatory relationships between genes, helping to unravel the complex mechanisms that control gene expression and cellular function',
             isVisible: isGene
-        },
+        }, */
         // TODO: implement
         // {
         //     name: 'Actionable/Cancer genes',
