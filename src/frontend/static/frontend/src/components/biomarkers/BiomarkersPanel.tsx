@@ -232,22 +232,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     componentDidMount () {
         window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
-        this.getUserInstitutions()
-    }
-
-    /**
-     * Fetches the Institutions of which the User is part of
-     */
-    getUserInstitutions () {
-        ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
-            response.json<DjangoInstitution[]>().then((userInstitutions) => {
-                this.setState({ userInstitutions })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
-        }).catch((err) => {
-            console.log("Error getting user's tags ->", err)
-        })
     }
 
     /**
