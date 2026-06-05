@@ -44,7 +44,6 @@ declare const maxFeaturesBlindSearch: number
 declare const minFeaturesMetaheuristics: number
 declare const urlCloneBiomarker: string
 declare const urlStopFSExperiment: string
-declare const urlUserInstitutions: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
 const FILE_INPUT_LABEL = 'Add a new file'
