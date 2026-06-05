@@ -37,11 +37,12 @@ interface ChatPanelProps {
  * the active message thread (MessageThread). Panel dimensions are
  * persisted in localStorage and can be adjusted by dragging the
  * left/top/corner resize handles.
- * @param root0 - Component props.
- * @param root0.onClose - Callback invoked when the user closes the panel.
+ * @param props - Component props.
+ * @param props.onClose - Callback invoked when the user closes the panel.
  * @returns The rendered chat panel element.
  */
-const ChatPanel = ({ onClose }: ChatPanelProps) => {
+const ChatPanel = (props: ChatPanelProps) => {
+    const { onClose } = props
     const [conversations, setConversations] = useState<ConversationSummary[]>([])
     const [activeConvId, setActiveConvId] = useState<Nullable<number>>(() => {
         const stored = localStorage.getItem(ACTIVE_CONV_KEY)

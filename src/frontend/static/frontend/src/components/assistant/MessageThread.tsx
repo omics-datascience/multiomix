@@ -73,7 +73,8 @@ const SUGGESTED_PROMPTS = [
 
 /**
  * Formats an ISO timestamp as "HH:MM" for today, or "DD Mon HH:MM" otherwise.
- * @param iso
+ * @param iso - ISO 8601 timestamp string, or undefined.
+ * @returns Human-readable time or date+time string, or empty string if undefined.
  */
 function formatMsgTime (iso: string | undefined): string {
     if (!iso) { return '' }
@@ -92,12 +93,14 @@ function formatMsgTime (iso: string | undefined): string {
  * support (including a click-to-enlarge image lightbox), a copy-to-
  * clipboard button per message, a typing indicator while the assistant
  * is responding, and a textarea input for sending new messages.
- * @param root0
- * @param root0.messages
- * @param root0.isLoading
- * @param root0.onSend
+ * @param props - Component props.
+ * @param props.messages - Ordered list of chat messages to display.
+ * @param props.isLoading - Whether the assistant is currently generating a reply.
+ * @param props.onSend - Callback invoked with the message text when the user submits.
+ * @returns The rendered message thread.
  */
-const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
+const MessageThread = (props: MessageThreadProps) => {
+    const { messages, isLoading, onSend } = props
     const [input, setInput] = useState('')
     const [lightboxSrc, setLightboxSrc] = useState<Nullable<string>>(null)
     const [copiedKey, setCopiedKey] = useState<Nullable<string>>(null)
@@ -134,7 +137,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
 
     /**
      * Submits on Enter; allows Shift+Enter for line breaks.
-     * @param e
+     * @param e - Keyboard event from the textarea.
      */
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -146,8 +149,8 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
     /**
      * Copies content to the clipboard and briefly flips the button to a
      * "copied" state.
-     * @param key
-     * @param content
+     * @param key - Unique key identifying which message's button to flip.
+     * @param content - Text content to write to the clipboard.
      */
     const handleCopy = (key: string, content: string) => {
         navigator.clipboard.writeText(content).then(() => {

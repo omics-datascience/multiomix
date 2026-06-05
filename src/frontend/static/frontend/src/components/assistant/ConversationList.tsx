@@ -14,7 +14,8 @@ interface ConversationListProps {
 
 /**
  * Formats an ISO timestamp as "HH:MM" for today, or "DD Mon" otherwise.
- * @param iso
+ * @param iso - ISO 8601 timestamp string.
+ * @returns Human-readable time or date string.
  */
 function formatConvDate (iso: string): string {
     const d = new Date(iso)
@@ -31,15 +32,17 @@ function formatConvDate (iso: string): string {
  * Sidebar list of past conversations. Each item shows the title (or
  * "Untitled") and the last-updated timestamp. Supports inline
  * renaming on double-click and deletion via the trash icon.
- * @param root0
- * @param root0.conversations
- * @param root0.activeId
- * @param root0.onSelect
- * @param root0.onNew
- * @param root0.onDelete
- * @param root0.onRename
+ * @param props - Component props.
+ * @param props.conversations - List of conversation summaries to display.
+ * @param props.activeId - ID of the currently active conversation, or null.
+ * @param props.onSelect - Callback invoked when a conversation is selected.
+ * @param props.onNew - Callback invoked when the user starts a new conversation.
+ * @param props.onDelete - Callback invoked when a conversation is deleted.
+ * @param props.onRename - Callback invoked when a conversation is renamed.
+ * @returns The rendered conversation list sidebar.
  */
-const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, onRename }: ConversationListProps) => {
+const ConversationList = (props: ConversationListProps) => {
+    const { conversations, activeId, onSelect, onNew, onDelete, onRename } = props
     const [editingId, setEditingId] = useState<Nullable<number>>(null)
     const [editTitle, setEditTitle] = useState('')
     const inputRef = useRef<HTMLInputElement>(null)
@@ -47,8 +50,8 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
     /**
      * Enters inline edit mode for the conversation title; stops event
      * propagation.
-     * @param conv
-     * @param e
+     * @param conv - The conversation being edited.
+     * @param e - The mouse event that triggered the edit.
      */
     const startEdit = (conv: ConversationSummary, e: React.MouseEvent) => {
         e.stopPropagation()
@@ -59,7 +62,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
 
     /**
      * Submits the trimmed title via `onRename` and exits edit mode.
-     * @param id
+     * @param id - ID of the conversation being renamed.
      */
     const commitEdit = (id: number) => {
         onRename(id, editTitle.trim())
@@ -68,6 +71,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
 
     /**
      * Exits edit mode without saving changes.
+     * @returns void
      */
     const cancelEdit = () => setEditingId(null)
 
