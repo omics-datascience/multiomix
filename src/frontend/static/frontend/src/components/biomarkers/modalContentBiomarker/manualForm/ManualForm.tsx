@@ -4,15 +4,12 @@ import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOf
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
 import { DjangoTag } from '../../../../utils/django_interfaces'
-import { NewFile } from '../../../files-manager/FilesManager'
 
 /** ManualForm's props. */
 interface ManualFormProps {
     tagOptions: DropdownItemProps[]
     tags: DjangoTag[]
-    uploadingFile: boolean
     handleAddFileInputsChange: (name: string, value: any) => void
-    newFile: NewFile
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,

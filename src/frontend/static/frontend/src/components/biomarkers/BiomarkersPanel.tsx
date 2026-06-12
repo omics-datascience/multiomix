@@ -1,7 +1,7 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoInstitution, DjangoMethylationPlatform, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject } from '../../utils/util_functions'
 import { Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
@@ -105,8 +105,6 @@ interface BiomarkersPanelState {
     newFile: NewFile,
     showDeleteTagModal: boolean,
     deletingTag: boolean,
-    userInstitutions: DjangoInstitution[],
-    uploadingFile: boolean,
 }
 
 /**
@@ -126,7 +124,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             biomarkerToStop: null,
             selectedBiomarkerToDeleteOrSync: null,
             deletingBiomarker: false,
-            uploadingFile: false,
             addingOrEditingBiomarker: false,
             formBiomarker: this.getDefaultFormBiomarker(),
             selectedTagToDelete: null,
@@ -147,7 +144,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             newFile: this.getDefaultNewFile(),
             showDeleteTagModal: false,
             deletingTag: false,
-            userInstitutions: [],
         }
     }
 
@@ -229,19 +225,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      * tags and files.
      */
     componentDidMount () {
-        window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
-    }
-
-    /**
-     * Prevents users from closing browser tag when upload is in process.
-     * @param e Event
-     */
-    onUnload = e => { // the method that will be used for both add and remove event
-        if (this.state.uploadingFile) {
-            e.preventDefault()
-            e.returnValue = 'A file is being uploaded. If you close the tab the upload will be canceled.'
-        }
     }
 
     /**
@@ -2231,9 +2215,7 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                             return { key: id, value: id, text: tag.name }
                                         })
                                     ]}
-                                    uploadingFile={false}
                                     handleAddFileInputsChange={this.handleAddFileInputsChange}
-                                    newFile={this.state.newFile}
                                     handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                                     removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                                 />

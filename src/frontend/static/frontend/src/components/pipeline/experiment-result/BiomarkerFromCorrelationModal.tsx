@@ -1587,9 +1587,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
                         tagOptions={[]}
-                        uploadingFile={false}
                         handleAddFileInputsChange={this.handleAddFileInputsChange}
-                        newFile={this.state.newFile}
                         handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
                         removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                         tags={this.state.tags}
