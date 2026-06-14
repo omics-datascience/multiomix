@@ -1,4 +1,5 @@
 import React from 'react'
+import { useIntl, IntlShape } from 'react-intl'
 import { Grid, Select, Header, Icon, Label, DropdownItemProps, Image } from 'semantic-ui-react'
 import { FileType, SourceType, Source, Nullable } from '../../utils/interfaces'
 import { UploadButton } from '../common/UploadButton'
@@ -47,6 +48,11 @@ interface SourceFormProps {
     selectStudy: (selectedStudy: DjangoCGDSStudy) => void
 }
 
+interface SourceFormInternalProps extends SourceFormProps {
+    /** Intl object */
+    intl: IntlShape
+}
+
 /**
  * Component's state
  */
@@ -64,7 +70,7 @@ interface SourceFormState {
  * @param props Component's props
  * @returns Component
  */
-class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
+class SourceFormBase extends React.Component<SourceFormInternalProps, SourceFormState> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -105,14 +111,16 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * Fetches the Institutions of which the User is part of
      */
     getUserInstitutions () {
+        const { intl } = this.props
+
         ky.get(urlUserInstitutions, { signal: this.abortController.signal }).then((response) => {
             response.json<DjangoInstitution[]>().then((userInstitutions) => {
                 this.setState({ userInstitutions })
             }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
+                console.log(intl.formatMessage({ id: 'sourceForm.errorParsingJson' }), err)
             })
         }).catch((err) => {
-            console.log("Error getting user's tags ->", err)
+            console.log(intl.formatMessage({ id: 'sourceForm.errorGettingTags' }), err)
         })
     }
 
@@ -133,6 +141,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * @returns Button or label depending with source the user is using
      */
     getDisplayInfoForSource () {
+        const { intl } = this.props
         const sourceFilename = this.props.source.filename
         let component
 
@@ -150,7 +159,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         />
 
                         <Label style={{ width: '100%' }} className='margin-top-2' color='yellow'>
-                            The file will be added to "Datasets/Multiomix"
+                            {intl.formatMessage({ id: 'sourceForm.fileAddedToDatasets' })}
                         </Label>
 
                         {current && current.files.length > 0 &&
@@ -164,7 +173,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 component = (
                     <Label
                         className='clickable full-width'
-                        title='Select your dataset'
+                        title={intl.formatMessage({ id: 'sourceForm.selectDataset' })}
                         color={this.props.source.selectedExistingFile !== null ? 'green' : 'red'}
                         onClick={this.openUsersDatasetsSelectionModal}
                     >
@@ -172,11 +181,12 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                     </Label>
                 )
                 break
+
             case SourceType.CGDS:
                 component = (
                     <Label
                         className='clickable full-width'
-                        title='Select your dataset'
+                        title={intl.formatMessage({ id: 'sourceForm.selectDataset' })}
                         color={this.props.source.CGDSStudy !== null ? 'green' : 'red'}
                         onClick={this.openCGDSDatasetsSelectionModal}
                     >
@@ -184,6 +194,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                     </Label>
                 )
                 break
+
             default:
                 component = null
                 break
@@ -197,13 +208,10 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * @param selectedSourceType New selected Source
      */
     selectSourceType (selectedSourceType) {
-        // Shows the modal if correspond
         if (selectedSourceType === SourceType.UPLOADED_DATASETS) {
             this.openUsersDatasetsSelectionModal()
-        } else {
-            if (selectedSourceType === SourceType.CGDS) {
-                this.openCGDSDatasetsSelectionModal()
-            }
+        } else if (selectedSourceType === SourceType.CGDS) {
+            this.openCGDSDatasetsSelectionModal()
         }
 
         this.props.handleChangeSourceType(selectedSourceType)
@@ -231,19 +239,25 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
      * Callback to mark a File as selected
      * @param selectedFile Selected file to mark
      */
-    markFileAsSelected = (selectedFile: DjangoUserFile) => { this.setState({ selectedFile }) }
+    markFileAsSelected = (selectedFile: DjangoUserFile) => {
+        this.setState({ selectedFile })
+    }
 
     /**
      * Callback to mark a CGDSStudy as selected
      * @param selectedStudy Selected CGDSStudy to mark
      */
-    markStudyAsSelected = (selectedStudy: DjangoCGDSStudy) => { this.setState({ selectedStudy }) }
+    markStudyAsSelected = (selectedStudy: DjangoCGDSStudy) => {
+        this.setState({ selectedStudy })
+    }
 
     render () {
+        const { intl } = this.props
+
         let institutionsOptions: DropdownItemProps[] = [
-            { key: 'all', value: 'all', text: 'All' },
-            { key: 'private', value: 'private', text: 'Private' },
-            { key: 'public', value: 'public', text: 'Public' }
+            { key: 'all', value: 'all', text: intl.formatMessage({ id: 'sourceForm.all' }) },
+            { key: 'private', value: 'private', text: intl.formatMessage({ id: 'sourceForm.private' }) },
+            { key: 'public', value: 'public', text: intl.formatMessage({ id: 'sourceForm.public' }) }
         ]
 
         const institutionsOptionsAux: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
@@ -255,15 +269,31 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
         const showCBioPortalOption = this.props.showCBioPortalOption ?? true
 
         const selectOptions: DropdownItemProps[] = [
-            { key: 'select_source', text: 'Select dataset...', value: SourceType.NONE },
-            { key: 'datasets', text: 'From your datasets', value: SourceType.UPLOADED_DATASETS }
+            {
+                key: 'select_source',
+                text: intl.formatMessage({ id: 'sourceForm.selectDatasetPlaceholder' }),
+                value: SourceType.NONE
+            },
+            {
+                key: 'datasets',
+                text: intl.formatMessage({ id: 'sourceForm.fromYourDatasets' }),
+                value: SourceType.UPLOADED_DATASETS
+            }
         ]
 
         if (showCBioPortalOption) {
-            selectOptions.push({ key: 'cgds', text: 'From cBioPortal', value: SourceType.CGDS })
+            selectOptions.push({
+                key: 'cgds',
+                text: intl.formatMessage({ id: 'sourceForm.fromCBioPortal' }),
+                value: SourceType.CGDS
+            })
         }
 
-        selectOptions.push({ key: 'add_new', text: 'Upload dataset', value: SourceType.NEW_DATASET })
+        selectOptions.push({
+            key: 'add_new',
+            text: intl.formatMessage({ id: 'sourceForm.uploadDataset' }),
+            value: SourceType.NEW_DATASET
+        })
 
         const isIcon = this.props.headerIcon.type === 'icon'
         const icon = isIcon
@@ -272,7 +302,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
 
         return (
             <Grid.Row>
-                {/* Select User's files modal */}
                 <UserDatasetsModal
                     showUserDatasetsModal={this.state.showUserDatasetsModal}
                     selectedFile={this.state.selectedFile}
@@ -285,7 +314,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                     markFileAsSelected={this.markFileAsSelected}
                 />
 
-                {/* Select CGDS Study modal */}
                 {showCBioPortalOption && (
                     <CGDSDatasetsModal
                         showCGDSDatasetsModal={this.state.showCGDSDatasetsModal}
@@ -296,6 +324,7 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         markStudyAsSelected={this.markStudyAsSelected}
                     />
                 )}
+
                 <Header as='h4' icon={isIcon} image={!isIcon} textAlign='center'>
                     {icon}
                     {this.props.headerTitle.split(' ').map((text, index) => (
@@ -307,7 +336,6 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                 </Header>
 
                 <div className='full-width'>
-                    {/* Source selection */}
                     <Select
                         button
                         selectOnBlur={false}
@@ -317,11 +345,10 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
                         className='margin-bottom-2'
                         value={this.props.source.type as SourceType}
                         options={selectOptions}
-                        placeholder='Select dataset...'
+                        placeholder={intl.formatMessage({ id: 'sourceForm.selectDatasetPlaceholder' })}
                         onChange={(_e, { value }) => this.selectSourceType(value)}
                     />
 
-                    {/* The upload button, if user's datasets is selected */}
                     {this.getDisplayInfoForSource()}
                 </div>
             </Grid.Row>
@@ -329,4 +356,17 @@ class SourceForm extends React.Component<SourceFormProps, SourceFormState> {
     }
 }
 
-export { SourceForm }
+/**
+ * Wrapper component that injects the intl object into SourceForm.
+ * @param props SourceForm props excluding intl.
+ * @returns SourceForm component with injected intl instance.
+ */
+export default function SourceFormWithIntl (
+    props: SourceFormProps
+) {
+    const intl = useIntl()
+
+    return <SourceFormBase {...props} intl={intl} />
+}
+
+export { SourceFormWithIntl as SourceForm }

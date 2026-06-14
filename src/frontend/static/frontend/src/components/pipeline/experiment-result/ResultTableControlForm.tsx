@@ -6,6 +6,7 @@ import { generatesOrderingQueryMultiField } from '../../../utils/util_functions'
 import { DjangoExperiment } from '../../../utils/django_interfaces'
 import { SingleRangeSlider } from 'neo-react-semantic-ui-range'
 import { BiomarkerFromCorrelationModal } from './BiomarkerFromCorrelationModal'
+import { useIntl } from 'react-intl'
 
 declare const urlDownloadResultWithFilters: string
 
@@ -41,10 +42,11 @@ interface ResultTableControlFormProps {
  * @returns Component
  */
 export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
+    const intl = useIntl()
     const selectCorrelationTypeOptions = [
-        { key: 'both', text: 'Both', value: CorrelationType.BOTH },
-        { key: 'positive', text: 'Positive', value: CorrelationType.POSITIVE },
-        { key: 'negative', text: 'Negative', value: CorrelationType.NEGATIVE }
+        { key: 'both', text: intl.formatMessage({ id: 'resultTableControlForm.correlationType.both' }), value: CorrelationType.BOTH },
+        { key: 'positive', text: intl.formatMessage({ id: 'resultTableControlForm.correlationType.positive' }), value: CorrelationType.POSITIVE },
+        { key: 'negative', text: intl.formatMessage({ id: 'resultTableControlForm.correlationType.negative' }), value: CorrelationType.NEGATIVE }
     ]
 
     const selectPageSizeOptions = [
@@ -85,13 +87,13 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                                         {props.numberOfShowingCombinations} / {props.totalNumberOfCombinations}
                                     </span>
                                 </Statistic.Value>
-                                <Statistic.Label>SHOWING/TOTAL</Statistic.Label>
+                                <Statistic.Label>{intl.formatMessage({ id: 'resultTableControlForm.showingTotal' })}</Statistic.Label>
                             </Statistic>
 
                             <InfoPopup
                                 extraClassName='margin-left-2'
                                 onTop={false}
-                                content='Number of significantly correlated features  according to the applied filters over the total significantly correlated'
+                                content={intl.formatMessage({ id: 'resultTableControlForm.showingTotalInfo' })}
                             />
                         </Form.Field>
 
@@ -100,7 +102,10 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                             width={5}
                             icon='search' iconPosition='left'
                             label={`${props.gemDescription}/mRNA`}
-                            placeholder={`Search by ${props.gemDescription} or mRNA`}
+                            placeholder={intl.formatMessage(
+                                { id: 'resultTableControlForm.searchPlaceholder' },
+                                { gemDescription: props.gemDescription }
+                            )}
                             name='textFilter'
                             value={props.tableControl.textFilter}
                             onChange={(_, { name, value }) => props.onHandleTableControlChanges(name, value)}
@@ -113,7 +118,7 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                                 id='slider-cor-filter-label'
                                 className='align-center bolder'
                             >
-                                Correlation Coefficient {props.tableControl.coefficientThreshold.toFixed(2)}
+                                {intl.formatMessage({ id: 'resultTableControlForm.correlationCoefficient' }, { value: props.tableControl.coefficientThreshold.toFixed(2) })}
                             </Label>
 
                             <SingleRangeSlider
@@ -141,7 +146,9 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                             width={2}
                             fluid
                             selectOnBlur={false}
-                            label='Correlation type'
+                            label={intl.formatMessage({
+                                id: 'resultTableControlForm.correlationType'
+                            })}
                             options={selectCorrelationTypeOptions}
                             name='correlationType'
                             value={props.tableControl.correlationType}
@@ -154,7 +161,9 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                             width={2}
                             fluid
                             selectOnBlur={false}
-                            label='Number of entries'
+                            label={intl.formatMessage({
+                                id: 'resultTableControlForm.numberOfEntries'
+                            })}
                             options={selectPageSizeOptions}
                             name='pageSize'
                             value={props.tableControl.pageSize}
@@ -166,7 +175,11 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                             width={2}
                             label={isShowingHighPrecision ? '1.234e-5' : 'p < .001'}
                             icon={isShowingHighPrecision ? 'eye slash' : 'eye'}
-                            title={`${isShowingHighPrecision ? 'Less' : 'More'} precise p-value`}
+                            title={intl.formatMessage({
+                                id: isShowingHighPrecision
+                                    ? 'resultTableControlForm.lessPrecisePValue'
+                                    : 'resultTableControlForm.morePrecisePValue'
+                            })}
                             onClick={() => props.changePrecisionState(!isShowingHighPrecision)}
                         />
 
@@ -177,20 +190,28 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
 
                         <Form.Button
                             width={2}
-                            label='Clean'
+                            label={intl.formatMessage({
+                                id: 'resultTableControlForm.clean'
+                            })}
                             icon='trash'
                             color='red'
-                            title='Reset filters and sorting'
+                            title={intl.formatMessage({
+                                id: 'resultTableControlForm.cleanTitle'
+                            })}
                             className='no-margin-right-form-field'
                             onClick={() => props.resetFiltersAndSorting(props.experimentInfo.experiment)}
                         />
 
                         <Form.Button
                             width={2}
-                            label='Download'
+                            label={intl.formatMessage({
+                                id: 'resultTableControlForm.download'
+                            })}
                             icon='cloud download'
                             color='blue'
-                            title='Download result with filters applied'
+                            title={intl.formatMessage({
+                                id: 'resultTableControlForm.downloadTitle'
+                            })}
                             className='no-margin-right-form-field'
                             onClick={() => window.open(generateDownloadWithFiltersQuery(), '_blank')}
                             disabled={!props.experimentInfo.rows.length}
@@ -199,10 +220,9 @@ export const ResultTableControlForm = (props: ResultTableControlFormProps) => {
                         <Form.Field width={1} className='margin-left-2'>
                             <InfoPopup
                                 id='experiment-result-info-popup'
-                                content={(
-                                    <p>
-                                        This table shows all the combinations whose correlation coefficient was more or equal than selected threshold ({props.minimumCoefficientThreshold}). Choose some of the options listed in <i>Actions</i> column
-                                    </p>
+                                content={intl.formatMessage(
+                                    { id: 'resultTableControlForm.infoPopup' },
+                                    { threshold: props.minimumCoefficientThreshold }
                                 )}
                             />
                         </Form.Field>

@@ -1,18 +1,32 @@
 import React from 'react'
+import { useIntl } from 'react-intl'
 import { Segment, Grid, Header, Select } from 'semantic-ui-react'
 import { getFileTypeSelectOptions } from '../../utils/util_functions'
 import { SourceForm } from '../pipeline/SourceForm'
 import { FileType, SourceType } from '../../utils/interfaces'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../utils/django_interfaces'
-import { SurvivalAnalysisPanelState, SourceStateName, ColumnStateName } from './SurvivalAnalysisPanel'
+import {
+    SurvivalAnalysisPanelState,
+    SourceStateName,
+    ColumnStateName
+} from './SurvivalAnalysisPanel'
 
 /**
  * Component's props
  */
 interface SurvivalFormProps extends SurvivalAnalysisPanelState {
-    selectStudy: (selectedStudy: DjangoCGDSStudy, sourceName: SourceStateName) => void,
-    onHandleChangeSourceType: (sourceSelected: SourceType, sourceName: SourceStateName) => void,
-    selectUploadedFile: (selectedFile: DjangoUserFile, sourceName: SourceStateName) => void,
+    selectStudy: (
+        selectedStudy: DjangoCGDSStudy,
+        sourceName: SourceStateName
+    ) => void,
+    onHandleChangeSourceType: (
+        sourceSelected: SourceType,
+        sourceName: SourceStateName
+    ) => void,
+    selectUploadedFile: (
+        selectedFile: DjangoUserFile,
+        sourceName: SourceStateName
+    ) => void,
     selectSurvivalColumn: (name: ColumnStateName, value) => void,
     selectNewFile: (sourceName: SourceStateName) => void,
     changeFileType: (value) => void
@@ -24,18 +38,24 @@ interface SurvivalFormProps extends SurvivalAnalysisPanelState {
  * @returns Component
  */
 export const SurvivalForm = (props: SurvivalFormProps) => {
-    // Gets Select options without the 'Clinical' one
-    const fileTypeOptions = getFileTypeSelectOptions(false).filter((option) => option.key !== 'clinical')
+    const intl = useIntl()
+
+    const fileTypeOptions = getFileTypeSelectOptions(false)
+        .filter((option) => option.key !== 'clinical')
+
     const optionsArrayIsEmpty = props.columnEventOptions.length === 0
 
     return (
         <div>
             <Segment>
                 <Grid className='padded-left-10 padded-right-10'>
-                    {/* File type for expression dataset */}
                     <Grid.Row>
                         <Header textAlign='center'>
-                            <Header.Content>Expression file type</Header.Content>
+                            <Header.Content>
+                                {intl.formatMessage({
+                                    id: 'survivalForm.expressionFileType'
+                                })}
+                            </Header.Content>
                         </Header>
 
                         <Select
@@ -44,14 +64,16 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                             value={props.expressionFileType}
                             options={fileTypeOptions}
                             name='fileType'
-                            onChange={(_, { value }) => props.changeFileType(value)}
+                            onChange={(_, { value }) =>
+                                props.changeFileType(value)}
                         />
                     </Grid.Row>
 
-                    {/* Expression profile SourceForm */}
                     <SourceForm
                         source={props.expressionSource}
-                        headerTitle='Expression profile'
+                        headerTitle={intl.formatMessage({
+                            id: 'survivalForm.expressionProfile'
+                        })}
                         headerIcon={{
                             type: 'icon',
                             src: 'dna'
@@ -59,23 +81,33 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         fileType={props.expressionFileType}
                         tagOptions={[]}
                         handleChangeSourceType={(selectedSourceType) => {
-                            props.onHandleChangeSourceType(selectedSourceType, 'expressionSource')
+                            props.onHandleChangeSourceType(
+                                selectedSourceType,
+                                'expressionSource'
+                            )
                         }}
                         selectNewFile={() => {
                             props.selectNewFile('expressionSource')
                         }}
                         selectUploadedFile={(selectedFile) => {
-                            props.selectUploadedFile(selectedFile, 'expressionSource')
+                            props.selectUploadedFile(
+                                selectedFile,
+                                'expressionSource'
+                            )
                         }}
                         selectStudy={(selectedStudy) => {
-                            props.selectStudy(selectedStudy, 'expressionSource')
+                            props.selectStudy(
+                                selectedStudy,
+                                'expressionSource'
+                            )
                         }}
                     />
 
-                    {/* Clinical SourceForm */}
                     <SourceForm
                         source={props.survivalSource}
-                        headerTitle='Survival profile'
+                        headerTitle={intl.formatMessage({
+                            id: 'survivalForm.survivalProfile'
+                        })}
                         headerIcon={{
                             type: 'icon',
                             src: 'user'
@@ -83,24 +115,31 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         fileType={FileType.CLINICAL}
                         tagOptions={[]}
                         handleChangeSourceType={(selectedSourceType) => {
-                            props.onHandleChangeSourceType(selectedSourceType, 'survivalSource')
+                            props.onHandleChangeSourceType(
+                                selectedSourceType,
+                                'survivalSource'
+                            )
                         }}
                         selectNewFile={() => {
                             props.selectNewFile('survivalSource')
                         }}
                         selectUploadedFile={(selectedFile) => {
-                            props.selectUploadedFile(selectedFile, 'survivalSource')
+                            props.selectUploadedFile(
+                                selectedFile,
+                                'survivalSource'
+                            )
                         }}
                         selectStudy={(selectedStudy) => {
-                            props.selectStudy(selectedStudy, 'survivalSource')
+                            props.selectStudy(
+                                selectedStudy,
+                                'survivalSource'
+                            )
                         }}
                     />
                 </Grid>
             </Segment>
 
-            {/* Survival columns of interest */}
             <Segment>
-                {/* Event time */}
                 <div className='full-width'>
                     <Select
                         button
@@ -112,12 +151,14 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         name='columnEventTime'
                         value={props.columnEventTime}
                         options={props.columnEventOptions}
-                        placeholder='Event Time column'
-                        onChange={(_e, { name, value }) => props.selectSurvivalColumn(name, value)}
+                        placeholder={intl.formatMessage({
+                            id: 'survivalForm.eventTimeColumn'
+                        })}
+                        onChange={(_e, { name, value }) =>
+                            props.selectSurvivalColumn(name, value)}
                     />
                 </div>
 
-                {/* Event status */}
                 <div className='full-width'>
                     <Select
                         button
@@ -128,8 +169,11 @@ export const SurvivalForm = (props: SurvivalFormProps) => {
                         name='columnEventStatus'
                         value={props.columnEventStatus}
                         options={props.columnEventOptions}
-                        placeholder='Event Status column'
-                        onChange={(_e, { name, value }) => props.selectSurvivalColumn(name, value)}
+                        placeholder={intl.formatMessage({
+                            id: 'survivalForm.eventStatusColumn'
+                        })}
+                        onChange={(_e, { name, value }) =>
+                            props.selectSurvivalColumn(name, value)}
                     />
                 </div>
             </Segment>

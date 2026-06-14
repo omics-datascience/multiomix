@@ -3,6 +3,7 @@ import { Card, Label, Icon, Dropdown, DropdownMenuProps } from 'semantic-ui-reac
 import { DjangoTag } from '../../utils/django_interfaces'
 import { TagForm } from '../common/TagForm'
 import { NewExperiment } from '../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -37,6 +38,7 @@ interface ExperimentTagInfoProps {
  * @returns Component
  */
 export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
+    const intl = useIntl()
     // To enable/disable some functions
     const isTagSelected = props.experiment.tag.id && props.experiment.tag.id
 
@@ -50,7 +52,7 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
                 options={props.tagOptions}
                 clearable
                 onChange={(_e, { value }) => props.selectTagForNewExperiment(value)}
-                placeholder='Select an existing Tag'
+                placeholder={intl.formatMessage({ id: 'experimentTagInfo.selectExistingTag' })}
             />
         )
         : null
@@ -73,7 +75,7 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
                 className='clickable margin-left-2'
                 name='trash'
                 color='red'
-                title='Remove Tag'
+                title={intl.formatMessage({ id: 'experimentTagInfo.removeTag' })}
                 onClick={() => props.selectTagForNewExperiment(null)}
             />
         )
@@ -87,14 +89,14 @@ export const ExperimentTagInfo = (props: ExperimentTagInfoProps) => {
                 className='margin-bottom-2 align-center'
                 title={isTagSelected ? props.experiment.tag.description : ''}
             >
-                {isTagSelected ? props.experiment.tag.name : 'No tag assigned'}
+                {isTagSelected ? props.experiment.tag.name : intl.formatMessage({ id: 'experimentTagInfo.noTagAssigned' })}
             </Label>
 
             <Icon
                 className='clickable margin-left-2'
                 name={props.isSelectingTag ? 'times' : 'pencil'}
                 color={props.isSelectingTag ? 'red' : 'yellow'}
-                title={props.isSelectingTag ? 'Cancel' : 'Edit'}
+                title={props.isSelectingTag ? intl.formatMessage({ id: 'common.cancel' }) : intl.formatMessage({ id: 'experimentTagInfo.edit' })}
                 onClick={() => props.toggleDisplayTagForm()}
             />
 

@@ -109,7 +109,7 @@ interface BiomarkersPanelProps {
 /**
  * Renders a CRUD panel for a Biomarker.
  */
-export class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPanelState> {
+class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPanelState> {
     abortController = new AbortController()
     constructor (props) {
         super(props)
@@ -2120,3 +2120,13 @@ export class BiomarkersPanel extends React.Component<BiomarkersPanelProps, Bioma
         )
     }
 }
+
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
+const BiomarkersPanelWithIntl = (props: Omit<BiomarkersPanelProps, 'intl'>) => {
+    const intl = useIntl()
+    return <BiomarkersPanel {...props} intl={intl} />
+}
+
+export { BiomarkersPanelWithIntl as BiomarkersPanel }

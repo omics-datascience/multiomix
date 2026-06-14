@@ -3,6 +3,7 @@ import { Form, Message, Button, Image } from 'semantic-ui-react'
 import { Nullable } from '../../utils/interfaces'
 import { CsrfInput } from './CsrfInput'
 import validator from 'validator'
+import { injectIntl, IntlShape } from 'react-intl'
 
 declare const urlIndex: string
 declare const urlAuthenticate: string
@@ -29,6 +30,8 @@ interface GeneralFormProps {
     url: string,
     children: React.ReactNode
 }
+
+interface LoginSignUpFormProps { intl: IntlShape }
 
 /**
  * Renders a General from with the "Render props" pattern
@@ -68,7 +71,7 @@ const GeneralForm = (props: GeneralFormProps) => {
 /**
  * Renders a Login/Sign up form
  */
-export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
+class LoginSignUpForm extends React.Component<LoginSignUpFormProps, LoginSignUpState> {
     constructor (props) {
         super(props)
 
@@ -126,6 +129,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
      * @returns Error message if exists. Login component otherwise
      */
     getLoginPanel () {
+        const { intl } = this.props
         let message: Nullable<JSX.Element> = null
 
         if (loginError.length > 0) {
@@ -153,7 +157,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
         }
 
         return (
-            <GeneralForm title='Log in' url={urlAuthenticate}>
+            <GeneralForm title={intl.formatMessage({ id: 'loginSignUpForm.loginTitle' })} url={urlAuthenticate}>
                 {message}
 
                 <Form.Input
@@ -161,7 +165,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     icon='user'
                     iconPosition='left'
                     className='wrap-login-input'
-                    placeholder='Username'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.usernamePlaceholder' })}
                     name='username'
                     value={this.state.username}
                     onChange={this.handleInputChange}
@@ -172,7 +176,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     icon='lock'
                     iconPosition='left'
                     className='wrap-login-input'
-                    placeholder='Password'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.passwordPlaceholder' })}
                     name='password'
                     value={this.state.password}
                     onChange={this.handleInputChange}
@@ -189,7 +193,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                         type='button'
                         onClick={() => this.setState({ showSignUpForm: true })}
                     >
-                        Sign Up
+                        {intl.formatMessage({ id: 'loginSignUpForm.signUpButton' })}
                     </Form.Field>
 
                     <Form.Button
@@ -200,7 +204,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                         circular
                         disabled={!this.loginFormIsValid()}
                     >
-                        Login
+                        {intl.formatMessage({ id: 'loginSignUpForm.loginButton' })}
                     </Form.Button>
                 </Form.Group>
 
@@ -218,16 +222,17 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
      * @returns Sign up form component
      */
     getSignUpPanel () {
+        const { intl } = this.props
         const passwordsMismatch = this.state.newPassword !== this.state.newPasswordRepeated
         const emailIsNotValid = this.state.email != null && this.state.email.trim().length > 0 && !this.emailIsValid()
 
         return (
-            <GeneralForm title='Sign Up' url={urlCreateUser}>
+            <GeneralForm title={intl.formatMessage({ id: 'loginSignUpForm.signUpTitle' })} url={urlCreateUser}>
                 <Form.Input
                     fluid
                     icon='user'
                     iconPosition='left'
-                    placeholder='Username'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.usernamePlaceholder' })}
                     name='newUsername'
                     value={this.state.newUsername}
                     onChange={this.handleInputChange}
@@ -237,7 +242,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     fluid
                     icon='mail'
                     iconPosition='left'
-                    placeholder='Email'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.emailPlaceholder' })}
                     name='email'
                     error={emailIsNotValid}
                     value={this.state.email}
@@ -245,14 +250,14 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                 />
                 {emailIsNotValid && (
                     <p className='align-center error-message-helper'>
-                        Please provide a valid <i>email</i> address
+                        {intl.formatMessage({ id: 'loginSignUpForm.validEmailMessage' })}
                     </p>
                 )}
                 <Form.Input
                     fluid
                     icon='lock'
                     iconPosition='left'
-                    placeholder='Password'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.passwordPlaceholder' })}
                     name='newPassword'
                     value={this.state.newPassword}
                     onChange={this.handleInputChange}
@@ -262,7 +267,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                     fluid
                     icon='lock'
                     iconPosition='left'
-                    placeholder='Repeat your password'
+                    placeholder={intl.formatMessage({ id: 'loginSignUpForm.repeatPasswordPlaceholder' })}
                     className='password-repeated-input'
                     name='newPasswordRepeated'
                     error={passwordsMismatch}
@@ -272,7 +277,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                 />
                 {passwordsMismatch && (
                     <p className='align-center error-message-helper'>
-                        This value is different to <i>Password</i> field
+                        {intl.formatMessage({ id: 'loginSignUpForm.passwordMismatchMessage' })}
                     </p>
                 )}
 
@@ -286,7 +291,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                         type='button'
                         onClick={() => this.setState({ showSignUpForm: false })}
                     >
-                        Back
+                        {intl.formatMessage({ id: 'common.goBack' })}
                     </Form.Field>
 
                     <Form.Button
@@ -297,7 +302,7 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
                         type='submit'
                         disabled={!this.signUpFormIsValid()}
                     >
-                        Sign Up
+                        {intl.formatMessage({ id: 'loginSignUpForm.signUpButton' })}
                     </Form.Button>
                 </Form.Group>
 
@@ -309,3 +314,5 @@ export class LoginSignUpForm extends React.Component<any, LoginSignUpState> {
         return !this.state.showSignUpForm ? this.getLoginPanel() : this.getSignUpPanel()
     }
 }
+
+export default injectIntl(LoginSignUpForm)

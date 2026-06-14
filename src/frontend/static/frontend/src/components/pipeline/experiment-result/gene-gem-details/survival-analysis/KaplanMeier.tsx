@@ -7,6 +7,7 @@ import { Button, DropdownItemProps, Form, Grid, Header, Label, Select } from 'se
 import { KaplanMeier, KaplanMeierData, KaplanMeierSample } from './KaplanMeierUtils'
 import { LogRankTestStats } from './LogRankTestStats'
 import { LoadingPanel } from '../LoadingPanel'
+import { useIntl, IntlShape } from 'react-intl'
 
 declare const urlSurvivalData: string
 // Defined in gem.html
@@ -35,6 +36,7 @@ type SurvivalDataResponse = {
  * Component's props
  */
 interface KaplanMeierChartProps {
+    intl: IntlShape,
     experimentId: number,
     selectedRow: Nullable<DjangoMRNAxGEMResultRow>,
     gem_source: DjangoExperimentSource,
@@ -104,13 +106,14 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
      * @returns Low and high groups ready for Kaplan-Meier chart
      */
     generateKaplanMeierData (dataResponse: SurvivalDataResponse, dataKey: 'gene_data' | 'gem_data'): KaplanMeierData {
+        const { intl } = this.props
         return [
             {
-                label: 'Low expression group',
+                label: intl.formatMessage({ id: 'kaplanMeierChart.lowExpressionGroup' }),
                 data: dataResponse[dataKey]?.low_group ?? []
             },
             {
-                label: 'High expression group',
+                label: intl.formatMessage({ id: 'kaplanMeierChart.highExpressionGroup' }),
                 data: dataResponse[dataKey]?.high_group ?? []
             }
         ]
@@ -242,6 +245,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
     }
 
     render () {
+        const { intl } = this.props
+
         if (this.state.gettingSurvivalData) {
             return <LoadingPanel />
         }
@@ -249,12 +254,12 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
         const survivalColumnsTupleOptions: DropdownItemProps[] = this.state.survivalColumns.map((survColumn) => {
             return {
                 key: survColumn.id,
-                text: `Time: ${survColumn.time_column} | Event: ${survColumn.event_column}`,
+                text: intl.formatMessage({ id: 'kaplanMeierChart.timeEvent' }, { time: survColumn.time_column, event: survColumn.event_column }),
                 value: survColumn.id
             }
         })
 
-        survivalColumnsTupleOptions.unshift({ key: 'None', text: 'None', value: undefined })
+        survivalColumnsTupleOptions.unshift({ key: 'None', text: intl.formatMessage({ id: 'kaplanMeierChart.none' }), value: undefined })
 
         const noOptions = this.state.survivalColumnsValues.length === 0
 
@@ -269,7 +274,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             <Form.Select
                                 width={5}
                                 selectOnBlur={false}
-                                label='Survival columns tuples'
+                                label={intl.formatMessage({ id: 'kaplanMeierChart.survivalColumnsTuples' })}
                                 options={survivalColumnsTupleOptions}
                                 value={this.state.selectedSurvivalColumnId as number}
                                 name='selectedSurvivalColumnId'
@@ -279,12 +284,12 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
 
                             <Form.Field width={4}>
                                 <label>
-                                    Field of event of interest
+                                    {intl.formatMessage({ id: 'kaplanMeierChart.fieldOfInterest' })}
                                 </label>
 
                                 <Select
                                     selectOnBlur={false}
-                                    label='Field of event of interest'
+                                    label={intl.formatMessage({ id: 'kaplanMeierChart.fieldOfInterest' })}
                                     options={survivalValuesOptions}
                                     search
                                     selection
@@ -293,7 +298,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                     name='fieldsInterest'
                                     value={this.state.fieldsInterest}
                                     onChange={(_, { name, value }) => this.handleChange(name, value)}
-                                    placeholder='Select some fields'
+                                    placeholder={intl.formatMessage({ id: 'kaplanMeierChart.selectFields' })}
                                     disabled={this.state.gettingSurvivalData || noOptions}
                                 />
 
@@ -307,7 +312,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                                         size='large'
                                         pointing='left'
                                     >
-                                        The fields of interest were inferred from common values
+                                        {intl.formatMessage({ id: 'kaplanMeierChart.inferredFields' })}
                                     </Label>
                                 </Form.Field>
                             )}
@@ -333,7 +338,7 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                 <Grid.Row className='no-padding-top' columns={2}>
                     <Grid.Column>
                         <Label color='orange' size='large'>
-                            Samples with empty values (i.e. blank values) will be ignored in survival analysis
+                            {intl.formatMessage({ id: 'kaplanMeierChart.emptyValuesWarning' })}
                         </Label>
                     </Grid.Column>
                     <Grid.Column style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -341,12 +346,12 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             <Button
                                 color='orange'
                                 fluid
-                                title='Unlink clinical dataset from this experiment'
+                                title={intl.formatMessage({ id: 'kaplanMeierChart.unlinkDatasetTitle' })}
                                 onClick={() => this.handleUnlinkClinicalSource()}
                                 loading={this.state.unlinkingSource}
                                 disabled={this.state.unlinkingSource}
                             >
-                                Unlink DataSet
+                                {intl.formatMessage({ id: 'kaplanMeierChart.unlinkDataset' })}
                             </Button>
                         </div>
                     </Grid.Column>
@@ -358,8 +363,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             data={this.state.geneData}
                             height={480}
                             width={600}
-                            xAxisLabel='Time'
-                            yAxisLabel='Probability'
+                            xAxisLabel={intl.formatMessage({ id: 'kaplanMeierChart.time' })}
+                            yAxisLabel={intl.formatMessage({ id: 'kaplanMeierChart.probability' })}
                         />
 
                         <LogRankTestStats logrankTest={this.state.geneLogrank} />
@@ -370,8 +375,8 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
                             data={this.state.gemData}
                             height={480}
                             width={600}
-                            xAxisLabel='Time'
-                            yAxisLabel='Probability'
+                            xAxisLabel={intl.formatMessage({ id: 'kaplanMeierChart.time' })}
+                            yAxisLabel={intl.formatMessage({ id: 'kaplanMeierChart.probability' })}
                         />
 
                         <LogRankTestStats logrankTest={this.state.gemLogrank} />
@@ -382,4 +387,13 @@ class KaplanMeierChart extends React.Component<KaplanMeierChartProps, KaplanMeie
     }
 }
 
-export { KaplanMeierChart }
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
+
+const KaplanMeierChartWithIntl = (props: Omit<KaplanMeierChartProps, 'intl'>) => {
+    const intl = useIntl()
+    return <KaplanMeierChart {...props} intl={intl} />
+}
+
+export { KaplanMeierChartWithIntl as KaplanMeierChart }

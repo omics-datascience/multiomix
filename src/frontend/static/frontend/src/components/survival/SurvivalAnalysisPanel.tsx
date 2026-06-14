@@ -1,8 +1,14 @@
 import React from 'react'
+import { useIntl, IntlShape } from 'react-intl'
 import { Base } from '../Base'
 import { Grid, Segment, DropdownItemProps } from 'semantic-ui-react'
 import { FileType, Source, SourceType } from '../../utils/interfaces'
-import { getDefaultSource, getFilenameFromSource, getInputFileCSVColumns, listToDropdownOptions } from '../../utils/util_functions'
+import {
+    getDefaultSource,
+    getFilenameFromSource,
+    getInputFileCSVColumns,
+    listToDropdownOptions
+} from '../../utils/util_functions'
 import { DjangoUserFile, DjangoCGDSStudy } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { SurvivalForm } from './SurvivalForm'
@@ -15,6 +21,15 @@ type SourceStateName = 'expressionSource' | 'survivalSource'
 type ColumnStateName = 'columnEventTime' | 'columnEventStatus'
 
 /**
+ * Component's props
+ */
+interface SurvivalAnalysisPanelProps {}
+
+interface SurvivalAnalysisPanelInternalProps extends SurvivalAnalysisPanelProps {
+    intl: IntlShape
+}
+
+/**
  * Component's state
  */
 interface SurvivalAnalysisPanelState {
@@ -22,7 +37,7 @@ interface SurvivalAnalysisPanelState {
     survivalSource: Source,
     expressionFileType: FileType,
     columnEventTime: string,
-    columnEventStatus: string
+    columnEventStatus: string,
     columnEventOptions: DropdownItemProps[],
     genes: string[],
     selectedGenes: string[]
@@ -32,7 +47,10 @@ interface SurvivalAnalysisPanelState {
  * Renders a Survival Analysis panel
  * @returns Component
  */
-class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPanelState> {
+class SurvivalAnalysisPanel extends React.Component<
+    SurvivalAnalysisPanelInternalProps,
+    SurvivalAnalysisPanelState
+> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -70,7 +88,10 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * @param sourceSelected New selected SourceType
      * @param sourceName Source field's name to update
      */
-    handleChangeSourceType = (sourceSelected: SourceType, sourceName: SourceStateName) => {
+    handleChangeSourceType = (
+        sourceSelected: SourceType,
+        sourceName: SourceStateName
+    ) => {
         const source = this.state[sourceName]
         source.type = sourceSelected
         this.setState<never>({ [sourceName]: source })
@@ -82,7 +103,6 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * and doesn't trigger an update of the state fields
      */
     updateSourceFilenames () {
-        // Updates state filenames
         const expressionSource = this.state.expressionSource
         const survivalSource = this.state.survivalSource
 
@@ -93,13 +113,21 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
     }
 
     /**
-     * Transforms a columns' name  array into a DropdownItemProps array for Selects
+     * Transforms a columns' name array into a DropdownItemProps array for Selects
      * and sets it to the state
      * @param columnNames Column names to transform
      */
     setColumnNamesAsOptions = (columnNames: string[]) => {
-        const columnNamesAsOptions: DropdownItemProps[] = listToDropdownOptions(columnNames)
-        columnNamesAsOptions.unshift({ key: 'no_selected', text: 'No selected' })
+        const columnNamesAsOptions: DropdownItemProps[] =
+            listToDropdownOptions(columnNames)
+
+        columnNamesAsOptions.unshift({
+            key: 'no_selected',
+            text: this.props.intl.formatMessage({
+                id: 'survivalAnalysisPanel.noSelected'
+            })
+        })
+
         this.setState({ columnEventOptions: columnNamesAsOptions })
     }
 
@@ -107,7 +135,11 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * Shows a general error when failed the retrieving of columns names from the Survival Dataset
      */
     alertErrorColumnNames () {
-        alert('An error ocurred reading the header of th Survival Source. Please, try uploading it again')
+        alert(
+            this.props.intl.formatMessage({
+                id: 'survivalAnalysisPanel.errorReadingHeader'
+            })
+        )
     }
 
     /**
@@ -120,23 +152,37 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
         switch (survivalSource.type) {
             case SourceType.NEW_DATASET:
                 if (survivalSource.newUploadedFileRef.current.files.length) {
-                    getInputFileCSVColumns(survivalSource.newUploadedFileRef.current.files[0])
+                    getInputFileCSVColumns(
+                        survivalSource.newUploadedFileRef.current.files[0]
+                    )
                         .then(this.setColumnNamesAsOptions)
                         .catch((ex) => {
                             this.alertErrorColumnNames()
-                            console.log('Error reading CSV column names', ex)
+                            console.log(
+                                this.props.intl.formatMessage({
+                                    id: 'survivalAnalysisPanel.errorReadingCsvColumns'
+                                }),
+                                ex
+                            )
                         })
                 }
 
                 break
+
             case SourceType.UPLOADED_DATASETS:
                 this.getColumnsNamesFromServer(false)
                 break
+
             case SourceType.CGDS:
                 this.getColumnsNamesFromServer(true)
                 break
+
             default:
-                console.log('Invalid SourceType')
+                console.log(
+                    this.props.intl.formatMessage({
+                        id: 'survivalAnalysisPanel.invalidSourceType'
+                    })
+                )
                 break
         }
     }
@@ -146,7 +192,7 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * @param isCGDSStudy Flag to set the corresponding URL, if true, is a CGDStudy, UploadedFile otherwise
      */
     getColumnsNamesFromServer (isCGDSStudy: boolean) {
-        const id: number = (isCGDSStudy)
+        const id: number = isCGDSStudy
             ? this.state.survivalSource.CGDSStudy?.id as number
             : this.state.survivalSource.selectedExistingFile?.id as number
 
@@ -158,21 +204,35 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
             sourceType: this.state.survivalSource.type as SourceType
         }
 
-        ky.get(urlDatasetColumnName, { signal: this.abortController.signal, searchParams }).then((response) => {
+        ky.get(urlDatasetColumnName, {
+            signal: this.abortController.signal,
+            searchParams
+        }).then((response) => {
             response.json<string[]>()
                 .then((columnNames) => {
                     this.setColumnNamesAsOptions(columnNames)
                 })
                 .catch((err) => {
                     this.alertErrorColumnNames()
-                    console.log('Error parsing JSON ->', err)
+
+                    console.log(
+                        this.props.intl.formatMessage({
+                            id: 'survivalAnalysisPanel.errorParsingJson'
+                        }),
+                        err
+                    )
                 })
         }).catch((err) => {
             if (!this.abortController.signal.aborted) {
                 this.alertErrorColumnNames()
             }
 
-            console.log('Error getting colum names ->', err)
+            console.log(
+                this.props.intl.formatMessage({
+                    id: 'survivalAnalysisPanel.errorGettingColumnNames'
+                }),
+                err
+            )
         })
     }
 
@@ -190,10 +250,8 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * @param sourceName Recently selected source to check
      */
     takeActionOfSourceSelected (sourceName: SourceStateName) {
-        // Independently of the selected Source, we update the filenames
         this.updateSourceFilenames()
 
-        // If it's updating the survival source, gets the columns name to select the event columns
         if (sourceName === 'survivalSource') {
             this.getColumnName()
         } else {
@@ -213,9 +271,13 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * @param selectedFile Selected file as Source
      * @param sourceName Source field's name to update
      */
-    selectUploadedFile = (selectedFile: DjangoUserFile, sourceName: SourceStateName) => {
+    selectUploadedFile = (
+        selectedFile: DjangoUserFile,
+        sourceName: SourceStateName
+    ) => {
         const source: Source = this.state[sourceName]
         source.selectedExistingFile = selectedFile
+
         this.setState<never>({ [sourceName]: source }, () => {
             this.takeActionOfSourceSelected(sourceName)
         })
@@ -226,9 +288,13 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * @param selectedStudy Selected Study as Source
      * @param sourceName Source field's name to update
      */
-    selectStudy = (selectedStudy: DjangoCGDSStudy, sourceName: SourceStateName) => {
+    selectStudy = (
+        selectedStudy: DjangoCGDSStudy,
+        sourceName: SourceStateName
+    ) => {
         const source: Source = this.state[sourceName]
         source.CGDSStudy = selectedStudy
+
         this.setState<never>({ [sourceName]: source }, () => {
             this.takeActionOfSourceSelected(sourceName)
         })
@@ -238,21 +304,24 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
      * Set the new array of selected genes
      * @param newSelectedGenes Array of genes selected in the Dropdown
      */
-    handleGenesChanges = (newSelectedGenes: string[]) => { this.setState({ selectedGenes: newSelectedGenes }) }
+    handleGenesChanges = (newSelectedGenes: string[]) => {
+        this.setState({ selectedGenes: newSelectedGenes })
+    }
 
     /**
      * Handle changes in the Survival Selects
      * @param name Name of the column State's field to update
      * @param value New selected value in the Select
      */
-    selectSurvivalColumn = (name: ColumnStateName, value) => { this.setState<never>({ [name]: value }) }
+    selectSurvivalColumn = (name: ColumnStateName, value) => {
+        this.setState<never>({ [name]: value })
+    }
 
     render () {
         return (
             <div>
                 <Base activeItem='survival' wrapperClass='wrapper'>
                     <Segment>
-                        {/* Datasets form */}
                         <Grid columns={3} stackable textAlign='left' divided>
                             <Grid.Column width={2} textAlign='center'>
                                 <SurvivalForm
@@ -266,7 +335,6 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
                                 />
                             </Grid.Column>
 
-                            {/* Gene selection */}
                             <Grid.Column width={4} textAlign='center'>
                                 <SurvivalGeneSelectionPanel
                                     genes={this.state.genes}
@@ -282,4 +350,19 @@ class SurvivalAnalysisPanel extends React.Component<unknown, SurvivalAnalysisPan
     }
 }
 
-export { SurvivalAnalysisPanel, SurvivalAnalysisPanelState, SourceStateName, ColumnStateName }
+/**
+ * Wrapper component that injects the intl object into SurvivalAnalysisPanel.
+ * @returns SurvivalAnalysisPanel component with injected intl instance.
+ */
+export default function SurvivalAnalysisPanelWithIntl (_props: SurvivalAnalysisPanelProps) {
+    const intl = useIntl()
+
+    return <SurvivalAnalysisPanel intl={intl} />
+}
+
+export {
+    SurvivalAnalysisPanelWithIntl as SurvivalAnalysisPanel,
+    SurvivalAnalysisPanelState,
+    SourceStateName,
+    ColumnStateName
+}

@@ -3,6 +3,7 @@ import { Button, Grid, Header, Icon, Input, Segment, Select } from 'semantic-ui-
 import { DjangoSurvivalColumnsTupleSimple } from '../../utils/django_interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { survivalTupleIsValid } from './utils'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -42,6 +43,8 @@ const ContainerNoInline = (props: { children: JSX.Element, noPadding?: boolean }
  * @returns Component
  */
 export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
+    const intl = useIntl()
+
     /**
      * Checks if last Survival tuple is valid to allow user to create another one
      * @returns True if user can add another survival tuple, false otherwise
@@ -93,13 +96,20 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                         <ContainerNoInline key={idx} noPadding={props.noPadding}>
                             <Segment>
                                 <Header as='h4'>
-                                    Survival tuple #{idx + 1}
+                                    {
+                                        intl.formatMessage(
+                                            { id: 'survivalTuplesForm.survivalTuple' },
+                                            { number: idx + 1 }
+                                        )
+                                    }
 
                                     <Icon
                                         name='trash'
                                         color='red'
                                         className='clickable pull-right'
-                                        title='Remove this survival tuple'
+                                        title={intl.formatMessage({
+                                            id: 'survivalTuplesForm.removeTuple'
+                                        })}
                                         disabled={props.disabled}
                                         onClick={() => removeSurvivalFormTuple(idx)}
                                     />
@@ -116,13 +126,13 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 onChange={checkedHandleSurvivalFormChanges}
                                                 loading={props.loading}
                                                 disabled={props.disabled}
-                                                placeholder='Column of event'
+                                                placeholder={intl.formatMessage({ id: 'survivalTuplesForm.eventColumn' })}
                                                 maxLength={30}
                                             />
                                         )
                                         : (
                                             <Select
-                                                placeholder='Column of event'
+                                                placeholder={intl.formatMessage({ id: 'survivalTuplesForm.eventColumn' })}
                                                 name='event_column'
                                                 fluid
                                                 className='margin-top-2'
@@ -146,7 +156,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 onChange={checkedHandleSurvivalFormChanges}
                                                 loading={props.loading}
                                                 disabled={props.disabled}
-                                                placeholder='Column of time'
+                                                placeholder={intl.formatMessage({ id: 'survivalTuplesForm.timeColumn' })}
                                                 maxLength={30}
                                             />
                                         )
@@ -159,7 +169,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                                                 value={survivalColumn.time_column}
                                                 loading={props.loading}
                                                 disabled={props.disabled}
-                                                placeholder='Column of time'
+                                                placeholder={intl.formatMessage({ id: 'survivalTuplesForm.timeColumn' })}
                                                 onChange={(_, { name, value }) => handleChangeValueTuple(idx, name, value)}
                                             />
                                         )
@@ -182,7 +192,7 @@ export const SurvivalTuplesForm = (props: SurvivalTuplesFormProps) => {
                     >
                         <Icon name='plus' />
 
-                        Add survival tuple
+                        {intl.formatMessage({ id: 'survivalTuplesForm.addTuple' })}
                     </Button>
                 </Grid.Column>
             </Grid.Row>

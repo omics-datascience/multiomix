@@ -72,6 +72,7 @@
     "react-avatar": "^5.0.3",
     "react-colorful": "^5.6.1",
     "react-dom": "^18.3.1",
+    "react-intl": "^6.8.9",
     "react-markdown": "^10.1.0",
     "react-plotly.js": "^2.6.0",
     "react-virtualized": "^9.22.6",

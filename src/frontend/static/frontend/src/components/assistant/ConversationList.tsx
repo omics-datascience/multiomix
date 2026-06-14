@@ -16,6 +16,7 @@ interface ConversationListProps {
  * Formats an ISO timestamp as "HH:MM" for today, or "DD Mon" otherwise.
  * @param iso
  */
+
 function formatConvDate (iso: string): string {
     const d = new Date(iso)
     const now = new Date()
@@ -39,6 +40,7 @@ function formatConvDate (iso: string): string {
  * @param root0.onDelete
  * @param root0.onRename
  */
+
 const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, onRename }: ConversationListProps) => {
     const [editingId, setEditingId] = useState<Nullable<number>>(null)
     const [editTitle, setEditTitle] = useState('')
@@ -50,6 +52,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
      * @param conv
      * @param e
      */
+
     const startEdit = (conv: ConversationSummary, e: React.MouseEvent) => {
         e.stopPropagation()
         setEditingId(conv.id)
@@ -61,6 +64,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
      * Submits the trimmed title via `onRename` and exits edit mode.
      * @param id
      */
+
     const commitEdit = (id: number) => {
         onRename(id, editTitle.trim())
         setEditingId(null)
@@ -69,6 +73,7 @@ const ConversationList = ({ conversations, activeId, onSelect, onNew, onDelete, 
     /**
      * Exits edit mode without saving changes.
      */
+
     const cancelEdit = () => setEditingId(null)
 
     return (

@@ -4,6 +4,7 @@ import { Button, Divider, Icon, Input, Message, MessageHeader, Modal, ModalActio
 import { getDjangoHeader } from '../utils/util_functions'
 import { DjangoUser } from '../utils/django_interfaces'
 import { CustomAlertTypes, Nullable } from '../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 declare const urlUpdateUser: string
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const UpdateUserModal = (props: Props) => {
+    const intl = useIntl()
     const [isLoading, setIsLoading] = useState(false)
     const [firstName, setFirstName] = useState(props.currentUser.first_name)
     const [lastName, setLastName] = useState(props.currentUser.last_name)
@@ -29,12 +31,12 @@ export const UpdateUserModal = (props: Props) => {
 
         if (password.text.length || passwordCheck.text.length) {
             if (password.text !== passwordCheck.text) {
-                setTextError(prevState => ({ ...prevState, title: 'Both password have to be equal', isOpen: true, body: 'Ensure to both password being equal.' }))
+                setTextError(prevState => ({ ...prevState, title: intl.formatMessage({ id: 'updateUserModal.passwordMismatch.title' }), isOpen: true, body: intl.formatMessage({ id: 'updateUserModal.passwordMismatch.body' }) }))
                 return
             }
 
             if (password.text.length < 8) {
-                setTextError(prevState => ({ ...prevState, title: 'Password length', isOpen: true, body: 'Password has at lesat 8 characters.' }))
+                setTextError(prevState => ({ ...prevState, title: intl.formatMessage({ id: 'updateUserModal.passwordLength.title' }), isOpen: true, body: intl.formatMessage({ id: 'updateUserModal.passwordLength.body' }) }))
                 return
             }
 
@@ -53,7 +55,7 @@ export const UpdateUserModal = (props: Props) => {
         setIsLoading(true)
         ky.patch(urlUpdateUser, { headers: myHeaders, json: body }).then((response) => {
             response.json<any>().then((_) => {
-                props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Credentials changed!', () => {
+                props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'updateUserModal.success' }), () => {
                     setTextError({ isOpen: false, title: '', body: '' })
                     setPassword(prevState => ({ ...prevState, text: '' }))
                     setPasswordCheck(prevState => ({ ...prevState, text: '' }))
@@ -67,10 +69,10 @@ export const UpdateUserModal = (props: Props) => {
             })
         }).catch((err) => {
             console.error('Error parsing JSON ->', err)
-            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error updating credentials!', null)
+            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'updateUserModal.error' }), null)
         }).catch((err) => {
             console.error('Error updating profile ->', err)
-            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error updating credentials!', null)
+            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'updateUserModal.error' }), null)
         }).finally(() => {
             if (password.text.length || passwordCheck.text.length) {
                 setTimeout(() => {
@@ -88,28 +90,28 @@ export const UpdateUserModal = (props: Props) => {
             closeIcon={<Icon name='close' size='large' onClick={props.handleClose} />}
             style={{ width: '30%' }}
         >
-            <ModalHeader>Edit {props.currentUser.username} information</ModalHeader>
+            <ModalHeader>{intl.formatMessage({ id: 'updateUserModal.title' }, { username: props.currentUser.username })}</ModalHeader>
 
             <ModalContent>
                 <Segment>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div className='padding-vertical-1'>
                             <h6 style={{ fontSize: '18px', margin: 1 }}>
-                                Email:
+                                {intl.formatMessage({ id: 'updateUserModal.email' })}
                             </h6>
                             <Input value={props.currentUser.email} disabled />
                         </div>
                         <div>
                             <h6 style={{ fontSize: '16px', margin: 1 }}>
-                                First name:
+                                {intl.formatMessage({ id: 'updateUserModal.firstName' })}
                             </h6>
-                            <Input placeholder='Enter first name' value={firstName} onChange={(e, { value }) => setFirstName(value)} />
+                            <Input placeholder={intl.formatMessage({ id: 'updateUserModal.firstName.placeholder' })} value={firstName} onChange={(e, { value }) => setFirstName(value)} />
                         </div>
                         <div className='padding-vertical-1'>
                             <h6 style={{ fontSize: '16px', margin: 1 }}>
-                                Last name:
+                                {intl.formatMessage({ id: 'updateUserModal.lastName' })}
                             </h6>
-                            <Input placeholder='Enter last name' value={lastName} onChange={(e, { value }) => setLastName(value)} />
+                            <Input placeholder={intl.formatMessage({ id: 'updateUserModal.lastName.placeholder' })} value={lastName} onChange={(e, { value }) => setLastName(value)} />
                         </div>
                     </div>
                     <Divider />
@@ -117,7 +119,7 @@ export const UpdateUserModal = (props: Props) => {
                         <div className='padding-vertical-1'>
 
                             <h6 style={{ fontSize: '16px', margin: 1 }}>
-                                Reset password:
+                                {intl.formatMessage({ id: 'updateUserModal.resetPassword' })}
                             </h6>
                             <Input
                                 type={password.visibility ? 'text' : 'password'}
@@ -136,7 +138,7 @@ export const UpdateUserModal = (props: Props) => {
                             />
                         </div>
                         <div className='padding-vertical-1'>
-                            <p>Repeat password:</p>
+                            <p>{intl.formatMessage({ id: 'updateUserModal.repeatPassword' })}</p>
                             <Input
                                 type={passwordCheck.visibility ? 'text' : 'password'}
                                 icon={(
@@ -164,15 +166,15 @@ export const UpdateUserModal = (props: Props) => {
             </ModalContent>
             <ModalActions>
                 <Button onClick={props.handleClose} disabled={isLoading}>
-                    Cancel
+                    {intl.formatMessage({ id: 'common.cancel' })}
                 </Button>
                 <Button
                     color='green'
                     loading={isLoading}
                     disabled={isLoading}
-                    onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, 'Change password', 'Are you sure to change your password?', handleUpdateUser)}
+                    onClick={!password.text.length && !passwordCheck.text.length ? () => handleUpdateUser() : () => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'updateUserModal.changePassword.title' }), intl.formatMessage({ id: 'updateUserModal.changePassword.confirm' }), handleUpdateUser)}
                 >
-                    Confirm
+                    {intl.formatMessage({ id: 'common.confirm' })}
                 </Button>
             </ModalActions>
         </Modal>

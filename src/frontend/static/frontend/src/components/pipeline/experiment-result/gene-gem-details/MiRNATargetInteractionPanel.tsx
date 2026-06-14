@@ -9,6 +9,7 @@ import { Grid, Header, Icon, List, Statistic } from 'semantic-ui-react'
 import { ListOfElementsWithHeader } from './ListOfElementsWithHeader'
 import { PubmedButton } from './PubmedButton'
 import { TryAgainSegment } from '../../../common/TryAgainSegment'
+import { useIntl, IntlShape } from 'react-intl'
 
 declare const urlMiRNAInteraction: string
 
@@ -19,6 +20,7 @@ interface MiRNATargetInteractionPanelProps {
     identifier: string,
     miRNA: Nullable<string>,
     gene: Nullable<string>,
+    intl: IntlShape
 }
 
 /**
@@ -35,7 +37,7 @@ interface MiRNATargetInteractionPanelState {
  * @param props Component's props
  * @returns Component
  */
-export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInteractionPanelProps, MiRNATargetInteractionPanelState> {
+class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInteractionPanelProps, MiRNATargetInteractionPanelState> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -101,6 +103,8 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
     }
 
     render () {
+        const { intl } = this.props
+
         if (this.state.gettingData) {
             return <LoadingPanel />
         }
@@ -118,7 +122,9 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
                             <Header size='huge' icon>
                                 <Icon name='folder outline' />
 
-                                No data found for this miRNA and gene
+                                {intl.formatMessage({
+                                    id: 'miRNATargetInteractionPanel.noData'
+                                })}
                             </Header>
                         </Grid.Column>
                     </Grid.Row>
@@ -141,18 +147,24 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
                                     <Icon name='star' />{this.state.data.score}
                                 </Statistic.Value>
                                 <Statistic.Label>
-                                    Score ({scoreClassData.description})
+                                    {intl.formatMessage(
+                                        { id: 'miRNATargetInteractionPanel.score' },
+                                        { scoreClass: scoreClassData.description }
+                                    )}
                                 </Statistic.Label>
                             </Statistic>
 
                             <Header id='score-source-header' size='huge'>
-                                Score source: {this.state.data.source_name}
+                                {intl.formatMessage(
+                                    { id: 'miRNATargetInteractionPanel.scoreSource' },
+                                    { source: this.state.data.source_name }
+                                )}
                             </Header>
                         </Grid.Column>
 
                         {/* Sources */}
                         <Grid.Column width={5}>
-                            <ListOfElementsWithHeader headerTitle='Sources' headerIcon='newspaper'>
+                            <ListOfElementsWithHeader headerTitle={intl.formatMessage({ id: 'miRNATargetInteractionPanel.sources' })} headerIcon='newspaper'>
                                 {this.state.data.sources.map((source) => (
                                     <List.Item key={source}>
                                         <List.Icon name='newspaper' size='large' verticalAlign='middle' />
@@ -168,7 +180,7 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
 
                         {/* Pubmeds */}
                         <Grid.Column width={5}>
-                            <ListOfElementsWithHeader headerTitle='Pubmeds' headerIcon='file'>
+                            <ListOfElementsWithHeader headerTitle={intl.formatMessage({ id: 'miRNATargetInteractionPanel.pubmeds' })} headerIcon='file'>
                                 {this.state.data.pubmeds.map((pubmed) => (
                                     <PubmedButton key={pubmed} pubmedURL={pubmed} />
                                 ))}
@@ -180,3 +192,22 @@ export class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInte
         )
     }
 }
+
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
+
+const MiRNATargetInteractionPanelWithIntl = (
+    props: Omit<MiRNATargetInteractionPanelProps, 'intl'>
+) => {
+    const intl = useIntl()
+
+    return (
+        <MiRNATargetInteractionPanel
+            {...props}
+            intl={intl}
+        />
+    )
+}
+
+export { MiRNATargetInteractionPanelWithIntl as MiRNATargetInteractionPanel }

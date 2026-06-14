@@ -16,9 +16,10 @@ import { getDjangoHeader, alertGeneralError, getDefaultNewTag, getDefaultExperim
 import { DjangoExperiment, DjangoTag, DjangoUserFile, DjangoCGDSStudy, DjangoMRNAxGEMResultRow, ExperimentType, RowHeader } from '../../utils/django_interfaces'
 import { FileType, AllExperimentsTableControl, ExperimentInfo, ExperimentResultTableControl, NewExperiment, SourceType, ResponseRequestWithPagination, CorrelationType, Nullable, WebsocketConfig } from '../../utils/interfaces'
 import { PipelineForm } from './PipelineForm'
-import { AllExperimentsView } from './all-experiments-view/AllExperimentsView'
+import AllExperimentsView from './all-experiments-view/AllExperimentsView'
 import { NewExperimentSourceStateName } from './Pipeline'
 import { WebsocketClientCustom } from '../../websockets/WebsocketClient'
+import { useIntl, IntlShape } from 'react-intl'
 
 declare const urlGetExperimentData: string
 declare const urlGetFullUserExperiment: string
@@ -125,6 +126,7 @@ interface MiRNAPipelineProps {
     /** Function callback to handle GEM FileType changes */
     selectGEMFileType: (fileType: FileType) => void,
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
+    intl: IntlShape
 }
 
 /**
@@ -542,9 +544,11 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
      * @param experiment Selected experiment to fetch the data
      */
     seeResult = (experiment: DjangoExperiment) => {
+        const { intl } = this.props
+
         // If the user raises the maximum number of open tabs allowed, shows an alert
         if (Object.keys(this.state.experimentTabs).length === maximumNumberOfOpenTabs) {
-            alert('You have reached the maximum number of open tabs. Please close one and try again.')
+            alert(intl.formatMessage({ id: 'miRNAPipeline.alert.maxTabs' }))
             return
         }
 
@@ -713,22 +717,24 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
      * @returns Modal component. Null if no Experiment was selected to delete
      */
     getExperimentDeletionConfirmModals () {
+        const { intl } = this.props
+
         if (!this.state.selectedExperimentToDeleteOrStop) {
             return null
         }
 
         return (
             <Modal size='small' open={this.state.showDeleteExperimentModal} onClose={this.handleCloseDelete} centered={false}>
-                <Header icon='trash' content='Delete experiment' />
+                <Header icon='trash' content={intl.formatMessage({ id: 'miRNAPipeline.deleteModal.header' })} />
                 <Modal.Content>
-                    Are you sure you want to delete the experiment <strong>{this.state.selectedExperimentToDeleteOrStop.name}</strong>?
+                    {intl.formatMessage({ id: 'miRNAPipeline.deleteModal.content' }, { name: this.state.selectedExperimentToDeleteOrStop.name })}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleCloseDelete}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={this.deleteExperiment} loading={this.state.deletingExperiment} disabled={this.state.deletingExperiment}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -740,22 +746,24 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
      * @returns Modal component. Null if no Experiment was selected to stop
      */
     getExperimentStopConfirmModals () {
+        const { intl } = this.props
+
         if (!this.state.selectedExperimentToDeleteOrStop) {
             return null
         }
 
         return (
             <Modal size='small' open={this.state.showStopExperimentModal} onClose={this.handleCloseStop} centered={false}>
-                <Header icon='stop' content='Stop experiment' />
+                <Header icon='stop' content={intl.formatMessage({ id: 'miRNAPipeline.stopModal.header' })} />
                 <Modal.Content>
-                    Are you sure you want to stop the experiment <strong>{this.state.selectedExperimentToDeleteOrStop.name}</strong>?
+                    {intl.formatMessage({ id: 'miRNAPipeline.stopModal.content' }, { name: this.state.selectedExperimentToDeleteOrStop.name })}
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleCloseStop}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={this.stopExperiment} loading={this.state.stoppingExperiment} disabled={this.state.stoppingExperiment}>
-                        Stop
+                        {intl.formatMessage({ id: 'common.stop' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -839,10 +847,11 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
     showTab (selectedTab: ActiveTabsOptions) { this.setState({ activeTab: selectedTab }) }
 
     render () {
+        const { intl } = this.props
         const tagOptions: DropdownMenuProps[] = this.props.tags.map((tag) => {
             return { key: tag.name, value: tag.id, text: tag.name }
         })
-        tagOptions.unshift({ key: 'no-tag', value: null, text: 'No Tag' })
+        tagOptions.unshift({ key: 'no-tag', value: null, text: intl.formatMessage({ id: 'miRNAPipeline.tags.noTag' }) })
 
         const experimentDeletionConfirmModal = this.getExperimentDeletionConfirmModals()
         const experimentStopConfirmModal = this.getExperimentStopConfirmModals()
@@ -912,7 +921,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                                 active={this.state.activeTab === 'all-experiments'}
                                                 onClick={() => this.showTab('all-experiments')}
                                             >
-                                                <strong>All analysis</strong>
+                                                <strong>{intl.formatMessage({ id: 'miRNAPipeline.tabs.allAnalysis' })}</strong>
                                             </Menu.Item>
 
                                             {/* The rest of the Experiments' result */}
@@ -925,7 +934,7 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                                             color='blue'
                                             fluid
                                             className='borderless-button full-height'
-                                            title={`${this.state.showLastExperiments ? 'Hide' : 'Show'} last analysis`}
+                                            title={intl.formatMessage({ id: this.state.showLastExperiments ? 'miRNAPipeline.tabs.hideLastAnalysis' : 'miRNAPipeline.tabs.showLastAnalysis' })}
                                             onClick={() => this.setState((prev) => (
                                                 { showLastExperiments: !prev.showLastExperiments }
                                             ))}
@@ -969,4 +978,13 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
     }
 }
 
-export { MiRNAPipeline, HeaderRow }
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
+
+const MiRNAPipelineWithIntl = (props: Omit<MiRNAPipelineProps, 'intl'>) => {
+    const intl = useIntl()
+    return <MiRNAPipeline {...props} intl={intl} />
+}
+
+export { MiRNAPipelineWithIntl as MiRNAPipeline, HeaderRow }

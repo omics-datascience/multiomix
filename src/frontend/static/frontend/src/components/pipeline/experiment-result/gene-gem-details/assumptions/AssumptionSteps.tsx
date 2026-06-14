@@ -3,6 +3,7 @@ import { Icon, Step } from 'semantic-ui-react'
 import { DjangoMRNAxGEMResultRow } from '../../../../../utils/django_interfaces'
 import { Nullable } from '../../../../../utils/interfaces'
 import { getGeneAndGEMFromSelectedRow } from '../../../../../utils/util_functions'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -22,7 +23,7 @@ interface AssumptionStepProps {
  */
 const AssumptionStep = (props: AssumptionStepProps) => {
     const assumptionCompleted = props.geneIsOk && props.gemIsOk
-
+    const intl = useIntl()
     const [gene, gem] = getGeneAndGEMFromSelectedRow(props.selectedRow)
 
     let extraDescription: string
@@ -37,11 +38,11 @@ const AssumptionStep = (props: AssumptionStepProps) => {
 
         if (!props.geneIsOk && !props.gemIsOk) {
             // Neither satisfies the condition
-            extraDescription = `Neither ${gene} nor ${gem} satisfies this assumption`
+            extraDescription = intl.formatMessage({ id: 'assumptionStep.neitherSatisfies' }, { gene, gem })
         } else {
             // At least one of them satisfies the condition
             const [good, bad] = props.geneIsOk ? [gene, gem] : [gem, gene]
-            extraDescription = `${good} satisfies this assumption but ${bad} does not`
+            extraDescription = intl.formatMessage({ id: 'assumptionStep.oneSatisfies' }, { good, bad })
         }
     }
 
@@ -75,6 +76,7 @@ interface AssumptionStepSimpleProps {
  * @returns Component
  */
 const AssumptionStepSimple = (props: AssumptionStepSimpleProps) => {
+    const intl = useIntl()
     let extraDescription: string
     let icon: ReactElement
 
@@ -83,7 +85,7 @@ const AssumptionStepSimple = (props: AssumptionStepSimpleProps) => {
         extraDescription = ''
     } else {
         icon = <Icon name='times' color='red' />
-        extraDescription = 'This assumption is not satisfied'
+        extraDescription = intl.formatMessage({ id: 'assumptionStep.notSatisfied' })
     }
 
     const stepDescription = `${props.description}. ${extraDescription}`

@@ -8,7 +8,7 @@ import { NewPredictionRangeLabelsSetModal } from '../../../common/prediction-ran
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { SamplesAndTimeInferenceCharts } from './SamplesAndTimeInferenceCharts'
 import { InferenceExperimentClinicalAttributeSelect } from './InferenceExperimentClinicalAttributeSelect'
-import { ClinicalSourcePopup } from '../../../pipeline/all-experiments-view/ClinicalSourcePopup'
+import ClinicalSourcePopup from '../../../pipeline/all-experiments-view/ClinicalSourcePopup'
 import { useIntl } from 'react-intl'
 
 declare const urlInferenceExperimentSamplesAndTime: string

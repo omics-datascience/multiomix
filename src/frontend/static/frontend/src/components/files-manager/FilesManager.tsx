@@ -14,7 +14,7 @@ import { TagLabel } from '../common/TagLabel'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { DeleteButton } from '../common/DeleteButton'
-import { useIntl } from 'react-intl'
+import { useIntl, IntlShape } from 'react-intl'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -80,6 +80,7 @@ interface FilesManagerState {
  */
 interface FilesManagerProps {
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void
+    intl: IntlShape
 }
 
 class FilesManager extends React.Component<FilesManagerProps, FilesManagerState> {
@@ -115,7 +116,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns An object with all the field with default values
      */
     getDefaultNewFile (): NewFile {
-        const { intl } = this.props
         return {
             newFileName: FILE_INPUT_LABEL,
             newFileNameUser: '',
@@ -166,7 +166,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     onUnload = e => { // the method that will be used for both add and remove event
         if (this.state.uploadingFile) {
             e.preventDefault()
-            e.returnValue = 'A file is being uploaded. If you close the tab the upload will be canceled.'
+            e.returnValue = this.props.intl.formatMessage({ id: 'files.manager.upload.unloadWarning' })
         }
     }
 
@@ -466,6 +466,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @param error Error object
      */
     uploadError = (error: HTTPError) => {
+        const { intl } = this.props
+
         error.response.json<DjangoResponseUploadUserFileError>().then((errorBody) => {
             console.error(errorBody)
             // NOTE: Parses int as Django Rest Framework returns as string
@@ -475,7 +477,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 : null
 
             if (internalCode === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
-                alert('The file has an incorrect format: all columns except the index must be numerical data')
+                alert(intl.formatMessage({ id: 'files.manager.error.invalidFormat' }))
             } else {
                 alertGeneralError()
             }
@@ -568,6 +570,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns Modal component. Null if no Tag was selected to delete
      */
     getTagDeletionConfirmModals () {
+        const { intl } = this.props
+
         if (!this.state.selectedTagToDelete) {
             return null
         }
@@ -576,14 +580,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             <Modal size='small' open={this.state.showDeleteTagModal} onClose={this.handleClose} centered={false}>
                 <Header icon='trash' content='Delete tag' />
                 <Modal.Content>
-                    <p>Are you sure you want to delete the Tag "{this.state.selectedTagToDelete.name}"?</p>
+                    <p>{intl.formatMessage({ id: 'files.manager.delete.tag.confirm' }, { tagName: this.state.selectedTagToDelete.name })}</p>
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={this.deleteTag} loading={this.state.deletingTag} disabled={this.state.deletingTag}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -595,26 +599,28 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns Modal component. Null if no File was selected to delete
      */
     getFileDeletionConfirmModals () {
+        const { intl } = this.props
+
         if (!this.state.selectedFileToDelete) {
             return null
         }
 
         const warningMessage = this.state.selectedFileToDelete.file_type === FileType.CLINICAL
-            ? 'This file will be UNLINKED from all the associated experiments'
-            : 'All the associated experiments to this file will be DELETED'
+            ? intl.formatMessage({ id: 'files.manager.delete.file.warning.clinical' })
+            : intl.formatMessage({ id: 'files.manager.delete.file.warning.default' })
 
         return (
             <Modal size='small' open={this.state.showDeleteFileModal} onClose={this.handleClose} centered={false}>
-                <Header icon='trash' content='Delete file' />
+                <Header icon='trash' content={intl.formatMessage({ id: 'files.manager.delete.file.title' })} />
                 <Modal.Content>
-                    Are you sure you want to delete the file <strong>{this.state.selectedFileToDelete.name}</strong>? <strong>{warningMessage}</strong>
+                    {intl.formatMessage({ id: 'files.manager.delete.file.confirm' }, { fileName: <strong>{this.state.selectedFileToDelete.name}</strong> })} <strong>{warningMessage}</strong>
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={this.handleClose}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={this.deleteFile} loading={this.state.deletingFile} disabled={this.state.deletingFile}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -721,15 +727,16 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns Default object for table's headers
      */
     getDefaultHeaders (): RowHeader<DjangoUserFile>[] {
+        const { intl } = this.props
         return [
-            { name: 'Name', serverCodeToSort: 'name' },
-            { name: 'Description', serverCodeToSort: 'description', width: 3 },
-            { name: 'Type', serverCodeToSort: 'file_type' },
-            { name: 'Date', serverCodeToSort: 'upload_date' },
-            { name: 'Institutions', width: 2 },
-            { name: 'Tag', serverCodeToSort: 'tag', width: 2 },
-            { name: 'Public', width: 1 },
-            { name: 'Actions', width: 2 }
+            { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name' },
+            { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 3 },
+            { name: intl.formatMessage({ id: 'files.manager.table.type' }), serverCodeToSort: 'file_type' },
+            { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'upload_date' },
+            { name: intl.formatMessage({ id: 'files.manager.table.institutions' }), width: 2 },
+            { name: intl.formatMessage({ id: 'files.manager.table.tag' }), serverCodeToSort: 'tag', width: 2 },
+            { name: intl.formatMessage({ id: 'files.manager.table.public' }), width: 1 },
+            { name: intl.formatMessage({ id: 'common.actions' }), width: 2 }
         ]
     }
 
@@ -738,16 +745,17 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * @returns Default object for table's Filters
      */
     getDefaultFilters (): PaginationCustomFilter[] {
+        const { intl } = this.props
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+        tagOptions.unshift({ key: 'no_tag', text: intl.formatMessage({ id: 'files.manager.filter.tag.noTag' }) })
 
         const selectVisibilityOptions = [
-            { key: 'all', text: 'All', value: 'all' },
-            { key: 'private', text: 'Private', value: 'private' }
+            { key: 'all', text: intl.formatMessage({ id: 'files.manager.filter.visibility.all' }), value: 'all' },
+            { key: 'private', text: intl.formatMessage({ id: 'files.manager.filter.visibility.private' }), value: 'private' }
         ]
 
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
@@ -755,10 +763,24 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         })
 
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select existing Tag', options: tagOptions, width: 3 },
-            { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', options: selectVisibilityOptions, clearable: false, width: 2 },
             {
-                label: 'Institutions',
+                label: intl.formatMessage({ id: 'files.manager.table.tag' }),
+                keyForServer: 'tag',
+                defaultValue: '',
+                placeholder: intl.formatMessage({ id: 'files.manager.filter.tag.placeholder' }),
+                options: tagOptions,
+                width: 3
+            },
+            {
+                label: intl.formatMessage({ id: 'files.manager.filter.visibility.label' }),
+                keyForServer: 'visibility',
+                defaultValue: 'all',
+                options: selectVisibilityOptions,
+                clearable: false,
+                width: 2
+            },
+            {
+                label: intl.formatMessage({ id: 'files.manager.filter.institutions.label' }),
                 keyForServer: 'institutions',
                 defaultValue: '',
                 options: institutionsOptions,
@@ -766,7 +788,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 width: 3
             },
             {
-                label: 'File type',
+                label: intl.formatMessage({ id: 'files.manager.filter.fileType.label' }),
                 keyForServer: 'file_type',
                 defaultValue: FileType.ALL,
                 options: getFileTypeSelectOptions(),
@@ -778,6 +800,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
 
     render () {
         // Tag and File deletion modals
+        const { intl } = this.props
         const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
         const fileTypeOptions = getFileTypeSelectOptions(false)
@@ -786,7 +809,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+        tagOptions.unshift({ key: 'no_tag', text: intl.formatMessage({ id: 'files.manager.filter.tag.noTag' }) })
 
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
@@ -841,12 +864,12 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                         textAlign='center'
                     >
                         <PaginatedTable<DjangoUserFile>
-                            headerTitle='File Manager'
+                            headerTitle={intl.formatMessage({ id: 'files.manager.title' })}
                             headers={this.getDefaultHeaders()}
                             customFilters={this.getDefaultFilters()}
                             showSearchInput
-                            searchLabel='Name'
-                            searchPlaceholder='Search by name'
+                            searchLabel={intl.formatMessage({ id: 'common.name' })}
+                            searchPlaceholder={intl.formatMessage({ id: 'files.manager.search.placeholder' })}
                             urlToRetrieveData={urlUserFilesCRUD}
                             updateWSKey='update_user_files'
                             mapFunction={(userFileRow: DjangoUserFile) => (
@@ -860,7 +883,10 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             <Icon
                                                 name='building'
                                                 size='large'
-                                                title={`This dataset is shared with ${userFileRow.institutions.map((institution) => institution.name).join(', ')}`}
+                                                title={intl.formatMessage(
+                                                    { id: 'files.manager.tooltip.sharedWith' },
+                                                    { list: userFileRow.institutions.map((i) => i.name).join(', ') }
+                                                )}
                                             />
                                         )}
                                     </Table.Cell>
@@ -870,14 +896,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             userFileRow.is_public
                                                 ? (
                                                     <Icon
-                                                        title='All users of the platform can see this file'
+                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.public' })}
                                                         name='check'
                                                         color='green'
                                                     />
                                                 )
                                                 : (
                                                     <Icon
-                                                        title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.privateVisibility' })}
                                                         name='close'
                                                         color='red'
                                                     />
@@ -890,7 +916,10 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             name='info'
                                             className='margin-left-2'
                                             color='blue'
-                                            title={`The column "${userFileRow.column_used_as_index}" will be used as index`}
+                                            title={intl.formatMessage(
+                                                { id: 'files.manager.tooltip.indexColumn' },
+                                                { columnName: userFileRow.column_used_as_index }
+                                            )}
                                         />
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
@@ -901,7 +930,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                     name='pencil'
                                                     className='clickable margin-left-5'
                                                     color='yellow'
-                                                    title='Edit'
+                                                    title={intl.formatMessage({ id: 'common.edit' })}
                                                     onClick={() => this.editFile(userFileRow)}
                                                 />
                                             </>
@@ -915,7 +944,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                         name='cloud download'
                                                         color='blue'
                                                         className='clickable margin-left-5'
-                                                        title='Download file'
+                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.download' })}
                                                         onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
                                                     />
                                                     {/* Public switch */}
@@ -932,7 +961,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                     {/* Shows a delete button if specified */}
                                                     {!userFileRow.is_public && (
                                                         <DeleteButton
-                                                            title='Delete file'
+                                                            title={intl.formatMessage({ id: 'common.delete' })}
                                                             onClick={() => this.confirmFileDeletion(userFileRow)}
                                                             ownerId={userFileRow.user.id}
                                                         />
@@ -947,7 +976,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                 name='warning sign'
                                                 className='margin-left-2'
                                                 color='yellow'
-                                                title='The dataset contains NaN values'
+                                                title={intl.formatMessage({ id: 'files.manager.tooltip.nanWarning' })}
                                             />
                                         )}
                                     </Table.Cell>
@@ -960,5 +989,13 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         )
     }
 }
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
 
-export { NewFile, FilesManager }
+const FilesManagerWithIntl = (props: Omit<FilesManagerProps, 'intl'>) => {
+    const intl = useIntl()
+    return <FilesManager {...props} intl={intl} />
+}
+
+export { NewFile, FilesManagerWithIntl as FilesManager }

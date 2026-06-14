@@ -7,6 +7,7 @@ import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTa
 import { TagLabel } from '../../common/TagLabel'
 import { UserFileTypeLabel } from './UserFileTypeLabel'
 import { CurrentUserContext } from '../../Base'
+import { useIntl } from 'react-intl'
 
 declare const urlUserFilesCRUD: string
 
@@ -40,6 +41,7 @@ interface UserDatasetsModalProps {
  * @param props Component's props
  */
 const UserDatasetsModal = (props: UserDatasetsModalProps) => {
+    const intl = useIntl()
     const currentUser = useContext(CurrentUserContext)
 
     /**
@@ -48,21 +50,21 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
      */
     function getDefaultHeaders (): RowHeader<DjangoUserFile>[] {
         let headersList: RowHeader<DjangoUserFile>[] = [
-            { name: 'Name', serverCodeToSort: 'name', width: 4 },
-            { name: 'Description', serverCodeToSort: 'description', width: 6 }
+            { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 4 },
+            { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 6 }
         ]
 
         const isClinical = props.selectingFileType === FileType.CLINICAL
 
         if (isClinical) {
-            headersList.push({ name: 'Number of survival tuples', width: 1 })
+            headersList.push({ name: intl.formatMessage({ id: 'userDatasetsModal.numberOfSurvivalTuples' }), width: 1 })
         }
 
         const restOfHeaders: RowHeader<DjangoUserFile>[] = [
-            { name: 'Tag', serverCodeToSort: 'tag' },
-            { name: 'Upload Date', serverCodeToSort: 'upload_date' },
-            { name: 'Visibility', serverCodeToSort: 'institutions' },
-            { name: 'Uploaded by', serverCodeToSort: 'user' }
+            { name: intl.formatMessage({ id: 'userDatasetsModal.tag' }), serverCodeToSort: 'tag' },
+            { name: intl.formatMessage({ id: 'userDatasetsModal.uploadDate' }), serverCodeToSort: 'upload_date' },
+            { name: intl.formatMessage({ id: 'userDatasetsModal.visibility' }), serverCodeToSort: 'institutions' },
+            { name: intl.formatMessage({ id: 'userDatasetsModal.uploadedBy' }), serverCodeToSort: 'user' }
         ]
 
         headersList = headersList.concat(restOfHeaders)
@@ -76,8 +78,8 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
      */
     function getDefaultFilters (): PaginationCustomFilter[] {
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: props.tagOptions },
-            { label: 'Visibility', keyForServer: 'visibility', defaultValue: 'all', placeholder: 'Select an existing Tag', options: props.institutionsOptions }
+            { label: intl.formatMessage({ id: 'userDatasetsModal.tag' }), keyForServer: 'tag', defaultValue: '', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.tagOptions },
+            { label: intl.formatMessage({ id: 'userDatasetsModal.visibility' }), keyForServer: 'visibility', defaultValue: 'all', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.institutionsOptions }
         ]
     }
 
@@ -91,7 +93,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
 
     return (
         <Modal size='fullscreen' open={props.showUserDatasetsModal} onClose={props.handleClose} centered={false}>
-            <Header icon='database' content={`Select ${fileType} dataset`} />
+            <Header icon='database' content={intl.formatMessage({ id: 'userDatasetsModal.selectDataset' }, { fileType })} />
             <Modal.Content className='align-center'>
                 <PaginatedTable<DjangoUserFile>
                     headers={getDefaultHeaders()}
@@ -120,7 +122,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                                     <UserFileTypeLabel dataset={userFile} />
                                 </Table.Cell>
                                 <Table.Cell collapsing textAlign='center'>
-                                    {userFile.user.id === currentUser?.id ? 'You' : userFile.user.username}
+                                    {userFile.user.id === currentUser?.id ? intl.formatMessage({ id: 'userDatasetsModal.you' }) : userFile.user.username}
                                 </Table.Cell>
                             </Table.Row>
                         )
@@ -131,7 +133,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
             {/* Cancel button */}
             <Modal.Actions>
                 <Button onClick={props.handleClose}>
-                    Cancel
+                    {intl.formatMessage({ id: 'common.cancel' })}
                 </Button>
 
                 <Button
@@ -139,7 +141,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                     onClick={() => props.selectFile(props.selectedFile)}
                     disabled={props.selectedFile === null}
                 >
-                    Confirm
+                    {intl.formatMessage({ id: 'common.confirm' })}
                 </Button>
             </Modal.Actions>
         </Modal>

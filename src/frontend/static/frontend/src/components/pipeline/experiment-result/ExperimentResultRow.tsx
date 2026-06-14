@@ -3,6 +3,7 @@ import { DjangoMRNAxGEMResultRow } from '../../../utils/django_interfaces'
 import { Table, Icon } from 'semantic-ui-react'
 import { Nullable } from '../../../utils/interfaces'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -24,6 +25,8 @@ interface ExperimentResultRowProps {
  * @returns Component
  */
 export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
+    const intl = useIntl()
+
     /**
      * Generates a valid value to display in table. It could be
      * a string if user has selected to hide high precision or a number
@@ -67,7 +70,7 @@ export const ExperimentResultRow = (props: ExperimentResultRowProps) => {
                     name='chart bar'
                     className='clickable'
                     color='blue'
-                    title='Details'
+                    title={intl.formatMessage({ id: 'common.details' })}
                     onClick={() => props.openDetailsModal(props.row)}
                 />
 

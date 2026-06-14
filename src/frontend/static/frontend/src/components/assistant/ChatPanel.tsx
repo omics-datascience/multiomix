@@ -38,6 +38,7 @@ interface ChatPanelProps {
  * @param root0
  * @param root0.onClose
  */
+
 const ChatPanel = ({ onClose }: ChatPanelProps) => {
     const [conversations, setConversations] = useState<ConversationSummary[]>([])
     const [activeConvId, setActiveConvId] = useState<Nullable<number>>(() => {
@@ -105,6 +106,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * @param e
      * @param dir
      */
+
     const startDrag = (e: React.MouseEvent, dir: 'w' | 'h' | 'both') => {
         e.preventDefault()
         dragRef.current = { dir, startX: e.clientX, startY: e.clientY, startW: panelW, startH: panelH }
@@ -145,6 +147,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * Fetches all messages for the conversation with the given ID.
      * @param id
      */
+
     const loadConvMessages = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         ky.get(convUrl).json<ConversationDetail>().then(data => {
@@ -157,6 +160,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * and loads its messages.
      * @param id
      */
+
     const selectConversation = (id: number) => {
         localStorage.setItem(ACTIVE_CONV_KEY, String(id))
         setActiveConvId(id)
@@ -177,6 +181,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * conversation if it was active.
      * @param id
      */
+
     const deleteConversation = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         ky.delete(convUrl, { headers: getDjangoHeader() }).then(() => {
@@ -195,6 +200,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * @param id
      * @param title
      */
+
     const renameConversation = (id: number, title: string) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         ky.patch(convUrl, {
@@ -210,6 +216,7 @@ const ChatPanel = ({ onClose }: ChatPanelProps) => {
      * then appends the assistant reply or an error message.
      * @param text
      */
+
     const sendMessage = (text: string) => {
         const userMsg: ChatMessage = { role: 'user', content: text }
         setMessages(prev => [...prev, userMsg])

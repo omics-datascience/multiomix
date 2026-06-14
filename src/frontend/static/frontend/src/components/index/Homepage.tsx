@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button, Container, Grid, Header, Icon, Image, List, Segment } from 'semantic-ui-react'
 import { Base } from '../Base'
+import { useIntl } from 'react-intl'
 
 // Declared in base.html
 declare const urlPipeline: string
@@ -9,48 +10,65 @@ declare const urlPipeline: string
  * Homepage heading
  * @returns Component
  */
-const HomepageHeading = () => (
-    <Segment id='homepage-heading' inverted>
-        <Grid stackable textAlign='center' className='margin-top-2'>
-            <Grid.Row columns={1}>
-                <Image rounded size='big' src='/static/frontend/img/homepage/multiomix-logo-name.png' alt='Multiomix logo' />
-            </Grid.Row>
-            <Grid.Row columns={1}>
-                <Header
-                    as='h1'
-                    id='header-title'
-                    inverted
-                    content='Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation'
-                />
-            </Grid.Row>
-        </Grid>
+const HomepageHeading = () => {
+    const intl = useIntl()
 
-        <Container text className='margin-top-5 margin-bottom-5'>
-            <Grid stackable>
-                <Grid.Row columns={2}>
-                    <Grid.Column>
-                        <Button primary size='huge' fluid as='a' href={urlPipeline}>
-                            Get Started
-                            <Icon name='arrow right' />
-                        </Button>
-                    </Grid.Column>
-                    <Grid.Column>
-                        <Button color='orange' size='huge' fluid as='a' href='https://youtube.com/playlist?list=PL1P-aHbALFjuwUjNeyA5G7vhqJMRjuoAS' target='_blank'>
-                            Tutorials
-                            <Icon className='margin-left-2' name='youtube' />
-                        </Button>
-                    </Grid.Column>
+    return (
+        <Segment id='homepage-heading' inverted>
+            <Grid stackable textAlign='center' className='margin-top-2'>
+                <Grid.Row columns={1}>
+                    <Image
+                        rounded
+                        size='big'
+                        src='/static/frontend/img/homepage/multiomix-logo-name.png'
+                        alt={intl.formatMessage({ id: 'homepage.logoAlt' })}
+                    />
+                </Grid.Row>
+                <Grid.Row columns={1}>
+                    <Header
+                        as='h1'
+                        id='header-title'
+                        inverted
+                        content={intl.formatMessage({ id: 'homepage.headerTitle' })}
+                    />
                 </Grid.Row>
             </Grid>
-        </Container>
-    </Segment>
-)
+
+            <Container text className='margin-top-5 margin-bottom-5'>
+                <Grid stackable>
+                    <Grid.Row columns={2}>
+                        <Grid.Column>
+                            <Button primary size='huge' fluid as='a' href={urlPipeline}>
+                                {intl.formatMessage({ id: 'homepage.getStarted' })}
+                                <Icon name='arrow right' />
+                            </Button>
+                        </Grid.Column>
+                        <Grid.Column>
+                            <Button
+                                color='orange'
+                                size='huge'
+                                fluid
+                                as='a'
+                                href='https://youtube.com/playlist?list=PL1P-aHbALFjuwUjNeyA5G7vhqJMRjuoAS'
+                                target='_blank'
+                            >
+                                {intl.formatMessage({ id: 'homepage.tutorials' })}
+                                <Icon className='margin-left-2' name='youtube' />
+                            </Button>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            </Container>
+        </Segment>
+    )
+}
 
 /**
  * Homepage component
  * @returns Component
  */
 export const Homepage = () => {
+    const intl = useIntl()
     return (
         <div>
             <Base activeItem='home' wrapperClass='wrapper'>
@@ -63,19 +81,19 @@ export const Homepage = () => {
                         <Grid.Row>
                             <Grid.Column width={8}>
                                 <Header className='important-title' as='h1'>
-                                    Empowering bioinformatics
+                                    {intl.formatMessage({ id: 'homepage.empoweringBioinformatics' })}
                                 </Header>
                                 <div className='middle-size-text'>
                                     <p>
-                                        Multiomix is an interactive cloud platform that allows biologists to identify genetic and epigenetic events associated with the transcriptional modulation of cancer-related genes through the analysis of multi-omics data available on public or private functional genomic databases.
+                                        {intl.formatMessage({ id: 'homepage.description1' })}
                                     </p>
                                     <p>
-                                        Briefly, Multiomix combines a user-friendly GUI, an integrated set of functions for data retrieval, aggregation, and storage of multi-omics data with three predefined pipelines that allow the identification of:
+                                        {intl.formatMessage({ id: 'homepage.description2' })}
                                     </p>
                                     <List>
-                                        <List.Item icon='marker' content='Genes post-transcriptionally modulated by microRNAs (miRNA pipeline)' />
-                                        <List.Item icon='marker' content='Genes transcriptionally silenced by promoter hyper-methylation (Methylation pipeline)' />
-                                        <List.Item icon='marker' content='Genes/Chromosome regions of potential focal amplification and over-expression (CNA pipeline)' />
+                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.mirna' })} />
+                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.methylation' })} />
+                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.cna' })} />
                                     </List>
                                 </div>
                             </Grid.Column>
@@ -87,7 +105,7 @@ export const Homepage = () => {
                                     rounded
                                     size='large'
                                     src='/static/frontend/img/homepage/all-analysis.png'
-                                    alt='analysis'
+                                    alt={intl.formatMessage({ id: 'homepage.analysisAlt' })}
                                 />
                             </Grid.Column>
                         </Grid.Row>
@@ -97,16 +115,16 @@ export const Homepage = () => {
                 <Segment className='padded-segment' vertical inverted>
                     <Container text>
                         <Header as='h1' className='important-title' inverted>
-                            Get involved!
+                            {intl.formatMessage({ id: 'homepage.getInvolved' })}
                         </Header>
                         <p className='middle-size-text'>
-                            Multiomix is a free and open-source platform hosted on Github. If you are a developer and want to contribute any kind of help is welcome and appreciated. Feel free to submit an issue o make a Pull Request!
+                            {intl.formatMessage({ id: 'homepage.openSourceDescription' })}
                         </p>
                     </Container>
 
                     <Container text textAlign='center' className='margin-top-5'>
                         <Button id='source-button' secondary basic as='a' size='huge' href='https://github.com/omics-datascience/multiomix' target='_blank' inverted>
-                            Source
+                            {intl.formatMessage({ id: 'homepage.source' })}
                             <Icon name='github' className='margin-left-5' />
                         </Button>
                     </Container>

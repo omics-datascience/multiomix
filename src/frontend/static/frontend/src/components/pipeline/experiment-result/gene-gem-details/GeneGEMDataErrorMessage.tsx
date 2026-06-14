@@ -1,21 +1,27 @@
 import React from 'react'
 import { Grid, Header, Icon } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 /**
  * Generates a message warning user about invalid data to compute Stats or correlation graph/boxplots
  * @returns Component
  */
-export const GeneGEMDataErrorMessage = () => (
-    <Grid padded>
-        <Grid.Row columns={1}>
-            <Grid.Column textAlign='center'>
-                <Header icon>
-                    <Icon name='warning sign' />
-                    There was an error computing information for this combination. Maybe there are few samples to compute the data. Check another combination
+export const GeneGEMDataErrorMessage = () => {
+    const intl = useIntl()
 
-                    <Header.Subheader>If the problem persists for others combinations, please, contact us</Header.Subheader>
-                </Header>
-            </Grid.Column>
-        </Grid.Row>
-    </Grid>
-)
+    return (
+        <Grid padded>
+            <Grid.Row columns={1}>
+                <Grid.Column textAlign='center'>
+                    <Header icon>
+                        <Icon name='warning sign' />
+                        {intl.formatMessage({ id: 'geneGEMDataErrorMessage.header' })}
+                        <Header.Subheader>
+                            {intl.formatMessage({ id: 'geneGEMDataErrorMessage.subheader' })}
+                        </Header.Subheader>
+                    </Header>
+                </Grid.Column>
+            </Grid.Row>
+        </Grid>
+    )
+}

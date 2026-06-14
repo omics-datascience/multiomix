@@ -7,6 +7,7 @@ import { getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 import { SemanticListItem } from '../../../utils/interfaces'
 import { CurrentUserContext } from '../../Base'
+import { useIntl } from 'react-intl'
 
 declare const urlGetUsersCandidatesLimited: string
 declare const urlGetInstitutionsNonInExperiment: string
@@ -32,16 +33,17 @@ interface InstitutionUserListProps {
 }
 
 const InstitutionUserList = (props: InstitutionUserListProps) => {
+    const intl = useIntl()
     return (
         <div key={props.institutionId} style={{ padding: '0 1rem 0 0' }}>
             <PaginatedTable<DjangoInstitutionUserLimited>
-                headerTitle={props.institutionName + ' users'}
+                headerTitle={`${props.institutionName} ${intl.formatMessage({ id: 'sharedInstitutions.users' })}`}
                 headers={[
-                    { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 }
+                    { name: intl.formatMessage({ id: 'sharedInstitutions.userName' }), serverCodeToSort: 'user__username' as any, width: 3 }
                 ]}
                 showSearchInput
-                searchLabel='User name'
-                searchPlaceholder='Search by User name'
+                searchLabel={intl.formatMessage({ id: 'sharedInstitutions.userName' })}
+                searchPlaceholder={intl.formatMessage({ id: 'sharedInstitutions.searchUserName' })}
                 urlToRetrieveData={urlGetUsersCandidatesLimited + '/' + props.institutionId + '/'}
                 updateWSKey='update_user_for_institution'
                 mapFunction={(userCandidate: DjangoInstitutionUserLimited) => {
@@ -64,6 +66,7 @@ export const SharedInstitutions = (props: Props) => {
     const [institutionList, setInstitutionList] = useState<{ id: number, name: string }[]>([])
     const [isLoadingInstitution, setIsLoadingInstitution] = useState<boolean>(false)
     const currentUser = useContext(CurrentUserContext)
+    const intl = useIntl()
 
     /**
      * Function to search institutions that are not in experiment.
@@ -173,14 +176,14 @@ export const SharedInstitutions = (props: Props) => {
             closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
             style={{ width: '80%' }}
         >
-            <ModalHeader>Shared institutions</ModalHeader>
+            <ModalHeader>{intl.formatMessage({ id: 'sharedInstitutions.title' })}</ModalHeader>
             <ModalContent>
                 {
                     props.user.id === currentUser?.id &&
                     (
                         <>
                             <Select
-                                placeholder='Select a institution to share'
+                                placeholder={intl.formatMessage({ id: 'sharedInstitutions.selectInstitution' })}
                                 options={listOfInstitutionNonPart}
                                 value={institutionIdToAdd.toString()}
                                 onChange={(_e, { value }) => setInstitutionIdToAdd(Number(value))}
@@ -188,9 +191,9 @@ export const SharedInstitutions = (props: Props) => {
                             <Button
                                 className='margin-left-5'
                                 disabled={!institutionIdToAdd || isLoadingInstitution}
-                                onClick={() => props.handleChangeConfirmModalState(true, 'Share experiment', 'Are you sure to share experiment to institution?', handleAddInstitution)}
+                                onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'sharedInstitutions.shareExperiment' }), intl.formatMessage({ id: 'sharedInstitutions.confirmShare' }), handleAddInstitution)}
                             >
-                                Add institution
+                                {intl.formatMessage({ id: 'sharedInstitutions.addInstitution' })}
                             </Button>
                         </>
                     )
@@ -223,8 +226,8 @@ export const SharedInstitutions = (props: Props) => {
                                                             className='clickable'
                                                             disabled={isLoadingInstitution}
                                                             color='red'
-                                                            title='Remove institution'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
+                                                            title={intl.formatMessage({ id: 'sharedInstitutions.removeInstitution' })}
+                                                            onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'sharedInstitutions.stopSharing' }), intl.formatMessage({ id: 'sharedInstitutions.confirmStopSharing' }), () => handleRemoveInstitution(institution.id))}
                                                         />
                                                     )}
                                             </div>
