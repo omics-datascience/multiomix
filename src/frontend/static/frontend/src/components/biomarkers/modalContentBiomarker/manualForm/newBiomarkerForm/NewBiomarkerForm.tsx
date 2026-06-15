@@ -1,10 +1,11 @@
 import React from 'react'
-import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea, Message } from 'semantic-ui-react'
+import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea, Message, Form, DropdownItemProps } from 'semantic-ui-react'
 import { TextAreaMolecules } from './TextAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
 import { SelectDropDownSingleMolecule } from './SelectDropDownSingleMolecule'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { DjangoTag } from '../../../../../utils/django_interfaces'
 
 /** All the types of molecules in a Biomarker. */
 const BIOMARKER_OPTIONS = [
@@ -37,9 +38,10 @@ interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
+    tagOptions: DropdownItemProps[],
+    tags: DjangoTag[],
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
-    isFormEmpty: () => boolean,
     cleanForm: () => void,
     handleChangeMoleculeSelected: (name: BiomarkerType) => void,
     handleChangeMoleculeInputSelected: (value: MoleculesTypeOfSelection) => void,
@@ -50,7 +52,7 @@ interface NewBiomarkerFormProps {
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleChangeInputForm: (value: string, name: 'biomarkerName' | 'biomarkerDescription') => void,
+    handleChangeInputForm: (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => void,
 }
 
 /**
@@ -109,6 +111,22 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                         options={BIOMARKER_OPTIONS}
                         value={props.biomarkerForm.moleculeSelected}
                         onChange={(_, { value }) => props.handleChangeMoleculeSelected(Object.values(BiomarkerType).includes(value as BiomarkerType) ? value as BiomarkerType : BiomarkerType.MRNA)}
+                    />
+
+                    <Form.Dropdown
+                        fluid
+                        width={16}
+                        options={props.tagOptions}
+                        search
+                        selection
+                        clearable
+                        name='tag'
+                        onChange={(_, { value }) => {
+                            const selectedTag = props.tags.find(t => t.id === value) ?? null
+                            props.handleChangeInputForm(selectedTag, 'tag')
+                        }}
+                        value={props.biomarkerForm.tag?.id ?? ''}
+                        placeholder='Tag (optional)'
                     />
 
                     <ButtonsForTypeOfInsert
