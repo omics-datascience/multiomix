@@ -350,10 +350,9 @@ class SurvivalAnalysisPanel extends React.Component<
 
 /**
  * Wrapper component that injects the intl object into SurvivalAnalysisPanel.
- * @param _props Component props.
  * @returns SurvivalAnalysisPanel component with injected intl instance.
  */
-export default function SurvivalAnalysisPanelWithIntl (_props: SurvivalAnalysisPanelProps) {
+export default function SurvivalAnalysisPanelWithIntl () {
     const intl = useIntl()
 
     return <SurvivalAnalysisPanel intl={intl} />
