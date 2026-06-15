@@ -25,6 +25,7 @@ declare const urlMethylationSitesFinder: string
 declare const urlGeneSymbolsFinder: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
+
 type SelectedOption = 'selectAll' | 'selectWithFilters'
 
 /** A matched molecule with the search query and the validated alias. */
@@ -124,7 +125,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             experimentInfoWithoutFilters: {
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
-            }
+            },
         }
     }
 
@@ -1095,7 +1096,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * @param value new value for input form
      * @param name type of input to change
      */
-    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+    handleChangeInputForm = (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker[name] = value
         this.setState({ formBiomarker })
@@ -1285,45 +1286,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             }
 
             dataset.survival_columns.push(newElement)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (
-        datasetName: NameOfCGDSDataset,
-        idxSurvivalTuple: number,
-        name: string,
-        value: any
-    ) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
             this.setState({ newBiomarker })
         }
     }
@@ -1573,6 +1535,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
+                        tagOptions={[]}
+                        tags={this.state.tags}
                     />
 
                 </Modal>
