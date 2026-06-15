@@ -23,9 +23,7 @@ type ColumnStateName = 'columnEventTime' | 'columnEventStatus'
 /**
  * Component's props
  */
-interface SurvivalAnalysisPanelProps {}
-
-interface SurvivalAnalysisPanelInternalProps extends SurvivalAnalysisPanelProps {
+interface SurvivalAnalysisPanelProps {
     intl: IntlShape
 }
 
@@ -48,7 +46,7 @@ interface SurvivalAnalysisPanelState {
  * @returns Component
  */
 class SurvivalAnalysisPanel extends React.Component<
-    SurvivalAnalysisPanelInternalProps,
+    SurvivalAnalysisPanelProps,
     SurvivalAnalysisPanelState
 > {
     abortController = new AbortController()
@@ -352,6 +350,7 @@ class SurvivalAnalysisPanel extends React.Component<
 
 /**
  * Wrapper component that injects the intl object into SurvivalAnalysisPanel.
+ * @param _props Component props.
  * @returns SurvivalAnalysisPanel component with injected intl instance.
  */
 export default function SurvivalAnalysisPanelWithIntl (_props: SurvivalAnalysisPanelProps) {

@@ -1081,6 +1081,8 @@ class Pipeline extends React.Component<PipelineProps, PipelineState> {
 
 /**
  * Functional wrapper to inject intl into the class component.
+ * @param props Component props.
+ * @returns Component.
  */
 const PipelineWithIntl = (props: Omit<PipelineProps, 'intl'>) => {
     const intl = useIntl()
