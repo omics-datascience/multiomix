@@ -1,10 +1,10 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject } from '../../utils/util_functions'
-import { Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal, FileType } from '../../utils/interfaces'
+import { Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
@@ -26,7 +26,6 @@ import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
 import { TagsPanel } from '../files-manager/TagsPanel'
-import { NewFile } from '../files-manager/FilesManager'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -46,7 +45,7 @@ declare const urlCloneBiomarker: string
 declare const urlStopFSExperiment: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
-const FILE_INPUT_LABEL = 'Add a new file'
+
 /** A matched molecule with the search query and the validated alias. */
 type MoleculeFinderResult = { molecule: string, standard: string }
 
@@ -102,7 +101,6 @@ interface BiomarkersPanelState {
     modalInstitutions: SharedInstitutionsBiomarkerPropsExtend,
     /** modal to handle shared users */
     modalUsers: SharedUsersBiomarkerPropsExtend,
-    newFile: NewFile,
     showDeleteTagModal: boolean,
     deletingTag: boolean,
 }
@@ -141,7 +139,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
             addingTag: false,
             modalInstitutions: this.defaultModalInstitutions(),
             modalUsers: this.defaultModalUsers(),
-            newFile: this.getDefaultNewFile(),
             showDeleteTagModal: false,
             deletingTag: false,
         }
@@ -159,24 +156,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
      */
     handleCloseModalModalInstitution = () => {
         this.setState({ modalInstitutions: this.defaultModalInstitutions() })
-    }
-
-    /**
-     * Generates a default new file form
-     * @returns An object with all the field with default values
-     */
-    getDefaultNewFile (): NewFile {
-        return {
-            newFileName: FILE_INPUT_LABEL,
-            newFileNameUser: '',
-            newFileDescription: '',
-            newFileType: FileType.MRNA,
-            newTag: null,
-            institutions: [],
-            isCpGSiteId: false,
-            platform: DjangoMethylationPlatform.PLATFORM_450,
-            survivalColumns: []
-        }
     }
 
     /**
@@ -1412,17 +1391,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     }
 
     /**
-     * Handles input changes in the New File Form
-     * @param name State field to change
-     * @param value Value to assign to the specified field
-     */
-    handleAddFileInputsChange = (name: string, value: any) => {
-        const newFileForm = this.state.newFile
-        newFileForm[name] = value
-        this.setState({ newFile: newFileForm })
-    }
-
-    /**
      * Cleans the new/edit biomarker form
      */
     cleanForm = () => {
@@ -1473,19 +1441,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
     /** Closes the deletion confirm modals. */
     handleClose = () => {
         this.setState({ showDeleteBiomarkerModal: false })
-    }
-
-    /**
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
-        this.setState(prevState => ({
-            newFile: {
-                ...prevState.newFile,
-                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
-            },
-        }))
     }
 
     /**
@@ -1562,23 +1517,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
         const featureSelection = this.state.featureSelection
         featureSelection.step = 3
         this.setState({ featureSelection })
-    }
-
-    /**
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
-        this.setState(prevState => ({
-            newFile: {
-                ...prevState.newFile,
-                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
-                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
-                ),
-            },
-        }))
     }
 
     /**
@@ -2215,9 +2153,6 @@ export class BiomarkersPanel extends React.Component<unknown, BiomarkersPanelSta
                                             return { key: id, value: id, text: tag.name }
                                         })
                                     ]}
-                                    handleAddFileInputsChange={this.handleAddFileInputsChange}
-                                    handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                                    removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                                 />
                             )}
 

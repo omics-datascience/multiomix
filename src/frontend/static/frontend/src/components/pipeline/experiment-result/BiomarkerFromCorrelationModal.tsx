@@ -1,10 +1,10 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
 import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMethylationPlatform, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
-import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl, FileType } from '../../../utils/interfaces'
+import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from '../../biomarkers/types'
 import { ManualForm } from '../../biomarkers/modalContentBiomarker/manualForm/ManualForm'
 import { PaginationCustomFilter } from '../../common/PaginatedTable'
@@ -12,7 +12,6 @@ import { isEqual } from 'lodash'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../biomarkers/utils'
 import { BiomarkerDetailsModal } from '../../biomarkers/BiomarkerDetailsModal'
 import { Alert } from '../../common/Alert'
-import { NewFile } from '../../files-manager/FilesManager'
 
 // URLs defined in gem.html
 declare const urlBiomarkersCRUD: string
@@ -26,7 +25,7 @@ declare const urlMethylationSitesFinder: string
 declare const urlGeneSymbolsFinder: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
-const FILE_INPUT_LABEL = 'Add a new file'
+
 type SelectedOption = 'selectAll' | 'selectWithFilters'
 
 /** A matched molecule with the search query and the validated alias. */
@@ -87,7 +86,6 @@ interface BiomarkerFromCorrelationModalState {
     openSelectOptionModal: boolean,
     experimentInfoWithoutFilters: ExperimentInfo,
     modalReady: boolean,
-    newFile: NewFile,
 }
 
 /**
@@ -128,7 +126,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
             },
-            newFile: this.getDefaultNewFile(),
         }
     }
 
@@ -138,24 +135,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     componentWillUnmount () {
         this.abortController.abort()
-    }
-
-    /**
-     * Generates a default new file form
-     * @returns An object with all the field with default values
-     */
-    getDefaultNewFile (): NewFile {
-        return {
-            newFileName: FILE_INPUT_LABEL,
-            newFileNameUser: '',
-            newFileDescription: '',
-            newFileType: FileType.MRNA,
-            newTag: null,
-            institutions: [],
-            isCpGSiteId: false,
-            platform: DjangoMethylationPlatform.PLATFORM_450,
-            survivalColumns: []
-        }
     }
 
     /**
@@ -1318,36 +1297,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
     }
 
     /**
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (idxSurvivalTuple: number) => {
-        this.setState(prevState => ({
-            newFile: {
-                ...prevState.newFile,
-                survivalColumns: prevState.newFile.survivalColumns.filter((_, i) => i !== idxSurvivalTuple),
-            },
-        }))
-    }
-
-    /**
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (idxSurvivalTuple: number, name: string, value: any) => {
-        this.setState(prevState => ({
-            newFile: {
-                ...prevState.newFile,
-                survivalColumns: prevState.newFile.survivalColumns.map((t, i) =>
-                    i === idxSurvivalTuple ? { ...t, [name]: value } : t
-                ),
-            },
-        }))
-    }
-
-    /**
      * Checks if the form is entirely empty. Useful to enable 'Cancel' button
      * @returns True is any of the form's field contains any data. False otherwise
      */
@@ -1431,17 +1380,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             confirmModal: this.getDefaultConfirmModal(),
             biomarkerTypeSelected: BiomarkerOrigin.BASE
         })
-    }
-
-    /**
-     * Handles input changes in the New File Form
-     * @param name State field to change
-     * @param value Value to assign to the specified field
-     */
-    handleAddFileInputsChange = (name: string, value: any) => {
-        const newFileForm = this.state.newFile
-        newFileForm[name] = value
-        this.setState({ newFile: newFileForm })
     }
 
     /**
@@ -1587,9 +1525,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
                         tagOptions={[]}
-                        handleAddFileInputsChange={this.handleAddFileInputsChange}
-                        handleSurvivalFormDatasetChanges={this.handleSurvivalFormDatasetChanges}
-                        removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                         tags={this.state.tags}
                     />
 

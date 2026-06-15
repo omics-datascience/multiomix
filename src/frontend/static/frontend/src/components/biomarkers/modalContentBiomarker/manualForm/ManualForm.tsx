@@ -9,14 +9,11 @@ import { DjangoTag } from '../../../../utils/django_interfaces'
 interface ManualFormProps {
     tagOptions: DropdownItemProps[]
     tags: DjangoTag[]
-    handleAddFileInputsChange: (name: string, value: any) => void
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
-    removeSurvivalFormTuple: (idx: number) => void,
-    handleSurvivalFormDatasetChanges: (idx: number, name: string, value) => void,
     cleanForm: () => void,
     isFormEmpty: () => boolean,
     handleChangeMoleculeSelected: (value: BiomarkerType) => void,
