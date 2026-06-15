@@ -28,7 +28,9 @@ const getEdgeOpacity = (correlation: number) => {
     const abs = Math.abs(correlation)
 
     if (abs >= 0.8) { return 0.95 }
+
     if (abs >= 0.6) { return 0.8 }
+
     if (abs >= 0.5) { return 0.65 }
 
     return 0.22
@@ -38,8 +40,11 @@ const getEdgeWidth = (correlation: number) => {
     const abs = Math.abs(correlation)
 
     if (abs >= 0.9) { return 6 }
+
     if (abs >= 0.8) { return 5 }
+
     if (abs >= 0.7) { return 4 }
+
     if (abs >= 0.5) { return 3 }
 
     return 1.5
