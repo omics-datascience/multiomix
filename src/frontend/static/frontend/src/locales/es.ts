@@ -1431,7 +1431,6 @@ export default {
     'biomarkersPanel.stopExperiment.content': '¿Está seguro de que desea detener el experimento {name}?',
     'biomarkersPanel.deleteModal.header': 'Eliminar biomarcador',
     'biomarkersPanel.deleteModal.content': '¿Está seguro de que desea eliminar el biomarcador {name}?',
-    'biomarkersPanel.cloneModal.header': 'Clonar biomarcador',
     'biomarkersPanel.cloneModal.content': '¿Está seguro de que desea clonar el biomarcador "{name}"?',
     'biomarkersPanel.cloneModal.button': 'Clonar',
 
@@ -1447,6 +1446,7 @@ export default {
     'biomarkersPanel.icon.sharedInstitutions': 'Instituciones compartidas',
     'biomarkersPanel.icon.sharedUsers': 'Usuarios compartidos',
     'biomarkersPanel.icon.clone': 'Clonar biomarcador',
+    'biomarkersPanel.icon.stop': 'Detener biomarcador',
     'biomarkersPanel.icon.public': 'Todos los usuarios de la plataforma pueden ver este experimento',
     'biomarkersPanel.icon.notPublic': 'Si esto está marcado, todos los usuarios de la plataforma pueden ver (pero no editar ni eliminar) este elemento',
 
