@@ -9,6 +9,7 @@ import { NewExperimentSourceStateName } from './Pipeline'
 import { PipelineAdvancedForm } from './PipelineAdvancedForm'
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { PipelineSourcePopupContent } from './PipelineSourcePopupContent'
+import { useIntl, IntlShape } from 'react-intl'
 
 /**
  * Component's props
@@ -50,11 +51,16 @@ interface PipelineFormProps {
     selectGEMFileType: (fileType: FileType) => void
 }
 
+interface PipelineFormInternalProps extends PipelineFormProps {
+    /** Intl object */
+    intl: IntlShape
+}
+
 /**
  * Renders a form to submit an experiment/pipeline
  * @param props Component's props
  */
-export class PipelineForm extends React.Component<PipelineFormProps, any> {
+class PipelineFormBase extends React.Component<PipelineFormInternalProps, any> {
     /**
      * Checks if user can submit the files to run a pipeline
      * @returns True if can submit, false otherwise
@@ -82,6 +88,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
     canEdit = (): boolean => this.isEditing() && this.props.newExperiment.name.trim().length > 0
 
     render () {
+        const { intl } = this.props
         // For short...
         const newExperiment = this.props.newExperiment
 
@@ -111,13 +118,13 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                     className='margin-top-2'
                     percent={uploadPercentage}
                     indicating
-                    label='Preparing analysis'
+                    label={intl.formatMessage({ id: 'pipelineForm.preparingAnalysis' })}
                 />
             )
             : (
                 <Button
                     color='green'
-                    content={isEditing ? 'Save changes' : 'Run analysis'}
+                    content={intl.formatMessage({ id: isEditing ? 'pipelineForm.saveChanges' : 'pipelineForm.runAnalysis' })}
                     className='margin-top-2'
                     fluid
                     onClick={isEditing ? this.props.makeEditExperimentRequest : this.props.runPipeline}
@@ -144,7 +151,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         className='margin-bottom-2'
                         value={this.props.gemFileType}
                         options={selectOptions}
-                        placeholder='Select dataset...'
+                        placeholder={intl.formatMessage({ id: 'pipelineForm.selectDataset' })}
                         onChange={(_e, { value }) => this.props.selectGEMFileType(value as FileType)}
                     />
                 </div>
@@ -157,7 +164,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         {/* mRNA SourceForm */}
                         <SourceForm
                             source={newExperiment.mRNASource}
-                            headerTitle='mRNA profile'
+                            headerTitle={intl.formatMessage({ id: 'pipelineForm.mrnaProfile' })}
                             headerIcon={{
                                 type: 'img',
                                 src: 'static/frontend/img/profiles/mRNA.svg'
@@ -180,7 +187,10 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         {/* GEM SourceForm */}
                         <SourceForm
                             source={newExperiment.gemSource}
-                            headerTitle={`${gemData.description} profile`}
+                            headerTitle={intl.formatMessage(
+                                { id: 'pipelineForm.profile' },
+                                { profile: gemData.description }
+                            )}
                             headerIcon={{
                                 type: 'img',
                                 src: `static/frontend/img/profiles/${gemData.image}`
@@ -203,9 +213,29 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         {/* Number of samples in common */}
                         <Grid.Row>
                             <Label className='full-width align-left'>
-                                <p>Samples mRNA: {numberSamplesMRNA}</p>
-                                <p>Samples {gemData.description}: {numberSamplesGEM}</p>
-                                <p>Samples in common: {numberSamplesInCommon}</p>
+                                <p>
+                                    {intl.formatMessage(
+                                        { id: 'pipelineForm.samplesMrna' },
+                                        { count: numberSamplesMRNA }
+                                    )}
+                                </p>
+
+                                <p>
+                                    {intl.formatMessage(
+                                        { id: 'pipelineForm.samplesGem' },
+                                        {
+                                            gem: gemData.description,
+                                            count: numberSamplesGEM
+                                        }
+                                    )}
+                                </p>
+
+                                <p>
+                                    {intl.formatMessage(
+                                        { id: 'pipelineForm.samplesInCommon' },
+                                        { count: numberSamplesInCommon }
+                                    )}
+                                </p>
                             </Label>
                         </Grid.Row>
                     </Grid>
@@ -214,13 +244,13 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                 {/* Name, description and tag panel */}
                 <Segment>
                     <Header textAlign='left'>
-                        <Header.Content>Analysis info</Header.Content>
+                        <Header.Content>{intl.formatMessage({ id: 'pipelineForm.analysisInfo' })}</Header.Content>
                     </Header>
 
                     <Form>
                         <Form.Input
                             icon='asterisk'
-                            placeholder='Name'
+                            placeholder={intl.formatMessage({ id: 'common.name' })}
                             name='name'
                             value={newExperiment.name}
                             onChange={checkedValidityCallback(this.props.handleFormInputsChange)}
@@ -228,7 +258,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         />
 
                         <Form.TextArea
-                            placeholder='Description (optional)'
+                            placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                             name='description'
                             value={newExperiment.description}
                             onChange={(_, { name, value }) => this.props.handleFormInputsChange(name, value)}
@@ -258,7 +288,7 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
                         handleFormInputsChange={this.props.handleFormInputsChange}
                     />
 
-                    <Icon name='asterisk' /> Required field
+                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'pipelineForm.requiredField' })}
 
                     <Form>
                         {/* Progress bar or submit analysis run/edition button */}
@@ -266,13 +296,13 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
 
                         {/* Warning about upload time */}
                         <Label className='margin-top-2 full-width no-margin-left align-center' color='yellow'>
-                            The upload time is subject to the size of the file
+                            {intl.formatMessage({ id: 'pipelineForm.uploadTimeWarning' })}
                         </Label>
 
                         {/* Cancel button */}
                         <Button
                             color='red'
-                            content='Clear form'
+                            content={intl.formatMessage({ id: 'pipelineForm.clearForm' })}
                             className='margin-top-2'
                             fluid
                             onClick={this.props.resetExperimentForm}
@@ -284,3 +314,18 @@ export class PipelineForm extends React.Component<PipelineFormProps, any> {
         )
     }
 }
+
+/**
+ * Wrapper component that injects the intl object into PipelineForm.
+ * @param props Pipeline form props excluding intl.
+ * @returns PipelineForm component with injected intl instance.
+ */
+export default function PipelineFormWithIntl (
+    props: PipelineFormProps
+) {
+    const intl = useIntl()
+
+    return <PipelineFormBase {...props} intl={intl} />
+}
+
+export { PipelineFormWithIntl as PipelineForm }

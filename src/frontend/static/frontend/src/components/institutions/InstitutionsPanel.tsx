@@ -11,7 +11,7 @@ import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import InstitutionForm from './InstitutionForm'
 import { InstitutionModal, InstitutionModalState } from './InstitutionModal'
 import { Alert } from '../common/Alert'
-
+import { useIntl, IntlShape } from 'react-intl'
 // URLs defined in files.html
 declare const urlGetUserInstitutions: string
 declare const urlDeleteInstitution: string
@@ -41,11 +41,14 @@ export interface InstitutionTableData extends DjangoInstitution {
     is_user_admin: boolean
 }
 
+interface InstitutionsPanelProps {
+    intl: IntlShape
+}
+
 /**
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
- */
-export class InstitutionsPanel extends React.Component<unknown, InstitutionsPanelState> {
+ */ class InstitutionsPanel extends React.Component<InstitutionsPanelProps, InstitutionsPanelState> {
     filterTimeout: number | undefined
     abortController = new AbortController()
 
@@ -216,13 +219,14 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
      * @param institutionId id from institution to delete.
      */
     handleDeleteInstitution (institutionId: number) {
+        const { intl } = this.props
         const url = `${urlDeleteInstitution}/${institutionId}/`
         const myHeaders = getDjangoHeader()
         ky.delete(url, { headers: myHeaders }).then((response) => {
             response.json().then(() => {
-                this.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, 'Institution deleted!', null)
+                this.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'institutionsPanel.alert.successDelete' }), null)
             }).catch((err) => {
-                this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+                this.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionsPanel.alert.errorDelete' }), null)
                 console.error('Error parsing JSON ->', err)
             })
                 .finally(() => {
@@ -231,7 +235,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                     this.setState({ confirmModal })
                 })
         }).catch((err) => {
-            this.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error deleting an Institution!', null)
+            this.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionsPanel.alert.errorDelete' }), null)
             console.error('Error adding new Institution ->', err)
         }).finally(() => {
             const confirmModal = this.state.confirmModal
@@ -241,6 +245,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
     }
 
     render () {
+        const { intl } = this.props
         return (
             <Base activeItem='institutions' wrapperClass='institutionsWrapper'>
                 <Grid columns={2} padded stackable divided stretched>
@@ -249,9 +254,9 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                         <Segment>
                             <Header textAlign='center'>
                                 <Icon name='building' />
-                                <Header.Content className='headerContent'><span>My institutions</span>
+                                <Header.Content className='headerContent'><span>{intl.formatMessage({ id: 'institutionsPanel.header' })}</span>
                                     <div style={{ float: 'right', height: '10px' }}>
-                                        <InfoPopup onTop={false} extraClassName='questionIcon' content='In this form you can add institutions and colleagues to collaborate sharing datasets (and experiment results in a near future)' />
+                                        <InfoPopup onTop={false} extraClassName='questionIcon' content={intl.formatMessage({ id: 'institutionsPanel.header.info' })} />
                                     </div>
                                 </Header.Content>
                             </Header>
@@ -273,18 +278,18 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                     <Grid.Column width={12}>
                         <Segment>
                             <PaginatedTable<InstitutionTableData>
-                                headerTitle='Institutions'
+                                headerTitle={intl.formatMessage({ id: 'institutionsPanel.table.headerTitle' })}
                                 headers={[
-                                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                                    { name: 'Location', serverCodeToSort: 'location', width: 1 },
-                                    { name: 'Email', serverCodeToSort: 'email', width: 1 },
-                                    { name: 'Phone number', serverCodeToSort: 'telephone_number', width: 1 },
-                                    { name: 'Actions', width: 1 }
+                                    { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                                    { name: intl.formatMessage({ id: 'institutionsPanel.table.location' }), serverCodeToSort: 'location', width: 1 },
+                                    { name: intl.formatMessage({ id: 'institutionsPanel.table.email' }), serverCodeToSort: 'email', width: 1 },
+                                    { name: intl.formatMessage({ id: 'institutionsPanel.table.phoneNumber' }), serverCodeToSort: 'telephone_number', width: 1 },
+                                    { name: intl.formatMessage({ id: 'common.actions' }), width: 1 }
                                 ]}
                                 defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
                                 showSearchInput
-                                searchLabel='Name'
-                                searchPlaceholder='Search by name'
+                                searchLabel={intl.formatMessage({ id: 'common.name' })}
+                                searchPlaceholder={intl.formatMessage({ id: 'institutionsPanel.search.placeholder' })}
                                 urlToRetrieveData={urlGetUserInstitutions}
                                 updateWSKey='update_institutions'
                                 mapFunction={(institution: InstitutionTableData) => {
@@ -300,7 +305,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                     name='address book'
                                                     className='clickable'
                                                     color='blue'
-                                                    title='Details'
+                                                    title={intl.formatMessage({ id: 'common.details' })}
                                                     onClick={() => this.handleOpenModal(institution)}
                                                 />
 
@@ -312,7 +317,7 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                             name='pencil'
                                                             className='clickable margin-left-5'
                                                             color='yellow'
-                                                            title={`Edit (${institution.name}`}
+                                                            title={intl.formatMessage({ id: 'institutionsPanel.icon.edit' }, { name: institution.name })}
                                                             onClick={() => this.handleSetInstitutionToEdit(institution)}
                                                         />
                                                     )
@@ -324,8 +329,8 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
                                                         className='clickable margin-left-5'
                                                         color='red'
                                                         disabled={this.state.isDeletingInstitution}
-                                                        title='Delete Institution'
-                                                        onClick={() => this.handleChangeConfirmModalState(true, 'Delete institution', `Are you sure about deleting institution ${institution.name}`, () => this.handleDeleteInstitution(institution.id as number))}
+                                                        title={intl.formatMessage({ id: 'institutionsPanel.icon.delete' })}
+                                                        onClick={() => this.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'institutionsPanel.confirm.delete.header' }), intl.formatMessage({ id: 'institutionsPanel.confirm.delete.content' }, { name: institution.name }), () => this.handleDeleteInstitution(institution.id as number))}
                                                     />
                                                 )}
                                             </Table.Cell>
@@ -366,3 +371,14 @@ export class InstitutionsPanel extends React.Component<unknown, InstitutionsPane
         )
     }
 }
+
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
+
+const InstitutionsPanelWithIntl = (props: Omit<InstitutionsPanelProps, 'intl'>) => {
+    const intl = useIntl()
+    return <InstitutionsPanel {...props} intl={intl} />
+}
+
+export { InstitutionsPanelWithIntl as InstitutionsPanel }

@@ -4,6 +4,7 @@ import { Button, Grid, Header, Icon, Placeholder, PlaceholderLine, PlaceholderPa
 import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
 import { KySearchParams, Nullable } from '../../../../utils/interfaces'
 import { LinkOrPlainText } from '../../../common/LinkOrPlainText'
+import { useIntl } from 'react-intl'
 
 declare const urlMiRNAData: string
 
@@ -25,6 +26,7 @@ interface MiRNAExtraDataProps {
  * @returns Component
  */
 export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
+    const intl = useIntl()
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
     const [loading, setLoading] = useState<boolean>(true)
 
@@ -78,7 +80,7 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                             <Header size='huge' icon>
                                 <Icon name='folder outline' />
 
-                                No details found for this miRNA
+                                {intl.formatMessage({ id: 'miRNAExtraData.noDetails' })}
                             </Header>
                         </Grid.Column>
                     </Grid.Row>
@@ -106,14 +108,14 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     return (
         <Grid className='margin-bottom-2' centered>
             <Grid.Row divided centered>
-                <Grid.Column width={othersLinks.length ? 6 : 8} title='miRNA aliases' textAlign='center' verticalAlign='middle'>
+                <Grid.Column width={othersLinks.length ? 6 : 8} title={intl.formatMessage({ id: 'miRNAExtraData.aliases' })} textAlign='center' verticalAlign='middle'>
                     <Header size='large'>
                         <LinkOrPlainText url={mirbaseURL} text={miRNAAliases} />
                     </Header>
                 </Grid.Column>
 
                 {miRNAData.mirna_sequence && (
-                    <Grid.Column width={8} title='Sequence' verticalAlign='middle'>
+                    <Grid.Column width={8} title={intl.formatMessage({ id: 'miRNAExtraData.sequence' })} verticalAlign='middle'>
                         <Header size='large'>
                             {miRNAData.mirna_sequence}
                         </Header>

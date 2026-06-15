@@ -1,6 +1,7 @@
 import React from 'react'
 import { Card, Grid, Header, Image } from 'semantic-ui-react'
 import { BiomarkerOrigin } from '../../types'
+import { useIntl } from 'react-intl'
 
 /** BiomarkerTypeSelection props. */
 interface BiomarkerTypeSelectionProps {
@@ -8,16 +9,17 @@ interface BiomarkerTypeSelectionProps {
 }
 
 export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
+    const intl = useIntl()
     const cards = [
         {
-            title: 'Emtpy',
-            description: 'Create an empty Biomarker. You can later add molecules or features (genes, microRNAs, DNA methylation, CNAs) that will make up the biomarker',
+            title: intl.formatMessage({ id: 'biomarkerType.empty.title' }),
+            description: intl.formatMessage({ id: 'biomarkerType.empty.description' }),
             action: () => props.handleSelectModal(BiomarkerOrigin.MANUAL),
             image: '/static/frontend/img/biomarkers/Empty.png'
         },
         {
-            title: 'Feature Selection/ML',
-            description: 'As a starting point, you can select a previously discovered Biomarker, a well-known Biomarker, or a superset of genes that you would like to test. This method will select the molecular subset that fits the better prediction',
+            title: intl.formatMessage({ id: 'biomarkerType.featureSelection.title' }),
+            description: intl.formatMessage({ id: 'biomarkerType.featureSelection.description' }),
             action: () => props.handleSelectModal(BiomarkerOrigin.FEATURE_SELECTION),
             image: '/static/frontend/img/biomarkers/Fs3.png'
         }
@@ -25,13 +27,14 @@ export const BiomarkerTypeSelection = (props: BiomarkerTypeSelectionProps) => {
     return (
         <>
             <Header as='h2' textAlign='center'>
-                Create a new Biomarker
+                {intl.formatMessage({ id: 'biomarkerType.createNew' })}
+
             </Header>
 
             <Grid stackable>
                 <Grid.Row columns={3} className='grid--container'>
                     <Grid.Column width={16}>
-                        <h2 className='text--subtitle'>Choose type of Biomarker</h2>
+                        <h2 className='text--subtitle'>{intl.formatMessage({ id: 'biomarkerType.chooseType' })}</h2>
                     </Grid.Column>
                     {
                         cards.map(card => (

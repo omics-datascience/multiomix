@@ -9,6 +9,7 @@ import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPo
 import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { NewFile } from './FilesManager'
 import { InstitutionsDropdown } from './InstitutionsDropdown'
+import { useIntl } from 'react-intl'
 
 /** UploadLabel props. */
 interface UploadLabelProps {
@@ -21,21 +22,33 @@ interface UploadLabelProps {
  * @returns Component
  */
 const UploadLabel = (props: UploadLabelProps) => {
+    const intl = useIntl()
     const isUploading = props.uploadState === null || props.uploadState === UploadState.UPLOADING_CHUNKS
     const [header, description]: [string, string] = isUploading
-        ? ['Uploading file', 'The file is being uploaded in chunks']
-        : ['Ensuring file quality', 'We perform a serie of checks to ensure that the data received on our server is correct']
-
+        ? [
+            intl.formatMessage({ id: 'newFileForm.uploadingFile' }),
+            intl.formatMessage({ id: 'newFileForm.uploadingFile.description' })
+        ]
+        : [
+            intl.formatMessage({ id: 'newFileForm.checkingFile' }),
+            intl.formatMessage({ id: 'newFileForm.checkingFile.description' })
+        ]
     return (
         <span>
-            {isUploading ? 'Uploading file' : 'Checking file'}
+            {isUploading
+                ? intl.formatMessage({ id: 'newFileForm.uploadingFile' })
+                : intl.formatMessage({ id: 'newFileForm.checkingFile' })}
 
             <InfoPopup
                 content={(
                     <>
                         <Header>{header}</Header>
 
-                        <p>{description}. Please note that <strong>this process may take a few minutes depending on the size of the file. You can still use Multiomix from another browser tab</strong>. Thanks for your patience.</p>
+                        <p>
+                            {description}.
+                            {' '}
+                            <strong>{intl.formatMessage({ id: 'newFileForm.processing.warning' })}</strong>
+                        </p>
                     </>
                 )}
                 onTop={false}
@@ -75,6 +88,7 @@ interface NewFileFormProps {
  * @returns Component
  */
 export const NewFileForm = (props: NewFileFormProps) => {
+    const intl = useIntl()
     const checkedHandleFormChanges = checkedValidityCallback(props.handleAddFileInputsChange)
 
     let progressOrButton
@@ -95,7 +109,9 @@ export const NewFileForm = (props: NewFileFormProps) => {
             <Form.Button
                 fluid
                 className='ellipsis'
-                content={props.isEditing ? 'Editing...' : props.newFile.newFileName}
+                content={props.isEditing
+                    ? intl.formatMessage({ id: 'newFileForm.editing' })
+                    : props.newFile.newFileName}
                 color='blue'
                 onClick={() => props.newFileInputRef.current.click()}
                 width={14}
@@ -125,23 +141,34 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             <InfoPopup
                                 content={(
                                     <>
-                                        <Header>Datasets</Header>
+                                        <Header>{intl.formatMessage({ id: 'common.datasets' })}</Header>
 
-                                        <p>In this form you can submit your own datasets. It will be pre-processed and will be available to launch new experiments or share with colleagues from the institutions to which you belong</p>
+                                        <p>{intl.formatMessage({ id: 'newFileForm.datasets.description' })}</p>
 
-                                        <Header as='h2'>Important considerations</Header>
+                                        <Header as='h2'>{intl.formatMessage({ id: 'newFileForm.importantConsiderations' })}</Header>
 
                                         <List bulleted>
-                                            <List.Item>First row <strong>must be a header</strong></List.Item>
-                                            <List.Item>First column <strong>must be the index</strong>, the rest the samples expression data</List.Item>
-                                            <List.Item>CSV, TSV or TXT files are accepted. Excel files will be supported in a near future</List.Item>
-                                            <List.Item>The column and decimal delimiters will be inferred from the data</List.Item>
+                                            <List.Item>
+                                                {intl.formatMessage({ id: 'newFileForm.dataset.header' })}
+                                            </List.Item>
+
+                                            <List.Item>
+                                                {intl.formatMessage({ id: 'newFileForm.dataset.index' })}
+                                            </List.Item>
+
+                                            <List.Item>
+                                                {intl.formatMessage({ id: 'newFileForm.dataset.acceptedFiles' })}
+                                            </List.Item>
+
+                                            <List.Item>
+                                                {intl.formatMessage({ id: 'newFileForm.dataset.delimiters' })}
+                                            </List.Item>
                                         </List>
 
                                         <img
                                             src='static/frontend/img/datasets/DatasetFormat.jpg'
                                             className='margin-top-5'
-                                            alt='Dataset format'
+                                            alt={intl.formatMessage({ id: 'newFileForm.datasetFormat' })}
                                         />
                                     </>
                                 )}
@@ -152,7 +179,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         <Grid.Row>
                             {/* Filename input */}
                             <Form.Input
-                                placeholder='Filename'
+                                placeholder={intl.formatMessage({ id: 'newFileForm.filename.placeholder' })}
                                 name='newFileNameUser'
                                 value={props.newFile.newFileNameUser}
                                 onChange={checkedHandleFormChanges}
@@ -171,7 +198,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 name='newFileType'
                                 value={props.newFile.newFileType}
                                 onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                placeholder='File type'
+                                placeholder={intl.formatMessage({ id: 'newFileForm.fileType.placeholder' })}
                                 width={16}
                                 disabled={props.uploadingFile}
                             />
@@ -184,13 +211,13 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                         fluid
                                         selectOnBlur={false}
                                         options={[
-                                            { key: 'gene', value: false, text: 'Gene ID' },
-                                            { key: 'cg', value: true, text: 'CpG site ID' }
+                                            { key: 'gene', value: false, text: intl.formatMessage({ id: 'newFileForm.geneId' }) },
+                                            { key: 'cg', value: true, text: intl.formatMessage({ id: 'newFileForm.cpgSiteId' }) }
                                         ]}
                                         name='isCpGSiteId'
                                         value={props.newFile.isCpGSiteId}
                                         onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                        placeholder='File type'
+                                        placeholder={intl.formatMessage({ id: 'newFileForm.fileType.placeholder' })}
                                         width={16}
                                         disabled={props.uploadingFile}
                                     />
@@ -202,14 +229,14 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                             fluid
                                             selectOnBlur={false}
                                             options={[
-                                                { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 450' },
+                                                { key: '450', value: DjangoMethylationPlatform.PLATFORM_450, text: intl.formatMessage({ id: 'newFileForm.platform450' }) },
                                                 /* TODO: implement platform 27 when dictionary is available */
-                                                { key: '27', value: DjangoMethylationPlatform.PLATFORM_450, text: 'Platform 27', disabled: true }
+                                                { key: '27', value: DjangoMethylationPlatform.PLATFORM_450, text: intl.formatMessage({ id: 'newFileForm.platform27' }), disabled: true }
                                             ]}
                                             name='platform'
                                             value={props.newFile.platform}
                                             onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                            placeholder='File type'
+                                            placeholder={intl.formatMessage({ id: 'newFileForm.platform.placeholder' })}
                                             width={16}
                                             disabled={props.uploadingFile}
                                         />
@@ -221,7 +248,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         <Grid.Row>
                             {/* File description input */}
                             <Form.Input
-                                placeholder='Description (optional)'
+                                placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                 name='newFileDescription'
                                 value={props.newFile.newFileDescription}
                                 onChange={checkedHandleFormChanges}
@@ -242,7 +269,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 name='newTag'
                                 value={props.newFile.newTag as number}
                                 onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
-                                placeholder='Tag (optional)'
+                                placeholder={intl.formatMessage({ id: 'newFileForm.tag.placeholder' })}
                                 disabled={props.uploadingFile}
                             />
                         </Grid.Row>
@@ -261,7 +288,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                         <Grid.Row>
                             {/* Warning about upload time */}
                             <Label color='yellow' size='large'>
-                                Note: the upload time is subject to the size of the file
+                                {intl.formatMessage({ id: 'newFileForm.uploadWarning' })}
                             </Label>
                         </Grid.Row>
 
@@ -270,7 +297,9 @@ export const NewFileForm = (props: NewFileFormProps) => {
                             <Form.Button
                                 className='no-padding-left'
                                 fluid
-                                content={props.isEditing ? 'Save' : 'Upload'}
+                                content={props.isEditing
+                                    ? intl.formatMessage({ id: 'common.save' })
+                                    : intl.formatMessage({ id: 'newFileForm.upload' })}
                                 color='green'
                                 disabled={!props.newFileIsValid || props.uploadingFile}
                                 onClick={props.uploadFile}
@@ -286,7 +315,7 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 color='red'
                                 onClick={props.resetNewFileForm}
                                 disabled={!props.newFileIsValid || props.uploadingFile}
-                                title='Clear the form'
+                                title={intl.formatMessage({ id: 'newFileForm.resetForm' })}
                             />
                         </Grid.Row>
 

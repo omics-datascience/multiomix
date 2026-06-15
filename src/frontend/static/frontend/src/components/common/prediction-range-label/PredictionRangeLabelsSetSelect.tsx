@@ -4,6 +4,7 @@ import { PredictionRangeLabelsSet } from '../../biomarkers/types'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
 import { InputLabel } from '../InputLabel'
+import { useIntl } from 'react-intl'
 
 declare const urlPredictionRangeLabelsSets: string
 
@@ -26,6 +27,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
     const abortController = useRef(new AbortController())
     const [predictionRangeLabelsSets, setPredictionRangeLabelsSets] = useState<PredictionRangeLabelsSet[]>([])
     const [loading, setLoading] = useState(false)
+    const intl = useIntl()
 
     useEffect(() => {
         getData()
@@ -68,7 +70,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
 
     return (
         <>
-            <InputLabel label='Use a range label' />
+            <InputLabel label={intl.formatMessage({ id: 'predictionRangeLabelsSetSelect.label' })} />
 
             <Select
                 fluid
@@ -79,7 +81,7 @@ export const PredictionRangeLabelsSetSelect = (props: PredictionRangeLabelsSetSe
                 clearable
                 value={props.selectedClusterSetPk}
                 onChange={(_, { value }) => { props.setSelectedClusterSetPk(value as number | undefined) }}
-                placeholder='Use range labels'
+                placeholder={intl.formatMessage({ id: 'predictionRangeLabelsSetSelect.placeholder' })}
                 className='margin-top-2'
                 disabled={options.length === 0}
             />

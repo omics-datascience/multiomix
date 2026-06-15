@@ -5,6 +5,7 @@ import { ConfirmModal, CustomAlert, CustomAlertTypes, Nullable } from '../utils/
 import { CurrentUserContext } from './Base'
 import { UpdateUserModal } from './UpdateUserModal'
 import { Alert } from './common/Alert'
+import { useIntl } from 'react-intl'
 
 // Constants declared in base.html
 declare const urlIndex: string
@@ -30,6 +31,8 @@ interface LogInLogOutPanelProps {
  * @returns Component
  */
 const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
+    const intl = useIntl()
+
     const getDefaultConfirmModal = (): ConfirmModal => {
         return {
             confirmModal: false,
@@ -111,7 +114,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     if (props.currentUser.is_anonymous) {
         return (
             <Menu.Item as='a' href={urlLogin} style={{ fontSize: '1rem' }}>
-                Log in
+                {intl.formatMessage({ id: 'mainNavbar.login' })}
             </Menu.Item>
         )
     }
@@ -119,10 +122,10 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     // Logged user
     return (
         <>
-            <Dropdown text={`Hi, ${props.currentUser.username}`} className='link item' aria-label='Login/Logout'>
+            <Dropdown text={intl.formatMessage({ id: 'mainNavbar.greeting' }, { username: props.currentUser.username })} className='link item' aria-label='Login/Logout'>
                 <Dropdown.Menu>
-                    <Dropdown.Item icon='user' text='Edit profile' onClick={() => setModal({ ...modal, isOpen: true })} />
-                    <Dropdown.Item icon='power off' text='Exit' as='a' href={urlLogout} />
+                    <Dropdown.Item icon='user' text={intl.formatMessage({ id: 'mainNavbar.editProfile' })} onClick={() => setModal({ ...modal, isOpen: true })} />
+                    <Dropdown.Item icon='power off' text={intl.formatMessage({ id: 'mainNavbar.exit' })} as='a' href={urlLogout} />
                 </Dropdown.Menu>
             </Dropdown>
             <UpdateUserModal isOpen={modal.isOpen} handleClose={() => setModal({ ...modal, isOpen: false })} currentUser={props.currentUser} handleChangeConfirmModalState={handleChangeConfirmModalState} handleUpdateAlert={handleUpdateAlert} />
@@ -150,7 +153,7 @@ const LogInLogOutPanel = (props: LogInLogOutPanelProps) => {
     )
 }
 
-type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source' | 'differential-expression'
+type ActiveItemOptions = 'home' | 'pipeline' | 'files' | 'cgds' | 'survival' | 'institutions' | 'about-us' | 'biomarkers' | 'open-source' | 'differential-expression' | 'faq'
 
 interface MainNavbarProps {
     activeItem?: ActiveItemOptions,
@@ -163,12 +166,13 @@ interface MainNavbarProps {
  * @returns Component
  */
 const MainNavbar = (props: MainNavbarProps) => {
+    const intl = useIntl()
     // Gets current user context
     const currentUser = useContext(CurrentUserContext)
 
     const cBioPortalOption = (
         <Dropdown.Item
-            text='cBioPortal'
+            text={intl.formatMessage({ id: 'mainNavbar.cbioportal' })}
             icon='cloud'
             as='a' href={urlCGDSPanel}
             active={props.activeItem === 'cgds'}
@@ -178,8 +182,8 @@ const MainNavbar = (props: MainNavbarProps) => {
     return (
         <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
             {/* Logo */}
-            <Menu.Item as='a' header href={urlIndex} title='Multiomix homepage'>
-                <Image size='tiny' src='/static/frontend/img/logo.png' alt='Multiomix homepage' />
+            <Menu.Item as='a' header href={urlIndex} title={intl.formatMessage({ id: 'mainNavbar.logo.title' })}>
+                <Image size='tiny' src='/static/frontend/img/logo.png' alt={intl.formatMessage({ id: 'mainNavbar.logo.alt' })} />
             </Menu.Item>
 
             {/* Loading spinners while user is fetch */}
@@ -203,13 +207,13 @@ const MainNavbar = (props: MainNavbarProps) => {
             {currentUser && !currentUser.is_anonymous && (
                 <>
                     <Menu.Menu>
-                        <Dropdown item text='Analysis' className='link item' icon={null} aria-label='Analysis'>
+                        <Dropdown item text={intl.formatMessage({ id: 'mainNavbar.analysis' })} className='link item' icon={null} aria-label='Analysis'>
                             <Dropdown.Menu>
                                 {/* GEM panel */}
                                 <Dropdown.Item
-                                    text='GEM'
+                                    text={intl.formatMessage({ id: 'mainNavbar.gem' })}
                                     icon='lab'
-                                    title='Gene Expression Modulation'
+                                    title={intl.formatMessage({ id: 'mainNavbar.gem.title' })}
                                     as='a' href={urlPipeline}
                                     active={props.activeItem === 'pipeline'}
                                 />
@@ -226,7 +230,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
                                 {/* Biomarkers panel */}
                                 <Dropdown.Item
-                                    text='Biomarkers'
+                                    text={intl.formatMessage({ id: 'mainNavbar.biomarkers' })}
                                     icon='list layout'
                                     as='a' href={urlBiomarkers}
                                     active={props.activeItem === 'biomarkers'}
@@ -234,7 +238,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
                                 {/* Differential Expression panel */}
                                 <Dropdown.Item
-                                    text='Differential expression'
+                                    text={intl.formatMessage({ id: 'mainNavbar.differentialExpression' })}
                                     icon='buromobelexperte'
                                     as='a' href={urlDifferentialExpression}
                                     active={props.activeItem === 'differential-expression'}
@@ -245,11 +249,11 @@ const MainNavbar = (props: MainNavbarProps) => {
 
                     {/* Datasets menu */}
                     <Menu.Menu>
-                        <Dropdown text='Datasets' className='link item' icon={null} aria-label='Datasets'>
+                        <Dropdown text={intl.formatMessage({ id: 'mainNavbar.datasets' })} className='link item' icon={null} aria-label='Datasets'>
                             <Dropdown.Menu>
                                 {/* User's Datasets panel */}
                                 <Dropdown.Item
-                                    text='My datasets'
+                                    text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}
                                     icon='database'
                                     as='a' href={urlDatasets}
                                     active={props.activeItem === 'files'}
@@ -264,7 +268,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                     {/* Institutions  */}
                     <Menu.Menu>
                         <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
-                            Institutions
+                            {intl.formatMessage({ id: 'mainNavbar.institutions' })}
                         </Menu.Item>
                     </Menu.Menu>
                 </>
@@ -273,13 +277,13 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* Only admin options */}
             {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) && (
                 <Menu.Menu>
-                    <Dropdown text='Admin' className='link item' icon={null} aria-label='Admin'>
+                    <Dropdown text={intl.formatMessage({ id: 'mainNavbar.admin' })} className='link item' icon={null} aria-label='Admin'>
                         <Dropdown.Menu>
                             {currentUser.is_superuser && (
                                 <>
                                     {/* User's Datasets panel */}
                                     <Dropdown.Item
-                                        text='Database: Genes'
+                                        text={intl.formatMessage({ id: 'mainNavbar.databaseGenes' })}
                                         icon='dna'
                                         // as='a' href={null}
                                         disabled
@@ -294,13 +298,24 @@ const MainNavbar = (props: MainNavbarProps) => {
             {/* About us */}
             <Menu.Menu>
                 <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
-                    About us
+                    {intl.formatMessage({ id: 'mainNavbar.aboutUs' })}
+                </Menu.Item>
+            </Menu.Menu>
+
+            <Menu.Menu>
+                <Menu.Item
+                    as='a'
+                    href='/faq'
+                    style={{ fontSize: '1rem' }}
+                    active={props.activeItem === 'faq'}
+                >
+                    {intl.formatMessage({ id: 'mainNavbar.faq' })}
                 </Menu.Item>
             </Menu.Menu>
 
             <Menu.Menu>
                 <Menu.Item as='a' href={urlOpenSource} style={{ fontSize: '1rem' }}>
-                    Open source
+                    {intl.formatMessage({ id: 'mainNavbar.openSource' })}
                 </Menu.Item>
             </Menu.Menu>
 

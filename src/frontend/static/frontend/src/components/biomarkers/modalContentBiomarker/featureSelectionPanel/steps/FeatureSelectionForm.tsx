@@ -7,6 +7,7 @@ import { fitnessFunctionsOptions } from '../../../utils'
 import { RFPanel } from './algorithms/RFPanel'
 import { RandomStateInput } from '../RandomStateInput'
 import { CrossValidationInput } from '../CrossValidationInput'
+import { useIntl } from 'react-intl'
 
 /** FeatureSelectionForm props. */
 interface FeatureSelectionFormProps {
@@ -35,6 +36,8 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
         isExpertOn
     } = props
 
+    const intl = useIntl()
+
     /**
      * Returns the panel with the options of the selected fitness function.
      * @returns Component.
@@ -51,7 +54,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                         <div style={{ display: isExpertOn ? 'inherit' : 'none', padding: '10px' }}>
                             <Form.Group style={{ display: isExpertOn ? 'flex' : 'none', flexDirection: 'row', alignItems: 'start' }}>
                                 <span style={{ fontSize: '12px', color: '#6c757d', opacity: 0.8, marginRight: '10px' }}>
-                                    Search for the optimal number of clusters (soon)
+                                    {intl.formatMessage({ id: 'featureSelection.searchOptimalClusters' })}
                                 </span>
                                 <Form.Checkbox
                                     checked={fitnessFunctionParameters.clusteringParameters.lookForOptimalNClusters}
@@ -65,7 +68,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                                         fluid
                                         style={{ minWidth: '180px', maxWidth: '100% ' }}
                                         type='number'
-                                        label='Number of clusters'
+                                        label={intl.formatMessage({ id: 'common.nClusters' })}
                                         name='nClusters'
                                         min={2}
                                         max={10}
@@ -89,7 +92,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                                     fluid
                                     style={{ minWidth: '180px', maxWidth: '100% ' }}
                                     type='number'
-                                    label='Penalizer'
+                                    label={intl.formatMessage({ id: 'common.penalizer' })}
                                     name='penalizer'
                                     min={0}
                                     value={fitnessFunctionParameters.clusteringParameters.penalizer}
@@ -118,7 +121,7 @@ export const FeatureSelectionForm = (props: FeatureSelectionFormProps) => {
                         <Form.Group widths='equal' style={{ display: isExpertOn ? 'inherit' : 'none' }}>
                             <Form.Input
                                 fluid
-                                label='Max iterations'
+                                label={intl.formatMessage({ id: 'featureSelection.maxIterations' })}
                                 placeholder='100-2000'
                                 name='maxIterations'
                                 value={fitnessFunctionParameters.svmParameters.maxIterations}

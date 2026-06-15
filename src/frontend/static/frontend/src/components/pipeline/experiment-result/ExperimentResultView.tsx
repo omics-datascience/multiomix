@@ -8,6 +8,7 @@ import { ResultTableControlForm } from './ResultTableControlForm'
 import { GeneGemDetailsModal } from './gene-gem-details/GeneGemDetailsModal'
 import { HeaderRow } from '../MiRNAPipeline'
 import { InfoPopup } from './gene-gem-details/InfoPopup'
+import { useIntl, IntlShape } from 'react-intl'
 
 /**
  * Component's props
@@ -25,6 +26,7 @@ interface ExperimentResultViewProps {
     resetSorting: (experiment: DjangoExperiment) => void,
     /** Callback to refresh experiment info on clinical source changes */
     refreshExperimentInfo: (experimentId: number) => void
+    intl: IntlShape
 }
 
 /**
@@ -102,6 +104,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
     }
 
     render () {
+        const { intl } = this.props
         // Get GEM description to display
         const experiment = this.props.experimentInfo.experiment
         const gemDescription = getGemDescription(experiment.type, 'ExperimentType')
@@ -114,15 +117,15 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
         // Table Headers
         const headers: HeaderRow[] = [
             { name: gemDescription, serverCodeToSort: 'gem' },
-            { name: 'mRNA', serverCodeToSort: 'gene' },
-            { name: 'Chromosome', serverCodeToSort: 'gene__chromosome', width: 2 },
-            { name: 'Gene start (bp)', serverCodeToSort: 'gene__start' },
-            { name: 'Gene end (bp)', serverCodeToSort: 'gene__end' },
-            { name: 'Gene type', serverCodeToSort: 'gene__type' },
-            { name: 'Gene desc.', serverCodeToSort: 'gene__description', width: 4 },
-            { name: 'Correlation', serverCodeToSort: 'correlation' },
-            { name: 'P-value', serverCodeToSort: 'p_value' },
-            { name: `Adj. P-value (${pValuesAdjustmentMethodDescription})`, serverCodeToSort: 'adjusted_p_value' }
+            { name: intl.formatMessage({ id: 'experimentResultView.mrna' }), serverCodeToSort: 'gene' },
+            { name: intl.formatMessage({ id: 'experimentResultView.chromosome' }), serverCodeToSort: 'gene__chromosome', width: 2 },
+            { name: intl.formatMessage({ id: 'experimentResultView.geneStart' }), serverCodeToSort: 'gene__start' },
+            { name: intl.formatMessage({ id: 'experimentResultView.geneEnd' }), serverCodeToSort: 'gene__end' },
+            { name: intl.formatMessage({ id: 'experimentResultView.geneType' }), serverCodeToSort: 'gene__type' },
+            { name: intl.formatMessage({ id: 'experimentResultView.geneDescription' }), serverCodeToSort: 'gene__description', width: 4 },
+            { name: intl.formatMessage({ id: 'experimentResultView.correlation' }), serverCodeToSort: 'correlation' },
+            { name: intl.formatMessage({ id: 'experimentResultView.pValue' }), serverCodeToSort: 'p_value' },
+            { name: intl.formatMessage({ id: 'experimentResultView.adjustedPValue' }, { method: pValuesAdjustmentMethodDescription }), serverCodeToSort: 'adjusted_p_value' }
         ]
 
         // Check if it's a miRNA experiment to show specific actions
@@ -162,12 +165,12 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
 
                 {/* Sorting order */}
                 <p id='sorting-order-data'>
-                    <strong>Sorting (in order) by</strong> {this.generateSortingInfoText()}
+                    <strong>{intl.formatMessage({ id: 'experimentResultView.sortingOrderBy' })}</strong> {this.generateSortingInfoText()}
 
                     <Icon
                         name='trash'
                         color='red'
-                        title='Clean sorting only'
+                        title={intl.formatMessage({ id: 'experimentResultView.cleanSortingOnly' })}
                         className='clickable margin-left-1'
                         onClick={() => this.props.resetSorting(experiment)}
                         disabled={!this.props.tableControl.sortFields.length}
@@ -176,7 +179,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                     <InfoPopup
                         onTop={false}
                         extraClassName='margin-left-1'
-                        content='The order of sorting will be respected. If you want to remove any of the element which are being sorted you can click on its column header until the sorting mark disappear. To make a full clean of the sorting, you can click the red button on the left'
+                        content={intl.formatMessage({ id: 'experimentResultView.sortingInfo' })}
                     />
                 </p>
 
@@ -204,7 +207,7 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
                                 )
                             })}
 
-                            <Table.HeaderCell>Actions</Table.HeaderCell>
+                            <Table.HeaderCell>{intl.formatMessage({ id: 'experimentResultView.actions' })}</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
 
@@ -234,4 +237,17 @@ class ExperimentResultView extends React.Component<ExperimentResultViewProps, Ex
     }
 }
 
-export { ExperimentResultView }
+const ExperimentResultViewWithIntl = (
+    props: Omit<ExperimentResultViewProps, 'intl'>
+) => {
+    const intl = useIntl()
+
+    return (
+        <ExperimentResultView
+            {...props}
+            intl={intl}
+        />
+    )
+}
+
+export { ExperimentResultViewWithIntl as ExperimentResultView }

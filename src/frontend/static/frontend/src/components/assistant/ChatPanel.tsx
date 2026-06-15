@@ -142,6 +142,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * @param e - The mouse event that triggered the drag.
      * @param dir - Resize axis: 'w' (horizontal), 'h' (vertical), or 'both' (corner).
      */
+
     const startDrag = (e: React.MouseEvent, dir: 'w' | 'h' | 'both') => {
         e.preventDefault()
         dragRef.current = { dir, startX: e.clientX, startY: e.clientY, startW: panelW, startH: panelH }
@@ -182,6 +183,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * Fetches all messages for the conversation with the given ID.
      * @param id - ID of the conversation whose messages should be loaded.
      */
+
     const loadConvMessages = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         ky.get(convUrl).json<ConversationDetail>().then(data => {
@@ -194,6 +196,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * and loads its messages.
      * @param id - ID of the conversation to activate.
      */
+
     const selectConversation = (id: number) => {
         localStorage.setItem(ACTIVE_CONV_KEY, String(id))
         setActiveConvId(id)
@@ -214,6 +217,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * conversation if it was active.
      * @param id - ID of the conversation to delete.
      */
+
     const deleteConversation = (id: number) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         const removeConv = (prev: ConversationSummary[]) => prev.filter(c => c.id !== id)
@@ -233,6 +237,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * @param id - ID of the conversation to rename.
      * @param title - New title; empty string resets it to null on the server.
      */
+
     const renameConversation = (id: number, title: string) => {
         const convUrl = `${urlAssistantConversations}${id}/`
         const applyTitle = (prev: ConversationSummary[]) => prev.map(c => c.id === id ? { ...c, title: title || null } : c)
@@ -249,6 +254,7 @@ const ChatPanel = (props: ChatPanelProps) => {
      * then appends the assistant reply or an error message.
      * @param text - The message text entered by the user.
      */
+
     const sendMessage = (text: string) => {
         const userMsg: ChatMessage = { role: 'user', content: text }
         setMessages(prev => [...prev, userMsg])

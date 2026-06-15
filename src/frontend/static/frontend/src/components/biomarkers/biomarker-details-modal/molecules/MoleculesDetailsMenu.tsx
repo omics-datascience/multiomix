@@ -3,6 +3,7 @@ import { Menu } from 'semantic-ui-react'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ActiveBiomarkerMoleculeItemMenu, BiomarkerMolecule } from '../../types'
 import { MoleculeType } from '../../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 /** MoleculesDetailsMenu props. */
 interface MoleculesDetailsMenuProps {
@@ -29,13 +30,13 @@ interface ItemMenuProp {
  */
 export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
     const isGene = [MoleculeType.MRNA, MoleculeType.CNA].includes(props.selectedMolecule.type)
-
+    const intl = useIntl()
     /**
      * Array with all the items and conditions
      */
     const items: ItemMenuProp[] = [
         {
-            name: 'Details',
+            name: intl.formatMessage({ id: 'common.details' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DETAILS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DETAILS,
             popupInfo: `Details of ${props.selectedMolecule.identifier} obtained from different standardized sources`,
@@ -50,14 +51,14 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
         //     isVisible: isGene
         // },
         {
-            name: 'Gene associations network',
+            name: intl.formatMessage({ id: 'moleculesDetailsMenu.geneAssociations' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ASSOCIATIONS_NETWORK,
             popupInfo: 'It shows the network of gene associations of the genes of this biomarker',
             isVisible: isGene
         },
         {
-            name: 'Gene Ontology',
+            name: intl.formatMessage({ id: 'moleculesDetailsMenu.geneOntology' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY,
             popupInfo: 'Gene Ontology (GO) is a powerful tool for understanding the biological processes, molecular functions, and cellular components associated with a gene',
@@ -79,21 +80,21 @@ export const MoleculesDetailsMenu = (props: MoleculesDetailsMenuProps) => {
         //     isVisible: isGene
         // },
         {
-            name: 'Diseases',
+            name: intl.formatMessage({ id: 'moleculesDetailsMenu.diseases' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DISEASES),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DISEASES,
             popupInfo: 'Interactions of the molecule with diseases that have been reported in the literature',
             isVisible: [MoleculeType.MIRNA].includes(props.selectedMolecule.type)
         },
         {
-            name: 'Drugs',
+            name: intl.formatMessage({ id: 'moleculesDetailsMenu.drugs' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.DRUGS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.DRUGS,
             popupInfo: 'Interactions of the molecule with drugs that have been reported in the literature',
             isVisible: [MoleculeType.MIRNA].includes(props.selectedMolecule.type)
         },
         {
-            name: 'miRNA-Gene interactions',
+            name: intl.formatMessage({ id: 'moleculesDetailsMenu.miRNAGeneInteractions' }),
             onClick: () => props.setActiveItem(ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS),
             isActive: props.activeItem === ActiveBiomarkerMoleculeItemMenu.MIRNA_GENE_INTERACTIONS,
             popupInfo: 'Different miRNA-Gene interactions that have been reported in the literature along with the associated mirDIP score and Pubmed sources',

@@ -4,6 +4,7 @@ import { CurrentUserContext } from '../../Base'
 import { getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 import { SemanticListItem } from '../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 declare const urlGetSharedUsers: string
 declare const urlPostRemoveUser: string
@@ -25,6 +26,7 @@ interface Props extends SharedUsersProps {
 export const SharedUsers = (props: Props) => {
     const [isLoadingUser, setIsLoadingUser] = useState<boolean>(false)
     const currentUser = useContext(CurrentUserContext)
+    const intl = useIntl()
     const [activeUser, setActiveUser] = useState<{ id: number, username: string }>({ id: 0, username: '' })
     const abortController = useRef(new AbortController())
     const [usersList, setUsersList] = useState<{ id: number, username: string }[]>([])
@@ -138,14 +140,14 @@ export const SharedUsers = (props: Props) => {
             closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
             style={{ width: '80%' }}
         >
-            <ModalHeader>Shared users</ModalHeader>
+            <ModalHeader>{intl.formatMessage({ id: 'sharedUsers.title' })}</ModalHeader>
             <ModalContent>
                 {
                     props.user.id === currentUser?.id &&
                     (
                         <>
                             <Select
-                                placeholder='Select a user to share'
+                                placeholder={intl.formatMessage({ id: 'sharedUsers.selectUser' })}
                                 options={listOfUsersNonPart}
                                 value={userIdToAdd.toString()}
                                 onChange={(_e, { value }) => setUserIdToAdd(Number(value))}
@@ -153,9 +155,9 @@ export const SharedUsers = (props: Props) => {
                             <Button
                                 className='margin-left-5'
                                 disabled={!userIdToAdd || isLoadingUser}
-                                onClick={() => props.handleChangeConfirmModalState(true, 'Share experiment', 'Are you sure to share experiment to user?', handleAddInstitution)}
+                                onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'sharedUsers.shareExperiment' }), intl.formatMessage({ id: 'sharedUsers.confirmShare' }), handleAddInstitution)}
                             >
-                                Add user
+                                {intl.formatMessage({ id: 'sharedUsers.addUser' })}
                             </Button>
                         </>
                     )
@@ -188,8 +190,8 @@ export const SharedUsers = (props: Props) => {
                                                             className='clickable'
                                                             disabled={isLoadingUser}
                                                             color='red'
-                                                            title='Remove institution'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing to user', 'Are you sure to stop sharing experiment to user?', () => handleRemoveInstitution(institution.id))}
+                                                            title={intl.formatMessage({ id: 'sharedUsers.removeUser' })}
+                                                            onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'sharedUsers.stopSharing' }), intl.formatMessage({ id: 'sharedUsers.confirmStopSharing' }), () => handleRemoveInstitution(institution.id))}
                                                         />
                                                     )}
                                             </div>

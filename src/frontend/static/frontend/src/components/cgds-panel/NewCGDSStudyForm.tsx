@@ -4,6 +4,7 @@ import { DjangoCGDSStudy } from '../../utils/django_interfaces'
 import { NameOfCGDSDataset } from '../../utils/interfaces'
 import { NewCGDSDatasetForm } from './NewCGDSDatasetForm'
 import { parseValue, checkedValidityCallback } from '../../utils/util_functions'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -30,6 +31,7 @@ interface NewCGDSStudyFormProps {
  * @returns Component
  */
 export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
+    const intl = useIntl()
     const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges)
     const isDisabled = props.newCGDSStudy.name.trim().length === 0 &&
                     props.newCGDSStudy.description.trim().length === 0 &&
@@ -45,7 +47,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
         <Segment>
             <Header textAlign='center'>
                 <Icon name='database' />
-                <Header.Content>Add specification of CGDS Study</Header.Content>
+                <Header.Content>{intl.formatMessage({ id: 'cgdsStudyForm.header' })}</Header.Content>
             </Header>
 
             {/* Name */}
@@ -58,7 +60,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
                 disabled={props.addingOrEditingCGDSStudy}
-                placeholder='Name'
+                placeholder={intl.formatMessage({ id: 'common.name' })}
                 maxLength={150}
             />
 
@@ -71,7 +73,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 onChange={(_, { name, value }) => props.handleFormChanges(name, value)}
                 onKeyDown={props.handleKeyDown}
                 disabled={props.addingOrEditingCGDSStudy}
-                placeholder='Description'
+                placeholder={intl.formatMessage({ id: 'common.description' })}
             />
 
             {/* URL */}
@@ -84,7 +86,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
                 disabled={props.addingOrEditingCGDSStudy}
-                placeholder='URL (tar.gz/zip)'
+                placeholder={intl.formatMessage({ id: 'cgdsStudyForm.url.placeholder' })}
                 maxLength={300}
             />
 
@@ -97,7 +99,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 onChange={checkedHandleFormChanges}
                 onKeyDown={props.handleKeyDown}
                 disabled={props.addingOrEditingCGDSStudy}
-                placeholder='URL of extra info'
+                placeholder={intl.formatMessage({ id: 'cgdsStudyForm.urlInfo.placeholder' })}
                 maxLength={300}
             />
 
@@ -106,7 +108,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             {/* Dataset */}
             <Header textAlign='center'>
                 <Icon name='file archive' />
-                <Header.Content>CGDS Datasets</Header.Content>
+                <Header.Content>{intl.formatMessage({ id: 'cgdsStudyForm.datasets.header' })}</Header.Content>
             </Header>
 
             {/* mRNA Dataset */}
@@ -151,7 +153,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             {/* Methylation Dataset */}
             <NewCGDSDatasetForm
                 newCGDSDataset={props.newCGDSStudy.methylation_dataset}
-                nameToShow='Methylation'
+                nameToShow={intl.formatMessage({ id: 'cgdsStudyForm.dataset.methylation' })}
                 datasetName='methylation_dataset'
                 showSurvivalTuplesForm={false}
                 addingOrEditingCGDSStudy={props.addingOrEditingCGDSStudy}
@@ -164,7 +166,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             {/* Clinical Patients Dataset */}
             <NewCGDSDatasetForm
                 newCGDSDataset={props.newCGDSStudy.clinical_patient_dataset}
-                nameToShow='Clinical Patients'
+                nameToShow={intl.formatMessage({ id: 'cgdsStudyForm.dataset.clinicalPatients' })}
                 datasetName='clinical_patient_dataset'
                 showSurvivalTuplesForm
                 addingOrEditingCGDSStudy={props.addingOrEditingCGDSStudy}
@@ -180,7 +182,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             {/* Clinical Samples Dataset */}
             <NewCGDSDatasetForm
                 newCGDSDataset={props.newCGDSStudy.clinical_sample_dataset}
-                nameToShow='Clinical Samples'
+                nameToShow={intl.formatMessage({ id: 'cgdsStudyForm.dataset.clinicalSamples' })}
                 datasetName='clinical_sample_dataset'
                 showSurvivalTuplesForm={false}
                 addingOrEditingCGDSStudy={props.addingOrEditingCGDSStudy}
@@ -191,17 +193,17 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             />
 
             <div className='margin-top-5'>
-                <Icon name='asterisk' /> Required field
+                <Icon name='asterisk' /> {intl.formatMessage({ id: 'cgdsStudyForm.requiredField' })}
 
                 <Label color='yellow' className='align-center' size='large'>
-                    In order to have the data available, you must perform the synchronization at least once
+                    {intl.formatMessage({ id: 'cgdsStudyForm.syncWarning' })}
                 </Label>
             </div>
 
             {/* Submit form button */}
             <Button
                 color='green'
-                content={`${props.newCGDSStudy && props.newCGDSStudy.id ? 'Edit' : 'Add'} study`}
+                content={`${props.newCGDSStudy && props.newCGDSStudy.id ? intl.formatMessage({ id: 'cgdsStudyForm.editStudy' }) : intl.formatMessage({ id: 'cgdsStudyForm.addStudy' })}`}
                 className='margin-top-2'
                 fluid
                 onClick={props.addOrEditStudy}
@@ -211,7 +213,7 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             {/* Cancel button */}
             <Button
                 color='red'
-                content='Cancel'
+                content={intl.formatMessage({ id: 'common.cancel' })}
                 className='margin-top-2'
                 fluid
                 onClick={props.cleanForm}

@@ -12,7 +12,7 @@ import { NewClusteringModelForm } from './NewClusteringModelForm'
 import { NewRFModelForm } from './NewRFModelForm'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { InputLabel } from '../../../common/InputLabel'
-
+import { useIntl } from 'react-intl'
 declare const urlNewTrainedModel: string
 
 /** NewTrainedModelModal props. */
@@ -79,6 +79,7 @@ const getDefaultNewTrainedModelData = (): NewTrainedModelData => ({
  * @returns Component.
  */
 export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
+    const intl = useIntl()
     const [form, setForm] = useState<NewTrainedModelData>(getDefaultNewTrainedModelData())
     const [currentStep, setCurrentStep] = useState<1 | 2>(1)
     const [sendingData, setSendingData] = useState(false)
@@ -409,7 +410,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                     <Grid>
                         <Grid.Row columns={3} divided>
                             <Grid.Column width={5}>
-                                <Header as='h4'>Select a new model to train</Header>
+                                <Header as='h4'>{intl.formatMessage({ id: 'newTrainedModelModal.header.selectModel' })}</Header>
 
                                 <Form>
                                     <Form.Field
@@ -425,7 +426,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                             {/* Specific model params */}
                             <Grid.Column width={6}>
                                 {selectedFitnessFunction !== null &&
-                                    <Header as='h4'>Select model parameters</Header>}
+                                    <Header as='h4'>{intl.formatMessage({ id: 'newTrainedModelModal.header.selectModelParameters' })}</Header>}
 
                                 <Form>
                                     {getModelForm()}
@@ -434,14 +435,14 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
 
                             {/* Specific model params */}
                             <Grid.Column width={5}>
-                                <Header as='h4'>Select Cross Validation parameters</Header>
+                                <Header as='h4'>{intl.formatMessage({ id: 'newTrainedModelModal.header.selectCVParameters' })}</Header>
 
                                 <Form.Input
                                     fluid
                                     label={(
-                                        <InputLabel label='Number of folds'>
+                                        <InputLabel label={intl.formatMessage({ id: 'common.numberOfFolds' })}>
                                             <InfoPopup
-                                                content='Defines the number of data splits for cross-validation; ensures robust model evaluation and prevents overfitting.'
+                                                content={intl.formatMessage({ id: 'newTrainedModelModal.info.numberOfFolds' })}
                                                 onTop={false}
                                                 onEvent='hover'
                                                 noBorder
@@ -449,7 +450,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                             />
                                         </InputLabel>
                                     )}
-                                    placeholder='An integer number'
+                                    placeholder={intl.formatMessage({ id: 'common.integerNumber' })}
                                     type='number'
                                     step={1}
                                     min={3}
@@ -516,18 +517,18 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
         >
             <Modal.Header>
                 <Icon name='code branch' />
-                Create new trained model
+                {intl.formatMessage({ id: 'newTrainedModelModal.header.create' })}
             </Modal.Header>
             <Modal.Content>
                 <Grid>
                     <Grid.Row columns={2} divided>
                         <Grid.Column width={4}>
-                            <Header dividing as='h2'>Basic data</Header>
+                            <Header dividing as='h2'>{intl.formatMessage({ id: 'common.basicData' })}</Header>
 
                             <Form>
                                 <Form.Input
                                     icon='asterisk'
-                                    placeholder='Name'
+                                    placeholder={intl.formatMessage({ id: 'common.name' })}
                                     name='name'
                                     value={form.name}
                                     onChange={(_, { name, value }) => handleInputChanges(name, value)}
@@ -535,7 +536,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 />
 
                                 <Form.TextArea
-                                    placeholder='Description (optional)'
+                                    placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                     name='description'
                                     value={form.description ?? undefined}
                                     onChange={(_, { name, value }) => handleInputChanges(name, value as string | undefined)}
@@ -543,7 +544,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                             </Form>
 
                             <div className='margin-top-2'>
-                                <Icon name='asterisk' /> Required field
+                                <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
                             </div>
                         </Grid.Column>
                         <Grid.Column className='column-fixed-height' width={12}>
@@ -552,7 +553,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
                                     <Icon name='list' />
                                     <Step.Content>
-                                        <Step.Title>Step 1: Training parameters</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'newTrainedModelModal.step1.trainingParameters' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step
@@ -568,7 +569,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                                 >
                                     <Icon name='boxes' />
                                     <Step.Content>
-                                        <Step.Title>Step 2: Training datasets</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'newTrainedModelModal.step2.trainingDatasets' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                             </Step.Group>
@@ -582,7 +583,7 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                 </Grid>
             </Modal.Content>
             <Modal.Actions>
-                <Button onClick={() => props.setShowNewTrainedModelModal(false)}>Cancel</Button>
+                <Button onClick={() => props.setShowNewTrainedModelModal(false)}>{intl.formatMessage({ id: 'common.cancel' })}</Button>
 
                 {/* Submit StatisticalAnalysis button */}
                 <Button
@@ -597,7 +598,8 @@ export const NewTrainedModelModal = (props: NewTrainedModelModalProps) => {
                     }}
                     disabled={isLastStep ? !formIsValid() : !modelIsValid}
                 >
-                    {isLastStep ? 'Confirm' : 'Continue'}
+                    {isLastStep ? intl.formatMessage({ id: 'common.confirm' }) : intl.formatMessage({ id: 'common.continue' })}
+
                 </Button>
             </Modal.Actions>
         </Modal>

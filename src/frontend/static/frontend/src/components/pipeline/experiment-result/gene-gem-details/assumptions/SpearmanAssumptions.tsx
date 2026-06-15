@@ -5,6 +5,7 @@ import { DjangoMRNAxGEMResultRow } from '..//../../../../utils/django_interfaces
 import { AssumptionsCompletion, RecommendedCorrelationMethod } from './AssumptionsPanel'
 import { AssumptionStepSimple } from './AssumptionSteps'
 import { ReferenceCardsGroup } from './ReferenceCardsGroup'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -16,6 +17,7 @@ interface SpearmanAssumptionsProps {
 }
 
 export const SpearmanAssumptions = (props: SpearmanAssumptionsProps) => {
+    const intl = useIntl()
     const referenceCards: ReferenceCard[] = [
         {
             color: 'black',
@@ -49,13 +51,13 @@ export const SpearmanAssumptions = (props: SpearmanAssumptionsProps) => {
             <Grid>
                 <Grid.Row columns={2}>
                     <Grid.Column width='6'>
-                        <Header size='huge'>Spearman statistical assumptions</Header>
+                        <Header size='huge'>{intl.formatMessage({ id: 'spearmanAssumptions.title' })}</Header>
 
                         <Step.Group vertical>
                             {/* Monotonicity */}
                             <AssumptionStepSimple
-                                title='Monotonicity'
-                                description='Correlation should be monotonic (Spearman rank-order correlation coefficient absolute value >= 0.8 with a p-value < 0.05)'
+                                title={intl.formatMessage({ id: 'spearmanAssumptions.monotonicity.title' })}
+                                description={intl.formatMessage({ id: 'spearmanAssumptions.monotonicity.description' })}
                                 isOk={props.assumptions.monotonicityIsOk}
                             />
                         </Step.Group>

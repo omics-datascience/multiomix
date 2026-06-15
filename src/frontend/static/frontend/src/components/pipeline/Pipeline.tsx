@@ -11,6 +11,7 @@ import intersection from 'lodash/intersection'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
 import { Confirm } from 'semantic-ui-react'
+import { useIntl, IntlShape } from 'react-intl'
 
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesGEM'
 type NewExperimentSourceStateName = 'mRNASource' | 'gemSource'
@@ -74,10 +75,17 @@ type PipelineState = {
 }
 
 /**
+ * Component's props
+ */
+interface PipelineProps {
+    intl: IntlShape
+}
+
+/**
  * Main Pipeline class render. Renders a new experiment form
  * and modals to confirm some actions
  */
-class Pipeline extends React.Component<any, PipelineState> {
+class Pipeline extends React.Component<PipelineProps, PipelineState> {
     websocketClient: WebsocketClientCustom | undefined
     filterTimeout: number | undefined
     defaultNewExperiment: NewExperiment
@@ -748,7 +756,7 @@ class Pipeline extends React.Component<any, PipelineState> {
                         this.resetAllNumberOfSamples()
                     } else {
                         if (responseJSON.status.internal_code === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
-                            alert('The file has an incorrect format: all columns except the index must be numerical data')
+                            alert(this.props.intl.formatMessage({ id: 'files.manager.error.invalidFormat' }))
                         } else {
                             alertGeneralError()
                         }
@@ -1071,4 +1079,14 @@ class Pipeline extends React.Component<any, PipelineState> {
     }
 }
 
-export { Pipeline, NewExperimentSourceStateName }
+/**
+ * Functional wrapper to inject intl into the class component.
+ * @param props Component props.
+ * @returns Component.
+ */
+const PipelineWithIntl = (props: Omit<PipelineProps, 'intl'>) => {
+    const intl = useIntl()
+    return <Pipeline {...props} intl={intl} />
+}
+
+export { PipelineWithIntl as Pipeline, NewExperimentSourceStateName }

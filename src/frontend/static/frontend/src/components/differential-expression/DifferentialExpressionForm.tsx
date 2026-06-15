@@ -11,6 +11,7 @@ import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
 import { intersection, isEqual } from 'lodash'
 import { DifferentialExpressionInputClinicalAttribute } from './DifferentialExpressionInputClinicalAttribute'
 import { DifferentialExpressionAnalysis } from './types'
+import { useIntl } from 'react-intl'
 
 // Define the possible field names for number of samples
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesClinical'
@@ -79,6 +80,7 @@ interface DifferentialExpressionFormProps {
 export const DifferentialExpressionForm = (props: DifferentialExpressionFormProps) => {
     const [form, setForm] = useState<IDifferentialExpressionForm>(cleanForm)
     const abortController = useRef(new AbortController())
+    const intl = useIntl()
 
     /**
      * Change the source state to submit a pipeline
@@ -258,14 +260,14 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
 
         ky.patch(urlUpdateExperiment + `/${props.experimentToEdit?.id}/`, { headers: myHeaders, json: body }).then((response) => {
             response.json().then(() => {
-                props.updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment updated successfully!')
+                props.updateAlert(CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'differentialExpressionForm.successUpdated' }))
                 setForm(cleanForm)
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
             console.error('Error to update experiment ->', err)
-            props.updateAlert(CustomAlertTypes.ERROR, 'Error to update Differential Expression experiment!')
+            props.updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpressionForm.errorUpdating' }))
         }).finally(() => {
             setForm(prevState => ({
                 ...prevState,
@@ -297,14 +299,14 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
         }
         ky.post(urlDifferentialExpressionSubmit, { headers: myHeaders, json: body }).then((response) => {
             response.json().then(() => {
-                props.updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment created successfully!')
+                props.updateAlert(CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'differentialExpressionForm.successCreated' }))
                 setForm(cleanForm)
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
             console.error('Error getting users ->', err)
-            props.updateAlert(CustomAlertTypes.ERROR, 'Error creating Differential Expression experiment!')
+            props.updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpressionForm.errorCreating' }))
         }).finally(() => {
             setForm(prevState => ({
                 ...prevState,
@@ -561,7 +563,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 setForm(prevState => ({
                     ...prevState,
                     numberOfSamplesMRNA: mRNAHeadersColumnsNames.length,
-                    numberOfSamplesClinial: clinicalHeadersColumnsNames.length,
+                    numberOfSamplesClinical: clinicalHeadersColumnsNames.length,
                     numberOfSamplesInCommon: intersection(
                         mRNAHeadersColumnsNames,
                         clinicalHeadersColumnsNames
@@ -600,13 +602,13 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
         <Segment className='diff--side--bar--container table-bordered'>
             <Header textAlign='center' className='margin-top-0'>
                 <Icon name='buromobelexperte' />
-                <Header.Content>New Differential Expression</Header.Content>
+                <Header.Content>{intl.formatMessage({ id: 'differentialExpressionForm.header' })}</Header.Content>
             </Header>
             <Form>
                 <Form.Input
                     onChange={(e) => handleChangeForm(e.target.value, 'differentialExpressionName')}
                     type='text'
-                    placeholder='Name'
+                    placeholder={intl.formatMessage({ id: 'common.name' })}
                     className='diff--side--bar--container--item--margin'
                     value={form.differentialExpressionName}
                     icon='asterisk'
@@ -616,7 +618,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                     style={{ maxWidth: '100%', minWidth: '100%' }}
                     rows={3}
                     onChange={(_, e) => handleChangeForm(e.value ? e.value.toString() : '', 'differentialExpressionDescription')}
-                    placeholder='Description'
+                    placeholder={intl.formatMessage({ id: 'common.description' })}
                     className='diff--side--bar--container--item--margin'
                     value={form.differentialExpressionDescription}
                 />
@@ -624,7 +626,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 <Form.Field>
                     <SourceForm
                         source={form.mRNASource}
-                        headerTitle='mRNA profile'
+                        headerTitle={intl.formatMessage({ id: 'sourceSelectors.mRNAProfile' })}
                         headerIcon={{
                             type: 'img',
                             src: 'static/frontend/img/profiles/mRNA.svg'
@@ -648,7 +650,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 <Form.Field>
                     <SourceForm
                         source={form.clinicalSource}
-                        headerTitle='Clinical profile'
+                        headerTitle={intl.formatMessage({ id: 'sourceSelectors.clinicalProfile' })}
                         headerIcon={{
                             type: 'img',
                             src: '/static/frontend/img/profiles/mRNA.svg'
@@ -670,9 +672,9 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 </Form.Field>
                 <Form.Field>
                     <Label className='full-width align-left'>
-                        <p>Samples mRNA: {form.numberOfSamplesMRNA}</p>
-                        <p>Samples clinical: {form.numberOfSamplesClinical}</p>
-                        <p>Samples in common: {form.numberOfSamplesInCommon}</p>
+                        <p>{intl.formatMessage({ id: 'differentialExpressionForm.samplesMRNA' }, { count: form.numberOfSamplesMRNA })}</p>
+                        <p>{intl.formatMessage({ id: 'differentialExpressionForm.samplesClinical' }, { count: form.numberOfSamplesClinical })}</p>
+                        <p>{intl.formatMessage({ id: 'differentialExpressionForm.samplesInCommon' }, { count: form.numberOfSamplesInCommon })}</p>
                     </Label>
                 </Form.Field>
                 <Form.Field>
@@ -686,8 +688,8 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 {/* Coefficient threshold slider */}{/* Minimum Standard Deviation for Genes */}
                 <Form.Field className='diff--side--container--bar--slider'>
                     <LabelWithInfoPopup
-                        labelText={`Threshold percentile: ${form.thresholdPercentile.toFixed(2)}`}
-                        popupContent='Percentile threshold for filtering low-expression genes (default 0.15)'
+                        labelText={intl.formatMessage({ id: 'differentialExpressionForm.thresholdPercentile' }, { value: form.thresholdPercentile.toFixed(2) })}
+                        popupContent={intl.formatMessage({ id: 'differentialExpressionForm.thresholdPercentile.info' })}
                         centered
                     />
 
@@ -707,8 +709,8 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 </Form.Field>
                 <Form.Field className='diff--side--container--bar--slider'>
                     <LabelWithInfoPopup
-                        labelText={`Threshold std: ${toScientific(form.thresholdStd.toString())}`}
-                        popupContent='Variance threshold for gene filtering (default 1e-4)'
+                        labelText={intl.formatMessage({ id: 'differentialExpressionForm.thresholdStd' }, { value: toScientific(form.thresholdStd.toString()) })}
+                        popupContent={intl.formatMessage({ id: 'differentialExpressionForm.thresholdStd.info' })}
                         centered
                     />
 
@@ -728,8 +730,8 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                 </Form.Field>
                 <Form.Field className='diff--side--container--bar--slider'>
                     <LabelWithInfoPopup
-                        labelText={`Top: ${form.top}`}
-                        popupContent='Most significant number of genes to keep as result'
+                        labelText={intl.formatMessage({ id: 'differentialExpressionForm.top' }, { value: form.top })}
+                        popupContent={intl.formatMessage({ id: 'differentialExpressionForm.top.info' })}
                         centered
                     />
 
@@ -758,7 +760,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                     color='green'
                     loading={form.isLoading}
                 >
-                    {form.isEditing ? 'Edit experiment' : 'Create experiment'}
+                    {form.isEditing ? intl.formatMessage({ id: 'differentialExpressionForm.editExperiment' }) : intl.formatMessage({ id: 'differentialExpressionForm.createExperiment' })}
                 </Button>
             </Form>
             <Button
@@ -772,7 +774,7 @@ export const DifferentialExpressionForm = (props: DifferentialExpressionFormProp
                     props.handleCleanExperimentToEdit()
                 }}
             >
-                {form.isEditing ? 'Cancel edit' : 'Reset form'}
+                {form.isEditing ? intl.formatMessage({ id: 'differentialExpressionForm.cancelEdit' }) : intl.formatMessage({ id: 'differentialExpressionForm.resetForm' })}
             </Button>
         </Segment>
     )

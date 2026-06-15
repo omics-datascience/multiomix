@@ -7,6 +7,7 @@ import { InfoPopup } from '../InfoPopup'
 import { BoxPlotChart } from './BoxPlotChart'
 import { DensityChart, DensityChartMix } from './DensityChart'
 import { COMMON_DECIMAL_PLACES } from '../../../../../utils/constants'
+import { useIntl } from 'react-intl'
 
 /** MeanAndStdStats props. */
 interface MeanAndStdStatsProps {
@@ -20,6 +21,7 @@ interface MeanAndStdStatsProps {
  * @returns Component
  */
 const MeanAndStdStats = memo((props: MeanAndStdStatsProps) => {
+    const intl = useIntl()
     const log2 = Math.log2(props.mean)
     const log2Display = isNaN(log2) ? '-' : log2.toFixed(COMMON_DECIMAL_PLACES)
 
@@ -27,15 +29,15 @@ const MeanAndStdStats = memo((props: MeanAndStdStatsProps) => {
         <>
             <Statistic size='small'>
                 <Statistic.Value>{props.mean.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
-                <Statistic.Label>Average</Statistic.Label>
+                <Statistic.Label>{intl.formatMessage({ id: 'chartSection.average' })}</Statistic.Label>
             </Statistic>
             <Statistic size='small'>
                 <Statistic.Value>{log2Display}</Statistic.Value>
-                <Statistic.Label>Average (Log2)</Statistic.Label>
+                <Statistic.Label>{intl.formatMessage({ id: 'chartSection.averageLog2' })}</Statistic.Label>
             </Statistic>
             <Statistic size='small'>
                 <Statistic.Value>{props.standardDeviation.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
-                <Statistic.Label>Standard deviation</Statistic.Label>
+                <Statistic.Label>{intl.formatMessage({ id: 'chartSection.standardDeviation' })}</Statistic.Label>
             </Statistic>
         </>
     )
@@ -54,20 +56,38 @@ interface NormalityStatsProps {
  * @param props Component's props
  * @returns Component
  */
-const NormalityStats = memo((props: NormalityStatsProps) => (
-    <>
-        <InfoPopup content={`It tests if the ${props.geneOrGem} vector follows a normal distribution`} />
+const NormalityStats = memo((props: NormalityStatsProps) => {
+    const intl = useIntl()
 
-        <Statistic size='tiny'>
-            <Statistic.Value>{props.normality.statistic.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
-            <Statistic.Label>Shapiro test</Statistic.Label>
-        </Statistic>
-        <Statistic size='tiny'>
-            <Statistic.Value>{props.normality.p_value.toFixed(COMMON_DECIMAL_PLACES)}</Statistic.Value>
-            <Statistic.Label>P-Value</Statistic.Label>
-        </Statistic>
-    </>
-))
+    return (
+        <>
+            <InfoPopup
+                content={intl.formatMessage(
+                    { id: 'chartSection.normalityInfo' },
+                    { geneOrGem: props.geneOrGem }
+                )}
+            />
+
+            <Statistic size='tiny'>
+                <Statistic.Value>
+                    {props.normality.statistic.toFixed(COMMON_DECIMAL_PLACES)}
+                </Statistic.Value>
+                <Statistic.Label>
+                    {intl.formatMessage({ id: 'chartSection.shapiroTest' })}
+                </Statistic.Label>
+            </Statistic>
+
+            <Statistic size='tiny'>
+                <Statistic.Value>
+                    {props.normality.p_value.toFixed(COMMON_DECIMAL_PLACES)}
+                </Statistic.Value>
+                <Statistic.Label>
+                    {intl.formatMessage({ id: 'chartSection.pValue' })}
+                </Statistic.Label>
+            </Statistic>
+        </>
+    )
+})
 
 /**
  * StatsSection's props

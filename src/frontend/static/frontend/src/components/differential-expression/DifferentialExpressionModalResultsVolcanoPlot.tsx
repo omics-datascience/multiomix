@@ -3,6 +3,7 @@ import { VolcanoPlot } from './VolcanoPlot'
 import ky from 'ky'
 import { VolcanoPoint } from './types'
 import { Form } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 declare const urlDifferentialExpressionVolcanoData: string
 
@@ -17,6 +18,7 @@ interface DifferentialExpressionModalResultsVolcanoPlotProps {
  * @returns Component.
  */
 export const DifferentialExpressionModalResultsVolcanoPlot = (props: DifferentialExpressionModalResultsVolcanoPlotProps) => {
+    const intl = useIntl()
     const [volcanoPoints, setVolcanoPoints] = useState<VolcanoPoint[]>([])
     const [fcThreshold, setFcThreshold] = useState<number>(1)
     const [pThreshold, setPThreshold] = useState<number>(0.05)
@@ -55,13 +57,15 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
 
     return (
         <div style={{ padding: 20 }}>
-            <h3>Volcano Plot</h3>
+            <h3>{intl.formatMessage({ id: 'differentialExpression.volcanoPlot.title' })}</h3>
 
             {/* Selects */}
             <Form>
                 <Form.Group widths='equal'>
                     <Form.Select
-                        label='|log2FC| threshold'
+                        label={intl.formatMessage({
+                            id: 'differentialExpression.volcanoPlot.fcThreshold'
+                        })}
                         options={[
                             { key: 1, text: '1', value: 1 },
                             { key: 2, text: '2', value: 2 },
@@ -75,7 +79,9 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                     />
 
                     <Form.Select
-                        label='p-value threshold'
+                        label={intl.formatMessage({
+                            id: 'differentialExpression.volcanoPlot.pValueThreshold'
+                        })}
                         options={[
                             { key: 0.05, text: '0.05', value: 0.05 },
                             { key: 0.01, text: '0.01', value: 0.01 },
@@ -85,7 +91,9 @@ export const DifferentialExpressionModalResultsVolcanoPlot = (props: Differentia
                             setPThreshold(Number(data.value))}
                     />
                     <Form.Checkbox
-                        label='Show thresholds'
+                        label={intl.formatMessage({
+                            id: 'differentialExpression.volcanoPlot.showThresholds'
+                        })}
                         checked={showThresholds}
                         onChange={(_, data) =>
                             setShowThresholds(Boolean(data.checked))}

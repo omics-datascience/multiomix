@@ -18,6 +18,7 @@ import { KaplanMeierChart } from './survival-analysis/KaplanMeier'
 import { MiRNATargetInteractionPanel } from './MiRNATargetInteractionPanel'
 import { TryAgainSegment } from '../../../common/TryAgainSegment'
 import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
+import { useIntl, IntlShape } from 'react-intl'
 
 // Defined in gem.html
 declare const urlCorrelationGraph: string
@@ -87,6 +88,7 @@ interface GeneGemDetailsModalProps {
     onHandleClose: () => void,
     /** Callback to refresh experiment info on clinical source changes */
     refreshExperimentInfo: (experimentId: number) => void
+    intl: IntlShape
 }
 
 /**
@@ -303,9 +305,10 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      * @returns Data ready for CorrelationGraph chart
      */
     generateCorrelationGraphData (gene: string, geneData: number[], gem: string, gemData: number[], clinicalData: string[]): ApexChartJSSerie[] {
+        const { intl } = this.props
         // Generates the new Chart's data
         const lineSerie: ApexChartJSSerie = {
-            name: 'Expected correlation',
+            name: intl.formatMessage({ id: 'geneGemDetailsModal.correlationGraph.lineSerie' }),
             data: findLineByLeastSquares(gemData, geneData),
             type: 'line'
         }
@@ -396,6 +399,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
      * gene and GEM
      */
     getCorrelationGraphData = () => {
+        const { intl } = this.props
+
         // If it's getting the data, prevents multiples requests to the server
         if (this.state.gettingCorrelationData) {
             return
@@ -469,7 +474,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                     } else {
                         switch (jsonResponse.status.internal_code) {
                             case DjangoCorrelationGraphInternalCode.EXPERIMENT_DOES_NOT_EXISTS:
-                                alert('It seems that the experiment does not exist. If you think it\'s an error, please, contact with the administrator')
+                                alert(intl.formatMessage({ id: 'geneGemDetailsModal.alert.experimentNotFound' }))
                                 break
                             default:
                                 this.correlationGraphOnGeneralError()
@@ -567,6 +572,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
     }
 
     render () {
+        const { intl } = this.props
+
         if (!this.props.selectedRow || !this.props.showModal) {
             return null
         }
@@ -583,7 +590,7 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                 onClose={this.resetFieldsAndClose}
                 closeOnDimmerClick={false}
             >
-                <Header id='header-details-modal' icon='dna' content={`${gem} x ${gene} details`} />
+                <Header id='header-details-modal' icon='dna' content={intl.formatMessage({ id: 'geneGemDetailsModal.header' }, { gem, gene })} />
 
                 <Modal.Content scrolling>
                     <GeneGemModalMenu
@@ -604,5 +611,13 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
         )
     }
 }
+/**
+ * Functional wrapper to inject intl into the class component.
+ */
 
-export { GeneGemDetailsModal, CorrelationChartData, CorrelationBoxplotData, ActiveItemMenu, ApexChartJSSerie }
+const GeneGemDetailsModalWithIntl = (props: Omit<GeneGemDetailsModalProps, 'intl'>) => {
+    const intl = useIntl()
+    return <GeneGemDetailsModal {...props} intl={intl} />
+}
+
+export { GeneGemDetailsModalWithIntl as GeneGemDetailsModal, CorrelationChartData, CorrelationBoxplotData, ActiveItemMenu, ApexChartJSSerie }

@@ -11,6 +11,7 @@ import { StopExperimentButton } from '../../../pipeline/all-experiments-view/Sto
 import { Nullable } from '../../../../utils/interfaces'
 import { DeleteButton } from '../../../common/DeleteButton'
 import { TableCellSources } from '../../../common/TableCellSources'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkerStatisticalValidations: string
 declare const urlStopStatisticalValidation: string
@@ -31,6 +32,7 @@ interface StatisticalValidationsTableProps {
  * @returns Component.
  */
 export const StatisticalValidationsTable = (props: StatisticalValidationsTableProps) => {
+    const intl = useIntl()
     const [stoppingStatValidation, setStoppingStatValidation] = useState(false)
     const [statValidationToStop, setStatValidationToStop] = useState<Nullable<StatisticalValidationForTable>>(null)
 
@@ -109,13 +111,13 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
 
         return (
             <Modal size='small' open={statValidationToStop !== null} onClose={handleCloseStopStatValidation} centered={false}>
-                <Header icon='stop' content='Stop statistical validation' />
+                <Header icon='stop' content={intl.formatMessage({ id: 'statValidationsTable.stopValidation.header' })} />
                 <Modal.Content>
-                    Are you sure you want to stop the statistical validation <strong>{statValidationToStop.name}</strong>?
+                    {intl.formatMessage({ id: 'statValidationsTable.stopValidation.confirm' }, { name: statValidationToStop.name })}?
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseStopStatValidation}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button
                         color='red'
@@ -123,7 +125,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                         loading={stoppingStatValidation}
                         disabled={stoppingStatValidation}
                     >
-                        Stop
+                        {intl.formatMessage({ id: 'common.stop' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -141,16 +143,16 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
 
         return (
             <Modal size='small' open={statValidationToRemove !== null} onClose={handleCloseRemoveStatValidation} centered={false}>
-                <Header icon='trash' content='Delete statistical validation' />
+                <Header icon='trash' content={intl.formatMessage({ id: 'statValidationsTable.deleteValidation.header' })} />
                 <Modal.Content>
-                    Are you sure you want to delete the statistical validation <strong>{statValidationToRemove.name}</strong>?
+                    {intl.formatMessage({ id: 'statValidationsTable.deleteValidation.confirm' }, { name: statValidationToRemove.name })}?
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={handleCloseRemoveStatValidation}>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button color='red' onClick={deleteStatValidation} loading={deletingStatValidation} disabled={deletingStatValidation}>
-                        Delete
+                        {intl.formatMessage({ id: 'common.delete' })}
                     </Button>
                 </Modal.Actions>
             </Modal>
@@ -167,24 +169,24 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
 
             {/* Table */}
             <PaginatedTable<StatisticalValidationForTable>
-                headerTitle='Statistical validations'
+                headerTitle={intl.formatMessage({ id: 'statValidationsTable.headerTitle' })}
                 headers={[
-                    { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                    { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                    { name: 'State', serverCodeToSort: 'state', textAlign: 'center' },
-                    { name: 'Model', textAlign: 'center', width: 2 },
-                    { name: 'Date', serverCodeToSort: 'created' },
-                    { name: 'Datasets' },
-                    { name: 'Actions' }
+                    { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                    { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
+                    { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', textAlign: 'center' },
+                    { name: intl.formatMessage({ id: 'statValidationsTable.headers.model' }), textAlign: 'center', width: 2 },
+                    { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'created' },
+                    { name: intl.formatMessage({ id: 'statValidationsTable.headers.datasets' }) },
+                    { name: intl.formatMessage({ id: 'common.actions' }) }
                 ]}
                 queryParams={{ biomarker_pk: props.selectedBiomarker.id }}
                 defaultSortProp={{ sortField: 'created', sortOrderAscendant: false }}
                 showSearchInput
-                searchLabel='Name'
-                searchPlaceholder='Search by name or description'
+                searchLabel={intl.formatMessage({ id: 'common.name' })}
+                searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'common.name' }) + ' / ' + intl.formatMessage({ id: 'common.description' })}
                 urlToRetrieveData={urlBiomarkerStatisticalValidations}
                 customElements={[
-                    <Form.Field key={1} className='custom-table-field' title='New statistical validation'>
+                    <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'statValidationsTable.newStatValidation' })}>
                         <Button primary icon onClick={() => { props.setOpenModalNewStatValidation(true) }}>
                             <Icon name='add' />
                         </Button>
@@ -223,14 +225,14 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                         onClick={() => { props.openStatResult(statisticalValidation) }}
                                         className='clickable'
                                         color='blue'
-                                        title='See results'
+                                        title={intl.formatMessage({ id: 'statValidationsTable.actions.seeResults' })}
                                     />
                                 )}
 
                                 {/* Stop button */}
                                 {isInProcess && (
                                     <StopExperimentButton
-                                        title='Stop statistical validation'
+                                        title={intl.formatMessage({ id: 'statValidationsTable.actions.stopValidation' })}
                                         onClick={() => setStatValidationToStop(statisticalValidation)}
                                     />
                                 )}
@@ -239,7 +241,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                                 {/** Todo: revisar ownerId */}
                                 {!isInProcess && (
                                     <DeleteButton
-                                        title='Delete statistical validation'
+                                        title={intl.formatMessage({ id: 'statValidationsTable.actions.deleteValidation' })}
                                         onClick={() => setStatValidationToRemove(statisticalValidation)}
                                         ownerId={null}
                                     />

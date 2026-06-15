@@ -4,6 +4,7 @@ import { clusteringAlgorithmOptions, clusteringMetricOptions, clusteringScoringM
 import { ClusteringMetric, ClusteringParameters } from '../../types'
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { InputLabel } from '../../../common/InputLabel'
+import { useIntl } from 'react-intl'
 
 interface NewClusteringModelFormProps {
     /** Getter of the selected params to handle in the form. */
@@ -15,22 +16,16 @@ interface NewClusteringModelFormProps {
 }
 
 export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
+    const intl = useIntl()
     return (
         <>
             <Form.Select
                 fluid
                 selectOnBlur={false}
                 label={(
-                    <InputLabel label='Algorithm'>
+                    <InputLabel label={intl.formatMessage({ id: 'common.algorithm' })}>
                         <InfoPopup
-                            content={(
-                                <>
-                                    <p>K-Means: Groups data by minimizing intra-cluster variance; effective for clustering RNA and miRNA expression profiles.</p>
-                                    <p>Spectral Clustering: Uses graph-based similarity to identify complex patterns; ideal for integrating methylation and CNA data.</p>
-                                    <p>BK-Means: A hierarchical variation of K-Means, suitable for layered clustering of clinical and multi-omics datasets.</p>
-                                    <p>Ward’s Method: Minimizes variance in hierarchical clustering; well-suited for combining RNA and methylation data in integrated analyses.</p>
-                                </>
-                            )}
+                            content={intl.formatMessage({ id: 'newClusteringForm.info.algorithm' })}
                             onTop={false}
                             onEvent='hover'
                             noBorder
@@ -39,7 +34,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     </InputLabel>
                 )}
                 options={clusteringAlgorithmOptions}
-                placeholder='Select an algorithm'
+                placeholder={intl.formatMessage({ id: 'common.algorithm' })}
                 name='algorithm'
                 value={props.parameters.algorithm}
                 onChange={props.handleChangeParams}
@@ -48,16 +43,16 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             <Form.Checkbox
                 checked={props.parameters.lookForOptimalNClusters}
                 onChange={(_e, { checked }) => { props.handleChangeOptimalNClusters(checked ?? false) }}
-                label='Search for the optimal number of clusters'
+                label={intl.formatMessage({ id: 'newClusteringForm.label.searchOptimalClusters' })}
             />
 
             {!props.parameters.lookForOptimalNClusters && (
                 <Form.Input
                     type='number'
                     label={(
-                        <InputLabel label='Number of clusters'>
+                        <InputLabel label={intl.formatMessage({ id: 'common.nClusters' })}>
                             <InfoPopup
-                                content='The number of clusters to group the data into. The optimal number of clusters can be found by looking for the elbow in the curve of the sum of squared distances between samples and their closest cluster center.'
+                                content={intl.formatMessage({ id: 'newClusteringForm.info.nClusters' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -77,14 +72,9 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                 fluid
                 selectOnBlur={false}
                 label={(
-                    <InputLabel label='Metric'>
+                    <InputLabel label={intl.formatMessage({ id: 'common.metric' })}>
                         <InfoPopup
-                            content={(
-                                <>
-                                    <p>Cox Regression: A proportional hazards model to identify associations between multi-omics features (RNA, miRNA, methylation) and clinical outcomes over time.</p>
-                                    <p>Log-Rank Test: A non-parametric test to compare the survival distributions of two or more groups; currently not available.</p>
-                                </>
-                            )}
+                            content={intl.formatMessage({ id: 'newClusteringForm.info.metric' })}
                             onTop={false}
                             onEvent='hover'
                             noBorder
@@ -93,7 +83,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     </InputLabel>
                 )}
                 options={clusteringMetricOptions}
-                placeholder='Select a metric'
+                placeholder={intl.formatMessage({ id: 'newClusteringForm.placeholder.metric' })}
                 name='metric'
                 value={props.parameters.metric}
                 onChange={props.handleChangeParams}
@@ -105,14 +95,9 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                     fluid
                     selectOnBlur={false}
                     label={(
-                        <InputLabel label='Scoring method'>
+                        <InputLabel label={intl.formatMessage({ id: 'common.scoringMethod' })}>
                             <InfoPopup
-                                content={(
-                                    <>
-                                        <p>C-Index: A measure of concordance between predicted and observed survival outcomes; higher values indicate better model performance.</p>
-                                        <p>Log Likelihood: The probability of observing the data given the model; lower values indicate better model performance.</p>
-                                    </>
-                                )}
+                                content={intl.formatMessage({ id: 'newClusteringForm.info.scoringMethod' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -121,7 +106,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                         </InputLabel>
                     )}
                     options={clusteringScoringMethodOptions}
-                    placeholder='Select a method'
+                    placeholder={intl.formatMessage({ id: 'newClusteringForm.placeholder.scoringMethod' })}
                     name='scoringMethod'
                     value={props.parameters.scoringMethod}
                     onChange={props.handleChangeParams}
@@ -131,9 +116,9 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
             <Form.Group widths='equal'>
                 <Form.Input
                     label={(
-                        <InputLabel label='Random state'>
+                        <InputLabel label={intl.formatMessage({ id: 'common.randomState' })}>
                             <InfoPopup
-                                content='The seed used by the random number generator to ensure reproducibility of the results.'
+                                content={intl.formatMessage({ id: 'newClusteringForm.info.randomState' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -141,7 +126,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder='An integer number'
+                    placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                     type='number'
                     step={1}
                     min={0}
@@ -152,9 +137,9 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
 
                 <Form.Input
                     label={(
-                        <InputLabel label='Penalizer'>
+                        <InputLabel label={intl.formatMessage({ id: 'common.penalizer' })}>
                             <InfoPopup
-                                content='This option is useful when the number of samples in the clinical data is small or there are few observed events, setting this value increases the robustness of the model in such cases avoiding problems with NaN values'
+                                content={intl.formatMessage({ id: 'newClusteringForm.info.penalizer' })}
                                 onTop={false}
                                 onEvent='hover'
                                 noBorder
@@ -162,7 +147,7 @@ export const NewClusteringModelForm = (props: NewClusteringModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder='An integer number'
+                    placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                     type='number'
                     step={0.1}
                     min={0}

@@ -8,7 +8,8 @@ import { NewPredictionRangeLabelsSetModal } from '../../../common/prediction-ran
 import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { SamplesAndTimeInferenceCharts } from './SamplesAndTimeInferenceCharts'
 import { InferenceExperimentClinicalAttributeSelect } from './InferenceExperimentClinicalAttributeSelect'
-import { ClinicalSourcePopup } from '../../../pipeline/all-experiments-view/ClinicalSourcePopup'
+import ClinicalSourcePopup from '../../../pipeline/all-experiments-view/ClinicalSourcePopup'
+import { useIntl } from 'react-intl'
 
 declare const urlInferenceExperimentSamplesAndTime: string
 declare const urlClinicalSourceAddOrEditInferenceExperiment: string
@@ -28,6 +29,7 @@ interface SamplesAndTimeInferenceTableProps {
  * @returns Component.
  */
 export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTableProps) => {
+    const intl = useIntl()
     const [activeMenuItem, setActiveMenuItem] = useState<'table' | 'charts'>('charts') // TODO: change to 'table'
     const [selectedRangeSetPk, setSelectedClusterSetPk] = useState<number | undefined>(undefined)
     const [openRangeLabelsSetModal, setOpenRangeLabelsSetModal] = useState(false)
@@ -48,8 +50,9 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                 return (
                     <PaginatedTable<SampleAndTime>
                         headers={[
-                            { name: 'Sample', serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
-                            { name: 'Predicted time', serverCodeToSort: 'prediction', width: 2, textAlign: 'center' }
+                            { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
+                            { name: intl.formatMessage({ id: 'inference.timeTable.columns.predictedTime' }), serverCodeToSort: 'prediction', width: 2, textAlign: 'center' }
+
                         ]}
                         queryParams={{
                             inference_experiment_pk: props.selectedInferenceExperiment.id,
@@ -57,18 +60,18 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                         }}
                         customFilters={[
                             {
-                                label: 'Range',
+                                label: intl.formatMessage({ id: 'inference.timeTable.filter.range.label' }),
                                 keyForServer: 'prediction',
                                 defaultValue: '',
-                                placeholder: 'Filter by range',
+                                placeholder: intl.formatMessage({ id: 'inference.timeTable.filter.range.placeholder' }),
                                 disabledFunction: () => selectedRangeSetPk === undefined
                             }
                         ]}
                         defaultSortProp={{ sortField: 'sample', sortOrderAscendant: false }}
                         showSearchInput
                         defaultPageSize={25}
-                        searchLabel='Sample'
-                        searchPlaceholder='Search by sample'
+                        searchLabel={intl.formatMessage({ id: 'common.sample' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'common.search' })}
                         searchWidth={5}
                         entriesSelectWidth={3}
                         urlToRetrieveData={urlInferenceExperimentSamplesAndTime}
@@ -116,10 +119,10 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                             active={activeMenuItem === 'charts'}
                             onClick={() => setActiveMenuItem('charts')}
                         >
-                            Charts
+                            {intl.formatMessage({ id: 'inference.timeTable.menu.table' })}
 
                             <InfoPopup
-                                content='Shows some charts with the samples and their predicted hazard/survival time grouped by some condition'
+                                content={intl.formatMessage({ id: 'inference.timeTable.menu.table.info' })}
                                 onTop={false}
                                 onEvent='hover'
                                 extraClassName='margin-left-5'
@@ -176,7 +179,7 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                                 setSelectedClusterSetPk={setSelectedClusterSetPk}
                             />
 
-                            <Button className='margin-top-2' primary fluid onClick={() => { setOpenRangeLabelsSetModal(true) }}>Add Range labels</Button>
+                            <Button className='margin-top-2' primary fluid onClick={() => { setOpenRangeLabelsSetModal(true) }}>{intl.formatMessage({ id: 'inference.timeTable.addRangeLabels' })}</Button>
                         </>
                     )}
                 </Grid.Column>

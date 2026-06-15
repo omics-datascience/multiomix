@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Form, Modal, Button, Icon, ButtonProps } from 'semantic-ui-react'
 import { ExperimentInfo } from '../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 type BiomarkerOption = 'selectAll' | 'selectWithFilters'
 
@@ -43,6 +44,7 @@ interface CreateBiomarkerButtonProps extends Partial<ButtonProps> {
  * />
  */
 const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = (props) => {
+    const intl = useIntl()
     // Destructure component-specific props and forward the rest to the underlying Button
     const { experimentInfo, onCreateBiomarker, ...buttonProps } = props
 
@@ -65,9 +67,9 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = (props) => {
         <>
             {/* Button that opens the modal */}
             <Button
-                label='Create Biomarker'
+                label={intl.formatMessage({ id: 'createBiomarkerButton.label' })}
                 icon='dna'
-                title='Create Biomarker from result'
+                title={intl.formatMessage({ id: 'createBiomarkerButton.title' })}
                 color='green'
                 className='space-modal large-modal'
                 labelPosition='left'
@@ -75,7 +77,7 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = (props) => {
                 {...buttonProps}
             >
                 <Icon name='plus' />
-                Create Biomarker
+                {intl.formatMessage({ id: 'createBiomarkerButton.label' })}
             </Button>
 
             {/* Modal with options */}
@@ -84,20 +86,20 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = (props) => {
                 open={open}
                 onClose={() => setOpen(false)}
             >
-                <Modal.Header>Create Biomarker</Modal.Header>
+                <Modal.Header>{intl.formatMessage({ id: 'createBiomarkerButton.modal.header' })}</Modal.Header>
                 <Modal.Content>
-                    <p>Select how you want to build the biomarker:</p>
+                    <p>{intl.formatMessage({ id: 'createBiomarkerButton.modal.description' })}</p>
                     <Form>
                         <Form.Group grouped>
                             <Form.Radio
-                                label='Select all'
+                                label={intl.formatMessage({ id: 'createBiomarkerButton.option.selectAll' })}
                                 name='biomarkerOption'
                                 value='selectAll'
                                 checked={selectedOption === 'selectAll'}
                                 onChange={(_, { value }) => setSelectedOption(value as BiomarkerOption)}
                             />
                             <Form.Radio
-                                label='Select with filters'
+                                label={intl.formatMessage({ id: 'createBiomarkerButton.option.selectWithFilters' })}
                                 name='biomarkerOption'
                                 value='selectWithFilters'
                                 checked={selectedOption === 'selectWithFilters'}
@@ -108,10 +110,10 @@ const CreateBiomarkerButton: React.FC<CreateBiomarkerButtonProps> = (props) => {
                 </Modal.Content>
                 <Modal.Actions>
                     <Button onClick={() => setOpen(false)} color='grey'>
-                        Cancel
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                     <Button onClick={handleConfirm} color='blue'>
-                        Confirm
+                        {intl.formatMessage({ id: 'common.confirm' })}
                     </Button>
                 </Modal.Actions>
             </Modal>

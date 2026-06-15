@@ -5,6 +5,7 @@ import { DjangoMRNAxGEMResultRow } from '..//../../../../utils/django_interfaces
 import { AssumptionsCompletion, RecommendedCorrelationMethod } from './AssumptionsPanel'
 import { AssumptionStepSimple } from './AssumptionSteps'
 import { ReferenceCardsGroup } from './ReferenceCardsGroup'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -16,6 +17,8 @@ interface KendallAssumptionsProps {
 }
 
 export const KendallAssumptions = (props: KendallAssumptionsProps) => {
+    const intl = useIntl()
+
     const referenceCards: ReferenceCard[] = [
         {
             color: 'red',
@@ -44,13 +47,13 @@ export const KendallAssumptions = (props: KendallAssumptionsProps) => {
             <Grid>
                 <Grid.Row columns={2} divided>
                     <Grid.Column width='6'>
-                        <Header size='huge'>Kendall statistical assumptions</Header>
+                        <Header size='huge'>{intl.formatMessage({ id: 'kendallAssumptions.title' })}</Header>
 
                         <Step.Group vertical>
                             {/* Monotonicity */}
                             <AssumptionStepSimple
-                                title='Monotonicity'
-                                description='Correlation should be monotonic (Spearman rank-order correlation coefficient absolute value >= 0.8 with a p-value < 0.05)'
+                                title={intl.formatMessage({ id: 'kendallAssumptions.monotonicity.title' })}
+                                description={intl.formatMessage({ id: 'kendallAssumptions.monotonicity.description' })}
                                 isOk={props.assumptions.monotonicityIsOk}
                             />
                         </Step.Group>

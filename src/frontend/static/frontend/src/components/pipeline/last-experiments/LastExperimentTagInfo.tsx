@@ -4,6 +4,7 @@ import { DjangoExperiment, DjangoTag } from '../../../utils/django_interfaces'
 import { Nullable } from '../../../utils/interfaces'
 import { TagForm } from '../../common/TagForm'
 import { TagLabel } from '../../common/TagLabel'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -27,6 +28,7 @@ interface LastExperimentTagInfoProps {
  * @returns Component
  */
 export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
+    const intl = useIntl()
     const isEditingTagInfo = props.experimentWhichIsSelectingTag && props.experimentWhichIsSelectingTag.id === props.experiment.id
     const dropdownTags = isEditingTagInfo
         ? (
@@ -38,7 +40,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
                 options={props.tagOptions}
                 clearable
                 onChange={(_e, { value }) => props.selectTag(value, props.experiment)}
-                placeholder='Select an existing Tag'
+                placeholder={intl.formatMessage({ id: 'lastExperimentTagInfo.selectExistingTag' })}
             />
         )
         : null
@@ -61,7 +63,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
                 className='clickable margin-left-2'
                 name='trash'
                 color='red'
-                title='Remove Tag'
+                title={intl.formatMessage({ id: 'lastExperimentTagInfo.removeTag' })}
                 onClick={() => props.selectTag(null, props.experiment)}
             />
         )
@@ -75,7 +77,7 @@ export const LastExperimentTagInfo = (props: LastExperimentTagInfoProps) => {
                 className='clickable margin-left-2'
                 name={isEditingTagInfo ? 'times' : 'pencil'}
                 color={isEditingTagInfo ? 'red' : 'yellow'}
-                title={isEditingTagInfo ? 'Cancel' : 'Edit'}
+                title={isEditingTagInfo ? intl.formatMessage({ id: 'common.cancel' }) : intl.formatMessage({ id: 'lastExperimentTagInfo.edit' })}
                 onClick={() => props.selectExperimentToAssignTag(props.experiment)}
             />
 

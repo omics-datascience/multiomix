@@ -17,6 +17,7 @@ import { InstitutionTableData } from './InstitutionsPanel'
 import ky from 'ky'
 import { getDjangoHeader } from '../../utils/util_functions'
 import { CurrentUserContext } from '../Base'
+import { useIntl } from 'react-intl'
 
 declare const urlGetUsersCandidates: string
 declare const urlEditInstitutionAdmin: string
@@ -41,6 +42,7 @@ interface Props extends InstitutionModalState {
  * @returns Component
  */
 export const InstitutionModal = (props: Props) => {
+    const intl = useIntl()
     const [userIdToAdd, setUserIdToAdd] = useState<number>(0)
     const [userList, setUserList] = useState<SemanticListItem[]>([])
     const abortController = useRef(new AbortController())
@@ -102,13 +104,13 @@ export const InstitutionModal = (props: Props) => {
 
         ky.patch(editUrl, { headers: myHeaders }).then((response) => {
             response.json().then(() => {
-                props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, adminSwitched ? 'User is admin!' : 'User is not admin!', null)
+                props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, adminSwitched ? intl.formatMessage({ id: 'institutionModal.userIsAdmin' }) : intl.formatMessage({ id: 'institutionModal.userIsNotAdmin' }), null)
             }).catch((err) => {
-                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error for switch role!', null)
+                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionModal.switchRoleError' }), null)
                 console.error('Error parsing JSON ->', err)
             })
         }).catch((err) => {
-            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error for switch role!', null)
+            props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionModal.switchRoleError' }), null)
             console.error('Error adding new Institution ->', err)
         })
     }
@@ -153,7 +155,7 @@ export const InstitutionModal = (props: Props) => {
             <ModalContent>
                 <Segment>
                     <Select
-                        placeholder='Select a user to add'
+                        placeholder={intl.formatMessage({ id: 'institutionModal.selectUser' })}
                         options={userList}
                         value={userIdToAdd.toString()}
                         onChange={(_e, { value }) => setUserIdToAdd(Number(value))}
@@ -161,26 +163,29 @@ export const InstitutionModal = (props: Props) => {
                     <Button
                         className='margin-left-5'
                         disabled={!userIdToAdd}
-                        onClick={() => props.handleChangeConfirmModalState(true, 'Add user to institution', 'Are you sure to add user to institution?', handleAddUser)}
+                        onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'institutionModal.addUserInstitution.title' }), intl.formatMessage({ id: 'institutionModal.addUserInstitution.confirm' }), handleAddUser)}
 
                     >
-                        Add user
+                        {intl.formatMessage({ id: 'institutionModal.addUser' })}
                     </Button>
                     <PaginatedTable<DjangoInstitutionUser>
-                        headerTitle={props.institution?.name + ' users'}
+                        headerTitle={intl.formatMessage(
+                            { id: 'institutionModal.usersTitle' },
+                            { institutionName: props.institution?.name }
+                        )}
                         headers={props.institution?.is_user_admin
                             ? [
-                                { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
-                                { name: 'Admin', width: 1 },
-                                { name: 'Actions', width: 1 }
+                                { name: intl.formatMessage({ id: 'institutionModal.userName' }), serverCodeToSort: 'user__username' as any, width: 3 },
+                                { name: intl.formatMessage({ id: 'institutionModal.admin' }), width: 1 },
+                                { name: intl.formatMessage({ id: 'common.actions' }), width: 1 }
                             ]
                             : [
-                                { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 },
-                                { name: 'Admin', width: 1 }
+                                { name: intl.formatMessage({ id: 'institutionModal.userName' }), serverCodeToSort: 'user__username' as any, width: 3 },
+                                { name: intl.formatMessage({ id: 'institutionModal.admin' }), width: 1 }
                             ]}
                         showSearchInput
-                        searchLabel='User name'
-                        searchPlaceholder='Search by User name'
+                        searchLabel={intl.formatMessage({ id: 'institutionModal.userName' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'institutionModal.searchPlaceholder' })}
                         urlToRetrieveData={urlGetUsersCandidates + '/' + props.institution?.id + '/'}
                         updateWSKey='update_user_for_institution'
                         mapFunction={(userCandidate: DjangoInstitutionUser) => {
@@ -195,7 +200,7 @@ export const InstitutionModal = (props: Props) => {
                                                         name='check'
                                                         className='clickable margin-left-5'
                                                         color='teal'
-                                                        title='Institution admin'
+                                                        title={intl.formatMessage({ id: 'institutionModal.institutionAdmin' })}
                                                     />
                                                 )
                                                 : (
@@ -203,7 +208,7 @@ export const InstitutionModal = (props: Props) => {
                                                         name='close'
                                                         className='clickable margin-left-5'
                                                         color='red'
-                                                        title='Non Institution admin'
+                                                        title={intl.formatMessage({ id: 'institutionModal.nonInstitutionAdmin' })}
                                                     />
                                                 )
                                         }
@@ -218,8 +223,8 @@ export const InstitutionModal = (props: Props) => {
                                                             name='close'
                                                             className='clickable margin-left-5'
                                                             color='olive'
-                                                            title='Switch to non Institution admin'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Manage admin', 'Are you sure to remove admin to user?', () => handleSwitchUserAdmin(false, userCandidate.id))}
+                                                            title={intl.formatMessage({ id: 'institutionModal.switchToNonAdmin' })}
+                                                            onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'institutionModal.manageAdmin' }), intl.formatMessage({ id: 'institutionModal.removeAdminConfirm' }), () => handleSwitchUserAdmin(false, userCandidate.id))}
                                                         />
                                                     )
                                                     : (
@@ -227,8 +232,8 @@ export const InstitutionModal = (props: Props) => {
                                                             name='star'
                                                             className='clickable margin-left-5'
                                                             color='teal'
-                                                            title='Switch to Institution admin'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Manage admin', 'Are you sure to make user admin?', () => handleSwitchUserAdmin(true, userCandidate.id))}
+                                                            title={intl.formatMessage({ id: 'institutionModal.switchToAdmin' })}
+                                                            onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'institutionModal.manageAdmin' }), intl.formatMessage({ id: 'institutionModal.makeAdminConfirm' }), () => handleSwitchUserAdmin(true, userCandidate.id))}
                                                         />
                                                     )
                                             }
@@ -239,8 +244,8 @@ export const InstitutionModal = (props: Props) => {
                                                         name='close'
                                                         className='clickable margin-left-5'
                                                         color='red'
-                                                        onClick={() => props.handleChangeConfirmModalState(true, 'Remove user', 'Are you sure to remove user?', () => handleRemoveUser(userCandidate.user.id))}
-                                                        title='Remove user from Institution'
+                                                        onClick={() => props.handleChangeConfirmModalState(true, intl.formatMessage({ id: 'institutionModal.removeUser' }), intl.formatMessage({ id: 'institutionModal.removeUserConfirm' }), () => handleRemoveUser(userCandidate.user.id))}
+                                                        title={intl.formatMessage({ id: 'institutionModal.removeUser' })}
                                                     />
                                                 )
                                             }

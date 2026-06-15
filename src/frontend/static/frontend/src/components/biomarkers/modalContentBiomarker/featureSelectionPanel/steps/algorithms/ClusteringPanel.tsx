@@ -2,6 +2,7 @@ import React from 'react'
 import { Button, Form, Label, Segment } from 'semantic-ui-react'
 import { ClusteringMetric, ClusteringParameters, ClusteringScoringMethod } from '../../../../types'
 import { clusteringAlgorithmOptions } from '../../../../utils'
+import { useIntl } from 'react-intl'
 
 /** ClusteringPanel props. */
 interface ClusteringPanelProps {
@@ -15,14 +16,15 @@ interface ClusteringPanelProps {
  * @returns Component.
  */
 export const ClusteringPanel = (props: ClusteringPanelProps) => {
+    const intl = useIntl()
     const { settings, handleChangeFitnessFunctionOption } = props
 
     return (
         <>
             <Form.Select
-                label='Algorithm'
+                label={intl.formatMessage({ id: 'common.algorithm' })}
                 selectOnBlur={false}
-                placeholder='Clustering Algorithm'
+                placeholder={intl.formatMessage({ id: 'clustering.algorithm.placeholder' })}
                 name='moleculeSelected'
                 options={clusteringAlgorithmOptions}
                 value={settings.algorithm}
@@ -32,7 +34,8 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
             <Form.Group className='form-group-button'>
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>
-                        Metric
+                        {intl.formatMessage({ id: 'common.metric' })}
+
                     </Label>
                     <Button.Group
                         compact
@@ -56,7 +59,7 @@ export const ClusteringPanel = (props: ClusteringPanelProps) => {
 
                 <Segment className='form-gruop-button-segment'>
                     <Label attached='top'>
-                        Scoring method
+                        {intl.formatMessage({ id: 'common.scoringMethod' })}
                     </Label>
                     <Button.Group
                         compact

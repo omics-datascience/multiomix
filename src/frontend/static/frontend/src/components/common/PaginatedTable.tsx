@@ -9,6 +9,7 @@ import { InfoPopup } from '../pipeline/experiment-result/gene-gem-details/InfoPo
 import { NoDataRow } from '../pipeline/experiment-result/gene-gem-details/NoDataRow'
 import { InputLabel } from './InputLabel'
 import isEqual from 'lodash/isEqual'
+import { useIntl, IntlShape } from 'react-intl'
 import '../../css/common-styles.css'
 
 declare const currentUserId: string
@@ -113,6 +114,7 @@ interface PaginatedTableProps<T> {
     entriesSelectWidth?: SemanticWIDTHS,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
+    intl: IntlShape
 }
 
 /**
@@ -442,6 +444,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     }
 
     render () {
+        const { intl } = this.props
         const tableControl = this.state.tableControl
 
         // Applies map function
@@ -470,7 +473,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                     <Table.Row>
                         <Table.Cell colSpan={this.props.headers.length}>
                             <Header as='h4' textAlign='center'>
-                                <Icon name='spinner' loading /> Loading...
+                                <Icon name='spinner' loading /> {intl.formatMessage({ id: 'paginatedTable.loading' })}
                             </Header>
                         </Table.Cell>
                     </Table.Row>
@@ -507,7 +510,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                     <Form.Input
                                         width={this.props.searchWidth ?? 3}
                                         icon='search' iconPosition='left'
-                                        label={this.props.searchLabel ?? 'Name/Description'}
+                                        label={this.props.searchLabel ?? intl.formatMessage({ id: 'paginatedTable.searchLabel' })}
                                         title={this.props.searchPlaceholder}
                                         placeholder={this.props.searchPlaceholder}
                                         name='textFilter'
@@ -520,7 +523,7 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                                 {customFilters}
                                 {/* Page size */}
                                 <Form.Select
-                                    label='Entries'
+                                    label={intl.formatMessage({ id: 'paginatedTable.entries' })}
                                     className='entries-select-table'
                                     selectOnBlur={false}
                                     options={getDefaultPageSizeOption()}
@@ -598,4 +601,9 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
     }
 }
 
-export { PaginatedTable, DefaultSortProp, PaginationCustomFilter }
+const PaginatedTableWithIntl = <T,>(props: Omit<PaginatedTableProps<T>, 'intl'>) => {
+    const intl = useIntl()
+    return <PaginatedTable {...props} intl={intl} />
+}
+
+export { PaginatedTableWithIntl as PaginatedTable, DefaultSortProp, PaginationCustomFilter }

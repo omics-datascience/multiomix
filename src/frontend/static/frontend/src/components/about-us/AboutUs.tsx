@@ -1,6 +1,7 @@
 import React from 'react'
 import { Container, Divider, Grid, Header, Image, List } from 'semantic-ui-react'
 import { Base } from '../Base'
+import { useIntl } from 'react-intl'
 
 const EMAILS: string[] = [
     'mcabba@gmail.com',
@@ -13,6 +14,7 @@ const EMAILS: string[] = [
  * @returns Component
  */
 export const AboutUs = () => {
+    const intl = useIntl()
     return (
         <div>
             <Base activeItem='about-us' wrapperClass='wrapper'>
@@ -34,13 +36,13 @@ export const AboutUs = () => {
                         <Grid.Row columns={1}>
                             <Grid.Column>
                                 <Header as='h1'>
-                                    Multiomix is the result of interdisciplinary work between members of the following scientific institutions:
+                                    {intl.formatMessage({ id: 'about.description' })}
                                 </Header>
 
                                 <List>
-                                    <List.Item icon='building' content='CAETI - Universidad Abierta Interamericana' />
-                                    <List.Item icon='building' content='CINIBA - Faculty of Medical Sciences - UNLP' />
-                                    <List.Item icon='building' content='LIDI - Faculty of Informatics - UNLP' />
+                                    <List.Item icon='building' content={intl.formatMessage({ id: 'about.institution.caeti' })} />
+                                    <List.Item icon='building' content={intl.formatMessage({ id: 'about.institution.ciniba' })} />
+                                    <List.Item icon='building' content={intl.formatMessage({ id: 'about.institution.lidi' })} />
                                 </List>
                             </Grid.Column>
                         </Grid.Row>
@@ -51,7 +53,7 @@ export const AboutUs = () => {
                         <Grid.Row columns={1}>
                             <Grid.Column>
                                 <Header as='h1'>
-                                    Project coordination:
+                                    {intl.formatMessage({ id: 'about.coordination' })}
                                 </Header>
 
                                 <List>
@@ -67,15 +69,16 @@ export const AboutUs = () => {
                         <Grid.Row columns={1}>
                             <Grid.Column>
                                 <Header as='h1'>
-                                    Project members
+                                    {intl.formatMessage({ id: 'about.members.title' })}
                                 </Header>
 
                                 <Header as='h3'>
-                                    Main contributor: B.Comp.Sc. Genaro Camele
+                                    {intl.formatMessage({ id: 'about.members.main' })} PhD in Computer Science Genaro Camele
                                 </Header>
 
                                 <Header as='h3'>
-                                    Collaborators: Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, B.Comp.Sc. Julián Muhlberger, St. Ramiro Lasorsa, PhD. Waldo Hasperué
+                                    {intl.formatMessage({ id: 'about.members.collaborators' })} Esp. Hernán Chanfreau, Dr. Sebastián Menazzi, St. Agustín Marraco, B.Comp.Sc. Julián Muhlberger, St. Ramiro Lasorsa, PhD. Waldo Hasperué
+
                                 </Header>
                             </Grid.Column>
                         </Grid.Row>
@@ -87,10 +90,10 @@ export const AboutUs = () => {
                             <Grid.Column>
                                 {/* Contact */}
                                 <Header as='h3'>
-                                    Contact:
+                                    {intl.formatMessage({ id: 'about.contact.title' })}
                                 </Header>
 
-                                <p>For questions or suggestions please contact us:</p>
+                                <p>{intl.formatMessage({ id: 'about.contact.questions' })}</p>
 
                                 {EMAILS.map((email) => (
                                     <p key={email}>
@@ -98,7 +101,7 @@ export const AboutUs = () => {
                                     </p>
                                 ))}
 
-                                <p>You can also contact us for creating your research institution. It will let researchers share datasets inside Multiomix.</p>
+                                <p>{intl.formatMessage({ id: 'about.contact.institutions' })}</p>
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>

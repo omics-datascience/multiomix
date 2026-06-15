@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import { Icon } from 'semantic-ui-react'
 import { CurrentUserContext } from '../Base'
 import { Nullable } from '../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 interface Props {
     editExperiment: () => void,
@@ -11,6 +12,7 @@ interface Props {
 
 export const EditIcon = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
+    const intl = useIntl()
 
     if (props.ownerId !== currentUser?.id) {
         return <></>
@@ -21,7 +23,7 @@ export const EditIcon = (props: Props) => {
             name='pencil'
             className='clickable margin-left-5'
             color='yellow'
-            title='Edit'
+            title={intl.formatMessage({ id: 'common.edit' })}
             onClick={props.editExperiment}
             disabled={props.disabled}
         />

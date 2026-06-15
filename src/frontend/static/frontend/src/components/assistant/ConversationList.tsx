@@ -53,6 +53,7 @@ const ConversationList = (props: ConversationListProps) => {
      * @param conv - The conversation being edited.
      * @param e - The mouse event that triggered the edit.
      */
+
     const startEdit = (conv: ConversationSummary, e: React.MouseEvent) => {
         e.stopPropagation()
         setEditingId(conv.id)
@@ -64,6 +65,7 @@ const ConversationList = (props: ConversationListProps) => {
      * Submits the trimmed title via `onRename` and exits edit mode.
      * @param id - ID of the conversation being renamed.
      */
+
     const commitEdit = (id: number) => {
         onRename(id, editTitle.trim())
         setEditingId(null)
@@ -73,6 +75,7 @@ const ConversationList = (props: ConversationListProps) => {
      * Exits edit mode without saving changes.
      * @returns void
      */
+
     const cancelEdit = () => setEditingId(null)
 
     return (

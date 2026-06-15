@@ -6,6 +6,7 @@ import { ResultPlaceholder } from '../../stat-validations/result/ResultPlacehold
 import { DropdownItemProps, Grid, Header, Input, List, SearchProps, Select } from 'semantic-ui-react'
 import { InputLabel } from '../../../../common/InputLabel'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { useIntl } from 'react-intl'
 
 declare const urlMetabolicPathways: string
 
@@ -38,6 +39,7 @@ interface MetabolicPathwaysProps {
  * @returns Component.
  */
 export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [searchInput, setSearchInput] = useState<string>('')
     const [selectedSource, setSelectedSource] = useState<string | undefined>(undefined)
@@ -93,21 +95,21 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
             <Grid.Row columns={1}>
                 <Grid.Column>
                     <InfoPopup
-                        content='List of genes that are involved in a pathway for a given database'
+                        content={intl.formatMessage({ id: 'metabolicPathways.infoPopup' })}
                         onTop
                         onEvent='click'
                         extraClassName='pull-right'
                     />
 
                     <Header as='h3'>
-                        Metabolic pathways
+                        {intl.formatMessage({ id: 'metabolicPathways.header' })}
                     </Header>
 
-                    <InputLabel label='Select a source' />
+                    <InputLabel label={intl.formatMessage({ id: 'metabolicPathways.selectSource' })} />
 
                     <Select
                         selectOnBlur={false}
-                        placeholder='Source'
+                        placeholder={intl.formatMessage({ id: 'metabolicPathways.sourcePlaceholder' })}
                         className='selection-select-m selection-select'
                         options={sourcesOptions}
                         value={selectedSource}
@@ -117,7 +119,7 @@ export const MetabolicPathways = (props: MetabolicPathwaysProps) => {
                     <Input
                         icon='search'
                         fluid
-                        placeholder='Search'
+                        placeholder={intl.formatMessage({ id: 'common.search' })}
                         onChange={handleSearch}
                         value={searchInput}
                         disabled={selectedSource === undefined}

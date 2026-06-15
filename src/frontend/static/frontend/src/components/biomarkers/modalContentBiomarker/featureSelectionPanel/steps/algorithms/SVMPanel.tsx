@@ -2,6 +2,7 @@ import React from 'react'
 import { Form } from 'semantic-ui-react'
 import { SVMParameters } from '../../../../types'
 import { SVMKernelOptions } from '../../../../utils'
+import { useIntl } from 'react-intl'
 
 /** SVMPanel props. */
 interface SVMPanelProps {
@@ -15,6 +16,7 @@ interface SVMPanelProps {
  * @returns Component.
  */
 export const SVMPanel = (props: SVMPanelProps) => {
+    const intl = useIntl()
     const {
         parameters: svm,
         handleChangeFitnessFunctionOption
@@ -45,7 +47,7 @@ export const SVMPanel = (props: SVMPanelProps) => {
 
             <Form.Select
                 selectOnBlur={false}
-                placeholder='Kernel'
+                placeholder={intl.formatMessage({ id: 'svm.kernel.placeholder' })}
                 label='Kernel'
                 name='moleculeSelected'
                 options={SVMKernelOptions}

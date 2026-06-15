@@ -1,6 +1,7 @@
 import React from 'react'
 import { DjangoExperiment, ExperimentState } from '../../../utils/django_interfaces'
 import { Icon } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -20,13 +21,14 @@ interface SeeResultButtonProps {
  * @returns Component
  */
 export const SeeResultButton = (props: SeeResultButtonProps) => {
+    const intl = useIntl()
     const extraClassName = props.className ?? ''
     return (
         <Icon
             name='th list'
             className={`clickable ${extraClassName}`}
             color='green'
-            title={props.experiment.result_final_row_count ? 'See result' : 'No results to see. Try making the filters less restrictive'}
+            title={props.experiment.result_final_row_count ? intl.formatMessage({ id: 'seeResultButton.seeResult' }) : intl.formatMessage({ id: 'seeResultButton.noResults' })}
             onClick={() => props.seeResult(props.experiment)}
             disabled={props.experiment.state !== ExperimentState.COMPLETED || !props.experiment.result_final_row_count}
         />

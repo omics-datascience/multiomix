@@ -7,6 +7,7 @@ import { SourceSelectors } from '../../../common/SourceSelectors'
 import { DjangoCGDSStudy, DjangoUserFile } from '../../../../utils/django_interfaces'
 import { BiomarkerTrainedModelsTable } from '../BiomarkerTrainedModelsTable'
 import ky from 'ky'
+import { useIntl } from 'react-intl'
 
 declare const urlNewStatisticalValidation: string
 
@@ -59,6 +60,7 @@ const getDefaultNewStatisticalValidationData = (): NewStatisticalValidationData 
  * @returns Component
  */
 export const NewStatisticalValidationModal = (props: NewStatisticalValidationModalProps) => {
+    const intl = useIntl()
     const [form, setForm] = useState<NewStatisticalValidationData>(getDefaultNewStatisticalValidationData())
     const [currentStep, setCurrentStep] = useState(1)
     const [sendingData, setSendingData] = useState(false)
@@ -309,7 +311,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
         >
             <Modal.Header>
                 <Icon name='chart bar' />
-                Create new statistical validation
+                {intl.formatMessage({ id: 'newStatValidation.header.create' })}
             </Modal.Header>
             <Modal.Content>
                 <Grid>
@@ -318,27 +320,27 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         <Grid.Column width={4}>
                             {/* Basic data */}
                             <Segment>
-                                <Header dividing as='h2'>Basic data</Header>
+                                <Header dividing as='h2'>{intl.formatMessage({ id: 'common.basicData' })}</Header>
 
                                 <Form>
                                     <Form.Input
                                         name='name'
                                         value={form.name}
                                         icon='asterisk'
-                                        placeholder='Name'
+                                        placeholder={intl.formatMessage({ id: 'common.name' })}
                                         onChange={handleInputChange}
                                     />
 
                                     <Form.TextArea
                                         name='description'
                                         value={form.description ?? ''}
-                                        placeholder='Description (optional)'
+                                        placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                                         onChange={handleInputChange}
                                     />
                                 </Form>
 
                                 <div className='margin-top-2'>
-                                    <Icon name='asterisk' /> Required field
+                                    <Icon name='asterisk' /> {intl.formatMessage({ id: 'common.requiredField' })}
                                 </div>
                             </Segment>
                         </Grid.Column>
@@ -348,7 +350,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                 <Step active={currentStep === 1} completed={currentStep > 1} link onClick={() => { setCurrentStep(1) }}>
                                     <Icon name='list' />
                                     <Step.Content>
-                                        <Step.Title>Step 1: Trained model</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'newStatValidation.step.trainedModel' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                                 <Step
@@ -364,7 +366,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                                 >
                                     <Icon name='boxes' />
                                     <Step.Content>
-                                        <Step.Title>Step 2: Validation datasets</Step.Title>
+                                        <Step.Title>{intl.formatMessage({ id: 'newStatValidation.step.validationDatasets' })}</Step.Title>
                                     </Step.Content>
                                 </Step>
                             </Step.Group>
@@ -385,7 +387,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         color='red'
                         onClick={() => setCurrentStep(currentStep - 1)}
                     >
-                        Go back
+                        {intl.formatMessage({ id: 'common.cancel' })}
                     </Button>
                 )}
 
@@ -399,7 +401,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         }}
                         disabled={!selectedTrainedModelIsValid}
                     >
-                        Continue
+                        {intl.formatMessage({ id: 'common.continue' })}
                     </Button>
                 )}
 
@@ -413,7 +415,7 @@ export const NewStatisticalValidationModal = (props: NewStatisticalValidationMod
                         }}
                         disabled={!formIsValid()}
                     >
-                        Confirm
+                        {intl.formatMessage({ id: 'common.confirm' })}
                     </Button>
                 )}
             </Modal.Actions>
