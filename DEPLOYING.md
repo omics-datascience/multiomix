@@ -231,6 +231,86 @@ Then the following environment variables must be configured:
    - `AWS_EMR_SHARED_FOLDER`
 
 
+## AI Assistant MCP Tools
+
+The AI assistant supports [Model Context Protocol (MCP)][mcp-spec] servers, which extend the assistant's capabilities by giving it access to external tools (e.g. biomedical literature databases, clinical trials registries, genomic variant databases, and more).
+
+MCP servers are declared in `config/mcp_servers.json`. By default that file ships with **[BioMCP][biomcp]** already configured and enabled:
+
+```json
+{
+  "version": "1.0",
+  "servers": {
+    "biomcp": {
+      "enabled": true,
+      "description": "Biomedical research: PubMed papers, bioRxiv, ClinicalTrials.gov, NCI, variants, OncoKB",
+      "transport": "stdio",
+      "command": "biomcp",
+      "args": ["run", "--mode", "stdio"],
+      "env": {}
+    }
+  }
+}
+```
+
+### Activating MCP support
+
+MCP tools are **disabled by default**. To enable them you need to have the AI assistant enabled first (i.e. `OPENAI_API_KEY` and the related parameters set) and then:
+
+1. Open your `docker-compose.yml` (copied from `docker-compose_dist.yml`).
+2. In the `backend` service, uncomment the environment variable:
+   ```yaml
+   ASSISTANT_MCP_CONFIG_PATH: '/config/mcp_servers.json'
+   ```
+3. In the same service, uncomment the volume mount so the config file is available inside the container:
+   ```yaml
+   - ./config/mcp_servers.json:/config/mcp_servers.json:ro
+   ```
+4. Make sure any MCP server declared with `transport: stdio` has its `command` installed and available in `PATH` inside the container. For BioMCP that means `biomcp-python` must be installed in the container image.
+5. Redo the deployment with Docker.
+
+### Adding custom MCP servers
+
+You can extend the assistant with any MCP-compatible server by adding entries to `config/mcp_servers.json`. The loader supports three transport types:
+
+| Transport | Required fields | Optional fields |
+|-----------|----------------|-----------------|
+| `stdio`   | `command`      | `args`, `env`   |
+| `http`    | `command`, `url` | `args`, `env` |
+| `sse`     | `command`, `url` | `args`, `env` |
+
+Set `"enabled": false` on any entry to disable it without removing it from the file.
+
+Example — adding a custom HTTP MCP server alongside BioMCP:
+
+```json
+{
+  "version": "1.0",
+  "servers": {
+    "biomcp": {
+      "enabled": true,
+      "transport": "stdio",
+      "command": "biomcp",
+      "args": ["run", "--mode", "stdio"],
+      "env": {}
+    },
+    "my-custom-mcp": {
+      "enabled": true,
+      "description": "Custom internal tool server",
+      "transport": "http",
+      "command": "my-mcp-server",
+      "url": "http://my-mcp-host:8080/mcp",
+      "env": {
+        "MY_API_KEY": "secret"
+      }
+    }
+  }
+}
+```
+
+After modifying the file, restart the backend service for the changes to take effect. No rebuild is required since the file is mounted as a read-only volume.
+
+
 ## Execution of tasks with Celery
 
 Multiomix uses [Celery][celery] to distribute the computational load of its most expensive tasks (such as correlation analysis, Biomarkers Feature Selection, static validations, Machine Learning model training, etc.). This requires the user to have a messaging broker, such as RabbitMQ or Redis, installed and configured. In this project, Redis is used and a worker is deployed for each of the execution queues serving a different type of task. The Docker configuration is left ready to run in Docker Compose or Docker Swarm and K8S.
@@ -299,6 +379,8 @@ To import a `media` folder backup inside a new environment you must (from the ro
 2. Run the script `./tools/import_media.sh`.
 
 
+[mcp-spec]: https://modelcontextprotocol.io/
+[biomcp]: https://github.com/genomics-geek/biomcp
 [docker-swarm]: https://docs.docker.com/engine/swarm/
 [modulector]: https://github.com/omics-datascience/modulector
 [bioapi]: https://github.com/omics-datascience/BioAPI

@@ -19,13 +19,15 @@ Technical documentation for the AI assistant integrated into the Multiomix platf
    - [Biological information (BioAPI / Modulector)](#biological-information-bioapi--modulector)
    - [STRING database](#string-database)
    - [Curated knowledge base](#curated-knowledge-base)
+   - [External MCP tools (BioMCP)](#external-mcp-tools-biomcp)
 5. [Frontend — React widget](#5-frontend--react-widget)
 6. [Full query flow](#6-full-query-flow)
 7. [Environment variables and configuration](#7-environment-variables-and-configuration)
 8. [How to change the LLM model](#8-how-to-change-the-llm-model)
 9. [How to add a new tool](#9-how-to-add-a-new-tool)
-10. [How to add curated documentation](#10-how-to-add-curated-documentation)
-11. [Dependencies](#11-dependencies)
+10. [How to add an MCP server](#10-how-to-add-an-mcp-server)
+11. [How to add curated documentation](#11-how-to-add-curated-documentation)
+12. [Dependencies](#12-dependencies)
 
 ---
 
@@ -36,6 +38,8 @@ The assistant is an **LLM agent with tool-calling** embedded in Multiomix as a f
 - Their own experiments, results, and biomarkers
 - Biological information about genes, miRNAs, and drugs
 - Protein interaction networks and functional enrichment (STRING)
+- Biomedical literature: PubMed papers, preprints (bioRxiv/medRxiv), clinical trials (ClinicalTrials.gov)
+- Genomic variants and gene/drug/disease annotations from curated databases
 - Platform documentation and general concepts
 
 The assistant **never fabricates data**. It always retrieves real information via tools connected to the Multiomix database and external APIs.
@@ -63,27 +67,38 @@ The assistant **never fabricates data**. It always retrieves real information vi
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  llm_service.run_chat()                                             │
+│  llm_service.run_chat()  [sync]                                     │
 │                                                                      │
 │  1. EmbeddingService.embed(user_message)  ← HuggingFace local      │
 │  2. build_chat_history()                  ← PostgreSQL + pgvector   │
 │     ├─ 15 most recent messages (current conversation)               │
 │     └─ 5 semantically similar messages (ALL user conversations —    │
 │         cross-chat memory)                                          │
-│  3. AgentExecutor.invoke()                ← LangChain + OpenAI      │
-│     └─ create_tool_calling_agent(llm, tools, prompt)               │
-│  4. Persist user msg + assistant reply with embeddings              │
+│  3. load_mcp_config()                     ← config/mcp_servers.json│
+│  4. asyncio.run(_async_agent())           ← LangChain 1.x + OpenAI │
+│     ├─ MultiServerMCPClient(mcp_config)   ← MCP subprocess (stdio) │
+│     │    └─ client.get_tools()            ← BioMCP tools            │
+│     ├─ all_tools = internal (23) + mcp                              │
+│     └─ create_agent(llm, all_tools, prompt=SYSTEM_PROMPT)          │
+│  5. Persist user msg + assistant reply with embeddings              │
 └──────────┬──────────────────────────────────────────────────────────┘
            │ tool calls
            ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  TOOLS (23 tools)                                                   │
+│  TOOLS                                                              │
 │                                                                      │
+│  Internal (23):                                                     │
 │  ├─ PostgreSQL (Django ORM)  → experiments, biomarkers, files       │
 │  ├─ MongoDB                  → experiment results                   │
 │  ├─ Modulector API           → miRNA-gene interactions              │
 │  ├─ BioAPI                   → gene annotations, drugs              │
 │  └─ STRING REST API          → protein interactions, enrichment     │
+│                                                                      │
+│  External MCP (BioMCP, optional):                                   │
+│  ├─ PubMed / bioRxiv / medRxiv → biomedical papers                 │
+│  ├─ ClinicalTrials.gov         → clinical trials                    │
+│  ├─ NCI / OncoKB               → variants, oncology annotations     │
+│  └─ cBioPortal                 → genomic studies                    │
 └─────────────────────────────────────────────────────────────────────┘
            │ embeddings
            ▼
@@ -194,20 +209,30 @@ vector = embedding_service.embed("TP53 expression in breast cancer")
 
 Location: `src/assistant/services/llm_service.py`
 
-The agent uses the standard LangChain **ReAct with tool-calling** pattern:
+The agent uses the **langchain 1.x** API backed by LangGraph:
 
 ```python
-agent = create_tool_calling_agent(llm, tools, prompt)
-executor = AgentExecutor(agent=agent, tools=tools, max_iterations=5)
+agent = create_agent(llm, all_tools, prompt=SYSTEM_PROMPT)
+result = await agent.ainvoke({"messages": messages})
 ```
 
-The prompt has 4 sections:
-1. **System prompt** — scope, restrictions, markdown formatting instructions
-2. **Chat history** — previous messages (recent + semantic)
-3. **Human message** — current user query
-4. **Agent scratchpad** — internal space for the agent to reason and invoke tools
+`run_chat()` is a **sync** function (called from a standard WSGI/DRF view). Because `MultiServerMCPClient` requires an async context, the agent execution is isolated in `_async_agent()` and run via `asyncio.run()`. Sync DB operations (embed, save messages) stay outside the event loop.
 
-**System prompt restrictions**: the agent only answers questions about bioinformatics, the Multiomix platform, and the user's own data. Out-of-scope questions receive a fixed rejection message.
+```
+run_chat()  [sync]
+  ├─ DB ops (embed, build history, save user message)
+  ├─ load_mcp_config()
+  └─ asyncio.run(_async_agent(...))
+       ├─ MultiServerMCPClient  ← spawns MCP subprocesses
+       ├─ all_tools = internal + mcp
+       ├─ create_agent(llm, all_tools, prompt=SYSTEM_PROMPT)
+       └─ agent.ainvoke({"messages": [*history, HumanMessage]})
+  └─ DB ops (embed, save assistant reply)
+```
+
+**Graceful fallback**: if any MCP server fails to start or crashes, a `WARNING` is logged and the agent continues with the 23 internal tools only — the assistant remains fully functional.
+
+**System prompt restrictions**: the agent only answers questions about bioinformatics, the Multiomix platform, the user's own data, and biomedical literature. Out-of-scope questions receive a fixed rejection message.
 
 **`get_llm()` function**: the model swap point. See section [8](#8-how-to-change-the-llm-model).
 
@@ -293,6 +318,25 @@ Integration with the public [STRING REST API](https://string-db.org/help/api/) (
 |------|-------------|
 | `search_curated_knowledge(query)` | Semantic search over `CuratedDocument`. Returns the top 5 documents by cosine similarity. Useful for answering questions about how the platform works |
 
+### External MCP tools (BioMCP)
+
+Provided by the `biomcp-python` package via the MCP protocol (stdio subprocess). Available when `ASSISTANT_MCP_CONFIG_PATH` is set and `biomcp` is installed.
+
+| Category | Examples |
+|----------|---------|
+| PubMed / bioRxiv / medRxiv | Search papers by gene, disease, method, author |
+| ClinicalTrials.gov | Search clinical trials by condition or intervention |
+| NCI / OncoKB | Variant annotations, oncogenicity classifications |
+| cBioPortal | Studies, mutations, copy number alterations |
+
+**Example usage in the chat:**
+
+> *"Find recent PubMed papers about DESeq2 differential expression in breast cancer"*
+
+> *"Are there clinical trials for BRCA1 mutations in ovarian cancer?"*
+
+The tools are discovered automatically from the running MCP server — no code changes are needed when BioMCP adds new tools in a future release.
+
 ---
 
 ## 5. Frontend — React widget
@@ -373,12 +417,19 @@ ChatPanel.sendMessage()
                     │
                     ├─ 3. Message.objects.create(role=user, embedding=...)
                     │
-                    ├─ 4. AgentExecutor.invoke(input, chat_history)
-                    │     ├─ LLM decides which tools to call
-                    │     ├─ Executes tools (DB, external APIs)
-                    │     └─ LLM generates final response in markdown
+                    ├─ 4. load_mcp_config()  ← reads mcp_servers.json
                     │
-                    └─ 5. Message.objects.create(role=assistant, embedding=...)
+                    ├─ 5. asyncio.run(_async_agent(...))
+                    │     ├─ MultiServerMCPClient  → spawns BioMCP subprocess
+                    │     ├─ all_tools = 23 internal + MCP tools
+                    │     ├─ create_agent(llm, all_tools, system_prompt)
+                    │     ├─ agent.ainvoke({messages: [history + user_msg]})
+                    │     │    ├─ LLM decides which tools to call
+                    │     │    ├─ Executes tools (DB, external APIs, MCP)
+                    │     │    └─ LLM generates final response in markdown
+                    │     └─ [fallback to 23 internal tools if MCP fails]
+                    │
+                    └─ 6. Message.objects.create(role=assistant, embedding=...)
               │
               ▼
          Response { conversation_id, reply }
@@ -412,6 +463,7 @@ Optional variables:
 |----------|-------------|
 | `HF_TOKEN` | HuggingFace token (only required if the model needs authentication) |
 | `HF_CACHE_DIR` | Cache directory for HuggingFace models |
+| `ASSISTANT_MCP_CONFIG_PATH` | Absolute path to `mcp_servers.json`. If not set or the file is missing, MCP tools are disabled and the assistant uses only the 23 internal tools |
 
 ---
 
@@ -484,7 +536,58 @@ def get_my_new_tool(param: str) -> str:
 
 ---
 
-## 10. How to add curated documentation
+## 10. How to add an MCP server
+
+Adding a new MCP server requires **only editing `config/mcp_servers.json`** — no code changes needed.
+
+```json
+{
+  "version": "1.0",
+  "servers": {
+    "biomcp": {
+      "enabled": true,
+      "transport": "stdio",
+      "command": "biomcp",
+      "args": ["run"]
+    },
+    "my-new-server": {
+      "enabled": true,
+      "description": "Optional description for humans",
+      "transport": "stdio",
+      "command": "my-mcp-command",
+      "args": ["--flag", "value"],
+      "env": {
+        "MY_API_KEY": "secret"
+      }
+    }
+  }
+}
+```
+
+**Schema reference:**
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `enabled` | No (default `true`) | Set to `false` to disable without removing the entry |
+| `transport` | Yes | `"stdio"`, `"http"`, or `"sse"` |
+| `command` | Yes (stdio) | Executable name or path. Must be in `PATH` |
+| `args` | No | List of arguments passed to the command |
+| `env` | No | Extra environment variables injected into the subprocess |
+| `url` | Yes (http/sse) | Server URL for HTTP or SSE transports |
+
+**The new server's tools are discovered automatically** at every request — the LLM receives their descriptions and decides when to call them.
+
+**When to also update the system prompt:** if the new server covers a domain not listed in `## Your scope` (e.g. pharmacogenomics), add a bullet point to `SYSTEM_PROMPT` in `llm_service.py` so the agent knows it is allowed to answer questions in that domain.
+
+**Validation rules** (applied by `mcp_loader.py` at load time):
+- File missing or invalid JSON → warning logged, MCP disabled (internal tools still work)
+- `enabled: false` → silently skipped
+- Unknown transport → warning + skip
+- `command` not found in PATH (stdio) → warning + skip
+
+---
+
+## 11. How to add curated documentation
 
 `CuratedDocument` entries allow adding platform-specific knowledge that the agent can query semantically.
 
@@ -499,19 +602,23 @@ def get_my_new_tool(param: str) -> str:
 
 ---
 
-## 11. Dependencies
+## 12. Dependencies
 
 ### Backend (`config/requirements.txt`)
 
 ```
-langchain>=0.3.0
-langchain-openai>=0.2.0
-langchain-community>=0.3.0
-langchain-huggingface>=0.1.0
-pgvector>=0.3.6
-sentence-transformers>=3.0.0
-openai>=1.50.0
+langchain==1.3.2
+langchain-openai==1.2.2
+langchain-community==0.4.2
+langchain-huggingface==1.2.2
+langchain-mcp-adapters==0.2.2
+pgvector==0.4.2
+sentence-transformers==3.0.0
+openai==2.38.0
+biomcp-python==0.7.3
 ```
+
+**Note on langchain 1.x:** the entire langchain stack was upgraded from `0.3.x` to `1.x` because `langchain-mcp-adapters 0.2.x` requires `langchain-core>=1.4.0`, which is incompatible with the `0.3.x` series. As part of this upgrade, the agent API changed: `AgentExecutor` + `create_tool_calling_agent` were replaced by the single `create_agent()` function backed by LangGraph.
 
 ### Frontend (`package.json`)
 
