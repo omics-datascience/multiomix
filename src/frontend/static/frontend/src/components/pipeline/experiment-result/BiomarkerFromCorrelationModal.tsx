@@ -26,6 +26,7 @@ declare const urlMethylationSitesFinder: string
 declare const urlGeneSymbolsFinder: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
+
 type SelectedOption = 'selectAll' | 'selectWithFilters'
 
 /** A matched molecule with the search query and the validated alias. */
@@ -126,7 +127,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
             experimentInfoWithoutFilters: {
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
-            }
+            },
         }
     }
 
@@ -570,7 +571,8 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
 
     handleSelectAllBiomarker = () => {
         const allMolecules = this.state.experimentInfoWithoutFilters.rows
-
+        const genes = this.handleMapGeneFormFormat(allMolecules, 'gene')
+        const gems = this.handleMapGeneFormFormat(allMolecules, 'gem')
         this.setState({
             biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
             openCreateEditBiomarkerModal: true,
@@ -586,18 +588,12 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                     [BiomarkerType.CNA]: { isLoading: false, data: [] },
                     [BiomarkerType.MIRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gem
-                        }))
+                        data: genes
                     },
                     [BiomarkerType.METHYLATION]: { isLoading: false, data: [] },
                     [BiomarkerType.MRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gene
-                        }))
+                        data: gems
                     }
                 },
                 validation: {
@@ -623,15 +619,14 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
 
         // If there are filters applied, use the filtered rows, otherwise use all the rows
         const rowsToUse = hasFilters ? filteredRows : experimentInfo.rows
+        const genes = this.handleMapGeneFormFormat(rowsToUse, 'gene')
 
-        const genes = rowsToUse.map(r => r.gene)
-        const gems = rowsToUse.map(r => r.gem)
-
+        const gems = this.handleMapGeneFormFormat(rowsToUse, 'gem')
         return {
             ...this.getDefaultFormBiomarker(),
             moleculesSection: {
-                [BiomarkerType.MRNA]: { isLoading: false, data: genes.map(g => ({ value: g, isValid: true })) },
-                [BiomarkerType.MIRNA]: { isLoading: false, data: gems.map(g => ({ value: g, isValid: true })) },
+                [BiomarkerType.MRNA]: { isLoading: false, data: genes },
+                [BiomarkerType.MIRNA]: { isLoading: false, data: gems },
                 [BiomarkerType.CNA]: { isLoading: false, data: [] },
                 [BiomarkerType.METHYLATION]: { isLoading: false, data: [] }
             }
@@ -1090,7 +1085,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
      * @param value new value for input form
      * @param name type of input to change
      */
-    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+    handleChangeInputForm = (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker[name] = value
         this.setState({ formBiomarker })
@@ -1285,45 +1280,6 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     }
 
     /**
-     * TODO: Check if needed
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (
-        datasetName: NameOfCGDSDataset,
-        idxSurvivalTuple: number,
-        name: string,
-        value: any
-    ) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
      * Checks if the form is entirely empty. Useful to enable 'Cancel' button
      * @returns True is any of the form's field contains any data. False otherwise
      */
@@ -1377,7 +1333,6 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
 
     handleConfirm = () => {
         const { selectedOption } = this.state
-
         this.setState({ openSelectOptionModal: false }, () => {
             if (selectedOption === 'selectAll') {
                 this.handleSelectAllBiomarker()
@@ -1428,6 +1383,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
         ]
     }
 
+    /** Closes the create/edit Biomarker modal and reset all the states related to it. */
     closeBiomarkerModal = () => {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
@@ -1438,6 +1394,10 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
             modalReady: false
         })
     }
+    /**
+     *  Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select all" option.
+     *  @returns FormBiomarkerData object with the current page filtered rows data
+     */
 
     buildFormBiomarkerFromFilteredRows = () => {
         const { rows } = this.props.experimentInfo
@@ -1458,6 +1418,19 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                 [BiomarkerType.METHYLATION]: { isLoading: false, data: [] }
             }
         }
+    }
+
+    /**
+     * Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select with filters" option.
+     * @param genArray is the array of the current page filtered rows and type is the type of molecule to map (gem or gene).
+     * @param type is the type of molecule to map (gem or gene) to show in the ManualForm when the user selects "Select with filters" option.
+     * @returns FormBiomarkerData object with the current page filtered rows data
+     */
+    handleMapGeneFormFormat = (genArray: DjangoMRNAxGEMResultRow[], type: 'gem' | 'gene'): MoleculesSectionData[] => {
+        return Array.from(
+            new Set(genArray.map(r => r[type]).filter(Boolean)),
+            g => ({ value: g, isValid: true })
+        )
     }
 
     render () {
@@ -1553,6 +1526,8 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
+                        tagOptions={[]}
+                        tags={this.state.tags}
                     />
 
                 </Modal>

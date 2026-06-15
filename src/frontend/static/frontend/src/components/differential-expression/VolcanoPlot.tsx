@@ -1,6 +1,5 @@
 import React from 'react'
-import Plot from 'react-plotly.js'
-import { useIntl } from 'react-intl'
+import { Message } from 'semantic-ui-react'
 
 type VolcanoPoint = {
     id: string | number
@@ -21,62 +20,71 @@ interface VolcanoPlotProps {
 }
 
 /* Volcano plot component */
-export const VolcanoPlot = ({
-    data,
-    fcThreshold = 1,
-    pThreshold = 0.05,
-    showThresholds
-}: VolcanoPlotProps) => {
-    const intl = useIntl()
-    const transformP = (p: number) => -Math.log10(p)
+export const VolcanoPlot = (_props: VolcanoPlotProps) => {
+    // TODO: uncomment when backend is implemented
+    // const transformP = (p: number) => -Math.log10(p)
 
-    const significant = data.filter(
-        (d) => Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold
+    // const {
+    //     data,
+    //     fcThreshold = 1,
+    //     pThreshold = 0.05,
+    //     showThresholds
+    // } = props
+
+    // const significant = data.filter(
+    //     (d) => Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold
+    // )
+
+    // const nonsignificant = data.filter(
+    //     (d) => !(Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold)
+    // )
+    // const pLineY = transformP(pThreshold)
+
+    // const thresholdShapes = showThresholds
+    //     ? [
+    //     // p-value threshold (horizontal)
+    //         {
+    //             type: 'line',
+    //             xref: 'paper',
+    //             x0: 0,
+    //             x1: 1,
+    //             yref: 'y',
+    //             y0: pLineY,
+    //             y1: pLineY,
+    //             line: { dash: 'dash', width: 1 },
+    //         },
+    //         // +log2FC threshold
+    //         {
+    //             type: 'line',
+    //             xref: 'x',
+    //             x0: fcThreshold,
+    //             x1: fcThreshold,
+    //             yref: 'paper',
+    //             y0: 0,
+    //             y1: 1,
+    //             line: { dash: 'dash', width: 1 },
+    //         },
+    //         // -log2FC threshold
+    //         {
+    //             type: 'line',
+    //             xref: 'x',
+    //             x0: -fcThreshold,
+    //             x1: -fcThreshold,
+    //             yref: 'paper',
+    //             y0: 0,
+    //             y1: 1,
+    //             line: { dash: 'dash', width: 1 },
+    //         },
+    //     ]
+    //     : []
+    return (
+        <Message
+            info
+            icon='info circle'
+            header='Work in progress'
+            content='The volcano plot is currently under development and will be available in a future release.'
+        />
     )
-
-    const nonsignificant = data.filter(
-        (d) => !(Math.abs(d.log2FC) >= fcThreshold && d.pValue <= pThreshold)
-    )
-    const pLineY = transformP(pThreshold)
-
-    const thresholdShapes = showThresholds
-        ? [
-        // p-value threshold (horizontal)
-            {
-                type: 'line',
-                xref: 'paper',
-                x0: 0,
-                x1: 1,
-                yref: 'y',
-                y0: pLineY,
-                y1: pLineY,
-                line: { dash: 'dash', width: 1 },
-            },
-            // +log2FC threshold
-            {
-                type: 'line',
-                xref: 'x',
-                x0: fcThreshold,
-                x1: fcThreshold,
-                yref: 'paper',
-                y0: 0,
-                y1: 1,
-                line: { dash: 'dash', width: 1 },
-            },
-            // -log2FC threshold
-            {
-                type: 'line',
-                xref: 'x',
-                x0: -fcThreshold,
-                x1: -fcThreshold,
-                yref: 'paper',
-                y0: 0,
-                y1: 1,
-                line: { dash: 'dash', width: 1 },
-            },
-        ]
-        : []
-    return null
     // return (
     //     <Plot
     //         key={`${fcThreshold}-${pThreshold}`}

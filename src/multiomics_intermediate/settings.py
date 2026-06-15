@@ -352,6 +352,9 @@ ASSISTANT_HF_HOME: str = os.getenv('HF_HOME', os.path.expanduser('~/.cache/huggi
 ASSISTANT_TOKENIZERS_PARALLELISM: str = os.getenv('TOKENIZERS_PARALLELISM', 'false')
 # Apply at boot time so the HuggingFace tokenizers library picks it up before any import.
 os.environ.setdefault('TOKENIZERS_PARALLELISM', ASSISTANT_TOKENIZERS_PARALLELISM)
+# Path to external MCP servers config JSON. Set via ASSISTANT_MCP_CONFIG_PATH env var.
+# If not set or file not found, MCP tools are disabled gracefully.
+ASSISTANT_MCP_CONFIG_PATH: Optional[str] = os.getenv('ASSISTANT_MCP_CONFIG_PATH') or None
 
 
 # Feature Selection settings

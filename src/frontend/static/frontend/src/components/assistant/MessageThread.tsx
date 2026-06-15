@@ -11,16 +11,70 @@ interface MessageThreadProps {
     onSend: (text: string) => void
 }
 
+/**
+ * Capability groups shown in the empty-state welcome screen.
+ * Each entry represents a thematic area the assistant can help with,
+ * derived from the tool set defined in `assistant/services/tools.py`
+ * (internal Multiomix tools) and the MCP servers configured via
+ * `assistant/services/mcp_loader.py` (BioMCP, cBioPortal, etc.).
+ *
+ * Displayed as a three-column grid of cards, each card showing an icon,
+ * a category name, and a bullet list of example capabilities.
+ * Update this list whenever a new tool category is added or removed.
+ */
+const TOOL_CATEGORIES = [
+    {
+        icon: 'database' as const,
+        name: 'Your data',
+        items: [
+            'Correlation experiments',
+            'Biomarkers and feature selection',
+            'Uploaded files',
+            'Statistical validation',
+        ],
+    },
+    {
+        icon: 'lab' as const,
+        name: 'Bioinformatics',
+        items: [
+            'Genes, miRNAs and CpG sites',
+            'cBioPortal (CGDS) datasets',
+            'STRING interaction networks',
+            'Statistical methods',
+        ],
+    },
+    {
+        icon: 'book' as const,
+        name: 'Medical literature',
+        items: [
+            'Papers on PubMed / bioRxiv',
+            'Clinical trials (ClinicalTrials)',
+            'Genomic variants (OncoKB)',
+            'Gene / drug annotations',
+        ],
+    },
+]
+
+/**
+ * One-click example prompts shown below the capability cards in the
+ * empty-state screen. Clicking a chip fires `onSend` directly with the
+ * prompt text, letting the user try the assistant without typing.
+ * These are purely illustrative — edit freely to reflect the most
+ * useful or frequently requested queries.
+ */
 const SUGGESTED_PROMPTS = [
-    'Mostrar mis experimentos recientes',
-    '¿Cuáles son mis biomarkers?',
-    '¿Qué archivos tengo subidos?',
-    'Buscar información sobre el gen TP53',
+    'Show my recent experiments',
+    'What are my biomarkers?',
+    'Search PubMed papers about DESeq2',
+    'Clinical trials for BRCA1',
+    'Information about the TP53 gene',
+    'What files have I uploaded?',
 ]
 
 /**
  * Formats an ISO timestamp as "HH:MM" for today, or "DD Mon HH:MM" otherwise.
- * @param iso
+ * @param iso - ISO 8601 timestamp string, or undefined.
+ * @returns Human-readable time or date+time string, or empty string if undefined.
  */
 function formatMsgTime (iso: string | undefined): string {
     if (!iso) { return '' }
@@ -39,12 +93,14 @@ function formatMsgTime (iso: string | undefined): string {
  * support (including a click-to-enlarge image lightbox), a copy-to-
  * clipboard button per message, a typing indicator while the assistant
  * is responding, and a textarea input for sending new messages.
- * @param root0
- * @param root0.messages
- * @param root0.isLoading
- * @param root0.onSend
+ * @param props - Component props.
+ * @param props.messages - Ordered list of chat messages to display.
+ * @param props.isLoading - Whether the assistant is currently generating a reply.
+ * @param props.onSend - Callback invoked with the message text when the user submits.
+ * @returns The rendered message thread.
  */
-const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
+const MessageThread = (props: MessageThreadProps) => {
+    const { messages, isLoading, onSend } = props
     const [input, setInput] = useState('')
     const [lightboxSrc, setLightboxSrc] = useState<Nullable<string>>(null)
     const [copiedKey, setCopiedKey] = useState<Nullable<string>>(null)
@@ -81,7 +137,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
 
     /**
      * Submits on Enter; allows Shift+Enter for line breaks.
-     * @param e
+     * @param e - Keyboard event from the textarea.
      */
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -93,8 +149,8 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
     /**
      * Copies content to the clipboard and briefly flips the button to a
      * "copied" state.
-     * @param key
-     * @param content
+     * @param key - Unique key identifying which message's button to flip.
+     * @param content - Text content to write to the clipboard.
      */
     const handleCopy = (key: string, content: string) => {
         navigator.clipboard.writeText(content).then(() => {
@@ -136,9 +192,22 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             <div className='chat-messages-scroll' ref={scrollRef}>
                 {messages.length === 0 && !isLoading && (
                     <div className='chat-empty-state'>
-                        <p className='chat-empty-hint'>
-                            Preguntame sobre tus experimentos, genes o biomarkers.
-                        </p>
+                        <p className='chat-welcome-title'>How can I help you?</p>
+                        <div className='chat-capabilities-grid'>
+                            {TOOL_CATEGORIES.map(cat => (
+                                <div key={cat.name} className='chat-capability-card'>
+                                    <div className='chat-capability-name'>
+                                        <Icon name={cat.icon} size='small' />
+                                        {cat.name}
+                                    </div>
+                                    <ul className='chat-capability-items'>
+                                        {cat.items.map(item => (
+                                            <li key={item}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
                         <div className='chat-suggested-prompts'>
                             {SUGGESTED_PROMPTS.map(prompt => (
                                 <button
@@ -164,7 +233,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
                                 </div>
                                 <button
                                     className={`chat-copy-btn${copiedKey === msgKey ? ' copied' : ''}`}
-                                    title={copiedKey === msgKey ? 'Copiado' : 'Copiar'}
+                                    title={copiedKey === msgKey ? 'Copied' : 'Copy'}
                                     onClick={() => handleCopy(msgKey, msg.content)}
                                 >
                                     <Icon name={copiedKey === msgKey ? 'check' : 'copy outline'} size='small' />
@@ -187,7 +256,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
             <div className='chat-input-area'>
                 <textarea
                     rows={2}
-                    placeholder='Escribí un mensaje… (Enter para enviar, Shift+Enter para nueva línea)'
+                    placeholder='Type a message… (Enter to send, Shift+Enter for new line)'
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -199,7 +268,7 @@ const MessageThread = ({ messages, isLoading, onSend }: MessageThreadProps) => {
                     size='small'
                     disabled={isLoading || !input.trim()}
                     onClick={handleSend}
-                    title='Enviar'
+                    title='Send'
                     style={{ alignSelf: 'flex-end' }}
                 >
                     <Icon name='send' />

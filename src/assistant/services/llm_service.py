@@ -1,14 +1,24 @@
+import asyncio
+import logging
 from typing import List
+
 from django.conf import settings
 
 from assistant.models import Message
 from assistant.services.embedding_service import embedding_service
+from assistant.services.mcp_loader import load_mcp_config
 from assistant.services.tools import make_tools
-from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain.agents import create_agent
+from langchain_core.globals import set_debug
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from pgvector.django import CosineDistance
+
+logger = logging.getLogger(__name__)
+
+# Enable LangChain debug output only when the root logger is at DEBUG level
+if logging.getLogger().isEnabledFor(logging.DEBUG):
+    set_debug(True)
 
 SYSTEM_PROMPT = """You are Multiomix Assistant, a specialized AI integrated into the Multiomix platform —
 a cloud-based bioinformatics tool for inferring cancer genomic and epigenomic events associated with gene expression modulation.
@@ -24,6 +34,8 @@ You ONLY answer questions related to:
 - Gene and molecule information (genes, miRNAs, CpG sites)
 - Statistical methods used in the platform (DESeq2, limma, Cox regression, SVM, Random Forest, etc.)
 - Protein-protein interaction networks and functional enrichment from STRING database
+- Biomedical literature: PubMed papers, preprints (bioRxiv/medRxiv), clinical trials (ClinicalTrials.gov)
+- Genomic variants and gene/drug/disease annotations from curated databases (when MCP tools are available)
 
 ## Hard restrictions
 
@@ -63,7 +75,7 @@ def build_chat_history(conversation, user_id: int, query_embedding: List[float])
     - Recent messages: last N from the CURRENT conversation (immediate context).
     - Semantic messages: most similar messages from ANY conversation of the user
       (cross-chat long-term memory), excluding messages already in the recent set.
-    Returns LangChain message objects. SystemMessage is added separately in the prompt.
+    Returns LangChain message objects.
     """
 
     # Recent messages from the current conversation
@@ -94,6 +106,46 @@ def build_chat_history(conversation, user_id: int, query_embedding: List[float])
     return lc_messages
 
 
+def _extract_reply(result: dict) -> str:
+    """Extract text reply from the agent result dict."""
+    messages = result.get('messages', [])
+    if not messages:
+        return ''
+    last = messages[-1]
+    content = last.content if hasattr(last, 'content') else ''
+    return content if isinstance(content, str) else str(content)
+
+
+async def _async_agent(user_message: str, chat_history: List[BaseMessage], user_id: int, mcp_config: dict) -> str:
+    """
+    Async agent execution. Loads MCP tools if mcp_config is provided, then invokes
+    the LangChain agent. Falls back gracefully to internal tools if MCP fails.
+    """
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+
+    internal_tools = make_tools(user_id)
+    llm = get_llm()
+
+    # In langchain 1.x the full message list (history + current turn) is the input.
+    messages: List[BaseMessage] = list(chat_history) + [HumanMessage(content=user_message)]
+
+    if mcp_config:
+        try:
+            client = MultiServerMCPClient(mcp_config)
+            mcp_tools = await client.get_tools()
+            logger.debug('MCP tools loaded: %s', [t.name for t in mcp_tools])
+            all_tools = internal_tools + mcp_tools
+            agent = create_agent(llm, all_tools, system_prompt=SYSTEM_PROMPT)
+            result = await agent.ainvoke({'messages': messages})
+            return _extract_reply(result)
+        except Exception as exc:
+            logger.warning('MCP tools unavailable (%s), falling back to internal tools', exc)
+
+    agent = create_agent(llm, internal_tools, system_prompt=SYSTEM_PROMPT)
+    result = await agent.ainvoke({'messages': messages})
+    return _extract_reply(result)
+
+
 def run_chat(conversation, user_message: str, user_id: int) -> str:
     """
     Run one chat turn: embed the user message, build context, invoke agent, return reply.
@@ -119,22 +171,10 @@ def run_chat(conversation, user_message: str, user_id: int) -> str:
         conversation.title = user_message[:100]
         conversation.save(update_fields=['title'])
 
-    # Build agent prompt — standard LangChain tool-calling pattern
-    prompt = ChatPromptTemplate.from_messages([
-        ('system', SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name='chat_history'),
-        ('human', '{input}'),
-        MessagesPlaceholder(variable_name='agent_scratchpad'),
-    ])
+    mcp_config = load_mcp_config()
 
-    tools = make_tools(user_id)
-    llm = get_llm()
-
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    executor = AgentExecutor(agent=agent, tools=tools, verbose=False, max_iterations=5)
-
-    result = executor.invoke({'input': user_message, 'chat_history': chat_history})
-    reply = result.get('output', '')
+    # Async agent execution (MCP adapters require an event loop)
+    reply = asyncio.run(_async_agent(user_message, chat_history, user_id, mcp_config))
 
     # Embed and save assistant reply
     reply_embedding = embedding_service.embed(reply)
