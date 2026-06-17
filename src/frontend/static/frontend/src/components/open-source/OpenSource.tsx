@@ -3,10 +3,14 @@ import { Base } from '../Base'
 import { Container, Divider, Grid, Header, HeaderSubheader, List, ListContent, ListDescription, ListHeader, ListIcon, ListItem } from 'semantic-ui-react'
 import { useIntl } from 'react-intl'
 
-export const OpenSource = () => {
+/**
+ * Wrapper to make Context.Provider work.
+ * @returns Component.
+ */
+const OpenSourceWrapper = () => {
     const intl = useIntl()
     return (
-        <Base activeItem='open-source' wrapperClass='wrapper'>
+        <>
             <Container text className='margin-top-2 margin-bottom-5'>
                 <Grid stackable>
                     {/* Git hub */}
@@ -86,6 +90,18 @@ export const OpenSource = () => {
                     <Divider />
                 </Grid>
             </Container>
+        </>
+    )
+}
+
+/**
+ * Open Source Page.
+ * @returns Component.
+ */
+export const OpenSource = () => {
+    return (
+        <Base activeItem='open-source' wrapperClass='wrapper'>
+            <OpenSourceWrapper />
         </Base>
     )
 }
