@@ -3,17 +3,16 @@ import { Container, Divider, Grid, Header, List } from 'semantic-ui-react'
 import { Base } from '../Base'
 import { FAQQuestionAndAnswer } from './FAQQuestionAndAnswer'
 import { useIntl } from 'react-intl'
-/**
- * FAQ Page (Frequently Asked Questions).
- *
- * Uses the `FAQQuestionAndAnswer` component to display each questions and answers.
- */
 
-export const FAQ = () => {
+/**
+ * Wrapper to make Context.Provider work.
+ * @returns Component.
+ */
+const FAQWrapper = () => {
     const intl = useIntl()
 
     return (
-        <Base activeItem='faq' wrapperClass='wrapper'>
+        <>
             <Container text className='margin-top-2 margin-bottom-5'>
                 <Grid stackable>
                     <Grid.Row columns={1}>
@@ -211,6 +210,20 @@ export const FAQ = () => {
                     </Grid.Row>
                 </Grid>
             </Container>
+        </>
+    )
+}
+
+/**
+ * FAQ Page (Frequently Asked Questions).
+ *
+ * Uses the `FAQQuestionAndAnswer` component to display each questions and answers.
+ * @returns Component.
+ */
+export const FAQ = () => {
+    return (
+        <Base activeItem='faq' wrapperClass='wrapper'>
+            <FAQWrapper />
         </Base>
     )
 }
