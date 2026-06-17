@@ -216,8 +216,6 @@ const FAQWrapper = () => {
 
 /**
  * FAQ Page (Frequently Asked Questions).
- *
- * Uses the `FAQQuestionAndAnswer` component to display each questions and answers.
  * @returns Component.
  */
 export const FAQ = () => {
