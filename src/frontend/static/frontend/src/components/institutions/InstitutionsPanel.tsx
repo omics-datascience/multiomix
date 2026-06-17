@@ -48,7 +48,8 @@ interface InstitutionsPanelProps {
 /**
  * Renders a manager to list, add, download and remove source files (which are used to make experiments).
  * Also, this component renders a CRUD of Tags for files
- */ class InstitutionsPanel extends React.Component<InstitutionsPanelProps, InstitutionsPanelState> {
+ */
+class InstitutionsPanel extends React.Component<InstitutionsPanelProps, InstitutionsPanelState> {
     filterTimeout: number | undefined
     abortController = new AbortController()
 
