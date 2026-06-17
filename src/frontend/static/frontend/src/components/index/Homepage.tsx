@@ -64,73 +64,83 @@ const HomepageHeading = () => {
 }
 
 /**
- * Homepage component
+ * Wrapper to make Context.Provider work
  * @returns Component
  */
-export const Homepage = () => {
+const HomepageWrapper = () => {
     const intl = useIntl()
     return (
-        <div>
-            <Base activeItem='home' wrapperClass='wrapper'>
-                <HomepageHeading />
+        <>
+            <HomepageHeading />
 
-                {/* <ResponsiveContainer> */}
-                <Segment className='padded-segment' vertical>
-                    {/* <Grid container stackable verticalAlign='middle'> */}
-                    <Grid stackable verticalAlign='middle'>
-                        <Grid.Row>
-                            <Grid.Column width={8}>
-                                <Header className='important-title' as='h1'>
-                                    {intl.formatMessage({ id: 'homepage.empoweringBioinformatics' })}
-                                </Header>
-                                <div className='middle-size-text'>
-                                    <p>
-                                        {intl.formatMessage({ id: 'homepage.description1' })}
-                                    </p>
-                                    <p>
-                                        {intl.formatMessage({ id: 'homepage.description2' })}
-                                    </p>
-                                    <List>
-                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.mirna' })} />
-                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.methylation' })} />
-                                        <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.cna' })} />
-                                    </List>
-                                </div>
-                            </Grid.Column>
-                            <Grid.Column width={8}>
-                                <Image
-                                    id='all-analysis-img'
-                                    className='margin-left-5'
-                                    bordered
-                                    rounded
-                                    size='large'
-                                    src='/static/frontend/img/homepage/all-analysis.png'
-                                    alt={intl.formatMessage({ id: 'homepage.analysisAlt' })}
-                                />
-                            </Grid.Column>
-                        </Grid.Row>
-                    </Grid>
-                </Segment>
+            {/* <ResponsiveContainer> */}
+            <Segment className='padded-segment' vertical>
+                {/* <Grid container stackable verticalAlign='middle'> */}
+                <Grid stackable verticalAlign='middle'>
+                    <Grid.Row>
+                        <Grid.Column width={8}>
+                            <Header className='important-title' as='h1'>
+                                {intl.formatMessage({ id: 'homepage.empoweringBioinformatics' })}
+                            </Header>
+                            <div className='middle-size-text'>
+                                <p>
+                                    {intl.formatMessage({ id: 'homepage.description1' })}
+                                </p>
+                                <p>
+                                    {intl.formatMessage({ id: 'homepage.description2' })}
+                                </p>
+                                <List>
+                                    <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.mirna' })} />
+                                    <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.methylation' })} />
+                                    <List.Item icon='marker' content={intl.formatMessage({ id: 'homepage.pipeline.cna' })} />
+                                </List>
+                            </div>
+                        </Grid.Column>
+                        <Grid.Column width={8}>
+                            <Image
+                                id='all-analysis-img'
+                                className='margin-left-5'
+                                bordered
+                                rounded
+                                size='large'
+                                src='/static/frontend/img/homepage/all-analysis.png'
+                                alt={intl.formatMessage({ id: 'homepage.analysisAlt' })}
+                            />
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            </Segment>
 
-                <Segment className='padded-segment' vertical inverted>
-                    <Container text>
-                        <Header as='h1' className='important-title' inverted>
-                            {intl.formatMessage({ id: 'homepage.getInvolved' })}
-                        </Header>
-                        <p className='middle-size-text'>
-                            {intl.formatMessage({ id: 'homepage.openSourceDescription' })}
-                        </p>
-                    </Container>
+            <Segment className='padded-segment' vertical inverted>
+                <Container text>
+                    <Header as='h1' className='important-title' inverted>
+                        {intl.formatMessage({ id: 'homepage.getInvolved' })}
+                    </Header>
+                    <p className='middle-size-text'>
+                        {intl.formatMessage({ id: 'homepage.openSourceDescription' })}
+                    </p>
+                </Container>
 
-                    <Container text textAlign='center' className='margin-top-5'>
-                        <Button id='source-button' secondary basic as='a' size='huge' href='https://github.com/omics-datascience/multiomix' target='_blank' inverted>
-                            {intl.formatMessage({ id: 'homepage.source' })}
-                            <Icon name='github' className='margin-left-5' />
-                        </Button>
-                    </Container>
-                </Segment>
-                {/* </ResponsiveContainer> */}
-            </Base>
-        </div>
+                <Container text textAlign='center' className='margin-top-5'>
+                    <Button id='source-button' secondary basic as='a' size='huge' href='https://github.com/omics-datascience/multiomix' target='_blank' inverted>
+                        {intl.formatMessage({ id: 'homepage.source' })}
+                        <Icon name='github' className='margin-left-5' />
+                    </Button>
+                </Container>
+            </Segment>
+            {/* </ResponsiveContainer> */}
+        </>
+    )
+}
+
+/**
+ * Homepage component.
+ * @returns Component.
+ */
+export const Homepage = () => {
+    return (
+        <Base activeItem='home' wrapperClass='wrapper'>
+            <HomepageWrapper />
+        </Base>
     )
 }
