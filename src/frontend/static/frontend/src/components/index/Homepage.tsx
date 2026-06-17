@@ -64,8 +64,8 @@ const HomepageHeading = () => {
 }
 
 /**
- * Wrapper to make Context.Provider work
- * @returns Component
+ * Wrapper to make Context.Provider work.
+ * @returns Component.
  */
 const HomepageWrapper = () => {
     const intl = useIntl()
