@@ -1391,7 +1391,7 @@ export default {
     'mainNavbar.biomarkers': 'Biomarcadores',
     'mainNavbar.differentialExpression': 'Expresión diferencial',
 
-    'mainNavbar.myDatasets': 'Mis conjuntos de datos',
+    'mainNavbar.myDatasets': 'Mis datos',
     'mainNavbar.cbioportal': 'cBioPortal',
 
     'mainNavbar.institutions': 'Instituciones',
