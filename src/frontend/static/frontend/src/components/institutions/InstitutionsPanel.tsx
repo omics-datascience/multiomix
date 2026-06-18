@@ -41,6 +41,7 @@ export interface InstitutionTableData extends DjangoInstitution {
     is_user_admin: boolean
 }
 
+/** InstitutionsPanel props. */
 interface InstitutionsPanelProps {
     intl: IntlShape
 }
@@ -375,8 +376,9 @@ class InstitutionsPanel extends React.Component<InstitutionsPanelProps, Institut
 
 /**
  * Functional wrapper to inject intl into the class component.
+ * @param props Component props without intl.
+ * @returns Component with intl props.
  */
-
 const InstitutionsPanelWithIntl = (props: Omit<InstitutionsPanelProps, 'intl'>) => {
     const intl = useIntl()
     return <InstitutionsPanel {...props} intl={intl} />

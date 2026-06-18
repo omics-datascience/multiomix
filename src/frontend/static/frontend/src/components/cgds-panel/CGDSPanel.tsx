@@ -10,6 +10,7 @@ import { survivalTupleIsValid } from '../survival/utils'
 import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
+import { IntlShape, useIntl } from 'react-intl'
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
@@ -51,11 +52,16 @@ enum SyncStrategy {
     SYNC_ONLY_FAILED = 3
 }
 
+/** CGDSPanel props. */
+interface CGDSPanelProps {
+    intl: IntlShape
+}
+
 /**
  * Renders a CRUD panel for a CGDS Studies and their datasets
  * @returns Component
  */
-class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
+class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
     constructor (props) {
         super(props)
 
@@ -929,6 +935,8 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     }
 
     render () {
+        const { intl } = this.props
+
         // CGDS Study modals
         const cgdsStudyStopConfirmModal = this.getCGDSStudyStopConfirmModal()
         const cgdsStudySyncConfirmModal = this.getCGDSStudySyncConfirmModal()
@@ -977,7 +985,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                         urlToRetrieveData={urlCGDSStudiesCRUD}
                                         showSearchInput
                                         customFilters={[
-                                            { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
+                                            { label: intl.formatMessage({ id: 'cgdsDatasetsModal.onlyLastVersion' }), keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                                         ]}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
                                         mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => {
@@ -1047,4 +1055,14 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     }
 }
 
-export { CGDSPanel }
+/**
+ * Functional wrapper to inject intl into the class component.
+ * @param props Component props without intl.
+ * @returns Component with intl props.
+ */
+const CGDSPanelWithIntl = (props: Omit<CGDSPanelProps, 'intl'>) => {
+    const intl = useIntl()
+    return <CGDSPanel {...props} intl={intl} />
+}
+
+export { CGDSPanelWithIntl as CGDSPanel }
