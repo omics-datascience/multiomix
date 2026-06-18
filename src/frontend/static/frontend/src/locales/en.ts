@@ -671,7 +671,7 @@ export default {
     'faq.footer.links.privacy': 'Privacy Policy',
     // 82.FilesManager
     'files.manager.title': 'File Manager',
-    'files.manager.input.label': 'Add a new file',
+    'files.manager.input.label': 'Add new file',
     'files.manager.table.name': 'Name',
     'files.manager.table.description': 'Description',
     'files.manager.table.type': 'Type',
@@ -683,6 +683,9 @@ export default {
     'files.manager.filter.tag.placeholder': 'Select existing Tag',
     'files.manager.filter.visibility.all': 'All',
     'files.manager.filter.visibility.private': 'Private',
+    'files.manager.filter.visibility.label': 'Visibility',
+    'files.manager.filter.institutions.label': 'Institutions',
+    'files.manager.filter.fileType.label': 'File type',
     'files.manager.search.placeholder': 'Search by name',
     'files.manager.delete.tag.title': 'Delete tag',
     'files.manager.delete.tag.confirm': 'Are you sure you want to delete the Tag "{tagName}"?',

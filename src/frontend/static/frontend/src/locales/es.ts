@@ -714,7 +714,7 @@ export default {
 
     // 82.FilesManager
     'files.manager.title': 'Administrador de archivos',
-    'files.manager.input.label': 'Agregar un nuevo archivo',
+    'files.manager.input.label': 'Agregar archivo',
     'files.manager.table.name': 'Nombre',
     'files.manager.table.description': 'Descripción',
     'files.manager.table.type': 'Tipo',
@@ -727,6 +727,9 @@ export default {
     'files.manager.filter.tag.placeholder': 'Seleccionar etiqueta existente',
     'files.manager.filter.visibility.all': 'Todos',
     'files.manager.filter.visibility.private': 'Privado',
+    'files.manager.filter.visibility.label': 'Visibilidad',
+    'files.manager.filter.institutions.label': 'Instituciones',
+    'files.manager.filter.fileType.label': 'Tipo',
     'files.manager.search.placeholder': 'Buscar por nombre',
 
     'files.manager.delete.tag.title': 'Eliminar etiqueta',

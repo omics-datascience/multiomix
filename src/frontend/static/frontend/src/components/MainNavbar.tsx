@@ -249,7 +249,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
                     {/* Datasets menu */}
                     <Menu.Menu>
-                        <Dropdown text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })} className='link item' icon={null} aria-label='Datasets'>
+                        <Dropdown text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })} className='link item' icon={null} aria-label={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}>
                             <Dropdown.Menu>
                                 {/* User's Datasets panel */}
                                 <Dropdown.Item

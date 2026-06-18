@@ -24,8 +24,6 @@ type UploadResponse = {
     errorMsg?: string
 }
 
-const FILE_INPUT_LABEL = 'Add a new file'
-
 // URLs defined in files.html
 declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
@@ -112,12 +110,21 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
+     * Gets the input label translated.
+     * @returns Translated label for file input.
+     */
+    getFileInputLabelTranslated = () => {
+        const { intl } = this.props
+        return intl.formatMessage({ id: 'files.manager.input.label' })
+    }
+
+    /**
      * Generates a default new file form
      * @returns An object with all the field with default values
      */
-    getDefaultNewFile (): NewFile {
+    getDefaultNewFile = (): NewFile => {
         return {
-            newFileName: FILE_INPUT_LABEL,
+            newFileName: this.getFileInputLabelTranslated(),
             newFileNameUser: '',
             newFileDescription: '',
             newFileType: FileType.MRNA,
@@ -136,7 +143,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const newFileForm = this.state.newFile
         // Get Filename if file was selected
         const newFile = this.newFileInputRef.current
-        const newFileName = (newFile && newFile.files.length > 0) ? newFile.files[0].name : FILE_INPUT_LABEL
+        const newFileName = (newFile && newFile.files.length > 0) ? newFile.files[0].name : this.getFileInputLabelTranslated()
 
         // If there wasn't a File name written by the user, loads the filename in the input
         const newFileNameUser = (newFileForm.newFileNameUser.trim().length > 0) ? newFileForm.newFileNameUser : newFileName

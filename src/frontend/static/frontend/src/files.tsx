@@ -6,6 +6,12 @@ import { ConfirmModal } from './utils/interfaces'
 import { Confirm } from 'semantic-ui-react'
 import { createRoot } from 'react-dom/client'
 
+import { IntlProvider } from 'react-intl'
+import en from './locales/en'
+import es from './locales/es'
+
+const messages = { en, es }
+
 type FileState = {
     confirmModal: ConfirmModal
 }
@@ -36,30 +42,14 @@ class FilesApp extends React.Component<object, FileState> {
         confirmModal.headerText = headerText
         confirmModal.contentText = contentText
         confirmModal.onConfirm = onConfirm
-        this.setState({ confirmModal },
-            () => {
-                if (this.state.confirmModal.confirmModal === true) {
-                    console.log('Confirm modal is true')
-                } else if (this.state.confirmModal.confirmModal === false) {
-                    console.log('Confirm modal is false')
-                }
-            })
+        this.setState({ confirmModal })
     }
 
     /**
      * Reset the confirm modal, to be used again
      */
     handleCancelConfirmModalState () {
-        this.setState(
-            { confirmModal: this.getDefaultConfirmModal() },
-            () => {
-                if (this.state.confirmModal.confirmModal === true) {
-                    console.log('Confirm modal is true')
-                } else if (this.state.confirmModal.confirmModal === false) {
-                    console.log('Confirm modal is false')
-                }
-            }
-        )
+        this.setState({ confirmModal: this.getDefaultConfirmModal() })
     }
 
     /**
@@ -71,7 +61,7 @@ class FilesApp extends React.Component<object, FileState> {
             confirmModal: false,
             headerText: '',
             contentText: '',
-            onConfirm: () => console.log('DefaultConfirmModalFunction, this should change during cycle of component')
+            onConfirm: () => {}
         }
     }
 
@@ -95,4 +85,8 @@ class FilesApp extends React.Component<object, FileState> {
 }
 const container = document.getElementById('files-app')
 const root = createRoot(container!)
-root.render(<FilesApp />)
+root.render(
+    <IntlProvider locale='es' messages={messages.es}>
+        <FilesApp />
+    </IntlProvider>
+)
