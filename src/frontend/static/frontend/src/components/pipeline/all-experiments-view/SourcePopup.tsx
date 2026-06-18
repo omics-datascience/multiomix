@@ -4,6 +4,7 @@ import { DjangoExperimentSource, SourceSimpleCGDSDataset } from '../../../utils/
 import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
 import { formatDateLocale, getFileRowDescriptionInPlural } from '../../../utils/util_functions'
 import { useIntl } from 'react-intl'
+import { Nullable } from '../../../utils/interfaces'
 
 declare const downloadFileURL: string
 
@@ -12,7 +13,7 @@ declare const downloadFileURL: string
  */
 interface SourcePopupProps {
     /** Experiment's source to retrieve the info */
-    source: DjangoExperimentSource,
+    source: Nullable<DjangoExperimentSource>,
     /** Trigger icon's name */
     iconName: SemanticICONS,
     /** Trigger icon's color */
@@ -29,6 +30,11 @@ interface SourcePopupProps {
  */
 export const SourcePopup = (props: SourcePopupProps) => {
     const intl = useIntl()
+
+    if (!props.source) {
+        return null
+    }
+
     const isUserFile = props.source.user_file !== null
     const datasetObj = props.source.user_file ?? props.source.cgds_dataset
 

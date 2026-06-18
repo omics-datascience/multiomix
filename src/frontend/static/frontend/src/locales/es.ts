@@ -647,6 +647,8 @@ export default {
     'differentialExpression.panel.deleteError': '¡Error al eliminar el experimento de Expresión Diferencial!',
     'differentialExpression.panel.downloadMrnaSource': 'Descargar archivo fuente mRNA',
     'differentialExpression.panel.downloadClinicalSource': 'Descargar archivo clínico fuente',
+    'differentialExpression.panel.sources': 'Fuentes',
+    'differentialExpression.panel.public': 'Público',
     'differentialExpression.panel.publicVisible': 'Todos los usuarios de la plataforma pueden ver este experimento',
     'differentialExpression.panel.publicHidden': 'Si esto está marcado, todos los usuarios de la plataforma pueden ver (pero no editar ni eliminar) este elemento',
     'differentialExpression.panel.seeResults': 'Ver resultados',
@@ -1383,6 +1385,7 @@ export default {
     // 146 Footer
     'footer.termsAndPrivacyPolicy': 'Términos y política de privacidad',
     // 147 MainNavbar
+    'mainNavbar.logo.alt': 'Logo de Multiomix',
     'mainNavbar.login': 'Iniciar sesión',
     'mainNavbar.greeting': 'Hola, {username}',
     'mainNavbar.editProfile': 'Editar perfil',

@@ -618,6 +618,8 @@ export default {
     'differentialExpression.panel.deleteError': 'Error deleting Differential Expression experiment!',
     'differentialExpression.panel.downloadMrnaSource': 'Download source mRNA file',
     'differentialExpression.panel.downloadClinicalSource': 'Download Clinical source file',
+    'differentialExpression.panel.sources': 'Sources',
+    'differentialExpression.panel.public': 'Public',
     'differentialExpression.panel.publicVisible': 'All users of the platform can see this experiment',
     'differentialExpression.panel.publicHidden': 'If this is checked all the users in the platform can see (but not edit or remove) this element',
     'differentialExpression.panel.seeResults': 'See results',
@@ -1329,6 +1331,7 @@ export default {
     // 146 Footer
     'footer.termsAndPrivacyPolicy': 'Terms and privacy policy',
     // 147 MainNavbar
+    'mainNavbar.logo.alt': 'Multiomix logo',
     'mainNavbar.login': 'Log in',
     'mainNavbar.greeting': 'Hi, {username}',
     'mainNavbar.editProfile': 'Edit profile',

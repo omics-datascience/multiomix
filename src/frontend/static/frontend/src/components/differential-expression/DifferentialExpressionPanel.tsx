@@ -22,7 +22,7 @@ declare const urlDifferentialExpressionList:string
 declare const urlDifferentialExpressionStop:string
 declare const urlDeleteExperiment: string
 
-interface DiferentialExpressionPanelState {
+interface DifferentialExpressionPanelState {
     alert: CustomAlert
     modal: ConfirmModal
     stoppingExperiment: boolean
@@ -34,12 +34,12 @@ interface DiferentialExpressionPanelState {
 }
 
 /**
- *  Differential Expression Panel component
- * @returns JSX.Element
+ * Wrapper to make Context.Provider work.
+ * @returns Component.
  */
-export const DiferentialExpressionPanel = () => {
+const DifferentialExpressionPanelWrapper = () => {
     const intl = useIntl()
-    const [state, setState] = useState<DiferentialExpressionPanelState>({
+    const [state, setState] = useState<DifferentialExpressionPanelState>({
         alert: getDefaultAlertProps(),
         modal: getDefaultConfirmModal(),
         stoppingExperiment: false,
@@ -190,7 +190,7 @@ export const DiferentialExpressionPanel = () => {
     }
 
     return (
-        <Base activeItem='differential-expression' wrapperClass='wrapper'>
+        <>
             <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
                 <Grid.Column width={4} textAlign='center'>
                     <DifferentialExpressionForm
@@ -399,6 +399,18 @@ export const DiferentialExpressionPanel = () => {
                     modalResult: { differentialExpressionAnalysis: null, isOpen: false }
                 }))}
             />
+        </>
+    )
+}
+
+/**
+ * Differential Expression Panel component
+ * @returns Component.
+ */
+export const DifferentialExpressionPanel = () => {
+    return (
+        <Base activeItem='differential-expression' wrapperClass='wrapper'>
+            <DifferentialExpressionPanelWrapper />
         </Base>
     )
 }

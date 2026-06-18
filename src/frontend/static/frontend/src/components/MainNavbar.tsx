@@ -182,7 +182,7 @@ const MainNavbar = (props: MainNavbarProps) => {
     return (
         <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
             {/* Logo */}
-            <Menu.Item as='a' header href={urlIndex} title={intl.formatMessage({ id: 'mainNavbar.logo.title' })}>
+            <Menu.Item as='a' header href={urlIndex}>
                 <Image size='tiny' src='/static/frontend/img/logo.png' alt={intl.formatMessage({ id: 'mainNavbar.logo.alt' })} />
             </Menu.Item>
 
@@ -213,7 +213,6 @@ const MainNavbar = (props: MainNavbarProps) => {
                                 <Dropdown.Item
                                     text={intl.formatMessage({ id: 'mainNavbar.gem' })}
                                     icon='lab'
-                                    title={intl.formatMessage({ id: 'mainNavbar.gem.title' })}
                                     as='a' href={urlPipeline}
                                     active={props.activeItem === 'pipeline'}
                                 />
