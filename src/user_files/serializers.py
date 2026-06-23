@@ -21,6 +21,12 @@ class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'time_column', 'event_column']
 
 
+class SimpleTissueSerializer(serializers.Serializer):
+    """Lightweight serializer for Tissue model"""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
 class SimpleUserFileSerializer(serializers.ModelSerializer):
     """Serialize a few fields for all experiment list"""
     class Meta:
@@ -65,6 +71,7 @@ class UserFileSerializer(serializers.ModelSerializer):
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
 
+        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
             instance.survival_columns,
@@ -95,12 +102,10 @@ class UserFileSerializer(serializers.ModelSerializer):
         """
         with transaction.atomic():
             institutions_ids = validated_data.pop('institutions', [])
-            tissues = validated_data.pop('tissues', [])
 
             # User file and institutions
             user_file = UserFile.objects.create(user=self.context['request'].user, **validated_data)
             user_file.institutions.set(institutions_ids)
-            user_file.tissues.set(tissues)
             user_file.save()
 
             # Survival columns
@@ -123,11 +128,14 @@ class UserFileSerializer(serializers.ModelSerializer):
             instance.name = validated_data.get('name', instance.name)
             instance.file_type = validated_data.get('file_type', instance.file_type)
             instance.description = validated_data.get('description', instance.description)
-            instance.tag = validated_data.get('tag')
-            instance.tissues.set(validated_data.get('tissues', []))
-            instance.institutions.set(validated_data.get('institutions', []))
-            instance.is_cpg_site_id = validated_data.get('is_cpg_site_id')
-            instance.platform = validated_data.get('platform')
+            if 'tag' in validated_data:
+                instance.tag = validated_data['tag']
+            if 'tissues' in validated_data:
+                instance.tissues = validated_data['tissues']
+            if 'institutions' in validated_data:
+                instance.institutions.set(validated_data['institutions'])
+            instance.is_cpg_site_id = validated_data.get('is_cpg_site_id', instance.is_cpg_site_id)
+            instance.platform = validated_data.get('platform', instance.platform)
 
             # Updates survival columns
             survival_columns_str = self.context['request'].POST.get('survival_columns', '[]')

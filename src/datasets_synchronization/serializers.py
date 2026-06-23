@@ -224,8 +224,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             methylation_dataset = self.__create_cgds_dataset(validated_data.pop('methylation_dataset'))
             clinical_patient_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_patient_dataset'))
             clinical_sample_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_sample_dataset'))
-            tissues = validated_data.pop('tissues', [])
-
             # Creates the CGDSStudy
             cgds_study = CGDSStudy.objects.create(
                 mrna_dataset=mrna_dataset,
@@ -236,7 +234,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
                 clinical_sample_dataset=clinical_sample_dataset,
                 **validated_data
             )
-            cgds_study.tissues.set(tissues)
             return cgds_study
 
     @staticmethod
@@ -265,25 +262,16 @@ class CGDSStudySerializer(serializers.ModelSerializer):
         """
         # Updates CGDSDatasets from request data
         with transaction.atomic():
-            mrna_dataset = self.__update_cgds_dataset(instance.mrna_dataset, validated_data.pop('mrna_dataset'))
-            mirna_dataset = self.__update_cgds_dataset(instance.mirna_dataset, validated_data.pop('mirna_dataset'))
-            cna_dataset = self.__update_cgds_dataset(instance.cna_dataset, validated_data.pop('cna_dataset'))
-            methylation_dataset = self.__update_cgds_dataset(
-                instance.methylation_dataset,
-                validated_data.pop('methylation_dataset')
-            )
+            mrna_dataset = self.__update_cgds_dataset(instance.mrna_dataset, validated_data.pop('mrna_dataset')) if 'mrna_dataset' in validated_data else instance.mrna_dataset
+            mirna_dataset = self.__update_cgds_dataset(instance.mirna_dataset, validated_data.pop('mirna_dataset')) if 'mirna_dataset' in validated_data else instance.mirna_dataset
+            cna_dataset = self.__update_cgds_dataset(instance.cna_dataset, validated_data.pop('cna_dataset')) if 'cna_dataset' in validated_data else instance.cna_dataset
+            methylation_dataset = self.__update_cgds_dataset(instance.methylation_dataset, validated_data.pop('methylation_dataset')) if 'methylation_dataset' in validated_data else instance.methylation_dataset
 
             old_clinical_patient_dataset = instance.clinical_patient_dataset
             old_clinical_sample_dataset = instance.clinical_sample_dataset
 
-            clinical_patient_dataset = self.__update_cgds_dataset(
-                instance.clinical_patient_dataset,
-                validated_data.pop('clinical_patient_dataset')
-            )
-            clinical_sample_dataset = self.__update_cgds_dataset(
-                instance.clinical_sample_dataset,
-                validated_data.pop('clinical_sample_dataset')
-            )
+            clinical_patient_dataset = self.__update_cgds_dataset(instance.clinical_patient_dataset, validated_data.pop('clinical_patient_dataset')) if 'clinical_patient_dataset' in validated_data else instance.clinical_patient_dataset
+            clinical_sample_dataset = self.__update_cgds_dataset(instance.clinical_sample_dataset, validated_data.pop('clinical_sample_dataset')) if 'clinical_sample_dataset' in validated_data else instance.clinical_sample_dataset
 
             # If it has been created clinical data, it's needed to link to existing experiments referencing to this
             # CGDSStudy
@@ -305,9 +293,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.clinical_patient_dataset = clinical_patient_dataset
             instance.clinical_sample_dataset = clinical_sample_dataset
 
-            # Updates M2M tissues if provided
+            # Updates tissues if provided
             if 'tissues' in validated_data:
-                instance.tissues.set(validated_data['tissues'])
+                instance.tissues = validated_data['tissues']
 
             # Saves new changes and returns instance
             instance.save()

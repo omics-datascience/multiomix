@@ -36,6 +36,7 @@ from differential_expression.serializers import (
     DifferentialExpressionExperimentListSerializer,
     DifferentialExpressionVolcanoPlotSerializer,
 )
+from tissues.models import Tissue
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from user_files.views import get_an_user_file
@@ -585,7 +586,7 @@ class DifferentialExpressionUpdate(APIView):
     @staticmethod
     def patch(request: Request, pk: int):
         """
-        Update name and/or description of a differential expression experiment.
+        Update name, description and/or tissues of a differential expression experiment.
         """
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=pk)
 
@@ -600,11 +601,12 @@ class DifferentialExpressionUpdate(APIView):
         data = request.data
         name = data.get('name')
         description = data.get('description')
+        tissues_id = data.get('tissues')
 
         # Validate that at least one field is provided
-        if name is None and description is None:
+        if name is None and description is None and tissues_id is None:
             return Response(
-                {'ok': False, 'detail': 'At least one field (name or description) must be provided.'},
+                {'ok': False, 'detail': 'At least one field (name, description or tissues) must be provided.'},
                 status=400
             )
 
@@ -623,6 +625,10 @@ class DifferentialExpressionUpdate(APIView):
         if description is not None:
             experiment.description = description
             fields_to_update.append('description')
+        if tissues_id is not None:
+            tissue = get_object_or_404(Tissue, pk=tissues_id)
+            experiment.tissues = tissue
+            fields_to_update.append('tissues')
 
         # Save the experiment
         experiment.save(update_fields=fields_to_update)
@@ -632,7 +638,8 @@ class DifferentialExpressionUpdate(APIView):
             'data': {
                 'id': experiment.id,
                 'name': experiment.name,
-                'description': experiment.description
+                'description': experiment.description,
+                'tissues': {'id': experiment.tissues.id, 'name': experiment.tissues.name} if experiment.tissues else None
             }
         })
 

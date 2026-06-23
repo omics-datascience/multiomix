@@ -15,6 +15,7 @@ from genes.models import Gene
 from inferences.models import InferenceExperiment
 from institutions.models import Institution
 from tags.models import Tag
+from tissues.models import Tissue
 from user_files.models import UserFile
 from user_files.models_choices import FileType
 from .models_choices import ExperimentType, ExperimentState, CorrelationMethod, PValuesAdjustmentMethod
@@ -403,6 +404,7 @@ class Experiment(models.Model):
 
     shared_institutions = models.ManyToManyField(Institution, blank=True, related_name='shared_correlation_analysis')
     shared_users = models.ManyToManyField(User, blank=True, related_name='shared_users_correlation_analysis')
+    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property

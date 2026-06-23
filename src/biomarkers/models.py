@@ -8,6 +8,7 @@ from queryset_sequence import QuerySetSequence
 
 from institutions.models import Institution
 from tags.models import Tag
+from tissues.models import Tissue
 from api_service.websocket_functions import send_update_biomarkers_command
 from user_files.models_choices import MoleculeType
 
@@ -76,6 +77,7 @@ class Biomarker(models.Model):
     shared_institutions = models.ManyToManyField(Institution, related_name='shared_biomarkers', blank=True)
     shared_users = models.ManyToManyField(User, blank=True,
                                                  related_name='shared_users_biomarkers')
+    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     def __str__(self) -> str:
         return self.name
 

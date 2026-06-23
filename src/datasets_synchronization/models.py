@@ -289,7 +289,7 @@ class CGDSStudy(models.Model):
         null=True,
         related_name='cgds_studies_as_clinical_sample_dataset'
     )
-    tissues = models.ManyToManyField(Tissue, blank=True)
+    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     task_id: Optional[str] = models.CharField(max_length=100, blank=True, null=True)  # Celery Task ID
 
     def __str__(self) -> str:

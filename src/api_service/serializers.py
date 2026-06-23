@@ -49,7 +49,7 @@ class ExperimentSerializerDetail(serializers.ModelSerializer):
 
     class Meta:
         model = Experiment
-        fields = ['id', 'name', 'description', 'tag']
+        fields = ['id', 'name', 'description', 'tag', 'tissues']
 
 
 class ExperimentSourceSerializer(serializers.ModelSerializer):
@@ -72,12 +72,18 @@ class LimitedUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username']
 
 
+class SimpleTissueSerializer(serializers.Serializer):
+    """Lightweight serializer for Tissue model"""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
 class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""
     mRNA_source = ExperimentSourceSerializer()
     gem_source = ExperimentSourceSerializer()
     user = LimitedUserSerializer()
     tag = TagSerializer()
+    tissues = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = Experiment
@@ -99,7 +105,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'tag',
             'clinical_source_id',
             'is_public',
-            'user'
+            'user',
+            'tissues'
         ]
 
 

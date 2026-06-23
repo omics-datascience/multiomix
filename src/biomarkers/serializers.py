@@ -60,6 +60,12 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
         exclude = ['biomarker']
 
 
+class SimpleTissueSerializer(serializers.Serializer):
+    """Lightweight serializer for Tissue model"""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
 class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     """Biomarker model serializer without the molecules (useful to list Biomarkers)."""
     number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
@@ -76,6 +82,11 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     class Meta:
         model = Biomarker
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
+        return data
 
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:
@@ -110,7 +121,7 @@ class BiomarkerSimpleUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Biomarker
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'tissues']
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):
@@ -128,12 +139,16 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     methylations = MethylationIdentifierSerializer(many=True, required=False)
     origin = serializers.IntegerField(required=False)
     state = serializers.IntegerField(required=False)
-
     tag = TagSerializer(required=False)
 
     class Meta:
         model = Biomarker
         exclude = ['user']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
+        return data
 
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:
@@ -167,7 +182,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
         This avoids the user to edit a Biomarker that was already used and generate inconsistencies.
         """
         return ins.was_already_used
-    
+
     
 class BiomarkerFromCorrelationAnalysisSerializer(serializers.Serializer):
     """
