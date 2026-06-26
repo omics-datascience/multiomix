@@ -2,6 +2,7 @@ export default {
     // common actions
     'common.cancel': 'Cancel',
     'common.delete': 'Delete',
+    'common.download': 'Download',
     'common.stop': 'Stop',
     'common.save': 'Save',
     'common.close': 'Close',
