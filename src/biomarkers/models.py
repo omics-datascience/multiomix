@@ -77,7 +77,7 @@ class Biomarker(models.Model):
     shared_institutions = models.ManyToManyField(Institution, related_name='shared_biomarkers', blank=True)
     shared_users = models.ManyToManyField(User, blank=True,
                                                  related_name='shared_users_biomarkers')
-    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     def __str__(self) -> str:
         return self.name
 

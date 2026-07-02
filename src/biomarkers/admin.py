@@ -3,7 +3,7 @@ from .models import Biomarker
 
 class BiomarkerAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'tag', 'upload_date')
-    list_filter = ('tag', 'upload_date', 'tissues')
+    list_filter = ('tag', 'upload_date', 'tissue')
     search_fields = ('name', 'description')
 
 admin.site.register(Biomarker, BiomarkerAdmin)

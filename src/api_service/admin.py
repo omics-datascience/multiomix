@@ -5,7 +5,7 @@ from .models import Experiment, ExperimentSource, ExperimentClinicalSource, Gene
 
 class ExperimentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'type', 'submit_date', 'state', 'user')
-    list_filter = ('state', 'submit_date', 'tissues')
+    list_filter = ('state', 'submit_date', 'tissue')
     search_fields = ('name', 'description', 'user__username')
     filter_horizontal = ('shared_institutions', 'shared_users')
 

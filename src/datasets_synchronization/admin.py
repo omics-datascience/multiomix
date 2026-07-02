@@ -5,7 +5,7 @@ from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleUserFile, Surviv
 
 class CGDSStudyAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'version', 'date_last_synchronization', 'state')
-    list_filter = ('state', 'tissues')
+    list_filter = ('state', 'tissue')
     search_fields = ('name', 'description')
 
     def delete_queryset(self, request, queryset):

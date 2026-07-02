@@ -601,12 +601,12 @@ class DifferentialExpressionUpdate(APIView):
         data = request.data
         name = data.get('name')
         description = data.get('description')
-        tissues_id = data.get('tissues')
+        tissue_id = data.get('tissue')
 
         # Validate that at least one field is provided
-        if name is None and description is None and tissues_id is None:
+        if name is None and description is None and tissue_id is None:
             return Response(
-                {'ok': False, 'detail': 'At least one field (name, description or tissues) must be provided.'},
+                {'ok': False, 'detail': 'At least one field (name, description or tissue) must be provided.'},
                 status=400
             )
 
@@ -625,10 +625,10 @@ class DifferentialExpressionUpdate(APIView):
         if description is not None:
             experiment.description = description
             fields_to_update.append('description')
-        if tissues_id is not None:
-            tissue = get_object_or_404(Tissue, pk=tissues_id)
-            experiment.tissues = tissue
-            fields_to_update.append('tissues')
+        if tissue_id is not None:
+            tissue = get_object_or_404(Tissue, pk=tissue_id)
+            experiment.tissue = tissue
+            fields_to_update.append('tissue')
 
         # Save the experiment
         experiment.save(update_fields=fields_to_update)
@@ -639,7 +639,7 @@ class DifferentialExpressionUpdate(APIView):
                 'id': experiment.id,
                 'name': experiment.name,
                 'description': experiment.description,
-                'tissues': {'id': experiment.tissues.id, 'name': experiment.tissues.name} if experiment.tissues else None
+                'tissue': {'id': experiment.tissue.id, 'name': experiment.tissue.name} if experiment.tissue else None
             }
         })
 
