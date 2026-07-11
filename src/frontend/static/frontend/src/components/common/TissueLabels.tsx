@@ -9,6 +9,11 @@ interface TissueLabelsProps {
     tissueOptions: DjangoTissue[]
 }
 
+/**
+ * Normalizes a tissue value into an array so callers can pass either one tissue, a tissue id, or no value.
+ * @param tissues Tissue value or values to normalize.
+ * @returns Tissue values as an array.
+ */
 export const normalizeTissues = (tissues: TissueLabelsProps['tissues']): TissueValue[] => {
     if (!tissues) {
         return []
@@ -17,6 +22,12 @@ export const normalizeTissues = (tissues: TissueLabelsProps['tissues']): TissueV
     return Array.isArray(tissues) ? tissues : [tissues]
 }
 
+/**
+ * Resolves a tissue object from a tissue object or id.
+ * @param tissueValue Tissue object or id.
+ * @param tissueOptions Available tissue options.
+ * @returns The resolved tissue if it exists.
+ */
 const getTissue = (tissueValue: TissueValue, tissueOptions: DjangoTissue[]): DjangoTissue | undefined => {
     if (typeof tissueValue === 'number') {
         return tissueOptions.find((tissue) => tissue.id === tissueValue)
@@ -25,9 +36,20 @@ const getTissue = (tissueValue: TissueValue, tissueOptions: DjangoTissue[]): Dja
     return tissueValue
 }
 
+/**
+ * Extracts tissue ids from a tissue value.
+ * @param tissues Tissue value or values.
+ * @returns Tissue ids.
+ */
 export const getTissueIds = (tissues: TissueLabelsProps['tissues']): number[] =>
     normalizeTissues(tissues).map((tissue) => typeof tissue === 'number' ? tissue : tissue.id)
 
+/**
+ * Builds dropdown options from tissue objects.
+ * @param tissues Available tissue objects.
+ * @param includeNoTissueOption If true, prepends an option that clears the selected tissue.
+ * @returns Dropdown options for Semantic UI.
+ */
 export const getTissueDropdownOptions = (
     tissues: DjangoTissue[],
     includeNoTissueOption: boolean = false
@@ -43,6 +65,11 @@ export const getTissueDropdownOptions = (
         : tissueOptions
 }
 
+/**
+ * Renders tissue labels using the available tissue option metadata.
+ * @param props Component props.
+ * @returns Tissue labels or a dash when no tissue exists.
+ */
 export const TissueLabels = (props: TissueLabelsProps) => {
     const tissues = normalizeTissues(props.tissues)
         .map((tissueValue) => getTissue(tissueValue, props.tissueOptions))

@@ -109,6 +109,15 @@ enum DjangoUserFileUploadErrorInternalCode {
 }
 
 /**
+ * Django Tissue model interface
+ */
+interface DjangoTissue {
+    id: number,
+    name: string,
+    code: string
+}
+
+/**
  * A simple structure Experiment's source's CGDSDataset info
  */
 interface SourceSimpleCGDSDataset {
@@ -191,15 +200,6 @@ interface DjangoUser {
 interface DjangoInstitutionSimple {
     id: number,
     name: string
-}
-
-/**
- * Django Tissue model interface
- */
-interface DjangoTissue {
-    id: number,
-    name: string,
-    code: string
 }
 
 /**
