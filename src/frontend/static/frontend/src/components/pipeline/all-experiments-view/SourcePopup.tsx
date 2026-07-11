@@ -47,7 +47,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
     // Gets file's type description in plural to show the number of rows
     const datasetRowDescriptionInPlural = getFileRowDescriptionInPlural(datasetObj.file_type)
 
-    const tissue = normalizeTissues(datasetObj.tissues)[0]
+    const tissue = normalizeTissues(datasetObj.tissue)[0]
     const tissueName = typeof tissue === 'number' ? undefined : tissue?.name
     const datasetName = datasetObj.name ?? intl.formatMessage({ id: 'sourcePopup.unnamedSource' })
 

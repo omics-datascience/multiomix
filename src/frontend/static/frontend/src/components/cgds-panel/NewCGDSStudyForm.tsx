@@ -35,7 +35,7 @@ interface NewCGDSStudyFormProps {
 export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
     const intl = useIntl()
     const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges)
-    const tissues = normalizeTissues(props.newCGDSStudy.tissues)
+    const tissues = normalizeTissues(props.newCGDSStudy.tissue)
     const isDisabled = props.newCGDSStudy.name.trim().length === 0 &&
                     props.newCGDSStudy.description.trim().length === 0 &&
                     props.newCGDSStudy.url.trim().length === 0 &&
@@ -116,11 +116,11 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                 search
                 selection
                 clearable
-                name='tissues'
+                name='tissue'
                 value={typeof tissues[0] === 'number'
                     ? tissues[0]
                     : tissues[0]?.id ?? ''}
-                onChange={(_, { name, value }) => props.handleFormChanges(name, value ? [value] : [])}
+                onChange={(_, { name, value }) => props.handleFormChanges(name, value || null)}
                 placeholder='Tissue (optional)'
                 disabled={props.addingOrEditingCGDSStudy}
             />

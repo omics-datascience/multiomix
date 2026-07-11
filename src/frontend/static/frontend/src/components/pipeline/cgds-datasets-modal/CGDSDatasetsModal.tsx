@@ -82,7 +82,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                     showSearchInput
                     urlToRetrieveData={urlCGDSStudiesCRUD}
                     customFilters={[
-                        { label: 'Tissue', keyForServer: 'tissues', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues), width: 3 },
+                        { label: 'Tissue', keyForServer: 'tissue', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues), width: 3 },
                         { label: intl.formatMessage({ id: 'cgdsDatasetsModal.onlyLastVersion' }), keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                     ]}
                     queryParams={{ file_type: props.selectingFileType }}
@@ -97,7 +97,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                             >
                                 <Table.Cell>{CGDSStudy.name}</Table.Cell>
                                 <Table.Cell>{CGDSStudy.description}</Table.Cell>
-                                <Table.Cell><TissueLabels tissues={CGDSStudy.tissues} tissueOptions={tissues} /></Table.Cell>
+                                <Table.Cell><TissueLabels tissues={CGDSStudy.tissue} tissueOptions={tissues} /></Table.Cell>
                                 <Table.Cell>{CGDSStudy.version}</Table.Cell>
                                 <Table.Cell collapsing>{CGDSStudy.date_last_synchronization
                                     ? formatDateLocale(CGDSStudy.date_last_synchronization)

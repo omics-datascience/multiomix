@@ -308,13 +308,13 @@ class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField(method_name='get_name')
     description = serializers.SerializerMethodField(method_name='get_description')
     version = serializers.SerializerMethodField(method_name='get_version')
-    tissues = serializers.SerializerMethodField(method_name='get_tissues')
+    tissue = serializers.SerializerMethodField(method_name='get_tissue')
     file_obj = serializers.SerializerMethodField(method_name='get_file_obj')
 
     class Meta:
         model = CGDSDataset
         fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj',
-                  'tissues']
+                  'tissue']
 
     @staticmethod
     def get_file_obj(_instance: CGDSDataset):
@@ -334,5 +334,5 @@ class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
         return instance.study.version if instance.study else None
 
     @staticmethod
-    def get_tissues(instance: CGDSDataset):
-        return TissueSerializer(instance.study.tissues).data if instance.study and instance.study.tissues else None
+    def get_tissue(instance: CGDSDataset):
+        return TissueSerializer(instance.study.tissue).data if instance.study and instance.study.tissue else None

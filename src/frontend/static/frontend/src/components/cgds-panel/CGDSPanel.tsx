@@ -139,7 +139,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
             methylation_dataset: null,
             clinical_patient_dataset: null,
             clinical_sample_dataset: null,
-            tissues: []
+            tissue: null
         }
     }
 
@@ -171,7 +171,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
         CGDSStudyCopy.methylation_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.methylation_dataset)
         CGDSStudyCopy.clinical_patient_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_patient_dataset)
         CGDSStudyCopy.clinical_sample_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_sample_dataset)
-        CGDSStudyCopy.tissues = getTissueIds(CGDSStudyCopy.tissues)
+        CGDSStudyCopy.tissue = getTissueIds(CGDSStudyCopy.tissue)[0] ?? null
 
         this.setState({
             newCGDSStudy: CGDSStudyCopy
@@ -204,13 +204,12 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
 
     /**
      * Builds the API payload from the form state.
-     * The form keeps tissues as an array for dropdown compatibility, while the API expects one FK id.
+     * The form keeps tissue as one FK id.
      * @returns API payload for creating or editing a CGDS study.
      */
     buildCGDSStudyPayload = (): DjangoCGDSStudy => {
         const payload = copyObject(this.state.newCGDSStudy)
-        const tissueIds = getTissueIds(payload.tissues)
-        payload.tissues = tissueIds[0] ?? null
+        payload.tissue = getTissueIds(payload.tissue)[0] ?? null
         return payload
     }
 
@@ -454,11 +453,11 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
         const newCGDSStudy = this.state.newCGDSStudy
         newCGDSStudy[name] = value
 
-        if (name !== 'tissues') {
+        if (name !== 'tissue') {
             const inferredTissues = this.inferTissuesFromCGDSStudy(newCGDSStudy)
 
-            if (inferredTissues.length > 0 && getTissueIds(newCGDSStudy.tissues).length === 0) {
-                newCGDSStudy.tissues = inferredTissues
+            if (inferredTissues.length > 0 && getTissueIds(newCGDSStudy.tissue).length === 0) {
+                newCGDSStudy.tissue = inferredTissues[0]
             }
         }
 
@@ -1086,7 +1085,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
                                         urlToRetrieveData={urlCGDSStudiesCRUD}
                                         showSearchInput
                                         customFilters={[
-                                            { label: 'Tissue', keyForServer: 'tissues', defaultValue: '', placeholder: 'Select tissue', options: tissueOptions, width: 3 },
+                                            { label: 'Tissue', keyForServer: 'tissue', defaultValue: '', placeholder: 'Select tissue', options: tissueOptions, width: 3 },
                                             { label: intl.formatMessage({ id: 'cgdsDatasetsModal.onlyLastVersion' }), keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                                         ]}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
@@ -1100,7 +1099,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
                                                     <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis' />
                                                     <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis' />
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
-                                                    <Table.Cell textAlign='center'><TissueLabels tissues={CGDSStudyFileRow.tissues} tissueOptions={this.state.tissues} /></Table.Cell>
+                                                    <Table.Cell textAlign='center'><TissueLabels tissues={CGDSStudyFileRow.tissue} tissueOptions={this.state.tissues} /></Table.Cell>
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
                                                         ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
                                                         : '-'}

@@ -98,7 +98,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
     function getDefaultFilters (): PaginationCustomFilter[] {
         return [
             { label: intl.formatMessage({ id: 'userDatasetsModal.tag' }), keyForServer: 'tag', defaultValue: '', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.tagOptions },
-            { label: 'Tissue', keyForServer: 'tissues', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues) },
+            { label: 'Tissue', keyForServer: 'tissue', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues) },
             { label: intl.formatMessage({ id: 'userDatasetsModal.visibility' }), keyForServer: 'visibility', defaultValue: 'all', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.institutionsOptions }
         ]
     }
@@ -135,7 +135,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                                 {isClinical &&
                                     <Table.Cell textAlign='center'>{userFile.survival_columns ? userFile.survival_columns.length : 0}</Table.Cell>}
                                 <Table.Cell collapsing textAlign='center'>
-                                    <TissueLabels tissues={userFile.tissues} tissueOptions={tissues} />
+                                    <TissueLabels tissues={userFile.tissue} tissueOptions={tissues} />
                                 </Table.Cell>
                                 <Table.Cell collapsing textAlign='center'>
                                     <TagLabel tag={userFile.tag} fluid />

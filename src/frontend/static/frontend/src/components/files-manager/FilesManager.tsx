@@ -48,7 +48,7 @@ interface NewFile {
     platform: DjangoMethylationPlatform,
     newTag: Nullable<number>,
     institutions: number[],
-    tissues: number[],
+    tissue: Nullable<number>,
     survivalColumns: DjangoSurvivalColumnsTupleSimple[]
 }
 
@@ -135,7 +135,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             newFileType: FileType.MRNA,
             newTag: null,
             institutions: [],
-            tissues: [],
+            tissue: null,
             isCpGSiteId: false,
             platform: DjangoMethylationPlatform.PLATFORM_450,
             survivalColumns: []
@@ -541,8 +541,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         })
 
         // Adds the Tissue's id, if selected
-        if (newFileForm.tissues.length > 0) {
-            formData.append('tissues', newFileForm.tissues[0].toString())
+        if (newFileForm.tissue) {
+            formData.append('tissue', newFileForm.tissue.toString())
         }
 
         // Adds the survival columns tuples, if needed
@@ -683,7 +683,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             isCpGSiteId: fileToEdit.is_cpg_site_id,
                             platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                             institutions: fileToEdit.institutions.map((institution) => institution.id),
-                            tissues: getTissueIds(fileToEdit.tissues),
+                            tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                             survivalColumns: fileToEdit.survival_columns ?? []
                         }
                     })
@@ -706,7 +706,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     isCpGSiteId: fileToEdit.is_cpg_site_id,
                     platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                     institutions: fileToEdit.institutions.map((institution) => institution.id),
-                    tissues: getTissueIds(fileToEdit.tissues),
+                    tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                     survivalColumns: fileToEdit.survival_columns ?? []
                 }
             })
@@ -826,7 +826,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             },
             {
                 label: 'Tissue',
-                keyForServer: 'tissues',
+                keyForServer: 'tissue',
                 defaultValue: '',
                 placeholder: 'Select tissue',
                 options: tissueOptions,
@@ -937,7 +937,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             />
                                         )}
                                     </Table.Cell>
-                                    <Table.Cell><TissueLabels tissues={userFileRow.tissues} tissueOptions={this.state.tissues} /></Table.Cell>
+                                    <Table.Cell><TissueLabels tissues={userFileRow.tissue} tissueOptions={this.state.tissues} /></Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
                                     <Table.Cell textAlign='center'>
                                         {

@@ -283,10 +283,10 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 search
                                 selection
                                 clearable
-                                name='tissues'
-                                value={props.newFile.tissues[0] ?? ''}
+                                name='tissue'
+                                value={props.newFile.tissue ?? ''}
                                 onChange={(_, { name, value }) => {
-                                    props.handleAddFileInputsChange(name, value ? [value] : [])
+                                    props.handleAddFileInputsChange(name, value || null)
                                 }}
                                 placeholder='Tissue (optional)'
                                 disabled={props.uploadingFile}

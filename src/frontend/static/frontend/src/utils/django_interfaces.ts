@@ -119,7 +119,7 @@ interface SourceSimpleCGDSDataset {
     version: Nullable<number>,
     date_last_synchronization: Nullable<string>,
     file_obj: string,
-    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
+    tissue: DjangoTissue | number | null
 }
 
 /**
@@ -229,7 +229,7 @@ interface DjangoSimpleUserFile {
     name: string,
     description: Nullable<string>,
     file_type: FileType,
-    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
+    tissue: DjangoTissue | number | null
 }
 
 /**
@@ -250,7 +250,7 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
     user: DjangoUserSimple,
     survival_columns?: DjangoSurvivalColumnsTupleSimple[],
     is_public: boolean,
-    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
+    tissue: DjangoTissue | number | null
 }
 
 /**
@@ -525,7 +525,7 @@ interface DjangoCGDSStudy {
     methylation_dataset: Nullable<DjangoCGDSDataset>,
     clinical_patient_dataset: Nullable<DjangoCGDSDataset>,
     clinical_sample_dataset: Nullable<DjangoCGDSDataset>,
-    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
+    tissue: DjangoTissue | number | null
 }
 
 /**

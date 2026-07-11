@@ -24,7 +24,7 @@ class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
 
 class SimpleUserFileSerializer(serializers.ModelSerializer):
     """Serialize a few fields for all experiment list"""
-    tissues = TissueSerializer(read_only=True)
+    tissue = TissueSerializer(read_only=True)
 
     class Meta:
         model = UserFile
@@ -33,7 +33,7 @@ class SimpleUserFileSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'file_type',
-            'tissues'
+            'tissue'
         ]
 
 
@@ -69,7 +69,7 @@ class UserFileSerializer(serializers.ModelSerializer):
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
 
-        data['tissue'] = SimpleTissueSerializer(instance.tissue).data if instance.tissue else None
+        data['tissue'] = TissueSerializer(instance.tissue).data if instance.tissue else None
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
             instance.survival_columns,
