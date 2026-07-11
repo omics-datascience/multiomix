@@ -1,7 +1,7 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
 import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
 import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
@@ -18,6 +18,7 @@ import { useIntl, IntlShape } from 'react-intl'
 declare const urlBiomarkersCRUD: string
 declare const urlBiomarkersSimpleUpdate: string
 declare const urlBiomarkersCreate: string
+declare const urlTagsCRUD: string
 declare const urlMiRNACodes: string
 declare const urlGeneSymbols: string
 declare const urlMethylationSites: string
@@ -134,9 +135,31 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     /**
      * Abort controller if component is render
      */
+    componentDidMount () {
+        this.getUserTags()
+    }
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * Fetches the User's defined Biomarker/Experiment Tags.
+     */
+    getUserTags () {
+        const searchParams = {
+            type: TagType.EXPERIMENT
+        }
+
+        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
+            response.json<DjangoTag[]>().then((tags) => {
+                this.setState({ tags })
+            }).catch((err) => {
+                console.log('Error parsing Tags JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log("Error getting user's tags ->", err)
+        })
     }
 
     /**
@@ -1436,6 +1459,14 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     render () {
         const { intl } = this.props
         const { openSelectOptionModal, selectedOption } = this.state
+        const tagOptions: DropdownItemProps[] = [
+            { key: 'no_tag', value: '', text: intl.formatMessage({ id: 'biomarkerFromCorrelation.tags.noTag' }) },
+            ...this.state.tags.map((tag) => {
+                const id = tag.id as number
+                return { key: id, value: id, text: tag.name }
+            })
+        ]
+
         return (
             <>
                 <Form.Button
@@ -1526,7 +1557,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
-                        tagOptions={[]}
+                        tagOptions={tagOptions}
                         tags={this.state.tags}
                     />
 
