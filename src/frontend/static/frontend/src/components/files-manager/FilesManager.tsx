@@ -3,14 +3,14 @@ import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky, { HTTPError } from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
-import { TagsPanel } from './TagsPanel'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
+import { TagDropdown } from '../common/TagDropdown'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { DeleteButton } from '../common/DeleteButton'
@@ -56,16 +56,11 @@ interface FilesManagerState {
     tags: DjangoTag[],
     files: DjangoUserFile[],
     userInstitutions: DjangoInstitution[],
-    newTag: DjangoTag,
-    showDeleteTagModal: boolean,
     showDeleteFileModal: boolean,
-    selectedTagToDelete: Nullable<DjangoTag>,
     selectedFileToDelete: Nullable<DjangoUserFile>,
-    deletingTag: boolean,
     deletingFile: boolean,
     uploadingFile: boolean,
     newFile: NewFile,
-    addingTag: boolean,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
     /** posibles values for survival tuple */
@@ -93,16 +88,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             tags: [],
             files: [],
             userInstitutions: [],
-            newTag: getDefaultNewTag(),
-            showDeleteTagModal: false,
             showDeleteFileModal: false,
-            selectedTagToDelete: null,
             selectedFileToDelete: null,
-            deletingTag: false,
             deletingFile: false,
             uploadingFile: false,
             newFile: this.getDefaultNewFile(),
-            addingTag: false,
             uploadPercentage: 0,
             uploadState: null,
             survivalTuplesPossiblesValues: []
@@ -229,84 +219,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
-     * Selects a new Tag to edit
-     * @param selectedTag Tag to edit
-     */
-    editTag = (selectedTag: DjangoTag) => { this.setState({ newTag: copyObject(selectedTag) }) }
-
-    /**
-     * Does a request to add a new Tag
-     */
-    addOrEditTag () {
-        if (this.state.addingTag) {
-            return
-        }
-
-        // Sets the Request's Headers
-        const myHeaders = getDjangoHeader()
-
-        // If exists an id then we are editing, otherwise It's a new Tag
-        let addOrEditURL, requestMethod: typeof ky.post | typeof ky.patch
-
-        if (this.state.newTag.id !== null) {
-            addOrEditURL = `${urlTagsCRUD}${this.state.newTag.id}/`
-            requestMethod = ky.patch
-        } else {
-            addOrEditURL = urlTagsCRUD
-            requestMethod = ky.post
-        }
-
-        this.setState({ addingTag: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newTag }).then((response) => {
-                this.setState({ addingTag: false })
-                response.json<DjangoTag>().then((responseJSON) => {
-                    if (responseJSON && responseJSON.id) {
-                        // If all is OK, resets the form and gets the User's tag to refresh the list
-                        this.setState({ newTag: getDefaultNewTag() })
-                        this.getUserTags()
-                    }
-                }).catch((err) => {
-                    alertGeneralError()
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                this.setState({ addingTag: false })
-                alertGeneralError()
-                console.log('Error adding new Tag ->', err)
-            })
-        })
-    }
-
-    /**
-     * Makes a request to delete a Tag
-     */
-    deleteTag = () => {
-        if (this.state.selectedTagToDelete === null) {
-            return
-        }
-
-        // Sets the Request's Headers
-        const myHeaders = getDjangoHeader()
-        const deleteURL = `${urlTagsCRUD}${this.state.selectedTagToDelete.id}`
-        this.setState({ deletingTag: true }, () => {
-            ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
-                // If OK is returned refresh the tags
-                if (response.ok) {
-                    this.setState({
-                        deletingTag: false,
-                        showDeleteTagModal: false
-                    })
-                    this.getUserTags()
-                }
-            }).catch((err) => {
-                this.setState({ deletingTag: false })
-                alertGeneralError()
-                console.log('Error deleting Tag ->', err)
-            })
-        })
-    }
-
-    /**
      * Makes a request to delete a File
      */
     deleteFile = () => {
@@ -340,48 +252,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
-     * Handles New Tag Input changes
-     * @param name State field to change
-     * @param value Value to assign to the specified field
-     */
-    handleAddTagInputsChange = (name: string, value) => {
-        const newTag = this.state.newTag
-        newTag[name] = value
-        this.setState(prevState => ({
-            newTag: {
-                ...prevState.newTag,
-                [name]: value,
-            }
-        }))
-    }
-
-    /**
-     * Handles New Tag Input Key Press
-     * @param e Event of change
-     */
-    handleKeyDown = (e) => {
-        // If pressed Enter key submits the new Tag
-        if (e.which === 13 || e.keyCode === 13) {
-            this.addOrEditTag()
-        } else {
-            if (e.which === 27 || e.keyCode === 27) {
-                this.setState({ newTag: getDefaultNewTag() })
-            }
-        }
-    }
-
-    /**
-     * Show a modal to confirm a Tag deletion
-     * @param tag Selected Tag to delete
-     */
-    confirmTagDeletion = (tag: DjangoTag) => {
-        this.setState({
-            selectedTagToDelete: tag,
-            showDeleteTagModal: true
-        })
-    }
-
-    /**
      * Show a modal to confirm a File deletion
      * @param file Selected Tag to delete
      */
@@ -393,11 +263,48 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
+     * Persists a Tag change for an existing UserFile.
+     * @param userFile UserFile to update.
+     * @param tagId New Tag id, or null to clear it.
+     */
+    updateUserFileTag = (userFile: DjangoUserFile, tagId: Nullable<number>) => {
+        const formData = new FormData()
+        formData.append('name', userFile.name)
+        formData.append('description', userFile.description ?? '')
+        formData.append('file_type', userFile.file_type.toString())
+        formData.append('is_cpg_site_id', userFile.is_cpg_site_id.toString())
+
+        if (userFile.is_cpg_site_id && userFile.platform) {
+            formData.append('platform', userFile.platform.toString())
+        }
+
+        userFile.institutions.forEach((institution) => {
+            formData.append('institutions', institution.id.toString())
+        })
+
+        if (userFile.survival_columns && userFile.survival_columns.length > 0) {
+            formData.append('survival_columns', JSON.stringify(userFile.survival_columns))
+        }
+
+        if (tagId !== null) {
+            formData.append('tag', tagId.toString())
+        }
+
+        ky.patch(`${urlUserFilesCRUD}${userFile.id}/`, {
+            headers: getDjangoHeader(),
+            body: formData,
+            timeout: false
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error updating UserFile Tag ->', err)
+        })
+    }
+
+    /**
      * Closes the deletion confirm modals
      */
     handleClose = () => {
         this.setState({
-            showDeleteTagModal: false,
             showDeleteFileModal: false
         })
     }
@@ -570,35 +477,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     })
             }
         })
-    }
-
-    /**
-     * Generates the modal to confirm a Tag deletion
-     * @returns Modal component. Null if no Tag was selected to delete
-     */
-    getTagDeletionConfirmModals () {
-        const { intl } = this.props
-
-        if (!this.state.selectedTagToDelete) {
-            return null
-        }
-
-        return (
-            <Modal size='small' open={this.state.showDeleteTagModal} onClose={this.handleClose} centered={false}>
-                <Header icon='trash' content='Delete tag' />
-                <Modal.Content>
-                    <p>{intl.formatMessage({ id: 'files.manager.delete.tag.confirm' }, { tagName: this.state.selectedTagToDelete.name })}</p>
-                </Modal.Content>
-                <Modal.Actions>
-                    <Button onClick={this.handleClose}>
-                        {intl.formatMessage({ id: 'common.cancel' })}
-                    </Button>
-                    <Button color='red' onClick={this.deleteTag} loading={this.state.deletingTag} disabled={this.state.deletingTag}>
-                        {intl.formatMessage({ id: 'common.delete' })}
-                    </Button>
-                </Modal.Actions>
-            </Modal>
-        )
     }
 
     /**
@@ -806,9 +684,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     render () {
-        // Tag and File deletion modals
+        // File deletion modal
         const { intl } = this.props
-        const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
         const fileTypeOptions = getFileTypeSelectOptions(false)
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
@@ -824,9 +701,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
 
         return (
             <Base activeItem='files' wrapperClass='wrapper'>
-                {/* Tag deletion modal */}
-                {tagDeletionConfirmModal}
-
                 {/* File deletion modal */}
                 {fileDeletionConfirmModal}
 
@@ -851,16 +725,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             addSurvivalFormTuple={this.addSurvivalFormTuple}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                             survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
-                        />
-
-                        <TagsPanel
-                            tags={this.state.tags}
-                            newTag={this.state.newTag}
-                            addingTag={this.state.addingTag}
-                            handleAddTagInputsChange={this.handleAddTagInputsChange}
-                            handleKeyDown={this.handleKeyDown}
-                            confirmTagDeletion={this.confirmTagDeletion}
-                            editTag={this.editTag}
                         />
                     </Grid.Column>
 
@@ -897,7 +761,23 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             />
                                         )}
                                     </Table.Cell>
-                                    <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell>
+                                        <TagDropdown
+                                            selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
+                                            trigger={<TagLabel tag={userFileRow.tag} />}
+                                            tagType={TagType.FILE}
+                                            onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
+                                            onTagCreated={() => this.getUserTags()}
+                                            onTagEdited={() => this.getUserTags()}
+                                            onTagDeleted={(deletedTagId) => {
+                                                if (this.state.newFile.newTag === deletedTagId) {
+                                                    this.handleAddFileInputsChange('newTag', null)
+                                                }
+
+                                                this.getUserTags()
+                                            }}
+                                        />
+                                    </Table.Cell>
                                     <Table.Cell textAlign='center'>
                                         {
                                             userFileRow.is_public
