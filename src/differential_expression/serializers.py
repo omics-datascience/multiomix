@@ -66,7 +66,7 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
     clinical_source = ExperimentClinicalSourceSerializer(read_only=True)
     mrna_source = ExperimentSourceSerializer(read_only=True)
     user = UserSimpleForDiffExpExperiments(read_only=True)
-    tissues = SimpleTissueSerializer(read_only=True)
+    tissue = SimpleTissueSerializer(read_only=True)
 
     # State information
     state_display = serializers.CharField(source='get_state_display', read_only=True)
@@ -85,7 +85,7 @@ class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer
             'mrna_source',  # mRNA data source (ExperimentSourceSerializer)
             'is_public',  # Public visibility flag
             'tool',
-            'tissues'
+            'tissue'
         ]
         read_only_fields = [
             'id', 'created_at', 'state', 'state_display'
@@ -112,7 +112,7 @@ class DifferentialExpressionExperimentSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'user', 'clinical_source', 'mrna_source',
             'clinical_attribute', 'tool', 'threshold_percentile', 'threshold', 'top', 'state', 'state_display',
             'execution_time', 'created_at', 'updated_at', 'is_public',
-            'has_results', 'results_count', 'significant_genes_count', 'tissues'
+            'has_results', 'results_count', 'significant_genes_count', 'tissue'
         ]
         read_only_fields = [
             'id', 'execution_time', 'created_at', 'updated_at',

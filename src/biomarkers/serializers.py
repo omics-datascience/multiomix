@@ -86,7 +86,7 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
+        data['tissue'] = SimpleTissueSerializer(instance.tissue).data if instance.tissue else None
         return data
 
     @staticmethod
@@ -122,7 +122,7 @@ class BiomarkerSimpleUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Biomarker
-        fields = ['name', 'description', 'tissues']
+        fields = ['name', 'description', 'tissue']
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):
@@ -148,7 +148,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
+        data['tissue'] = SimpleTissueSerializer(instance.tissue).data if instance.tissue else None
         return data
 
     @staticmethod

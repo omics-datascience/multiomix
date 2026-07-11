@@ -294,9 +294,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.clinical_patient_dataset = clinical_patient_dataset
             instance.clinical_sample_dataset = clinical_sample_dataset
 
-            # Updates tissues if provided
-            if 'tissues' in validated_data:
-                instance.tissues = validated_data['tissues']
+            # Updates tissue if provided
+            if 'tissue' in validated_data:
+                instance.tissue = validated_data['tissue']
 
             # Saves new changes and returns instance
             instance.save()

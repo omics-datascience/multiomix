@@ -404,7 +404,7 @@ class Experiment(models.Model):
 
     shared_institutions = models.ManyToManyField(Institution, blank=True, related_name='shared_correlation_analysis')
     shared_users = models.ManyToManyField(User, blank=True, related_name='shared_users_correlation_analysis')
-    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     is_public = models.BooleanField(blank=False, null=False, default=False)
 
     @property

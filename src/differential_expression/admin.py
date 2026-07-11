@@ -14,7 +14,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
         'threshold_percentile', 'threshold', 'top', 'execution_time', 'created_at'
     )
     list_filter = (
-        'state', 'is_public', 'clinical_attribute', 'created_at', 'tissues'
+        'state', 'is_public', 'clinical_attribute', 'created_at', 'tissue'
     )
     search_fields = ('name', 'description', 'user__username', 'clinical_attribute')
     readonly_fields = (
@@ -42,7 +42,7 @@ class DifferentialExpressionExperimentAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Sharing', {
-            'fields': ('is_public', 'shared_institutions', 'shared_users', 'tissues'),
+            'fields': ('is_public', 'shared_institutions', 'shared_users', 'tissue'),
             'classes': ('collapse',)
         }),
     )

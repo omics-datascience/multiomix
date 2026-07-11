@@ -33,7 +33,7 @@ class UserFile(models.Model):
     file_obj = models.FileField(upload_to=user_directory_path)
     file_type = models.IntegerField(choices=FileType.choices)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, blank=True, null=True)
-    tissues = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
     upload_date = models.DateTimeField(auto_now_add=True, blank=False, null=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     institutions = models.ManyToManyField(Institution, blank=True)
