@@ -105,12 +105,12 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
 
 class BiomarkerSimpleUpdateSerializer(serializers.ModelSerializer):
     """
-    This serializer is used to update only the name and description of the Biomarker model to prevent updating all
+    This serializer is used to update simple Biomarker fields to prevent updating all
     the molecules when it's not necessary.
     """
     class Meta:
         model = Biomarker
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'tag']
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):

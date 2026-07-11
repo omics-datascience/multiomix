@@ -26,7 +26,7 @@ import { EditBiomarkerIcon } from './EditBiomarkerIcon'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { PopupIcons } from '../common/PopupIcons'
 import { useIntl, IntlShape } from 'react-intl'
-import { TagsPanel } from '../files-manager/TagsPanel'
+import { TagDropdown } from '../common/TagDropdown'
 
 // URLs defined in biomarkers.html
 declare const urlBiomarkersCRUD: string
@@ -55,6 +55,11 @@ type BiomarkerNameAndDesc = {
     name: string,
     description: string,
     tag?: { id: number } | null
+}
+
+/** Extremely simple struct of a Biomarker (useful for simple updates). */
+type BiomarkerTag = {
+    tag: Nullable<number>
 }
 
 /** Some flags to validate the Biomarkers form. */
@@ -1685,9 +1690,9 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
      * Fetches the User's defined tags
      */
     getUserTags () {
-        // Gets only File's Tags
+        // Gets only Biomarker/Experiment Tags
         const searchParams = {
-            type: TagType.FILE
+            type: TagType.EXPERIMENT
         }
 
         ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
@@ -1809,6 +1814,46 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
         })
     }
 
+    updateBiomarkerTag = async (
+        biomarker: BiomarkerSimple,
+        tagId: Nullable<number>
+    ) => {
+        const { intl } = this.props
+
+        const biomarkerTagToSend: BiomarkerTag = {
+            tag: tagId
+        }
+
+        try {
+            const updatedBiomarker = await ky
+                .patch(
+                    `${urlBiomarkersSimpleUpdate}/${biomarker.id}/`,
+                    {
+                        headers: getDjangoHeader(),
+                        json: biomarkerTagToSend,
+                        timeout: REQUEST_TIMEOUT
+                    }
+                )
+                .json<Biomarker>()
+
+            console.log('Respuesta del backend:', updatedBiomarker)
+            console.log('Tag devuelto:', updatedBiomarker.tag)
+        } catch (err) {
+            console.error('Error updating Biomarker tag ->', err)
+
+            this.setState(prevState => ({
+                alert: {
+                    ...prevState.alert,
+                    isOpen: true,
+                    type: CustomAlertTypes.ERROR,
+                    message: intl.formatMessage({
+                        id: 'biomarkersPanel.alert.errorEditing'
+                    })
+                }
+            }))
+        }
+    }
+
     /**
      * Does a request to add a new Tag
      */
@@ -1832,7 +1877,7 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
         }
 
         this.setState({ addingTag: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newTag }).then((response) => {
+            requestMethod(addOrEditURL, { headers: myHeaders, json: { ...this.state.newTag, type: TagType.EXPERIMENT } }).then((response) => {
                 this.setState({ addingTag: false })
                 response.json().then((responseJSON: DjangoTag) => {
                     if (responseJSON && responseJSON.id) {
@@ -1866,14 +1911,6 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
 
         const isLoadingFullBiomarker = this.state.loadingFullBiomarkerId !== null
 
-        // Tag and File deletion modals
-        const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
-        const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
-            const id = tag.id as number
-            return { key: id, value: id, text: tag.name }
-        })
-
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
         return (
             <Base activeItem='biomarkers' wrapperClass='wrapper'>
                 {/* Biomarker deletion modal */}
@@ -1882,39 +1919,11 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
                 {/* Experiment stopping confirm modal */}
                 {experimentStopConfirmModal}
 
-                {/* Tag deletion modal */}
-                {tagDeletionConfirmModal}
-
-                <Grid columns={2} padded stackable textAlign='center' divided>
-                    <Grid.Column width={3} textAlign='left'>
-
-                        <Grid.Column width={3} textAlign='left'>
-                            <TagsPanel
-                                tags={this.state.tags}
-                                newTag={this.state.newTag}
-                                addingTag={this.state.addingTag}
-                                handleAddTagInputsChange={this.handleAddTagInputsChange}
-                                handleKeyDown={this.handleKeyDown}
-                                confirmTagDeletion={this.confirmTagDeletion}
-                                editTag={this.editTag}
-                            />
-                        </Grid.Column>
-                        <Confirm
-                            open={this.state.confirmModal.confirmModal}
-                            header={this.state.confirmModal.headerText}
-                            content={this.state.confirmModal.contentText}
-                            onCancel={() => this.handleCancelConfirmModalState()}
-                            onConfirm={() => {
-                                this.handleCancelConfirmModalState()
-                                this.state.confirmModal.onConfirm()
-                            }}
-                        />
-                    </Grid.Column>
-
-                    {/* Files overview panel */}
+                <Grid columns={1} padded stackable textAlign='center'>
+                    {/* Biomarkers overview panel */}
                     <Grid.Column
                         id='files-manager-result-column'
-                        width={13}
+                        width={16}
                         textAlign='center'
                     >
                         <PaginatedTable<BiomarkerSimple>
@@ -1963,7 +1972,17 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
                                     <Table.Row key={biomarker.id as number}>
                                         <TableCellWithTitle value={biomarker.name} />
                                         <TableCellWithTitle value={biomarker.description} />
-                                        <Table.Cell><TagLabel tag={biomarker.tag} /></Table.Cell>
+                                        <Table.Cell>
+                                            <TagDropdown
+                                                selectedTagId={biomarker.tag ? biomarker.tag.id : null}
+                                                trigger={<TagLabel tag={biomarker.tag} />}
+                                                tagType={TagType.EXPERIMENT}
+                                                onTagSelect={(tagId) => this.updateBiomarkerTag(biomarker, tagId)}
+                                                onTagCreated={() => this.getUserTags()}
+                                                onTagEdited={() => this.getUserTags()}
+                                                onTagDeleted={() => this.getUserTags()}
+                                            />
+                                        </Table.Cell>
                                         <Table.Cell textAlign='center'><BiomarkerStateLabel biomarkerState={biomarker.state} /></Table.Cell>
                                         <Table.Cell><BiomarkerOriginLabel biomarkerOrigin={biomarker.origin} /></Table.Cell>
                                         <TableCellWithTitle value={formatDateLocale(biomarker.upload_date as string, 'L')} />
