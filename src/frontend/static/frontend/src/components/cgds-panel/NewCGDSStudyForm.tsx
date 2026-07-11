@@ -1,10 +1,11 @@
 import React from 'react'
-import { Input, Segment, Header, Icon, Divider, Button, Label } from 'semantic-ui-react'
+import { DropdownItemProps, Input, Segment, Header, Icon, Divider, Button, Label, Form } from 'semantic-ui-react'
 import { DjangoCGDSStudy } from '../../utils/django_interfaces'
 import { NameOfCGDSDataset } from '../../utils/interfaces'
 import { NewCGDSDatasetForm } from './NewCGDSDatasetForm'
 import { parseValue, checkedValidityCallback } from '../../utils/util_functions'
 import { useIntl } from 'react-intl'
+import { normalizeTissues } from '../common/TissueLabels'
 
 /**
  * Component's props
@@ -23,6 +24,7 @@ interface NewCGDSStudyFormProps {
     canAddCGDSStudy: () => boolean,
     addOrEditStudy: () => void,
     cleanForm: () => void
+    tissueOptions: DropdownItemProps[]
 }
 
 /**
@@ -33,6 +35,7 @@ interface NewCGDSStudyFormProps {
 export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
     const intl = useIntl()
     const checkedHandleFormChanges = checkedValidityCallback(props.handleFormChanges)
+    const tissues = normalizeTissues(props.newCGDSStudy.tissues)
     const isDisabled = props.newCGDSStudy.name.trim().length === 0 &&
                     props.newCGDSStudy.description.trim().length === 0 &&
                     props.newCGDSStudy.url.trim().length === 0 &&
@@ -42,7 +45,8 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
                     props.newCGDSStudy.cna_dataset === null &&
                     props.newCGDSStudy.methylation_dataset === null &&
                     props.newCGDSStudy.clinical_patient_dataset === null &&
-                    props.newCGDSStudy.clinical_sample_dataset === null
+                    props.newCGDSStudy.clinical_sample_dataset === null &&
+                    tissues.length === 0
     return (
         <Segment>
             <Header textAlign='center'>
@@ -104,6 +108,22 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             />
 
             <Divider />
+
+            <Form.Dropdown
+                fluid
+                className='margin-top-2'
+                options={props.tissueOptions}
+                search
+                selection
+                clearable
+                name='tissues'
+                value={typeof tissues[0] === 'number'
+                    ? tissues[0]
+                    : tissues[0]?.id ?? ''}
+                onChange={(_, { name, value }) => props.handleFormChanges(name, value ? [value] : [])}
+                placeholder='Tissue (optional)'
+                disabled={props.addingOrEditingCGDSStudy}
+            />
 
             {/* Dataset */}
             <Header textAlign='center'>

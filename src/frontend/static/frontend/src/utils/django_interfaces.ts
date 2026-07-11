@@ -112,12 +112,14 @@ enum DjangoUserFileUploadErrorInternalCode {
  * A simple structure Experiment's source's CGDSDataset info
  */
 interface SourceSimpleCGDSDataset {
-    name: string,
-    description: string,
+    id?: number,
+    name: Nullable<string>,
+    description: Nullable<string>,
     file_type: FileType,
-    version: number,
+    version: Nullable<number>,
     date_last_synchronization: Nullable<string>,
-    file_obj: string
+    file_obj: string,
+    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
 }
 
 /**
@@ -192,6 +194,15 @@ interface DjangoInstitutionSimple {
 }
 
 /**
+ * Django Tissue model interface
+ */
+interface DjangoTissue {
+    id: number,
+    name: string,
+    code: string
+}
+
+/**
  * Tags are different for Files and Experiments
  */
 enum TagType {
@@ -218,6 +229,7 @@ interface DjangoSimpleUserFile {
     name: string,
     description: Nullable<string>,
     file_type: FileType,
+    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
 }
 
 /**
@@ -237,7 +249,8 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
     platform: DjangoMethylationPlatform,
     user: DjangoUserSimple,
     survival_columns?: DjangoSurvivalColumnsTupleSimple[],
-    is_public: boolean
+    is_public: boolean,
+    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
 }
 
 /**
@@ -512,6 +525,7 @@ interface DjangoCGDSStudy {
     methylation_dataset: Nullable<DjangoCGDSDataset>,
     clinical_patient_dataset: Nullable<DjangoCGDSDataset>,
     clinical_sample_dataset: Nullable<DjangoCGDSDataset>,
+    tissues: DjangoTissue | number | Array<DjangoTissue | number> | null
 }
 
 /**
@@ -717,6 +731,7 @@ export {
     DjangoUserCandidates,
     DjangoAddRemoveUserToInstitutionInternalCode,
     DjangoInstitutionSimple,
+    DjangoTissue,
     PValuesAdjustmentMethod,
     DjangoExperimentSource,
     DjangoExperimentClinicalSource,

@@ -10,6 +10,7 @@ from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_
 from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
+from tissues.serializers import TissueSerializer
 from user_files.models import UserFile
 
 
@@ -21,21 +22,18 @@ class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'time_column', 'event_column']
 
 
-class SimpleTissueSerializer(serializers.Serializer):
-    """Lightweight serializer for Tissue model"""
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-
-
 class SimpleUserFileSerializer(serializers.ModelSerializer):
     """Serialize a few fields for all experiment list"""
+    tissues = TissueSerializer(read_only=True)
+
     class Meta:
         model = UserFile
         fields = [
             'id',
             'name',
             'description',
-            'file_type'
+            'file_type',
+            'tissues'
         ]
 
 
@@ -71,7 +69,7 @@ class UserFileSerializer(serializers.ModelSerializer):
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
 
-        data['tissues'] = SimpleTissueSerializer(instance.tissues).data if instance.tissues else None
+        data['tissues'] = TissueSerializer(instance.tissues).data if instance.tissues else None
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
             instance.survival_columns,

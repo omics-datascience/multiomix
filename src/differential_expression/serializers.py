@@ -53,6 +53,7 @@ class SimpleTissueSerializer(serializers.Serializer):
     """Lightweight serializer for Tissue model"""
     id = serializers.IntegerField()
     name = serializers.CharField()
+    code = serializers.CharField()
 
 class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer):
     """

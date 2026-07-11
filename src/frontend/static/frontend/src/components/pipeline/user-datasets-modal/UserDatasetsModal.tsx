@@ -1,6 +1,6 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Header, Modal, Button, DropdownItemProps, Table } from 'semantic-ui-react'
-import { DjangoUserFile, RowHeader } from '../../../utils/django_interfaces'
+import { DjangoTissue, DjangoUserFile, RowHeader } from '../../../utils/django_interfaces'
 import { FileType, Nullable } from '../../../utils/interfaces'
 import { formatDateLocale, getFileTypeName } from '../../../utils/util_functions'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
@@ -8,8 +8,11 @@ import { TagLabel } from '../../common/TagLabel'
 import { UserFileTypeLabel } from './UserFileTypeLabel'
 import { CurrentUserContext } from '../../Base'
 import { useIntl } from 'react-intl'
+import ky from 'ky'
+import { getTissueDropdownOptions, TissueLabels } from '../../common/TissueLabels'
 
 declare const urlUserFilesCRUD: string
+declare const urlTissuesCRUD: string
 
 /**
  * Component's props
@@ -43,6 +46,21 @@ interface UserDatasetsModalProps {
 const UserDatasetsModal = (props: UserDatasetsModalProps) => {
     const intl = useIntl()
     const currentUser = useContext(CurrentUserContext)
+    const [tissues, setTissues] = useState<DjangoTissue[]>([])
+
+    useEffect(() => {
+        if (!props.showUserDatasetsModal) {
+            return
+        }
+
+        ky.get(urlTissuesCRUD).then((response) => {
+            response.json<DjangoTissue[]>().then(setTissues).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
+    }, [props.showUserDatasetsModal])
 
     /**
      * Generates default table's headers
@@ -61,6 +79,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
         }
 
         const restOfHeaders: RowHeader<DjangoUserFile>[] = [
+            { name: 'Tissue' },
             { name: intl.formatMessage({ id: 'userDatasetsModal.tag' }), serverCodeToSort: 'tag' },
             { name: intl.formatMessage({ id: 'userDatasetsModal.uploadDate' }), serverCodeToSort: 'upload_date' },
             { name: intl.formatMessage({ id: 'userDatasetsModal.visibility' }), serverCodeToSort: 'institutions' },
@@ -79,6 +98,7 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
     function getDefaultFilters (): PaginationCustomFilter[] {
         return [
             { label: intl.formatMessage({ id: 'userDatasetsModal.tag' }), keyForServer: 'tag', defaultValue: '', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.tagOptions },
+            { label: 'Tissue', keyForServer: 'tissues', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues) },
             { label: intl.formatMessage({ id: 'userDatasetsModal.visibility' }), keyForServer: 'visibility', defaultValue: 'all', placeholder: intl.formatMessage({ id: 'userDatasetsModal.selectExistingTag' }), options: props.institutionsOptions }
         ]
     }
@@ -114,6 +134,9 @@ const UserDatasetsModal = (props: UserDatasetsModalProps) => {
                                 <Table.Cell>{userFile.description}</Table.Cell>
                                 {isClinical &&
                                     <Table.Cell textAlign='center'>{userFile.survival_columns ? userFile.survival_columns.length : 0}</Table.Cell>}
+                                <Table.Cell collapsing textAlign='center'>
+                                    <TissueLabels tissues={userFile.tissues} tissueOptions={tissues} />
+                                </Table.Cell>
                                 <Table.Cell collapsing textAlign='center'>
                                     <TagLabel tag={userFile.tag} fluid />
                                 </Table.Cell>

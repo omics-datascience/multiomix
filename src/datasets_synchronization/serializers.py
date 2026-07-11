@@ -9,6 +9,7 @@ from common.response import ResponseStatus
 from .enums import CreateCGDSStudyResponseCode
 from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset
 from django.db.models import Q
+from tissues.serializers import TissueSerializer
 
 
 class CGDSDatasetSerializer(serializers.ModelSerializer):
@@ -304,16 +305,34 @@ class CGDSStudySerializer(serializers.ModelSerializer):
 
 class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
     """CGDSDataset serializer with few fields for list views."""
-    name = serializers.CharField(source='study.name', read_only=True)
-    description = serializers.CharField(source='study.description', read_only=True)
-    version = serializers.CharField(source='study.version', read_only=True)
+    name = serializers.SerializerMethodField(method_name='get_name')
+    description = serializers.SerializerMethodField(method_name='get_description')
+    version = serializers.SerializerMethodField(method_name='get_version')
+    tissues = serializers.SerializerMethodField(method_name='get_tissues')
     file_obj = serializers.SerializerMethodField(method_name='get_file_obj')
 
     class Meta:
         model = CGDSDataset
-        fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj']
+        fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj',
+                  'tissues']
 
     @staticmethod
     def get_file_obj(_instance: CGDSDataset):
         """Returns None to avoid sending the file in list views."""
         return None
+
+    @staticmethod
+    def get_name(instance: CGDSDataset):
+        return instance.study.name if instance.study else None
+
+    @staticmethod
+    def get_description(instance: CGDSDataset):
+        return instance.study.description if instance.study else None
+
+    @staticmethod
+    def get_version(instance: CGDSDataset):
+        return instance.study.version if instance.study else None
+
+    @staticmethod
+    def get_tissues(instance: CGDSDataset):
+        return TissueSerializer(instance.study.tissues).data if instance.study and instance.study.tissues else None

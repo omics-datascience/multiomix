@@ -1,7 +1,7 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
-import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
+import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader, DjangoTissue } from '../../utils/django_interfaces'
 import ky, { HTTPError } from 'ky'
 import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
 import { TagsPanel } from './TagsPanel'
@@ -13,8 +13,9 @@ import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
-import { DeleteButton } from '../common/DeleteButton'
 import { useIntl, IntlShape } from 'react-intl'
+import { DeleteButton } from '../common/DeleteButton'
+import { getTissueDropdownOptions, getTissueIds, TissueLabels } from '../common/TissueLabels'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -28,6 +29,7 @@ type UploadResponse = {
 declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
 declare const urlUserInstitutions: string
+declare const urlTissuesCRUD: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
@@ -46,6 +48,7 @@ interface NewFile {
     platform: DjangoMethylationPlatform,
     newTag: Nullable<number>,
     institutions: number[],
+    tissues: number[],
     survivalColumns: DjangoSurvivalColumnsTupleSimple[]
 }
 
@@ -56,6 +59,7 @@ interface FilesManagerState {
     tags: DjangoTag[],
     files: DjangoUserFile[],
     userInstitutions: DjangoInstitution[],
+    tissues: DjangoTissue[],
     newTag: DjangoTag,
     showDeleteTagModal: boolean,
     showDeleteFileModal: boolean,
@@ -93,6 +97,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             tags: [],
             files: [],
             userInstitutions: [],
+            tissues: [],
             newTag: getDefaultNewTag(),
             showDeleteTagModal: false,
             showDeleteFileModal: false,
@@ -130,6 +135,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             newFileType: FileType.MRNA,
             newTag: null,
             institutions: [],
+            tissues: [],
             isCpGSiteId: false,
             platform: DjangoMethylationPlatform.PLATFORM_450,
             survivalColumns: []
@@ -185,6 +191,22 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
         this.getUserInstitutions()
+        this.getTissues()
+    }
+
+    /**
+     * Fetches the available tissues.
+     */
+    getTissues () {
+        ky.get(urlTissuesCRUD, { signal: this.abortController.signal }).then((response) => {
+            response.json<DjangoTissue[]>().then((tissues) => {
+                this.setState({ tissues })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
     }
 
     /** Removes event on component unmount and Abort controller if component unmount. */
@@ -518,6 +540,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             formData.append('institutions', institutionId.toString())
         })
 
+        // Adds the Tissue's id, if selected
+        if (newFileForm.tissues.length > 0) {
+            formData.append('tissues', newFileForm.tissues[0].toString())
+        }
+
         // Adds the survival columns tuples, if needed
         if (newFileForm.survivalColumns.length > 0) {
             formData.append('survival_columns', JSON.stringify(newFileForm.survivalColumns))
@@ -656,6 +683,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             isCpGSiteId: fileToEdit.is_cpg_site_id,
                             platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                             institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            tissues: getTissueIds(fileToEdit.tissues),
                             survivalColumns: fileToEdit.survival_columns ?? []
                         }
                     })
@@ -678,6 +706,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     isCpGSiteId: fileToEdit.is_cpg_site_id,
                     platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                     institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    tissues: getTissueIds(fileToEdit.tissues),
                     survivalColumns: fileToEdit.survival_columns ?? []
                 }
             })
@@ -768,6 +797,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueOptions = getTissueDropdownOptions(this.state.tissues)
 
         return [
             {
@@ -792,6 +822,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 defaultValue: '',
                 options: institutionsOptions,
                 disabledFunction: (actualValues) => actualValues.visibility === 'private',
+                width: 3
+            },
+            {
+                label: 'Tissue',
+                keyForServer: 'tissues',
+                defaultValue: '',
+                placeholder: 'Select tissue',
+                options: tissueOptions,
                 width: 3
             },
             {
@@ -821,6 +859,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueFormOptions = getTissueDropdownOptions(this.state.tissues, true)
 
         return (
             <Base activeItem='files' wrapperClass='wrapper'>
@@ -839,6 +878,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             fileTypeOptions={fileTypeOptions}
                             tagOptions={tagOptions}
                             institutionsOptions={institutionsOptions}
+                            tissueOptions={tissueFormOptions}
                             uploadingFile={this.state.uploadingFile}
                             uploadPercentage={this.state.uploadPercentage}
                             uploadState={this.state.uploadState}
@@ -897,6 +937,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             />
                                         )}
                                     </Table.Cell>
+                                    <Table.Cell><TissueLabels tissues={userFileRow.tissues} tissueOptions={this.state.tissues} /></Table.Cell>
                                     <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
                                     <Table.Cell textAlign='center'>
                                         {
