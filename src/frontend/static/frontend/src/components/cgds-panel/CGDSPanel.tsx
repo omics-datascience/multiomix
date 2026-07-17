@@ -11,7 +11,12 @@ import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
 import { IntlShape, useIntl } from 'react-intl'
-import { getTissueDropdownOptions, getTissueIds, TissueLabels } from '../common/TissueLabels'
+import { getTissueDropdownOptions, TissueLabels } from '../common/TissueLabels'
+
+/** CGDS study fields while editing the form. Tissue is kept as a FK id for create/update requests. */
+export interface CGDSStudyForm extends Omit<DjangoCGDSStudy, 'tissue'> {
+    tissue: Nullable<number>
+}
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
@@ -48,7 +53,7 @@ const CBIOPORTAL_TISSUE_CODE_ALIASES: { [key: string]: string[] } = {
  */
 interface CGDSPanelState {
     CGDSStudies: DjangoCGDSStudy[],
-    newCGDSStudy: DjangoCGDSStudy,
+    newCGDSStudy: CGDSStudyForm,
     sendingSyncRequest: boolean,
     selectedCGDSStudyToSync: Nullable<DjangoCGDSStudy>,
     addingOrEditingCGDSStudy: boolean,
@@ -125,7 +130,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
      * Generates a default new file form
      * @returns An object with all the field with default values
      */
-    getDefaultNewCGDSStudy (): DjangoCGDSStudy {
+    getDefaultNewCGDSStudy (): CGDSStudyForm {
         return {
             name: '',
             description: '',
@@ -171,10 +176,13 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
         CGDSStudyCopy.methylation_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.methylation_dataset)
         CGDSStudyCopy.clinical_patient_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_patient_dataset)
         CGDSStudyCopy.clinical_sample_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_sample_dataset)
-        CGDSStudyCopy.tissue = getTissueIds(CGDSStudyCopy.tissue)[0] ?? null
+        const CGDSStudyFormCopy: CGDSStudyForm = {
+            ...CGDSStudyCopy,
+            tissue: CGDSStudyCopy.tissue?.id ?? null
+        }
 
         this.setState({
-            newCGDSStudy: CGDSStudyCopy
+            newCGDSStudy: CGDSStudyFormCopy
         })
     }
 
@@ -194,7 +202,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
      * @param selectedCGDSStudy CGDS Study to edit
      */
     editTag = (selectedCGDSStudy: DjangoCGDSStudy) => {
-        this.setState({ newCGDSStudy: copyObject(selectedCGDSStudy) })
+        this.editCGDSStudy(selectedCGDSStudy)
     }
 
     /**
@@ -207,9 +215,8 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
      * The form keeps tissue as one FK id.
      * @returns API payload for creating or editing a CGDS study.
      */
-    buildCGDSStudyPayload = (): DjangoCGDSStudy => {
+    buildCGDSStudyPayload = (): CGDSStudyForm => {
         const payload = copyObject(this.state.newCGDSStudy)
-        payload.tissue = getTissueIds(payload.tissue)[0] ?? null
         return payload
     }
 
@@ -456,7 +463,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
         if (name !== 'tissue') {
             const inferredTissues = this.inferTissuesFromCGDSStudy(newCGDSStudy)
 
-            if (inferredTissues.length > 0 && getTissueIds(newCGDSStudy.tissue).length === 0) {
+            if (inferredTissues.length > 0 && newCGDSStudy.tissue === null) {
                 newCGDSStudy.tissue = inferredTissues[0]
             }
         }
@@ -469,7 +476,7 @@ class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
      * @param study Study form values.
      * @returns Tissue IDs inferred from name, description, URL and code tokens.
      */
-    inferTissuesFromCGDSStudy (study: DjangoCGDSStudy): number[] {
+    inferTissuesFromCGDSStudy (study: CGDSStudyForm): number[] {
         const searchableText = [
             study.name,
             study.description,

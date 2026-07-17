@@ -6,6 +6,7 @@ from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
 from django.contrib.auth import get_user_model
 from api_service.serializers import LimitedUserSerializer
+from tissues.serializers import SimpleTissueSerializer
 
 
 class MoleculeIdentifierSerializer(serializers.Serializer):
@@ -60,13 +61,6 @@ class MethylationIdentifierSerializer(serializers.ModelSerializer):
         exclude = ['biomarker']
 
 
-class SimpleTissueSerializer(serializers.Serializer):
-    """Lightweight serializer for Tissue model"""
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    code = serializers.CharField()
-
-
 class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     """Biomarker model serializer without the molecules (useful to list Biomarkers)."""
     number_of_mrnas = serializers.SerializerMethodField(method_name='get_number_of_mrnas')
@@ -79,15 +73,11 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     state = serializers.IntegerField(required=False)
 
     tag = TagSerializer(required=False)
+    tissue = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = Biomarker
         fields = '__all__'
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['tissue'] = SimpleTissueSerializer(instance.tissue).data if instance.tissue else None
-        return data
 
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:
@@ -133,6 +123,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
     has_fs_experiment = serializers.SerializerMethodField(method_name='get_has_fs_experiment')
     was_already_used = serializers.SerializerMethodField(method_name='get_was_already_used')
+    tissue = SimpleTissueSerializer(read_only=True)
 
     mrnas = MRNAIdentifierSerializer(many=True, required=False)
     mirnas = MiRNAIdentifierSerializer(many=True, required=False)
@@ -145,11 +136,6 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     class Meta:
         model = Biomarker
         exclude = ['user']
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['tissue'] = SimpleTissueSerializer(instance.tissue).data if instance.tissue else None
-        return data
 
     @staticmethod
     def get_number_of_mrnas(ins: Biomarker) -> int:

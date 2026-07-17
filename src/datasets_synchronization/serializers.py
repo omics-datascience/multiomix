@@ -9,7 +9,7 @@ from common.response import ResponseStatus
 from .enums import CreateCGDSStudyResponseCode
 from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset
 from django.db.models import Q
-from tissues.serializers import TissueSerializer
+from tissues.serializers import SimpleTissueSerializer
 
 
 class CGDSDatasetSerializer(serializers.ModelSerializer):
@@ -305,10 +305,10 @@ class CGDSStudySerializer(serializers.ModelSerializer):
 
 class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
     """CGDSDataset serializer with few fields for list views."""
-    name = serializers.SerializerMethodField(method_name='get_name')
-    description = serializers.SerializerMethodField(method_name='get_description')
-    version = serializers.SerializerMethodField(method_name='get_version')
-    tissue = serializers.SerializerMethodField(method_name='get_tissue')
+    name = serializers.CharField(source='study.name', read_only=True)
+    description = serializers.CharField(source='study.description', read_only=True)
+    version = serializers.CharField(source='study.version', read_only=True)
+    tissue = SimpleTissueSerializer(source='study.tissue', read_only=True)
     file_obj = serializers.SerializerMethodField(method_name='get_file_obj')
 
     class Meta:
@@ -320,19 +320,3 @@ class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
     def get_file_obj(_instance: CGDSDataset):
         """Returns None to avoid sending the file in list views."""
         return None
-
-    @staticmethod
-    def get_name(instance: CGDSDataset):
-        return instance.study.name if instance.study else None
-
-    @staticmethod
-    def get_description(instance: CGDSDataset):
-        return instance.study.description if instance.study else None
-
-    @staticmethod
-    def get_version(instance: CGDSDataset):
-        return instance.study.version if instance.study else None
-
-    @staticmethod
-    def get_tissue(instance: CGDSDataset):
-        return TissueSerializer(instance.study.tissue).data if instance.study and instance.study.tissue else None

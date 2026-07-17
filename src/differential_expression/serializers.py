@@ -7,6 +7,7 @@ from differential_expression.models import (
     DifferentialExpressionExperimentResult
 )
 from institutions.models import Institution
+from tissues.serializers import SimpleTissueSerializer
 
 
 class UserSimpleForDiffExpExperiments(serializers.ModelSerializer):
@@ -48,12 +49,6 @@ class DifferentialExpressionVolcanoPlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = DifferentialExpressionExperimentResult
         fields = ['id', 'label', 'log2FC', 'pValue']
-
-class SimpleTissueSerializer(serializers.Serializer):
-    """Lightweight serializer for Tissue model"""
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    code = serializers.CharField()
 
 class DifferentialExpressionExperimentListSerializer(serializers.ModelSerializer):
     """

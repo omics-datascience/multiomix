@@ -2,6 +2,7 @@ from datasets_synchronization.serializers import SimpleCGDSDatasetSerializer
 from genes.serializers import GeneForResultTableSerializer
 from tags.serializers import TagSerializer
 from user_files.serializers import SimpleUserFileSerializer, UserFileSerializer
+from tissues.serializers import SimpleTissueSerializer
 from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNACombination, GeneCNACombination, \
     GeneMethylationCombination, ExperimentClinicalSource
 from rest_framework import serializers
@@ -71,12 +72,6 @@ class LimitedUserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['id', 'username']
 
-
-class SimpleTissueSerializer(serializers.Serializer):
-    """Lightweight serializer for Tissue model"""
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    code = serializers.CharField()
 
 class ExperimentSerializer(serializers.ModelSerializer):
     """Experiment serializer"""

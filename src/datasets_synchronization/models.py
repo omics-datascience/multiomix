@@ -81,36 +81,34 @@ class CGDSDataset(models.Model):
 
     @property
     def file_type(self) -> FileType:
-        study = self.study
-
-        if study and study.mrna_dataset_id == self.pk:
+        if hasattr(self, 'mrna_dataset'):
             return FileType.MRNA
-        elif study and study.mirna_dataset_id == self.pk:
+        elif hasattr(self, 'mirna_dataset'):
             return FileType.MIRNA
-        elif study and study.cna_dataset_id == self.pk:
+        elif hasattr(self, 'cna_dataset'):
             return FileType.CNA
-        elif study and study.methylation_dataset_id == self.pk:
+        elif hasattr(self, 'methylation_dataset'):
             return FileType.METHYLATION
         return FileType.CLINICAL
 
-    def __get_reverse_study(self) -> Optional['CGDSStudy']:
+    def __get_reverse_study(self) -> Optional['CGDSDataset']:
         """Gets the related study model's name"""
-        if hasattr(self, 'cgds_studies_as_mrna_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_mrna_dataset)
-        elif hasattr(self, 'cgds_studies_as_mirna_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_mirna_dataset)
-        elif hasattr(self, 'cgds_studies_as_cna_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_cna_dataset)
-        elif hasattr(self, 'cgds_studies_as_methylation_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_methylation_dataset)
-        elif hasattr(self, 'cgds_studies_as_clinical_patient_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_clinical_patient_dataset)
-        elif hasattr(self, 'cgds_studies_as_clinical_sample_dataset'):
-            return cast(Optional['CGDSStudy'], self.cgds_studies_as_clinical_sample_dataset)
+        if hasattr(self, 'mrna_dataset'):
+            return cast(Optional['CGDSDataset'], self.mrna_dataset)
+        elif hasattr(self, 'mirna_dataset'):
+            return cast(Optional['CGDSDataset'], self.mirna_dataset)
+        elif hasattr(self, 'cna_dataset'):
+            return cast(Optional['CGDSDataset'], self.cna_dataset)
+        elif hasattr(self, 'methylation_dataset'):
+            return cast(Optional['CGDSDataset'], self.methylation_dataset)
+        elif hasattr(self, 'clinical_patient_dataset'):
+            return cast(Optional['CGDSDataset'], self.clinical_patient_dataset)
+        elif hasattr(self, 'clinical_sample_dataset'):
+            return cast(Optional['CGDSDataset'], self.clinical_sample_dataset)
         return None
 
     @property
-    def study(self) -> Optional['CGDSStudy']:
+    def study(self) -> Optional['CGDSDataset']:
         return self.__get_reverse_study()
 
     def __str__(self) -> str:

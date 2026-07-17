@@ -2,19 +2,17 @@ import React from 'react'
 import { Label } from 'semantic-ui-react'
 import { DjangoTissue } from '../../utils/django_interfaces'
 
-type TissueValue = DjangoTissue | number
-
 interface TissueLabelsProps {
-    tissues?: TissueValue | TissueValue[] | null,
+    tissues?: DjangoTissue | DjangoTissue[] | null,
     tissueOptions: DjangoTissue[]
 }
 
 /**
- * Normalizes a tissue value into an array so callers can pass either one tissue, a tissue id, or no value.
+ * Normalizes a tissue value into an array so callers can pass either one tissue, multiple tissues, or no value.
  * @param tissues Tissue value or values to normalize.
  * @returns Tissue values as an array.
  */
-export const normalizeTissues = (tissues: TissueLabelsProps['tissues']): TissueValue[] => {
+export const normalizeTissues = (tissues: TissueLabelsProps['tissues']): DjangoTissue[] => {
     if (!tissues) {
         return []
     }
@@ -23,26 +21,12 @@ export const normalizeTissues = (tissues: TissueLabelsProps['tissues']): TissueV
 }
 
 /**
- * Resolves a tissue object from a tissue object or id.
- * @param tissueValue Tissue object or id.
- * @param tissueOptions Available tissue options.
- * @returns The resolved tissue if it exists.
- */
-const getTissue = (tissueValue: TissueValue, tissueOptions: DjangoTissue[]): DjangoTissue | undefined => {
-    if (typeof tissueValue === 'number') {
-        return tissueOptions.find((tissue) => tissue.id === tissueValue)
-    }
-
-    return tissueValue
-}
-
-/**
- * Extracts tissue ids from a tissue value.
+ * Extracts tissue ids from tissue objects.
  * @param tissues Tissue value or values.
  * @returns Tissue ids.
  */
 export const getTissueIds = (tissues: TissueLabelsProps['tissues']): number[] =>
-    normalizeTissues(tissues).map((tissue) => typeof tissue === 'number' ? tissue : tissue.id)
+    normalizeTissues(tissues).map((tissue) => tissue.id)
 
 /**
  * Builds dropdown options from tissue objects.
@@ -72,8 +56,6 @@ export const getTissueDropdownOptions = (
  */
 export const TissueLabels = (props: TissueLabelsProps) => {
     const tissues = normalizeTissues(props.tissues)
-        .map((tissueValue) => getTissue(tissueValue, props.tissueOptions))
-        .filter((tissue): tissue is DjangoTissue => tissue !== undefined)
 
     if (tissues.length === 0) {
         return <>-</>

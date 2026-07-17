@@ -5,7 +5,6 @@ import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/g
 import { formatDateLocale, getFileRowDescriptionInPlural } from '../../../utils/util_functions'
 import { useIntl } from 'react-intl'
 import { Nullable } from '../../../utils/interfaces'
-import { normalizeTissues } from '../../common/TissueLabels'
 
 declare const downloadFileURL: string
 
@@ -47,8 +46,7 @@ export const SourcePopup = (props: SourcePopupProps) => {
     // Gets file's type description in plural to show the number of rows
     const datasetRowDescriptionInPlural = getFileRowDescriptionInPlural(datasetObj.file_type)
 
-    const tissue = normalizeTissues(datasetObj.tissue)[0]
-    const tissueName = typeof tissue === 'number' ? undefined : tissue?.name
+    const tissueName = datasetObj.tissue?.name
     const datasetName = datasetObj.name ?? intl.formatMessage({ id: 'sourcePopup.unnamedSource' })
 
     /**

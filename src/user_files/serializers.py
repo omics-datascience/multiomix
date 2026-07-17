@@ -10,7 +10,7 @@ from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_
 from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
-from tissues.serializers import TissueSerializer
+from tissues.serializers import SimpleTissueSerializer, TissueSerializer
 from user_files.models import UserFile
 
 
@@ -24,7 +24,7 @@ class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
 
 class SimpleUserFileSerializer(serializers.ModelSerializer):
     """Serialize a few fields for all experiment list"""
-    tissue = TissueSerializer(read_only=True)
+    tissue = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = UserFile
@@ -126,14 +126,11 @@ class UserFileSerializer(serializers.ModelSerializer):
             instance.name = validated_data.get('name', instance.name)
             instance.file_type = validated_data.get('file_type', instance.file_type)
             instance.description = validated_data.get('description', instance.description)
-            if 'tag' in validated_data:
-                instance.tag = validated_data['tag']
-            if 'tissue' in validated_data:
-                instance.tissue = validated_data['tissue']
-            if 'institutions' in validated_data:
-                instance.institutions.set(validated_data['institutions'])
-            instance.is_cpg_site_id = validated_data.get('is_cpg_site_id', instance.is_cpg_site_id)
-            instance.platform = validated_data.get('platform', instance.platform)
+            instance.tag = validated_data.get('tag')
+            instance.tissue = validated_data.get('tissue')
+            instance.institutions.set(validated_data.get('institutions', []))
+            instance.is_cpg_site_id = validated_data.get('is_cpg_site_id')
+            instance.platform = validated_data.get('platform')
 
             # Updates survival columns
             survival_columns_str = self.context['request'].POST.get('survival_columns', '[]')
