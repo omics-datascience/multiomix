@@ -2,6 +2,7 @@ export default {
     // Common actions
     'common.cancel': 'Cancelar',
     'common.delete': 'Eliminar',
+    'common.download': 'Descargar',
     'common.stop': 'Detener',
     'common.save': 'Guardar',
     'common.download': 'Descargar',
@@ -1227,7 +1228,7 @@ export default {
     'lastExperimentTagInfo.edit': 'Editar',
     // 130.UserLastExperiments
     'userLastExperiments.lastAnalysis': 'Últimos análisis',
-    'userDatasetsModal.selectDataset': 'Seleccionar conjunto de datos de {fileType}',
+    'userDatasetsModal.selectDataset': 'Seleccionar datos de {fileType}',
     // 131.UserDatasetsModal
     'userDatasetsModal.numberOfSurvivalTuples': 'Número de tuplas de supervivencia',
     'userDatasetsModal.uploadDate': 'Fecha de carga',
@@ -1322,7 +1323,7 @@ export default {
     'pipelineForm.preparingAnalysis': 'Preparando análisis',
     'pipelineForm.saveChanges': 'Guardar cambios',
     'pipelineForm.runAnalysis': 'Ejecutar análisis',
-    'pipelineForm.selectDataset': 'Seleccionar conjunto de datos...',
+    'pipelineForm.selectDataset': 'Seleccionar datos...',
     'pipelineForm.mrnaProfile': 'Perfil de mRNA',
     'pipelineForm.profile': 'Perfil de {profile}',
     'pipelineForm.samplesMrna': 'Muestras mRNA: {count}',
@@ -1352,10 +1353,10 @@ export default {
     'sourceForm.all': 'Todos',
     'sourceForm.private': 'Privado',
     'sourceForm.public': 'Público',
-    'sourceForm.selectDatasetPlaceholder': 'Seleccionar conjunto de datos...',
-    'sourceForm.fromYourDatasets': 'Desde tus conjuntos de datos',
+    'sourceForm.selectDatasetPlaceholder': 'Seleccionar datos...',
+    'sourceForm.fromYourDatasets': 'Desde tus datos',
     'sourceForm.fromCBioPortal': 'Desde cBioPortal',
-    'sourceForm.uploadDataset': 'Subir conjunto de datos',
+    'sourceForm.uploadDataset': 'Subir datos',
     // 141 SitePolicy
     'sitePolicy.header': 'Multiomix implementa un conjunto de medidas de seguridad para proteger el acceso a los conjuntos de datos cargados. Estas medidas se complementan con algunas recomendaciones para proteger la privacidad de los datos:',
     'sitePolicy.authentication': 'Multiomix implementa autenticación —verificando la identidad del usuario— y autorización —determinando a qué datos o recursos puede acceder un usuario autenticado respetando el nivel de acceso definido.',
