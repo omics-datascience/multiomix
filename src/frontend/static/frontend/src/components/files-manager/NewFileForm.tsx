@@ -67,6 +67,7 @@ interface NewFileFormProps {
     fileTypeOptions: any[],
     tagOptions: DropdownItemProps[],
     institutionsOptions: DropdownItemProps[],
+    tissueOptions: DropdownItemProps[],
     uploadingFile: boolean,
     uploadPercentage: number,
     newFileIsValid: boolean,
@@ -270,6 +271,24 @@ export const NewFileForm = (props: NewFileFormProps) => {
                                 value={props.newFile.newTag as number}
                                 onChange={(_, { name, value }) => props.handleAddFileInputsChange(name, value)}
                                 placeholder={intl.formatMessage({ id: 'newFileForm.tag.placeholder' })}
+                                disabled={props.uploadingFile}
+                            />
+                        </Grid.Row>
+
+                        <Grid.Row>
+                            <Form.Dropdown
+                                fluid
+                                width={16}
+                                options={props.tissueOptions}
+                                search
+                                selection
+                                clearable
+                                name='tissue'
+                                value={props.newFile.tissue ?? ''}
+                                onChange={(_, { name, value }) => {
+                                    props.handleAddFileInputsChange(name, value || null)
+                                }}
+                                placeholder='Tissue (optional)'
                                 disabled={props.uploadingFile}
                             />
                         </Grid.Row>

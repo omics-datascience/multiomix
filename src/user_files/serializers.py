@@ -10,6 +10,7 @@ from user_files.utils import has_uploaded_file_valid_format, get_invalid_format_
 from users.serializers import UserSimpleSerializer
 from institutions.serializers import InstitutionSimpleSerializer
 from tags.serializers import TagSerializer
+from tissues.serializers import SimpleTissueSerializer, TissueSerializer
 from user_files.models import UserFile
 
 
@@ -23,13 +24,16 @@ class SurvivalColumnsTupleUserFileSimpleSerializer(serializers.ModelSerializer):
 
 class SimpleUserFileSerializer(serializers.ModelSerializer):
     """Serialize a few fields for all experiment list"""
+    tissue = SimpleTissueSerializer(read_only=True)
+
     class Meta:
         model = UserFile
         fields = [
             'id',
             'name',
             'description',
-            'file_type'
+            'file_type',
+            'tissue'
         ]
 
 
@@ -39,7 +43,7 @@ class UserFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFile
-        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissues',
+        fields = ['id', 'name', 'description', 'file_obj', 'file_type', 'tag', 'tag_id', 'tissue',
                   'upload_date', 'institutions', 'number_of_rows', 'number_of_samples', 'user', 'contains_nan_values',
                   'column_used_as_index', 'is_cpg_site_id', 'platform', 'survival_columns', 'is_public']
 
@@ -65,6 +69,7 @@ class UserFileSerializer(serializers.ModelSerializer):
         if instance.tag:
             data['tag'] = TagSerializer(instance.tag).data
 
+        data['tissue'] = TissueSerializer(instance.tissue).data if instance.tissue else None
         data['institutions'] = InstitutionSimpleSerializer(instance.institutions, many=True, read_only=True).data
         data['survival_columns'] = SurvivalColumnsTupleUserFileSimpleSerializer(
             instance.survival_columns,
@@ -95,12 +100,10 @@ class UserFileSerializer(serializers.ModelSerializer):
         """
         with transaction.atomic():
             institutions_ids = validated_data.pop('institutions', [])
-            tissues = validated_data.pop('tissues', [])
 
             # User file and institutions
             user_file = UserFile.objects.create(user=self.context['request'].user, **validated_data)
             user_file.institutions.set(institutions_ids)
-            user_file.tissues.set(tissues)
             user_file.save()
 
             # Survival columns
@@ -124,7 +127,7 @@ class UserFileSerializer(serializers.ModelSerializer):
             instance.file_type = validated_data.get('file_type', instance.file_type)
             instance.description = validated_data.get('description', instance.description)
             instance.tag = validated_data.get('tag')
-            instance.tissues.set(validated_data.get('tissues', []))
+            instance.tissue = validated_data.get('tissue')
             instance.institutions.set(validated_data.get('institutions', []))
             instance.is_cpg_site_id = validated_data.get('is_cpg_site_id')
             instance.platform = validated_data.get('platform')

@@ -1,10 +1,11 @@
 import React from 'react'
 import { Input, Segment, Header, Icon, Select } from 'semantic-ui-react'
-import { DjangoCGDSDataset, DjangoCGDSStudy } from '../../utils/django_interfaces'
+import { DjangoCGDSDataset } from '../../utils/django_interfaces'
 import { NameOfCGDSDataset, CGDSDatasetSeparator, Nullable } from '../../utils/interfaces'
 import { checkedValidityCallback } from '../../utils/util_functions'
 import { SurvivalTuplesForm } from '../survival/SurvivalTuplesForm'
 import { useIntl } from 'react-intl'
+import type { CGDSStudyForm } from './CGDSPanel'
 
 /** For reusability */
 type HandleSurvivalChangesCallback = (datasetName: NameOfCGDSDataset, idx: number, name: string, value: any) => void
@@ -16,7 +17,7 @@ type RemoveSurvivalTupleCallback = (datasetName: NameOfCGDSDataset, idxSurvivalT
  */
 interface NewCGDSDatasetFormProps {
     /** CDGSStudy to take some fields to generate the CGDSDataset Mongo collection's name. */
-    newCGDSStudy: DjangoCGDSStudy,
+    newCGDSStudy: CGDSStudyForm,
     newCGDSDataset: Nullable<DjangoCGDSDataset>,
     nameToShow: string,
     datasetName: NameOfCGDSDataset,

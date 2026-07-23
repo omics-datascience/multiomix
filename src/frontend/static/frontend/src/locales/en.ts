@@ -899,7 +899,11 @@ export default {
     'sharedUsers.stopSharing': 'Stop sharing to user',
     'sharedUsers.confirmStopSharing': 'Are you sure to stop sharing experiment to user?',
     // 97. SourcePopup
-    'sourcePopup.cgdsDataset': 'cBioPortal dataset (version {version})',
+    'sourcePopup.cgdsDataset': 'cBioPortal dataset',
+    'sourcePopup.unnamedSource': 'Unnamed source',
+    'sourcePopup.version': 'Version: {version}',
+    'sourcePopup.tissue': 'Tissue: {tissue}',
+    'sourcePopup.cgdsDownloadUnavailable': 'Download unavailable for cBioPortal',
     'sourcePopup.syncDate': 'Sync. Date: {date}',
     'sourcePopup.sourceProperties': 'Source properties',
     'sourcePopup.samples': 'Samples: {count}',

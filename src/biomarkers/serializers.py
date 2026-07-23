@@ -6,6 +6,7 @@ from tags.serializers import TagSerializer
 from drf_writable_nested import WritableNestedModelSerializer
 from django.contrib.auth import get_user_model
 from api_service.serializers import LimitedUserSerializer
+from tissues.serializers import SimpleTissueSerializer
 
 
 class MoleculeIdentifierSerializer(serializers.Serializer):
@@ -72,6 +73,7 @@ class BiomarkerSimpleSerializer(WritableNestedModelSerializer):
     state = serializers.IntegerField(required=False)
 
     tag = TagSerializer(required=False)
+    tissue = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = Biomarker
@@ -110,7 +112,7 @@ class BiomarkerSimpleUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Biomarker
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'tissue']
 
 
 class BiomarkerSerializer(WritableNestedModelSerializer):
@@ -121,6 +123,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     number_of_methylations = serializers.SerializerMethodField(method_name='get_number_of_methylations')
     has_fs_experiment = serializers.SerializerMethodField(method_name='get_has_fs_experiment')
     was_already_used = serializers.SerializerMethodField(method_name='get_was_already_used')
+    tissue = SimpleTissueSerializer(read_only=True)
 
     mrnas = MRNAIdentifierSerializer(many=True, required=False)
     mirnas = MiRNAIdentifierSerializer(many=True, required=False)
@@ -128,7 +131,6 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
     methylations = MethylationIdentifierSerializer(many=True, required=False)
     origin = serializers.IntegerField(required=False)
     state = serializers.IntegerField(required=False)
-
     tag = TagSerializer(required=False)
 
     class Meta:
@@ -167,7 +169,7 @@ class BiomarkerSerializer(WritableNestedModelSerializer):
         This avoids the user to edit a Biomarker that was already used and generate inconsistencies.
         """
         return ins.was_already_used
-    
+
     
 class BiomarkerFromCorrelationAnalysisSerializer(serializers.Serializer):
     """
