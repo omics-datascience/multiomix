@@ -5,7 +5,6 @@ export default {
     'common.download': 'Download',
     'common.stop': 'Stop',
     'common.save': 'Save',
-    'common.download': 'Download',
     'common.close': 'Close',
     'common.actions': 'Actions',
     'common.confirm': 'Confirm',
