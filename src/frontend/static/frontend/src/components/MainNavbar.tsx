@@ -277,7 +277,7 @@ const MainNavbar = (props: MainNavbarProps) => {
                 </Menu.Menu>
 
                 {props.isLoadingUser && (
-                    <Menu.Item>
+                    <Menu.Item className='navbar-loading-placeholders'>
                         <Menu.Item style={{ padding: '0 1.72rem' }}>
                             <Loader active inline='centered' />
                         </Menu.Item>

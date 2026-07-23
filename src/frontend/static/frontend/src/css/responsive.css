@@ -1,0 +1,81 @@
+.ui.menu:not(.vertical) .right.menu.mobile-navbar-toggle,
+.ui.vertical.menu.mobile-navbar-menu {
+    display: none !important;
+}
+
+.ui.menu:not(.vertical) .menu.desktop-navbar-items {
+    display: flex !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .ui.menu:not(.vertical) .menu.desktop-navbar-items {
+        display: none !important;
+    }
+
+    .ui.menu:not(.vertical) .right.menu.mobile-navbar-toggle {
+        display: flex !important;
+        margin-left: auto !important;
+    }
+
+    .ui.vertical.menu.mobile-navbar-menu {
+        display: block !important;
+        margin-top: 0 !important;
+    }
+
+    .navbar-loading-placeholders {
+        display: none !important;
+    }
+
+    .mobile-navbar-toggle .item {
+        padding: 1rem 1.25rem !important;
+    }
+
+    .mobile-navbar-toggle .icon {
+        font-size: 2rem !important;
+    }
+}
+
+@media only screen and (min-width: 1025px) and (max-width: 1150px) {
+    .ui.menu:not(.vertical) .menu.desktop-navbar-items {
+        flex: 1 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .ui.menu:not(.vertical) .right.menu.mobile-navbar-toggle,
+    .ui.vertical.menu.mobile-navbar-menu {
+        display: none !important;
+    }
+
+    .desktop-navbar-items .item,
+    .desktop-navbar-items .dropdown {
+        font-size: 0.82rem !important;
+        padding-left: 0.45rem !important;
+        padding-right: 0.45rem !important;
+    }
+
+    .ui.menu .header.item {
+        padding-right: 0.8rem !important;
+    }
+}
+
+@media only screen and (min-width: 1151px) and (max-width: 1366px) {
+    .ui.menu:not(.vertical) .menu.desktop-navbar-items {
+        flex: 1 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .desktop-navbar-items .item,
+    .desktop-navbar-items .dropdown {
+        font-size: 0.90rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .ui.menu .header.item {
+        padding-right: 1.2rem !important;
+    }
+}
