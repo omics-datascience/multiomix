@@ -29,6 +29,10 @@ from common.enums import ResponseCode
 from common.exceptions import NoSamplesInCommon
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus
+from common.access_control import (
+    biomarker_visibility_q,
+    can_view_biomarker,
+)
 from common.utils import get_source_pk, get_subset_of_features
 from datasets_synchronization.models import SurvivalColumnsTupleCGDSDataset, SurvivalColumnsTupleUserFile
 from feature_selection.models import TrainedModel, FitnessFunction, ClusteringParameters, SVMParameters, RFParameters, \
@@ -59,7 +63,9 @@ def get_cluster_labels_set_instances(trained_model_id: Optional[int],
     if not trained_model_id:
         raise ValidationError('Invalid trained model id')
 
-    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
+    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id)
+    if not can_view_biomarker(trained_model.biomarker, user):
+        raise ValidationError('You do not have permission to access this trained model.')
     return trained_model.cluster_labels.all()
 
 
@@ -69,7 +75,9 @@ def get_prediction_range_labels_set_instances(trained_model_id: Optional[int],
     if not trained_model_id:
         raise ValidationError('Invalid trained model id')
 
-    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id, biomarker__user=user)
+    trained_model = get_object_or_404(TrainedModel, pk=trained_model_id)
+    if not can_view_biomarker(trained_model.biomarker, user):
+        raise ValidationError('You do not have permission to access this trained model.')
     return trained_model.prediction_ranges_labels.all()
 
 
@@ -81,8 +89,10 @@ def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> Statis
     @return: StatisticalValidation instance.
     """
     statistical_validation_pk = request.GET.get('statistical_validation_pk')
-    return get_object_or_404(StatisticalValidation, pk=statistical_validation_pk,
-                             biomarker__user=request.user)
+    stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk)
+    if not can_view_biomarker(stat_validation.biomarker, request.user):
+        raise ValidationError('You do not have permission to access this statistical validation.')
+    return stat_validation
 
 
 class CombinationSourceDataStatisticalPropertiesDetails(APIView):
@@ -152,7 +162,9 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
     def get_queryset(self):
         biomarker_pk = self.request.GET.get('biomarker_pk')
         user = self.request.user
-        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk, user=user)
+        biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        if not can_view_biomarker(biomarker, user):
+            return StatisticalValidation.objects.none()
         return biomarker.statistical_validations.all()
 
     permission_classes = [permissions.IsAuthenticated]
@@ -169,6 +181,9 @@ class StatisticalValidationDestroy(generics.DestroyAPIView):
     """REST endpoint: delete for StatisticalValidation model."""
 
     def get_queryset(self):
+        if self.request.method == 'GET':
+            visible_biomarkers = Biomarker.objects.filter(biomarker_visibility_q(self.request.user))
+            return StatisticalValidation.objects.filter(biomarker__in=visible_biomarkers)
         return StatisticalValidation.objects.filter(biomarker__user=self.request.user)
 
     serializer_class = StatisticalValidation
@@ -179,7 +194,8 @@ class StatisticalValidationMetrics(generics.RetrieveAPIView):
     """Gets a specific statistical validation information."""
 
     def get_queryset(self):
-        return StatisticalValidation.objects.filter(biomarker__user=self.request.user)
+        visible_biomarkers = Biomarker.objects.filter(biomarker_visibility_q(self.request.user))
+        return StatisticalValidation.objects.filter(biomarker__in=visible_biomarkers)
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = StatisticalValidationSerializer
@@ -273,8 +289,9 @@ class ClustersUniqueStatValidation(APIView):
 
     @staticmethod
     def get(request: Request, pk: int):
-        stat_validation = get_object_or_404(StatisticalValidation, pk=pk,
-                                            biomarker__user=request.user)
+        stat_validation = get_object_or_404(StatisticalValidation, pk=pk)
+        if not can_view_biomarker(stat_validation.biomarker, request.user):
+            raise ValidationError('You do not have permission to access this statistical validation.')
         samples_and_clusters = stat_validation.samples_and_clusters.values(text=F('cluster'),
                                                                            value=F('cluster')).distinct()
         return Response(samples_and_clusters)
@@ -403,8 +420,9 @@ class ModelDetails(APIView):
 
     @staticmethod
     def get(request: Request):
-        trained_model: TrainedModel = get_object_or_404(TrainedModel, pk=request.GET.get('trained_model_pk'),
-                                                        biomarker__user=request.user)
+        trained_model: TrainedModel = get_object_or_404(TrainedModel, pk=request.GET.get('trained_model_pk'))
+        if not can_view_biomarker(trained_model.biomarker, request.user):
+            raise ValidationError('You do not have permission to access this trained model.')
 
         model_used = trained_model.fitness_function
         if model_used == FitnessFunction.CLUSTERING:
@@ -898,6 +916,8 @@ class TrainedModelsOfBiomarker(generics.ListAPIView):
     def get_queryset(self):
         biomarker_pk = self.request.GET.get('biomarker_pk')
         biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        if not can_view_biomarker(biomarker, self.request.user):
+            return TrainedModel.objects.none()
         return biomarker.trained_models.all()
 
     permission_classes = [permissions.IsAuthenticated]

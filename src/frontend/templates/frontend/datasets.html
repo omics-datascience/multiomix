@@ -18,6 +18,10 @@
                 const downloadFileURL = "{% url 'download_user_file' %}"
                 const downloadFileHeaders = "{% url 'user_file_headers' %}"
                 const urlPostSwitchPublicView = "{% url 'switch-userFile-public-view' %}"
+                const urlGetInstitutionsNonInUserFile = "{% url 'institution-non-user-files-list' %}"
+                const urlShareUserFileToInstitution = "{% url 'share-user-file-to-institution' %}"
+                const urlGetSharedInstitutionUserFile = "{% url 'shared-institutions-user-file' %}"
+                const urlPostRemoveInstitutionUserFile = "{% url 'remove-institution-user-file' %}"
         </script>
 
         {% render_bundle 'files' 'js' %}

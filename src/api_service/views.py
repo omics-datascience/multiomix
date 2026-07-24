@@ -27,6 +27,11 @@ from common.functions import get_enum_from_value, get_integer_enum_from_value, e
     request_bool_to_python_bool, get_intersection, create_survival_columns_from_json, get_intersection_clinical
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus, generate_json_response_or_404
+from common.access_control import (
+    can_edit_shared_resource,
+    can_view_shared_resource,
+    shared_resource_visibility_q,
+)
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
     SurvivalColumnsTupleUserFile
 from genes.models import Gene
@@ -181,12 +186,7 @@ class ExperimentList(generics.ListAPIView):
         @param user: The user for whom the experiments are retrieved.
         @return: Queryset of experiments visible to the user.
         """
-        return Experiment.objects.filter(
-            Q(user=user) |
-            Q(is_public=True) |
-            Q(shared_institutions__institutionadministration__user=user) |
-            Q(shared_users=user)
-        ).distinct()
+        return Experiment.objects.filter(shared_resource_visibility_q(user)).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -208,13 +208,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
         try:
             experiment: Experiment = Experiment.objects.filter(
-                Q(pk=experiment_id) &
-                (
-                        Q(user=user) |
-                        Q(is_public=True) |
-                        Q(shared_institutions__institutionadministration__user=user) |
-                        Q(shared_users=user)
-                )
+                Q(pk=experiment_id) & shared_resource_visibility_q(user)
             ).distinct().get()
             combinations_queryset = experiment.combinations
 
@@ -278,7 +272,7 @@ class FullExperimentDetail(generics.RetrieveAPIView):
     """REST endpoint: get for Experiment model"""
 
     def get_queryset(self):
-        return Experiment.objects.filter(user=self.request.user)
+        return Experiment.objects.filter(shared_resource_visibility_q(self.request.user)).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -310,7 +304,7 @@ class RemoveInstitutionFromExperimentView(APIView):
         experiment_id = data.get('experimentId')
         institution_id = data.get('institutionId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
+        if not can_edit_shared_resource(experiment, request.user):
             return Response(
                 {"error": "You do not have permission to modify this experiment."},
                 status=status.HTTP_403_FORBIDDEN
@@ -347,7 +341,7 @@ class RemoveUserFromExperimentView(APIView):
         experiment_id = data.get('experimentId')
         user_id = data.get('userId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
+        if not can_edit_shared_resource(experiment, request.user):
             return Response(
                 {"error": "You do not have permission to modify this experiment."},
                 status=status.HTTP_403_FORBIDDEN
@@ -383,7 +377,7 @@ class ToggleExperimentPublicView(APIView):
         data = request.data
         experiment_id = data.get('experimentId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
+        if not can_edit_shared_resource(experiment, request.user):
             return Response(
                 {"error": "You do not have permission to modify this experiment."},
                 status=status.HTTP_403_FORBIDDEN
@@ -411,6 +405,8 @@ class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         user = self.request.user
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, user):
+            return Institution.objects.none()
         user_institutions = Institution.objects.filter(users=user)
         return user_institutions.exclude(
             id__in=experiment.shared_institutions.values_list('id', flat=True)
@@ -430,6 +426,8 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, self.request.user):
+            return get_user_model().objects.none()
 
         associated_user_ids = experiment.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
@@ -448,6 +446,8 @@ class UsersExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_view_shared_resource(experiment, self.request.user):
+            return User.objects.none()
         return experiment.shared_users
 
 
@@ -464,6 +464,8 @@ class InstitutionExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_view_shared_resource(experiment, self.request.user):
+            return Institution.objects.none()
         return experiment.shared_institutions
 
 
@@ -486,6 +488,11 @@ class AddInstitutionToExperimentView(APIView):
             )
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, request.user):
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         institution = get_object_or_404(Institution, id=institution_id)
 
         experiment.shared_institutions.add(institution)
@@ -513,6 +520,11 @@ class AddUserToExperimentView(APIView):
             )
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, request.user):
+            return Response(
+                {"error": "You do not have permission to modify this experiment."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         user = get_object_or_404(User, id=user_id)
 
         experiment.shared_users.add(user)
