@@ -542,15 +542,9 @@ def make_tools(user_id: int):
         """
         from api_service.mrna_service import global_mrna_service
 
-        params: dict = {'gene': gene_name}
-        if min_score > 0:
-            params['score'] = str(min_score)
-
-        data = global_mrna_service.get_mdulector_service_content(
-            'mirna-target-interactions',
-            request_params=params,
-            is_paginated=True,
-            method='get'
+        data = global_mrna_service.get_mirna_target_interactions(
+            gene=gene_name,
+            score=str(min_score) if min_score > 0 else None,
         )
 
         if not data or data.get('count', 0) == 0:
@@ -565,6 +559,122 @@ def make_tools(user_id: int):
             'total_interactions': data.get('count', 0),
             'shown': len(results),
             'modulators': results
+        }, default=str)
+
+    @tool
+    def search_mirna(query: str) -> str:
+        """
+        Searches for miRNA identifiers in Modulector by name or partial name.
+        Use this when the user asks to search, find, or look up a miRNA by name
+        (e.g. "hsa-miR-132", "miR-21"). Returns a list of matching miRNA codes
+        and their standard accession IDs.
+        Always use this before get_mirna_details to confirm the exact identifier.
+        """
+        from api_service.mrna_service import global_mrna_service
+
+        results = global_mrna_service.find_mirna_codes(query=query)
+
+        if not results:
+            return json.dumps({'message': f'No miRNAs found matching "{query}" in Modulector.'})
+
+        aliases = global_mrna_service.get_mirna_codes(mirna_codes=results) or {}
+        data = [{'molecule': m, 'standard': aliases.get(m)} for m in results]
+        return json.dumps({'query': query, 'count': len(data), 'results': data}, default=str)
+
+    @tool
+    def get_mirna_details(mirna: str) -> str:
+        """
+        Returns detailed information about a specific miRNA from Modulector,
+        including its accession ID, sequence, aliases, and database references.
+        Use this with an exact miRNA identifier obtained from search_mirna.
+        """
+        from api_service.mrna_service import global_mrna_service
+
+        data = global_mrna_service.get_mirna_details(mirna=mirna)
+
+        if not data:
+            return json.dumps({'message': f'No information found for miRNA "{mirna}" in Modulector.'})
+
+        return json.dumps({'mirna': mirna, 'details': data}, default=str)
+
+    @tool
+    def get_mirna_target_genes(mirna: str, min_score: float = 0.0, limit: int = 20) -> str:
+        """
+        Returns genes known to be targeted/regulated by a specific miRNA,
+        sourced from Modulector's miRNA-target interaction database.
+        Use this when the user asks which genes a miRNA regulates, targets,
+        or silences, or asks about downstream targets of a miRNA.
+        Results include gene name, interaction score, and supporting evidence.
+        """
+        from api_service.mrna_service import global_mrna_service
+
+        data = global_mrna_service.get_mirna_target_interactions(
+            mirna=mirna,
+            score=str(min_score) if min_score > 0 else None,
+        )
+
+        if not data or data.get('count', 0) == 0:
+            return json.dumps({
+                'message': f'No target genes found for miRNA "{mirna}" in Modulector.',
+                'results': []
+            })
+
+        results = data.get('results', [])[:limit]
+        return json.dumps({
+            'mirna': mirna,
+            'total_interactions': data.get('count', 0),
+            'shown': len(results),
+            'targets': results
+        }, default=str)
+
+    @tool
+    def get_mirna_diseases(mirna: str, limit: int = 20) -> str:
+        """
+        Returns diseases associated with a specific miRNA from Modulector.
+        Use this when the user asks about the clinical relevance, pathological
+        associations, or disease context of a miRNA.
+        """
+        from api_service.mrna_service import global_mrna_service
+
+        data = global_mrna_service.get_diseases(mirna=mirna)
+
+        if not data or data.get('count', 0) == 0:
+            return json.dumps({
+                'message': f'No disease associations found for miRNA "{mirna}" in Modulector.',
+                'results': []
+            })
+
+        results = data.get('results', [])[:limit]
+        return json.dumps({
+            'mirna': mirna,
+            'total': data.get('count', 0),
+            'shown': len(results),
+            'diseases': results
+        }, default=str)
+
+    @tool
+    def get_mirna_drugs(mirna: str, limit: int = 20) -> str:
+        """
+        Returns drugs or molecules associated with a specific miRNA from Modulector.
+        Use this when the user asks about pharmacological context, drug interactions,
+        or therapeutic relevance of a miRNA.
+        """
+        from api_service.mrna_service import global_mrna_service
+
+        data = global_mrna_service.get_drugs(mirna=mirna)
+
+        if not data or data.get('count', 0) == 0:
+            return json.dumps({
+                'message': f'No drug associations found for miRNA "{mirna}" in Modulector.',
+                'results': []
+            })
+
+        results = data.get('results', [])[:limit]
+        return json.dumps({
+            'mirna': mirna,
+            'total': data.get('count', 0),
+            'shown': len(results),
+            'drugs': results
         }, default=str)
 
     @tool
@@ -632,6 +742,11 @@ def make_tools(user_id: int):
         get_gene_info,
         get_gene_annotations,
         get_mirna_modulators,
+        search_mirna,
+        get_mirna_details,
+        get_mirna_target_genes,
+        get_mirna_diseases,
+        get_mirna_drugs,
         get_drugs_regulating_gene,
         get_string_interaction_partners,
         get_string_functional_enrichment,

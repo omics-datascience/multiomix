@@ -5,8 +5,8 @@
       "enabled": true,
       "description": "Biomedical research: PubMed papers, bioRxiv, ClinicalTrials.gov, NCI, variants, OncoKB",
       "transport": "stdio",
-      "command": "biomcp",
-      "args": ["run", "--mode", "stdio"],
+      "command": "biomcp-cli",
+      "args": ["mcp"],
       "env": {}
     }
   }

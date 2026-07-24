@@ -914,21 +914,23 @@ def get_number_samples_in_common_action_one_front(request):
 @login_required
 def mirna_data_action(request):
     """Gets miRNA data from Modulector"""
-    data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
+    data = global_mrna_service.get_mirna_details(mirna=request.GET.get('mirna', ''))
     return generate_json_response_or_404(data)
 
 
 @login_required
 def methylation_data_action(request):
     """Gets Methylation site data from Modulector"""
-    data = global_mrna_service.get_modulector_service_content('methylation', request.GET, is_paginated=False)
+    data = global_mrna_service.get_methylation_details(
+        methylation_site=request.GET.get('methylation_site', '')
+    )
     return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_target_interaction_action(request):
     """
-    Searches in papers an specific miRNA interaction.  
+    Searches in papers an specific miRNA interaction.
 
     Examples:
     http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&mirna=hsa-miR-132-3p&include_pubmeds=true
@@ -939,48 +941,40 @@ def get_mirna_target_interaction_action(request):
     """
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
-    include_pubmeds = request.GET.get('include_pubmeds')
 
     if not gene and not mirna:
         return JsonResponse(data={"error": "Param 'mirna' or 'gene' are mandatory"}, status=400)
-    if gene and not mirna:
-        params = {'gene': gene}
-    elif not gene and mirna:
-        params = {'mirna': mirna}
-    else:
-        params = {'mirna': mirna, 'gene': gene}
 
-    score = request.GET.get('score')
-    if score:
-        params['score'] = score
-
-    if include_pubmeds:
-        if include_pubmeds.lower() == "true":
-            params['include_pubmeds'] = "true"
-
-    # Gets include_pubmeds flag
-    include_pubmeds = request.GET.get('include_pubmeds') == 'true'
-    if include_pubmeds:
-        params['include_pubmeds'] = 'true'
-
-    data = global_mrna_service.get_modulector_service_content('mirna-target-interactions',
-                                                              request_params=params,
-                                                              is_paginated=True,
-                                                              method='get')
+    data = global_mrna_service.get_mirna_target_interactions(
+        mirna=mirna,
+        gene=gene,
+        score=request.GET.get('score'),
+        include_pubmeds=request.GET.get('include_pubmeds', '').lower() == 'true',
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
     return JsonResponse(data)
 
 
 @login_required
 def get_mirna_diseases_action(request):
     """Searches in papers miRNA associations with diseases"""
-    data = global_mrna_service.get_modulector_service_content('diseases', request.GET, is_paginated=True)
+    data = global_mrna_service.get_diseases(
+        mirna=request.GET.get('mirna'),
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
     return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_drugs_action(request):
     """Searches in papers miRNA associations with drugs"""
-    data = global_mrna_service.get_modulector_service_content('drugs', request.GET, is_paginated=True)
+    data = global_mrna_service.get_drugs(
+        mirna=request.GET.get('mirna'),
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
     return generate_json_response_or_404(data)
 
 

@@ -168,6 +168,8 @@ def find_genes_from_request(request: Request) -> List[Dict]:
     """
     genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
                                                                  request.GET, is_paginated=False)
+    if not genes_found:
+        return []
     aliases = get_gene_aliases(genes_found)
     return [{'molecule': gene, 'standard': aliases.get(gene, [None])[0]} for gene in genes_found]
 
@@ -197,17 +199,11 @@ class MiRNACodes(APIView):
     @staticmethod
     def __get_mirna_aliases(mirna_codes: List[str]) -> Optional[Dict]:
         """Get the aliases for a list of miRNAs through Modulector"""
-        return global_mrna_service.get_modulector_service_content(
-            'mirna-codes',
-            request_params={'mirna_codes': mirna_codes},
-            is_paginated=False,
-            method='post'
-        )
+        return global_mrna_service.get_mirna_codes(mirna_codes=mirna_codes)
 
     def get(self, request):
         """Generates a query to search miRNAs through Modulector"""
-        mirnas_found = global_mrna_service.get_modulector_service_content('mirna-codes-finder',
-                                                                          request.GET, is_paginated=False)
+        mirnas_found = global_mrna_service.find_mirna_codes(query=request.GET.get('query', ''))
 
         # Generates the structure for the frontend
         aliases = self.__get_mirna_aliases(mirnas_found)
@@ -235,23 +231,12 @@ class MethylationSites(APIView):
     @staticmethod
     def __get_methylation_sites_aliases(methylation_sites: List[str]) -> Optional[Dict]:
         """Get the aliases for a list of Methylation sites through Modulector"""
-        return global_mrna_service.get_modulector_service_content(
-            'methylation-sites',
-            request_params={'methylation_sites': methylation_sites},
-            is_paginated=False,
-            method='post'
-        )
+        return global_mrna_service.get_methylation_sites(methylation_sites=methylation_sites)
 
     def get(self, request: Request):
         """Generates a query to search Methylation sites through Modulector"""
-        # methylation_sites = request.GET.get('methylation_sites', '')
-
         # Gets the Methylation sites
-        sites_found = global_mrna_service.get_modulector_service_content(
-            'methylation-sites-finder',
-            request_params=request.GET,
-            is_paginated=False
-        )
+        sites_found = global_mrna_service.find_methylation_sites(query=request.GET.get('query', ''))
 
         # Generates the structure for the frontend
         aliases = self.__get_methylation_sites_aliases(sites_found)
