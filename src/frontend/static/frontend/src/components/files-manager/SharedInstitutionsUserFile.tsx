@@ -39,6 +39,7 @@ export const SharedInstitutionsUserFile = (props: Props) => {
     const [institutionIdToAdd, setInstitutionIdToAdd] = useState<number>(0)
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
+    /** Fetches the institutions available for sharing and those already shared. */
     const loadInstitutions = () => {
         if (!props.userFileId) {
             return
@@ -70,6 +71,7 @@ export const SharedInstitutionsUserFile = (props: Props) => {
         })
     }
 
+    /** Shares the dataset with the selected institution after confirmation. */
     const handleAddInstitution = () => {
         if (!institutionIdToAdd) {
             return
@@ -88,6 +90,10 @@ export const SharedInstitutionsUserFile = (props: Props) => {
             .finally(() => setIsLoading(false))
     }
 
+    /**
+     * Removes the dataset sharing association with an institution after confirmation.
+     * @param institutionId Institution to remove from the shared dataset.
+     */
     const handleRemoveInstitution = (institutionId: number) => {
         setIsLoading(true)
         ky.post(urlPostRemoveInstitutionUserFile, {

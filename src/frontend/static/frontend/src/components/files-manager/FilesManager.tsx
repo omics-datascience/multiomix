@@ -422,6 +422,10 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         })
     }
 
+    /**
+     * Opens the institution-sharing modal for a dataset.
+     * @param file Dataset whose sharing configuration will be managed.
+     */
     openShareInstitutions = (file: DjangoUserFile) => {
         this.setState({
             selectedFileToShare: file,
@@ -429,6 +433,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         })
     }
 
+    /** Closes the institution-sharing modal and clears the selected dataset. */
     closeShareInstitutions = () => {
         this.setState({
             selectedFileToShare: null,
@@ -436,6 +441,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         })
     }
 
+    /**
+     * Updates the table cache after the shared institutions of a dataset change.
+     * @param fileId Dataset identifier.
+     * @param institutions Current institutions shared with the dataset.
+     */
     updateSharedInstitutions = (fileId: number, institutions: DjangoInstitutionSimple[]) => {
         this.setState(prevState => ({
             sharedInstitutionsByFile: {

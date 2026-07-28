@@ -177,6 +177,7 @@ class InstitutionNonUserFilesSharedListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Return the current user's institutions not already shared with the dataset."""
         user_file_id = self.kwargs.get('user_file_id')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
         if not can_edit_shared_resource(user_file, self.request.user):
@@ -193,6 +194,7 @@ class UserFileSharedInstitutionsListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Return the institutions shared with the dataset when the user can view it."""
         user_file_id = self.kwargs.get('user_file_id')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
         if not can_view_user_file(user_file, self.request.user):
@@ -207,6 +209,7 @@ class AddInstitutionToUserFileView(APIView):
 
     @staticmethod
     def post(request):
+        """Share a dataset with an institution belonging to the requesting owner."""
         institution_id = request.data.get('institutionId')
         user_file_id = request.data.get('userFileId')
 
@@ -239,6 +242,7 @@ class RemoveInstitutionFromUserFileView(APIView):
 
     @staticmethod
     def post(request):
+        """Remove an institution from a dataset owned by the requesting user."""
         institution_id = request.data.get('institutionId')
         user_file_id = request.data.get('userFileId')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
