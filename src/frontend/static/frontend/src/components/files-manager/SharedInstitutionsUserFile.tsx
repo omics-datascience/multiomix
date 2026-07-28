@@ -123,7 +123,7 @@ export const SharedInstitutionsUserFile = (props: Props) => {
             onClose={props.handleClose}
             open={props.isOpen}
             closeIcon={<Icon name='close' size='large' onClick={props.handleClose} />}
-            style={{ width: '60%' }}
+            style={{ width: '45%', maxWidth: '650px' }}
         >
             <ModalHeader>{intl.formatMessage({ id: 'files.manager.sharedInstitutions.title' })}</ModalHeader>
             <ModalContent>
