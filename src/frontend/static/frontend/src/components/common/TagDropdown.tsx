@@ -3,7 +3,7 @@ import ky from 'ky'
 import { Button, Dropdown, Icon, Input, List, Loader } from 'semantic-ui-react'
 import { DjangoTag, TagType } from '../../utils/django_interfaces'
 import { Nullable } from '../../utils/interfaces'
-import { alertGeneralError, copyObject, getDefaultNewTag, getDjangoHeader } from '../../utils/util_functions'
+import { alertGeneralError, copyObject, getDefaultNewTag, getDjangoHeader, getUserTagsByType } from '../../utils/util_functions'
 import { TagForm } from './TagForm'
 
 declare const urlTagsCRUD: string
@@ -73,13 +73,9 @@ export const TagDropdown = (props: TagDropdownProps) => {
     const getTags = () => {
         setLoadingTags(true)
 
-        const searchParams = props.tagType !== undefined ? { type: props.tagType } : undefined
-
-        ky.get(urlTagsCRUD, { searchParams, signal: abortController.current.signal })
-            .then((response) => {
-                response.json<DjangoTag[]>().then((tagsResponse) => {
-                    setTags(tagsResponse)
-                }).catch((err) => console.log('Error parsing Tags JSON ->', err))
+        getUserTagsByType(props.tagType, abortController.current.signal)
+            .then((tagsResponse) => {
+                setTags(tagsResponse)
             })
             .catch((err) => {
                 if (!abortController.current.signal.aborted) {
@@ -89,7 +85,7 @@ export const TagDropdown = (props: TagDropdownProps) => {
             .finally(() => setLoadingTags(false))
     }
 
-    // Fetches all the Tags as soon as the component is mounted
+    /** Fetches all the Tags as soon as the component is mounted. */
     useEffect(() => {
         getTags()
 
@@ -103,8 +99,10 @@ export const TagDropdown = (props: TagDropdownProps) => {
         setNewTag(getDefaultNewTag())
     }
 
-    // Keeps the internal selection in sync if the parent updates the Tag from outside
-    // while the panel is closed (e.g. after a refresh of the underlying data)
+    /**
+     * Keeps the internal selection in sync if the parent updates the Tag from outside
+     * while the panel is closed (e.g. after a refresh of the underlying data).
+     */
     useEffect(() => {
         if (!open) {
             setSelectedId(props.selectedTagId)
@@ -139,8 +137,12 @@ export const TagDropdown = (props: TagDropdownProps) => {
         handleClose()
     }
 
-    // Discards any pending change made during this opening of the Dropdown
-    const handleResetSelection = () => setSelectedId(props.selectedTagId)
+    /**
+     * Discards any pending change made during this opening of the Dropdown.
+     */
+    const handleResetSelection = () => {
+        setSelectedId(props.selectedTagId)
+    }
 
     /**
      * Handles changes for the "New tag" form fields (name/description)
@@ -151,7 +153,9 @@ export const TagDropdown = (props: TagDropdownProps) => {
         setNewTag((prevNewTag) => ({ ...prevNewTag, [name]: value }))
     }
 
-    /** Goes back to the Tags list discarding the current "New tag" draft */
+    /**
+     * Goes back to the Tags list discarding the current "New tag" draft.
+     */
     const goBackToList = () => {
         setNewTag(getDefaultNewTag())
         setView('list')
@@ -189,6 +193,7 @@ export const TagDropdown = (props: TagDropdownProps) => {
      * @param tag Tag to delete.
      */
     const deleteTag = (e: React.MouseEvent<HTMLElement>, tag: DjangoTag) => {
+        // Keeps the icon click from selecting the row or closing the Semantic UI Dropdown.
         e.preventDefault()
         e.stopPropagation()
 
@@ -214,7 +219,9 @@ export const TagDropdown = (props: TagDropdownProps) => {
             })
     }
 
-    // Sends the request to create or update a Tag and selects it as soon as it's saved
+    /**
+     * Sends the request to create or update a Tag and selects it as soon as it's saved.
+     */
     const createTag = () => {
         console.log('Creating tag with data ->', newTag)
 
@@ -316,8 +323,11 @@ export const TagDropdown = (props: TagDropdownProps) => {
         }
     }
 
-    // "Tags" list/search view
-    const tagsListView = (
+    /**
+     * Renders the "Tags" list/search view.
+     * @returns Tags list/search view.
+     */
+    const renderTagsListView = () => (
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px 0' }}>
                 <strong>Tags</strong>
@@ -428,7 +438,10 @@ export const TagDropdown = (props: TagDropdownProps) => {
         </>
     )
 
-    /** "New tag" form view */
+    /**
+     * Renders the "New tag" form view.
+     * @returns New Tag form view.
+     */
     const newTagView = (
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px 0' }}>
@@ -481,7 +494,7 @@ export const TagDropdown = (props: TagDropdownProps) => {
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={handleMenuKeyDown}
             >
-                {view === 'list' ? tagsListView : newTagView}
+                {view === 'list' ? renderTagsListView() : newTagView}
             </Dropdown.Menu>
         </Dropdown>
     )

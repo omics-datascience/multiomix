@@ -3,7 +3,7 @@ import { Base } from '../Base'
 import { Header, Button, Modal, Table, DropdownItemProps, Icon, Confirm, Form, Grid } from 'semantic-ui-react'
 import { DjangoCGDSStudy, DjangoTag, DjangoUserFile, TagType } from '../../utils/django_interfaces'
 import ky, { Options } from 'ky'
-import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, formatDateLocale, cleanRef, getFilenameFromSource, makeSourceAndAppend, getDefaultSource, getDefaultNewTag, copyObject, getUserTagsByType } from '../../utils/util_functions'
 import { Nullable, CustomAlert, CustomAlertTypes, SourceType, OkResponse, ConfirmModal } from '../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple } from './types'
 import { ManualForm } from './modalContentBiomarker/manualForm/ManualForm'
@@ -1690,17 +1690,8 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
      * Fetches the User's defined tags
      */
     getUserTags () {
-        // Gets only Biomarker/Experiment Tags
-        const searchParams = {
-            type: TagType.EXPERIMENT
-        }
-
-        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json<DjangoTag[]>().then((tags) => {
-                this.setState({ tags })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
+        getUserTagsByType(TagType.EXPERIMENT, this.abortController.signal).then((tags) => {
+            this.setState({ tags })
         }).catch((err) => {
             console.log("Error getting user's tags ->", err)
         })
@@ -1814,7 +1805,12 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
         })
     }
 
-    updateBiomarkerTag = async (
+    /**
+     * Persists a Tag change for an existing Biomarker.
+     * @param biomarker Biomarker to update.
+     * @param tagId New Tag id, or null to clear it.
+     */
+    updateBiomarkerTag = (
         biomarker: BiomarkerSimple,
         tagId: Nullable<number>
     ) => {
@@ -1824,21 +1820,21 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
             tag: tagId
         }
 
-        try {
-            const updatedBiomarker = await ky
-                .patch(
-                    `${urlBiomarkersSimpleUpdate}/${biomarker.id}/`,
-                    {
-                        headers: getDjangoHeader(),
-                        json: biomarkerTagToSend,
-                        timeout: REQUEST_TIMEOUT
-                    }
-                )
-                .json<Biomarker>()
-
-            console.log('Respuesta del backend:', updatedBiomarker)
-            console.log('Tag devuelto:', updatedBiomarker.tag)
-        } catch (err) {
+        ky.patch(
+            `${urlBiomarkersSimpleUpdate}/${biomarker.id}/`,
+            {
+                headers: getDjangoHeader(),
+                json: biomarkerTagToSend,
+                timeout: REQUEST_TIMEOUT
+            }
+        ).then((response) => {
+            response.json<Biomarker>().then((updatedBiomarker) => {
+                console.log('Respuesta del backend:', updatedBiomarker)
+                console.log('Tag devuelto:', updatedBiomarker.tag)
+            }).catch((err) => {
+                console.log('Error parsing Biomarker JSON after Tag update ->', err)
+            })
+        }).catch((err) => {
             console.error('Error updating Biomarker tag ->', err)
 
             this.setState(prevState => ({
@@ -1851,7 +1847,7 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
                     })
                 }
             }))
-        }
+        })
     }
 
     /**

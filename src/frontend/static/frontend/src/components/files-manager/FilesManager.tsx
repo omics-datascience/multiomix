@@ -3,7 +3,7 @@ import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
 import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
 import ky, { HTTPError } from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns, getUserTagsByType } from '../../utils/util_functions'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
@@ -25,7 +25,6 @@ type UploadResponse = {
 }
 
 // URLs defined in files.html
-declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
 declare const urlUserInstitutions: string
 declare const urlChunkUpload: string
@@ -202,17 +201,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * Fetches the User's defined tags
      */
     getUserTags () {
-        // Gets only File's Tags
-        const searchParams = {
-            type: TagType.FILE
-        }
-
-        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json<DjangoTag[]>().then((tags) => {
-                this.setState({ tags })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
+        getUserTagsByType(TagType.FILE, this.abortController.signal).then((tags) => {
+            this.setState({ tags })
         }).catch((err) => {
             console.log("Error getting user's tags ->", err)
         })
