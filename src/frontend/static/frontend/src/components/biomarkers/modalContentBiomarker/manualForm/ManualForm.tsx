@@ -1,5 +1,5 @@
 import React from 'react'
-import { DropdownItemProps, Grid } from 'semantic-ui-react'
+import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
@@ -7,7 +7,6 @@ import { DjangoTag } from '../../../../utils/django_interfaces'
 
 /** ManualForm's props. */
 interface ManualFormProps {
-    tagOptions: DropdownItemProps[]
     tags: DjangoTag[]
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
@@ -52,7 +51,6 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleValidateForm={props.handleValidateForm}
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
-                    tagOptions={props.tagOptions}
                     tags={props.tags}
                 />
             </Grid.Column>

@@ -1450,13 +1450,6 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     render () {
         const { intl } = this.props
         const { openSelectOptionModal, selectedOption } = this.state
-        const tagOptions: DropdownItemProps[] = [
-            { key: 'no_tag', value: '', text: intl.formatMessage({ id: 'biomarkerFromCorrelation.tags.noTag' }) },
-            ...this.state.tags.map((tag) => {
-                const id = tag.id as number
-                return { key: id, value: id, text: tag.name }
-            })
-        ]
 
         return (
             <>
@@ -1548,7 +1541,6 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
-                        tagOptions={tagOptions}
                         tags={this.state.tags}
                     />
 

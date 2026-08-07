@@ -1827,14 +1827,7 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
                 json: biomarkerTagToSend,
                 timeout: REQUEST_TIMEOUT
             }
-        ).then((response) => {
-            response.json<Biomarker>().then((updatedBiomarker) => {
-                console.log('Respuesta del backend:', updatedBiomarker)
-                console.log('Tag devuelto:', updatedBiomarker.tag)
-            }).catch((err) => {
-                console.log('Error parsing Biomarker JSON after Tag update ->', err)
-            })
-        }).catch((err) => {
+        ).catch((err) => {
             console.error('Error updating Biomarker tag ->', err)
 
             this.setState(prevState => ({
@@ -2173,13 +2166,6 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
                                     handleChangeCheckBox={this.handleChangeCheckBox}
                                     handleRestartSection={this.handleRestartSection}
                                     tags={this.state.tags}
-                                    tagOptions={[
-                                        { key: 'no_tag', value: '', text: 'No tag' },
-                                        ...this.state.tags.map((tag) => {
-                                            const id = tag.id as number
-                                            return { key: id, value: id, text: tag.name }
-                                        })
-                                    ]}
                                 />
                             )}
 
