@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -38,7 +38,7 @@ def get_inference_experiments_of_biomarker(request: HttpRequest) -> QuerySet[Inf
     user = request.user
     biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
     if not can_view_biomarker(biomarker, user):
-        raise ValidationError('You do not have permission to access this biomarker.')
+        raise PermissionDenied('You do not have permission to access this biomarker.')
     return biomarker.inference_experiments.all()
 
 
@@ -47,7 +47,7 @@ def get_inference_experiment(request: HttpRequest) -> InferenceExperiment:
     inference_experiment_pk = request.GET.get('inference_experiment_pk')
     experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk)
     if not can_view_biomarker(experiment.biomarker, request.user):
-        raise ValidationError('You do not have permission to access this inference experiment.')
+        raise PermissionDenied('You do not have permission to access this inference experiment.')
     return experiment
 
 
@@ -303,7 +303,7 @@ class ClustersUniqueInferenceExperiment(APIView):
     def get(request: Request, pk: int):
         experiment = get_object_or_404(InferenceExperiment, pk=pk)
         if not can_view_biomarker(experiment.biomarker, request.user):
-            raise ValidationError('You do not have permission to access this inference experiment.')
+            raise PermissionDenied('You do not have permission to access this inference experiment.')
         samples_and_clusters = experiment.samples_and_clusters.values(text=F('cluster'), value=F('cluster')).distinct()
         return Response(samples_and_clusters)
 
@@ -340,7 +340,7 @@ class SampleAndTimePredictionSamples(generics.ListAPIView):
         inference_experiment_pk = self.request.GET.get('inference_experiment_pk')
         experiment = get_object_or_404(InferenceExperiment, pk=inference_experiment_pk)
         if not can_view_biomarker(experiment.biomarker, self.request.user):
-            raise ValidationError('You do not have permission to access this inference experiment.')
+            raise PermissionDenied('You do not have permission to access this inference experiment.')
         samples_and_clusters = experiment.samples_and_time.all()
         return self.__filter_by_range(samples_and_clusters, self.request)
 

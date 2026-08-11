@@ -13,7 +13,7 @@ from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -65,7 +65,7 @@ def get_cluster_labels_set_instances(trained_model_id: Optional[int],
 
     trained_model = get_object_or_404(TrainedModel, pk=trained_model_id)
     if not can_view_biomarker(trained_model.biomarker, user):
-        raise ValidationError('You do not have permission to access this trained model.')
+        raise PermissionDenied('You do not have permission to access this trained model.')
     return trained_model.cluster_labels.all()
 
 
@@ -77,7 +77,7 @@ def get_prediction_range_labels_set_instances(trained_model_id: Optional[int],
 
     trained_model = get_object_or_404(TrainedModel, pk=trained_model_id)
     if not can_view_biomarker(trained_model.biomarker, user):
-        raise ValidationError('You do not have permission to access this trained model.')
+        raise PermissionDenied('You do not have permission to access this trained model.')
     return trained_model.prediction_ranges_labels.all()
 
 
@@ -91,7 +91,7 @@ def get_stat_validation_instance(request: Union[HttpRequest, Request]) -> Statis
     statistical_validation_pk = request.GET.get('statistical_validation_pk')
     stat_validation = get_object_or_404(StatisticalValidation, pk=statistical_validation_pk)
     if not can_view_biomarker(stat_validation.biomarker, request.user):
-        raise ValidationError('You do not have permission to access this statistical validation.')
+        raise PermissionDenied('You do not have permission to access this statistical validation.')
     return stat_validation
 
 
@@ -164,7 +164,7 @@ class BiomarkerStatisticalValidations(generics.ListAPIView):
         user = self.request.user
         biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
         if not can_view_biomarker(biomarker, user):
-            return StatisticalValidation.objects.none()
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.statistical_validations.all()
 
     permission_classes = [permissions.IsAuthenticated]
@@ -291,7 +291,7 @@ class ClustersUniqueStatValidation(APIView):
     def get(request: Request, pk: int):
         stat_validation = get_object_or_404(StatisticalValidation, pk=pk)
         if not can_view_biomarker(stat_validation.biomarker, request.user):
-            raise ValidationError('You do not have permission to access this statistical validation.')
+            raise PermissionDenied('You do not have permission to access this statistical validation.')
         samples_and_clusters = stat_validation.samples_and_clusters.values(text=F('cluster'),
                                                                            value=F('cluster')).distinct()
         return Response(samples_and_clusters)
@@ -422,7 +422,7 @@ class ModelDetails(APIView):
     def get(request: Request):
         trained_model: TrainedModel = get_object_or_404(TrainedModel, pk=request.GET.get('trained_model_pk'))
         if not can_view_biomarker(trained_model.biomarker, request.user):
-            raise ValidationError('You do not have permission to access this trained model.')
+            raise PermissionDenied('You do not have permission to access this trained model.')
 
         model_used = trained_model.fitness_function
         if model_used == FitnessFunction.CLUSTERING:
@@ -917,7 +917,7 @@ class TrainedModelsOfBiomarker(generics.ListAPIView):
         biomarker_pk = self.request.GET.get('biomarker_pk')
         biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
         if not can_view_biomarker(biomarker, self.request.user):
-            return TrainedModel.objects.none()
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.trained_models.all()
 
     permission_classes = [permissions.IsAuthenticated]

@@ -207,6 +207,7 @@ const DifferentialExpressionPanelWrapper = () => {
         }))
     }
 
+    /** Closes the shared-users modal and clears its selected experiment. */
     const handleCloseUsersModal = () => {
         setState(prevState => ({
             ...prevState,
@@ -214,6 +215,7 @@ const DifferentialExpressionPanelWrapper = () => {
         }))
     }
 
+    /** Closes the shared-institutions modal and clears its selected experiment. */
     const handleCloseInstitutionsModal = () => {
         setState(prevState => ({
             ...prevState,

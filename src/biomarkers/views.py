@@ -7,6 +7,7 @@ from django.db import transaction
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -281,7 +282,7 @@ class BiomarkerMolecules(generics.ListAPIView):
         biomarker_pk = self.request.GET.get('biomarker_pk')
         biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
         if not can_view_biomarker(biomarker, self.request.user):
-            return MoleculeIdentifier.objects.none()
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         molecule_type = self.request.GET.get('type')
         return biomarker.all_molecules(molecule_type=molecule_type)
 
@@ -326,7 +327,7 @@ class InstitutionNonExperimentsSharedBiomarkerListView(generics.ListAPIView):
         user = self.request.user
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         user_institutions = Institution.objects.filter(users=user)
         return user_institutions.exclude(
             id__in=biomarker.shared_institutions.values_list('id', flat=True)
@@ -351,10 +352,7 @@ class AddInstitutionToBiomarkerView(APIView):
         
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         institution = get_object_or_404(Institution, id=institution_id)
 
         biomarker.shared_institutions.add(institution)
@@ -375,7 +373,7 @@ class UsersSharedBiomarkerListView(generics.ListAPIView):
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_view_biomarker(biomarker, self.request.user):
-            return User.objects.none()
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.shared_users
 
 class RemoveInstitutionFromBiomarkerView(APIView):
@@ -394,10 +392,7 @@ class RemoveInstitutionFromBiomarkerView(APIView):
         institution_id = data.get('institutionId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         institution = get_object_or_404(Institution, id=institution_id)
 
@@ -427,7 +422,7 @@ class InstitutionBiomarkersSharedListView(generics.ListAPIView):
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_view_biomarker(biomarker, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.shared_institutions
 
 class RemoveUserFromBiomarkerView(APIView):
@@ -446,10 +441,7 @@ class RemoveUserFromBiomarkerView(APIView):
         user_id = data.get('userId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         user = get_object_or_404(User, id=user_id)
 
@@ -479,7 +471,7 @@ class UsersNonBiomarkersSharedListView(generics.ListAPIView):
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, self.request.user):
-            return get_user_model().objects.none()
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         associated_user_ids = biomarker.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
@@ -503,10 +495,7 @@ class AddUserToBiomarkerView(APIView):
         
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         user = get_object_or_404(User, id=user_id)
 
         biomarker.shared_users.add(user)
@@ -529,10 +518,7 @@ class ToggleBiomarkerPublicView(APIView):
         biomarker_id = data.get('biomarkerId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
         if not can_edit_shared_resource(biomarker, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         biomarker.is_public = not biomarker.is_public
         biomarker.save(update_fields=['is_public'])

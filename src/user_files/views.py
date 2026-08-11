@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
 from common.access_control import can_edit_shared_resource, can_view_user_file, user_file_visibility_q
@@ -181,7 +181,7 @@ class InstitutionNonUserFilesSharedListView(generics.ListAPIView):
         user_file_id = self.kwargs.get('user_file_id')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
         if not can_edit_shared_resource(user_file, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to modify this dataset.')
 
         shared_institution_ids = user_file.institutions.values_list('pk', flat=True)
         return Institution.objects.filter(users=self.request.user).exclude(pk__in=shared_institution_ids)
@@ -198,7 +198,7 @@ class UserFileSharedInstitutionsListView(generics.ListAPIView):
         user_file_id = self.kwargs.get('user_file_id')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
         if not can_view_user_file(user_file, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to access this dataset.')
         return user_file.institutions.all()
 
 
@@ -221,10 +221,7 @@ class AddInstitutionToUserFileView(APIView):
 
         user_file = get_object_or_404(UserFile, pk=user_file_id)
         if not can_edit_shared_resource(user_file, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this dataset."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this dataset.')
 
         institution = get_object_or_404(
             Institution,
@@ -248,10 +245,7 @@ class RemoveInstitutionFromUserFileView(APIView):
         user_file = get_object_or_404(UserFile, pk=user_file_id)
 
         if not can_edit_shared_resource(user_file, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this dataset."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this dataset.')
 
         institution = get_object_or_404(Institution, pk=institution_id)
         if not user_file.institutions.filter(pk=institution.pk).exists():
@@ -300,10 +294,7 @@ class ToggleFilePublicView(APIView):
         user_file_id = data.get('userFileId')
         user_file: UserFile = get_object_or_404(UserFile, id=user_file_id)
         if user_file.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this user file."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this user file.')
 
         user_file.is_public = not user_file.is_public
         user_file.save(update_fields=['is_public'])

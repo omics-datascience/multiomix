@@ -6,12 +6,13 @@ import pandas as pd
 from celery.contrib.abortable import AbortableAsyncResult
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -134,7 +135,7 @@ class DifferentialExpressionDetail(generics.RetrieveAPIView):
         experiment = get_object_or_404(DifferentialExpressionExperiment, pk=experiment_id)
         # Check if the user has access to the experiment
         if not can_view_shared_resource(experiment, user):
-            raise ValidationError('You do not have permission to access this experiment.')
+            raise PermissionDenied('You do not have permission to access this experiment.')
 
         return experiment.results.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
@@ -192,7 +193,7 @@ class DifferentialExpressionRetrieve(generics.RetrieveAPIView):
 
         # Check if the user has access to the experiment
         if not can_view_shared_resource(experiment, user):
-            raise ValidationError('You do not have permission to access this experiment.')
+            raise PermissionDenied('You do not have permission to access this experiment.')
 
         return experiment
     filterset_fields = ['tool']
@@ -322,7 +323,7 @@ class DifferentialExpressionResults(generics.ListAPIView):
         # Check permissions
         user = self.request.user
         if not can_view_shared_resource(experiment, user):
-            raise ValidationError('You do not have permission to access this experiment.')
+            raise PermissionDenied('You do not have permission to access this experiment.')
 
         # Get query parameters for filtering (optional)
         p_threshold = self.request.query_params.get('p_threshold')
@@ -366,7 +367,7 @@ class DifferentialExpressionVolcanoData(generics.ListAPIView):
         # Check permissions
         user = self.request.user
         if not can_view_shared_resource(experiment, user):
-            raise ValidationError('You do not have permission to access this experiment.')
+            raise PermissionDenied('You do not have permission to access this experiment.')
 
         # Return all results (no pagination)
         return experiment.results.all()
@@ -388,7 +389,7 @@ class DifferentialExpressionStop(APIView):
 
         user = request.user
         if not can_edit_shared_resource(experiment, user):
-            raise ValidationError('You do not have permission to access this experiment.')
+            raise PermissionDenied('You do not have permission to access this experiment.')
 
         # Task state and validation
         if not experiment.task_id:
@@ -550,10 +551,7 @@ class ToggleDiffExperimentPublicView(APIView):
         experiment_id = data.get('experimentId')
         experiment = get_object_or_404(DifferentialExpressionExperiment, id=experiment_id)
         if experiment.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         experiment.is_public = not experiment.is_public
         experiment.save(update_fields=['is_public'])
@@ -575,7 +573,7 @@ class DifferentialExpressionInstitutionNonSharedListView(generics.ListAPIView):
             pk=self.kwargs.get('experiment_id'),
         )
         if not can_edit_shared_resource(experiment, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         return Institution.objects.filter(users=self.request.user).exclude(
             pk__in=experiment.shared_institutions.values_list('pk', flat=True)
@@ -594,7 +592,7 @@ class DifferentialExpressionUserNonSharedListView(generics.ListAPIView):
             pk=self.kwargs.get('experiment_id'),
         )
         if not can_edit_shared_resource(experiment, self.request.user):
-            return User.objects.none()
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         return User.objects.exclude(
             pk__in=experiment.shared_users.values_list('pk', flat=True)
@@ -613,7 +611,7 @@ class DifferentialExpressionSharedUsersListView(generics.ListAPIView):
             pk=self.kwargs.get('experiment_id'),
         )
         if not can_view_shared_resource(experiment, self.request.user):
-            return User.objects.none()
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_users.all()
 
 
@@ -629,7 +627,7 @@ class DifferentialExpressionSharedInstitutionsListView(generics.ListAPIView):
             pk=self.kwargs.get('experiment_id'),
         )
         if not can_view_shared_resource(experiment, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_institutions.all()
 
 
@@ -644,10 +642,7 @@ class AddInstitutionToDifferentialExpressionView(APIView):
             pk=request.data.get('experimentId'),
         )
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         institution = get_object_or_404(Institution, pk=request.data.get('institutionId'))
         experiment.shared_institutions.add(institution)
@@ -665,10 +660,7 @@ class AddUserToDifferentialExpressionView(APIView):
             pk=request.data.get('experimentId'),
         )
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         user = get_object_or_404(User, pk=request.data.get('userId'))
         experiment.shared_users.add(user)
@@ -686,10 +678,7 @@ class RemoveInstitutionFromDifferentialExpressionView(APIView):
             pk=request.data.get('experimentId'),
         )
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         institution = get_object_or_404(Institution, pk=request.data.get('institutionId'))
         if not experiment.shared_institutions.filter(pk=institution.pk).exists():
@@ -710,10 +699,7 @@ class RemoveUserFromDifferentialExpressionView(APIView):
             pk=request.data.get('experimentId'),
         )
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         user = get_object_or_404(User, pk=request.data.get('userId'))
         if not experiment.shared_users.filter(pk=user.pk).exists():
@@ -739,10 +725,7 @@ class DifferentialExpressionUpdate(APIView):
 
         # Only the owner can update the experiment
         if experiment.user.id != request.user.id:
-            return Response(
-                {'ok': False, 'detail': 'You do not have permission to update this experiment.'},
-                status=403
-            )
+            raise PermissionDenied('You do not have permission to update this experiment.')
 
         # Get the data from request
         data = request.data
@@ -802,10 +785,7 @@ class DifferentialExpressionDelete(APIView):
 
         # Only the owner can delete the experiment
         if experiment.user.id != request.user.id:
-            return Response(
-                {'ok': False, 'detail': 'You do not have permission to delete this experiment.'},
-                status=403
-            )
+            raise PermissionDenied('You do not have permission to delete this experiment.')
 
         # Check if the experiment is currently running
         running_states = [
@@ -914,7 +894,7 @@ def download_differential_expression_results(request, pk: int):
     # Check permissions
     user = request.user
     if not can_view_shared_resource(experiment, user):
-        return HttpResponse('Unauthorized', status=401)
+        raise DjangoPermissionDenied('You do not have permission to access this experiment.')
 
     # Get filter parameters from query string
     adj_p_val = request.GET.get('adj_p_val')

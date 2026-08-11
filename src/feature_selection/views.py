@@ -14,7 +14,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.db import transaction
 from rest_framework import permissions
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -79,7 +79,7 @@ class FeatureSelectionSubmit(APIView):
             biomarker_pk = request.POST.get('biomarkerPk')
             biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
             if not can_edit_shared_resource(biomarker, request.user):
-                raise ValidationError('You do not have permission to use this biomarker.')
+                raise PermissionDenied('You do not have permission to use this biomarker.')
 
             # Clinical source
             clinical_source_type = get_source_pk(request.POST, 'clinicalType')

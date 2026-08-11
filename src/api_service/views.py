@@ -8,6 +8,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, Http404
@@ -15,6 +16,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -305,10 +307,7 @@ class RemoveInstitutionFromExperimentView(APIView):
         institution_id = data.get('institutionId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         institution = get_object_or_404(Institution, id=institution_id)
 
@@ -342,10 +341,7 @@ class RemoveUserFromExperimentView(APIView):
         user_id = data.get('userId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         user = get_object_or_404(User, id=user_id)
 
@@ -378,10 +374,7 @@ class ToggleExperimentPublicView(APIView):
         experiment_id = data.get('experimentId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         experiment.is_public = not experiment.is_public
         experiment.save(update_fields=['is_public'])
@@ -406,7 +399,7 @@ class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
         user = self.request.user
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         user_institutions = Institution.objects.filter(users=user)
         return user_institutions.exclude(
             id__in=experiment.shared_institutions.values_list('id', flat=True)
@@ -427,7 +420,7 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, self.request.user):
-            return get_user_model().objects.none()
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         associated_user_ids = experiment.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
@@ -447,7 +440,7 @@ class UsersExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_view_shared_resource(experiment, self.request.user):
-            return User.objects.none()
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_users
 
 
@@ -465,7 +458,7 @@ class InstitutionExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_view_shared_resource(experiment, self.request.user):
-            return Institution.objects.none()
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_institutions
 
 
@@ -489,10 +482,7 @@ class AddInstitutionToExperimentView(APIView):
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         institution = get_object_or_404(Institution, id=institution_id)
 
         experiment.shared_institutions.add(institution)
@@ -521,10 +511,7 @@ class AddUserToExperimentView(APIView):
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
         if not can_edit_shared_resource(experiment, request.user):
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         user = get_object_or_404(User, id=user_id)
 
         experiment.shared_users.add(user)
@@ -1045,7 +1032,9 @@ def generate_result_file_response(
 @login_required
 def download_full_result(request, pk: int):
     """Downloads all the combinations resulting from an analysis"""
-    experiment = get_object_or_404(Experiment, pk=pk, user=request.user)
+    experiment = get_object_or_404(Experiment, pk=pk)
+    if not can_view_shared_resource(experiment, request.user):
+        raise DjangoPermissionDenied('You do not have permission to access this experiment.')
 
     def format_combination_object(combination: Type[GeneGEMCombination]) -> Dict:
         """
@@ -1082,7 +1071,9 @@ def download_full_result(request, pk: int):
 def download_result_with_filters(request: Request):
     """Downloads the combinations resulting from an analysis with filters applied"""
     experiment_id = request.GET.get('experiment_id')
-    experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)
+    experiment = get_object_or_404(Experiment, pk=experiment_id)
+    if not can_view_shared_resource(experiment, request.user):
+        raise DjangoPermissionDenied('You do not have permission to access this experiment.')
 
     comb_dict: List[OrderedDict] = ExperimentResultCombinationsDetails.as_view()(
         request=request
