@@ -11,7 +11,6 @@ from differential_expression.models import (
     DifferentialExpressionExperiment,
     DifferentialExpressionExperimentState,
 )
-from .service import DifferentialExpressionService
 
 @app.task(bind=True, base=AbortableTask, acks_late=True, reject_on_worker_lost=True,
           soft_time_limit=settings.FS_SOFT_TIME_LIMIT)
@@ -21,6 +20,11 @@ def eval_differential_expression_experiment(self, experiment_pk: int, ):
     @param self: Self instance of the Celery task (available due to bind=True).
     @param experiment_pk: Primary key of the experiment to evaluate.
     """
+    # Importing the service initializes embedded R through rpy2. Keep that out
+    # of web processes: on Windows, R installs a console control handler that
+    # prevents Django's development server from receiving Ctrl+C.
+    from .service import DifferentialExpressionService
+
     # Check if the experiment exists
     try:
         experiment : DifferentialExpressionExperiment = DifferentialExpressionExperiment.objects.get(pk=experiment_pk)

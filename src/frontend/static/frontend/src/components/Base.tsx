@@ -5,6 +5,7 @@ import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { Footer } from './Footer'
 import { IntlProvider } from 'react-intl'
+import { ChatWidget } from './assistant/ChatWidget'
 
 // Locales
 import es from '../locales/es'
@@ -110,6 +111,9 @@ const Base = (props: BaseProps) => {
                     {/* Footer */}
                     {/* TODO: add license */}
                     <Footer />
+
+                    {/* AI Assistant floating widget */}
+                    {currentUser && !currentUser.is_anonymous && <ChatWidget />}
                 </IntlProvider>
             </LocaleContext.Provider>
         </CurrentUserContext.Provider>

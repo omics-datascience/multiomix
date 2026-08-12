@@ -176,7 +176,7 @@ export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerPr
             onClose={() => props.handleClose()}
             open={props.isOpen}
             closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
-            style={{ width: '80%' }}
+            style={{ width: '60%', maxWidth: '1000px' }}
         >
             <ModalHeader>Shared institutions</ModalHeader>
             <ModalContent>

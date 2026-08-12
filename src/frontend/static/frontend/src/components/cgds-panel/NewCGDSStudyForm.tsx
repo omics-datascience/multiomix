@@ -1,16 +1,16 @@
 import React from 'react'
-import { Input, Segment, Header, Icon, Divider, Button, Label } from 'semantic-ui-react'
-import { DjangoCGDSStudy } from '../../utils/django_interfaces'
+import { DropdownItemProps, Input, Segment, Header, Icon, Divider, Button, Label, Form } from 'semantic-ui-react'
 import { NameOfCGDSDataset } from '../../utils/interfaces'
 import { NewCGDSDatasetForm } from './NewCGDSDatasetForm'
 import { parseValue, checkedValidityCallback } from '../../utils/util_functions'
 import { useIntl } from 'react-intl'
+import type { CGDSStudyForm } from './CGDSPanel'
 
 /**
  * Component's props
  */
 interface NewCGDSStudyFormProps {
-    newCGDSStudy: DjangoCGDSStudy,
+    newCGDSStudy: CGDSStudyForm,
     addingOrEditingCGDSStudy: boolean,
     handleFormDatasetChanges: (datasetName: NameOfCGDSDataset, name: string, value: any) => void,
     addSurvivalFormTuple: (datasetName: NameOfCGDSDataset) => void,
@@ -23,6 +23,7 @@ interface NewCGDSStudyFormProps {
     canAddCGDSStudy: () => boolean,
     addOrEditStudy: () => void,
     cleanForm: () => void
+    tissueOptions: DropdownItemProps[]
 }
 
 /**
@@ -104,6 +105,20 @@ export const NewCGDSStudyForm = (props: NewCGDSStudyFormProps) => {
             />
 
             <Divider />
+
+            <Form.Dropdown
+                fluid
+                className='margin-top-2'
+                options={props.tissueOptions}
+                search
+                selection
+                clearable
+                name='tissue'
+                value={props.newCGDSStudy.tissue ?? ''}
+                onChange={(_, { name, value }) => props.handleFormChanges(name, value || null)}
+                placeholder='Tissue (optional)'
+                disabled={props.addingOrEditingCGDSStudy}
+            />
 
             {/* Dataset */}
             <Header textAlign='center'>

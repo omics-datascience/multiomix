@@ -1,9 +1,9 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
-import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
+import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader, DjangoTissue, DjangoInstitutionSimple } from '../../utils/django_interfaces'
 import ky, { HTTPError } from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns, getUserTagsByType } from '../../utils/util_functions'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns, getUserTagsByType, getDefaultNewTag } from '../../utils/util_functions'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
@@ -13,8 +13,10 @@ import { TagLabel } from '../common/TagLabel'
 import { TagDropdown } from '../common/TagDropdown'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
-import { DeleteButton } from '../common/DeleteButton'
 import { useIntl, IntlShape } from 'react-intl'
+import { DeleteButton } from '../common/DeleteButton'
+import { getTissueDropdownOptions, getTissueIds, TissueLabels } from '../common/TissueLabels'
+import { SharedInstitutionsUserFile } from './SharedInstitutionsUserFile'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -27,10 +29,12 @@ type UploadResponse = {
 // URLs defined in files.html
 declare const urlUserFilesCRUD: string
 declare const urlUserInstitutions: string
+declare const urlTissuesCRUD: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
 declare const downloadFileHeaders: string
+declare const currentUserId: string
 
 /**
  * New File Form fields
@@ -45,6 +49,7 @@ interface NewFile {
     platform: DjangoMethylationPlatform,
     newTag: Nullable<number>,
     institutions: number[],
+    tissue: Nullable<number>,
     survivalColumns: DjangoSurvivalColumnsTupleSimple[]
 }
 
@@ -62,8 +67,17 @@ interface FilesManagerState {
     newFile: NewFile,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
-    /** posibles values for survival tuple */
+    /** Possible values for survival tuple */
     survivalTuplesPossiblesValues: string[],
+    tissues: DjangoTissue[],
+    newTag: DjangoTag,
+    showDeleteTagModal: boolean,
+    selectedTagToDelete: Nullable<DjangoTag>,
+    deletingTag: boolean,
+    addingTag: boolean,
+    selectedFileToShare: Nullable<DjangoUserFile>,
+    showShareInstitutionsModal: boolean,
+    sharedInstitutionsByFile: { [fileId: number]: DjangoInstitutionSimple[] },
 }
 
 /**
@@ -94,7 +108,16 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             newFile: this.getDefaultNewFile(),
             uploadPercentage: 0,
             uploadState: null,
-            survivalTuplesPossiblesValues: []
+            survivalTuplesPossiblesValues: [],
+            tissues: [],
+            newTag: getDefaultNewTag(),
+            showDeleteTagModal: false,
+            selectedTagToDelete: null,
+            deletingTag: false,
+            addingTag: false,
+            selectedFileToShare: null,
+            showShareInstitutionsModal: false,
+            sharedInstitutionsByFile: {}
         }
     }
 
@@ -119,6 +142,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             newFileType: FileType.MRNA,
             newTag: null,
             institutions: [],
+            tissue: null,
             isCpGSiteId: false,
             platform: DjangoMethylationPlatform.PLATFORM_450,
             survivalColumns: []
@@ -174,6 +198,22 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
         this.getUserInstitutions()
+        this.getTissues()
+    }
+
+    /**
+     * Fetches the available tissues.
+     */
+    getTissues () {
+        ky.get(urlTissuesCRUD, { signal: this.abortController.signal }).then((response) => {
+            response.json<DjangoTissue[]>().then((tissues) => {
+                this.setState({ tissues })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
     }
 
     /** Removes event on component unmount and Abort controller if component unmount. */
@@ -253,6 +293,25 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
+     * Opens the institution-sharing modal for a dataset.
+     * @param file Dataset whose sharing configuration will be managed.
+     */
+    openShareInstitutions = (file: DjangoUserFile) => {
+        this.setState({
+            selectedFileToShare: file,
+            showShareInstitutionsModal: true
+        })
+    }
+
+    /** Closes the institution-sharing modal and clears the selected dataset. */
+    closeShareInstitutions = () => {
+        this.setState({
+            selectedFileToShare: null,
+            showShareInstitutionsModal: false
+        })
+    }
+
+    /**
      * Persists a Tag change for an existing UserFile.
      * @param userFile UserFile to update.
      * @param tagId New Tag id, or null to clear it.
@@ -291,10 +350,25 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
+     * Updates the table cache after the shared institutions of a dataset change.
+     * @param fileId Dataset identifier.
+     * @param institutions Current institutions shared with the dataset.
+     */
+    updateSharedInstitutions = (fileId: number, institutions: DjangoInstitutionSimple[]) => {
+        this.setState(prevState => ({
+            sharedInstitutionsByFile: {
+                ...prevState.sharedInstitutionsByFile,
+                [fileId]: institutions
+            }
+        }))
+    }
+
+    /**
      * Closes the deletion confirm modals
      */
     handleClose = () => {
         this.setState({
+            showDeleteTagModal: false,
             showDeleteFileModal: false
         })
     }
@@ -415,6 +489,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             formData.append('institutions', institutionId.toString())
         })
 
+        // Adds the Tissue's id, if selected
+        if (newFileForm.tissue) {
+            formData.append('tissue', newFileForm.tissue.toString())
+        }
+
         // Adds the survival columns tuples, if needed
         if (newFileForm.survivalColumns.length > 0) {
             formData.append('survival_columns', JSON.stringify(newFileForm.survivalColumns))
@@ -524,6 +603,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             isCpGSiteId: fileToEdit.is_cpg_site_id,
                             platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                             institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                             survivalColumns: fileToEdit.survival_columns ?? []
                         }
                     })
@@ -546,6 +626,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     isCpGSiteId: fileToEdit.is_cpg_site_id,
                     platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                     institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                     survivalColumns: fileToEdit.survival_columns ?? []
                 }
             })
@@ -636,6 +717,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueOptions = getTissueDropdownOptions(this.state.tissues)
 
         return [
             {
@@ -663,6 +745,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 width: 3
             },
             {
+                label: 'Tissue',
+                keyForServer: 'tissue',
+                defaultValue: '',
+                placeholder: 'Select tissue',
+                options: tissueOptions,
+                width: 3
+            },
+            {
                 label: intl.formatMessage({ id: 'files.manager.filter.fileType.label' }),
                 keyForServer: 'file_type',
                 defaultValue: FileType.ALL,
@@ -678,6 +768,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const { intl } = this.props
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
         const fileTypeOptions = getFileTypeSelectOptions(false)
+        const selectedFileToShare = this.state.selectedFileToShare
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
@@ -688,11 +779,23 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueFormOptions = getTissueDropdownOptions(this.state.tissues, true)
 
         return (
             <Base activeItem='files' wrapperClass='wrapper'>
                 {/* File deletion modal */}
                 {fileDeletionConfirmModal}
+
+                {selectedFileToShare && (
+                    <SharedInstitutionsUserFile
+                        isOpen={this.state.showShareInstitutionsModal}
+                        userFileId={selectedFileToShare.id as number}
+                        user={selectedFileToShare.user}
+                        handleClose={this.closeShareInstitutions}
+                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                        onInstitutionsChange={(institutions) => this.updateSharedInstitutions(selectedFileToShare.id as number, institutions)}
+                    />
+                )}
 
                 <Grid columns={2} padded stackable textAlign='center' divided>
                     <Grid.Column width={3} textAlign='left'>
@@ -703,6 +806,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             fileTypeOptions={fileTypeOptions}
                             tagOptions={tagOptions}
                             institutionsOptions={institutionsOptions}
+                            tissueOptions={tissueFormOptions}
                             uploadingFile={this.state.uploadingFile}
                             uploadPercentage={this.state.uploadPercentage}
                             uploadState={this.state.uploadState}
@@ -769,6 +873,22 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                         />
                                     </Table.Cell>
                                     <Table.Cell textAlign='center'>
+                                        {(this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions).length > 0
+                                            ? (
+                                                <Icon
+                                                    name='building'
+                                                    size='large'
+                                                    title={intl.formatMessage(
+                                                        { id: 'files.manager.tooltip.sharedWith' },
+                                                        { list: (this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions).map((i) => i.name).join(', ') }
+                                                    )}
+                                                />
+                                            )
+                                            : '-'}
+                                    </Table.Cell>
+                                    <Table.Cell><TissueLabels tissues={userFileRow.tissue} tissueOptions={this.state.tissues} /></Table.Cell>
+                                    <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell textAlign='center'>
                                         {
                                             userFileRow.is_public
                                                 ? (
@@ -798,6 +918,15 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                 { columnName: userFileRow.column_used_as_index }
                                             )}
                                         />
+                                        {Number(currentUserId) === userFileRow.user.id && (
+                                            <Icon
+                                                name='share alternate'
+                                                className='clickable margin-left-5'
+                                                color='blue'
+                                                title={intl.formatMessage({ id: 'files.manager.sharedInstitutions.action' })}
+                                                onClick={() => this.openShareInstitutions(userFileRow)}
+                                            />
+                                        )}
                                         {/* Users can modify or delete own files or the ones which belongs to an
                                         Institution which the user is admin of */}
                                         {userFileRow.is_private_or_institution_admin && (
