@@ -1,9 +1,9 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
 import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
-import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
+import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource, getUserTagsByType } from '../../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from '../../biomarkers/types'
 import { ManualForm } from '../../biomarkers/modalContentBiomarker/manualForm/ManualForm'
@@ -134,9 +134,23 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     /**
      * Abort controller if component is render
      */
+    componentDidMount () {
+        this.getUserTags()
+    }
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * Fetches the User's defined Biomarker/Experiment Tags.
+     */
+    getUserTags () {
+        getUserTagsByType(TagType.EXPERIMENT, this.abortController.signal).then((tags) => {
+            this.setState({ tags })
+        }).catch((err) => {
+            console.log("Error getting user's tags ->", err)
+        })
     }
 
     /**
@@ -1436,6 +1450,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
     render () {
         const { intl } = this.props
         const { openSelectOptionModal, selectedOption } = this.state
+
         return (
             <>
                 <Form.Button
@@ -1526,7 +1541,6 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
-                        tagOptions={[]}
                         tags={this.state.tags}
                     />
 
