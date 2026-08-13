@@ -1359,6 +1359,7 @@ export default {
     'mainNavbar.aboutUs': 'About us',
     'mainNavbar.faq': 'FAQ',
     'mainNavbar.openSource': 'Open source',
+    'mainNavbar.language': 'Language',
 
     'mainNavbar.homepage': 'Multiomix homepage',
     // 148.UpdateUserModal

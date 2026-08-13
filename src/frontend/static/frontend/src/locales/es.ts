@@ -1413,6 +1413,7 @@ export default {
     'mainNavbar.aboutUs': 'Sobre nosotros',
     'mainNavbar.faq': 'Preguntas frecuentes',
     'mainNavbar.openSource': 'Código abierto',
+    'mainNavbar.language': 'Idioma',
 
     'mainNavbar.homepage': 'Página principal de Multiomix',
     // 148.UpdateUserModal
