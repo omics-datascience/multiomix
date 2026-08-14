@@ -77,17 +77,18 @@ class UserFileSerializer(serializers.ModelSerializer):
             read_only=True
         ).data
 
-        # Check if user can delete this instance (is owner or admin of one of the Dataset's institutions)
+        # Keep mutation controls owner-only. Institution membership only gives
+        # read access to datasets shared with that institution.
         request = self.context.get('request')
         if request is not None:
             user = request.user
-            is_private = instance.user == user
-            is_institution_admin = instance.institutions.filter(
-                institutionadministration__user=user,
-                institutionadministration__is_institution_admin=True
-            ).exists()
-            data['is_private_or_institution_admin'] = is_private or is_institution_admin
+            is_owner = instance.user == user
+            data['is_owner'] = is_owner
+            # Preserve the existing response field for clients that still
+            # consume it, but its value now represents ownership only.
+            data['is_private_or_institution_admin'] = is_owner
         else:
+            data['is_owner'] = False
             data['is_private_or_institution_admin'] = False
         return data
 
