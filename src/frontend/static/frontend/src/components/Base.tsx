@@ -14,6 +14,7 @@ import en from '../locales/en'
 // Common dependencies for all the pages
 import 'fomantic-ui-css/semantic.css'
 import '../css/base.css'
+import '../css/responsive.css'
 
 const messages = { en, es }
 

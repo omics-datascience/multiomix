@@ -169,160 +169,141 @@ const MainNavbar = (props: MainNavbarProps) => {
     const intl = useIntl()
     // Gets current user context
     const currentUser = useContext(CurrentUserContext)
+    const [menuOpen, setMenuOpen] = useState(false)
 
     const cBioPortalOption = (
         <Dropdown.Item
             text={intl.formatMessage({ id: 'mainNavbar.cbioportal' })}
             icon='cloud'
-            as='a' href={urlCGDSPanel}
+            as='a'
+            href={urlCGDSPanel}
             active={props.activeItem === 'cgds'}
         />
     )
 
-    return (
-        <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
-            {/* Logo */}
-            <Menu.Item as='a' header href={urlIndex}>
-                <Image size='tiny' src='/static/frontend/img/logo.png' alt={intl.formatMessage({ id: 'mainNavbar.logo.alt' })} />
-            </Menu.Item>
-
-            {/* Loading spinners while user is fetch */}
-            {props.isLoadingUser && (
-                <Menu.Item>
-                    <Menu.Item style={{ padding: '0 1.72rem' }}>
-                        <Loader active inline='centered' />
-                    </Menu.Item>
-                    <Menu.Item style={{ padding: '0 1.72rem' }}>
-                        <Loader active inline='centered' />
-                    </Menu.Item>
-                    <Menu.Item style={{ padding: '0 1.7rem' }}>
-                        <Loader active inline='centered' />
-                    </Menu.Item>
-                    <Menu.Item style={{ padding: '0 1.7rem' }}>
-                        <Loader active inline='centered' />
-                    </Menu.Item>
-                </Menu.Item>
-            )}
-            {/* Analysis menu */}
+    const renderNavbarItems = () => (
+        <>
             {currentUser && !currentUser.is_anonymous && (
                 <>
-                    <Menu.Menu>
-                        <Dropdown item text={intl.formatMessage({ id: 'mainNavbar.analysis' })} className='link item' icon={null} aria-label='Analysis'>
-                            <Dropdown.Menu>
-                                {/* GEM panel */}
-                                <Dropdown.Item
-                                    text={intl.formatMessage({ id: 'mainNavbar.gem' })}
-                                    icon='lab'
-                                    as='a' href={urlPipeline}
-                                    active={props.activeItem === 'pipeline'}
-                                />
+                    <Dropdown item text={intl.formatMessage({ id: 'mainNavbar.analysis' })} className='link item' icon={null} aria-label='Analysis'>
+                        <Dropdown.Menu>
+                            <Dropdown.Item
+                                text={intl.formatMessage({ id: 'mainNavbar.gem' })}
+                                icon='lab'
+                                as='a'
+                                href={urlPipeline}
+                                active={props.activeItem === 'pipeline'}
+                            />
 
-                                {/* Survival Analysis panel */}
-                                {/* TODO: discuss with team! Maybe this is the "Stats validation panel in Biomarkers page" */}
-                                {/* <Dropdown.Item
-                                    text='Survival'
-                                    icon='heart'
-                                    as='a' href={urlSurvival}
-                                    active={props.activeItem === 'survival'}
-                                    disabled
-                                /> */}
+                            <Dropdown.Item
+                                text={intl.formatMessage({ id: 'mainNavbar.biomarkers' })}
+                                icon='list layout'
+                                as='a'
+                                href={urlBiomarkers}
+                                active={props.activeItem === 'biomarkers'}
+                            />
 
-                                {/* Biomarkers panel */}
-                                <Dropdown.Item
-                                    text={intl.formatMessage({ id: 'mainNavbar.biomarkers' })}
-                                    icon='list layout'
-                                    as='a' href={urlBiomarkers}
-                                    active={props.activeItem === 'biomarkers'}
-                                />
+                            <Dropdown.Item
+                                text={intl.formatMessage({ id: 'mainNavbar.differentialExpression' })}
+                                icon='buromobelexperte'
+                                as='a'
+                                href={urlDifferentialExpression}
+                                active={props.activeItem === 'differential-expression'}
+                            />
+                        </Dropdown.Menu>
+                    </Dropdown>
 
-                                {/* Differential Expression panel */}
-                                <Dropdown.Item
-                                    text={intl.formatMessage({ id: 'mainNavbar.differentialExpression' })}
-                                    icon='buromobelexperte'
-                                    as='a' href={urlDifferentialExpression}
-                                    active={props.activeItem === 'differential-expression'}
-                                />
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </Menu.Menu>
+                    <Dropdown item text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })} className='link item' icon={null} aria-label={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}>
+                        <Dropdown.Menu>
+                            <Dropdown.Item
+                                text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}
+                                icon='database'
+                                as='a'
+                                href={urlDatasets}
+                                active={props.activeItem === 'files'}
+                            />
 
-                    {/* Datasets menu */}
-                    <Menu.Menu>
-                        <Dropdown text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })} className='link item' icon={null} aria-label={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}>
-                            <Dropdown.Menu>
-                                {/* User's Datasets panel */}
-                                <Dropdown.Item
-                                    text={intl.formatMessage({ id: 'mainNavbar.myDatasets' })}
-                                    icon='database'
-                                    as='a' href={urlDatasets}
-                                    active={props.activeItem === 'files'}
-                                />
+                            {cBioPortalOption}
+                        </Dropdown.Menu>
+                    </Dropdown>
 
-                                {/* cBioPortal Datasets panel */}
-                                {cBioPortalOption}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </Menu.Menu>
-
-                    {/* Institutions  */}
-                    <Menu.Menu>
-                        <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
-                            {intl.formatMessage({ id: 'mainNavbar.institutions' })}
-                        </Menu.Item>
-                    </Menu.Menu>
+                    <Menu.Item as='a' href={urlInstitutions} style={{ fontSize: '1rem' }}>
+                        {intl.formatMessage({ id: 'mainNavbar.institutions' })}
+                    </Menu.Item>
                 </>
             )}
 
-            {/* Only admin options */}
             {currentUser && (currentUser.is_superuser || currentUser.is_institution_admin) && (
-                <Menu.Menu>
-                    <Dropdown text={intl.formatMessage({ id: 'mainNavbar.admin' })} className='link item' icon={null} aria-label='Admin'>
-                        <Dropdown.Menu>
-                            {currentUser.is_superuser && (
-                                <>
-                                    {/* User's Datasets panel */}
-                                    <Dropdown.Item
-                                        text={intl.formatMessage({ id: 'mainNavbar.databaseGenes' })}
-                                        icon='dna'
-                                        // as='a' href={null}
-                                        disabled
-                                    />
-                                </>
-                            )}
-                        </Dropdown.Menu>
-                    </Dropdown>
-                </Menu.Menu>
+                <Dropdown item text={intl.formatMessage({ id: 'mainNavbar.admin' })} className='link item' icon={null} aria-label='Admin'>
+                    <Dropdown.Menu>
+                        {currentUser.is_superuser && (
+                            <Dropdown.Item
+                                text={intl.formatMessage({ id: 'mainNavbar.databaseGenes' })}
+                                icon='dna'
+                                disabled
+                            />
+                        )}
+                    </Dropdown.Menu>
+                </Dropdown>
             )}
 
-            {/* About us */}
-            <Menu.Menu>
-                <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
-                    {intl.formatMessage({ id: 'mainNavbar.aboutUs' })}
-                </Menu.Item>
-            </Menu.Menu>
+            <Menu.Item as='a' href={urlAboutUs} style={{ fontSize: '1rem' }}>
+                {intl.formatMessage({ id: 'mainNavbar.aboutUs' })}
+            </Menu.Item>
 
-            <Menu.Menu>
-                <Menu.Item
-                    as='a'
-                    href='/faq'
-                    style={{ fontSize: '1rem' }}
-                    active={props.activeItem === 'faq'}
-                >
-                    {intl.formatMessage({ id: 'mainNavbar.faq' })}
-                </Menu.Item>
-            </Menu.Menu>
+            <Menu.Item as='a' href='/faq' style={{ fontSize: '1rem' }} active={props.activeItem === 'faq'}>
+                {intl.formatMessage({ id: 'mainNavbar.faq' })}
+            </Menu.Item>
 
-            <Menu.Menu>
-                <Menu.Item as='a' href={urlOpenSource} style={{ fontSize: '1rem' }}>
-                    {intl.formatMessage({ id: 'mainNavbar.openSource' })}
-                </Menu.Item>
-            </Menu.Menu>
+            <Menu.Item as='a' href={urlOpenSource} style={{ fontSize: '1rem' }}>
+                {intl.formatMessage({ id: 'mainNavbar.openSource' })}
+            </Menu.Item>
 
-            {/* LogIn/LogOut panel */}
-            <Menu.Menu position='right'>
-                <LogInLogOutPanel currentUser={currentUser} />
-            </Menu.Menu>
-        </Menu>
+            <LogInLogOutPanel currentUser={currentUser} />
+        </>
+    )
+
+    return (
+        <>
+            <Menu className='margin-bottom-0' inverted borderless aria-label='Main navigation'>
+                <Menu.Item as='a' header href={urlIndex}>
+                    <Image size='tiny' src='/static/frontend/img/logo.png' alt={intl.formatMessage({ id: 'mainNavbar.logo.alt' })} />
+                </Menu.Item>
+
+                <Menu.Menu position='right' className='mobile-navbar-toggle'>
+                    <Menu.Item onClick={() => setMenuOpen(!menuOpen)} aria-label='Open menu'>
+                        <Icon name={menuOpen ? 'close' : 'bars'} />
+                    </Menu.Item>
+                </Menu.Menu>
+
+                {props.isLoadingUser && (
+                    <Menu.Item className='navbar-loading-placeholders'>
+                        <Menu.Item style={{ padding: '0 1.72rem' }}>
+                            <Loader active inline='centered' />
+                        </Menu.Item>
+                        <Menu.Item style={{ padding: '0 1.72rem' }}>
+                            <Loader active inline='centered' />
+                        </Menu.Item>
+                        <Menu.Item style={{ padding: '0 1.7rem' }}>
+                            <Loader active inline='centered' />
+                        </Menu.Item>
+                        <Menu.Item style={{ padding: '0 1.7rem' }}>
+                            <Loader active inline='centered' />
+                        </Menu.Item>
+                    </Menu.Item>
+                )}
+
+                <Menu.Menu className='desktop-navbar-items'>
+                    {renderNavbarItems()}
+                </Menu.Menu>
+            </Menu>
+
+            {menuOpen && (
+                <Menu inverted vertical fluid className='mobile-navbar-menu'>
+                    {renderNavbarItems()}
+                </Menu>
+            )}
+        </>
     )
 }
 

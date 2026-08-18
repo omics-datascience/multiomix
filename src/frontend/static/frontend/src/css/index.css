@@ -36,3 +36,9 @@
 #source-button {
     min-width: 30%;
 }
+
+@media only screen and (min-width: 1151px) and (max-width: 1366px) {
+    #homepage-heading {
+        text-align: center;
+    }
+}
