@@ -5,9 +5,19 @@
       "enabled": true,
       "description": "Biomedical research: PubMed papers, bioRxiv, ClinicalTrials.gov, NCI, variants, OncoKB",
       "transport": "stdio",
-      "command": "biomcp",
-      "args": ["run", "--mode", "stdio"],
+      "command": "biomcp-cli",
+      "args": ["mcp"],
       "env": {}
+    },
+    "modulector": {
+      "enabled": true,
+      "description": "miRNA target interactions, aliases, methylation sites, disease and drug associations",
+      "transport": "stdio",
+      "command": "modulector-mcp",
+      "args": [],
+      "env": {
+        "MODULECTOR_API_BASE_URL": "https://modulector.multiomix.org"
+      }
     }
   }
 }

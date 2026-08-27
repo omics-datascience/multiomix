@@ -222,12 +222,7 @@ class MongoService(object):
                 method='post'
             )
         elif file_type == FileType.MIRNA:
-            data = global_mrna_service.get_modulector_service_content(
-                'mirna-codes',
-                request_params={'mirna_codes': molecules},
-                is_paginated=False,
-                method='post'
-            )
+            data = global_mrna_service.get_mirna_codes(mirna_codes=molecules)
         else:
             # In case of methylation, cBioPortal don't manage the methylation sites, so we don't need to use Modulector.
             # Generates a dummy dict with the same keys and values as the molecules list

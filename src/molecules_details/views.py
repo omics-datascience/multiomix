@@ -594,14 +594,7 @@ class MethylationSiteInformation(APIView):
         if not methylation_site:
             return Response(status=400, data={"error": "Param 'methylation_site' is mandatory"})
 
-        data = global_mrna_service.get_modulector_service_content(
-            'methylation',
-            request_params={
-                'methylation_site': methylation_site
-            },
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_methylation_details(methylation_site=methylation_site)
 
         return Response({
             'data': data if data else None

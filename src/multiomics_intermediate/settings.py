@@ -304,11 +304,15 @@ EMAIL_PAGE_TEMPLATE = 'confirm_template.html'
 EMAIL_PAGE_DOMAIN = 'https://multiomix.org'
 
 # Modulector settings
-MODULECTOR_SETTINGS = {
-    'host': os.getenv('MODULECTOR_HOST', 'modulector.multiomix.org'),
-    'port': os.getenv('MODULECTOR_PORT', 443),
-    'protocol': os.getenv('BIOAPI_PROTOCOL', 'https')
-}
+_modulector_protocol = os.getenv('MODULECTOR_PROTOCOL', os.getenv('BIOAPI_PROTOCOL', 'https'))
+_modulector_host = os.getenv('MODULECTOR_HOST', 'modulector.multiomix.org')
+_modulector_port = os.getenv('MODULECTOR_PORT', '443')
+# MODULECTOR_API_BASE_URL is also read directly by the modulector-sdk as env var
+MODULECTOR_BASE_URL = os.getenv(
+    'MODULECTOR_API_BASE_URL',
+    f"{_modulector_protocol}://{_modulector_host}" if _modulector_port in ('80', '443')
+    else f"{_modulector_protocol}://{_modulector_host}:{_modulector_port}"
+)
 
 # BioAPI settings
 BIOAPI_SETTINGS = {

@@ -542,15 +542,9 @@ def make_tools(user_id: int):
         """
         from api_service.mrna_service import global_mrna_service
 
-        params: dict = {'gene': gene_name}
-        if min_score > 0:
-            params['score'] = str(min_score)
-
-        data = global_mrna_service.get_mdulector_service_content(
-            'mirna-target-interactions',
-            request_params=params,
-            is_paginated=True,
-            method='get'
+        data = global_mrna_service.get_mirna_target_interactions(
+            gene=gene_name,
+            score=str(min_score) if min_score > 0 else None,
         )
 
         if not data or data.get('count', 0) == 0:
