@@ -15,7 +15,7 @@ import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
 import { useIntl, IntlShape } from 'react-intl'
 import { DeleteButton } from '../common/DeleteButton'
-import { getTissueDropdownOptions, getTissueIds, TissueLabels } from '../common/TissueLabels'
+import { getTissueDropdownOptions, getTissueIds } from '../common/TissueLabels'
 import { SharedInstitutionsUserFile } from './SharedInstitutionsUserFile'
 
 /** Structure returned from the chunk upload service. */
@@ -34,7 +34,6 @@ declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
 declare const downloadFileHeaders: string
-declare const currentUserId: string
 
 /**
  * New File Form fields
@@ -843,35 +842,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                     <TableCellWithTitle value={userFileRow.description} />
                                     <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
                                     <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
-                                    <Table.Cell>
-                                        {userFileRow.institutions.length > 0 && (
-                                            <Icon
-                                                name='building'
-                                                size='large'
-                                                title={intl.formatMessage(
-                                                    { id: 'files.manager.tooltip.sharedWith' },
-                                                    { list: userFileRow.institutions.map((i) => i.name).join(', ') }
-                                                )}
-                                            />
-                                        )}
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <TagDropdown
-                                            selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
-                                            trigger={<TagLabel tag={userFileRow.tag} />}
-                                            tagType={TagType.FILE}
-                                            onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
-                                            onTagCreated={() => this.getUserTags()}
-                                            onTagEdited={() => this.getUserTags()}
-                                            onTagDeleted={(deletedTagId) => {
-                                                if (this.state.newFile.newTag === deletedTagId) {
-                                                    this.handleAddFileInputsChange('newTag', null)
-                                                }
-
-                                                this.getUserTags()
-                                            }}
-                                        />
-                                    </Table.Cell>
                                     <Table.Cell textAlign='center'>
                                         {(this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions).length > 0
                                             ? (
@@ -886,8 +856,27 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                             )
                                             : '-'}
                                     </Table.Cell>
-                                    <Table.Cell><TissueLabels tissues={userFileRow.tissue} tissueOptions={this.state.tissues} /></Table.Cell>
-                                    <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
+                                    <Table.Cell>
+                                        {userFileRow.is_owner
+                                            ? (
+                                                <TagDropdown
+                                                    selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
+                                                    trigger={<TagLabel tag={userFileRow.tag} />}
+                                                    tagType={TagType.FILE}
+                                                    onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
+                                                    onTagCreated={() => this.getUserTags()}
+                                                    onTagEdited={() => this.getUserTags()}
+                                                    onTagDeleted={(deletedTagId) => {
+                                                        if (this.state.newFile.newTag === deletedTagId) {
+                                                            this.handleAddFileInputsChange('newTag', null)
+                                                        }
+
+                                                        this.getUserTags()
+                                                    }}
+                                                />
+                                            )
+                                            : <TagLabel tag={userFileRow.tag} />}
+                                    </Table.Cell>
                                     <Table.Cell textAlign='center'>
                                         {
                                             userFileRow.is_public
@@ -918,7 +907,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                 { columnName: userFileRow.column_used_as_index }
                                             )}
                                         />
-                                        {Number(currentUserId) === userFileRow.user.id && (
+                                        {userFileRow.is_owner && (
                                             <Icon
                                                 name='share alternate'
                                                 className='clickable margin-left-5'
@@ -927,9 +916,8 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                                                 onClick={() => this.openShareInstitutions(userFileRow)}
                                             />
                                         )}
-                                        {/* Users can modify or delete own files or the ones which belongs to an
-                                        Institution which the user is admin of */}
-                                        {userFileRow.is_private_or_institution_admin && (
+                                        {/* Only the dataset owner can modify or delete it. */}
+                                        {userFileRow.is_owner && (
                                             <>
                                                 {/* Shows a edit button if specified */}
                                                 <Icon
