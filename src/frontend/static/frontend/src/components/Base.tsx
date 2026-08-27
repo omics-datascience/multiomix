@@ -18,7 +18,9 @@ import '../css/base.css'
 const messages = { en, es }
 const LOCALE_STORAGE_KEY = 'multiomix_locale'
 
-type Locale = 'en' | 'es'
+const LOCALES = ['en', 'es'] as const
+type Locale = typeof LOCALES[number]
+const LANG_SET: Set<Locale> = new Set(LOCALES)
 
 interface LocaleContextType {
     locale: Locale,
@@ -55,8 +57,8 @@ const Base = (props: BaseProps) => {
     const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState<boolean>(true)
     // State that defines the current language ('es' or 'en') for <IntlProvider>, used to display the interface in the selected locale
     const [locale, setLocaleState] = useState<Locale>(() => {
-        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
-        return storedLocale === 'en' || storedLocale === 'es' ? storedLocale : 'es'
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale
+        return LANG_SET.has(storedLocale) ? storedLocale : 'es'
     })
 
     const setLocale = (newLocale: Locale) => {

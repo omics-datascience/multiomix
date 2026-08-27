@@ -862,14 +862,14 @@ export default {
     'loginSignUpForm.validEmailMessage': 'Por favor ingrese una dirección de correo válida',
     'loginSignUpForm.passwordMismatchMessage': 'Este valor es diferente al campo Contraseña',
     // 91.OpenSource
-    'openSource.intro.title': 'En Omicsdatascience creemos en la ciencia abierta. Explora nuestros proyectos de código abierto, disponibles libremente para la comunidad con el fin de fomentar la colaboración, la transparencia y la innovación en la investigación biomédica. Disponibles en nuestra organización de GitHub.',
+    'openSource.intro.title': 'En <organizationLink>Omicsdatascience</organizationLink> creemos en la ciencia abierta. Explora nuestros proyectos de código abierto, disponibles libremente para la comunidad con el fin de fomentar la colaboración, la transparencia y la innovación en la investigación biomédica. Disponibles en nuestra <githubLink>organización de GitHub</githubLink>.',
     'openSource.intro.description': 'Estos repositorios representan algunas de nuestras iniciativas de código abierto más destacadas, desarrolladas para brindar a la comunidad científica herramientas bioinformáticas accesibles y de vanguardia.',
 
     'openSource.multiomix.description': 'Plataforma basada en la nube para inferir eventos genómicos y epigenómicos del cáncer asociados con la modulación de la expresión génica.',
     'openSource.modulector.description': 'Modulector es una plataforma abierta que proporciona información sobre miRNAs, genes y sitios de metilación basada en la recopilación de información de diferentes recursos.',
     'openSource.bioapi.description': 'Una potente abstracción de bases de datos genómicas. BioApi es una API REST que proporciona datos relacionados con nomenclatura génica, expresión génica y rutas metabólicas.',
 
-    'openSource.publications.title': 'Descubre nuestras contribuciones científicas',
+    'openSource.publications.title': 'Descubre nuestras <contributionsLink>contribuciones científicas</contributionsLink>',
     'openSource.publications.description': 'Además de nuestro software de código abierto, publicamos regularmente artículos científicos revisados por pares que documentan las metodologías, innovaciones y hallazgos detrás de nuestras herramientas. Te invitamos a explorar nuestras publicaciones para comprender mejor el impacto científico de nuestro trabajo.',
 
     'openSource.publication.multiomix.description': 'Una plataforma basada en la nube para inferir eventos genómicos y epigenómicos del cáncer asociados con la modulación de la expresión génica',
