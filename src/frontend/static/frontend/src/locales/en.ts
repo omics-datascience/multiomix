@@ -895,6 +895,7 @@ export default {
     'sharedInstitutions.removeInstitution': 'Remove institution',
     'sharedInstitutions.stopSharing': 'Stop sharing experiment',
     'sharedInstitutions.confirmStopSharing': 'Are you sure to stop sharing experiment to this institution?',
+    'sharedInstitutions.institutions': 'Institutions',
     'sharedInstitutions.users': 'users',
     'sharedInstitutions.userName': 'User name',
     'sharedInstitutions.searchUserName': 'Search by User name',
