@@ -48,6 +48,10 @@
     padding-right: 0.5rem;
 }
 
+.shared-institutions-users-column {
+    padding-left: 2.5rem !important;
+}
+
 @media (max-width: 767px) {
     .shared-institutions-controls {
         align-items: stretch;
@@ -56,5 +60,9 @@
 
     .shared-institutions-controls .ui.button {
         align-self: flex-start;
+    }
+
+    .shared-institutions-users-column {
+        padding-left: 1rem !important;
     }
 }

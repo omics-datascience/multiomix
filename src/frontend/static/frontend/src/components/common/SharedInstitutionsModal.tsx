@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import { Button, Divider, Grid, GridColumn, Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader, Segment, Select, Table } from 'semantic-ui-react'
+import { Button, Grid, GridColumn, Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader, Segment, Select, Table } from 'semantic-ui-react'
 import { DjangoInstitutionUserLimited } from '../../utils/django_interfaces'
 import { SemanticListItem } from '../../utils/interfaces'
 import { PaginatedTable } from './PaginatedTable'
@@ -102,7 +102,7 @@ export const SharedInstitutionsModal = (props: SharedInstitutionsModalProps) => 
 
                 <Segment className='shared-institutions-panel'>
                     <Grid columns={2} stackable>
-                        <GridColumn width={7}>
+                        <GridColumn width={5}>
                             <List selection verticalAlign='middle' className='shared-institutions-list'>
                                 <div
                                     className='list shared-institutions-items'
@@ -142,8 +142,7 @@ export const SharedInstitutionsModal = (props: SharedInstitutionsModalProps) => 
                                 </div>
                             </List>
                         </GridColumn>
-                        <Divider vertical />
-                        <GridColumn width={9}>
+                        <GridColumn width={11} className='shared-institutions-users-column'>
                             {props.selectedInstitution
                                 ? (
                                     <InstitutionUserList
