@@ -944,7 +944,6 @@ export default {
     'sharedInstitutions.removeInstitution': 'Eliminar institución',
     'sharedInstitutions.stopSharing': 'Dejar de compartir experimento',
     'sharedInstitutions.confirmStopSharing': '¿Está seguro de dejar de compartir el experimento con esta institución?',
-    'sharedInstitutions.institutions': 'Instituciones',
     'sharedInstitutions.users': 'usuarios',
     'sharedInstitutions.userName': 'Nombre de usuario',
     'sharedInstitutions.searchUserName': 'Buscar por nombre de usuario',

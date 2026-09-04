@@ -1,12 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Button, Divider, Grid, GridColumn, Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader, Segment, Select, Table } from 'semantic-ui-react'
 import ky from 'ky'
-import { DjangoInstitutionUserLimited } from '../../utils/django_interfaces'
-import { PaginatedTable } from '../common/PaginatedTable'
-import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { CurrentUserContext } from '../Base'
 import { SemanticListItem } from '../../utils/interfaces'
 import { getDjangoHeader } from '../../utils/util_functions'
+import { useIntl } from 'react-intl'
+import { SharedInstitution, SharedInstitutionsModal } from '../common/SharedInstitutionsModal'
 
 declare const urlGetUsersCandidatesLimitedBiomarker: string
 declare const urlGetInstitutionsNonInExperimentBiomarker: string
@@ -26,36 +24,6 @@ interface SharedInstitutionsBiomarkerProps extends SharedInstitutionsBiomarkerPr
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
-interface InstitutionUserListProps {
-    institutionName: string,
-    institutionId: number,
-}
-
-const InstitutionUserList = (props: InstitutionUserListProps) => {
-    return (
-        <div key={props.institutionId} style={{ padding: '0 1rem 0 0' }}>
-            <PaginatedTable<DjangoInstitutionUserLimited>
-                headerTitle={props.institutionName + ' users'}
-                headers={[
-                    { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 }
-                ]}
-                showSearchInput
-                searchLabel='User name'
-                searchPlaceholder='Search by User name'
-                urlToRetrieveData={urlGetUsersCandidatesLimitedBiomarker + '/' + props.institutionId + '/'}
-                updateWSKey='update_user_for_institution'
-                mapFunction={(userCandidate: DjangoInstitutionUserLimited) => {
-                    return (
-                        <Table.Row key={userCandidate.user.id}>
-                            <TableCellWithTitle value={userCandidate.user.username} />
-                        </Table.Row>
-                    )
-                }}
-            />
-        </div>
-    )
-}
-
 /**
  * Modal that shows institutions shared to a biomarker
  * @param props Component props
@@ -64,11 +32,12 @@ const InstitutionUserList = (props: InstitutionUserListProps) => {
 export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerProps) => {
     const [activeInstitution, setActiveInstitution] = useState<{ id: number, name: string }>({ id: 0, name: '' })
     const [listOfInstitutionNonPart, setListOfInstitutionNonPart] = useState<SemanticListItem[]>([])
-    const [institutionIdToAdd, setInstitutionIdToAdd] = useState<number>(0)
+    const [institutionIdToAdd, setInstitutionIdToAdd] = useState<string | null>(null)
     const abortController = useRef(new AbortController())
     const [institutionList, setInstitutionList] = useState<{ id: number, name: string }[]>([])
     const [isLoadingInstitution, setIsLoadingInstitution] = useState<boolean>(false)
     const currentUser = useContext(CurrentUserContext)
+    const intl = useIntl()
 
     /**
      * Function to search institutions that are not in experiment.
@@ -120,11 +89,12 @@ export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerPr
             setIsLoadingInstitution(true)
             const myHeaders = getDjangoHeader()
             const body = {
-                institutionId: institutionIdToAdd,
+                institutionId: Number(institutionIdToAdd),
                 biomarkerId: props.biomarkerId
             }
             ky.post(urlShareBiomarkerToInstitution, { headers: myHeaders, signal: abortController.current.signal, json: body }).then((response) => {
                 response.json().then(() => {
+                    setInstitutionIdToAdd(null)
                     InstitutionsistNonInExperiment()
                     usersListInstitution()
                 }).catch((err) => {
@@ -165,92 +135,51 @@ export const SharedInstitutionsBiomarker = (props: SharedInstitutionsBiomarkerPr
     }
 
     useEffect(() => {
-        if (props.biomarkerId) {
+        if (props.isOpen && props.biomarkerId) {
+            setInstitutionIdToAdd(null)
             InstitutionsistNonInExperiment()
             usersListInstitution()
         }
-    }, [props.biomarkerId])
+    }, [props.biomarkerId, props.isOpen])
+
+    const canManage = props.user.id === currentUser?.id
+    const selectedInstitution: SharedInstitution | null = activeInstitution.id ? activeInstitution : null
 
     return (
-        <Modal
-            onClose={() => props.handleClose()}
-            open={props.isOpen}
-            closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
-            style={{ width: '60%', maxWidth: '1000px' }}
-        >
-            <ModalHeader>Shared institutions</ModalHeader>
-            <ModalContent>
-                {
-                    props.user.id === currentUser?.id &&
-                    (
-                        <>
-                            <Select
-                                placeholder='Select a institution to share'
-                                options={listOfInstitutionNonPart}
-                                value={institutionIdToAdd.toString()}
-                                onChange={(_e, { value }) => setInstitutionIdToAdd(Number(value))}
-                            />
-                            <Button
-                                className='margin-left-5'
-                                disabled={!institutionIdToAdd || isLoadingInstitution}
-                                onClick={() => props.handleChangeConfirmModalState(true, 'Share experiment', 'Are you sure to share biomarker to institution?', handleAddInstitution)}
-                            >
-                                Add institution
-                            </Button>
-                        </>
-                    )
-                }
-
-                <Segment>
-                    <Grid columns={2}>
-                        <GridColumn>
-                            <List selection verticalAlign='middle'>
-                                <div
-                                    style={{
-                                        maxHeight: '400px',
-                                        overflowY: 'auto'
-                                    }}
-                                >
-                                    {institutionList.map(institution => (
-                                        <ListItem key={institution.id} active={activeInstitution.id === institution.id}>
-                                            <div style={{ display: 'flex', alignContent: 'center', flexDirection: 'row' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <ListContent onClick={() => setActiveInstitution(institution)}>
-                                                        <ListHeader>
-                                                            {institution.name}
-                                                        </ListHeader>
-                                                    </ListContent>
-                                                </div>
-                                                {currentUser?.id === props.user.id &&
-                                                    (
-                                                        <Icon
-                                                            name='trash'
-                                                            className='clickable'
-                                                            disabled={isLoadingInstitution}
-                                                            color='red'
-                                                            title='Remove institution'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
-                                                        />
-                                                    )}
-                                            </div>
-                                        </ListItem>
-                                    ))}
-                                </div>
-                            </List>
-                        </GridColumn>
-                        <Divider vertical />
-                        <GridColumn>
-                            {
-                                activeInstitution.id
-                                    ? (
-                                        <InstitutionUserList institutionName={activeInstitution.name} institutionId={activeInstitution.id} />
-                                    )
-                                    : null
-                            }
-                        </GridColumn>
-                    </Grid>
-                </Segment>
-            </ModalContent>
-        </Modal>
+        <SharedInstitutionsModal
+            isOpen={props.isOpen}
+            title={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.header' })}
+            selectPlaceholder={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.selectPlaceholder' })}
+            addButtonText={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.addInstitution' })}
+            availableInstitutions={listOfInstitutionNonPart}
+            selectedInstitutionToAdd={institutionIdToAdd}
+            sharedInstitutions={institutionList}
+            selectedInstitution={selectedInstitution}
+            usersUrl={urlGetUsersCandidatesLimitedBiomarker}
+            usersHeaderTitle={(institutionName) => intl.formatMessage(
+                { id: 'sharedInstitutionsBiomarker.users.title' },
+                { institutionName }
+            )}
+            userNameLabel={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.users.column' })}
+            searchUserNamePlaceholder={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.users.searchPlaceholder' })}
+            removeInstitutionTitle={intl.formatMessage({ id: 'sharedInstitutionsBiomarker.removeInstitution' })}
+            isLoading={isLoadingInstitution}
+            canManage={canManage}
+            onClose={props.handleClose}
+            onInstitutionToAddChange={setInstitutionIdToAdd}
+            onAddInstitution={() => props.handleChangeConfirmModalState(
+                true,
+                intl.formatMessage({ id: 'sharedInstitutionsBiomarker.confirm.share.header' }),
+                intl.formatMessage({ id: 'sharedInstitutionsBiomarker.confirm.share.content' }),
+                handleAddInstitution
+            )}
+            onSelectInstitution={setActiveInstitution}
+            onRemoveInstitution={(institutionId) => props.handleChangeConfirmModalState(
+                true,
+                intl.formatMessage({ id: 'sharedInstitutionsBiomarker.confirm.stopShare.header' }),
+                intl.formatMessage({ id: 'sharedInstitutionsBiomarker.confirm.stopShare.content' }),
+                () => handleRemoveInstitution(institutionId)
+            )}
+        />
     )
 }
