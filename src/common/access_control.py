@@ -92,14 +92,10 @@ def user_file_visibility_q(user: AbstractBaseUser) -> Q:
 
 
 def can_edit_user_file(user_file: Any, user: AbstractBaseUser) -> bool:
-    """Return whether the user may edit/delete a UserFile."""
-    if not user or not user.is_authenticated:
-        return False
+    """Return whether the user may mutate a UserFile.
 
-    return (
-        user_file.user_id == user.id
-        or user_file.institutions.filter(
-            users=user,
-            institutionadministration__is_institution_admin=True,
-        ).exists()
-    )
+    Institution membership controls visibility, but it does not grant
+    ownership or mutation permissions. Dataset edits, deletion, visibility
+    changes, and sharing changes are therefore restricted to the owner.
+    """
+    return bool(user and user.is_authenticated and user_file.user_id == user.id)

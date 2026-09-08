@@ -11,7 +11,7 @@ from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
-from common.access_control import can_edit_shared_resource, can_view_user_file, user_file_visibility_q
+from common.access_control import can_edit_user_file, can_view_user_file, user_file_visibility_q
 from institutions.models import Institution
 from institutions.serializers import InstitutionSimpleSerializer
 from user_files.serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
@@ -73,16 +73,13 @@ def get_an_user_file(user: AbstractBaseUser, user_file_pk: int) -> UserFile:
     return get_object_or_404(queryset, pk=user_file_pk)
 
 
-def get_own_or_as_admin_user_files(user: AbstractBaseUser):
+def get_own_user_files(user: AbstractBaseUser):
     """
-    Returns only the User's Files which were uploaded by himself or belongs to an Institution which his is the admin of
+    Returns only the User's Files which were uploaded by himself.
     @param user: User to retrieve his Datasets
     @return: User's Files
     """
-    return UserFile.objects.filter(Q(user=user) | (
-            Q(institutions__institutionadministration__user=user)
-            & Q(institutions__institutionadministration__is_institution_admin=True)
-    )).distinct()
+    return UserFile.objects.filter(user=user)
 
 
 def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool, with_survival_only: bool) -> QuerySet:
@@ -157,14 +154,14 @@ class UserFileList(generics.ListAPIView):
 
 class UserFileDetail(generics.RetrieveUpdateDestroyAPIView):
     """
-    REST endpoint: get, modify or delete for UserFile model. A User can modify or delete ONLY the files which were
-    uploaded by himself or belongs to an Institution which his is the admin of
+    REST endpoint: get, modify or delete for UserFile model. Only the owner
+    can modify or delete a UserFile; institutional visibility is read-only.
     """
 
     def get_queryset(self):
         if self.request.method == 'GET':
             return UserFile.objects.filter(user_file_visibility_q(self.request.user)).distinct()
-        return get_own_or_as_admin_user_files(self.request.user)
+        return get_own_user_files(self.request.user)
 
     serializer_class = UserFileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -180,7 +177,7 @@ class InstitutionNonUserFilesSharedListView(generics.ListAPIView):
         """Return the current user's institutions not already shared with the dataset."""
         user_file_id = self.kwargs.get('user_file_id')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
-        if not can_edit_shared_resource(user_file, self.request.user):
+        if not can_edit_user_file(user_file, self.request.user):
             raise PermissionDenied('You do not have permission to modify this dataset.')
 
         shared_institution_ids = user_file.institutions.values_list('pk', flat=True)
@@ -220,7 +217,7 @@ class AddInstitutionToUserFileView(APIView):
             )
 
         user_file = get_object_or_404(UserFile, pk=user_file_id)
-        if not can_edit_shared_resource(user_file, request.user):
+        if not can_edit_user_file(user_file, request.user):
             raise PermissionDenied('You do not have permission to modify this dataset.')
 
         institution = get_object_or_404(
@@ -244,7 +241,7 @@ class RemoveInstitutionFromUserFileView(APIView):
         user_file_id = request.data.get('userFileId')
         user_file = get_object_or_404(UserFile, pk=user_file_id)
 
-        if not can_edit_shared_resource(user_file, request.user):
+        if not can_edit_user_file(user_file, request.user):
             raise PermissionDenied('You do not have permission to modify this dataset.')
 
         institution = get_object_or_404(Institution, pk=institution_id)
@@ -293,7 +290,7 @@ class ToggleFilePublicView(APIView):
 
         user_file_id = data.get('userFileId')
         user_file: UserFile = get_object_or_404(UserFile, id=user_file_id)
-        if user_file.user.id != request.user.id:
+        if not can_edit_user_file(user_file, request.user):
             raise PermissionDenied('You do not have permission to modify this user file.')
 
         user_file.is_public = not user_file.is_public
