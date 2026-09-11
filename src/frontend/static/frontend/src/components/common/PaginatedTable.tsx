@@ -1,6 +1,6 @@
 import ky from 'ky'
 import React, { ReactElement } from 'react'
-import { Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHS, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
+import { Accordion, Checkbox, DropdownItemProps, Form, Grid, Header, Icon, Pagination, SemanticWIDTHS, SemanticWIDTHSNUMBER, Table } from 'semantic-ui-react'
 import { RowHeader } from '../../utils/django_interfaces'
 import { GeneralTableControl, Nullable, ResponseRequestWithPagination, WebsocketConfig } from '../../utils/interfaces'
 import { getDefaultGeneralTableControl, getDefaultPageSizeOption, alertGeneralError, generatesOrderingQuery } from '../../utils/util_functions'
@@ -112,6 +112,7 @@ interface PaginatedTableProps<T> {
     infoPopupContent?: string,
     /** `width` prop of Form.Item of the _Entries_ select. */
     entriesSelectWidth?: SemanticWIDTHS,
+    mobileFiltersLabel?: string,
     /** Callback to render custom components applied to data retrieved from backend API */
     mapFunction: (elem: T) => ReactElement
     intl: IntlShape
@@ -131,7 +132,8 @@ interface PaginatedTableState<T> {
         }
     },
     elements: T[],
-    gettingData: boolean
+    gettingData: boolean,
+    mobileFiltersOpen: boolean
 }
 
 /**
@@ -176,7 +178,8 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             elements: [],
             tableControl: generalTableControl,
             retrievedOptions: {},
-            gettingData: false
+            gettingData: false,
+            mobileFiltersOpen: false
         }
     }
 
@@ -481,6 +484,43 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
             )
             : tableBody
 
+        const filtersForm = (
+            <Form>
+                <Form.Group className='custom-form'>
+                    {this.props.customElements}
+
+                    {this.props.showSearchInput && (
+                        <Form.Input
+                            width={this.props.searchWidth ?? 3}
+                            icon='search' iconPosition='left'
+                            label={this.props.searchLabel ?? intl.formatMessage({ id: 'paginatedTable.searchLabel' })}
+                            title={this.props.searchPlaceholder}
+                            placeholder={this.props.searchPlaceholder}
+                            name='textFilter'
+                            value={tableControl.textFilter}
+                            onChange={(_, { name, value }) => {
+                                this.handleTableControlChanges(name, value)
+                            }}
+                        />
+                    )}
+                    {customFilters}
+                    <Form.Select
+                        label={intl.formatMessage({ id: 'paginatedTable.entries' })}
+                        className='entries-select-table'
+                        selectOnBlur={false}
+                        options={getDefaultPageSizeOption()}
+                        name='pageSize'
+                        fluid
+                        width={this.props.entriesSelectWidth ?? 1}
+                        value={tableControl.pageSize}
+                        onChange={(_, { name, value }) => {
+                            this.handleTableControlChanges(name, value)
+                        }}
+                    />
+                </Form.Group>
+            </Form>
+        )
+
         return (
             <Grid padded stackable textAlign='center' divided>
                 <Grid.Row>
@@ -501,48 +541,30 @@ class PaginatedTable<T> extends React.Component<PaginatedTableProps<T>, Paginate
                         )}
                     </Grid.Column>
                     <Grid.Column width={16}>
-                        <Form>
-                            <Form.Group className='custom-form'>
-                                {this.props.customElements}
-
-                                {/* Search input */}
-                                {this.props.showSearchInput && (
-                                    <Form.Input
-                                        width={this.props.searchWidth ?? 3}
-                                        icon='search' iconPosition='left'
-                                        label={this.props.searchLabel ?? intl.formatMessage({ id: 'paginatedTable.searchLabel' })}
-                                        title={this.props.searchPlaceholder}
-                                        placeholder={this.props.searchPlaceholder}
-                                        name='textFilter'
-                                        value={tableControl.textFilter}
-                                        onChange={(_, { name, value }) => {
-                                            this.handleTableControlChanges(name, value)
-                                        }}
-                                    />
-                                )}
-                                {customFilters}
-                                {/* Page size */}
-                                <Form.Select
-                                    label={intl.formatMessage({ id: 'paginatedTable.entries' })}
-                                    className='entries-select-table'
-                                    selectOnBlur={false}
-                                    options={getDefaultPageSizeOption()}
-                                    name='pageSize'
-                                    fluid
-                                    width={this.props.entriesSelectWidth ?? 1}
-                                    value={tableControl.pageSize}
-                                    onChange={(_, { name, value }) => {
-                                        this.handleTableControlChanges(name, value)
-                                    }}
-                                />
-                            </Form.Group>
-                        </Form>
+                        {this.props.mobileFiltersLabel
+                            ? (
+                                <Accordion className='mobile-filters-accordion'>
+                                    <Accordion.Title
+                                        active={this.state.mobileFiltersOpen}
+                                        className='mobile-filters-toggle'
+                                        icon={<></>}
+                                        onClick={() => this.setState((prevState) => ({ mobileFiltersOpen: !prevState.mobileFiltersOpen }))}
+                                    >
+                                        <span>{this.props.mobileFiltersLabel}</span>
+                                        <Icon name={this.state.mobileFiltersOpen ? 'angle up' : 'angle down'} />
+                                    </Accordion.Title>
+                                    <Accordion.Content active={this.state.mobileFiltersOpen} className='mobile-filters-content'>
+                                        {filtersForm}
+                                    </Accordion.Content>
+                                </Accordion>
+                            )
+                            : filtersForm}
                     </Grid.Column>
                 </Grid.Row>
                 <Grid.Row>
-                    <Grid.Column style={{ overflowX: 'auto' }}>
+                    <Grid.Column className='paginated-table-scroll' style={{ overflowX: 'auto' }}>
                         {/* Table */}
-                        <Table celled sortable>
+                        <Table celled sortable unstackable>
                             {/* Header */}
                             <Table.Header>
                                 <Table.Row>

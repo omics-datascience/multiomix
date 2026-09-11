@@ -67,6 +67,178 @@
     border-color: #2185d0 !important;
 }
 
+.gem-all-experiments-view .mobile-filters-toggle {
+    display: none !important;
+}
+
+.gem-all-experiments-view .mobile-filters-content {
+    display: block !important;
+}
+
+.gem-mobile-title-row {
+    display: none !important;
+}
+
+@media only screen and (max-width: 767px) {
+    .gem-all-experiments-view .mobile-filters-accordion {
+        position: relative;
+        left: 1rem;
+    }
+
+    .gem-mobile-title-row {
+        display: flex !important;
+        padding-bottom: 0 !important;
+    }
+
+    .gem-mobile-title-row .ui.header {
+        margin: 0;
+        width: 100%;
+    }
+
+    .gem-all-experiments-view .mobile-filters-toggle {
+        align-items: center;
+        background: #2185d0;
+        color: #fff;
+        display: flex !important;
+        justify-content: center;
+        padding: 0.78571429em 1em !important;
+        position: relative;
+    }
+
+    .gem-all-experiments-view .mobile-filters-toggle > span {
+        text-align: center;
+        width: 100%;
+    }
+
+    .gem-all-experiments-view .mobile-filters-toggle > .icon {
+        margin: 0 !important;
+        position: absolute;
+        right: 1em;
+    }
+
+    .gem-all-experiments-view .mobile-filters-content {
+        display: none !important;
+    }
+
+    .gem-all-experiments-view .mobile-filters-content.active {
+        display: block !important;
+    }
+
+    .gem-all-experiments-view > .ui.padded.stackable.grid > .row:first-child {
+        margin-left: 1rem;
+        margin-right: 1rem;
+        width: calc(100% - 2rem) !important;
+    }
+
+    .experiments-tabs-header {
+        flex-wrap: nowrap !important;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        width: calc(100% - 2rem) !important;
+    }
+
+    .experiments-tabs-header > .column {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .experiments-tabs-header > .column:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    .experiments-tabs-header > .column:last-child {
+        flex: 0 0 44px !important;
+        width: 44px !important;
+    }
+
+    .experiments-tabs-header .menu-with-bolder-border {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .gem-all-experiments-view {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .gem-all-experiments-view h4.ui.header.margin-bottom-1 {
+        display: none;
+    }
+
+    .gem-all-experiments-view .custom-form {
+        display: block;
+    }
+
+    .gem-all-experiments-view .custom-form > .field {
+        margin: 0 0 1em !important;
+        width: 100% !important;
+    }
+
+    .gem-all-experiments-view .custom-form > .field:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .gem-all-experiments-view .paginated-table-scroll {
+        left: 1rem;
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .gem-all-experiments-view .paginated-table-scroll .ui.sortable.table > thead > tr > th {
+        white-space: normal;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .experiments-tabs-header {
+        flex-wrap: nowrap !important;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        width: calc(100% - 2rem) !important;
+    }
+
+    .experiments-tabs-header > .column {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .experiments-tabs-header > .column:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    .experiments-tabs-header > .column:last-child {
+        flex: 0 0 44px !important;
+        width: 44px !important;
+    }
+
+    .experiments-tabs-header .menu-with-bolder-border {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .gem-all-experiments-view {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .gem-all-experiments-view .entries-select-table {
+        min-width: 75px;
+    }
+
+    .gem-all-experiments-view .paginated-table-scroll {
+        max-width: 100%;
+        min-width: 0;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 #label-new-experiment-selected-tag {
     width: 70%
 }

@@ -913,7 +913,14 @@ class MiRNAPipeline extends React.Component<MiRNAPipelineProps, MiRNAPipelineSta
                             textAlign='center'
                         >
                             <Grid>
-                                <Grid.Row columns={2}>
+                                {this.state.activeTab === 'all-experiments' && (
+                                    <Grid.Row columns={1} className='gem-mobile-title-row'>
+                                        <Grid.Column>
+                                            <Header as='h4' textAlign='center'>GEM</Header>
+                                        </Grid.Column>
+                                    </Grid.Row>
+                                )}
+                                <Grid.Row columns={2} className='experiments-tabs-header'>
                                     <Grid.Column width={15}>
                                         <Menu className='menu-with-bolder-border'>
                                             <Menu.Item

@@ -37,6 +37,10 @@
     min-width: 30%;
 }
 
+#main-app .ui.text.container {
+    max-width: min(100%, 700px);
+}
+
 @media only screen and (min-width: 1151px) and (max-width: 1366px) {
     #homepage-heading {
         text-align: center;

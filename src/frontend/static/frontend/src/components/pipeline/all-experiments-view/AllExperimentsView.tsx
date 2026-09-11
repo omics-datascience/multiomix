@@ -172,9 +172,10 @@ class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExp
     render (): JSX.Element {
         const { intl } = this.props
         return (
-            <div>
+            <div className='gem-all-experiments-view'>
                 <PaginatedTable<DjangoExperiment>
                     headerTitle='GEM'
+                    mobileFiltersLabel={intl.formatMessage({ id: 'allExperimentsView.filters.title' })}
                     updateWSKey='update_experiments'
                     defaultSortProp={{ sortField: 'submit_date', sortOrderAscendant: false }}
                     headers={[

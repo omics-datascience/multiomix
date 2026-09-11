@@ -812,6 +812,12 @@ export default {
     'loginSignUpForm.validEmailMessage': 'Please provide a valid email address',
     'loginSignUpForm.passwordMismatchMessage': 'This value is different to Password field',
     // 91.OpenSource
+    'openSource.header.main': 'Explore the open-source projects from',
+    'openSource.header.sub': 'These repositories represent some of our most prominent open-source initiatives, developed to empower the research community with accessible and cutting-edge bioinformatics tools.',
+    'openSource.publications.sub': 'In addition to our open-source software, we regularly publish peer-reviewed scientific articles that document the methodologies, innovations, and findings behind our tools. We invite you to explore our publications to better understand the research impact of our work.',
+    'openSource.publications.multiomix.description': 'A cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation',
+    'openSource.publications.modulector.description': 'A platform as a service for access to microRNA databases',
+
     'openSource.intro.title': 'At Omicsdatascience, we believe in open science. Explore our open-source projects, freely available to the community to foster collaboration, transparency, and innovation in biomedical research. Available in our GitHub organization.',
     'openSource.intro.description': 'These repositories represent some of our most prominent open-source initiatives, developed to empower the research community with accessible and cutting-edge bioinformatics tools.',
 
@@ -830,6 +836,7 @@ export default {
     'allExperimentsView.filters.selectTag': 'Select an existing Tag',
     'allExperimentsView.filters.experimentType': 'Experiment type',
     'allExperimentsView.filters.correlationMethod': 'Correlation method',
+    'allExperimentsView.filters.title': 'Filters',
 
     'allExperimentsView.table.name': 'Name',
     'allExperimentsView.table.description': 'Description',
