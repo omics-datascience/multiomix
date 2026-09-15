@@ -836,146 +836,150 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             searchPlaceholder={intl.formatMessage({ id: 'files.manager.search.placeholder' })}
                             urlToRetrieveData={urlUserFilesCRUD}
                             updateWSKey='update_user_files'
-                            mapFunction={(userFileRow: DjangoUserFile) => (
-                                <Table.Row key={userFileRow.id as number}>
-                                    <TableCellWithTitle value={userFileRow.name} />
-                                    <TableCellWithTitle value={userFileRow.description} />
-                                    <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
-                                    <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
-                                    <Table.Cell textAlign='center'>
-                                        {(this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions).length > 0
-                                            ? (
-                                                <Icon
-                                                    name='building'
-                                                    size='large'
-                                                    title={intl.formatMessage(
-                                                        { id: 'files.manager.tooltip.sharedWith' },
-                                                        { list: (this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions).map((i) => i.name).join(', ') }
-                                                    )}
-                                                />
-                                            )
-                                            : '-'}
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        {userFileRow.is_owner
-                                            ? (
-                                                <TagDropdown
-                                                    selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
-                                                    trigger={<TagLabel tag={userFileRow.tag} />}
-                                                    tagType={TagType.FILE}
-                                                    onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
-                                                    onTagCreated={() => this.getUserTags()}
-                                                    onTagEdited={() => this.getUserTags()}
-                                                    onTagDeleted={(deletedTagId) => {
-                                                        if (this.state.newFile.newTag === deletedTagId) {
-                                                            this.handleAddFileInputsChange('newTag', null)
-                                                        }
+                            mapFunction={(userFileRow: DjangoUserFile) => {
+                                const sharedInstitutions = this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions
 
-                                                        this.getUserTags()
-                                                    }}
-                                                />
-                                            )
-                                            : <TagLabel tag={userFileRow.tag} />}
-                                    </Table.Cell>
-                                    <Table.Cell textAlign='center'>
-                                        {
-                                            userFileRow.is_public
+                                return (
+                                    <Table.Row key={userFileRow.id as number}>
+                                        <TableCellWithTitle value={userFileRow.name} />
+                                        <TableCellWithTitle value={userFileRow.description} />
+                                        <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
+                                        <TableCellWithTitle value={userFileRow.upload_date ? formatDateLocale(userFileRow.upload_date, 'L') : '-'} />
+                                        <Table.Cell textAlign='center'>
+                                            {sharedInstitutions.length > 0
                                                 ? (
                                                     <Icon
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.public' })}
-                                                        name='check'
-                                                        color='green'
+                                                        name='building'
+                                                        size='large'
+                                                        title={intl.formatMessage(
+                                                            { id: 'files.manager.tooltip.sharedWith' },
+                                                            { list: sharedInstitutions.map((i) => i.name).join(', ') }
+                                                        )}
                                                     />
                                                 )
-                                                : (
-                                                    <Icon
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.privateVisibility' })}
-                                                        name='close'
-                                                        color='red'
-                                                    />
-                                                )
-                                        }
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        {/* Extra information: */}
-                                        <Icon
-                                            name='info'
-                                            className='margin-left-2'
-                                            color='blue'
-                                            title={intl.formatMessage(
-                                                { id: 'files.manager.tooltip.indexColumn' },
-                                                { columnName: userFileRow.column_used_as_index }
-                                            )}
-                                        />
-                                        {userFileRow.is_owner && (
-                                            <Icon
-                                                name='share alternate'
-                                                className='clickable margin-left-5'
-                                                color='blue'
-                                                title={intl.formatMessage({ id: 'files.manager.sharedInstitutions.action' })}
-                                                onClick={() => this.openShareInstitutions(userFileRow)}
-                                            />
-                                        )}
-                                        {/* Only the dataset owner can modify or delete it. */}
-                                        {userFileRow.is_owner && (
-                                            <>
-                                                {/* Shows a edit button if specified */}
-                                                <Icon
-                                                    name='pencil'
-                                                    className='clickable margin-left-5'
-                                                    color='yellow'
-                                                    title={intl.formatMessage({ id: 'common.edit' })}
-                                                    onClick={() => this.editFile(userFileRow)}
-                                                />
-                                            </>
-                                        )}
+                                                : '-'}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {userFileRow.is_owner
+                                                ? (
+                                                    <TagDropdown
+                                                        selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
+                                                        trigger={<TagLabel tag={userFileRow.tag} />}
+                                                        tagType={TagType.FILE}
+                                                        onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
+                                                        onTagCreated={() => this.getUserTags()}
+                                                        onTagEdited={() => this.getUserTags()}
+                                                        onTagDeleted={(deletedTagId) => {
+                                                            if (this.state.newFile.newTag === deletedTagId) {
+                                                                this.handleAddFileInputsChange('newTag', null)
+                                                            }
 
-                                        <PopupIcons
-                                            content={(
-                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                                                    {/* Shows a download button if specified */}
-                                                    <Icon
-                                                        name='cloud download'
-                                                        color='blue'
-                                                        className='clickable margin-left-5'
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.download' })}
-                                                        onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
-                                                    />
-                                                    {/* Public switch */}
-                                                    <SwitchPublicButton
-                                                        publicButtonEntity={{
-                                                            id: userFileRow.id as number,
-                                                            user: { id: userFileRow.user.id },
-                                                            is_public: userFileRow.is_public
+                                                            this.getUserTags()
                                                         }}
-                                                        nameEntity='file'
-                                                        publicKey='userFileId'
-                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
                                                     />
-                                                    {/* Shows a delete button if specified */}
-                                                    {!userFileRow.is_public && (
-                                                        <DeleteButton
-                                                            title={intl.formatMessage({ id: 'common.delete' })}
-                                                            onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                            ownerId={userFileRow.user.id}
+                                                )
+                                                : <TagLabel tag={userFileRow.tag} />}
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='center'>
+                                            {
+                                                userFileRow.is_public
+                                                    ? (
+                                                        <Icon
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.public' })}
+                                                            name='check'
+                                                            color='green'
                                                         />
-                                                    )}
-                                                </div>
-                                            )}
-                                        />
-
-                                        {/* NaNs warning */}
-                                        {userFileRow.contains_nan_values && (
+                                                    )
+                                                    : (
+                                                        <Icon
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.privateVisibility' })}
+                                                            name='close'
+                                                            color='red'
+                                                        />
+                                                    )
+                                            }
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {/* Extra information: */}
                                             <Icon
-                                                name='warning sign'
+                                                name='info'
                                                 className='margin-left-2'
-                                                color='yellow'
-                                                title={intl.formatMessage({ id: 'files.manager.tooltip.nanWarning' })}
+                                                color='blue'
+                                                title={intl.formatMessage(
+                                                    { id: 'files.manager.tooltip.indexColumn' },
+                                                    { columnName: userFileRow.column_used_as_index }
+                                                )}
                                             />
-                                        )}
-                                    </Table.Cell>
-                                </Table.Row>
-                            )}
+                                            {userFileRow.is_owner && (
+                                                <Icon
+                                                    name='share alternate'
+                                                    className='clickable margin-left-5'
+                                                    color='blue'
+                                                    title={intl.formatMessage({ id: 'files.manager.sharedInstitutions.action' })}
+                                                    onClick={() => this.openShareInstitutions(userFileRow)}
+                                                />
+                                            )}
+                                            {/* Only the dataset owner can modify or delete it. */}
+                                            {userFileRow.is_owner && (
+                                                <>
+                                                    {/* Shows a edit button if specified */}
+                                                    <Icon
+                                                        name='pencil'
+                                                        className='clickable margin-left-5'
+                                                        color='yellow'
+                                                        title={intl.formatMessage({ id: 'common.edit' })}
+                                                        onClick={() => this.editFile(userFileRow)}
+                                                    />
+                                                </>
+                                            )}
+
+                                            <PopupIcons
+                                                content={(
+                                                    <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                        {/* Shows a download button if specified */}
+                                                        <Icon
+                                                            name='cloud download'
+                                                            color='blue'
+                                                            className='clickable margin-left-5'
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.download' })}
+                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                        />
+                                                        {/* Public switch */}
+                                                        <SwitchPublicButton
+                                                            publicButtonEntity={{
+                                                                id: userFileRow.id as number,
+                                                                user: { id: userFileRow.user.id },
+                                                                is_public: userFileRow.is_public
+                                                            }}
+                                                            nameEntity='file'
+                                                            publicKey='userFileId'
+                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                        />
+                                                        {/* Shows a delete button if specified */}
+                                                        {!userFileRow.is_public && (
+                                                            <DeleteButton
+                                                                title={intl.formatMessage({ id: 'common.delete' })}
+                                                                onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                                ownerId={userFileRow.user.id}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            />
+
+                                            {/* NaNs warning */}
+                                            {userFileRow.contains_nan_values && (
+                                                <Icon
+                                                    name='warning sign'
+                                                    className='margin-left-2'
+                                                    color='yellow'
+                                                    title={intl.formatMessage({ id: 'files.manager.tooltip.nanWarning' })}
+                                                />
+                                            )}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                )
+                            }}
                         />
                     </Grid.Column>
                 </Grid>
