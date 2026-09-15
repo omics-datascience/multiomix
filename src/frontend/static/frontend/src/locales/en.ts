@@ -822,14 +822,14 @@ export default {
     'loginSignUpForm.validEmailMessage': 'Please provide a valid email address',
     'loginSignUpForm.passwordMismatchMessage': 'This value is different to Password field',
     // 91.OpenSource
-    'openSource.intro.title': 'At Omicsdatascience, we believe in open science. Explore our open-source projects, freely available to the community to foster collaboration, transparency, and innovation in biomedical research. Available in our GitHub organization.',
+    'openSource.intro.title': 'At <organizationLink>Omicsdatascience</organizationLink>, we believe in open science. Explore our open-source projects, freely available to the community to foster collaboration, transparency, and innovation in biomedical research. Available in our <githubLink>GitHub organization</githubLink>.',
     'openSource.intro.description': 'These repositories represent some of our most prominent open-source initiatives, developed to empower the research community with accessible and cutting-edge bioinformatics tools.',
 
     'openSource.multiomix.description': 'Cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation.',
     'openSource.modulector.description': 'Modulector is a performing open platform that provides information about miRNAs, genes and methylation sites based on a compilation of information from different resources.',
     'openSource.bioapi.description': 'A powerful abstraction of genomics databases. Bioapi is a REST API that provides data related to gene nomenclature, gene expression, and metabolic pathways.',
 
-    'openSource.publications.title': 'Discover our scientific contributions',
+    'openSource.publications.title': 'Discover our scientific <contributionsLink>contributions</contributionsLink>',
     'openSource.publications.description': 'In addition to our open-source software, we regularly publish peer-reviewed scientific articles that document the methodologies, innovations, and findings behind our tools. We invite you to explore our publications to better understand the research impact of our work.',
 
     'openSource.publication.multiomix.description': 'A cloud-based platform to infer cancer genomic and epigenomic events associated with gene expression modulation',
@@ -1368,6 +1368,7 @@ export default {
     'mainNavbar.aboutUs': 'About us',
     'mainNavbar.faq': 'FAQ',
     'mainNavbar.openSource': 'Open source',
+    'mainNavbar.language': 'Language',
 
     'mainNavbar.homepage': 'Multiomix homepage',
     // 148.UpdateUserModal

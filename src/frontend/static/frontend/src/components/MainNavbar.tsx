@@ -6,6 +6,7 @@ import { CurrentUserContext } from './Base'
 import { UpdateUserModal } from './UpdateUserModal'
 import { Alert } from './common/Alert'
 import { useIntl } from 'react-intl'
+import { LanguageSelector } from './LanguageSelector'
 
 // Constants declared in base.html
 declare const urlIndex: string
@@ -320,6 +321,7 @@ const MainNavbar = (props: MainNavbarProps) => {
 
             {/* LogIn/LogOut panel */}
             <Menu.Menu position='right'>
+                <LanguageSelector />
                 <LogInLogOutPanel currentUser={currentUser} />
             </Menu.Menu>
         </Menu>
