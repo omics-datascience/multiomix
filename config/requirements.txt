@@ -39,4 +39,5 @@ pgvector==0.4.2
 sentence-transformers==3.0.0
 openai==2.38.0
 biomcp-cli==0.8.22
-modulector-sdk==2.4.0
+modulector-sdk==2.6.1
+bioapi-sdk==0.1.0

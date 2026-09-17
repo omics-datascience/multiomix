@@ -153,12 +153,7 @@ def biomarkers_action(request):
 
 def get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
     """Get the aliases for a list of genes from BioAPI"""
-    return global_mrna_service.get_bioapi_service_content(
-        'gene-symbols',
-        request_params={'gene_ids': genes_ids},
-        is_paginated=False,
-        method='post'
-    )
+    return global_mrna_service.get_gene_symbols(gene_ids=genes_ids)
 
 
 def find_genes_from_request(request: Request) -> List[Dict]:
@@ -166,8 +161,11 @@ def find_genes_from_request(request: Request) -> List[Dict]:
     Generates the structure for the frontend for a list of genes. The needed structure is a list of dicts with
     the following keys: molecule, standard
     """
-    genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
-                                                                 request.GET, is_paginated=False)
+    limit = request.GET.get('limit')
+    genes_found = global_mrna_service.find_gene_symbols(
+        query=request.GET.get('query', ''),
+        limit=int(limit) if limit else 50,
+    )
     if not genes_found:
         return []
     aliases = get_gene_aliases(genes_found)

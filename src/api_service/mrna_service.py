@@ -1,11 +1,16 @@
 import logging
-from json.decoder import JSONDecodeError
-from typing import Any, Dict, List, Optional, Literal, Union
-import requests
+from typing import Any, cast, Dict, List, Optional
 from django.conf import settings
-from django.http import QueryDict
-from requests.exceptions import ConnectionError
 
+import bioapi_sdk
+from bioapi_sdk import (
+    CorrectionMethod,
+    GeneTermRelationType,
+    GeneTermsFilterType,
+    OntologyType,
+    PathwaySource,
+    TermRelationType,
+)
 import modulector_sdk as modulector
 from modulector_sdk import PaginatedResponse
 
@@ -36,85 +41,6 @@ class MRNAService(object):
             return f"{protocol}://{host}"
         else:
             return f"{protocol}://{host}:{port}"
-
-    @staticmethod
-    def __generate_rest_query_params(get_request: QueryDict) -> str:
-        """
-        Generates a string with all the query params from GET request.
-        @param get_request: GET request with query params to send to DRF backend
-        @return: String to send to BioAPI
-        """
-        return '&'.join([f'{key}={value}' for (key, value) in get_request.items()])
-
-    def __get_bioapi_content(
-            self,
-            service_name: str,
-            request_params: QueryDict,
-            is_paginated: bool,
-            method: Literal['get', 'post'],
-    ) -> Optional[Union[Dict, str]]:
-        """
-        Generic function to make a request to a BioAPI service.
-        @param service_name: BioAPI service to consume
-        @param request_params: GET/POST request with query params
-        @param is_paginated: True if the expected response is paginated
-        @param method: Request method (GET or POST)
-        @return: JSON data retrieved from BioAPI. None if response has 404 status code
-        """
-        url = f'{self.url_bioapi_prefix}/{service_name}/'
-
-        data = None  # Prevents Mypy warning
-        try:
-            if method == 'get':
-                params = self.__generate_rest_query_params(request_params)
-                if params:
-                    url += f'/?{params}/'
-                data = requests.get(url)
-            else:
-                data = requests.post(url, json=request_params)
-
-            if data.status_code != 200:
-                logging.warning(f'{method.upper()} to {url} returned status_code {data.status_code} and '
-                                f'message: {data.content}')
-                return None
-
-            content_type = data.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                return data.json()
-            elif 'text/plain' in content_type or 'text/html' in content_type:
-                return data.text
-            else:
-                return None
-
-        except (ConnectionError, JSONDecodeError) as ex:
-            logging.error(f'Received data from BioAPI: {data}')
-            logging.exception(ex)
-
-            if is_paginated:
-                return {
-                    'count': 0,
-                    'next': '',
-                    'previous': '',
-                    'results': []
-                }
-            return None
-
-    def get_bioapi_service_content(
-            self,
-            service_name: str,
-            request_params: QueryDict,
-            is_paginated: bool,
-            method: Literal['get', 'post'] = 'get'
-    ) -> Optional[Any]:
-        """
-        Makes a request to a BioAPI service.
-        @param service_name: BioAPI service to consume
-        @param request_params: GET/POST params with query params to send to DRF backend
-        @param is_paginated: True if the expected response is paginated
-        @param method: Request method (GET or POST)
-        @return: JSON data retrieved from BioAPI. None if response has 404 status code
-        """
-        return self.__get_bioapi_content(service_name, request_params, is_paginated, method)
 
     # ------------------------------------------------------------------ #
     # Modulector SDK wrappers                                              #
@@ -219,10 +145,7 @@ class MRNAService(object):
     def find_mirna_codes(self, query: str, limit: Optional[int] = None) -> List[str]:
         """Search miRNA identifiers via Modulector SDK."""
         try:
-            kwargs: Dict[str, Any] = {'query': query, 'base_url': self._modulector_base_url}
-            if limit is not None:
-                kwargs['limit'] = limit
-            return modulector.find_mirna_codes(**kwargs)
+            return modulector.find_mirna_codes(query=query, limit=limit, base_url=self._modulector_base_url)
         except Exception as ex:
             logging.exception(ex)
             return []
@@ -241,13 +164,150 @@ class MRNAService(object):
     def find_methylation_sites(self, query: str, limit: Optional[int] = None) -> List[str]:
         """Search methylation site identifiers via Modulector SDK."""
         try:
-            kwargs: Dict[str, Any] = {'query': query, 'base_url': self._modulector_base_url}
-            if limit is not None:
-                kwargs['limit'] = limit
-            return modulector.find_methylation_sites(**kwargs)
+            return modulector.find_methylation_sites(query=query, limit=limit, base_url=self._modulector_base_url)
         except Exception as ex:
             logging.exception(ex)
             return []
+
+    # ------------------------------------------------------------------ #
+    # BioAPI SDK wrappers                                                  #
+    # ------------------------------------------------------------------ #
+
+    def get_gene_symbols(self, gene_ids: List[str]) -> Optional[Dict[str, List[str]]]:
+        """Validate gene identifiers and get their HGNC-approved symbols via BioAPI SDK."""
+        try:
+            return bioapi_sdk.gene_symbols(gene_ids=gene_ids, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def find_gene_symbols(self, query: str, limit: int = 50) -> List[str]:
+        """Search gene symbols via BioAPI SDK."""
+        try:
+            return bioapi_sdk.gene_symbols_finder(query=query, limit=limit, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return []
+
+    def get_gene_information(self, gene_ids: List[str]) -> Optional[Dict]:
+        """Get genomic and database information for genes via BioAPI SDK."""
+        try:
+            return bioapi_sdk.information_of_genes(gene_ids=gene_ids, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_genes_of_its_group(self, gene_id: str) -> Optional[Dict]:
+        """Get the HGNC gene group information for a gene via BioAPI SDK."""
+        try:
+            return bioapi_sdk.genes_of_its_group(gene_id=gene_id, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_pathways_in_common(self, gene_ids: List[str]) -> Optional[Dict]:
+        """Get metabolic pathways common to a list of genes via BioAPI SDK."""
+        try:
+            return bioapi_sdk.pathways_in_common(gene_ids=gene_ids, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_pathway_genes(self, source: str, external_id: str) -> Optional[Dict]:
+        """Get genes involved in a metabolic pathway via BioAPI SDK."""
+        try:
+            return bioapi_sdk.pathway_genes(
+                source=cast(PathwaySource, source),
+                external_id=external_id,
+                base_url=self.url_bioapi_prefix,
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_genes_to_terms(
+            self,
+            gene_ids: List[str],
+            filter_type: str = 'intersection',
+            relation_type: Optional[List[str]] = None,
+            ontology_type: Optional[List[str]] = None,
+            p_value_threshold: Optional[float] = None,
+            correction_method: Optional[str] = None,
+    ) -> Optional[List[Dict]]:
+        """Get Gene Ontology terms related to a list of genes via BioAPI SDK."""
+        try:
+            return bioapi_sdk.genes_to_terms(
+                gene_ids=gene_ids,
+                filter_type=cast(GeneTermsFilterType, filter_type),
+                relation_type=cast(Optional[List[GeneTermRelationType]], relation_type),
+                ontology_type=cast(Optional[List[OntologyType]], ontology_type),
+                p_value_threshold=p_value_threshold,
+                correction_method=cast(Optional[CorrectionMethod], correction_method),
+                base_url=self.url_bioapi_prefix,
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_related_terms(
+            self,
+            term_id: str,
+            relations: Optional[List[str]] = None,
+            ontology_type: Optional[List[str]] = None,
+            general_depth: Optional[int] = None,
+            hierarchical_depth_to_children: Optional[int] = None,
+            to_root: Optional[bool] = None,
+    ) -> Optional[List[Dict]]:
+        """Get Gene Ontology terms related to a term via BioAPI SDK."""
+        try:
+            return bioapi_sdk.related_terms(
+                term_id=term_id,
+                relations=cast(Optional[List[TermRelationType]], relations),
+                ontology_type=cast(Optional[List[OntologyType]], ontology_type),
+                general_depth=general_depth,
+                hierarchical_depth_to_children=hierarchical_depth_to_children,
+                to_root=to_root,
+                base_url=self.url_bioapi_prefix,
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_oncokb_information(self, gene_ids: List[str], query: Optional[str] = None) -> Optional[Dict]:
+        """Get OncoKB cancer evidence and precision therapy data for genes via BioAPI SDK."""
+        try:
+            return bioapi_sdk.information_of_oncokb(gene_ids=gene_ids, query=query, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_drugs_pharm_gkb(self, gene_ids: List[str]) -> Optional[Dict]:
+        """Get PharmGKB cancer-related drug labels for genes via BioAPI SDK."""
+        try:
+            return bioapi_sdk.drugs_pharm_gkb(gene_ids=gene_ids, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_string_relations(self, gene_id: str, min_combined_score: Optional[int] = None) -> Optional[List[Dict]]:
+        """Get STRING functional association relations for a gene via BioAPI SDK."""
+        try:
+            return bioapi_sdk.string_relations(
+                gene_id=gene_id,
+                min_combined_score=min_combined_score,
+                base_url=self.url_bioapi_prefix,
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            return None
+
+    def get_drugs_regulating_gene(self, gene_id: str) -> Optional[Dict]:
+        """Get a DrugBank link listing drugs that regulate a gene via BioAPI SDK."""
+        try:
+            return bioapi_sdk.drugs_regulating_gene(gene_id=gene_id, base_url=self.url_bioapi_prefix)
+        except Exception as ex:
+            logging.exception(ex)
+            return None
 
 
 global_mrna_service = MRNAService()
