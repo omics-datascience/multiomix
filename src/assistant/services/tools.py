@@ -542,15 +542,9 @@ def make_tools(user_id: int):
         """
         from api_service.mrna_service import global_mrna_service
 
-        params: dict = {'gene': gene_name}
-        if min_score > 0:
-            params['score'] = str(min_score)
-
-        data = global_mrna_service.get_mdulector_service_content(
-            'mirna-target-interactions',
-            request_params=params,
-            is_paginated=True,
-            method='get'
+        data = global_mrna_service.get_mirna_target_interactions(
+            gene=gene_name,
+            score=str(min_score) if min_score > 0 else None,
         )
 
         if not data or data.get('count', 0) == 0:
@@ -578,12 +572,7 @@ def make_tools(user_id: int):
         """
         from api_service.mrna_service import global_mrna_service
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'information-of-genes',
-            request_params={'gene_ids': [gene_name]},
-            is_paginated=False,
-            method='post'
-        )
+        data = global_mrna_service.get_gene_information(gene_ids=[gene_name])
 
         if not data:
             return json.dumps({'error': f'No annotation data found for gene "{gene_name}" in BioAPI.'})
@@ -600,12 +589,7 @@ def make_tools(user_id: int):
         """
         from api_service.mrna_service import global_mrna_service
 
-        data = global_mrna_service.get_bioapi_service_content(
-            f'/drugs-regulating-gene/{gene_name}',
-            request_params={},
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_drugs_regulating_gene(gene_id=gene_name)
 
         if not data or 'link' not in data:
             return json.dumps({

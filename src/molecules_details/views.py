@@ -20,19 +20,11 @@ class GeneInformation(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
 
-        if gene:
-            gene = gene.split(',')
-        else:
+        if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
+        gene_ids = gene.split(',')
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'information-of-genes',
-            request_params={
-                'gene_ids': gene
-            },
-            is_paginated=False,
-            method='post'
-        )
+        data = global_mrna_service.get_gene_information(gene_ids=gene_ids)
 
         return Response({
             'data': data if data else None
@@ -56,12 +48,7 @@ class GeneGroups(APIView):
         if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
-        data = global_mrna_service.get_bioapi_service_content(
-            f'/genes-of-its-group/{gene}',
-            request_params={},  # No params needed
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_genes_of_its_group(gene_id=gene)
         return Response({
             'data': data if data else None
         })
@@ -83,19 +70,11 @@ class PathwaysInformation(APIView):
     def get(request: HttpRequest):
         gene = request.GET.get('gene', '').strip()
 
-        if gene:
-            gene = gene.split(',')
-        else:
+        if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
+        gene_ids = gene.split(',')
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'pathways-in-common',
-            request_params={
-                'gene_ids': gene
-            },
-            is_paginated=False,
-            method='post'
-        )
+        data = global_mrna_service.get_pathways_in_common(gene_ids=gene_ids)
 
         return Response({
             'data': data['pathways'] if data and 'pathways' in data else None
@@ -124,12 +103,7 @@ class MetabolicPathwaysInformation(APIView):
         if not pathway_id:
             return Response(status=400, data={"error": "Param 'id' is mandatory"})
 
-        data = global_mrna_service.get_bioapi_service_content(
-            f'/pathway-genes/{source}/{pathway_id}',
-            request_params={},  # No params needed
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_pathway_genes(source=source, external_id=pathway_id)
         return Response({
             'data': data['genes'] if data and 'genes' in data else None
         })
@@ -150,17 +124,17 @@ class GeneOntologyTermsOfGene(APIView):
         filter_type = request.GET.get('filter_type', '').strip()
         p_value_threshold = request.GET.get('p_value_threshold', '').strip()
         correction_method = request.GET.get('correction_method', '').strip()
-        relation_type = request.GET.get('relation_type', '').strip()
-        ontology_type = request.GET.get('ontology_type', '').strip()
+        relation_type_param = request.GET.get('relation_type', '').strip()
+        ontology_type_param = request.GET.get('ontology_type', '').strip()
 
-        if gene:
-            gene = gene.split(',')
-        else:
+        if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
+        gene_ids = gene.split(',')
 
         if not filter_type:
             filter_type = 'intersection'
 
+        relation_types: list[str]
         if filter_type not in ["intersection", "union", "enrichment"]:
             return Response(status=400, data={"error": "The 'filter_type' parameter must be one of the following "
                                                        "options: 'intersection', 'union' or 'enrichment'"})
@@ -172,56 +146,42 @@ class GeneOntologyTermsOfGene(APIView):
                 if not correction_method:
                     return Response(status=400, data={"error": "The 'correction_method' parameter is mandatory if "
                                                                "'filter_type' is 'enrichment'"})
+                relation_types = []
             else:
-                if not relation_type:
-                    relation_type = ["enables", "involved_in",
-                                     "part_of", "located_in"]
+                if not relation_type_param:
+                    relation_types = ["enables", "involved_in", "part_of", "located_in"]
                 else:
-                    relation_type = relation_type.split(',')
-                    for relation in relation_type:
+                    relation_types = relation_type_param.split(',')
+                    for relation in relation_types:
                         if relation not in ["enables", "involved_in", "part_of", "located_in"]:
                             return Response(status=400, data={"error": "The 'relation_type' parameter must be a "
                                                                        "combination of the following options: "
                                                                        "'enables', 'involved_in', 'part_of' and "
                                                                        "'located_in'"})
-        if not ontology_type:
-            ontology_type = ["biological_process",
-                             "molecular_function", "cellular_component"]
+        if not ontology_type_param:
+            ontology_types = ["biological_process", "molecular_function", "cellular_component"]
         else:
-            ontology_type = ontology_type.split(',')
-            for type_elem in ontology_type:
+            ontology_types = ontology_type_param.split(',')
+            for type_elem in ontology_types:
                 if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
                     return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination of "
                                                                "the following options: 'biological_process', "
                                                                "'molecular_function' and 'cellular_component'"})
         if filter_type in ["intersection", "union"]:
-            data = global_mrna_service.get_bioapi_service_content(
-                'genes-to-terms',
-                # request_params={
-                #     'gene_ids': [gene],
-                #     'filter_type': filter_type,
-                #     'ontology_type': ontology_type,
-                #     'relation_type': relation_type
-                # },
-                # TODO: remove this and uncomment the above code when the bioapi service is fixed
-                request_params={
-                    "gene_ids": ["TMCO4"], "relation_type": ["enables"], "ontology_type": ["molecular_function"]
-                },
-                is_paginated=False,
-                method='post'
+            # TODO: use gene_ids=gene_ids, filter_type=filter_type, ontology_type=ontology_types,
+            #  relation_type=relation_types when the bioapi service is fixed
+            data = global_mrna_service.get_genes_to_terms(
+                gene_ids=["TMCO4"],
+                relation_type=["enables"],
+                ontology_type=["molecular_function"],
             )
         else:  # filter_type == "enrichment"
-            data = global_mrna_service.get_bioapi_service_content(
-                'genes-to-terms',
-                request_params={
-                    'gene_ids': gene,
-                    'filter_type': filter_type,
-                    'p_value_threshold': p_value_threshold,
-                    'correction_method': correction_method,
-                    'ontology_type': ontology_type
-                },
-                is_paginated=False,
-                method='post'
+            data = global_mrna_service.get_genes_to_terms(
+                gene_ids=gene_ids,
+                filter_type=filter_type,
+                p_value_threshold=float(p_value_threshold),
+                correction_method=correction_method,
+                ontology_type=ontology_types,
             )
 
         return Response({
@@ -239,7 +199,7 @@ class GeneOntologyTermsOfTerm(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
-    def __process_go_data(go_terms: dict) -> dict:
+    def __process_go_data(go_terms: list[dict] | None) -> dict:
         """
         Generates a structure with the GO terms data in a format ready-to-use for cytoscape frontend lib.
         @param go_terms: BioAPI GO data.
@@ -286,61 +246,57 @@ class GeneOntologyTermsOfTerm(APIView):
         if not general_depth.isnumeric():
             return Response(status=400, data={"error": "Param 'general_depth' must be a numeric value"})
 
-        hierarchical_depth_to_children = request.GET.get('hierarchical_depth_to_children', '0').strip()
-        if hierarchical_depth_to_children:
-            if not hierarchical_depth_to_children.isnumeric():
+        hierarchical_depth_to_children_param = request.GET.get('hierarchical_depth_to_children', '0').strip()
+        hierarchical_depth_to_children = 0
+        if hierarchical_depth_to_children_param:
+            if not hierarchical_depth_to_children_param.isnumeric():
                 return Response(status=400, data={"error": "Param 'hierarchical_depth_to_children' must be a "
                                                            "numeric value"})
-            hierarchical_depth_to_children = int(hierarchical_depth_to_children)
+            hierarchical_depth_to_children = int(hierarchical_depth_to_children_param)
 
-        to_root = request.GET.get('to_root', '1').strip()
-        if to_root:
-            if to_root not in ["0", "1"]:
+        to_root_param = request.GET.get('to_root', '1').strip()
+        to_root = True
+        if to_root_param:
+            if to_root_param not in ["0", "1"]:
                 return Response(status=400, data={"error": "Param 'to_root' must be '0' or '1'"})
-            to_root = int(to_root)
+            to_root = bool(int(to_root_param))
 
-        relations = request.GET.get('relations', '').strip()
-        if not relations:
+        relations_param = request.GET.get('relations', '').strip()
+        if not relations_param:
             relations = ["part_of", "regulates", "has_part"]
         else:
-            relations = relations.split(',')
+            relations = relations_param.split(',')
             for relation in relations:
                 if relation not in ["part_of", "regulates", "has_part"]:
                     return Response(status=400, data={"error": "The 'relations' parameter must be a combination of "
                                                                "the following options: 'part_of', 'regulates' and "
                                                                "'has_part'"})
 
-        ontology_type = request.GET.get('ontology_type', '').strip()
-        if not ontology_type:
-            ontology_type = ["biological_process",
-                             "molecular_function", "cellular_component"]
+        ontology_type_param = request.GET.get('ontology_type', '').strip()
+        if not ontology_type_param:
+            ontology_types = ["biological_process", "molecular_function", "cellular_component"]
         else:
-            ontology_type = ontology_type.split(',')
-            for type_elem in ontology_type:
+            ontology_types = ontology_type_param.split(',')
+            for type_elem in ontology_types:
                 if type_elem not in ["biological_process", "molecular_function", "cellular_component"]:
                     return Response(status=400, data={"error": "The 'ontology_type' parameter must be a combination "
                                                                "of the following options: 'biological_process', "
                                                                "'molecular_function' and 'cellular_component'"})
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'related-terms',
-            request_params={
-                'term_id': term_id,
-                'relations': relations,
-                'ontology_type': ontology_type,
-                'general_depth': int(general_depth),
-                'hierarchical_depth_to_children': hierarchical_depth_to_children,
-                'to_root': to_root
-            },
-            is_paginated=False,
-            method='post'
+        data = global_mrna_service.get_related_terms(
+            term_id=term_id,
+            relations=relations,
+            ontology_type=ontology_types,
+            general_depth=int(general_depth),
+            hierarchical_depth_to_children=hierarchical_depth_to_children,
+            to_root=to_root,
         )
 
         # Generates structure for cytoscape in frontend
-        data = self.__process_go_data(data)
+        go_terms_data = self.__process_go_data(data)
 
         return Response({
-            'go_terms': data
+            'go_terms': go_terms_data
         })
 
 
@@ -363,21 +319,12 @@ class ActionableAndCancerGenes(APIView):
 
         if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
-        else:
-            gene = gene.split(',')
+        gene_ids = gene.split(',')
 
         if not query:
             query = ""
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'information-of-oncokb',
-            request_params={
-                'gene_ids': gene,
-                'query': query
-            },
-            is_paginated=False,
-            method='post'
-        )
+        data = global_mrna_service.get_oncokb_information(gene_ids=gene_ids, query=query)
 
         return Response({
             'data': data if data else None
@@ -398,17 +345,9 @@ class DrugsPharmGKB(APIView):
         gene = request.GET.get('gene', '').strip()
         if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
-        else:
-            gene = gene.split(',')
+        gene_ids = gene.split(',')
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'drugs-pharm-gkb',
-            request_params={
-                'gene_ids': gene
-            },
-            is_paginated=False,
-            method='post'
-        )
+        data = global_mrna_service.get_drugs_pharm_gkb(gene_ids=gene_ids)
 
         return Response({
             'data': data if data else None
@@ -489,7 +428,7 @@ class PredictedFunctionalAssociationsNetwork(APIView):
             'grabbable': True,
         }
 
-    def __process_associations_data(self, associations: dict) -> list[dict]:
+    def __process_associations_data(self, associations: list[dict] | None) -> list[dict]:
         """
         Generates a structure with the genes associations data in a format ready-to-use for cytoscape frontend lib.
         @param associations: BioAPI Gene  data.
@@ -536,20 +475,15 @@ class PredictedFunctionalAssociationsNetwork(APIView):
         else:
             return Response(status=400, data={"error": "Param 'min_combined_score' must be a numeric value"})
 
-        data = global_mrna_service.get_bioapi_service_content(
-            'string-relations',
-            request_params={
-                'gene_id': gene_id,
-                'min_combined_score': max(900, int(min_combined_score))
-            },
-            is_paginated=False,
-            method='post'
+        data = global_mrna_service.get_string_relations(
+            gene_id=gene_id,
+            min_combined_score=max(900, int(min_combined_score)),
         )
 
         # Generates structure for cytoscape in frontend
-        data = self.__process_associations_data(data)
+        associations_data = self.__process_associations_data(data)
 
-        return Response({'data': data})
+        return Response({'data': associations_data})
 
 
 class DrugsRegulatingGene(APIView):
@@ -568,12 +502,7 @@ class DrugsRegulatingGene(APIView):
         if not gene:
             return Response(status=400, data={"error": "Param 'gene' is mandatory"})
 
-        data = global_mrna_service.get_bioapi_service_content(
-            f'/drugs-regulating-gene/{gene}',
-            request_params={},  # No params needed
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_drugs_regulating_gene(gene_id=gene)
         return Response({
             'data': data["link"] if data and "link" in data else None
         })
@@ -594,14 +523,7 @@ class MethylationSiteInformation(APIView):
         if not methylation_site:
             return Response(status=400, data={"error": "Param 'methylation_site' is mandatory"})
 
-        data = global_mrna_service.get_modulector_service_content(
-            'methylation',
-            request_params={
-                'methylation_site': methylation_site
-            },
-            is_paginated=False,
-            method='get'
-        )
+        data = global_mrna_service.get_methylation_details(methylation_site=methylation_site)
 
         return Response({
             'data': data if data else None
