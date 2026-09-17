@@ -38,27 +38,15 @@ class UserFileOwnerPermissionsTest(TestCase):
         self.user_file.institutions.add(self.institution)
         self.client = APIClient()
 
-    def test_is_owner_replaces_legacy_permission_flag(self):
-        """The API exposes ownership without the deprecated combined flag."""
-        self.client.force_authenticate(user=self.institution_admin)
-        admin_response = self.client.get(f'/user-files/{self.user_file.pk}/')
-
-        self.assertEqual(admin_response.status_code, 200)
-        self.assertFalse(admin_response.data['is_owner'])
-        self.assertNotIn('is_private_or_institution_admin', admin_response.data)
-
-        self.client.force_authenticate(user=self.owner)
-        owner_response = self.client.get(f'/user-files/{self.user_file.pk}/')
-
-        self.assertEqual(owner_response.status_code, 200)
-        self.assertTrue(owner_response.data['is_owner'])
-        self.assertNotIn('is_private_or_institution_admin', owner_response.data)
-
     def test_institution_admin_can_read_but_cannot_update_or_delete(self):
         """Institution administrators retain read access but cannot mutate a dataset."""
         self.client.force_authenticate(user=self.institution_admin)
 
         read_response = self.client.get(f'/user-files/{self.user_file.pk}/')
+        self.assertEqual(read_response.status_code, 200)
+        self.assertFalse(read_response.data['is_owner'])
+        self.assertFalse(read_response.data['is_private_or_institution_admin'])
+
         update_response = self.client.patch(
             f'/user-files/{self.user_file.pk}/',
             data={
@@ -75,12 +63,42 @@ class UserFileOwnerPermissionsTest(TestCase):
             format='json',
         )
 
-        self.assertEqual(read_response.status_code, 200)
         self.assertEqual(update_response.status_code, 404)
         self.assertEqual(delete_response.status_code, 404)
         self.assertEqual(toggle_response.status_code, 403)
         self.user_file.refresh_from_db()
         self.assertEqual(self.user_file.name, 'Shared dataset')
+
+    def test_institution_member_cannot_mutate_or_manage_sharing(self):
+        """Ordinary institution members cannot mutate or manage sharing either."""
+        self.client.force_authenticate(user=self.institution_member)
+
+        update_response = self.client.patch(
+            f'/user-files/{self.user_file.pk}/',
+            data={
+                'name': 'Changed by member',
+                'file_type': FileType.MRNA.value,
+                'is_cpg_site_id': False,
+            },
+            format='json',
+        )
+        remove_institution_response = self.client.post(
+            '/user-files/remove-institution',
+            data={
+                'userFileId': self.user_file.pk,
+                'institutionId': self.institution.pk,
+            },
+            format='json',
+        )
+        toggle_response = self.client.post(
+            '/user-files/switch-file-public-view/',
+            data={'userFileId': self.user_file.pk},
+            format='json',
+        )
+
+        self.assertEqual(update_response.status_code, 404)
+        self.assertEqual(remove_institution_response.status_code, 403)
+        self.assertEqual(toggle_response.status_code, 403)
 
     def test_only_owner_can_update_delete_and_manage_sharing(self):
         """The owner can perform the complete dataset management workflow."""

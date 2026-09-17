@@ -87,20 +87,21 @@ def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool
     Returns the User's files objects from DB
     @param user: User to retrieve his Datasets
     @param public_only: If True retrieves only the public Datasets
-    @param private_only: If True retrieves only the uploaded Datasets by the User, otherwise, returns all his datasets
-    and the Datasets of the Institutions the user belongs to. If public_only is set to True, this parameter is ignored
+    @param private_only: If True retrieves only the uploaded Datasets by the User, otherwise, returns all public
+    datasets and the Datasets of the Institutions the user belongs to. If public_only is set to True, this parameter
+    is ignored
     @param with_survival_only: If True retrieves only the clinical Datasets which have at least on survival column tuple
     @return: QuerySet of UserFile objects
     """
     if public_only:
         # Gets public Datasets
         filter_condition = Q(is_public=True)
-    else:
-        # Gets UserFiles which belongs to current user
+    elif private_only:
+        # Gets UserFiles which belong to the current user
         filter_condition = Q(user=user)
-        if not private_only:
-            # Gets public datasets too
-            filter_condition = user_file_visibility_q(user)
+    else:
+        # Gets public and institution datasets too
+        filter_condition = user_file_visibility_q(user)
 
     # Filters by survival data
     user_files_objects = UserFile.objects

@@ -82,9 +82,14 @@ class UserFileSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request is not None:
             user = request.user
-            data['is_owner'] = instance.user == user
+            is_owner = instance.user == user
+            data['is_owner'] = is_owner
+            # Preserve the existing response field for clients that still
+            # consume it, but its value now represents ownership only.
+            data['is_private_or_institution_admin'] = is_owner
         else:
             data['is_owner'] = False
+            data['is_private_or_institution_admin'] = False
         return data
 
     def create(self, validated_data):
