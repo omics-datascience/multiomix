@@ -240,7 +240,7 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
     tag: DjangoTag,
     upload_date?: string,
     institutions: DjangoInstitutionSimple[],
-    is_private_or_institution_admin: boolean,
+    is_owner: boolean,
     number_of_rows: number,
     number_of_samples: number,
     contains_nan_values: boolean,
