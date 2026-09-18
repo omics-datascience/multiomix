@@ -5,6 +5,7 @@ import { withTooltip, Tooltip, defaultStyles as defaultTooltipStyles } from '@vi
 import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip'
 import { StatChartDataWithOutliers } from '../../../../../utils/interfaces'
 import { BoxplotDatum, mean, quantile } from '../../../../common/boxplots/BoxplotsCommons'
+import { useIntl } from 'react-intl'
 
 interface TooltipData extends BoxplotDatum {
     x: string,
@@ -32,6 +33,7 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
         hideTooltip,
         dataObjects
     }: BoxPlotChartProps & WithTooltipProvidedProps<TooltipData>) => {
+        const intl = useIntl()
         const height = 500
 
         /**
@@ -197,15 +199,15 @@ const BoxPlotChart = withTooltip<BoxPlotChartProps, TooltipData>(
                             <strong>{tooltipData.x}</strong>
                         </div>
                         <div style={{ marginTop: '5px', fontSize: '12px' }}>
-                            {tooltipData.min && <div>Min: {tooltipData.min}</div>}
-                            {tooltipData.firstQuartile && <div>First quartile: {tooltipData.firstQuartile}</div>}
-                            {tooltipData.median && <div>Median: {tooltipData.median}</div>}
-                            {tooltipData.thirdQuartile && <div>Third quartile: {tooltipData.thirdQuartile}</div>}
-                            {tooltipData.max && <div>Max: {tooltipData.max}</div>}
+                            {tooltipData.min && <div>{intl.formatMessage({ id: 'boxPlotChart.min' })}: {tooltipData.min}</div>}
+                            {tooltipData.firstQuartile && <div>{intl.formatMessage({ id: 'boxPlotChart.firstQuartile' })}: {tooltipData.firstQuartile}</div>}
+                            {tooltipData.median && <div>{intl.formatMessage({ id: 'boxPlotChart.median' })}: {tooltipData.median}</div>}
+                            {tooltipData.thirdQuartile && <div>{intl.formatMessage({ id: 'boxPlotChart.thirdQuartile' })}: {tooltipData.thirdQuartile}</div>}
+                            {tooltipData.max && <div>{intl.formatMessage({ id: 'boxPlotChart.max' })}: {tooltipData.max}</div>}
                         </div>
                         {(tooltipData.outliersObjects && tooltipData.outliersObjects.length > 0) && (
                             <div>
-                                <strong>Outliers</strong>
+                                <strong>{intl.formatMessage({ id: 'boxPlotChart.outliers' })}</strong>
                                 <div>
                                     {tooltipData.outliersObjects.map(outlier => (
                                         <span key={outlier.sample_identifier}>

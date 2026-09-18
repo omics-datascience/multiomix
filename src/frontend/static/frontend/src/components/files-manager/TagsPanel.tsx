@@ -3,6 +3,7 @@ import { Segment, Header, Icon, List } from 'semantic-ui-react'
 import { DjangoTag } from '../../utils/django_interfaces'
 import { Nullable } from '../../utils/interfaces'
 import { TagForm } from '../common/TagForm'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -25,6 +26,7 @@ interface TagsPanelProps {
  * @returns Component
  */
 export const TagsPanel = (props: TagsPanelProps) => {
+    const intl = useIntl()
     const selectedTagId = props.selectedTag ? props.selectedTag.id : null
     const tagsItems = props.tags.map((tag) => {
         const isActive = tag.id === selectedTagId
@@ -45,7 +47,7 @@ export const TagsPanel = (props: TagsPanelProps) => {
                         name='pencil'
                         color='yellow'
                         className='clickable'
-                        title='Edit tag'
+                        title={intl.formatMessage({ id: 'tagsPanel.editTag' })}
                         onClick={() => props.editTag(tag)}
                     />
 
@@ -54,14 +56,14 @@ export const TagsPanel = (props: TagsPanelProps) => {
                         name='trash'
                         color='red'
                         className='clickable'
-                        title='Delete tag'
+                        title={intl.formatMessage({ id: 'tagsPanel.deleteTag' })}
                         onClick={() => props.confirmTagDeletion(tag)}
                     />
                 </List.Content>
                 <List.Icon
                     name={isActive ? 'filter' : 'tag'}
                     color={isActive ? 'green' : undefined}
-                    title={isActive ? 'The results are filtered by this tag' : ''}
+                    title={isActive ? intl.formatMessage({ id: 'tagsPanel.filteredByTag' }) : ''}
                 />
                 <List.Content>
                     <List.Header>{tag.name}</List.Header>
@@ -75,7 +77,7 @@ export const TagsPanel = (props: TagsPanelProps) => {
         <Segment>
             <Header textAlign='center'>
                 <Icon name='tags' />
-                <Header.Content>My Tags</Header.Content>
+                <Header.Content>{intl.formatMessage({ id: 'tagsPanel.myTags' })}</Header.Content>
             </Header>
 
             {/* Add tag input */}

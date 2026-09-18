@@ -1,7 +1,7 @@
 import React from 'react'
 import { Base, CurrentUserContext } from '../Base'
 import { Grid, Header, Button, Modal, Table, SemanticICONS, SemanticCOLORS, Icon } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode, RowHeader, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState } from '../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoCGDSDataset, DjangoSyncCGDSStudyResponseCode, DjangoResponseSyncCGDSStudyResult, DjangoMethylationPlatform, DjangoSurvivalColumnsTupleSimple, DjangoCreateCGDSStudyResponseCode, RowHeader, CGDSStudySynchronizationState, CGDSDatasetSynchronizationState, DjangoTissue } from '../../utils/django_interfaces'
 import ky from 'ky'
 import { getDjangoHeader, alertGeneralError, copyObject, formatDateLocale } from '../../utils/util_functions'
 import { FileType, CGDSDatasetSeparator, NameOfCGDSDataset, Nullable } from '../../utils/interfaces'
@@ -10,25 +10,56 @@ import { survivalTupleIsValid } from '../survival/utils'
 import { PaginatedTable } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExperimentButton'
+import { IntlShape, useIntl } from 'react-intl'
+import { getTissueDropdownOptions, TissueLabels } from '../common/TissueLabels'
+
+/** CGDS study fields while editing the form. Tissue is kept as a FK id for create/update requests. */
+export interface CGDSStudyForm extends Omit<DjangoCGDSStudy, 'tissue'> {
+    tissue: Nullable<number>
+}
 
 // URLs defined in base.html
 declare const urlCGDSStudiesCRUD: string
+declare const urlTissuesCRUD: string
 
 // URLs defined in cgds.html
 declare const urlSyncCGDSStudy: string
 declare const urlStopCGDSSync: string
+
+const CBIOPORTAL_TISSUE_CODE_ALIASES: { [key: string]: string[] } = {
+    ADRENAL_GLAND: ['acc'],
+    BLADDER: ['blca'],
+    BLOOD: ['laml', 'dlbc'],
+    BRAIN: ['gbm', 'lgg'],
+    BREAST: ['brca'],
+    CERVIX_UTERI: ['cesc'],
+    COLON: ['coad', 'read', 'coadread'],
+    ESOPHAGUS: ['esca'],
+    KIDNEY: ['kich', 'kirc', 'kirp'],
+    LIVER: ['lihc', 'chol'],
+    LUNG: ['luad', 'lusc', 'nsclc', 'sclc'],
+    OVARY: ['ov'],
+    PANCREAS: ['paad'],
+    PROSTATE: ['prad'],
+    SKIN: ['skcm'],
+    STOMACH: ['stad'],
+    TESTIS: ['tgct'],
+    THYROID: ['thca'],
+    UTERUS: ['ucec', 'ucs']
+}
 
 /**
  * Component's state
  */
 interface CGDSPanelState {
     CGDSStudies: DjangoCGDSStudy[],
-    newCGDSStudy: DjangoCGDSStudy,
+    newCGDSStudy: CGDSStudyForm,
     sendingSyncRequest: boolean,
     selectedCGDSStudyToSync: Nullable<DjangoCGDSStudy>,
     addingOrEditingCGDSStudy: boolean,
     stoppingCGDSStudy: boolean,
     selectedCGDSStudyToStop: Nullable<DjangoCGDSStudy>,
+    tissues: DjangoTissue[],
 }
 
 /**
@@ -51,11 +82,16 @@ enum SyncStrategy {
     SYNC_ONLY_FAILED = 3
 }
 
+/** CGDSPanel props. */
+interface CGDSPanelProps {
+    intl: IntlShape
+}
+
 /**
  * Renders a CRUD panel for a CGDS Studies and their datasets
  * @returns Component
  */
-class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
+class CGDSPanel extends React.Component<CGDSPanelProps, CGDSPanelState> {
     constructor (props) {
         super(props)
 
@@ -66,15 +102,35 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             selectedCGDSStudyToSync: null,
             addingOrEditingCGDSStudy: false,
             selectedCGDSStudyToStop: null,
-            stoppingCGDSStudy: false
+            stoppingCGDSStudy: false,
+            tissues: []
         }
+    }
+
+    componentDidMount () {
+        this.getTissues()
+    }
+
+    /**
+     * Fetches the available tissues.
+     */
+    getTissues () {
+        ky.get(urlTissuesCRUD).then((response) => {
+            response.json<DjangoTissue[]>().then((tissues) => {
+                this.setState({ tissues })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
     }
 
     /**
      * Generates a default new file form
      * @returns An object with all the field with default values
      */
-    getDefaultNewCGDSStudy (): DjangoCGDSStudy {
+    getDefaultNewCGDSStudy (): CGDSStudyForm {
         return {
             name: '',
             description: '',
@@ -87,7 +143,8 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             cna_dataset: null,
             methylation_dataset: null,
             clinical_patient_dataset: null,
-            clinical_sample_dataset: null
+            clinical_sample_dataset: null,
+            tissue: null
         }
     }
 
@@ -119,9 +176,13 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
         CGDSStudyCopy.methylation_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.methylation_dataset)
         CGDSStudyCopy.clinical_patient_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_patient_dataset)
         CGDSStudyCopy.clinical_sample_dataset = this.escapeDatasetNullFields(CGDSStudyCopy.clinical_sample_dataset)
+        const CGDSStudyFormCopy: CGDSStudyForm = {
+            ...CGDSStudyCopy,
+            tissue: CGDSStudyCopy.tissue?.id ?? null
+        }
 
         this.setState({
-            newCGDSStudy: CGDSStudyCopy
+            newCGDSStudy: CGDSStudyFormCopy
         })
     }
 
@@ -141,13 +202,23 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
      * @param selectedCGDSStudy CGDS Study to edit
      */
     editTag = (selectedCGDSStudy: DjangoCGDSStudy) => {
-        this.setState({ newCGDSStudy: copyObject(selectedCGDSStudy) })
+        this.editCGDSStudy(selectedCGDSStudy)
     }
 
     /**
      * Cleans the new/edit CGDSStudy form
      */
     cleanForm = () => { this.setState({ newCGDSStudy: this.getDefaultNewCGDSStudy() }) }
+
+    /**
+     * Builds the API payload from the form state.
+     * The form keeps tissue as one FK id.
+     * @returns API payload for creating or editing a CGDS study.
+     */
+    buildCGDSStudyPayload = (): CGDSStudyForm => {
+        const payload = copyObject(this.state.newCGDSStudy)
+        return payload
+    }
 
     /**
      * Does a request to add a new CGDS Study
@@ -161,7 +232,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
         const myHeaders = getDjangoHeader()
 
         // If exists an id then we are editing, otherwise It's a new CGDSStudy
-        let addOrEditURL, requestMethod
+        let addOrEditURL, requestMethod: typeof ky.post | typeof ky.patch
 
         if (this.state.newCGDSStudy.id) {
             addOrEditURL = `${urlCGDSStudiesCRUD}/${this.state.newCGDSStudy.id}/`
@@ -171,11 +242,13 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             requestMethod = ky.post
         }
 
+        const payload = this.buildCGDSStudyPayload()
+
         this.setState({ addingOrEditingCGDSStudy: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newCGDSStudy, timeout: 20000 })
+            requestMethod(addOrEditURL, { headers: myHeaders, json: payload, timeout: 20000 })
                 .then((response) => {
                     this.setState({ addingOrEditingCGDSStudy: false })
-                    response.json().then((CGDSStudy: DjangoCGDSStudy) => {
+                    response.json<DjangoCGDSStudy>().then((CGDSStudy) => {
                         if (CGDSStudy && CGDSStudy.id) {
                             // If all is OK, resets the form and gets the User's tag to refresh the list
                             this.cleanForm()
@@ -229,7 +302,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             ky.post(urlSyncCGDSStudy, { headers: myHeaders, json: jsonParams }).then((response) => {
                 this.setState({ sendingSyncRequest: false })
                 this.handleClose()
-                response.json().then((jsonResponse: DjangoResponseSyncCGDSStudyResult) => {
+                response.json<DjangoResponseSyncCGDSStudyResult>().then((jsonResponse) => {
                     switch (jsonResponse.status.code) {
                         case DjangoSyncCGDSStudyResponseCode.CGDS_STUDY_DOES_NOT_EXIST:
                             alert('The Study was not found, refresh the list and try with other study')
@@ -386,7 +459,43 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     handleFormChanges = (name: string, value) => {
         const newCGDSStudy = this.state.newCGDSStudy
         newCGDSStudy[name] = value
+
+        if (name !== 'tissue') {
+            const inferredTissues = this.inferTissuesFromCGDSStudy(newCGDSStudy)
+
+            if (inferredTissues.length > 0 && newCGDSStudy.tissue === null) {
+                newCGDSStudy.tissue = inferredTissues[0]
+            }
+        }
+
         this.setState({ newCGDSStudy })
+    }
+
+    /**
+     * Tries to infer tissues from common cBioPortal study metadata.
+     * @param study Study form values.
+     * @returns Tissue IDs inferred from name, description, URL and code tokens.
+     */
+    inferTissuesFromCGDSStudy (study: CGDSStudyForm): number[] {
+        const searchableText = [
+            study.name,
+            study.description,
+            study.url,
+            study.url_study_info
+        ].join(' ').toLowerCase()
+
+        return this.state.tissues
+            .filter((tissue) => {
+                const tissueName = tissue.name.toLowerCase()
+                const codeTokens = tissue.code.toLowerCase().split('_')
+                const codeAliases = CBIOPORTAL_TISSUE_CODE_ALIASES[tissue.code] ?? []
+
+                return searchableText.includes(tissueName) ||
+                    codeTokens.every((token) => searchableText.includes(token)) ||
+                    codeAliases.some((alias) => new RegExp(`(^|[^a-z0-9])${alias}([^a-z0-9]|$)`).test(searchableText))
+            })
+            .map((tissue) => tissue.id)
+            .slice(0, 1)
     }
 
     /**
@@ -691,6 +800,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
             { name: 'Name', serverCodeToSort: 'name', width: 1 },
             { name: 'Description', serverCodeToSort: 'description', width: 2 },
             { name: 'Version', serverCodeToSort: 'version', width: 1, textAlign: 'center' },
+            { name: 'Tissues', width: 1, textAlign: 'center' },
             { name: 'Sync', title: 'Sync. Date', serverCodeToSort: 'date_last_synchronization', width: 1, textAlign: 'center' },
             { name: 'mRNA', serverCodeToSort: 'mrna_dataset', width: 1, textAlign: 'center' },
             { name: 'miRNA', serverCodeToSort: 'mirna_dataset', width: 1, textAlign: 'center' },
@@ -929,9 +1039,13 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     }
 
     render () {
+        const { intl } = this.props
+
         // CGDS Study modals
         const cgdsStudyStopConfirmModal = this.getCGDSStudyStopConfirmModal()
         const cgdsStudySyncConfirmModal = this.getCGDSStudySyncConfirmModal()
+        const tissueOptions = getTissueDropdownOptions(this.state.tissues)
+        const tissueFormOptions = getTissueDropdownOptions(this.state.tissues, true)
 
         return (
             <Base activeItem='cgds' wrapperClass='wrapper'>
@@ -964,6 +1078,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                             canAddCGDSStudy={this.canAddCGDSStudy}
                                             addOrEditStudy={this.addOrEditStudy}
                                             cleanForm={this.cleanForm}
+                                            tissueOptions={tissueFormOptions}
                                         />
                                     </Grid.Column>
                                 )}
@@ -977,7 +1092,8 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                         urlToRetrieveData={urlCGDSStudiesCRUD}
                                         showSearchInput
                                         customFilters={[
-                                            { label: 'Only last version', keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
+                                            { label: 'Tissue', keyForServer: 'tissue', defaultValue: '', placeholder: 'Select tissue', options: tissueOptions, width: 3 },
+                                            { label: intl.formatMessage({ id: 'cgdsDatasetsModal.onlyLastVersion' }), keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                                         ]}
                                         infoPopupContent='These are the available cBioPortal datasets to launch experiments. During the synchronization process all the duplicated molecules have been remove. There are different icons that indicate the state of each dataset, hover on them to get more information'
                                         mapFunction={(CGDSStudyFileRow: DjangoCGDSStudy) => {
@@ -990,6 +1106,7 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
                                                     <TableCellWithTitle value={CGDSStudyFileRow.name} className='ellipsis' />
                                                     <TableCellWithTitle value={CGDSStudyFileRow.description} className='ellipsis' />
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.version}</Table.Cell>
+                                                    <Table.Cell textAlign='center'><TissueLabels tissues={CGDSStudyFileRow.tissue} tissueOptions={this.state.tissues} /></Table.Cell>
                                                     <Table.Cell textAlign='center'>{CGDSStudyFileRow.date_last_synchronization
                                                         ? formatDateLocale(CGDSStudyFileRow.date_last_synchronization)
                                                         : '-'}
@@ -1047,4 +1164,14 @@ class CGDSPanel extends React.Component<unknown, CGDSPanelState> {
     }
 }
 
-export { CGDSPanel }
+/**
+ * Functional wrapper to inject intl into the class component.
+ * @param props Component props without intl.
+ * @returns Component with intl props.
+ */
+const CGDSPanelWithIntl = (props: Omit<CGDSPanelProps, 'intl'>) => {
+    const intl = useIntl()
+    return <CGDSPanel {...props} intl={intl} />
+}
+
+export { CGDSPanelWithIntl as CGDSPanel }

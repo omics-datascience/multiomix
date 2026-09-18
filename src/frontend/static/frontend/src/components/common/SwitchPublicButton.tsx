@@ -3,6 +3,7 @@ import { Icon } from 'semantic-ui-react'
 import { CurrentUserContext } from '../Base'
 import { getDjangoHeader } from '../../utils/util_functions'
 import ky from 'ky'
+import { useIntl } from 'react-intl'
 
 declare const urlPostSwitchPublicView
 
@@ -21,6 +22,12 @@ interface Props {
 export const SwitchPublicButton = (props: Props) => {
     const currentUser = useContext(CurrentUserContext)
     const [isLoading, setIsLoading] = useState(false)
+    const intl = useIntl()
+
+    const makePrivateText = intl.formatMessage({ id: 'switchPublicButton.makePrivate' }, { nameEntity: props.nameEntity })
+    const makePublicText = intl.formatMessage({ id: 'switchPublicButton.makePublic' }, { nameEntity: props.nameEntity })
+    const confirmMakePrivateText = intl.formatMessage({ id: 'switchPublicButton.confirmMakePrivate' }, { nameEntity: props.nameEntity })
+    const confirmMakePublicText = intl.formatMessage({ id: 'switchPublicButton.confirmMakePublic' }, { nameEntity: props.nameEntity })
 
     /**
      * Function to switch visibility of experiment
@@ -56,8 +63,11 @@ export const SwitchPublicButton = (props: Props) => {
             className='clickable margin-left-5'
             disabled={isLoading}
             color={props.publicButtonEntity.is_public ? 'red' : 'teal'}
-            title={props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`}
-            onClick={() => props.handleChangeConfirmModalState(true, props.publicButtonEntity.is_public ? `Make ${props.nameEntity} private` : `Make ${props.nameEntity} public`, props.publicButtonEntity.is_public ? `Are you sure to make the ${props.nameEntity} private?` : `Are you sure to make the ${props.nameEntity} public`, handleSwitchVisibility)}
+            title={props.publicButtonEntity.is_public ? makePrivateText : makePublicText}
+            onClick={() => props.handleChangeConfirmModalState(true,
+                props.publicButtonEntity.is_public ? makePrivateText : makePublicText,
+                props.publicButtonEntity.is_public ? confirmMakePrivateText : confirmMakePublicText,
+                handleSwitchVisibility)}
         />
     )
 }

@@ -7,11 +7,12 @@ import { MoleculeGeneralInformation } from './MoleculeGeneralInformation'
 import { PathwaysInformation } from './genes/PathwaysInformation'
 import { MirnaInteractionsPanel } from './MirnaInteractionsPanel'
 import { GeneOntologyPanel } from './gene-ontology/GeneOntologyPanel'
+import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPanel'
+import { GeneExpressionRegulationNetworkPanel } from './genes/GeneAssociationsNetwork'
 import { MiRNADrugsPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADrugsPanel'
 import { MiRNADiseasesPanel } from '../../../pipeline/experiment-result/gene-gem-details/MiRNADiseasesPanel'
 import { ActionableCancerGenesPanel } from './genes/ActionableCancerGenesPanel'
-/* import { GeneRegulationAssociationsPanel } from './genes/gene-association-network/GeneRegulationAssociationsPanel' */
-import { GeneAssociationsNetworkPanel } from './genes/GeneAssociationsNetworkPanel'
+import { useIntl } from 'react-intl'
 
 // const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS // TODO: use this
 const MENU_DEFAULT: ActiveBiomarkerMoleculeItemMenu = ActiveBiomarkerMoleculeItemMenu.DETAILS
@@ -32,6 +33,7 @@ interface CurrentMoleculeDetailsProps {
  */
 export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
     const [activeItem, setActiveItem] = useState<ActiveBiomarkerMoleculeItemMenu>(MENU_DEFAULT)
+    const intl = useIntl()
 
     /** Effect to set the active item to DETAILS when the selected molecule changes. */
     useEffect(() => {
@@ -53,9 +55,8 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
                 return <GeneAssociationsNetworkPanel selectedGene={selectedMolecule} />
             case ActiveBiomarkerMoleculeItemMenu.GENE_ONTOLOGY:
                 return <GeneOntologyPanel selectedMolecule={selectedMolecule} />
-            /* Todo: implement wEhen experiment regulation associations are available
-             case ActiveBiomarkerMolecuWleItemMenu.GENE_REGULATION_ASSOCIATIONS:
-                return <GeneRegulationAssociationsPanel /> */
+            case ActiveBiomarkerMoleculeItemMenu.GENE_REGULATION_ASSOCIATIONS:
+                return <GeneExpressionRegulationNetworkPanel />
             case ActiveBiomarkerMoleculeItemMenu.DISEASES:
                 return <MiRNADiseasesPanel miRNA={selectedMolecule.identifier} />
             case ActiveBiomarkerMoleculeItemMenu.DRUGS:
@@ -102,10 +103,10 @@ export const CurrentMoleculeDetails = (props: CurrentMoleculeDetailsProps) => {
             <Header size='huge' icon textAlign='center' style={{ alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Icon name='dna' />
 
-                No molecule selected
+                {intl.formatMessage({ id: 'currentMoleculeDetails.noSelection' })}
 
                 <Header.Subheader>
-                    Select one in the left panel
+                    {intl.formatMessage({ id: 'currentMoleculeDetails.selectOne' })}
                 </Header.Subheader>
             </Header>
         )

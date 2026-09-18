@@ -16,12 +16,15 @@ import { StopExperimentButton } from '../pipeline/all-experiments-view/StopExper
 import ky from 'ky'
 import { EditIcon } from '../common/EditIcon'
 import { DifferentialExpressionModalResults } from './DifferentialExpressionModalResults'
+import { useIntl } from 'react-intl'
+import { SharedUsers, SharedUsersProps } from '../pipeline/all-experiments-view/SharedUsers'
+import { SharedInstitutions, SharedInstitutionsProps } from '../pipeline/all-experiments-view/SharedInstitutions'
 
 declare const urlDifferentialExpressionList:string
 declare const urlDifferentialExpressionStop:string
 declare const urlDeleteExperiment: string
 
-interface DiferentialExpressionPanelState {
+interface DifferentialExpressionPanelState {
     alert: CustomAlert
     modal: ConfirmModal
     stoppingExperiment: boolean
@@ -30,14 +33,17 @@ interface DiferentialExpressionPanelState {
         differentialExpressionAnalysis: DifferentialExpressionAnalysis | null
         isOpen: boolean
     }
+    modalUsers: SharedUsersProps
+    modalInstitutions: SharedInstitutionsProps
 }
 
 /**
- *  Differential Expression Panel component
- * @returns JSX.Element
+ * Wrapper to make Context.Provider work.
+ * @returns Component.
  */
-export const DiferentialExpressionPanel = () => {
-    const [state, setState] = useState<DiferentialExpressionPanelState>({
+const DifferentialExpressionPanelWrapper = () => {
+    const intl = useIntl()
+    const [state, setState] = useState<DifferentialExpressionPanelState>({
         alert: getDefaultAlertProps(),
         modal: getDefaultConfirmModal(),
         stoppingExperiment: false,
@@ -45,6 +51,20 @@ export const DiferentialExpressionPanel = () => {
         modalResult: {
             differentialExpressionAnalysis: null,
             isOpen: false
+        },
+        modalUsers: {
+            isOpen: false,
+            users: [],
+            experimentId: 0,
+            isAdding: false,
+            user: { id: 0, username: '' }
+        },
+        modalInstitutions: {
+            isOpen: false,
+            institutions: [],
+            experimentId: 0,
+            isAdding: false,
+            user: { id: 0, username: '' }
         }
     })
 
@@ -90,10 +110,10 @@ export const DiferentialExpressionPanel = () => {
             return { key: id, value: id, text: tag.name }
         })
 
-        methodsOptions.unshift({ key: 'no_method', text: 'No method' })
+        methodsOptions.unshift({ key: 'no_method', text: intl.formatMessage({ id: 'differentialExpression.panel.noMethod' }) })
 
         return [
-            { label: 'Method', keyForServer: 'tool', defaultValue: '', placeholder: 'Select an existing method', options: methodsOptions, width: 3 }
+            { label: intl.formatMessage({ id: 'differentialExpression.panel.method' }), keyForServer: 'tool', defaultValue: '', placeholder: intl.formatMessage({ id: 'differentialExpression.panel.selectMethod' }), options: methodsOptions, width: 3 }
         ]
     }
 
@@ -117,12 +137,12 @@ export const DiferentialExpressionPanel = () => {
         }).then((response) => {
             // If OK closes the modal
             if (response.ok) {
-                updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment stopped successfully!')
+                updateAlert(CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'differentialExpression.panel.stopSuccess' }))
             } else {
-                updateAlert(CustomAlertTypes.ERROR, 'Error stopping Differential Expression experiment!')
+                updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpression.panel.stopError' }))
             }
         }).catch((err) => {
-            updateAlert(CustomAlertTypes.ERROR, 'Error stopping Differential Expression experiment!')
+            updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpression.panel.stopError' }))
             console.error('Error stopping FSExperiment ->', err)
         }).finally(() => {
             setState(prevState => ({ ...prevState, stoppingExperiment: false }))
@@ -140,12 +160,12 @@ export const DiferentialExpressionPanel = () => {
             headers: myHeaders,
         }).then((response) => {
             if (response.ok) {
-                updateAlert(CustomAlertTypes.SUCCESS, 'Differential Expression experiment deleted successfully!')
+                updateAlert(CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'differentialExpression.panel.deleteSuccess' }))
             } else {
-                updateAlert(CustomAlertTypes.ERROR, 'Error deleting Differential Expression experiment!')
+                updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpression.panel.deleteError' }))
             }
         }).catch((err) => {
-            updateAlert(CustomAlertTypes.ERROR, 'Error deleting Differential Expression experiment!')
+            updateAlert(CustomAlertTypes.ERROR, intl.formatMessage({ id: 'differentialExpression.panel.deleteError' }))
             console.error('Error deleting FSExperiment ->', err)
         })
     }
@@ -187,8 +207,24 @@ export const DiferentialExpressionPanel = () => {
         }))
     }
 
+    /** Closes the shared-users modal and clears its selected experiment. */
+    const handleCloseUsersModal = () => {
+        setState(prevState => ({
+            ...prevState,
+            modalUsers: { ...prevState.modalUsers, isOpen: false, experimentId: 0 }
+        }))
+    }
+
+    /** Closes the shared-institutions modal and clears its selected experiment. */
+    const handleCloseInstitutionsModal = () => {
+        setState(prevState => ({
+            ...prevState,
+            modalInstitutions: { ...prevState.modalInstitutions, isOpen: false, experimentId: 0 }
+        }))
+    }
+
     return (
-        <Base activeItem='differential-expression' wrapperClass='wrapper'>
+        <>
             <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
                 <Grid.Column width={4} textAlign='center'>
                     <DifferentialExpressionForm
@@ -199,16 +235,17 @@ export const DiferentialExpressionPanel = () => {
                 </Grid.Column>
                 <Grid.Column width={12}>
                     <PaginatedTable<DifferentialExpressionAnalysis>
-                        headerTitle='Differential Expressions Analyses'
+                        headerTitle={intl.formatMessage({ id: 'differentialExpression.panel.headerTitle' })}
                         headers={[
-                            { name: 'Name', serverCodeToSort: 'name', width: 2 },
-                            { name: 'Description', serverCodeToSort: 'description', width: 3 },
-                            { name: 'Method', serverCodeToSort: 'tool' },
-                            { name: 'Date', serverCodeToSort: 'created_at' },
-                            { name: 'State', serverCodeToSort: 'state', width: 1, textAlign: 'center' },
-                            { name: 'Sources' },
-                            { name: 'Public', width: 1 },
-                            { name: 'Actions', width: 2 }
+                            { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 2 },
+                            { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 3 },
+                            { name: intl.formatMessage({ id: 'differentialExpression.panel.method' }), serverCodeToSort: 'tool' },
+                            { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'created_at' },
+                            { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', width: 1, textAlign: 'center' },
+                            { name: intl.formatMessage({ id: 'differentialExpression.panel.sources' }) },
+                            { name: intl.formatMessage({ id: 'differentialExpression.panel.public' }), width: 1 },
+                            { name: intl.formatMessage({ id: 'allExperimentsView.table.shared' }), width: 1 },
+                            { name: intl.formatMessage({ id: 'common.actions' }), width: 2 }
                         ]}
                         defaultSortProp={{ sortField: 'created_at', sortOrderAscendant: false }}
                         customFilters={getDefaultFilters()}
@@ -224,7 +261,9 @@ export const DiferentialExpressionPanel = () => {
                                 </Button>
                             </Form.Field> */
                         ]}
-                        searchLabel='Name/Description'
+                        searchLabel={intl.formatMessage({
+                            id: 'differentialExpression.panel.nameDescription'
+                        })}
                         searchPlaceholder='Search by name/description'
                         urlToRetrieveData={urlDifferentialExpressionList}
                         updateWSKey='update_differential_expression_experiments'
@@ -255,14 +294,18 @@ export const DiferentialExpressionPanel = () => {
                                                 source={differentialExpressionAnalysis.mrna_source}
                                                 iconName='file'
                                                 iconColor={GenesColors.MRNA}
-                                                downloadButtonTitle='Download source mRNA file'
+                                                downloadButtonTitle={intl.formatMessage({
+                                                    id: 'differentialExpression.panel.downloadMrnaSource'
+                                                })}
                                             />
 
                                             <SourcePopup
                                                 source={differentialExpressionAnalysis.clinical_source}
                                                 iconName='file alternate'
                                                 iconColor={GenesColors.CLINICAL}
-                                                downloadButtonTitle='Download Clinical source file'
+                                                downloadButtonTitle={intl.formatMessage({
+                                                    id: 'differentialExpression.panel.downloadClinicalSource'
+                                                })}
                                             />
                                         </>
 
@@ -272,19 +315,61 @@ export const DiferentialExpressionPanel = () => {
                                             differentialExpressionAnalysis.is_public
                                                 ? (
                                                     <Icon
-                                                        title='All users of the platform can see this experiment'
+                                                        title={intl.formatMessage({
+                                                            id: 'differentialExpression.panel.publicVisible'
+                                                        })}
                                                         name='check'
                                                         color='green'
                                                     />
                                                 )
                                                 : (
                                                     <Icon
-                                                        title='If this is checked all the users in the platform can see (but not edit or remove) this element'
+                                                        title={intl.formatMessage({
+                                                            id: 'differentialExpression.panel.publicHidden'
+                                                        })}
                                                         name='close'
                                                         color='red'
                                                     />
                                                 )
                                         }
+                                    </TableCell>
+                                    <TableCell textAlign='center'>
+                                        <Icon
+                                            name='building'
+                                            color='green'
+                                            className='clickable'
+                                            title={intl.formatMessage({ id: 'allExperimentsView.shared.institutions' })}
+                                            onClick={() => setState(prevState => ({
+                                                ...prevState,
+                                                modalInstitutions: {
+                                                    ...prevState.modalInstitutions,
+                                                    isOpen: true,
+                                                    experimentId: differentialExpressionAnalysis.id,
+                                                    user: {
+                                                        id: differentialExpressionAnalysis.user.id ?? 0,
+                                                        username: differentialExpressionAnalysis.user.username ?? ''
+                                                    }
+                                                }
+                                            }))}
+                                        />
+                                        <Icon
+                                            name='users'
+                                            color='teal'
+                                            className='clickable'
+                                            title={intl.formatMessage({ id: 'allExperimentsView.shared.users' })}
+                                            onClick={() => setState(prevState => ({
+                                                ...prevState,
+                                                modalUsers: {
+                                                    ...prevState.modalUsers,
+                                                    isOpen: true,
+                                                    experimentId: differentialExpressionAnalysis.id,
+                                                    user: {
+                                                        id: differentialExpressionAnalysis.user.id ?? 0,
+                                                        username: differentialExpressionAnalysis.user.username ?? ''
+                                                    }
+                                                }
+                                            }))}
+                                        />
                                     </TableCell>
                                     <TableCell>
                                         {/* See results button */}
@@ -295,7 +380,9 @@ export const DiferentialExpressionPanel = () => {
                                                     onClick={() => { openInferenceResult(differentialExpressionAnalysis) }}
                                                     className='clickable'
                                                     color='blue'
-                                                    title='See results'
+                                                    title={intl.formatMessage({
+                                                        id: 'differentialExpression.panel.seeResults'
+                                                    })}
                                                 />
                                             )
                                         }
@@ -313,8 +400,10 @@ export const DiferentialExpressionPanel = () => {
                                                     {
                                                         isInProcess && (
                                                             <StopExperimentButton
-                                                                title='Stop experiment'
-                                                                onClick={() => handleChangeConfirmModalState(true, 'Stop Experiment', 'Are you sure to stop experiment?', () => confirmExperimentStop(differentialExpressionAnalysis.id))}
+                                                                title={intl.formatMessage({
+                                                                    id: 'differentialExpression.panel.stopExperiment'
+                                                                })}
+                                                                onClick={() => handleChangeConfirmModalState(true, intl.formatMessage({ id: 'differentialExpression.panel.stopExperimentTitle' }), intl.formatMessage({ id: 'differentialExpression.panel.stopExperimentConfirm' }), () => confirmExperimentStop(differentialExpressionAnalysis.id))}
                                                                 ownerId={differentialExpressionAnalysis.user.id as number}
                                                             />
                                                         )
@@ -323,7 +412,9 @@ export const DiferentialExpressionPanel = () => {
                                                     {/* Delete button */}
                                                     {(!isInProcess && !differentialExpressionAnalysis.is_public) && (
                                                         <DeleteButton
-                                                            title='Delete experiment'
+                                                            title={intl.formatMessage({
+                                                                id: 'differentialExpression.panel.deleteExperiment'
+                                                            })}
                                                             onClick={() => confirmExperimentDeletion(differentialExpressionAnalysis)}
                                                             ownerId={differentialExpressionAnalysis.user.id}
                                                         />
@@ -381,6 +472,28 @@ export const DiferentialExpressionPanel = () => {
                     modalResult: { differentialExpressionAnalysis: null, isOpen: false }
                 }))}
             />
+            <SharedUsers
+                {...state.modalUsers}
+                handleClose={handleCloseUsersModal}
+                handleChangeConfirmModalState={handleChangeConfirmModalState}
+            />
+            <SharedInstitutions
+                {...state.modalInstitutions}
+                handleClose={handleCloseInstitutionsModal}
+                handleChangeConfirmModalState={handleChangeConfirmModalState}
+            />
+        </>
+    )
+}
+
+/**
+ * Differential Expression Panel component
+ * @returns Component.
+ */
+export const DifferentialExpressionPanel = () => {
+    return (
+        <Base activeItem='differential-expression' wrapperClass='wrapper'>
+            <DifferentialExpressionPanelWrapper />
         </Base>
     )
 }

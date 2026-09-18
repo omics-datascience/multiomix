@@ -5,6 +5,7 @@ import { GeneAndGEMSection } from './GeneAndGEMSection'
 import { ChartSection } from './ChartSection'
 import { Nullable } from '../../../../../utils/interfaces'
 import { GeneGEMDataErrorMessage } from '../GeneGEMDataErrorMessage'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -23,6 +24,7 @@ interface StatisticalPropertiesPanelProps {
  * @returns Component
  */
 export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProps) => {
+    const intl = useIntl()
     const [showBars, _setShowBars] = useState(true) // FIXME: uncomment when the area is well displayed
     const [showTogether, setShowTogether] = useState(false)
 
@@ -63,7 +65,7 @@ export const StatisticalPropertiesPanel = (props: StatisticalPropertiesPanelProp
                                 icon
                                 circular
                                 className='margin-top-5'
-                                title={showTogether ? 'Show separated' : 'Show together'}
+                                title={showTogether ? intl.formatMessage({ id: 'statisticalPropertiesPanel.showSeparated' }) : intl.formatMessage({ id: 'statisticalPropertiesPanel.showTogether' })}
                                 color={showTogether ? 'red' : 'blue'}
                                 onClick={() => setShowTogether(!showTogether)}
                             >

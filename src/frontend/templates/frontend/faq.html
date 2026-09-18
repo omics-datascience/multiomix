@@ -1,0 +1,16 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %} | FAQ{% endblock %}
+{% block meta_description %}
+Frequently Asked Questions about Multiomix and our platform.
+{% endblock %}
+
+{% block content %}
+        <main id="faq-app"></main>
+{% endblock %}
+
+{% block js %}
+        {% render_bundle 'faq' 'js' %}
+{% endblock %}

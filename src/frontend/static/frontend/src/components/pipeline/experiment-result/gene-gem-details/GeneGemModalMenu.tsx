@@ -3,6 +3,7 @@ import { Menu } from 'semantic-ui-react'
 import { Nullable } from '../../../../utils/interfaces'
 import { ActiveItemMenu } from './GeneGemDetailsModal'
 import { InfoPopup } from './InfoPopup'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -30,16 +31,20 @@ interface GeneGemModalMenuProps {
  * @returns Component
  */
 export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
+    const intl = useIntl()
     return (
         <Menu className='menu-with-bolder-border'>
             <Menu.Item
                 active={props.activeItem === ActiveItemMenu.STATISTICAL_PROPERTIES}
                 onClick={() => props.setActiveItem(ActiveItemMenu.STATISTICAL_PROPERTIES)}
             >
-                Stats
+                {intl.formatMessage({ id: 'geneGemModalMenu.stats' })}
 
                 <InfoPopup
-                    content={`Stats of the correlation and also of each value vector separately (${props.gene} and ${props.gem})`}
+                    content={intl.formatMessage(
+                        { id: 'geneGemModalMenu.stats.info' },
+                        { gene: props.gene, gem: props.gem }
+                    )}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -50,10 +55,17 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                 active={props.activeItem === ActiveItemMenu.CORRELATION_GRAPH}
                 onClick={() => props.setActiveItem(ActiveItemMenu.CORRELATION_GRAPH)}
             >
-                Correlation {props.gemDataIsOrdinal ? 'boxplots' : 'graph'}
+                {intl.formatMessage({
+                    id: props.gemDataIsOrdinal
+                        ? 'geneGemModalMenu.correlationBoxplots'
+                        : 'geneGemModalMenu.correlationGraph'
+                })}
 
                 <InfoPopup
-                    content={`Correlation graph between ${props.gene} and ${props.gem} and also stats to measure the correlation`}
+                    content={intl.formatMessage(
+                        { id: 'geneGemModalMenu.correlation.info' },
+                        { gene: props.gene, gem: props.gem }
+                    )}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -66,10 +78,13 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                         active={props.activeItem === ActiveItemMenu.MIRNA_TARGET_INTERACTION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.MIRNA_TARGET_INTERACTION)}
                     >
-                        {props.gem}-{props.gene} Interaction
+                        {intl.formatMessage({ id: 'geneGemModalMenu.mirnaInteraction' }, { gem: props.gem, gene: props.gene })}
 
                         <InfoPopup
-                            content={`Scores, given by external databases, that measures the association between ${props.gene} and ${props.gem} `}
+                            content={intl.formatMessage(
+                                { id: 'geneGemModalMenu.interaction.info' },
+                                { gene: props.gene, gem: props.gem }
+                            )}
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -80,10 +95,16 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                         active={props.activeItem === ActiveItemMenu.MIRNA_INTERACTION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.MIRNA_INTERACTION)}
                     >
-                        {props.gem} Interaction
+                        {intl.formatMessage(
+                            { id: 'geneGemModalMenu.mirnaInteraction' },
+                            { gem: props.gem }
+                        )}
 
                         <InfoPopup
-                            content={`Find target interactions with ${props.gem} in miRNA external databases`}
+                            content={intl.formatMessage(
+                                { id: 'geneGemModalMenu.mirnaInteraction.info' },
+                                { gem: props.gem }
+                            )}
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -94,10 +115,16 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                         active={props.activeItem === ActiveItemMenu.DISEASES_ASSOCIATION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.DISEASES_ASSOCIATION)}
                     >
-                        {props.gem} disease association
+                        {intl.formatMessage(
+                            { id: 'geneGemModalMenu.diseaseAssociation' },
+                            { gem: props.gem }
+                        )}
 
                         <InfoPopup
-                            content={`Diseases associated with ${props.gem} in miRNA external databases`}
+                            content={intl.formatMessage(
+                                { id: 'geneGemModalMenu.diseaseAssociation.info' },
+                                { gem: props.gem }
+                            )}
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -108,10 +135,16 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                         active={props.activeItem === ActiveItemMenu.DRUGS_ASSOCIATION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.DRUGS_ASSOCIATION)}
                     >
-                        {props.gem} drug association
+                        {intl.formatMessage(
+                            { id: 'geneGemModalMenu.drugAssociation' },
+                            { gem: props.gem }
+                        )}
 
                         <InfoPopup
-                            content={`Drugs associated with ${props.gem} in miRNA external databases`}
+                            content={intl.formatMessage(
+                                { id: 'geneGemModalMenu.drugAssociation.info' },
+                                { gem: props.gem }
+                            )}
                             onTop={false}
                             onEvent='hover'
                             extraClassName='margin-left-5'
@@ -124,10 +157,16 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                 active={props.activeItem === ActiveItemMenu.ASSUMPTIONS}
                 onClick={() => props.setActiveItem(ActiveItemMenu.ASSUMPTIONS)}
             >
-                Assumptions
+                {intl.formatMessage({ id: 'geneGemModalMenu.assumptions' })}
 
                 <InfoPopup
-                    content={`It evaluates the statistics assumptions that the data should satisfy for the correlation method (${props.correlationMethodDescription}) and the correction method (${props.pValuesAdjustmentMethodDescription}) used in this analysis`}
+                    content={intl.formatMessage(
+                        { id: 'geneGemModalMenu.assumptions.info' },
+                        {
+                            correlationMethod: props.correlationMethodDescription,
+                            correctionMethod: props.pValuesAdjustmentMethodDescription
+                        }
+                    )}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'
@@ -138,10 +177,13 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                 active={props.activeItem === ActiveItemMenu.SURVIVAL_ANALYSIS}
                 onClick={() => props.setActiveItem(ActiveItemMenu.SURVIVAL_ANALYSIS)}
             >
-                Survival Analysis
+                {intl.formatMessage({ id: 'geneGemModalMenu.survivalAnalysis' })}
 
                 <InfoPopup
-                    content={`Survival analysis between ${props.gene} low expression patient group and ${props.gene} high expression patient group`}
+                    content={intl.formatMessage(
+                        { id: 'geneGemModalMenu.survivalAnalysis.info' },
+                        { gene: props.gene }
+                    )}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'

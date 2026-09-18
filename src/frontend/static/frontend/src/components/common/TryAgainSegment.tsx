@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button, Header, Icon, Segment } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 /** Component's props. */
 interface TryAgainSegmentProps {
@@ -12,17 +13,21 @@ interface TryAgainSegmentProps {
  * @param props Component's props.
  * @returns Component.
  */
-export const TryAgainSegment = (props: TryAgainSegmentProps) => (
-    <Segment placeholder>
-        <Header icon>
-            <Icon name='warning sign' />
-            Something went wrong, please try again
-        </Header>
+export const TryAgainSegment = (props: TryAgainSegmentProps) => {
+    const intl = useIntl()
 
-        <Segment.Inline>
-            <Button primary onClick={props.onTryAgain}>
-                Try Again
-            </Button>
-        </Segment.Inline>
-    </Segment>
-)
+    return (
+        <Segment placeholder>
+            <Header icon>
+                <Icon name='warning sign' />
+                {intl.formatMessage({ id: 'tryAgainSegment.message' })}
+            </Header>
+
+            <Segment.Inline>
+                <Button primary onClick={props.onTryAgain}>
+                    {intl.formatMessage({ id: 'tryAgainSegment.button' })}
+                </Button>
+            </Segment.Inline>
+        </Segment>
+    )
+}

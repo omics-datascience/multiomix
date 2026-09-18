@@ -3,6 +3,8 @@ import { Popup, Button, Icon, Header, List } from 'semantic-ui-react'
 import { DjangoExperimentSource, SourceSimpleCGDSDataset } from '../../../utils/django_interfaces'
 import { SemanticICONS, SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
 import { formatDateLocale, getFileRowDescriptionInPlural } from '../../../utils/util_functions'
+import { useIntl } from 'react-intl'
+import { Nullable } from '../../../utils/interfaces'
 
 declare const downloadFileURL: string
 
@@ -11,7 +13,7 @@ declare const downloadFileURL: string
  */
 interface SourcePopupProps {
     /** Experiment's source to retrieve the info */
-    source: DjangoExperimentSource,
+    source: Nullable<DjangoExperimentSource>,
     /** Trigger icon's name */
     iconName: SemanticICONS,
     /** Trigger icon's color */
@@ -27,6 +29,12 @@ interface SourcePopupProps {
  * @returns Component
  */
 export const SourcePopup = (props: SourcePopupProps) => {
+    const intl = useIntl()
+
+    if (!props.source) {
+        return null
+    }
+
     const isUserFile = props.source.user_file !== null
     const datasetObj = props.source.user_file ?? props.source.cgds_dataset
 
@@ -38,6 +46,9 @@ export const SourcePopup = (props: SourcePopupProps) => {
     // Gets file's type description in plural to show the number of rows
     const datasetRowDescriptionInPlural = getFileRowDescriptionInPlural(datasetObj.file_type)
 
+    const tissueName = datasetObj.tissue?.name
+    const datasetName = datasetObj.name ?? intl.formatMessage({ id: 'sourcePopup.unnamedSource' })
+
     /**
      * Gets the some extra content of the Popup for a CGDS dataset.
      * @param obj CGDS dataset object.
@@ -45,17 +56,24 @@ export const SourcePopup = (props: SourcePopupProps) => {
      */
     const getCGDSData = (obj: SourceSimpleCGDSDataset): JSX.Element => {
         const syncDate = obj.date_last_synchronization ? formatDateLocale(obj.date_last_synchronization) : '-'
+        const version = obj.version ?? '-'
 
         return (
             <>
                 <hr />
                 <List.Item>
                     <List.Icon name='database' color='blue' />
-                    <List.Content>cBioPortal dataset (version {obj.version})</List.Content>
+                    <List.Content>{intl.formatMessage({ id: 'sourcePopup.cgdsDataset' })}</List.Content>
+                </List.Item>
+                <List.Item>
+                    <List.Icon name='code branch' color='blue' />
+                    <List.Content>{intl.formatMessage({ id: 'sourcePopup.version' }, { version })}</List.Content>
                 </List.Item>
                 <List.Item>
                     <List.Icon name='clock' color='blue' />
-                    <List.Content>Sync. Date: {syncDate}</List.Content>
+                    <List.Content>
+                        {intl.formatMessage({ id: 'sourcePopup.syncDate' }, { date: syncDate })}
+                    </List.Content>
                 </List.Item>
             </>
         )
@@ -81,13 +99,12 @@ export const SourcePopup = (props: SourcePopupProps) => {
         >
             {/* Popup content */}
             <>
-                <Header as='h3' content={datasetObj.name} />
-                <p>{datasetObj.description ? datasetObj.description : ''}</p>
+                <Header as='h3' content={datasetName} />
                 <List>
                     {/* Number of rows and samples */}
                     <List.Item>
                         <List.Content>
-                            <List.Header className='source-popup-header'>Source properties</List.Header>
+                            <List.Header className='source-popup-header'>{intl.formatMessage({ id: 'sourcePopup.sourceProperties' })}</List.Header>
                             <List.List>
                                 <List.Item>
                                     <List.Icon name='numbered list' color='blue' className='no-padding-left' />
@@ -95,8 +112,15 @@ export const SourcePopup = (props: SourcePopupProps) => {
                                 </List.Item>
                                 <List.Item>
                                     <List.Icon name='users' color='blue' />
-                                    <List.Content>Samples: {props.source.number_of_samples}</List.Content>
+                                    <List.Content>{intl.formatMessage({ id: 'sourcePopup.samples' }, { count: props.source.number_of_samples })}</List.Content>
                                 </List.Item>
+
+                                {tissueName && (
+                                    <List.Item>
+                                        <List.Icon name='tag' color='blue' />
+                                        <List.Content>{intl.formatMessage({ id: 'sourcePopup.tissue' }, { tissue: tissueName })}</List.Content>
+                                    </List.Item>
+                                )}
 
                                 {/* CGDS data */}
                                 {props.source.cgds_dataset &&
@@ -116,7 +140,9 @@ export const SourcePopup = (props: SourcePopupProps) => {
                     disabled={!isUserFile}
                 >
                     <Icon name='cloud download' />
-                    Download
+                    {isUserFile
+                        ? intl.formatMessage({ id: 'common.download' })
+                        : intl.formatMessage({ id: 'sourcePopup.cgdsDownloadUnavailable' })}
                 </Button>
             </>
         </Popup>

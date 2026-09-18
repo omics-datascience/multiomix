@@ -39,4 +39,5 @@ urlpatterns = [
     path('email/', include(mail_urls)),
     path('users/', include('users.urls')),
     path('tissues/', include('tissues.urls')),
+    path('assistant/', include('assistant.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

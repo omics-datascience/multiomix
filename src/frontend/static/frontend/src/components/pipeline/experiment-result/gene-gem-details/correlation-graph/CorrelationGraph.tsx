@@ -9,6 +9,7 @@ import { GeneGEMDataErrorMessage } from '../GeneGEMDataErrorMessage'
 import { CorrelationChartData, ApexChartJSSerie } from './../GeneGemDetailsModal'
 import * as d3 from 'd3'
 import { InputLabel } from '../../../../common/InputLabel'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -26,6 +27,7 @@ interface CorrelationGraphProps {
  * @returns Component
  */
 export const CorrelationGraph = (props: CorrelationGraphProps) => {
+    const intl = useIntl()
     const [gene, gem] = getGeneAndGEMFromSelectedRow(props.selectedRow)
     const gemDescription = props.selectedRow ? getGemDescription(props.selectedRow.experiment_type, 'ExperimentType') : ''
 
@@ -90,7 +92,7 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
             }
         },
         noData: {
-            text: 'No data selected',
+            text: intl.formatMessage({ id: 'correlationGraph.noDataSelected' }),
             style: {
                 fontSize: '3em',
                 color: '#ccc'
@@ -144,16 +146,16 @@ export const CorrelationGraph = (props: CorrelationGraphProps) => {
     const clinicalColumnsOptions: DropdownItemProps[] = listToDropdownOptions(props.chartData.clinicalColumns)
     const clinicalColumnsIsEmpty = clinicalColumnsOptions.length === 0
 
-    clinicalColumnsOptions.unshift({ key: 'none', text: 'None', value: undefined })
+    clinicalColumnsOptions.unshift({ key: 'none', text: intl.formatMessage({ id: 'common.none' }), value: undefined })
 
     return (
         <Grid>
             <Grid.Row>
                 <Grid.Column width={5}>
-                    <InputLabel label='Group by factor' />
+                    <InputLabel label={intl.formatMessage({ id: 'correlationGraph.groupByFactor' })} />
 
                     <Dropdown
-                        placeholder='Group by'
+                        placeholder={intl.formatMessage({ id: 'correlationGraph.groupBy' })}
                         fluid
                         search
                         selection

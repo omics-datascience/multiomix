@@ -1,6 +1,7 @@
 *.pyc
 .idea
 .vscode
+!src/frontend/static/frontend/.vscode
 src/frontend/static/frontend/node_modules
 src/frontend/static/frontend/dist
 src/venv

@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { Header, Icon } from 'semantic-ui-react'
 import { DjangoExperiment } from '../../../../../utils/django_interfaces'
-import { ClinicalSourcePopup, ValidationSource } from '../../../all-experiments-view/ClinicalSourcePopup'
+import ClinicalSourcePopup, { ValidationSource } from '../../../all-experiments-view/ClinicalSourcePopup'
 import { InferenceExperimentForTable } from '../../../../biomarkers/types'
 import { Nullable } from '../../../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -24,6 +25,7 @@ interface NoClinicalDataProps {
 }
 
 export const NoClinicalData = (props: NoClinicalDataProps) => {
+    const intl = useIntl()
     const [showPopup, setShowPopup] = useState(false)
     let validationSource: Nullable<ValidationSource> = null
 
@@ -38,10 +40,10 @@ export const NoClinicalData = (props: NoClinicalDataProps) => {
         <Header size='huge' icon textAlign='center'>
             <Icon name='users' />
 
-            No clinical data found
+            {intl.formatMessage({ id: 'noClinicalData.header' })}
 
             <Header.Subheader>
-                Click the icon below to upload clinical data
+                {intl.formatMessage({ id: 'noClinicalData.subheader' })}
 
                 <ClinicalSourcePopup
                     experiment={props.experiment}

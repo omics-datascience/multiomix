@@ -6,7 +6,7 @@ import { getExperimentTypeSelectOptions, getCorrelationMethodSelectOptions, form
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { SourcePopup } from './SourcePopup'
-import { ClinicalSourcePopup } from './ClinicalSourcePopup'
+import ClinicalSourcePopup from './ClinicalSourcePopup'
 import { SeeResultButton } from './SeeResultButton'
 import { StopExperimentButton } from './StopExperimentButton'
 import { DeleteButton } from '../../common/DeleteButton'
@@ -15,6 +15,7 @@ import { SwitchPublicButton } from '../../common/SwitchPublicButton'
 import { SharedUsers, SharedUsersProps } from './SharedUsers'
 import { EditIcon } from '../../common/EditIcon'
 import { PopupIcons } from '../../common/PopupIcons'
+import { injectIntl, IntlShape } from 'react-intl'
 
 declare const urlUserExperiments: string
 declare const urlDownloadFullResult: string
@@ -27,6 +28,7 @@ declare const urlUnlinkClinicalSourceUserFile: string
  * Component's props
  */
 interface AllExperimentsViewProps {
+    intl: IntlShape,
     allExperiments: DjangoExperiment[],
     allExperimentsTableControl: AllExperimentsTableControl,
     gettingAllExperiments: boolean,
@@ -58,7 +60,7 @@ interface AllExperimentsViewState {
  * @param experiment Component's experiment
  * @returns Component
  */
-export class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
+class AllExperimentsView extends React.Component<AllExperimentsViewProps, AllExperimentsViewState> {
     constructor (props) {
         super(props)
         this.state = {
@@ -90,12 +92,13 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
      * @returns Default object for table's Filters
      */
     getDefaultFilters (): PaginationCustomFilter[] {
+        const { intl } = this.props
         const tagOptions: DropdownItemProps[] = this.props.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+        tagOptions.unshift({ key: 'no_tag', text: intl.formatMessage({ id: 'allExperimentsView.filters.noTag' }) })
 
         // Get Experiment type select options, with 'All' option included
         const experimentTypeOptions = getExperimentTypeSelectOptions()
@@ -106,7 +109,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         return [
             { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 },
             {
-                label: 'Experiment type',
+                label: intl.formatMessage({ id: 'allExperimentsView.filters.experimentType' }),
                 keyForServer: 'type',
                 defaultValue: ExperimentType.ALL,
                 options: experimentTypeOptions,
@@ -114,7 +117,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                 width: 2
             },
             {
-                label: 'Correlation method',
+                label: intl.formatMessage({ id: 'allExperimentsView.filters.correlationMethod' }),
                 keyForServer: 'correlation_method',
                 defaultValue: CorrelationMethod.ALL,
                 options: selectCorrelationMethodsOptions,
@@ -167,6 +170,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
     closePopup = () => { this.setState({ clinicalPopupOpenId: null }) }
 
     render (): JSX.Element {
+        const { intl } = this.props
         return (
             <div>
                 <PaginatedTable<DjangoExperiment>
@@ -174,19 +178,19 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                     updateWSKey='update_experiments'
                     defaultSortProp={{ sortField: 'submit_date', sortOrderAscendant: false }}
                     headers={[
-                        { name: 'Name', serverCodeToSort: 'name' },
-                        { name: 'Description', serverCodeToSort: 'description', width: 3 },
-                        { name: 'Date', serverCodeToSort: 'submit_date' },
-                        { name: 'State', serverCodeToSort: 'state', width: 1, textAlign: 'center' },
-                        { name: 'Type', serverCodeToSort: 'type' },
-                        { name: 'Cor. Method', serverCodeToSort: 'correlation_method' },
-                        { name: 'N° Combinations', serverCodeToSort: 'result_final_row_count' },
-                        { name: 'Clinical', width: 1, textAlign: 'center' },
-                        { name: 'Tag', serverCodeToSort: 'tag', width: 1 },
-                        { name: 'Sources' },
-                        { name: 'Public' },
-                        { name: 'Shared' },
-                        { name: 'Actions', width: 2 }
+                        { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name' },
+                        { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 3 },
+                        { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'submit_date' },
+                        { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', width: 1, textAlign: 'center' },
+                        { name: intl.formatMessage({ id: 'common.algorithm' }), serverCodeToSort: 'type' },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.correlationMethodShort' }), serverCodeToSort: 'correlation_method' },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.combinations' }), serverCodeToSort: 'result_final_row_count' },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.clinical' }), width: 1, textAlign: 'center' },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.filters.tag' }), serverCodeToSort: 'tag', width: 1 },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.sources' }) },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.public' }) },
+                        { name: intl.formatMessage({ id: 'allExperimentsView.table.shared' }) },
+                        { name: intl.formatMessage({ id: 'common.actions' }), width: 2 }
                     ]}
                     customFilters={this.getDefaultFilters()}
                     showSearchInput
@@ -336,7 +340,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                 />
                                                 {/* Stop button */}
                                                 <StopExperimentButton
-                                                    title='Stop experiment'
+                                                    title={intl.formatMessage({ id: 'common.stop' })}
                                                     onClick={() => this.props.confirmExperimentStop(experiment)}
                                                     ownerId={experiment.user.id}
                                                 />
@@ -344,7 +348,7 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
                                                 {/* Delete button */}
                                                 {!isInProcess && !experiment.is_public && (
                                                     <DeleteButton
-                                                        title='Delete experiment'
+                                                        title={intl.formatMessage({ id: 'common.delete' })}
                                                         onClick={() => this.props.confirmExperimentDeletion(experiment)}
                                                         ownerId={experiment.user.id}
                                                     />
@@ -383,3 +387,5 @@ export class AllExperimentsView extends React.Component<AllExperimentsViewProps,
         )
     }
 }
+
+export default injectIntl(AllExperimentsView)

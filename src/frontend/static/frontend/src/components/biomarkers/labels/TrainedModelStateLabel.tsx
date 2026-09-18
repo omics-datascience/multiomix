@@ -2,6 +2,7 @@ import React from 'react'
 import { Icon } from 'semantic-ui-react'
 import { StateIconInfo } from '../../../utils/interfaces'
 import { TrainedModelState } from '../types'
+import { useIntl } from 'react-intl'
 
 /** TrainedModelStateLabel props. */
 interface TrainedModelStateLabelProps {
@@ -17,6 +18,7 @@ interface TrainedModelStateLabelProps {
  * @returns Component.
  */
 export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
+    const intl = useIntl()
     let stateIcon: StateIconInfo
 
     switch (props.trainedModelStateState) {
@@ -25,7 +27,11 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'check',
                 color: props.cvFoldsWereModified ? 'orange' : 'green',
                 loading: false,
-                title: 'The experiment is complete' + (props.cvFoldsWereModified ? ' (number of CrossValidation folds were modified to be stratified)' : '')
+                title: intl.formatMessage(
+                    { id: 'trainedModelState.completed' },
+                    { cvModified: props.cvFoldsWereModified }
+                )
+
             }
             break
         case TrainedModelState.FINISHED_WITH_ERROR:
@@ -33,7 +39,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'times',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has finished with errors. Try again'
+                title: intl.formatMessage({ id: 'trainedModelState.finishedWithError' })
             }
             break
         case TrainedModelState.WAITING_FOR_QUEUE:
@@ -41,7 +47,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'wait',
                 color: 'yellow',
                 loading: false,
-                title: 'The process of this experiment will start soon'
+                title: intl.formatMessage({ id: 'trainedModelState.waitingForQueue' })
+
             }
             break
         case TrainedModelState.NO_SAMPLES_IN_COMMON:
@@ -49,7 +56,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'user outline',
                 color: 'red',
                 loading: false,
-                title: 'Datasets don\'t have samples in common'
+                title: intl.formatMessage({ id: 'trainedModelState.noSamplesInCommon' })
+
             }
             break
         case TrainedModelState.IN_PROCESS:
@@ -57,14 +65,15 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'sync alternate',
                 color: 'yellow',
                 loading: true,
-                title: 'The experiment is being processed'
+                title: intl.formatMessage({ id: 'trainedModelState.inProcess' })
+
             }
             break
         case TrainedModelState.STOPPING:
             stateIcon = {
                 iconName: 'stop',
                 loading: false,
-                title: 'The experiment is being stopped',
+                title: intl.formatMessage({ id: 'trainedModelState.stopping' }),
                 className: 'experiment-stopping-icon'
             }
             break
@@ -73,7 +82,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'stop',
                 color: 'red',
                 loading: false,
-                title: 'The experiment was stopped'
+                title: intl.formatMessage({ id: 'trainedModelState.stopped' })
+
             }
             break
         case TrainedModelState.REACHED_ATTEMPTS_LIMIT:
@@ -81,7 +91,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'undo',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has failed several times. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'trainedModelState.reachedAttemptsLimit' })
+
             }
             break
         case TrainedModelState.NO_FEATURES_FOUND:
@@ -89,7 +100,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'times rectangle',
                 color: 'red',
                 loading: false,
-                title: 'No features were found. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'trainedModelState.noFeaturesFound' })
+
             }
             break
         case TrainedModelState.NO_BEST_MODEL_FOUND:
@@ -97,7 +109,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'target',
                 color: 'red',
                 loading: false,
-                title: 'No model could be obtained. Maybe there are fewer samples than number of folds in the CrossValidation or the data presents high collinearity. Try changing some parameters as penalizer or number of folds in the CV process and try again'
+                title: intl.formatMessage({ id: 'trainedModelState.noBestModelFound' })
+
             }
             break
         case TrainedModelState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
@@ -105,7 +118,7 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
+                title: intl.formatMessage({ id: 'trainedModelState.numberOfSamplesFewerThanCvFolds' })
             }
             break
         case TrainedModelState.MODEL_DUMP_NOT_AVAILABLE:
@@ -113,7 +126,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'target',
                 color: 'orange',
                 loading: false,
-                title: 'The Feature Selection process has finished correctly, but there was a problem obtaining the model. Try training a new model'
+                title: intl.formatMessage({ id: 'trainedModelState.modelDumpNotAvailable' })
+
             }
             break
         case TrainedModelState.TIMEOUT_EXCEEDED:
@@ -121,7 +135,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'wait',
                 color: 'red',
                 loading: false,
-                title: 'The training process has reached the timeout limit. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'trainedModelState.timeoutExceeded' })
+
             }
             break
         case TrainedModelState.EMPTY_DATASET:
@@ -129,7 +144,8 @@ export const TrainedModelStateLabel = (props: TrainedModelStateLabelProps) => {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'After filtering out invalid values such as NaN or inf, there were no molecules or samples to train the model. Perhaps the requested molecules do not exist in the dataset, or all patients contain NaN or inf data. Try changing the dataset used or correct your data and try again.'
+                title: intl.formatMessage({ id: 'trainedModelState.emptyDataset' })
+
             }
             break
     }

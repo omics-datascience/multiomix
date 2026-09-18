@@ -1,6 +1,7 @@
 import React from 'react'
 /* import { XYChart, theme, withParentSize, withTheme } from '@data-ui/xy-chart' */
 import { DjangoSourceDataOutliersBasic } from '../../../utils/django_interfaces'
+import { useIntl } from 'react-intl'
 
 /** Type of BoxPlot datum field */
 type BoxplotDatum = {
@@ -83,9 +84,10 @@ const TooltipElement = (props: TooltipElementProps) => (
  * @param props Component's props
  * @returns Component
  */
-const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
+const RenderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
     const { min, max, mean, median, firstQuartile, thirdQuartile, outliers, outliersObjects, cnaDescription } = props.datum
     const color = props.color
+    const intl = useIntl()
 
     return (
         <div className='align-left'>
@@ -95,15 +97,15 @@ const renderBoxPlotTooltip = (props: BoxPlotTooltipProps) => {
                     <hr />
                 </>
             )}
-            <TooltipElement strongTitle='Min' numberToDisplay={min} color={color} fixed={2} />
-            <TooltipElement strongTitle='First quartile' numberToDisplay={firstQuartile} color={color} fixed={2} />
-            <TooltipElement strongTitle='Median' numberToDisplay={median} color={color} fixed={2} />
-            <TooltipElement strongTitle='Third quartile' numberToDisplay={thirdQuartile} color={color} fixed={2} />
-            <TooltipElement strongTitle='Max' numberToDisplay={max} color={color} fixed={2} />
-            <TooltipElement strongTitle='Mean' numberToDisplay={mean} color={color} fixed={3} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.min' })} numberToDisplay={min} color={color} fixed={2} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.firstQuartile' })} numberToDisplay={firstQuartile} color={color} fixed={2} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.median' })} numberToDisplay={median} color={color} fixed={2} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.thirdQuartile' })} numberToDisplay={thirdQuartile} color={color} fixed={2} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.max' })} numberToDisplay={max} color={color} fixed={2} />
+            <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.mean' })} numberToDisplay={mean} color={color} fixed={3} />
             {outliers && outliers.length > 0 && (
                 <>
-                    <TooltipElement strongTitle='Outliers (using MAD)' numberToDisplay={outliers.length} color={color} />
+                    <TooltipElement strongTitle={intl.formatMessage({ id: 'boxPlotTooltip.outliers' })} numberToDisplay={outliers.length} color={color} />
 
                     {outliersObjects.map((outlier) => (
                         <TooltipElement
@@ -125,6 +127,6 @@ export {
     mean,
     quantile,
     BoxPlotTooltipProps,
-    renderBoxPlotTooltip,
+    RenderBoxPlotTooltip,
     BoxplotDatum
 }

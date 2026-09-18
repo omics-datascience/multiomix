@@ -12,6 +12,7 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 import { ExternalLink } from '../../../../common/ExternalLink'
 import '../../../../../css/cytoscape.css'
+import { useIntl } from 'react-intl'
 
 // Defined in biomarkers.html
 declare const urlGeneAssociationsNetwork: string
@@ -25,21 +26,31 @@ const COLORS_BY_STRING_RELATION = {
     coExpression: ['Co-expression', '#10002b']
 } as const
 
-const CytoscapeLegends = () => (
-    <div className='cytoscape-legends'>
-        <div className='legend-title'>Relations</div>
-        <div className='legend-scale'>
-            <ul className='legend-labels' id='legend'>
-                {Object.entries(COLORS_BY_STRING_RELATION).map(([_, [relationDescription, color]]) => (
-                    <li key={relationDescription}>
-                        <span style={{ backgroundColor: color }} />
-                        {relationDescription}
-                    </li>
-                ))}
-            </ul>
+/**
+ * Renders the legends for the Cytoscape instance.
+ * @returns Component.
+ */
+const CytoscapeLegends = () => {
+    const intl = useIntl()
+
+    return (
+        <div className='cytoscape-legends'>
+            <div className='legend-title'>
+                {intl.formatMessage({ id: 'common.relations' })}
+            </div>
+            <div className='legend-scale'>
+                <ul className='legend-labels' id='legend'>
+                    {Object.entries(COLORS_BY_STRING_RELATION).map(([relationKey, [_, color]]) => (
+                        <li key={relationKey}>
+                            <span style={{ backgroundColor: color }} />
+                            {intl.formatMessage({ id: `geneAssociations.relation.${relationKey}` })}
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
-    </div>
-)
+    )
+}
 
 interface GeneAssociationsNetworkPanelProps {
     selectedGene: BiomarkerMolecule
@@ -53,6 +64,7 @@ type CytoscapeResponseData =
     }
 
 export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsNetworkPanelProps) => {
+    const intl = useIntl()
     const cyContainerRef = useRef<HTMLDivElement | null>(null)
     const cyRef = useRef<Core | null>(null)
     const abortControllerRef = useRef<AbortController | null>(null)
@@ -330,7 +342,7 @@ export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsN
                 <Grid.Column width={3}>
                     <Form>
                         <Form.Field>
-                            <label>Min combined score</label>
+                            <label>{intl.formatMessage({ id: 'geneAssociations.form.minCombinedScore' })}</label>
                             <Input
                                 type='number'
                                 value={minCombinedScore}

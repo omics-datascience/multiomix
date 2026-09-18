@@ -33,7 +33,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
 
         const searchParams = { inference_experiment_pk: props.selectedInferenceExperiment.id }
         ky.get(urlInferenceExperimentClinicalAttrs, { searchParams, timeout: 60000, signal: abortController.current.signal }).then((response) => {
-            response.json().then((clinicalAttributes: string[]) => {
+            response.json<string[]>().then((clinicalAttributes) => {
                 setClinicalAttributes(clinicalAttributes)
             }).catch((err) => {
                 alertGeneralError()
@@ -67,7 +67,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
     }, [props.selectedInferenceExperiment.id])
     return (
         <>
-            <InputLabel label='Group by clinical attribute' />
+            <InputLabel label='inference.clinicalAttribute.label' />
 
             <Form.Select
                 fluid
@@ -79,7 +79,7 @@ export const InferenceExperimentClinicalAttributeSelect = (props: InferenceExper
                 clearable
                 value={props.selectedClinicalAttribute}
                 onChange={(_, { value }) => { props.setSelectedClinicalAttribute(value as string) }}
-                placeholder='Clinical attribute to group by'
+                placeholder='inference.clinicalAttribute.placeholder'
                 disabled={clinicalAttributesOptions.length === 0}
             />
         </>

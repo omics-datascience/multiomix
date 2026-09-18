@@ -4,6 +4,7 @@ import { Table } from 'semantic-ui-react'
 import { PaginatedTable } from '../../../common/PaginatedTable'
 import { PubmedButton } from './PubmedButton'
 import { MiRNAExtraData } from './MiRNAExtraData'
+import { useIntl } from 'react-intl'
 
 declare const urlMiRNADiseases: string
 
@@ -21,9 +22,10 @@ interface MiRNADiseasesPanelProps {
  * @returns Component
  */
 export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
+    const intl = useIntl()
     const headers: RowHeader<DjangoMiRNADiseasesJSON>[] = [
-        { name: 'Condition associated', serverCodeToSort: 'disease' },
-        { name: 'Pubmed' }
+        { name: intl.formatMessage({ id: 'miRNADiseasesPanel.conditionAssociated' }), serverCodeToSort: 'disease' },
+        { name: intl.formatMessage({ id: 'miRNADiseasesPanel.pubmed' }) }
     ]
 
     const mapFunction = (diseaseRow: DjangoMiRNADiseasesJSON) => {
@@ -42,12 +44,12 @@ export const MiRNADiseasesPanel = (props: MiRNADiseasesPanelProps) => {
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNADiseasesJSON>
-                headerTitle='miRNA diseases associations'
+                headerTitle={intl.formatMessage({ id: 'miRNADiseasesPanel.headerTitle' })}
                 headers={headers}
                 showSearchInput
                 entriesSelectWidth={2}
-                searchLabel='Disease'
-                searchPlaceholder='Search by disease'
+                searchLabel={intl.formatMessage({ id: 'miRNADiseasesPanel.searchLabel' })}
+                searchPlaceholder={intl.formatMessage({ id: 'miRNADiseasesPanel.searchPlaceholder' })}
                 queryParams={{
                     mirna: props.miRNA
                 }}

@@ -6,6 +6,7 @@ import { getCorrelationMethodSelectOptions, getAdjustmentMethodSelectOptions } f
 import { InfoPopup } from './experiment-result/gene-gem-details/InfoPopup'
 import { SemanticShorthandItem } from 'semantic-ui-react/dist/commonjs/generic'
 import { ExternalLink } from '../common/ExternalLink'
+import { useIntl } from 'react-intl'
 
 // Slider styles
 import 'neo-react-semantic-ui-range/dist/styles.min.css'
@@ -64,6 +65,7 @@ interface PipelineAdvancedFormProps {
  * @returns Component
  */
 export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
+    const intl = useIntl()
     const [showAdvancedSettings, setShowAdvancedSetting] = useState<boolean>(false)
 
     // Generates Slider settings
@@ -111,7 +113,7 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                 className='clickable margin-bottom-5'
                 onClick={() => setShowAdvancedSetting(!showAdvancedSettings)}
             >
-                <Icon name={showAdvancedSettings ? 'chevron down' : 'chevron right'} /> <strong>Advanced Settings</strong>
+                <Icon name={showAdvancedSettings ? 'chevron down' : 'chevron right'} /> <strong>{intl.formatMessage({ id: 'pipelineAdvancedForm.advancedSettings' })}</strong>
             </div>
 
             {showAdvancedSettings && (
@@ -119,8 +121,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {/* Correlation method */}
                     <Form.Field>
                         <LabelWithInfoPopup
-                            labelText='Correlation method'
-                            popupContent='Correlation method to use: Pearson, Spearman or Kendall (Tau-b). You can see if the selected method is appropriated for your data in the Assumptions panel in the result view once the experiment has finished'
+                            labelText={intl.formatMessage({ id: 'pipelineAdvancedForm.correlationMethod' })}
+                            popupContent={intl.formatMessage({ id: 'pipelineAdvancedForm.correlationMethodInfo' })}
                         />
 
                         <Select
@@ -139,20 +141,26 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {props.gemFileType !== FileType.MIRNA && (
                         <>
                             <LabelWithInfoPopup
-                                labelText='Correlate...'
-                                popupContent='You can choose whether to keep only the combinations whose genes match or to keep all the combinations resulting from the experiment'
+                                labelText={intl.formatMessage({ id: 'pipelineAdvancedForm.correlate' })}
+                                popupContent={intl.formatMessage({ id: 'pipelineAdvancedForm.correlateInfo' })}
                             />
 
                             <Form.Radio
                                 className='margin-top-5'
-                                label={`... ${props.gemDescription}s with expression of only its genes`}
+                                label={intl.formatMessage(
+                                    { id: 'pipelineAdvancedForm.correlateOwnGenes' },
+                                    { gemDescription: props.gemDescription }
+                                )}
                                 name='correlateWithAllGenes'
                                 checked={!props.newExperiment.correlateWithAllGenes}
                                 onChange={(_, { name }) => props.handleFormInputsChange(name as string, false)}
                                 disabled={props.isEditing}
                             />
                             <Form.Radio
-                                label={`... all ${props.gemDescription}s with all genes`}
+                                label={intl.formatMessage(
+                                    { id: 'pipelineAdvancedForm.correlateAllGenes' },
+                                    { gemDescription: props.gemDescription }
+                                )}
                                 name='correlateWithAllGenes'
                                 checked={props.newExperiment.correlateWithAllGenes}
                                 onChange={(_, { name }) => props.handleFormInputsChange(name as string, true)}
@@ -164,8 +172,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {/* Minimum correlation coefficient */}
                     <Form.Field>
                         <LabelWithInfoPopup
-                            labelText={`Min. Correlation Threshold ${correlationCoefficientFormatted}`}
-                            popupContent='Only those combinations that have a correlation coefficient above this threshold will be kept'
+                            labelText={intl.formatMessage({ id: 'pipelineAdvancedForm.minCorrelationThreshold' }, { value: correlationCoefficientFormatted })}
+                            popupContent={intl.formatMessage({ id: 'pipelineAdvancedForm.minCorrelationThresholdInfo' })}
                             centered
                         />
 
@@ -178,8 +186,8 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {/* Minimum Standard Deviation for Genes */}
                     <Form.Field>
                         <LabelWithInfoPopup
-                            labelText={`Genes Min. Standard Deviation ${geneStdFormatted}`}
-                            popupContent='Only those genes with a standard deviation above this value will be kept'
+                            labelText={intl.formatMessage({ id: 'pipelineAdvancedForm.genesMinStandardDeviation' }, { value: geneStdFormatted })}
+                            popupContent={intl.formatMessage({ id: 'pipelineAdvancedForm.genesMinStandardDeviationInfo' })}
                             centered
                         />
 
@@ -192,8 +200,17 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {/* Minimum Standard Deviation for GEM */}
                     <Form.Field>
                         <LabelWithInfoPopup
-                            labelText={`${props.gemDescription} Min. Standard Deviation ${gemStdFormatted}`}
-                            popupContent={`Only those ${props.gemDescription}s with a standard deviation above this value will be kept`}
+                            labelText={intl.formatMessage(
+                                { id: 'pipelineAdvancedForm.gemMinStandardDeviation' },
+                                {
+                                    gemDescription: props.gemDescription,
+                                    value: gemStdFormatted
+                                }
+                            )}
+                            popupContent={intl.formatMessage(
+                                { id: 'pipelineAdvancedForm.gemMinStandardDeviationInfo' },
+                                { gemDescription: props.gemDescription }
+                            )}
                             centered
                         />
 
@@ -205,9 +222,9 @@ export const PipelineAdvancedForm = (props: PipelineAdvancedFormProps) => {
                     {/* P-value adjustment method */}
                     <Form.Field>
                         <LabelWithInfoPopup
-                            labelText='P-value adjustment'
+                            labelText={intl.formatMessage({ id: 'pipelineAdvancedForm.pValueAdjustment' })}
                             popupContent={
-                                <p>P-value adjustment method for <ExternalLink href='http://www.biostathandbook.com/multiplecomparisons.html'>Family-wise Error Rate or False Discovert Rate</ExternalLink></p>
+                                <p>{intl.formatMessage({ id: 'pipelineAdvancedForm.pValueAdjustmentInfo' })}{' '} <ExternalLink href='http://www.biostathandbook.com/multiplecomparisons.html'>{intl.formatMessage({ id: 'pipelineAdvancedForm.familyWiseErrorRate' })}</ExternalLink></p>
                             }
                         />
 

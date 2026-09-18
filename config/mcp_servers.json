@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "servers": {
+    "biomcp": {
+      "enabled": true,
+      "description": "Biomedical research: PubMed papers, bioRxiv, ClinicalTrials.gov, NCI, variants, OncoKB",
+      "transport": "stdio",
+      "command": "biomcp",
+      "args": ["run", "--mode", "stdio"],
+      "env": {}
+    }
+  }
+}

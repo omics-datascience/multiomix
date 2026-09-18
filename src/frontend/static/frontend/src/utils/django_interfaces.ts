@@ -109,15 +109,26 @@ enum DjangoUserFileUploadErrorInternalCode {
 }
 
 /**
+ * Django Tissue model interface
+ */
+interface DjangoTissue {
+    id: number,
+    name: string,
+    code: string
+}
+
+/**
  * A simple structure Experiment's source's CGDSDataset info
  */
 interface SourceSimpleCGDSDataset {
-    name: string,
-    description: string,
+    id?: number,
+    name: Nullable<string>,
+    description: Nullable<string>,
     file_type: FileType,
-    version: number,
+    version: Nullable<number>,
     date_last_synchronization: Nullable<string>,
-    file_obj: string
+    file_obj: string,
+    tissue: Nullable<DjangoTissue>
 }
 
 /**
@@ -218,6 +229,7 @@ interface DjangoSimpleUserFile {
     name: string,
     description: Nullable<string>,
     file_type: FileType,
+    tissue: Nullable<DjangoTissue>
 }
 
 /**
@@ -228,6 +240,8 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
     tag: DjangoTag,
     upload_date?: string,
     institutions: DjangoInstitutionSimple[],
+    is_owner: boolean,
+    /** @deprecated Use is_owner. Kept for compatibility with older API consumers. */
     is_private_or_institution_admin: boolean,
     number_of_rows: number,
     number_of_samples: number,
@@ -237,7 +251,8 @@ interface DjangoUserFile extends DjangoSimpleUserFile {
     platform: DjangoMethylationPlatform,
     user: DjangoUserSimple,
     survival_columns?: DjangoSurvivalColumnsTupleSimple[],
-    is_public: boolean
+    is_public: boolean,
+    tissue: Nullable<DjangoTissue>
 }
 
 /**
@@ -512,6 +527,7 @@ interface DjangoCGDSStudy {
     methylation_dataset: Nullable<DjangoCGDSDataset>,
     clinical_patient_dataset: Nullable<DjangoCGDSDataset>,
     clinical_sample_dataset: Nullable<DjangoCGDSDataset>,
+    tissue: Nullable<DjangoTissue>
 }
 
 /**
@@ -717,6 +733,7 @@ export {
     DjangoUserCandidates,
     DjangoAddRemoveUserToInstitutionInternalCode,
     DjangoInstitutionSimple,
+    DjangoTissue,
     PValuesAdjustmentMethod,
     DjangoExperimentSource,
     DjangoExperimentClinicalSource,

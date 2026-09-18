@@ -9,6 +9,7 @@ from common.response import ResponseStatus
 from .enums import CreateCGDSStudyResponseCode
 from .models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset
 from django.db.models import Q
+from tissues.serializers import SimpleTissueSerializer
 
 
 class CGDSDatasetSerializer(serializers.ModelSerializer):
@@ -224,8 +225,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             methylation_dataset = self.__create_cgds_dataset(validated_data.pop('methylation_dataset'))
             clinical_patient_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_patient_dataset'))
             clinical_sample_dataset = self.__create_cgds_dataset(validated_data.pop('clinical_sample_dataset'))
-            tissues = validated_data.pop('tissues', [])
-
             # Creates the CGDSStudy
             cgds_study = CGDSStudy.objects.create(
                 mrna_dataset=mrna_dataset,
@@ -236,7 +235,6 @@ class CGDSStudySerializer(serializers.ModelSerializer):
                 clinical_sample_dataset=clinical_sample_dataset,
                 **validated_data
             )
-            cgds_study.tissues.set(tissues)
             return cgds_study
 
     @staticmethod
@@ -265,25 +263,16 @@ class CGDSStudySerializer(serializers.ModelSerializer):
         """
         # Updates CGDSDatasets from request data
         with transaction.atomic():
-            mrna_dataset = self.__update_cgds_dataset(instance.mrna_dataset, validated_data.pop('mrna_dataset'))
-            mirna_dataset = self.__update_cgds_dataset(instance.mirna_dataset, validated_data.pop('mirna_dataset'))
-            cna_dataset = self.__update_cgds_dataset(instance.cna_dataset, validated_data.pop('cna_dataset'))
-            methylation_dataset = self.__update_cgds_dataset(
-                instance.methylation_dataset,
-                validated_data.pop('methylation_dataset')
-            )
+            mrna_dataset = self.__update_cgds_dataset(instance.mrna_dataset, validated_data.pop('mrna_dataset')) if 'mrna_dataset' in validated_data else instance.mrna_dataset
+            mirna_dataset = self.__update_cgds_dataset(instance.mirna_dataset, validated_data.pop('mirna_dataset')) if 'mirna_dataset' in validated_data else instance.mirna_dataset
+            cna_dataset = self.__update_cgds_dataset(instance.cna_dataset, validated_data.pop('cna_dataset')) if 'cna_dataset' in validated_data else instance.cna_dataset
+            methylation_dataset = self.__update_cgds_dataset(instance.methylation_dataset, validated_data.pop('methylation_dataset')) if 'methylation_dataset' in validated_data else instance.methylation_dataset
 
             old_clinical_patient_dataset = instance.clinical_patient_dataset
             old_clinical_sample_dataset = instance.clinical_sample_dataset
 
-            clinical_patient_dataset = self.__update_cgds_dataset(
-                instance.clinical_patient_dataset,
-                validated_data.pop('clinical_patient_dataset')
-            )
-            clinical_sample_dataset = self.__update_cgds_dataset(
-                instance.clinical_sample_dataset,
-                validated_data.pop('clinical_sample_dataset')
-            )
+            clinical_patient_dataset = self.__update_cgds_dataset(instance.clinical_patient_dataset, validated_data.pop('clinical_patient_dataset')) if 'clinical_patient_dataset' in validated_data else instance.clinical_patient_dataset
+            clinical_sample_dataset = self.__update_cgds_dataset(instance.clinical_sample_dataset, validated_data.pop('clinical_sample_dataset')) if 'clinical_sample_dataset' in validated_data else instance.clinical_sample_dataset
 
             # If it has been created clinical data, it's needed to link to existing experiments referencing to this
             # CGDSStudy
@@ -305,9 +294,9 @@ class CGDSStudySerializer(serializers.ModelSerializer):
             instance.clinical_patient_dataset = clinical_patient_dataset
             instance.clinical_sample_dataset = clinical_sample_dataset
 
-            # Updates M2M tissues if provided
-            if 'tissues' in validated_data:
-                instance.tissues.set(validated_data['tissues'])
+            # Updates tissue if provided
+            if 'tissue' in validated_data:
+                instance.tissue = validated_data['tissue']
 
             # Saves new changes and returns instance
             instance.save()
@@ -319,11 +308,13 @@ class SimpleCGDSDatasetSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='study.name', read_only=True)
     description = serializers.CharField(source='study.description', read_only=True)
     version = serializers.CharField(source='study.version', read_only=True)
+    tissue = SimpleTissueSerializer(source='study.tissue', read_only=True)
     file_obj = serializers.SerializerMethodField(method_name='get_file_obj')
 
     class Meta:
         model = CGDSDataset
-        fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj']
+        fields = ['id', 'name', 'description', 'version', 'date_last_synchronization', 'file_type', 'file_obj',
+                  'tissue']
 
     @staticmethod
     def get_file_obj(_instance: CGDSDataset):

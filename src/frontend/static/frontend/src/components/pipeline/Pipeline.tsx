@@ -11,6 +11,7 @@ import intersection from 'lodash/intersection'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../utils/constants'
 import { Confirm } from 'semantic-ui-react'
+import { useIntl, IntlShape } from 'react-intl'
 
 type NumberOfSamplesFields = 'numberOfSamplesMRNA' | 'numberOfSamplesGEM'
 type NewExperimentSourceStateName = 'mRNASource' | 'gemSource'
@@ -74,11 +75,18 @@ type PipelineState = {
 }
 
 /**
+ * Component's props
+ */
+interface PipelineProps {
+    intl: IntlShape
+}
+
+/**
  * Main Pipeline class render. Renders a new experiment form
  * and modals to confirm some actions
  */
-class Pipeline extends React.Component<any, PipelineState> {
-    websocketClient: WebsocketClientCustom
+class Pipeline extends React.Component<PipelineProps, PipelineState> {
+    websocketClient: WebsocketClientCustom | undefined
     filterTimeout: number | undefined
     defaultNewExperiment: NewExperiment
     abortController = new AbortController()
@@ -224,7 +232,7 @@ class Pipeline extends React.Component<any, PipelineState> {
             this.setState({ gettingCommonSamples: true }, () => {
                 ky.get(urlGetCommonSamples, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                     this.setState({ gettingCommonSamples: false })
-                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonResult) => {
+                    response.json<DjangoNumberSamplesInCommonResult>().then((jsonResponse) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                             this.setState({
                                 numberOfSamplesMRNA: jsonResponse.data.number_samples_mrna,
@@ -311,7 +319,7 @@ class Pipeline extends React.Component<any, PipelineState> {
                 this.setState({ gettingCommonSamples: true }, () => {
                     ky.post(urlGetCommonSamplesOneFront, { json: jsonData, headers: myHeaders }).then((response) => {
                         this.setState({ gettingCommonSamples: false })
-                        response.json().then((jsonResponse: DjangoNumberSamplesInCommonOneFrontResult) => {
+                        response.json<DjangoNumberSamplesInCommonOneFrontResult>().then((jsonResponse) => {
                             if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                                 // For front Source subtracts 1 to not have in count the first column of the file
                                 this.setState<never>({
@@ -492,7 +500,7 @@ class Pipeline extends React.Component<any, PipelineState> {
         this.setState({ gettingAllExperiments: true }, () => {
             ky.get(urlUserExperiments, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
                 this.setState({ gettingAllExperiments: false })
-                response.json().then((jsonResponse: ResponseRequestWithPagination<DjangoExperiment>) => {
+                response.json<ResponseRequestWithPagination<DjangoExperiment>>().then((jsonResponse) => {
                     allExperimentsTableControl.totalRowCount = jsonResponse.count
                     this.setState({ allExperiments: jsonResponse.results, allExperimentsTableControl })
                 }).catch((err) => {
@@ -522,12 +530,12 @@ class Pipeline extends React.Component<any, PipelineState> {
      * Handles sorting on table of all experiments
      * @param headerServerCodeToSort Server code of the selected column to send to the server for sorting
      */
-    handleSortAllExperiments = (headerServerCodeToSort: AllExperimentsSortField) => {
+    handleSortAllExperiments = (headerServerCodeToSort: string) => {
         // If the user has selected other column for sorting...
         const tableControl = this.state.allExperimentsTableControl
 
         if (this.state.allExperimentsTableControl.sortField !== headerServerCodeToSort) {
-            tableControl.sortField = headerServerCodeToSort
+            tableControl.sortField = headerServerCodeToSort as AllExperimentsSortField
             tableControl.sortOrderAscendant = true
         } else {
             // If it's the same just change the sort order
@@ -568,7 +576,7 @@ class Pipeline extends React.Component<any, PipelineState> {
             ky.get(urlLastExperiments, { signal: this.abortController.signal }).then((response) => {
                 this.setState({ gettingExperiments: false })
 
-                response.json().then((experiments: DjangoExperiment[]) => {
+                response.json<DjangoExperiment[]>().then((experiments) => {
                     this.setState({ lastExperiments: experiments })
                 }).catch((err) => {
                     console.log('Error parsing JSON ->', err)
@@ -748,7 +756,7 @@ class Pipeline extends React.Component<any, PipelineState> {
                         this.resetAllNumberOfSamples()
                     } else {
                         if (responseJSON.status.internal_code === DjangoUserFileUploadErrorInternalCode.INVALID_FORMAT_NON_NUMERIC) {
-                            alert('The file has an incorrect format: all columns except the index must be numerical data')
+                            alert(this.props.intl.formatMessage({ id: 'files.manager.error.invalidFormat' }))
                         } else {
                             alertGeneralError()
                         }
@@ -915,7 +923,7 @@ class Pipeline extends React.Component<any, PipelineState> {
         }
 
         ky.get(urlTagsCRUD, { signal: this.abortController.signal, searchParams }).then((response) => {
-            response.json().then((experimentTags: DjangoTag[]) => {
+            response.json<DjangoTag[]>().then((experimentTags) => {
                 this.setState({ tags: experimentTags }, functionToExecute)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
@@ -958,7 +966,7 @@ class Pipeline extends React.Component<any, PipelineState> {
         this.setState({ addingTagForNewExperiment: true }, () => {
             ky.post(urlTagsCRUD, { headers: myHeaders, json: this.state.newTagForNewExperiment }).then((response) => {
                 this.setState({ addingTagForNewExperiment: false })
-                response.json().then((insertedTag: DjangoTag) => {
+                response.json<DjangoTag>().then((insertedTag) => {
                     if (insertedTag && insertedTag.id) {
                         // If all is OK, resets the form and gets the User's tag to refresh the list and select the tag
                         this.setState({ newTagForNewExperiment: getDefaultNewTag() })
@@ -1071,4 +1079,14 @@ class Pipeline extends React.Component<any, PipelineState> {
     }
 }
 
-export { Pipeline, NewExperimentSourceStateName }
+/**
+ * Functional wrapper to inject intl into the class component.
+ * @param props Component props.
+ * @returns Component.
+ */
+const PipelineWithIntl = (props: Omit<PipelineProps, 'intl'>) => {
+    const intl = useIntl()
+    return <Pipeline {...props} intl={intl} />
+}
+
+export { PipelineWithIntl as Pipeline, NewExperimentSourceStateName }

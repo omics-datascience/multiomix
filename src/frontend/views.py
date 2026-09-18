@@ -63,3 +63,7 @@ def differential_expression(request):
 def open_source(request):
     """Open source view"""
     return render(request, "frontend/open-source.html")
+
+def faq_action(request):
+    """FAQ view"""
+    return render(request, "frontend/faq.html")

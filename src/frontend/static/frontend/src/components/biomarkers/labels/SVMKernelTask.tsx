@@ -1,6 +1,7 @@
 import React from 'react'
 import { Label, SemanticCOLORS } from 'semantic-ui-react'
 import { SVMTask } from '../types'
+import { useIntl } from 'react-intl'
 
 /** SVMKernelTask props. */
 interface SVMKernelTaskProps {
@@ -16,17 +17,18 @@ interface SVMKernelTaskProps {
  * @returns Component.
  */
 export const SVMKernelTask = (props: SVMKernelTaskProps) => {
+    const intl = useIntl()
     let color: SemanticCOLORS
     let description: string
 
     switch (props.task) {
         case SVMTask.REGRESSION:
             color = 'green'
-            description = 'Regression'
+            description = intl.formatMessage({ id: 'svmTask.regression' })
             break
         case SVMTask.RANKING:
             color = 'blue'
-            description = 'Ranking'
+            description = intl.formatMessage({ id: 'svmTask.ranking' })
             break
         default:
             color = 'blue'

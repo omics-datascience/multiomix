@@ -7,6 +7,7 @@ import { NewInferenceExperimentModal } from './NewInferenceExperimentModal'
 import { InferenceExperimentResultModal } from './InferenceExperimentResultModal'
 import ky from 'ky'
 import { alertGeneralError } from '../../../../utils/util_functions'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkerInferenceExperimentsDetails: string
 
@@ -23,7 +24,7 @@ interface BiomarkerInferenceExperimentsPanelProps {
  */
 export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExperimentsPanelProps) => {
     const abortController = useRef(new AbortController())
-
+    const intl = useIntl()
     const [openModalNewInferenceExperiment, setOpenModalNewInferenceExperiment] = useState(false)
     const [openModalResultInferenceExperiment, setOpenModalResultInferenceExperiment] = useState(false)
     const [selectedInferenceExperiment, setSelectedInferenceExperiment] = useState<Nullable<InferenceExperimentForTable>>(null)
@@ -54,7 +55,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
         const url = `${urlBiomarkerInferenceExperimentsDetails}/${selectedInferenceExperiment.id}/`
         const searchParams = { biomarker_pk: props.selectedBiomarker.id as number }
         ky.get(url, { searchParams, signal: abortController.current.signal }).then((response) => {
-            response.json().then((experiment: InferenceExperimentForTable) => {
+            response.json<InferenceExperimentForTable>().then((experiment) => {
                 setSelectedInferenceExperiment(experiment)
             }).catch((err) => {
                 alertGeneralError()
@@ -92,7 +93,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
         return (
             <Modal
                 className='large-modal'
-                closeIcon={<Icon name='close' size='large' />}
+                closeIcon={<Icon name='close' size='large' title={intl.formatMessage({ id: 'common.close' })} />}
                 closeOnEscape={false}
                 centered={false}
                 closeOnDimmerClick={false}
@@ -100,7 +101,7 @@ export const BiomarkerInferenceExperimentsPanel = (props: BiomarkerInferenceExpe
                 onClose={closeStatResult}
                 open={openModalResultInferenceExperiment}
             >
-                <Header icon='area chart' content={`Inference experiment "${selectedInferenceExperiment.name}"`} />
+                <Header icon='area chart' content={intl.formatMessage({ id: 'inference.experiment.title' }, { name: selectedInferenceExperiment.name })} />
 
                 <Modal.Content>
                     <InferenceExperimentResultModal selectedInferenceExperiment={selectedInferenceExperiment} refreshExperimentInfo={refreshExperimentInfo} />

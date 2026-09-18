@@ -2,6 +2,7 @@ import React from 'react'
 import { Icon } from 'semantic-ui-react'
 import { StateIconInfo } from '../../../utils/interfaces'
 import { BiomarkerState } from '../types'
+import { useIntl } from 'react-intl'
 
 /** BiomarkerStateLabel props. */
 interface BiomarkerStateLabelProps {
@@ -15,6 +16,7 @@ interface BiomarkerStateLabelProps {
  * @returns Component.
  */
 export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
+    const intl = useIntl()
     let stateIcon: StateIconInfo
 
     switch (props.biomarkerState) {
@@ -23,7 +25,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'check',
                 color: 'green',
                 loading: false,
-                title: 'The experiment is complete'
+                title: intl.formatMessage({ id: 'biomarkerState.completed' })
             }
             break
         case BiomarkerState.FINISHED_WITH_ERROR:
@@ -31,7 +33,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'times',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has finished with errors. Try again'
+                title: intl.formatMessage({ id: 'biomarkerState.finishedWithError' })
             }
             break
         case BiomarkerState.WAITING_FOR_QUEUE:
@@ -39,7 +41,8 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'wait',
                 color: 'yellow',
                 loading: false,
-                title: 'The process of this experiment will start soon'
+                title: intl.formatMessage({ id: 'biomarkerState.waitingForQueue' })
+
             }
             break
         case BiomarkerState.NO_SAMPLES_IN_COMMON:
@@ -47,7 +50,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'user outline',
                 color: 'red',
                 loading: false,
-                title: 'Datasets don\'t have samples in common'
+                title: intl.formatMessage({ id: 'biomarkerState.noSamplesInCommon' })
             }
             break
         case BiomarkerState.IN_PROCESS:
@@ -55,14 +58,14 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'sync alternate',
                 color: 'yellow',
                 loading: true,
-                title: 'The experiment is being processed'
+                title: intl.formatMessage({ id: 'biomarkerState.inProcess' })
             }
             break
         case BiomarkerState.STOPPING:
             stateIcon = {
                 iconName: 'stop',
                 loading: false,
-                title: 'The experiment is being stopped',
+                title: intl.formatMessage({ id: 'biomarkerState.stopping' }),
                 className: 'experiment-stopping-icon'
             }
             break
@@ -71,7 +74,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'stop',
                 color: 'red',
                 loading: false,
-                title: 'The experiment was stopped'
+                title: intl.formatMessage({ id: 'biomarkerState.stopped' })
             }
             break
         case BiomarkerState.REACHED_ATTEMPTS_LIMIT:
@@ -79,7 +82,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'undo',
                 color: 'red',
                 loading: false,
-                title: 'The experiment has failed several times. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'biomarkerState.reachedAttemptsLimit' })
             }
             break
         case BiomarkerState.NO_FEATURES_FOUND:
@@ -87,7 +90,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'times rectangle',
                 color: 'red',
                 loading: false,
-                title: 'No features were found. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'biomarkerState.noFeaturesFound' })
             }
             break
         case BiomarkerState.EMPTY_DATASET:
@@ -95,7 +98,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'After filtering out invalid values such as NaN or inf, there were no molecules or samples to make inference. Perhaps the requested molecules do not exist in the dataset, or all patients contain NaN or inf data. Try changing the dataset used or correct your data and try again.'
+                title: intl.formatMessage({ id: 'biomarkerState.emptyDataset' })
             }
             break
         case BiomarkerState.NO_VALID_MOLECULES:
@@ -103,7 +106,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'browser',
                 color: 'red',
                 loading: false,
-                title: 'The dataset used has not enough molecules to compute the experiment (i.e.: has different molecules than the specified in the Biomarker). Select other dataset and try again'
+                title: intl.formatMessage({ id: 'biomarkerState.noValidMolecules' })
             }
             break
         case BiomarkerState.NUMBER_OF_SAMPLES_FEWER_THAN_CV_FOLDS:
@@ -111,7 +114,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'user times',
                 color: 'red',
                 loading: false,
-                title: 'There is a less number of members of each class than the number of CrossValidation folds. We tried to set a lower split number but it still failed. Try selecting a larger dataset and try again'
+                title: intl.formatMessage({ id: 'biomarkerState.numberOfSamplesFewerThanCvFolds' })
             }
             break
         case BiomarkerState.TIMEOUT_EXCEEDED:
@@ -119,7 +122,7 @@ export const BiomarkerStateLabel = (props: BiomarkerStateLabelProps) => {
                 iconName: 'wait',
                 color: 'red',
                 loading: false,
-                title: 'The analysis has reached the timeout limit. Try changing some parameters and try again'
+                title: intl.formatMessage({ id: 'biomarkerState.timeoutExceeded' })
             }
             break
     }

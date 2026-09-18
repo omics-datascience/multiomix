@@ -4,6 +4,32 @@ import ky from 'ky'
 import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { Footer } from './Footer'
+import { IntlProvider } from 'react-intl'
+import { ChatWidget } from './assistant/ChatWidget'
+
+// Locales
+import es from '../locales/es'
+import en from '../locales/en'
+
+// Common dependencies for all the pages
+import 'fomantic-ui-css/semantic.css'
+import '../css/base.css'
+
+const messages = { en, es }
+const LOCALE_STORAGE_KEY = 'multiomix_locale'
+
+const LOCALES = ['en', 'es'] as const
+type Locale = typeof LOCALES[number]
+const LANG_SET: Set<Locale> = new Set(LOCALES)
+
+interface LocaleContextType {
+    locale: Locale,
+    setLocale: (locale: Locale) => void
+}
+const LocaleContext = React.createContext<LocaleContextType>({
+    locale: 'es',
+    setLocale: () => {}
+})
 
 declare const urlCurrentUser: string
 
@@ -29,6 +55,16 @@ const Base = (props: BaseProps) => {
     const abortController = useRef(new AbortController())
     const [currentUser, setUser] = useState<Nullable<DjangoUser>>(null)
     const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState<boolean>(true)
+    // State that defines the current language ('es' or 'en') for <IntlProvider>, used to display the interface in the selected locale
+    const [locale, setLocaleState] = useState<Locale>(() => {
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale
+        return LANG_SET.has(storedLocale) ? storedLocale : 'es'
+    })
+
+    const setLocale = (newLocale: Locale) => {
+        localStorage.setItem(LOCALE_STORAGE_KEY, newLocale)
+        setLocaleState(newLocale)
+    }
 
     /**
      * Method which is executed when the component has mounted
@@ -47,7 +83,7 @@ const Base = (props: BaseProps) => {
      */
     function getCurrentUser () {
         ky.get(urlCurrentUser, { retry: 5, signal: abortController.current.signal }).then((response) => {
-            response.json().then((currentUser: DjangoUser) => {
+            response.json<DjangoUser>().then((currentUser) => {
                 setUser(currentUser)
             }).catch((err) => {
                 console.log('Error parsing JSON ->', err)
@@ -75,19 +111,26 @@ const Base = (props: BaseProps) => {
 
     return (
         <CurrentUserContext.Provider value={currentUser}>
-            {/* Navbar */}
-            <MainNavbar activeItem={props.activeItem} isLoadingUser={isLoadingCurrentUser} />
+            <LocaleContext.Provider value={{ locale, setLocale }}>
+                <IntlProvider locale={locale} messages={messages[locale]}>
+                    {/* Navbar */}
+                    <MainNavbar activeItem={props.activeItem} isLoadingUser={isLoadingCurrentUser} />
 
-            {/* Composition part */}
-            <div className={props.wrapperClass}>
-                {props.children}
-            </div>
+                    {/* Composition part */}
+                    <div className={props.wrapperClass}>
+                        {props.children}
+                    </div>
 
-            {/* Footer */}
-            {/* TODO: add license */}
-            <Footer />
+                    {/* Footer */}
+                    {/* TODO: add license */}
+                    <Footer />
+
+                    {/* AI Assistant floating widget */}
+                    {currentUser && !currentUser.is_anonymous && <ChatWidget />}
+                </IntlProvider>
+            </LocaleContext.Provider>
         </CurrentUserContext.Provider>
     )
 }
 
-export { Base, CurrentUserContext }
+export { Base, CurrentUserContext, LocaleContext }

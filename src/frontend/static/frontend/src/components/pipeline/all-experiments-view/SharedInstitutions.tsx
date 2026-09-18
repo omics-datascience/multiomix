@@ -1,12 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Button, Divider, Grid, GridColumn, Icon, List, ListContent, ListHeader, ListItem, Modal, ModalContent, ModalHeader, Segment, Select, Table } from 'semantic-ui-react'
-import { PaginatedTable } from '../../common/PaginatedTable'
-import { DjangoInstitutionUserLimited } from '../../../utils/django_interfaces'
-import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { getDjangoHeader } from '../../../utils/util_functions'
 import ky from 'ky'
 import { SemanticListItem } from '../../../utils/interfaces'
 import { CurrentUserContext } from '../../Base'
+import { useIntl } from 'react-intl'
+import { SharedInstitution, SharedInstitutionsModal } from '../../common/SharedInstitutionsModal'
 
 declare const urlGetUsersCandidatesLimited: string
 declare const urlGetInstitutionsNonInExperiment: string
@@ -26,44 +24,15 @@ interface Props extends SharedInstitutionsProps {
     handleChangeConfirmModalState: (setOption: boolean, headerText: string, contentText: string, onConfirm: () => void) => void,
 }
 
-interface InstitutionUserListProps {
-    institutionName: string,
-    institutionId: number,
-}
-
-const InstitutionUserList = (props: InstitutionUserListProps) => {
-    return (
-        <div key={props.institutionId} style={{ padding: '0 1rem 0 0' }}>
-            <PaginatedTable<DjangoInstitutionUserLimited>
-                headerTitle={props.institutionName + ' users'}
-                headers={[
-                    { name: 'User name', serverCodeToSort: 'user__username' as any, width: 3 }
-                ]}
-                showSearchInput
-                searchLabel='User name'
-                searchPlaceholder='Search by User name'
-                urlToRetrieveData={urlGetUsersCandidatesLimited + '/' + props.institutionId + '/'}
-                updateWSKey='update_user_for_institution'
-                mapFunction={(userCandidate: DjangoInstitutionUserLimited) => {
-                    return (
-                        <Table.Row key={userCandidate.user.id}>
-                            <TableCellWithTitle value={userCandidate.user.username} />
-                        </Table.Row>
-                    )
-                }}
-            />
-        </div>
-    )
-}
-
 export const SharedInstitutions = (props: Props) => {
     const [activeInstitution, setActiveInstitution] = useState<{ id: number, name: string }>({ id: 0, name: '' })
     const [listOfInstitutionNonPart, setListOfInstitutionNonPart] = useState<SemanticListItem[]>([])
-    const [institutionIdToAdd, setInstitutionIdToAdd] = useState<number>(0)
+    const [institutionIdToAdd, setInstitutionIdToAdd] = useState<string | null>(null)
     const abortController = useRef(new AbortController())
     const [institutionList, setInstitutionList] = useState<{ id: number, name: string }[]>([])
     const [isLoadingInstitution, setIsLoadingInstitution] = useState<boolean>(false)
     const currentUser = useContext(CurrentUserContext)
+    const intl = useIntl()
 
     /**
      * Function to search institutions that are not in experiment.
@@ -74,7 +43,7 @@ export const SharedInstitutions = (props: Props) => {
         const url = `${urlGetInstitutionsNonInExperiment}/${props.experimentId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, name: string }[]) => {
+            response.json<{ id: number, name: string }[]>().then((jsonResponse) => {
                 setListOfInstitutionNonPart(jsonResponse.map(institution => ({ key: institution.id.toString(), value: institution.id.toString(), text: institution.name })))
             }).catch((err) => {
                 console.error('Error parsing JSON ->', err)
@@ -93,7 +62,7 @@ export const SharedInstitutions = (props: Props) => {
         const url = `${urlGetSharedInstitution}/${props.experimentId}/`
 
         ky.get(url, { headers: myHeaders, signal: abortController.current.signal }).then((response) => {
-            response.json().then((jsonResponse: { id: number, name: string }[]) => {
+            response.json<{ id: number, name: string }[]>().then((jsonResponse) => {
                 setInstitutionList(jsonResponse)
 
                 if (!(jsonResponse.map(item => item.id).includes(activeInstitution.id))) {
@@ -115,11 +84,12 @@ export const SharedInstitutions = (props: Props) => {
             setIsLoadingInstitution(true)
             const myHeaders = getDjangoHeader()
             const body = {
-                institutionId: institutionIdToAdd,
+                institutionId: Number(institutionIdToAdd),
                 experimentId: props.experimentId
             }
             ky.post(urlShareExperimentToInstitution, { headers: myHeaders, signal: abortController.current.signal, json: body }).then((response) => {
                 response.json().then(() => {
+                    setInstitutionIdToAdd(null)
                     InstitutionsistNonInExperiment()
                     usersListInstitution()
                 }).catch((err) => {
@@ -160,92 +130,48 @@ export const SharedInstitutions = (props: Props) => {
     }
 
     useEffect(() => {
-        if (props.experimentId) {
+        if (props.isOpen && props.experimentId) {
+            setInstitutionIdToAdd(null)
             InstitutionsistNonInExperiment()
             usersListInstitution()
         }
-    }, [props.experimentId])
+    }, [props.experimentId, props.isOpen])
+
+    const canManage = props.user.id === currentUser?.id
+    const selectedInstitution: SharedInstitution | null = activeInstitution.id ? activeInstitution : null
 
     return (
-        <Modal
-            onClose={() => props.handleClose()}
-            open={props.isOpen}
-            closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
-            style={{ width: '80%' }}
-        >
-            <ModalHeader>Shared institutions</ModalHeader>
-            <ModalContent>
-                {
-                    props.user.id === currentUser?.id &&
-                    (
-                        <>
-                            <Select
-                                placeholder='Select a institution to share'
-                                options={listOfInstitutionNonPart}
-                                value={institutionIdToAdd.toString()}
-                                onChange={(_e, { value }) => setInstitutionIdToAdd(Number(value))}
-                            />
-                            <Button
-                                className='margin-left-5'
-                                disabled={!institutionIdToAdd || isLoadingInstitution}
-                                onClick={() => props.handleChangeConfirmModalState(true, 'Share experiment', 'Are you sure to share experiment to institution?', handleAddInstitution)}
-                            >
-                                Add institution
-                            </Button>
-                        </>
-                    )
-                }
-
-                <Segment>
-                    <Grid columns={2}>
-                        <GridColumn>
-                            <List selection verticalAlign='middle'>
-                                <div
-                                    style={{
-                                        maxHeight: '400px',
-                                        overflowY: 'auto'
-                                    }}
-                                >
-                                    {institutionList.map(institution => (
-                                        <ListItem key={institution.id} active={activeInstitution.id === institution.id}>
-                                            <div style={{ display: 'flex', alignContent: 'center', flexDirection: 'row' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <ListContent onClick={() => setActiveInstitution(institution)}>
-                                                        <ListHeader>
-                                                            {institution.name}
-                                                        </ListHeader>
-                                                    </ListContent>
-                                                </div>
-                                                {currentUser?.id === props.user.id &&
-                                                    (
-                                                        <Icon
-                                                            name='trash'
-                                                            className='clickable'
-                                                            disabled={isLoadingInstitution}
-                                                            color='red'
-                                                            title='Remove institution'
-                                                            onClick={() => props.handleChangeConfirmModalState(true, 'Stop sharing experiment', 'Are you sure to stop sharing experiment to this institution?', () => handleRemoveInstitution(institution.id))}
-                                                        />
-                                                    )}
-                                            </div>
-                                        </ListItem>
-                                    ))}
-                                </div>
-                            </List>
-                        </GridColumn>
-                        <Divider vertical />
-                        <GridColumn>
-                            {
-                                activeInstitution.id
-                                    ? (
-                                        <InstitutionUserList institutionName={activeInstitution.name} institutionId={activeInstitution.id} />
-                                    )
-                                    : null
-                            }
-                        </GridColumn>
-                    </Grid>
-                </Segment>
-            </ModalContent>
-        </Modal>
+        <SharedInstitutionsModal
+            isOpen={props.isOpen}
+            title={intl.formatMessage({ id: 'sharedInstitutions.title' })}
+            selectPlaceholder={intl.formatMessage({ id: 'sharedInstitutions.selectInstitution' })}
+            addButtonText={intl.formatMessage({ id: 'sharedInstitutions.addInstitution' })}
+            availableInstitutions={listOfInstitutionNonPart}
+            selectedInstitutionToAdd={institutionIdToAdd}
+            sharedInstitutions={institutionList}
+            selectedInstitution={selectedInstitution}
+            usersUrl={urlGetUsersCandidatesLimited}
+            usersHeaderTitle={(institutionName) => `${institutionName} ${intl.formatMessage({ id: 'sharedInstitutions.users' })}`}
+            userNameLabel={intl.formatMessage({ id: 'sharedInstitutions.userName' })}
+            searchUserNamePlaceholder={intl.formatMessage({ id: 'sharedInstitutions.searchUserName' })}
+            removeInstitutionTitle={intl.formatMessage({ id: 'sharedInstitutions.removeInstitution' })}
+            isLoading={isLoadingInstitution}
+            canManage={canManage}
+            onClose={props.handleClose}
+            onInstitutionToAddChange={setInstitutionIdToAdd}
+            onAddInstitution={() => props.handleChangeConfirmModalState(
+                true,
+                intl.formatMessage({ id: 'sharedInstitutions.shareExperiment' }),
+                intl.formatMessage({ id: 'sharedInstitutions.confirmShare' }),
+                handleAddInstitution
+            )}
+            onSelectInstitution={setActiveInstitution}
+            onRemoveInstitution={(institutionId) => props.handleChangeConfirmModalState(
+                true,
+                intl.formatMessage({ id: 'sharedInstitutions.stopSharing' }),
+                intl.formatMessage({ id: 'sharedInstitutions.confirmStopSharing' }),
+                () => handleRemoveInstitution(institutionId)
+            )}
+        />
     )
 }

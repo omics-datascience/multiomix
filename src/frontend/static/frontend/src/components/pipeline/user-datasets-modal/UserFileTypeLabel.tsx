@@ -2,6 +2,7 @@ import React from 'react'
 import { Label } from 'semantic-ui-react'
 import { SemanticCOLORS } from 'semantic-ui-react/dist/commonjs/generic'
 import { DjangoUserFile } from '../../../utils/django_interfaces'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -16,10 +17,11 @@ interface UserFileTypeLabelProps {
  * @returns Component
  */
 export const UserFileTypeLabel = (props: UserFileTypeLabelProps) => {
+    const intl = useIntl()
     const hasInstitutions = props.dataset.institutions.length > 0
 
     const typeTitle = hasInstitutions
-        ? `Shared with ${props.dataset.institutions.length} institutions`
+        ? intl.formatMessage({ id: 'userFileTypeLabel.sharedWithInstitutions' }, { count: props.dataset.institutions.length })
         : undefined
 
     let typeDescription: string
@@ -30,10 +32,10 @@ export const UserFileTypeLabel = (props: UserFileTypeLabelProps) => {
         labelColor = 'grey'
     } else {
         if (props.dataset.is_public) {
-            typeDescription = 'Public'
+            typeDescription = intl.formatMessage({ id: 'userFileTypeLabel.public' })
             labelColor = 'blue'
         } else {
-            typeDescription = 'Private'
+            typeDescription = intl.formatMessage({ id: 'userFileTypeLabel.private' })
             labelColor = 'red'
         }
     }

@@ -2,6 +2,7 @@ from common.exceptions import EmptyDataset
 from common.typing import AbortEvent
 from differential_expression.models import DifferentialExpressionExperiment
 import logging
+import os
 import warnings
 from itertools import combinations
 
@@ -15,6 +16,11 @@ warnings.filterwarnings('ignore',
 warnings.filterwarnings('ignore',
                        message='Environment variable "R_SESSION_TMPDIR" redefined by R and overriding existing variable.',
                        category=UserWarning)
+
+# rpy2's API mode is unavailable on Windows. Selecting ABI explicitly avoids
+# logging its expected API-import failure before it falls back to ABI.
+if os.name == 'nt':
+    os.environ.setdefault('RPY2_CFFI_MODE', 'ABI')
 
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri

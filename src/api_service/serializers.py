@@ -2,6 +2,7 @@ from datasets_synchronization.serializers import SimpleCGDSDatasetSerializer
 from genes.serializers import GeneForResultTableSerializer
 from tags.serializers import TagSerializer
 from user_files.serializers import SimpleUserFileSerializer, UserFileSerializer
+from tissues.serializers import SimpleTissueSerializer
 from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNACombination, GeneCNACombination, \
     GeneMethylationCombination, ExperimentClinicalSource
 from rest_framework import serializers
@@ -49,7 +50,7 @@ class ExperimentSerializerDetail(serializers.ModelSerializer):
 
     class Meta:
         model = Experiment
-        fields = ['id', 'name', 'description', 'tag']
+        fields = ['id', 'name', 'description', 'tag', 'tissue']
 
 
 class ExperimentSourceSerializer(serializers.ModelSerializer):
@@ -78,6 +79,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
     gem_source = ExperimentSourceSerializer()
     user = LimitedUserSerializer()
     tag = TagSerializer()
+    tissue = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = Experiment
@@ -99,7 +101,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'tag',
             'clinical_source_id',
             'is_public',
-            'user'
+            'user',
+            'tissue'
         ]
 
 

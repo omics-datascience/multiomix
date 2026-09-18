@@ -1,7 +1,7 @@
 services:
     # PostgreSQL
     db:
-        image: postgres:16
+        image: pgvector/pgvector:pg16
         restart: 'always'
         container_name: multiomics_dev_db
         ports:

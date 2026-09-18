@@ -4,6 +4,7 @@ import { Button, Form, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { ClusterLabelsSet } from '../../biomarkers/types'
 import { NewClusterLabelsSetModal } from './NewClusterLabelsSetModal'
+import { useIntl } from 'react-intl'
 
 declare const urlClusterLabelsSetsPaginated: string
 
@@ -23,7 +24,7 @@ interface ClusterLabelsSetsModalProps {
  */
 export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
     const [showNewClusterLabelsSet, setShowNewClusterLabelsSet] = useState(false)
-
+    const intl = useIntl()
     // TODO: show this in the TrainedModels page
 
     return (
@@ -48,27 +49,27 @@ export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
             >
                 <Modal.Header>
                     <Icon name='braille' />
-                    Cluster labels sets
+                    {intl.formatMessage({ id: 'clusterLabelsSetsModal.header' })}
                 </Modal.Header>
                 <Modal.Content>
                     <PaginatedTable<ClusterLabelsSet>
-                        headerTitle='Cluster labels sets'
+                        headerTitle={intl.formatMessage({ id: 'clusterLabelsSetsModal.header' })}
                         headers={[
-                            { name: 'Name', serverCodeToSort: 'name', width: 3 },
-                            { name: 'Description', serverCodeToSort: 'description', width: 4 },
-                            { name: 'Actions' }
+                            { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
+                            { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },
+                            { name: intl.formatMessage({ id: 'common.actions' }) }
                         ]}
                         queryParams={{ trained_model_pk: props.trainedModelPk }}
                         customElements={[
-                            <Form.Field key={1} className='custom-table-field' title='New Cluster model'>
+                            <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'clusterLabelsSetsModal.newClusterModel' })}>
                                 <Button primary icon onClick={() => { setShowNewClusterLabelsSet(true) }}>
                                     <Icon name='add' />
                                 </Button>
                             </Form.Field>
                         ]}
                         showSearchInput
-                        searchLabel='Name'
-                        searchPlaceholder='Search by name or description'
+                        searchLabel={intl.formatMessage({ id: 'common.name' })}
+                        searchPlaceholder={intl.formatMessage({ id: 'clusterLabelsSetsModal.searchPlaceholder' })}
                         urlToRetrieveData={urlClusterLabelsSetsPaginated}
                         // updateWSKey='update_trained_models' // TODO: implement
                         mapFunction={(clusterLabelsSet: ClusterLabelsSet) => {
@@ -83,7 +84,7 @@ export const ClusterLabelsSetsModal = (props: ClusterLabelsSetsModalProps) => {
                                             name='pencil'
                                             color='yellow'
                                             className='clickable'
-                                            title='Edit'
+                                            title={intl.formatMessage({ id: 'common.edit' })}
                                             // onClick={() => setShowNewClusterLabelsSet(clusterLabelsSet)}
                                         /> */}
                                     </Table.Cell>

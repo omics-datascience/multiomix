@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
-    <title>Multiomix{% block title %}{% endblock %}</title>
+    <title>Multiomix {% block title %}{% endblock %}</title>
     {# Favicon #}
     <link rel="shortcut icon" href="{% static " frontend/img/favicon.ico" %}" type="image/x-icon">
     <link rel="icon" href="{% static " frontend/img/favicon.ico" %}" type="image/x-icon">
@@ -61,6 +61,9 @@
         const urlSearchUser = "{% url 'search_user' %}" {# URL to search user view #}
         const urlUpdateUser = "{% url 'update_user' %}" {# URL to update user view #}
         const currentUserId = "{{ user.id }}"
+        const urlAssistantChat = "{% url 'assistant_chat' %}" {# URL for AI assistant chat endpoint #}
+        const urlAssistantConversations = "{% url 'assistant_conversations' %}" {# URL for AI assistant conversations #}
+        const urlFAQ = "{% url 'faq' %}" {# URL to FAQ page #}
     </script>
 
     {% render_bundle 'base' 'js' %}

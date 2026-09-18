@@ -3,6 +3,7 @@ import { DjangoExperiment, DjangoTag } from '../../../utils/django_interfaces'
 import { Card, Label, DropdownMenuProps } from 'semantic-ui-react'
 import { LastExperimentCard } from '../last-experiments/LastExperimentCard'
 import { Nullable } from '../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 interface UserLastExperimentsProps {
     experiments: DjangoExperiment[],
@@ -27,6 +28,7 @@ interface UserLastExperimentsProps {
  * @returns Component
  */
 export const UserLastExperiments = (props: UserLastExperimentsProps) => {
+    const intl = useIntl()
     const experimentsList = props.experiments.map((experiment) => {
         return (
             <LastExperimentCard
@@ -48,7 +50,7 @@ export const UserLastExperiments = (props: UserLastExperimentsProps) => {
 
     return (
         <div className='align-center'>
-            <Label className='margin-bottom-5 full-width' color='blue' size='large'>Last analysis</Label>
+            <Label className='margin-bottom-5 full-width' color='blue' size='large'>{intl.formatMessage({ id: 'userLastExperiments.lastAnalysis' })}</Label>
 
             {/* Experiments list */}
             <Card.Group id='last-experiments-cards-group'>

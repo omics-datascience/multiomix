@@ -293,10 +293,15 @@ services:
 
             # For logging (by default LOG_FILE_PATH is /logs)
             # LOG_FILE_PATH: /path/to/folder/log
+
+            # MCP external tools (optional). Uncomment both lines below and install
+            # biomcp-python inside the container image to enable biomedical literature tools.
+            # ASSISTANT_MCP_CONFIG_PATH: '/config/mcp_servers.json'
         volumes:
             - static_data:/src/static
             - media_data:/src/media
             - logs_data:/logs
+            # - ./config/mcp_servers.json:/config/mcp_servers.json:ro
         depends_on:
             - db
             - mongo

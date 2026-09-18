@@ -26,7 +26,8 @@ export const common = {
         survival: `${PATHS.src}/survival.tsx`,
         aboutUs: `${PATHS.src}/about-us.tsx`,
         openSource: `${PATHS.src}/open-source.tsx`,
-        sitePolicy: `${PATHS.src}/site-policy.tsx`
+        sitePolicy: `${PATHS.src}/site-policy.tsx`,
+        faq: `${PATHS.src}/faq.tsx`
     },
     output: {
         path: PATHS.output,

@@ -3,6 +3,7 @@ import { DifferentialExpressionAnalysis } from './types'
 import { Icon, Modal, Tab, TabPane } from 'semantic-ui-react'
 import { DifferentialExpressionModalResultsTableView } from './DifferentialExpressionModalResultsTableView'
 import { DifferentialExpressionModalResultsVolcanoPlot } from './DifferentialExpressionModalResultsVolcanoPlot'
+import { useIntl } from 'react-intl'
 
 interface DifferentialExpressionModalResultsProps {
     /* Whether the results modal is open */
@@ -15,10 +16,11 @@ interface DifferentialExpressionModalResultsProps {
 
 /* Differential expression results modal component */
 export const DifferentialExpressionModalResults = (props: DifferentialExpressionModalResultsProps) => {
+    const intl = useIntl()
     /* Tab panes for results modal */
     const panes = [
         {
-            menuItem: 'Table',
+            menuItem: intl.formatMessage({ id: 'common.table' }),
             render: () => (
                 <TabPane>
                     <DifferentialExpressionModalResultsTableView differentialExpressionAnalysisId={props.differentialExpressionAnalysis?.id as number} />
@@ -26,7 +28,7 @@ export const DifferentialExpressionModalResults = (props: DifferentialExpression
             )
         },
         {
-            menuItem: 'Volcano Plot',
+            menuItem: intl.formatMessage({ id: 'differentialExpressionModalResults.tab.volcanoPlot' }),
             render: () => (
                 <TabPane>
                     <DifferentialExpressionModalResultsVolcanoPlot differentialExpressionAnalysisId={props.differentialExpressionAnalysis?.id as number} />
@@ -47,7 +49,7 @@ export const DifferentialExpressionModalResults = (props: DifferentialExpression
         >
             <>
                 <Modal.Header>
-                    Differential Expression Analysis Results - {props.differentialExpressionAnalysis?.name}
+                    {intl.formatMessage({ id: 'differentialExpressionModalResults.header' }, { name: props.differentialExpressionAnalysis?.name })}
                 </Modal.Header>
                 <Modal.Content scrolling>
                     <Tab panes={panes} />

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useIntl } from 'react-intl'
 import { Segment, Grid, Header, Dropdown, DropdownItemProps } from 'semantic-ui-react'
 import { listToDropdownOptions } from '../../utils/util_functions'
 
@@ -17,6 +18,8 @@ interface SurvivalGeneSelectionPanelProps {
  * @returns Component
  */
 export const SurvivalGeneSelectionPanel = (props: SurvivalGeneSelectionPanelProps) => {
+    const intl = useIntl()
+
     const genesOptions: DropdownItemProps[] = listToDropdownOptions(props.genes)
     const optionsArrayIsEmpty = genesOptions.length === 0
 
@@ -26,11 +29,17 @@ export const SurvivalGeneSelectionPanel = (props: SurvivalGeneSelectionPanelProp
                 {/* File type for expression dataset */}
                 <Grid.Row>
                     <Header textAlign='center'>
-                        <Header.Content>Select Genes</Header.Content>
+                        <Header.Content>
+                            {intl.formatMessage({
+                                id: 'survivalGeneSelectionPanel.selectGenes'
+                            })}
+                        </Header.Content>
                     </Header>
 
                     <Dropdown
-                        placeholder='State'
+                        placeholder={intl.formatMessage({
+                            id: 'common.state'
+                        })}
                         fluid
                         multiple
                         search

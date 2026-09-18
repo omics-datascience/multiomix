@@ -3,6 +3,7 @@ import { Table, Icon, TableCell, Form, Button } from 'semantic-ui-react'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { DiffExpExperimentDetail } from './types'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
+import { useIntl } from 'react-intl'
 declare const urlDifferentialExpressionExperimentResults: string
 declare const urlDownloadDifferentialExpressionResults: string
 
@@ -13,6 +14,7 @@ interface DifferentialExpressionModalResultsProps {
 export const DifferentialExpressionModalResultsTableView = (props: DifferentialExpressionModalResultsProps) => {
     const [pValueFilter, setPValueFilter] = useState<number>(0.05)
     const [logFilter, setLogFilter] = useState<number>(1)
+    const intl = useIntl()
 
     const downloadUrl = () => {
         const searchParams = new URLSearchParams({
@@ -29,12 +31,12 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
 
     const customInputs: PaginationCustomFilter[] = [
         {
-            label: 'Log fold change threshold',
+            label: intl.formatMessage({ id: 'diffExpResultsTable.logFoldThreshold' }),
             keyForServer: 'fc_threshold',
             defaultValue: 1,
             width: 2,
             options: [
-                { key: 'no_log', text: 'No Log Fold' },
+                { key: 'no_log', text: intl.formatMessage({ id: 'diffExpResultsTable.noLogFold' }) },
                 { key: '1', text: '1', value: 1 },
                 { key: '2', text: '2', value: 2 },
                 { key: '3', text: '3', value: 3 },
@@ -44,12 +46,12 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
             onChangeFilterEvent: (value) => setLogFilter(value),
         },
         {
-            label: 'P-value threshold',
+            label: intl.formatMessage({ id: 'diffExpResultsTable.pValueThreshold' }),
             keyForServer: 'p_threshold',
             defaultValue: 0.05,
             width: 2,
             options: [
-                { key: 'no_p_val', text: 'No P-value' },
+                { key: 'no_p_val', text: intl.formatMessage({ id: 'diffExpResultsTable.noPValue' }) },
                 { key: '0.05', text: '0.05', value: 0.05 },
                 { key: '0.01', text: '0.01', value: 0.01 },
             ],
@@ -60,34 +62,34 @@ export const DifferentialExpressionModalResultsTableView = (props: DifferentialE
     return (
         <>
             <PaginatedTable<DiffExpExperimentDetail>
-                headerTitle='Experiment results'
+                headerTitle={intl.formatMessage({ id: 'diffExpResultsTable.headerTitle' })}
                 headers={[
-                    { name: 'Gene', serverCodeToSort: 'gene' },
-                    { name: 'Adjusted p-value', serverCodeToSort: 'adj_p_val' },
-                    { name: 'Average expression', serverCodeToSort: 'ave_expr' },
-                    { name: 'B statistic', serverCodeToSort: 'b_statistic' },
-                    { name: 'Log Fold Change', serverCodeToSort: 'log_fc' },
-                    { name: 'P-value', serverCodeToSort: 'p_value' },
-                    { name: 'T statistic', serverCodeToSort: 't_statistic' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.gene' }), serverCodeToSort: 'gene' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.adjustedPValue' }), serverCodeToSort: 'adj_p_val' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.averageExpression' }), serverCodeToSort: 'ave_expr' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.bStatistic' }), serverCodeToSort: 'b_statistic' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.logFoldChange' }), serverCodeToSort: 'log_fc' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.pValue' }), serverCodeToSort: 'p_value' },
+                    { name: intl.formatMessage({ id: 'diffExpResultsTable.tStatistic' }), serverCodeToSort: 't_statistic' },
                 ]}
                 defaultSortProp={{ sortField: 'created_at', sortOrderAscendant: false }}
                 customFilters={customInputs}
                 showSearchInput
                 customElements={[
-                    <Form.Field key='download-csv-button' className='custom-table-field' title='Download results in a CSV file'>
+                    <Form.Field key='download-csv-button' className='custom-table-field' title={intl.formatMessage({ id: 'diffExpResultsTable.downloadCSV' })}>
                         <Button
                             color='green'
                             icon
                             type='button'
                             onClick={onDownload}
-                            title='Download results in a CSV file'
+                            title={intl.formatMessage({ id: 'diffExpResultsTable.downloadCSV' })}
                         >
                             <Icon name='file excel' />
                         </Button>
                     </Form.Field>
                 ]}
-                searchLabel='Gene'
-                searchPlaceholder='Search by Gene'
+                searchLabel={intl.formatMessage({ id: 'diffExpResultsTable.gene' })}
+                searchPlaceholder={intl.formatMessage({ id: 'diffExpResultsTable.searchPlaceholder' })}
                 urlToRetrieveData={urlDifferentialExpressionExperimentResults + props.differentialExpressionAnalysisId + '/'}
                 updateWSKey='update_differential_expression_experiments'
                 mapFunction={(differentialExpressionAnalysis: DiffExpExperimentDetail) => (

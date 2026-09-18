@@ -4,6 +4,7 @@ import { Form, Button } from 'semantic-ui-react'
 import { getDjangoHeader } from '../../utils/util_functions'
 import { CustomAlertTypes, Nullable } from '../../utils/interfaces'
 import { DjangoInstitution } from '../../utils/django_interfaces'
+import { useIntl } from 'react-intl'
 
 const defaultForm: {
     id: undefined | number;
@@ -31,16 +32,16 @@ interface Props {
 }
 
 const InstitutionForm = (props: Props) => {
+    const intl = useIntl()
     const [formData, setFormData] = useState(defaultForm)
 
     /**
-     * Handle form state data
-     * @param e event
-     * @param param.name key name to edit field in form
-     * @param param.value key value to edit field in form
+     * Handle form state data.
+     * @param _ event.
+     * @param data Data with the name and current value of the input element to update the form state.
      */
-
-    const handleChange = (_, { name, value }) => {
+    const handleChange = (_, data: any) => {
+        const { name, value } = data
         setFormData(prevState => ({
             ...prevState, [name]: value
         }))
@@ -64,15 +65,15 @@ const InstitutionForm = (props: Props) => {
 
             ky.patch(editUrl, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
-                response.json().then((jsonResponse: DjangoInstitution) => {
-                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} Updated!`, () => setFormData(defaultForm), true)
+                response.json<DjangoInstitution>().then((jsonResponse) => {
+                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'institutionForm.updated' }, { name: jsonResponse.name }), () => setFormData(defaultForm), true)
                 }).catch((err) => {
                     setFormData(prevState => ({ ...prevState, isLoading: false }))
-                    props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
+                    props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionForm.error' }), () => setFormData(prevState => ({ ...prevState, isLoading: false })))
                     console.error('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
+                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionForm.error' }), () => setFormData(prevState => ({ ...prevState, isLoading: false })))
                 console.error('Error adding new Institution ->', err)
             })
         } else {
@@ -84,15 +85,15 @@ const InstitutionForm = (props: Props) => {
             }
             ky.post(urlCreateInstitution, { headers: myHeaders, json: jsonParams }).then((response) => {
                 setFormData(prevState => ({ ...prevState, isLoading: true }))
-                response.json().then((jsonResponse: DjangoInstitution) => {
-                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, `Institution ${jsonResponse.name} created!`, () => setFormData(defaultForm))
+                response.json<DjangoInstitution>().then((jsonResponse) => {
+                    props.handleUpdateAlert(true, CustomAlertTypes.SUCCESS, intl.formatMessage({ id: 'institutionForm.created' }, { name: jsonResponse.name }), () => setFormData(defaultForm))
                 }).catch((err) => {
-                    props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
+                    props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionForm.error' }), () => setFormData(prevState => ({ ...prevState, isLoading: false })))
                     setFormData(prevState => ({ ...prevState, isLoading: false }))
                     console.error('Error parsing JSON ->', err)
                 })
             }).catch((err) => {
-                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, 'Error creating an institution!', () => setFormData(prevState => ({ ...prevState, isLoading: false })))
+                props.handleUpdateAlert(true, CustomAlertTypes.ERROR, intl.formatMessage({ id: 'institutionForm.error' }), () => setFormData(prevState => ({ ...prevState, isLoading: false })))
                 console.error('Error adding new Institution ->', err)
             })
         }
@@ -128,27 +129,27 @@ const InstitutionForm = (props: Props) => {
                     name='name'
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder='Institution name'
+                    placeholder={intl.formatMessage({ id: 'institutionForm.namePlaceholder' })}
                 />
                 <Form.Input
                     name='location'
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder='Institution location'
+                    placeholder={intl.formatMessage({ id: 'institutionForm.locationPlaceholder' })}
                 />
                 <Form.Input
                     name='email'
                     type='email'
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder='Institution email'
+                    placeholder={intl.formatMessage({ id: 'institutionForm.emailPlaceholder' })}
                 />
                 <Form.Input
                     name='telephone_number'
                     type='tel'
                     value={formData.telephone_number}
                     onChange={handleChange}
-                    placeholder='Institution phone number'
+                    placeholder={intl.formatMessage({ id: 'institutionForm.phonePlaceholder' })}
                 />
                 <Button
                     type='submit'
@@ -158,7 +159,7 @@ const InstitutionForm = (props: Props) => {
                     color='green'
                     loading={formData.isLoading}
                 >
-                    {props.institutionToEdit ? 'Edit institution' : 'Create institution'}
+                    {props.institutionToEdit ? intl.formatMessage({ id: 'institutionForm.editInstitution' }) : intl.formatMessage({ id: 'institutionForm.createInstitution' })}
                 </Button>
             </Form>
             <Button
@@ -169,7 +170,7 @@ const InstitutionForm = (props: Props) => {
                 color='red'
                 onClick={handleCancelForm}
             >
-                {props.institutionToEdit ? 'Cancel edit' : 'Reset form'}
+                {props.institutionToEdit ? intl.formatMessage({ id: 'institutionForm.cancelEdit' }) : intl.formatMessage({ id: 'institutionForm.resetForm' })}
             </Button>
         </>
     )

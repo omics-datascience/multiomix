@@ -16,5 +16,32 @@ urlpatterns = [
    path('file-header/<int:pk>/', views.UserFileHeaders.as_view()),
    path('switch-file-public-view/', views.ToggleFilePublicView.as_view(), name='switch-userFile-public-view'),
    path('switch-file-public-view/<int:userFileId>/', views.ToggleFilePublicView.as_view()),
+   path(
+       'non-institutions',
+       views.InstitutionNonUserFilesSharedListView.as_view(),
+       name='institution-non-user-files-list'
+   ),
+   path(
+       'non-institutions/<int:user_file_id>/',
+       views.InstitutionNonUserFilesSharedListView.as_view(),
+   ),
+   path(
+       'shared-institutions',
+       views.UserFileSharedInstitutionsListView.as_view(),
+       name='shared-institutions-user-file'
+   ),
+   path(
+       'shared-institutions/<int:user_file_id>/',
+       views.UserFileSharedInstitutionsListView.as_view(),
+   ),
+   path(
+       'share-to-institution',
+       views.AddInstitutionToUserFileView.as_view(),
+       name='share-user-file-to-institution'
+   ),
+   path(
+       'remove-institution',
+       views.RemoveInstitutionFromUserFileView.as_view(),
+       name='remove-institution-user-file'
+   ),
 ]
- 

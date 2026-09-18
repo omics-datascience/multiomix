@@ -3,9 +3,11 @@ import { Grid } from 'semantic-ui-react'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../types'
 import { NewBiomarkerForm } from './newBiomarkerForm/NewBiomarkerForm'
 import { MoleculesSectionsContainer } from './MoleculeSectionContainer'
+import { DjangoTag } from '../../../../utils/django_interfaces'
 
 /** ManualForm's props. */
 interface ManualFormProps {
+    tags: DjangoTag[]
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
@@ -26,7 +28,7 @@ interface ManualFormProps {
     handleValidateForm: () => { haveAmbiguous: boolean, haveInvalid: boolean },
     handleSendForm: () => void,
     handleChangeCheckBox: (value: boolean) => void,
-    handleChangeInputForm: (value: string, name: 'biomarkerName' | 'biomarkerDescription') => void,
+    handleChangeInputForm: (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => void,
 
 }
 
@@ -38,7 +40,6 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleChangeInputForm={props.handleChangeInputForm}
                     biomarkerForm={props.biomarkerForm}
                     cleanForm={props.cleanForm}
-                    isFormEmpty={props.isFormEmpty}
                     checkedIgnoreProposedAlias={props.checkedIgnoreProposedAlias}
                     handleChangeIgnoreProposedAlias={props.handleChangeIgnoreProposedAlias}
                     handleChangeMoleculeSelected={props.handleChangeMoleculeSelected}
@@ -50,6 +51,7 @@ export const ManualForm = (props: ManualFormProps) => {
                     handleValidateForm={props.handleValidateForm}
                     handleSendForm={props.handleSendForm}
                     handleChangeCheckBox={props.handleChangeCheckBox}
+                    tags={props.tags}
                 />
             </Grid.Column>
             <MoleculesSectionsContainer

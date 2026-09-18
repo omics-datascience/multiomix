@@ -7,6 +7,7 @@ import { getExperimentStateObj, formatDateLocale } from '../../../utils/util_fun
 import { SeeResultButton } from '../all-experiments-view/SeeResultButton'
 import { DeleteButton } from '../../common/DeleteButton'
 import { Nullable } from '../../../utils/interfaces'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -31,6 +32,7 @@ interface LastExperimentCardProps {
  * @returns Component
  */
 export const LastExperimentCard = (props: LastExperimentCardProps) => {
+    const intl = useIntl()
     const experiment = props.experiment // For a short reference
     const experimentState = getExperimentStateObj(experiment.state)
 
@@ -38,10 +40,16 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
     let trunc_alert
 
     if (experiment.result_final_row_count !== experiment.result_total_row_count) {
-        const truncTitle = `The result has been truncated due its size. Has ${experiment.result_total_row_count}, truncated to ${experiment.result_final_row_count}`
+        const truncTitle = intl.formatMessage(
+            { id: 'lastExperimentCard.truncatedTitle' },
+            {
+                totalRows: experiment.result_total_row_count,
+                finalRows: experiment.result_final_row_count
+            }
+        )
         trunc_alert = (
             <Card.Meta className='margin-top-2' title={truncTitle}>
-                <Label color='red'>Truncated</Label>
+                <Label color='red'>{intl.formatMessage({ id: 'lastExperimentCard.truncated' })}</Label>
             </Card.Meta>
         )
     } else {
@@ -78,7 +86,7 @@ export const LastExperimentCard = (props: LastExperimentCardProps) => {
                     {experiment.description ? experiment.description : '-'}
                 </Card.Meta>
                 <Card.Meta title={experimentState.title}>
-                    State: <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading} />
+                    {intl.formatMessage({ id: 'common.state' })}: {' '} <Icon name={experimentState.iconName} color={experimentState.color} loading={experimentState.loading} />
                 </Card.Meta>
 
                 {/* Truncated label */}

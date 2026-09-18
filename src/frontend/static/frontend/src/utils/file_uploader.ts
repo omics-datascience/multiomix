@@ -118,7 +118,7 @@ class ChunkFileUploader {
                 }
 
                 ky.post(this.urlComplete, { headers: this.headers, body: this.completeData, timeout: false }).then((response) => {
-                    response.json().then((responseJSON: T) => {
+                    response.json<T>().then((responseJSON) => {
                         resolve(responseJSON)
                     }).catch(reject)
                 }).catch(reject)
@@ -171,7 +171,7 @@ class ChunkFileUploader {
                 formData.set('file_obj', blobChunk, file.name)
 
                 ky.post(this.url, { headers: this.headers, body: formData, timeout: false }).then((response) => {
-                    response.json().then((responseJSON: ChunkUploadResponse) => {
+                    response.json<ChunkUploadResponse>().then((responseJSON) => {
                         const offset = responseJSON.offset
 
                         const sizeDone = Math.min(file.size, responseJSON.offset)
@@ -195,7 +195,7 @@ class ChunkFileUploader {
                             loadNextFrom(offset)
                         } else {
                             // Once it's finished must send data to final view
-                            this.completeUpload(uploadId).then(resolve).catch(reject)
+                            this.completeUpload<T>(uploadId).then(resolve).catch(reject)
                         }
                     }).catch(reject)
                 }).catch(reject)

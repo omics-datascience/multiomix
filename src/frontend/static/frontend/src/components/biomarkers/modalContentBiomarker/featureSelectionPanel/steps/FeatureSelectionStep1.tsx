@@ -6,6 +6,7 @@ import { PaginatedTable, PaginationCustomFilter } from '../../../../common/Pagin
 import { TableCellWithTitle } from '../../../../common/TableCellWithTitle'
 import { TagLabel } from '../../../../common/TagLabel'
 import { Biomarker, FeatureSelectionPanelData } from '../../../types'
+import { useIntl } from 'react-intl'
 
 declare const urlBiomarkersCRUD: string
 
@@ -27,10 +28,11 @@ export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
         markBiomarkerAsSelected,
         handleCompleteStep1
     } = props
+    const intl = useIntl()
 
     return (
         <PaginatedTable<Biomarker>
-            headerTitle='Biomarkers'
+            headerTitle={intl.formatMessage({ id: 'featureSelectionStep1.headerTitle' })}
             headers={defaultHeaders}
             customFilters={customFilters}
             queryParams={{
@@ -38,8 +40,8 @@ export const FeatureSelectionStep1 = (props: FeatureSelectionStep1Props) => {
             }}
             defaultSortProp={{ sortField: 'upload_date', sortOrderAscendant: false }}
             showSearchInput
-            searchLabel='Name'
-            searchPlaceholder='Search by name'
+            searchLabel={intl.formatMessage({ id: 'common.name' })}
+            searchPlaceholder={intl.formatMessage({ id: 'featureSelectionStep1.searchPlaceholder' })}
             urlToRetrieveData={urlBiomarkersCRUD}
             updateWSKey='update_biomarkers'
             mapFunction={(biomarker: Biomarker) => (

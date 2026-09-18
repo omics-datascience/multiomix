@@ -1,9 +1,9 @@
 import React from 'react'
 // Update the import path to the correct location of Base component
 import { Modal, DropdownItemProps, Icon, Form, Button, Confirm } from 'semantic-ui-react'
-import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoMRNAxGEMResultRow, DjangoSurvivalColumnsTupleSimple, DjangoTag, DjangoUserFile, TagType } from '../../../utils/django_interfaces'
 import ky, { Options } from 'ky'
-import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource } from '../../../utils/util_functions'
+import { getDjangoHeader, cleanRef, getFilenameFromSource, getDefaultSource, getUserTagsByType } from '../../../utils/util_functions'
 import { NameOfCGDSDataset, Nullable, CustomAlert, CustomAlertTypes, SourceType, ConfirmModal, ExperimentInfo, ExperimentResultTableControl } from '../../../utils/interfaces'
 import { Biomarker, BiomarkerType, BiomarkerOrigin, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection, SaveBiomarkerStructure, SaveMoleculeStructure, FeatureSelectionPanelData, SourceStateBiomarker, FeatureSelectionAlgorithm, FitnessFunction, FitnessFunctionParameters, BiomarkerState, AdvancedAlgorithm as AdvancedAlgorithmParameters, BBHAVersion, BiomarkerSimple, CrossValidationParameters } from '../../biomarkers/types'
 import { ManualForm } from '../../biomarkers/modalContentBiomarker/manualForm/ManualForm'
@@ -12,6 +12,7 @@ import { isEqual } from 'lodash'
 import { getDefaultClusteringParameters, getDefaultRFParameters, getDefaultSvmParameters } from '../../biomarkers/utils'
 import { BiomarkerDetailsModal } from '../../biomarkers/BiomarkerDetailsModal'
 import { Alert } from '../../common/Alert'
+import { useIntl, IntlShape } from 'react-intl'
 
 // URLs defined in gem.html
 declare const urlBiomarkersCRUD: string
@@ -25,6 +26,7 @@ declare const urlMethylationSitesFinder: string
 declare const urlGeneSymbolsFinder: string
 
 const REQUEST_TIMEOUT = 120000 // 2 minutes in milliseconds
+
 type SelectedOption = 'selectAll' | 'selectWithFilters'
 
 /** A matched molecule with the search query and the validated alias. */
@@ -45,6 +47,7 @@ type ValidationForm = {
 interface BiomarkerFromCorrelationModalProps {
     experimentInfo: ExperimentInfo;
     tableControl: ExperimentResultTableControl;
+    intl: IntlShape
 }
 
 /** BiomarkersPanel's state */
@@ -90,7 +93,7 @@ interface BiomarkerFromCorrelationModalState {
 /**
  * Renders a CRUD panel for a Biomarker.
  */
-export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrelationModalProps, BiomarkerFromCorrelationModalState> {
+class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrelationModalProps, BiomarkerFromCorrelationModalState> {
     abortController = new AbortController()
     constructor (props) {
         super(props)
@@ -124,16 +127,30 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             experimentInfoWithoutFilters: {
                 ...props.experimentInfo,
                 rows: [...props.experimentInfo.rows]
-            }
+            },
         }
     }
 
     /**
      * Abort controller if component is render
      */
+    componentDidMount () {
+        this.getUserTags()
+    }
 
     componentWillUnmount () {
         this.abortController.abort()
+    }
+
+    /**
+     * Fetches the User's defined Biomarker/Experiment Tags.
+     */
+    getUserTags () {
+        getUserTagsByType(TagType.EXPERIMENT, this.abortController.signal).then((tags) => {
+            this.setState({ tags })
+        }).catch((err) => {
+            console.log("Error getting user's tags ->", err)
+        })
     }
 
     /**
@@ -568,7 +585,8 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     handleSelectAllBiomarker = () => {
         const allMolecules = this.state.experimentInfoWithoutFilters.rows
-
+        const genes = this.handleMapGeneFormFormat(allMolecules, 'gene')
+        const gems = this.handleMapGeneFormFormat(allMolecules, 'gem')
         this.setState({
             biomarkerTypeSelected: BiomarkerOrigin.MANUAL,
             openCreateEditBiomarkerModal: true,
@@ -584,18 +602,12 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     [BiomarkerType.CNA]: { isLoading: false, data: [] },
                     [BiomarkerType.MIRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gem
-                        }))
+                        data: genes
                     },
                     [BiomarkerType.METHYLATION]: { isLoading: false, data: [] },
                     [BiomarkerType.MRNA]: {
                         isLoading: false,
-                        data: allMolecules.map(item => ({
-                            isValid: true,
-                            value: item.gene
-                        }))
+                        data: gems
                     }
                 },
                 validation: {
@@ -621,15 +633,14 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         // If there are filters applied, use the filtered rows, otherwise use all the rows
         const rowsToUse = hasFilters ? filteredRows : experimentInfo.rows
+        const genes = this.handleMapGeneFormFormat(rowsToUse, 'gene')
 
-        const genes = rowsToUse.map(r => r.gene)
-        const gems = rowsToUse.map(r => r.gem)
-
+        const gems = this.handleMapGeneFormFormat(rowsToUse, 'gem')
         return {
             ...this.getDefaultFormBiomarker(),
             moleculesSection: {
-                [BiomarkerType.MRNA]: { isLoading: false, data: genes.map(g => ({ value: g, isValid: true })) },
-                [BiomarkerType.MIRNA]: { isLoading: false, data: gems.map(g => ({ value: g, isValid: true })) },
+                [BiomarkerType.MRNA]: { isLoading: false, data: genes },
+                [BiomarkerType.MIRNA]: { isLoading: false, data: gems },
                 [BiomarkerType.CNA]: { isLoading: false, data: [] },
                 [BiomarkerType.METHYLATION]: { isLoading: false, data: [] }
             }
@@ -1028,6 +1039,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * Makes the request to create a Biomarker
      */
     handleSendForm = () => {
+        const { intl } = this.props
         const formBiomarker = this.state.formBiomarker
         formBiomarker.validation.isLoading = true
         this.setState({ formBiomarker })
@@ -1040,13 +1052,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
         // Adds molecules if needed
         const biomarkerToSend: SaveBiomarkerStructure | BiomarkerNameAndDesc = formBiomarker.canEditMolecules
-            ? {
-                ...simpleBiomarker,
-                mrnas: this.getMoleculesData(formBiomarker.moleculesSection.mRNA.data),
-                mirnas: this.getMoleculesData(formBiomarker.moleculesSection.miRNA.data),
-                cnas: this.getMoleculesData(formBiomarker.moleculesSection.CNA.data),
-                methylations: this.getMoleculesData(formBiomarker.moleculesSection.Methylation.data)
-            }
+            ? { ...simpleBiomarker, mrnas: this.getMoleculesData(formBiomarker.moleculesSection.mRNA.data), mirnas: this.getMoleculesData(formBiomarker.moleculesSection.miRNA.data), cnas: this.getMoleculesData(formBiomarker.moleculesSection.CNA.data), methylations: this.getMoleculesData(formBiomarker.moleculesSection.Methylation.data) }
             : simpleBiomarker
 
         const settings: Options = {
@@ -1058,17 +1064,13 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         // Checks if it's a creation or an update
         if (!formBiomarker.id) {
             ky.post(urlBiomarkersCreate, settings).then((response) => {
-                response.json<Biomarker>().then((_jsonResponse) => {
-                    this.closeModalWithSuccessMsg('Biomarker created successfully')
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
+                response.json<Biomarker>().then(() => { this.closeModalWithSuccessMsg(intl.formatMessage({ id: 'biomarkerFromCorrelation.alert.successCreating' })) }).catch((err) => { console.log('Error parsing JSON ->', err) })
             }).catch((err) => {
                 console.log('Error adding Biomarker ->', err)
                 const alert = this.state.alert
                 alert.isOpen = true
                 alert.type = CustomAlertTypes.ERROR
-                alert.message = 'Error creating biomarker!'
+                alert.message = intl.formatMessage({ id: 'biomarkerFromCorrelation.alert.errorCreating' })
                 this.setState({ alert })
             }).finally(() => {
                 formBiomarker.validation.isLoading = false
@@ -1077,17 +1079,13 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         } else {
             const url = formBiomarker.canEditMolecules ? urlBiomarkersCRUD : urlBiomarkersSimpleUpdate
             ky.patch(`${url}/${formBiomarker.id}/`, settings).then((response) => {
-                response.json<Biomarker>().then((_jsonResponse) => {
-                    this.closeModalWithSuccessMsg('Biomarker edited successfully')
-                }).catch((err) => {
-                    console.log('Error parsing JSON ->', err)
-                })
+                response.json<Biomarker>().then((_jsonResponse) => { this.closeModalWithSuccessMsg(intl.formatMessage({ id: 'biomarkerFromCorrelation.alert.successEditing' })) }).catch((err) => { console.log('Error parsing JSON ->', err) })
             }).catch((err) => {
                 console.log('Error getting genes ->', err)
                 const alert = this.state.alert
                 alert.isOpen = true
                 alert.type = CustomAlertTypes.ERROR
-                alert.message = 'Error editing biomarker!'
+                alert.message = intl.formatMessage({ id: 'biomarkerFromCorrelation.alert.errorEditing' })
                 this.setState({ alert })
             }).finally(() => {
                 formBiomarker.validation.isLoading = false
@@ -1101,7 +1099,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * @param value new value for input form
      * @param name type of input to change
      */
-    handleChangeInputForm = (value: string, name: 'biomarkerName' | 'biomarkerDescription') => {
+    handleChangeInputForm = (value: any, name: 'biomarkerName' | 'biomarkerDescription' | 'tag') => {
         const formBiomarker = this.state.formBiomarker
         formBiomarker[name] = value
         this.setState({ formBiomarker })
@@ -1296,45 +1294,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
     }
 
     /**
-     * TODO: Check if needed
-     * Removes a Survival data tuple for a CGDSDataset
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     */
-    removeSurvivalFormTuple = (datasetName: NameOfCGDSDataset, idxSurvivalTuple: number) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns.splice(idxSurvivalTuple, 1)
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
-     * TODO: Check if needed
-     * Handles CGDS Dataset form changes in fields of Survival data tuples
-     * @param datasetName Name of the edited CGDS dataset
-     * @param idxSurvivalTuple Index in survival tuple
-     * @param name Field of the CGDS dataset to change
-     * @param value Value to assign to the specified field
-     */
-    handleSurvivalFormDatasetChanges = (
-        datasetName: NameOfCGDSDataset,
-        idxSurvivalTuple: number,
-        name: string,
-        value: any
-    ) => {
-        const newBiomarker = this.state.newBiomarker
-        const dataset = newBiomarker[datasetName]
-
-        if (dataset !== null && dataset.survival_columns !== undefined) {
-            dataset.survival_columns[idxSurvivalTuple][name] = value
-            this.setState({ newBiomarker })
-        }
-    }
-
-    /**
      * Checks if the form is entirely empty. Useful to enable 'Cancel' button
      * @returns True is any of the form's field contains any data. False otherwise
      */
@@ -1388,7 +1347,6 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
 
     handleConfirm = () => {
         const { selectedOption } = this.state
-
         this.setState({ openSelectOptionModal: false }, () => {
             if (selectedOption === 'selectAll') {
                 this.handleSelectAllBiomarker()
@@ -1425,19 +1383,21 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
      * @returns Default object for table's Filters
      */
     getDefaultFilters (): PaginationCustomFilter[] {
+        const { intl } = this.props
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
         })
 
-        tagOptions.unshift({ key: 'no_tag', text: 'No tag' })
+        tagOptions.unshift({ key: 'no_tag', text: intl.formatMessage({ id: 'biomarkerFromCorrelation.tags.noTag' }) })
 
         // TODO: refactor Tag key as it's the same as AllExperimentsView.tsx and UserFilesView.tsx
         return [
-            { label: 'Tag', keyForServer: 'tag', defaultValue: '', placeholder: 'Select an existing Tag', options: tagOptions, width: 3 }
+            { label: intl.formatMessage({ id: 'biomarkerFromCorrelation.tags.label' }), keyForServer: 'tag', defaultValue: '', placeholder: intl.formatMessage({ id: 'biomarkerFromCorrelation.tags.placeholder' }), options: tagOptions, width: 3 }
         ]
     }
 
+    /** Closes the create/edit Biomarker modal and reset all the states related to it. */
     closeBiomarkerModal = () => {
         this.setState({
             formBiomarker: this.getDefaultFormBiomarker(),
@@ -1448,6 +1408,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
             modalReady: false
         })
     }
+    /**
+     *  Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select all" option.
+     *  @returns FormBiomarkerData object with the current page filtered rows data
+     */
 
     buildFormBiomarkerFromFilteredRows = () => {
         const { rows } = this.props.experimentInfo
@@ -1470,15 +1434,30 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         }
     }
 
+    /**
+     * Generates a FormBiomarkerData object with the current page filtered rows data to show in the ManualForm when the user selects "Select with filters" option.
+     * @param genArray is the array of the current page filtered rows and type is the type of molecule to map (gem or gene).
+     * @param type is the type of molecule to map (gem or gene) to show in the ManualForm when the user selects "Select with filters" option.
+     * @returns FormBiomarkerData object with the current page filtered rows data
+     */
+    handleMapGeneFormFormat = (genArray: DjangoMRNAxGEMResultRow[], type: 'gem' | 'gene'): MoleculesSectionData[] => {
+        return Array.from(
+            new Set(genArray.map(r => r[type]).filter(Boolean)),
+            g => ({ value: g, isValid: true })
+        )
+    }
+
     render () {
+        const { intl } = this.props
         const { openSelectOptionModal, selectedOption } = this.state
+
         return (
             <>
                 <Form.Button
                     primary
                     icon='dna'
                     width={2}
-                    label='Create Biomarker'
+                    label={intl.formatMessage({ id: 'biomarkerFromCorrelation.button.label' })}
                     color='green'
                     title='Create Biomarker from result'
                     className='no-margin-right-form-field'
@@ -1494,20 +1473,20 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     open={openSelectOptionModal}
                     onClose={() => this.setState({ openSelectOptionModal: false })}
                 >
-                    <Modal.Header>Create Biomarker</Modal.Header>
+                    <Modal.Header>{intl.formatMessage({ id: 'biomarkerFromCorrelation.modal.header' })}</Modal.Header>
                     <Modal.Content>
-                        <p>Select how you want to build the biomarker:</p>
+                        <p>{intl.formatMessage({ id: 'biomarkerFromCorrelation.modal.selectHow' })}</p>
                         <Form>
                             <Form.Group grouped>
                                 <Form.Radio
-                                    label='Select all'
+                                    label={intl.formatMessage({ id: 'biomarkerFromCorrelation.modal.selectAll' })}
                                     name='biomarkerOption'
                                     value='selectAll'
                                     checked={selectedOption === 'selectAll'}
                                     onChange={(_, { value }) => this.setState({ selectedOption: value as SelectedOption })}
                                 />
                                 <Form.Radio
-                                    label='Select with filters'
+                                    label={intl.formatMessage({ id: 'biomarkerFromCorrelation.modal.selectWithFilters' })}
                                     name='biomarkerOption'
                                     value='selectWithFilters'
                                     checked={selectedOption === 'selectWithFilters'}
@@ -1518,10 +1497,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                     </Modal.Content>
                     <Modal.Actions>
                         <Button onClick={() => this.setState({ openSelectOptionModal: false })} color='grey'>
-                            Cancel
+                            {intl.formatMessage({ id: 'common.cancel' })}
                         </Button>
                         <Button onClick={() => this.handleConfirm()} color='blue'>
-                            Confirm
+                            {intl.formatMessage({ id: 'common.confirm' })}
                         </Button>
                     </Modal.Actions>
                 </Modal>
@@ -1562,6 +1541,7 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
                         handleSendForm={this.handleSendForm}
                         handleChangeCheckBox={this.handleChangeCheckBox}
                         handleRestartSection={this.handleRestartSection}
+                        tags={this.state.tags}
                     />
 
                 </Modal>
@@ -1601,3 +1581,10 @@ export class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFrom
         )
     }
 }
+
+const BiomarkerFromCorrelationModalWithIntl = (props: Omit<BiomarkerFromCorrelationModalProps, 'intl'>) => {
+    const intl = useIntl()
+    return <BiomarkerFromCorrelationModal {...props} intl={intl} />
+}
+
+export { BiomarkerFromCorrelationModalWithIntl as BiomarkerFromCorrelationModal }

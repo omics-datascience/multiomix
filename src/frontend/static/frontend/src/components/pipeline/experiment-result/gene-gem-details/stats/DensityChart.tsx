@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { useIntl } from 'react-intl'
 import { StatChartData } from '../../../../../utils/interfaces'
 import {
     ComposedChart,
@@ -80,6 +81,7 @@ interface CustomTooltipProps {
  * @returns Component
  */
 export const DensityChart = (props: DensityChartProps) => {
+    const intl = useIntl()
     const allDensityChartsAreHidden = props.showDensityChart.every((booleanValue) => !booleanValue)
 
     const newData = useMemo(() => {
@@ -109,7 +111,7 @@ export const DensityChart = (props: DensityChartProps) => {
                         <XAxis2 dataKey='bin0' />
                         <YAxis2 />
                         <Tooltip content={<CustomTooltip color={data.strokeColor} color2={null} />} />
-                        <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
+                        <Legend payload={[{ value: intl.formatMessage({ id: 'densityChart.expression' }), type: 'line', id: 'ID01' }]} />
                         <Bar dataKey='density' fill={data.fillColor} stroke={data.strokeColor} strokeWidth={1} />
                         {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}
                         {/* <Area type="monotone" dataKey="density" fill={data.strokeColor} stroke={data.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
@@ -123,28 +125,32 @@ export const DensityChart = (props: DensityChartProps) => {
 
 /**
  * Renders a custom tooltip for Density chart
- * @param props Component props.
+ * @param props Props of tooltip.
+ * @param props.active True when the tooltip is active.
+ * @param props.payload Tooltip payload provided by Recharts.
+ * @param props.color Primary color used for the tooltip title.
+ * @param props.color2 Secondary color used when rendering the comparison series.
  * @returns Component
  */
-const CustomTooltip = (props: CustomTooltipProps) => {
-    const { active, payload, color, color2 } = props
+const CustomTooltip = ({ active, payload, color, color2 }: CustomTooltipProps) => {
+    const intl = useIntl()
 
     if (active && payload && payload.length) {
         return (
             <div style={{ background: '#fafafa', border: '1px solid #808080', borderWidth: '2px' }}>
                 <strong style={{ color }}>{payload[0].payload.bin0} To {payload[0].payload.bin1}</strong>
-                <div className='align-left'><strong>Count </strong>{payload[0].payload.count}</div>
-                <div className='align-left'><strong>Density </strong>{payload[0].payload.density.toFixed(3)}</div>
-                <div className='align-left'><strong>cumulative </strong>{payload[0].payload.cumulative}</div>
-                <div className='align-left'><strong>cumulativeDensity </strong>{payload[0].payload.cumulativeDensity.toFixed(3)}</div>
+                <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.count' })} </strong>{payload[0].payload.count}</div>
+                <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.density' })} </strong>{payload[0].payload.density.toFixed(3)}</div>
+                <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.cumulative' })} </strong>{payload[0].payload.cumulative}</div>
+                <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.cumulativeDensity' })} </strong>{payload[0].payload.cumulativeDensity.toFixed(3)}</div>
                 {payload[0].payload.obj2 && color2 &&
                     (
                         <div>
-                            <strong style={{ color: color2 }}>{payload[0].payload.bin0} To {payload[0].payload.bin1}</strong>
-                            <div className='align-left'><strong>Count </strong>{payload[0].payload.count2}</div>
-                            <div className='align-left'><strong>Density </strong>{payload[0].payload.density2.toFixed(3)}</div>
-                            <div className='align-left'><strong>cumulative </strong>{payload[0].payload.cumulative2}</div>
-                            <div className='align-left'><strong>cumulativeDensity </strong>{payload[0].payload.cumulativeDensity2.toFixed(3)}</div>
+                            <strong style={{ color: color2 }}>{payload[0].payload.bin0} {intl.formatMessage({ id: 'densityChart.to' })} {payload[0].payload.bin1}</strong>
+                            <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.count' })} </strong>{payload[0].payload.count2}</div>
+                            <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.density' })} </strong>{payload[0].payload.density2.toFixed(3)}</div>
+                            <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.cumulative' })} </strong>{payload[0].payload.cumulative2}</div>
+                            <div className='align-left'><strong>{intl.formatMessage({ id: 'densityChart.cumulativeDensity' })} </strong>{payload[0].payload.cumulativeDensity2.toFixed(3)}</div>
                         </div>
                     )}
             </div>
@@ -174,7 +180,7 @@ interface DensityChartMixProps {
  */
 export const DensityChartMix = (props: DensityChartMixProps) => {
     const allDensityChartsAreHidden = props.showDensityChart.every((booleanValue) => !booleanValue)
-
+    const intl = useIntl()
     const newData = useMemo(() => {
         const newData: BarData[] = generateNewData(props.dataObjects)
         const mergedObjects: any = []
@@ -219,7 +225,7 @@ export const DensityChartMix = (props: DensityChartMixProps) => {
                     <XAxis2 dataKey='bin0' tickCount={4} />
                     <YAxis2 />
                     <Tooltip content={<CustomTooltip color={newData.strokeColor} color2={newData.strokeColor2} />} />
-                    <Legend payload={[{ value: 'Expression', type: 'line', id: 'ID01' }]} />
+                    <Legend payload={[{ value: intl.formatMessage({ id: 'densityChart.expression' }), type: 'line', id: 'ID01' }]} />
                     <Bar dataKey='density' fill={newData.strokeColor} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                     <Bar dataKey='density2' fill={newData.strokeColor2} activeBar={!props.showBars} style={{ display: !props.showBars ? 'none' : 'inherit' }} />
                     {/* FIXME: it's ugly. Let's try to generate a similar chart to ApexCharts */}

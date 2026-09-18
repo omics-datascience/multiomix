@@ -1,5 +1,6 @@
 import React from 'react'
 import { Container, Grid, Icon, Segment } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 
 declare const multiomixVersion: string
 declare const urlSitePolicy: string
@@ -9,6 +10,7 @@ declare const urlSitePolicy: string
  * @returns Component.
  */
 export const Footer = () => {
+    const intl = useIntl()
     return (
         <Segment id='footer-component' inverted vertical>
             <Container>
@@ -40,7 +42,9 @@ export const Footer = () => {
                                     href={urlSitePolicy}
                                     rel='noreferrer'
                                 >
-                                    Terms and privacy policy
+                                    {intl.formatMessage({
+                                        id: 'footer.termsAndPrivacyPolicy'
+                                    })}
                                 </a>
                             </p>
                         </Grid.Column>

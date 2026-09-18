@@ -2,13 +2,14 @@ import React from 'react'
 import { Container, Grid, Header, Image } from 'semantic-ui-react'
 import { Base } from '../Base'
 import { ExternalLink } from '../common/ExternalLink'
+import { useIntl } from 'react-intl'
 
 /**
  * Site policy (terms and privacy policy) page
  * @returns Component
  */
 export const SitePolicy = () => {
-    const multiomixLink = <a href='/'>www.multiomix.org</a>
+    const intl = useIntl()
     return (
         <div>
             <Base wrapperClass='wrapper'>
@@ -30,35 +31,48 @@ export const SitePolicy = () => {
                         <Grid.Row className='margin-bottom-5' columns={1}>
                             <Grid.Column>
                                 <Header as='h2' id='site-policy-header'>
-                                    Multiomix implements a set of security measures to protect the access to the uploaded datasets. Those measures are enforced with some recommendations to protect the data privacy:
+                                    {intl.formatMessage({ id: 'sitePolicy.header' })}
                                 </Header>
 
                                 <p id='site-policy-content'>
-                                    Multiomix implements authentication—verifying a user’s identity—and authorization—determining what data/resources an authenticated user can access respecting the defined access level.
+                                    {intl.formatMessage({ id: 'sitePolicy.authentication' })}
 
                                     <br />
 
-                                    Data transfer is encrypted.
+                                    {intl.formatMessage({ id: 'sitePolicy.dataTransfer' })}
 
                                     <br />
 
-                                    {multiomixLink} is protected with a firewall to prevent brute force attacks.
+                                    {intl.formatMessage(
+                                        { id: 'sitePolicy.firewall' },
+                                        { multiomixLink: 'www.multiomix.org' }
+                                    )}
 
                                     <br />
 
-                                    The platform is containerized using Docker so that the database services and files cannot be accessed externally.
+                                    {intl.formatMessage({ id: 'sitePolicy.containerized' })}
 
                                     <br />
 
-                                    The operators of the service use reasonable security measures to protect against the loss, misuse, and alteration of the information and Data under our control.
+                                    {intl.formatMessage({ id: 'sitePolicy.securityMeasures' })}
 
                                     <br />
 
-                                    It is prohibited to use the service {multiomixLink} for the storage of any data that can be classified as Personally Identifiable Information (PII). Only pre-processed and de-identified data should be up-loaded to {multiomixLink}.
+                                    {intl.formatMessage(
+                                        { id: 'sitePolicy.piiRestriction' },
+                                        { multiomixLink: 'www.multiomix.org' }
+                                    )}
 
                                     <br />
 
-                                    Users can opt for setting up their own local Multiomix instance instead of using the {multiomixLink} service. The instructions to install the local instance are available at <ExternalLink href='https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md'>https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md</ExternalLink>
+                                    {intl.formatMessage(
+                                        { id: 'sitePolicy.localInstance' },
+                                        { multiomixLink: 'www.multiomix.org' }
+                                    )}{' '}
+                                    {intl.formatMessage({ id: 'sitePolicy.localInstanceInstructions' })}{' '}
+                                    <ExternalLink href='https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md'>
+                                        https://github.com/omics-datascience/multiomix/blob/main/DEPLOYING.md
+                                    </ExternalLink>
                                 </p>
                             </Grid.Column>
                         </Grid.Row>

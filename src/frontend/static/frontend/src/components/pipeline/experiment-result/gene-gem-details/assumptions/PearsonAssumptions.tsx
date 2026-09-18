@@ -5,6 +5,7 @@ import { DjangoMRNAxGEMResultRow } from '..//../../../../utils/django_interfaces
 import { AssumptionsCompletion, RecommendedCorrelationMethod } from './AssumptionsPanel'
 import { AssumptionStep, AssumptionStepSimple } from './AssumptionSteps'
 import { ReferenceCardsGroup } from './ReferenceCardsGroup'
+import { useIntl } from 'react-intl'
 
 /**
  * Component's props
@@ -18,6 +19,7 @@ interface PearsonAssumptionsProps {
 }
 
 export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
+    const intl = useIntl()
     const referenceCards: ReferenceCard[] = [
         {
             color: 'red',
@@ -51,13 +53,21 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
             <Grid>
                 <Grid.Row columns={2}>
                     <Grid.Column width='6'>
-                        <Header size='huge'>Pearson statistical assumptions</Header>
+                        <Header size='huge'>{intl.formatMessage({ id: 'pearsonAssumptions.title' })}</Header>
 
                         <Step.Group vertical>
                             {/* Normality */}
                             <AssumptionStep
-                                title='Normality'
-                                description={`Gene (${props.gene}) expression values and GEM (${props.gem}) expression values should be normally distributed each other for applying Pearson`}
+                                title={intl.formatMessage({ id: 'pearsonAssumptions.normality.title' })}
+                                description={intl.formatMessage(
+                                    {
+                                        id: 'pearsonAssumptions.normality.description'
+                                    },
+                                    {
+                                        gene: props.gene,
+                                        gem: props.gem
+                                    }
+                                )}
                                 geneIsOk={props.assumptions.geneNormalityIsOk}
                                 gemIsOk={props.assumptions.gemNormalityIsOk}
                                 selectedRow={props.selectedRow}
@@ -65,8 +75,8 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
 
                             {/* Outliers */}
                             <AssumptionStep
-                                title='Outliers'
-                                description='There should be no outliers'
+                                title={intl.formatMessage({ id: 'pearsonAssumptions.outliers.title' })}
+                                description={intl.formatMessage({ id: 'pearsonAssumptions.outliers.description' })}
                                 geneIsOk={props.assumptions.geneOutliersIsOk}
                                 gemIsOk={props.assumptions.gemOutliersIsOk}
                                 selectedRow={props.selectedRow}
@@ -74,15 +84,17 @@ export const PearsonAssumptions = (props: PearsonAssumptionsProps) => {
 
                             {/* Linearity */}
                             <AssumptionStepSimple
-                                title='Linearity'
-                                description='Correlation should be lineal'
+                                title={intl.formatMessage({
+                                    id: 'pearsonAssumptions.linearity.title'
+                                })}
+                                description={intl.formatMessage({ id: 'pearsonAssumptions.linearity.description' })}
                                 isOk={props.assumptions.linearityIsOk}
                             />
 
                             {/* Homoscedasticity */}
                             <AssumptionStepSimple
-                                title='Homoscedasticity'
-                                description='Correlation should be homoscedastic'
+                                title={intl.formatMessage({ id: 'pearsonAssumptions.homoscedasticity.title' })}
+                                description={intl.formatMessage({ id: 'pearsonAssumptions.homoscedasticity.description' })}
                                 isOk={props.assumptions.homoscedasticityIsOk}
                             />
                         </Step.Group>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
 import { InputLabel } from '../common/InputLabel'
+import { useIntl } from 'react-intl'
 
 interface DifferentialExpressionInputClinicalAttributeProps {
     /* List of clinical attributes available for selection */
@@ -19,9 +20,11 @@ interface DifferentialExpressionInputClinicalAttributeProps {
  * @returns Component.
  */
 export const DifferentialExpressionInputClinicalAttribute = (props: DifferentialExpressionInputClinicalAttributeProps) => {
+    const intl = useIntl()
+
     return (
         <>
-            <InputLabel label='Group by clinical attribute' />
+            <InputLabel label={intl.formatMessage({ id: 'differentialExpressionInputClinicalAttribute.label' })} />
 
             <Form.Select
                 fluid
@@ -33,7 +36,7 @@ export const DifferentialExpressionInputClinicalAttribute = (props: Differential
                 clearable
                 value={props.clinicalAttribute}
                 onChange={(_, { value }) => { props.onChange(value as string) }}
-                placeholder='Clinical attribute to group by'
+                placeholder={intl.formatMessage({ id: 'differentialExpressionInputClinicalAttribute.placeholder' })}
                 disabled={props.isEditing}
             />
         </>

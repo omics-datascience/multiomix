@@ -9,6 +9,7 @@ import { SourceForm } from '../SourceForm'
 import { BiomarkerState, InferenceExperimentForTable } from '../../biomarkers/types'
 import { MAX_FILE_SIZE_IN_MB_WARN } from '../../../utils/constants'
 import { Alert } from '../../common/Alert'
+import { injectIntl, IntlShape } from 'react-intl'
 
 declare const urlClinicalSourceUserFileCRUD: string
 declare const urlGetCommonSamplesClinical: string
@@ -26,6 +27,7 @@ export interface ValidationSource {
  * Component's props
  */
 interface PopupClinicalSourceProps {
+    intl: IntlShape,
     /** Experiment/InferenceExperiment instance to send its id and show some info */
     experiment: DjangoExperiment | InferenceExperimentForTable,
     /** To know if it's an experiment or an inference experiment and make some checks. */
@@ -78,7 +80,7 @@ interface ClinicalSourceState {
 /**
  * Renders an icon with opens a Popup to manage clinical source for an experiment on the fly
  */
-export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProps, ClinicalSourceState> {
+class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProps, ClinicalSourceState> {
     abortController = new AbortController()
 
     constructor (props) {
@@ -188,7 +190,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                         }
 
                         ky.post(urlGetCommonSamplesClinicalSource, { json: jsonData, headers: myHeaders }).then((response) => {
-                            response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                            response.json<DjangoNumberSamplesInCommonClinicalValidationResult>().then((jsonResponse) => {
                                 if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                                     if (jsonResponse.data.number_samples_in_common > 0) {
                                         this.setState({
@@ -236,7 +238,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                 }
 
                 ky.get(urlGetCommonSamplesClinical, { signal: this.abortController.signal, searchParams: searchParams as KySearchParams }).then((response) => {
-                    response.json().then((jsonResponse: DjangoNumberSamplesInCommonClinicalValidationResult) => {
+                    response.json<DjangoNumberSamplesInCommonClinicalValidationResult>().then((jsonResponse) => {
                         if (jsonResponse.status.code === DjangoResponseCode.SUCCESS) {
                             if (jsonResponse.data.number_samples_in_common > 0) {
                                 clinicalSource.type = SourceType.UPLOADED_DATASETS
@@ -271,7 +273,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
      */
     clinicalSourceVoid () {
         const alert = {
-            message: 'No samples in common',
+            message: this.props.intl.formatMessage({ id: 'clinicalSourcePopup.alert.noSamplesInCommon' }),
             isOpen: true,
             type: CustomAlertTypes.WARNING,
             duration: 500
@@ -314,7 +316,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
             // TODO: add type of experiment
             const url = `${this.props.urlUnlinkClinicalSource}/${this.props.experiment.id}/`
             ky.patch(url, { headers: myHeaders }).then((response) => {
-                response.json().then((response: DjangoCommonResponse) => {
+                response.json<DjangoCommonResponse>().then((response) => {
                     if (response.status.code === DjangoResponseCode.SUCCESS) {
                         this.successfulRequest()
                     } else {
@@ -344,7 +346,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         this.setState({ gettingSourceData: true }, () => {
             const url = `${urlClinicalSourceUserFileCRUD}/${this.props.experiment.clinical_source_id}`
             ky.get(url).then((response) => {
-                response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
+                response.json<DjangoExperimentClinicalSource>().then((clinicalSource) => {
                     if (clinicalSource && clinicalSource.id) {
                         this.setState({
                             clinicalSource: {
@@ -419,7 +421,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
 
         this.setState({ addingOrEditingSource: true }, () => {
             ky.post(this.props.urlClinicalSourceAddOrEdit, { headers: myHeaders, body: formData }).then((response) => {
-                response.json().then((clinicalSource: DjangoExperimentClinicalSource) => {
+                response.json<DjangoExperimentClinicalSource>().then((clinicalSource) => {
                     if (clinicalSource && clinicalSource.id) {
                         this.successfulRequest()
                     } else {
@@ -540,7 +542,11 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                     onOpen={this.openPopup}
                     trigger={(
                         <Icon
-                            title={`Analysis has${!experiment.clinical_source_id ? ' not' : ''} clinical data`}
+                            title={
+                                experiment.clinical_source_id
+                                    ? this.props.intl.formatMessage({ id: 'clinicalSourcePopup.iconTitle.withClinicalData' })
+                                    : this.props.intl.formatMessage({ id: 'clinicalSourcePopup.iconTitle.withoutClinicalData' })
+                            }
                             name='file'
                             className={clinicalButtonClassName}
                             color={experiment.clinical_source_id ? 'blue' : 'grey'}
@@ -558,7 +564,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                         <SourceForm
                                             source={this.state.clinicalSource}
                                             showOnlyClinicalDataWithSurvivalTuples={this.props.showOnlyClinicalDataWithSurvivalTuples}
-                                            headerTitle='Clinical Data'
+                                            headerTitle={this.props.intl.formatMessage({ id: 'clinicalSourcePopup.headerTitle' })}
                                             headerIcon={{
                                                 type: 'icon',
                                                 src: 'file'
@@ -581,7 +587,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                                             onClick={this.addOrEdit}
                                             disabled={isProcessing || !this.canAddOrEdit() || survColumnsAreComplete}
                                         >
-                                            Submit
+                                            {this.props.intl.formatMessage({ id: 'clinicalSourcePopup.submit' })}
                                         </Button>
                                     </Grid.Column>
 
@@ -611,7 +617,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                             onClick={this.closePopup}
                             disabled={isProcessing}
                         >
-                            {this.state.cgdsStudyName ? 'Close' : 'Cancel'}
+                            {this.state.cgdsStudyName ? this.props.intl.formatMessage({ id: 'common.close' }) : this.props.intl.formatMessage({ id: 'common.cancel' })}
                         </Button>
 
                         {/* Unlink button (only for UserFiles) */}
@@ -619,7 +625,7 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
                             <Button
                                 color='orange'
                                 fluid
-                                title='Unlink clinical dataset from this experiment'
+                                title={this.props.intl.formatMessage({ id: 'clinicalSourcePopup.unlinkTitle' })}
                                 className='margin-top-2'
                                 loading={this.state.unlinkingSource}
                                 onClick={this.unlinkClinicalSource}
@@ -641,3 +647,5 @@ export class ClinicalSourcePopup extends React.Component<PopupClinicalSourceProp
         )
     }
 }
+
+export default injectIntl(ClinicalSourcePopup)

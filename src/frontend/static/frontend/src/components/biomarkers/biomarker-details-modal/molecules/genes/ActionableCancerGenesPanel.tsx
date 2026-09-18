@@ -1,7 +1,10 @@
 import React from 'react'
+import { useIntl } from 'react-intl'
 
 export const ActionableCancerGenesPanel = () => {
+    const intl = useIntl()
+
     return (
-        <div>ActionableCancerGenesPanel</div>
+        <div>{intl.formatMessage({ id: 'actionableCancerGenes.panel.title' })}</div>
     )
 }

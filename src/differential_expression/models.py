@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from institutions.models import Institution
 from django.contrib.auth.models import User
+from tissues.models import Tissue
 import pandas as pd
 import math
 from django.db.models import Q, QuerySet
@@ -104,6 +105,7 @@ class DifferentialExpressionExperiment(models.Model):
     shared_institutions = models.ManyToManyField(Institution, related_name='shared_differential_expression', blank=True)
     shared_users = models.ManyToManyField(User, blank=True,
                                           related_name='shared_users_differential_expression')
+    tissue = models.ForeignKey(Tissue, on_delete=models.SET_NULL, default=None, blank=True, null=True)
 
     def __str__(self):
         return f"Differential Expression Experiment: {self.name}"

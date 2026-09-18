@@ -4,6 +4,7 @@ import { DropdownItemProps, InputOnChangeData } from 'semantic-ui-react'
 import { TagType, DjangoTag, ExperimentState, ExperimentType, CorrelationMethod, PValuesAdjustmentMethod, DjangoMRNAxGEMResultRow } from './django_interfaces'
 import dayjs from 'dayjs'
 import countBy from 'lodash/countBy'
+import ky from 'ky'
 import { MAX_FILE_SIZE_IN_MB_ERROR } from './constants'
 import { DifferentialExpressionAnalysisExperimentState } from '../components/differential-expression/types'
 
@@ -13,6 +14,7 @@ const USER_LOCALE: readonly string[] | string = navigator.languages !== undefine
     : navigator.language
 
 declare const CSRFToken: string
+declare const urlTagsCRUD: string
 
 const DEFAULT_FILENAME = 'Choose File'
 
@@ -24,6 +26,18 @@ const getDjangoHeader = (): Headers => {
     const headers = new Headers()
     headers.append('X-CSRFToken', CSRFToken)
     return headers
+}
+
+/**
+ * Fetches the current user's Tags, optionally filtering by Tag type.
+ * @param tagType Tag type to filter by. If omitted, every Tag of the user is fetched.
+ * @param signal Optional abort signal to cancel the request.
+ * @returns Promise with the user's Tags.
+ */
+const getUserTagsByType = (tagType?: TagType, signal?: AbortSignal): Promise<DjangoTag[]> => {
+    const searchParams = tagType !== undefined ? { type: tagType } : undefined
+
+    return ky.get(urlTagsCRUD, { searchParams, signal }).json<DjangoTag[]>()
 }
 
 /**
@@ -892,6 +906,7 @@ const getDefaultAlertProps = (): CustomAlert => {
 
 export {
     getDjangoHeader,
+    getUserTagsByType,
     alertGeneralError,
     getFileTypeSelectOptions,
     getDefaultNewTag,

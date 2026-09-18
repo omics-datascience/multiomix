@@ -3,6 +3,7 @@ import { DjangoMiRNADrugsJSON, RowHeader } from '../../../../utils/django_interf
 import { Table, Button, Icon } from 'semantic-ui-react'
 import { PaginationCustomFilter, PaginatedTable } from '../../../common/PaginatedTable'
 import { MiRNAExtraData } from './MiRNAExtraData'
+import { useIntl } from 'react-intl'
 
 declare const urlMiRNAeDrugs: string
 
@@ -20,15 +21,16 @@ interface MiRNADrugsPanelProps {
  * @returns Component
  */
 export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
+    const intl = useIntl()
     const headers: RowHeader<DjangoMiRNADrugsJSON>[] = [
-        { name: 'Drug associated', serverCodeToSort: 'condition' },
-        { name: 'Detection method', serverCodeToSort: 'detection_method' },
-        { name: 'Small molecule', serverCodeToSort: 'small_molecule' },
-        { name: 'Expression pattern', serverCodeToSort: 'expression_pattern' },
-        { name: 'Reference', serverCodeToSort: 'reference' },
-        { name: 'Support', serverCodeToSort: 'support' },
-        { name: 'FDA approved' },
-        { name: 'Pubmed' }
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.drugAssociated' }), serverCodeToSort: 'condition' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.detectionMethod' }), serverCodeToSort: 'detection_method' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.smallMolecule' }), serverCodeToSort: 'small_molecule' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.expressionPattern' }), serverCodeToSort: 'expression_pattern' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.reference' }), serverCodeToSort: 'reference' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.support' }), serverCodeToSort: 'support' },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.fdaApproved' }) },
+        { name: intl.formatMessage({ id: 'miRNADrugsPanel.pubmed' }) }
     ]
 
     const mapFunction = (drugRow: DjangoMiRNADrugsJSON) => {
@@ -51,7 +53,7 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
                         basic
                         color='blue'
                         icon
-                        title='See in NCBI'
+                        title={intl.formatMessage({ id: 'miRNADrugsPanel.seeInNCBI' })}
                         className='borderless-button'
                         as='a' href={drugRow.pubmed} target='_blank'
                     >
@@ -66,14 +68,14 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
 
     const customInputs: PaginationCustomFilter[] = [
         {
-            label: 'FDA approved',
+            label: intl.formatMessage({ id: 'miRNADrugsPanel.filter.fdaApproved' }),
             keyForServer: 'fda_approved',
             defaultValue: 0,
             width: 2,
             options: [
-                { key: 'all', text: 'All', value: 0 },
-                { key: 'yes', text: 'Yes', value: 'true' },
-                { key: 'no', text: 'No', value: 'false' }
+                { key: 'all', text: intl.formatMessage({ id: 'common.all' }), value: 0 },
+                { key: 'yes', text: intl.formatMessage({ id: 'miRNADrugsPanel.filter.yes' }), value: 'true' },
+                { key: 'no', text: intl.formatMessage({ id: 'miRNADrugsPanel.filter.no' }), value: 'false' }
             ]
         }
     ]
@@ -83,14 +85,14 @@ export const MiRNADrugsPanel = (props: MiRNADrugsPanelProps) => {
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNADrugsJSON>
-                headerTitle='miRNA drugs associations'
+                headerTitle={intl.formatMessage({ id: 'miRNADrugsPanel.headerTitle' })}
                 headers={headers}
                 customFilters={customInputs}
                 searchWidth={4}
                 entriesSelectWidth={2}
                 showSearchInput
-                searchLabel='Condition/Molecule/Pattern'
-                searchPlaceholder='Search by drug, S.M. or Exp. P.'
+                searchLabel={intl.formatMessage({ id: 'miRNADrugsPanel.searchLabel' })}
+                searchPlaceholder={intl.formatMessage({ id: 'miRNADrugsPanel.searchPlaceholder' })}
                 queryParams={{
                     mirna: props.miRNA
                 }}

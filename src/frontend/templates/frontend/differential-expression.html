@@ -29,6 +29,15 @@
             const urlDifferentialExpressionExperimentResults = "{% url 'differential_expression_results' %}"
             const urlDownloadDifferentialExpressionResults = "{% url 'download_differential_expression_results' %}"
             const urlDifferentialExpressionVolcanoData = "{% url 'differential_expression_volcano_data' %}"
+            const urlGetUsersCandidatesLimited = "{% url 'user_candidates_limited_institution' %}"
+            const urlGetInstitutionsNonInExperiment = "{% url 'diff-institution-non-shared' %}"
+            const urlGetUsersNonInExperiment = "{% url 'diff-user-non-shared' %}"
+            const urlShareExperimentToInstitution = "{% url 'diff-share-to-institution' %}"
+            const urlShareExperimentToUser = "{% url 'diff-share-to-user' %}"
+            const urlGetSharedInstitution = "{% url 'diff-shared-institutions' %}"
+            const urlGetSharedUsers = "{% url 'diff-shared-users' %}"
+            const urlPostRemoveInstitution = "{% url 'diff-remove-institution' %}"
+            const urlPostRemoveUser = "{% url 'diff-remove-user' %}"
         </script>
         {% render_bundle 'differentialExpression' 'js' %}
 {% endblock %}

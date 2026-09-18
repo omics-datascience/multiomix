@@ -5,6 +5,7 @@ import { PaginatedTable } from '../../../common/PaginatedTable'
 import { PubmedButton } from './PubmedButton'
 import { MiRNAExtraData } from './MiRNAExtraData'
 import { getScoreClassData } from '../../../../utils/util_functions'
+import { useIntl } from 'react-intl'
 
 declare const urlMiRNAInteraction: string
 
@@ -15,14 +16,18 @@ const NUMBER_OF_ELEMENTS_UNTIL_POPUP: number = 5
  * A Popup with explanations of mirDIP Score class
  * @returns Component
  */
-const InfoPopupScoreClass = () => (
-    <List bulleted>
-        <List.Item>Very high: top 1% ranks</List.Item>
-        <List.Item>High: top 5% (excluding top 1%)</List.Item>
-        <List.Item>Medium: top 1/3 (excluding top 5%)</List.Item>
-        <List.Item>Low: remaining predictions</List.Item>
-    </List>
-)
+const InfoPopupScoreClass = () => {
+    const intl = useIntl()
+
+    return (
+        <List bulleted>
+            <List.Item>{intl.formatMessage({ id: 'miRNAInteractionPanel.scoreClass.veryHigh' })}</List.Item>
+            <List.Item>{intl.formatMessage({ id: 'miRNAInteractionPanel.scoreClass.high' })}</List.Item>
+            <List.Item>{intl.formatMessage({ id: 'miRNAInteractionPanel.scoreClass.medium' })}</List.Item>
+            <List.Item>{intl.formatMessage({ id: 'miRNAInteractionPanel.scoreClass.low' })}</List.Item>
+        </List>
+    )
+}
 
 /**
  * Component's props
@@ -39,21 +44,22 @@ interface MiRNAInteractionPanelProps {
  * @returns Component
  */
 export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
+    const intl = useIntl()
     const headers: RowHeader<DjangoMiRNAGeneInteractionJSON>[] = [
-        { name: 'Gene', serverCodeToSort: 'gene', width: 3 },
-        { name: 'Sources', serverCodeToSort: 'source_name', width: 3 },
+        { name: intl.formatMessage({ id: 'miRNAInteractionPanel.gene' }), serverCodeToSort: 'gene', width: 3 },
+        { name: intl.formatMessage({ id: 'miRNAInteractionPanel.sources' }), serverCodeToSort: 'source_name', width: 3 },
         {
-            name: 'mirDIP score',
+            name: intl.formatMessage({ id: 'miRNAInteractionPanel.mirDIPScore' }),
             serverCodeToSort: 'score',
-            infoPopupContent: 'mirDIP scores of human microRNA target predictions were ranked according to four confidence classes (Very high, High, Medium and Low)',
+            infoPopupContent: intl.formatMessage({ id: 'miRNAInteractionPanel.mirDIPScoreInfo' }),
             width: 2
         },
         {
-            name: 'mirDIP score class',
+            name: intl.formatMessage({ id: 'miRNAInteractionPanel.mirDIPScoreClass' }),
             infoPopupContent: <InfoPopupScoreClass />,
             width: 2
         },
-        { name: 'Pubmed' }
+        { name: intl.formatMessage({ id: 'miRNAInteractionPanel.pubmed' }) }
     ]
 
     const generatePubmedButton = (paper: string) => (
@@ -65,18 +71,18 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
             <MiRNAExtraData miRNA={props.miRNA} />
 
             <PaginatedTable<DjangoMiRNAGeneInteractionJSON>
-                headerTitle='Interactions'
+                headerTitle={intl.formatMessage({ id: 'miRNAInteractionPanel.headerTitle' })}
                 headers={headers}
                 queryParams={{ mirna: props.miRNA }}
                 showSearchInput={props.showGeneSearchInput}
-                searchLabel='Gene'
-                searchPlaceholder='Search by gene'
+                searchLabel={intl.formatMessage({ id: 'miRNAInteractionPanel.searchLabel' })}
+                searchPlaceholder={intl.formatMessage({ id: 'miRNAInteractionPanel.searchPlaceholder' })}
                 defaultSortProp={{
                     sortField: 'score',
                     sortOrderAscendant: false
                 }}
                 customFilters={[
-                    { label: 'Include pubmeds', keyForServer: 'include_pubmeds', defaultValue: false, type: 'checkbox' }
+                    { label: intl.formatMessage({ id: 'miRNAInteractionPanel.includePubmeds' }), keyForServer: 'include_pubmeds', defaultValue: false, type: 'checkbox' }
                 ]}
                 urlToRetrieveData={urlMiRNAInteraction}
                 mapFunction={(miRNAInteraction: DjangoMiRNAGeneInteractionJSON) => {
@@ -99,7 +105,7 @@ export const MiRNAInteractionPanel = (props: MiRNAInteractionPanelProps) => {
                                     <Popup
                                         trigger={(
                                             <Icon
-                                                title='See more papers'
+                                                title={intl.formatMessage({ id: 'miRNAInteractionPanel.seeMorePapers' })}
                                                 name='plus circle'
                                                 color='teal'
                                                 className='clickable'
