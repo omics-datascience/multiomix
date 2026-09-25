@@ -33,6 +33,7 @@ export default {
     'common.basicData': 'Datos básicos',
     'common.descriptionOptional': 'Descripción (opcional)',
     'common.continue': 'Continuar',
+    'common.numberOfFolds': 'Número de particiones',
     // common Tables and states
     'common.state': 'Estado',
     'common.cluster': 'Cluster',
@@ -160,7 +161,7 @@ export default {
     'geneOntology.panel.table.term': 'Término',
     'geneOntology.panel.table.ontologyType': 'Tipo de ontología',
     // 12GENES.ActionableCancerGenesPanel.tsx
-    'actionableGenes.panel.title': 'Panel de genes de cáncer accionables',
+    'actionableCancerGenes.panel.title': 'Panel de genes de cáncer accionables',
     // 13.GeneAssociationsNetworkPanel
     'geneAssociations.relation.fusion': 'Fusión',
     'geneAssociations.relation.coOccurrence': 'Co-ocurrencia',
@@ -182,6 +183,7 @@ export default {
     'pathwaysInformation.context.gene': 'para este gen',
     'pathwaysInformation.context.pathways': 'para este gen',
     // 17.MethylationInformation.tsx
+    'methylationInformation.context.site': 'para este sitio de metilación',
     'methylationInformation.noDetails': 'No se encontraron detalles para este sitio de metilación',
     'methylationInformation.infoPopup.aliases': 'Alias de metilación y posición cromosómica',
     'methylationInformation.header': 'Información de metilación',

@@ -239,6 +239,7 @@ export default {
     'statValidationMetrics.header.validationMetrics': 'Validation metrics',
     'statValidationMetrics.metric.mse': 'MSE',
     'statValidationMetrics.metric.r2Score': 'R2 score',
+    'statValidationMetrics.header.model': 'Model',
     // 25.NewStatisticalValidationModal.tsx
     'newStatValidation.header.create': 'Create new statistical validation',
     'newStatValidation.step.trainedModel': 'Step 1: Trained model',
