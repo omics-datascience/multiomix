@@ -1,0 +1,45 @@
+@media only screen and (max-width: 767.98px) {
+    .modals.dimmer .ui.modal.update-user-profile-modal {
+        width: calc(100vw - 2rem) !important;
+        max-height: calc(100vh - 2rem);
+        margin: 1rem auto !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ui.modal.update-user-profile-modal > .header {
+        padding: 1rem 3.5rem 1rem 1rem !important;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        flex: 0 0 auto;
+    }
+
+    .ui.modal.update-user-profile-modal > .content {
+        min-height: 0;
+        overflow-y: auto;
+        flex: 1 1 auto;
+    }
+
+    .ui.modal.update-user-profile-modal > .content > .ui.segment > div {
+        width: 100%;
+        align-items: stretch !important;
+    }
+
+    .ui.modal.update-user-profile-modal > .content > .ui.segment > div > div {
+        width: 100%;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .ui.modal.update-user-profile-modal .ui.input {
+        width: 100%;
+    }
+
+    .ui.modal.update-user-profile-modal > .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+    }
+}

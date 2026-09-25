@@ -4,6 +4,10 @@ import { Base } from '../Base'
 import { ExternalLink } from '../common/ExternalLink'
 import { useIntl } from 'react-intl'
 
+/**
+ * Renders the site policy page content.
+ * @returns Component
+ */
 const SitePolicyContent = () => {
     const intl = useIntl()
     return (

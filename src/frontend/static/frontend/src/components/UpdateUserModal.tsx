@@ -5,6 +5,7 @@ import { getDjangoHeader } from '../utils/util_functions'
 import { DjangoUser } from '../utils/django_interfaces'
 import { CustomAlertTypes, Nullable } from '../utils/interfaces'
 import { useIntl } from 'react-intl'
+import '../css/update-user-modal.css'
 
 declare const urlUpdateUser: string
 
@@ -16,6 +17,10 @@ interface Props {
     handleUpdateAlert: (isOpen: boolean, type: CustomAlertTypes, message: string, callback: Nullable<() => void>) => void,
 }
 
+/**
+ * Renders the modal for editing a user's profile.
+ * @returns Component
+ */
 export const UpdateUserModal = (props: Props) => {
     const intl = useIntl()
     const [isLoading, setIsLoading] = useState(false)
@@ -87,6 +92,7 @@ export const UpdateUserModal = (props: Props) => {
     return (
         <Modal
             open={props.isOpen}
+            className='update-user-profile-modal'
             closeIcon={<Icon name='close' size='large' onClick={props.handleClose} />}
             style={{ width: '30%' }}
         >

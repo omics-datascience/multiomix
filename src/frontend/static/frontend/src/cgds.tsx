@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 
 import './css/files.css'
+import './css/cgds.css'
 
 import { CGDSPanel } from './components/cgds-panel/CGDSPanel'
 import { IntlProvider } from 'react-intl'
