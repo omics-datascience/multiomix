@@ -30,7 +30,7 @@ export const StatisticalValidationMenu = (props: StatisticalValidationMenuProps)
                 {intl.formatMessage({ id: 'statValidationMenu.bestFeatures' })}
 
                 <InfoPopup
-                    content='Most significant features for the survival analysis'
+                    content={intl.formatMessage({ id: 'statValidationMenu.bestFeatures.info' })}
                     onTop={false}
                     onEvent='hover'
                     extraClassName='margin-left-5'

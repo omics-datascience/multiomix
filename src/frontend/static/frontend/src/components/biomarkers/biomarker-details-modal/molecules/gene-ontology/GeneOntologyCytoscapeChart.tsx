@@ -7,6 +7,8 @@ import { OntologyRelationTermToTermFilter, CytoscapeElements, OntologyType, GoTe
 import { Button, Form, Grid } from 'semantic-ui-react'
 import '../../../../../css/cytoscape.css'
 import { useIntl } from 'react-intl'
+import { InputLabel } from '../../../../common/InputLabel'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 declare const urlGOTermToTerms: string
 
@@ -228,13 +230,21 @@ export const GeneOntologyCytoscapeChart = (props: GeneOntologyCytoscapeChartProp
                         ))}
                     </Form.Field>
                     <Form.Input
-                        label={intl.formatMessage({ id: 'geneOntology.form.generalDepth' })}
+                        label={(
+                            <InputLabel label={intl.formatMessage({ id: 'geneOntology.form.generalDepth' })}>
+                                <InfoPopup content={intl.formatMessage({ id: 'geneOntology.form.generalDepth.info' })} onTop={false} onEvent='hover' noBorder extraClassName='pull-right' />
+                            </InputLabel>
+                        )}
                         type='number'
                         value={termsRelatedToTermForm.general_depth}
                         onChange={(e) => handleChangesInForm('general_depth', parseInt(e.target.value))}
                     />
                     <Form.Input
-                        label={intl.formatMessage({ id: 'geneOntology.form.hierarchicalDepth' })}
+                        label={(
+                            <InputLabel label={intl.formatMessage({ id: 'geneOntology.form.hierarchicalDepth' })}>
+                                <InfoPopup content={intl.formatMessage({ id: 'geneOntology.form.hierarchicalDepth.info' })} onTop={false} onEvent='hover' noBorder extraClassName='pull-right' />
+                            </InputLabel>
+                        )}
                         type='number'
                         value={termsRelatedToTermForm.hierarchical_depth_to_children}
                         onChange={(e) => handleChangesInForm('hierarchical_depth_to_children', parseInt(e.target.value))}
