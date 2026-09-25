@@ -244,14 +244,19 @@ export const StatisticalValidationResultKaplanMeier = (props: StatisticalValidat
                         )}
                     </Form>
 
-                    {/* TODO: add InfoPopups for every metric and their interpretation. */}
                     <Statistic className='margin-top-5 margin-bottom-5'>
                         <Statistic.Value>{kaplanMeierData ? kaplanMeierData.concordance_index.toFixed(3) : '-'}</Statistic.Value>
-                        <Statistic.Label>{intl.formatMessage({ id: 'kaplanMeier.metric.cIndex' })}</Statistic.Label>
+                        <Statistic.Label>
+                            {intl.formatMessage({ id: 'kaplanMeier.metric.cIndex' })}
+                            <InfoPopup content={intl.formatMessage({ id: 'metricInfo.cIndex' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                        </Statistic.Label>
                     </Statistic>
                     <Statistic>
                         <Statistic.Value>{kaplanMeierData ? kaplanMeierData.log_likelihood.toFixed(3) : '-'}</Statistic.Value>
-                        <Statistic.Label>{intl.formatMessage({ id: 'kaplanMeier.metric.partialLogLikelihood' })}</Statistic.Label>
+                        <Statistic.Label>
+                            {intl.formatMessage({ id: 'kaplanMeier.metric.partialLogLikelihood' })}
+                            <InfoPopup content={intl.formatMessage({ id: 'metricInfo.partialLogLikelihood' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                        </Statistic.Label>
                     </Statistic>
 
                     {/* Samples and clusters modal. */}

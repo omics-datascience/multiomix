@@ -358,7 +358,7 @@ export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsN
                     <InfoPopup
                         content={(
                             <span>
-                                The combined score is computed by combining the probabilities from the different evidence channels and corrected for the probability of randomly observing an interaction. For a more detailed description please see{' '}
+                                {intl.formatMessage({ id: 'geneAssociations.infoPopup.text' })}{' '}
                                 <ExternalLink href='https://pubmed.ncbi.nlm.nih.gov/15608232/'>
                                     von Mering, et al. Nucleic Acids Res. 2005
                                 </ExternalLink>

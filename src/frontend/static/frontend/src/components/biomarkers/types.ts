@@ -534,7 +534,7 @@ interface KaplanMeierResultData {
 
 /** Data which is present in all the TrainedModels. */
 interface GeneralModelDetails {
-    best_fitness: number,
+    best_fitness: Nullable<number>,
     model: FitnessFunction
     random_state: Nullable<number>
 }

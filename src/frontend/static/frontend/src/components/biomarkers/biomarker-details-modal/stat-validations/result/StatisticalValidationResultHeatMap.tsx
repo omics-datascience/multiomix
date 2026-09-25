@@ -5,6 +5,8 @@ import ky from 'ky'
 import { alertGeneralError } from '../../../../../utils/util_functions'
 import { ResultPlaceholder } from './ResultPlaceholder'
 import { Heatmap } from '../heatmap/Heatmap'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
+import { useIntl } from 'react-intl'
 
 declare const urlStatisticalValidationHeatMap: string
 
@@ -20,6 +22,7 @@ interface StatisticalValidationResultHeatMapProps {
  * @returns Component
  */
 export const StatisticalValidationResultHeatMap = (props: StatisticalValidationResultHeatMapProps) => {
+    const intl = useIntl()
     const abortController = useRef(new AbortController())
     const [loading, setLoading] = useState(false)
     const [heatMapData, setHeatMapData] = useState<Nullable<MoleculesExpressions>>(null)
@@ -77,8 +80,15 @@ export const StatisticalValidationResultHeatMap = (props: StatisticalValidationR
             {loading &&
                 <ResultPlaceholder />}
 
-            {(!loading && heatMapData !== null) &&
-                <Heatmap data={data} width={1000} height={550} min={heatMapData.min} max={heatMapData.max} />}
+            {(!loading && heatMapData !== null) && (
+                <>
+                    <div className='align-center margin-bottom-5'>
+                        {intl.formatMessage({ id: 'metricInfo.expression.label' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'metricInfo.expression' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                    </div>
+                    <Heatmap data={data} width={1000} height={550} min={heatMapData.min} max={heatMapData.max} />
+                </>
+            )}
         </>
     )
 }
