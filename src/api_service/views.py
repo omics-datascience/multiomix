@@ -1,5 +1,7 @@
 import json
 import logging
+from urllib.parse import urlsplit
+import requests
 from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
 
 import numpy as np
@@ -13,6 +15,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters, status
@@ -53,7 +56,7 @@ from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_co
 from .permissions import ExperimentIsNotRunning
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
-    ExperimentClinicalSourceSerializer, LimitedUserSerializer
+    ExperimentClinicalSourceSerializer, LimitedUserSerializer, MirnaTargetValidationQuerySerializer
 from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
 from institutions.models import Institution
@@ -952,6 +955,26 @@ def get_mirna_target_interaction_action(request):
         page=request.GET.get('page'),
         page_size=request.GET.get('page_size'),
     )
+    return JsonResponse(data)
+
+
+@login_required
+@require_http_methods(['GET'])
+def get_mirna_target_validation_action(request):
+    """Return experimentally validated miRNA-target interactions from miRTarBase."""
+    serializer = MirnaTargetValidationQuerySerializer(data=request.GET)
+    if not serializer.is_valid():
+        return JsonResponse(serializer.errors, status=400)
+
+    try:
+        data = global_mrna_service.get_mirna_target_validations(**serializer.validated_data)
+    except (requests.RequestException, ValueError):
+        logging.exception('Modulector miRNA-target validation request failed')
+        return JsonResponse({'error': 'Modulector validation service is unavailable'}, status=502)
+
+    for key in ('next', 'previous'):
+        if data.get(key):
+            data[key] = f"{reverse('mirna_target_validation')}?{urlsplit(data[key]).query}"
     return JsonResponse(data)
 
 
