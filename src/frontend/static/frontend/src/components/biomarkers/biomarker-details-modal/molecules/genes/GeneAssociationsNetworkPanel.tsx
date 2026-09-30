@@ -296,28 +296,27 @@ export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsN
         cy.fit(undefined, 30)
     }
 
-    const getRelatedGenes = async (gene: BiomarkerMolecule, score: number) => {
+    const getRelatedGenes = (gene: BiomarkerMolecule, score: number) => {
         abortControllerRef.current?.abort()
-        abortControllerRef.current = new AbortController()
+        const abortController = new AbortController()
+        abortControllerRef.current = abortController
 
-        try {
-            const response = await ky.get(urlGeneAssociationsNetwork, {
-                searchParams: {
-                    gene_id: gene.identifier,
-                    min_combined_score: score
-                } as any,
-                signal: abortControllerRef.current.signal
+        return ky.get(urlGeneAssociationsNetwork, {
+            searchParams: {
+                gene_id: gene.identifier,
+                min_combined_score: score
+            } as any,
+            signal: abortController.signal
+        })
+            .json<{ data: CytoscapeResponseData }>()
+            .then(data => applyElements(data.data))
+            .catch(err => {
+                if (!abortController.signal.aborted) {
+                    alertGeneralError()
+                }
+
+                console.log('Error getting experiment', err)
             })
-
-            const data = await response.json<{ data: CytoscapeResponseData }>()
-            applyElements(data.data)
-        } catch (err) {
-            if (!abortControllerRef.current?.signal.aborted) {
-                alertGeneralError()
-            }
-
-            console.log('Error getting experiment', err)
-        }
     }
 
     useEffect(() => {
