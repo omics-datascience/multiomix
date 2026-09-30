@@ -8,6 +8,8 @@ import { GeneOntologyCytoscapeChart } from './GeneOntologyCytoscapeChart'
 import { GORelationType, GeneToTermFilterType, GeneToTermForm, GeneToTermSearchParams, GoTerm, OntologyType, TermsRelatedToGene } from './types'
 import { debounce } from 'lodash'
 import { useIntl } from 'react-intl'
+import { InputLabel } from '../../../../common/InputLabel'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 // Defined in biomarkers.html
 declare const urlGOGeneToTerms: string
@@ -151,7 +153,11 @@ export const GeneOntologyPanel = (props: GeneOntologyPanelProps) => {
                             {termsRelatedToGeneForm.filter_type === GeneToTermFilterType.ENRICHMENT && (
                                 <>
                                     <Form.Input
-                                        label={intl.formatMessage({ id: 'geneOntology.panel.pValueThreshold' })}
+                                        label={(
+                                            <InputLabel label={intl.formatMessage({ id: 'geneOntology.panel.pValueThreshold' })}>
+                                                <InfoPopup content={intl.formatMessage({ id: 'geneOntology.panel.pValueThreshold.info' })} onTop={false} onEvent='hover' noBorder extraClassName='pull-right' />
+                                            </InputLabel>
+                                        )}
                                         type='number'
                                         value={termsRelatedToGeneForm.p_value_threshold}
                                         onChange={(_e, { value }) => handleChangesInForm('p_value_threshold', value)}

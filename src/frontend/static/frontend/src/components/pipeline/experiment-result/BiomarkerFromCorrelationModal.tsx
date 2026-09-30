@@ -803,7 +803,7 @@ class BiomarkerFromCorrelationModal extends React.Component<BiomarkerFromCorrela
      * Method that gets symbols while user is writing in Select molecules input
      * @param molecules array of strings that is sending to the api
      */
-    handleGeneSymbols = async (molecules: string[]): Promise<void> => {
+    handleGeneSymbols = (molecules: string[]): void => {
         const moleculesSectionPreload = {
             ...this.state.formBiomarker.moleculesSection,
             [this.state.formBiomarker.moleculeSelected]: {

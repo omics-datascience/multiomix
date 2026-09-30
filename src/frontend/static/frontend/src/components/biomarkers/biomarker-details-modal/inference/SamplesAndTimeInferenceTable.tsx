@@ -51,7 +51,13 @@ export const SamplesAndTimeInferenceTable = (props: SamplesAndTimeInferenceTable
                     <PaginatedTable<SampleAndTime>
                         headers={[
                             { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3, textAlign: 'center' },
-                            { name: intl.formatMessage({ id: 'inference.timeTable.columns.predictedTime' }), serverCodeToSort: 'prediction', width: 2, textAlign: 'center' }
+                            {
+                                name: intl.formatMessage({ id: 'inference.timeTable.columns.predictedTime' }),
+                                serverCodeToSort: 'prediction',
+                                width: 2,
+                                textAlign: 'center',
+                                infoPopupContent: intl.formatMessage({ id: 'metricInfo.inferencePrediction' })
+                            }
 
                         ]}
                         queryParams={{

@@ -10,6 +10,7 @@ import { ListOfElementsWithHeader } from './ListOfElementsWithHeader'
 import { PubmedButton } from './PubmedButton'
 import { TryAgainSegment } from '../../../common/TryAgainSegment'
 import { useIntl, IntlShape } from 'react-intl'
+import { InfoPopup } from './InfoPopup'
 
 declare const urlMiRNAInteraction: string
 
@@ -151,6 +152,13 @@ class MiRNATargetInteractionPanel extends React.Component<MiRNATargetInteraction
                                         { id: 'miRNATargetInteractionPanel.score' },
                                         { scoreClass: scoreClassData.description }
                                     )}
+                                    <InfoPopup
+                                        content={intl.formatMessage({ id: 'miRNAInteractionPanel.mirDIPScoreInfo' })}
+                                        onTop={false}
+                                        onEvent='hover'
+                                        noBorder
+                                        extraClassName='margin-left-5'
+                                    />
                                 </Statistic.Label>
                             </Statistic>
 

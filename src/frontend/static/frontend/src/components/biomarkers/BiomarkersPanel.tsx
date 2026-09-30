@@ -949,7 +949,7 @@ class BiomarkersPanel extends React.Component<BiomarkersPanelProps, BiomarkersPa
      * Method that gets symbols while user is writing in Select molecules input
      * @param molecules array of strings that is sending to the api
      */
-    handleGeneSymbols = async (molecules: string[]): Promise<void> => {
+    handleGeneSymbols = (molecules: string[]): void => {
         this.setState(prevState => {
             const moleculesSectionPreload = {
                 ...prevState.formBiomarker.moleculesSection,

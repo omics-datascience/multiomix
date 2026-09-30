@@ -5,11 +5,12 @@ import { ClusteringScoringMethodLabel } from '../labels/ClusteringScoringMethodL
 import { FitnessFunctionLabel } from '../labels/FitnessFunctionLabel'
 import { SVMKernelLabel } from '../labels/SVMKernelLabel'
 import { SVMKernelTask } from '../labels/SVMKernelTask'
-import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails, RFModelDetails } from '../types'
+import { FitnessFunction, ClusteringModelDetails, SVMModelDetails, ModelDetails, RFModelDetails, ClusteringScoringMethod } from '../types'
 import { Nullable } from '../../../utils/interfaces'
 import ky from 'ky'
 import { alertGeneralError } from '../../../utils/util_functions'
 import { useIntl } from 'react-intl'
+import { InfoPopup } from '../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 declare const urlStatisticalValidationModalDetails: string
 
@@ -23,6 +24,11 @@ type GeneralMetricsProps = { data: ModelDetails, fitness_function: FitnessFuncti
  */
 const GeneralMetrics = (props: GeneralMetricsProps) => {
     const intl = useIntl()
+    const bestScoreInfoId = props.fitness_function === FitnessFunction.CLUSTERING
+        ? (props.data as ClusteringModelDetails).scoring_method === ClusteringScoringMethod.LOG_LIKELIHOOD
+            ? 'modelDetails.info.bestLogLikelihood'
+            : 'modelDetails.info.bestClusteringCIndex'
+        : 'modelDetails.info.bestCIndex'
     return (
         <>
             <List.Item>
@@ -30,6 +36,7 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Content>
                     <List.Header>
                         {intl.formatMessage({ id: 'common.model' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.model' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
 
                         <FitnessFunctionLabel
                             fluid={false}
@@ -43,7 +50,8 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Icon name='star outline' size='large' verticalAlign='middle' />
                 <List.Content>
                     <List.Header>
-                        {intl.formatMessage({ id: 'modelDetails.general.bestFitnessValue' })} {props.data.best_fitness.toFixed(4)}
+                        {intl.formatMessage({ id: 'modelDetails.general.bestFitnessValue' })} {props.data.best_fitness != null ? props.data.best_fitness.toFixed(4) : '-'}
+                        <InfoPopup content={intl.formatMessage({ id: bestScoreInfoId })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -52,6 +60,7 @@ const GeneralMetrics = (props: GeneralMetricsProps) => {
                 <List.Content>
                     <List.Header>
                         {intl.formatMessage({ id: 'common.randomState' })} {props.data.random_state ?? '-'}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.randomState' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
                     </List.Header>
                 </List.Content>
             </List.Item>
@@ -78,6 +87,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Content>
                     <List.Header>
                         {intl.formatMessage({ id: 'common.algorithm' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.algorithm' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
 
                         <ClusteringAlgorithmLabel clusteringAlgorithm={props.data.algorithm} className='margin-left-2' />
                     </List.Header>
@@ -88,6 +98,7 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
                 <List.Content>
                     <List.Header>
                         {intl.formatMessage({ id: 'common.scoringMethod' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.scoringMethod' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
 
                         <ClusteringScoringMethodLabel scoreMethod={props.data.scoring_method} className='margin-left-2' />
                     </List.Header>
@@ -96,7 +107,10 @@ const ClusteringModelDetailsPanel = (props: ClusteringModelDetailsPanelProps) =>
             <List.Item>
                 <List.Icon name='grid layout' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>{intl.formatMessage({ id: 'common.nClusters' })} {props.data.n_clusters}</List.Header>
+                    <List.Header>
+                        {intl.formatMessage({ id: 'common.nClusters' })} {props.data.n_clusters}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.nClusters' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                    </List.Header>
                 </List.Content>
             </List.Item>
         </List>
@@ -122,6 +136,7 @@ const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
                 <List.Content>
                     <List.Header>
                         Kernel:
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.kernel' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
 
                         <SVMKernelLabel kernel={props.data.kernel} className='margin-left-2' />
                     </List.Header>
@@ -132,6 +147,7 @@ const SVMModelDetailsPanel = (props: SVMModelDetailsPanelProps) => {
                 <List.Content>
                     <List.Header>
                         {intl.formatMessage({ id: 'modelDetails.svm.task' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.task' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
 
                         <SVMKernelTask task={props.data.task} className='margin-left-2' />
                     </List.Header>
@@ -158,13 +174,19 @@ const RFModelDetailsPanel = (props: RFModelDetailsPanelProps) => {
             <List.Item>
                 <List.Icon name='tree' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>{intl.formatMessage({ id: 'modelDetails.rf.numberOfEstimators' })} {props.data.n_estimators}</List.Header>
+                    <List.Header>
+                        {intl.formatMessage({ id: 'modelDetails.rf.numberOfEstimators' })} {props.data.n_estimators}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.nEstimators' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                    </List.Header>
                 </List.Content>
             </List.Item>
             <List.Item>
                 <List.Icon name='angle double down' size='large' verticalAlign='middle' />
                 <List.Content>
-                    <List.Header>{intl.formatMessage({ id: 'modelDetails.rf.maxDepth' })} {props.data.max_depth ?? '-'}</List.Header>
+                    <List.Header>
+                        {intl.formatMessage({ id: 'modelDetails.rf.maxDepth' })} {props.data.max_depth ?? '-'}
+                        <InfoPopup content={intl.formatMessage({ id: 'modelDetails.info.maxDepth' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                    </List.Header>
                 </List.Content>
             </List.Item>
         </List>

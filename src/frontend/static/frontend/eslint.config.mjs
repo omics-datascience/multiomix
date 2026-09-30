@@ -35,6 +35,13 @@ export default defineConfig([
             'no-undef': 'off',
             camelcase: 'off',
             curly: ['error', 'all'],
+            'no-restricted-syntax': [
+                'warn',
+                {
+                    selector: ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)[async=true]',
+                    message: 'Prefer promise chains with .then()/.catch() over async/await and try/catch for asynchronous operations.'
+                }
+            ],
             'no-multi-spaces': 'error',
             'padding-line-between-statements': [
                 'warn',
