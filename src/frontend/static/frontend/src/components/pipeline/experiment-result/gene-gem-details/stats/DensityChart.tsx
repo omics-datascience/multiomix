@@ -13,9 +13,10 @@ import {
     BarChart
 } from 'recharts'
 
-/** DensityChart props. */
+/**
+ * Component's props
+ */
 interface DensityChartProps {
-    /** Data series used to build the density chart. */
     dataObjects: StatChartData[],
     /** True to show bars in density chart */
     showBars: boolean,
@@ -55,24 +56,9 @@ type ChartData = {
 
 /** Data for a Bar component. */
 type BarData = {
-    /** Stroke color used to render the chart outline. */
     strokeColor: string | undefined,
-    /** Fill color used to render the chart bars. */
     fillColor: string | undefined,
-    /** Bars rendered for the current chart. */
     data: ChartData[]
-}
-
-/** CustomTooltip props. */
-interface CustomTooltipProps {
-    /** True when the tooltip is active. */
-    active?: boolean,
-    /** Tooltip payload provided by Recharts. */
-    payload?: any[],
-    /** Primary color used for the tooltip title. */
-    color: string | undefined,
-    /** Secondary color used when rendering the comparison series. */
-    color2: string | null | undefined
 }
 
 /**
@@ -125,14 +111,14 @@ export const DensityChart = (props: DensityChartProps) => {
 
 /**
  * Renders a custom tooltip for Density chart
- * @param props Props of tooltip.
- * @param props.active True when the tooltip is active.
- * @param props.payload Tooltip payload provided by Recharts.
- * @param props.color Primary color used for the tooltip title.
- * @param props.color2 Secondary color used when rendering the comparison series.
+ * @param props Props of tooltip
+ * @param props.active if component is active
+ * @param props.payload data for tooltip
+ * @param props.color color for tooltip title
+ * @param props.color2 color for tooltip title
  * @returns Component
  */
-const CustomTooltip = ({ active, payload, color, color2 }: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, color, color2 }: any) => {
     const intl = useIntl()
 
     if (active && payload && payload.length) {
@@ -160,9 +146,10 @@ const CustomTooltip = ({ active, payload, color, color2 }: CustomTooltipProps) =
     }
 }
 
-/** DensityChartMix props. */
+/**
+ * Component's props
+ */
 interface DensityChartMixProps {
-    /** Data series used to build the mixed density chart. */
     dataObjects: StatChartData[],
     /** True to show bars in density chart */
     showBars: boolean,
