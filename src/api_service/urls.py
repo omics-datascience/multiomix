@@ -36,6 +36,8 @@ urlpatterns = [
     # MiRNA Interaction
     path('mirna-target-interaction', views.get_mirna_target_interaction_action,
          name='mirna_target_interaction'),
+    path('mirna-target-validation', views.get_mirna_target_validation_action,
+         name='mirna_target_validation'),
     # MiRNA Disease associated
     path('mirna-disease', views.get_mirna_diseases_action, name='mirna_diseases'),
     path('mirna-drugs', views.get_mirna_drugs_action, name='mirna_drugs'),

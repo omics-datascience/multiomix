@@ -1070,6 +1070,8 @@ export default {
 
     'geneGemModalMenu.interaction': '{gem}-{gene} Interaction',
     'geneGemModalMenu.interaction.info': 'Scores, given by external databases, that measures the association between {gene} and {gem}',
+    'geneGemModalMenu.mirnaTargetValidation': 'miRTarBase validation',
+    'geneGemModalMenu.mirnaTargetValidation.info': 'Experimental evidence for the interaction between {gem} and {gene} from miRTarBase',
 
     'geneGemModalMenu.mirnaInteraction': '{gem} Interaction',
     'geneGemModalMenu.mirnaInteraction.info': 'Find target interactions with {gem} in miRNA external databases',
@@ -1149,6 +1151,12 @@ export default {
 
     'miRNAInteractionPanel.includePubmeds': 'Include pubmeds',
     'miRNAInteractionPanel.seeMorePapers': 'See more papers',
+    'miRNATargetValidationPanel.headerTitle': 'Experimental validations for {miRNA} and {gene}',
+    'miRNATargetValidationPanel.mirtarbaseId': 'miRTarBase ID',
+    'miRNATargetValidationPanel.supportType': 'Support type',
+    'miRNATargetValidationPanel.experiments': 'Experiments',
+    'miRNATargetValidationPanel.targetGeneEntrezId': 'Target Entrez ID',
+    'miRNATargetValidationPanel.pubmed': 'PubMed',
     // 122.MiRNATargetInteractionPanel
     'miRNATargetInteractionPanel.noData': 'No data found for this miRNA and gene',
 
