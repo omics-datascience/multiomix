@@ -9,6 +9,7 @@ import { ResultPlaceholder } from '../stat-validations/result/ResultPlaceholder'
 import { BoxPlotChart } from '../../../pipeline/experiment-result/gene-gem-details/stats/BoxPlotChart'
 import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
 import { useIntl } from 'react-intl'
+import { InfoPopup } from '../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 declare const urlClinicalSourceAddOrEditInferenceExperiment: string
 declare const urlUnlinkClinicalSourceInferenceExperiment: string
@@ -128,6 +129,10 @@ export const SamplesAndTimeInferenceCharts = (props: SamplesAndTimeInferenceChar
 
     return (
         <div ref={componentRef} className='align-center'>
+            <div className='margin-bottom-5'>
+                {intl.formatMessage({ id: 'inference.timeTable.columns.predictedTime' })}
+                <InfoPopup content={intl.formatMessage({ id: 'metricInfo.inferencePrediction' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+            </div>
             <BoxPlotChart
                 width={width}
                 dataObjects={chartData.map((dataObj: ChartData) => (

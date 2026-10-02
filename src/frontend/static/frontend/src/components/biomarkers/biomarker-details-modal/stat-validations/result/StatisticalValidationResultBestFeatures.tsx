@@ -6,6 +6,7 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import ReactApexChart from 'react-apexcharts'
 import { ResultPlaceholder } from '../result/ResultPlaceholder'
 import { useIntl } from 'react-intl'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 /** Epsilon to add to the min/max value of coefficients. */
 const EPSILON = 1
@@ -146,8 +147,15 @@ export const StatisticalValidationResultBestFeatures = (props: StatisticalValida
             {loading &&
                 <ResultPlaceholder />}
 
-            {(!loading && statValidationData !== null) &&
-                <ReactApexChart options={chartOptions} series={chartSeries} type='bar' height={440} />}
+            {(!loading && statValidationData !== null) && (
+                <>
+                    <div className='align-center margin-bottom-5'>
+                        {intl.formatMessage({ id: 'common.coefficient' })}
+                        <InfoPopup content={intl.formatMessage({ id: 'metricInfo.coxCoefficient' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                    </div>
+                    <ReactApexChart options={chartOptions} series={chartSeries} type='bar' height={440} />
+                </>
+            )}
         </>
     )
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ky from 'ky'
 import { Button, Grid, Header, Icon, Placeholder, PlaceholderLine, PlaceholderParagraph } from 'semantic-ui-react'
 import { DjangoMiRNADataJSON } from '../../../../utils/django_interfaces'
@@ -30,42 +30,32 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     const [miRNAData, setMiRNAData] = useState<Nullable<DjangoMiRNADataJSON>>(null)
     const [loading, setLoading] = useState<boolean>(true)
 
-    const abortController = useRef(new AbortController())
     const showNoDataHeader = props.showNoDataHeader ?? true
 
-    /**
-     * Function to get MiRNA data
-     */
-    const getMiRNAData = () => {
+    /** Gets miRNA data whenever the selected molecule changes. */
+    useEffect(() => {
+        const abortController = new AbortController()
         setLoading(true)
+        setMiRNAData(null)
 
         const searchParams: KySearchParams = {
             mirna: props.miRNA
         }
 
-        ky.get(urlMiRNAData, { signal: abortController.current.signal, searchParams }).then((response) => {
-            response.json<DjangoMiRNADataJSON>().then((jsonResponse) => {
-                setMiRNAData(jsonResponse)
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
+        ky.get(urlMiRNAData, { signal: abortController.signal, searchParams }).json<DjangoMiRNADataJSON>().then((jsonResponse) => {
+            setMiRNAData(jsonResponse)
         }).catch((err) => {
-            console.log('Error getting studies ->', err)
+            if (!abortController.signal.aborted) {
+                console.log('Error getting miRNA data ->', err)
+            }
         }).finally(() => {
-            setLoading(false)
+            if (!abortController.signal.aborted) {
+                setLoading(false)
+            }
         })
-    }
 
-    /**
-     * effect to get MirNA data when component is mount
-     */
-    useEffect(() => {
-        getMiRNAData()
-
-        return () => {
-            abortController.current.abort()
-        }
-    }, [])
+        return () => abortController.abort()
+    }, [props.miRNA])
 
     if (!miRNAData) {
         if (!showNoDataHeader) {
@@ -100,15 +90,13 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
     }
 
     const mirbaseURL = miRNAData.links.find((link) => link.source === 'mirbase')?.url
-    const othersLinks = miRNAData.links.filter((link) => link.source !== 'mirbase')
-
     // Sorts descendant to put MIMAT format first
     const miRNAAliases = miRNAData.aliases.sort((a, b) => b.localeCompare(a)).join(' / ')
 
     return (
         <Grid className='margin-bottom-2' centered>
             <Grid.Row divided centered>
-                <Grid.Column width={othersLinks.length ? 6 : 8} title={intl.formatMessage({ id: 'miRNAExtraData.aliases' })} textAlign='center' verticalAlign='middle'>
+                <Grid.Column width={miRNAData.links.length ? 6 : 8} title={intl.formatMessage({ id: 'miRNAExtraData.aliases' })} textAlign='center' verticalAlign='middle'>
                     <Header size='large'>
                         <LinkOrPlainText url={mirbaseURL} text={miRNAAliases} />
                     </Header>
@@ -122,19 +110,19 @@ export const MiRNAExtraData = (props: MiRNAExtraDataProps) => {
                     </Grid.Column>
                 )}
 
-                {(othersLinks.length > 0) && (
+                {(miRNAData.links.length > 0) && (
                     <Grid.Column width={2} verticalAlign='middle'>
-                        {othersLinks.map((link) => (
+                        {miRNAData.links.map((link) => (
                             <Button
                                 key={link.source}
                                 basic
                                 color='blue'
-                                icon
-                                title={link.source}
+                                icon={link.source !== 'mirbase'}
+                                title={link.source === 'mirbase' ? 'miRBase' : link.source}
                                 className='borderless-button no-box-shadow'
                                 as='a' href={link.url} target='_blank' rel='noopener noreferrer'
                             >
-                                <Icon name='linkify' />
+                                {link.source === 'mirbase' ? 'miRBase' : <Icon name='linkify' />}
                             </Button>
                         ))}
                     </Grid.Column>
