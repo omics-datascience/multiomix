@@ -9,33 +9,16 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 
-class MirnaTargetValidationQuerySerializer(serializers.Serializer):
-    """Filters accepted by the miRTarBase validation endpoint."""
-    mirna = serializers.CharField(required=False)
-    target = serializers.CharField(required=False)
-    support_type = serializers.ChoiceField(
-        choices=[
-            'Functional MTI',
-            'Functional MTI (Weak)',
-            'Non-Functional MTI',
-            'Non-Functional MTI (Weak)',
-        ], required=False
-    )
-    experiment = serializers.CharField(required=False)
-    ordering = serializers.CharField(required=False)
-    page = serializers.IntegerField(min_value=1, required=False)
-    page_size = serializers.IntegerField(min_value=1, max_value=1000, required=False)
-
-    def validate_ordering(self, value):
-        fields = [field.strip() for field in value.split(',')]
-        if not all(field in ('mirna', '-mirna', 'gene', '-gene') for field in fields):
-            raise serializers.ValidationError('ordering must contain only mirna or gene fields')
-        return ','.join(fields)
-
-    def validate(self, attrs):
-        if not attrs.get('mirna') and not attrs.get('target'):
-            raise serializers.ValidationError('mirna or target is required')
-        return attrs
+class MirnaTargetValidationSerializer(serializers.Serializer):
+    """Read-only representation of one miRTarBase validation record."""
+    id = serializers.IntegerField(read_only=True)
+    mirtarbase_id = serializers.CharField(read_only=True)
+    mirna = serializers.CharField(read_only=True)
+    gene = serializers.CharField(read_only=True)
+    target_gene_entrez_id = serializers.JSONField(read_only=True, allow_null=True)
+    experiments = serializers.ListField(child=serializers.CharField(), read_only=True)
+    support_type = serializers.CharField(read_only=True)
+    pmid = serializers.JSONField(read_only=True, allow_null=True)
 
 
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
