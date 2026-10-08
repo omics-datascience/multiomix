@@ -9,6 +9,18 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 
+class MirnaTargetValidationSerializer(serializers.Serializer):
+    """Read-only representation of one miRTarBase validation record."""
+    id = serializers.IntegerField(read_only=True)
+    mirtarbase_id = serializers.CharField(read_only=True)
+    mirna = serializers.CharField(read_only=True)
+    gene = serializers.CharField(read_only=True)
+    target_gene_entrez_id = serializers.JSONField(read_only=True, allow_null=True)
+    experiments = serializers.ListField(child=serializers.CharField(), read_only=True)
+    support_type = serializers.CharField(read_only=True)
+    pmid = serializers.JSONField(read_only=True, allow_null=True)
+
+
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
     """GeneGEMCombination serializer"""
     gene_extra_data = GeneForResultTableSerializer(source='gene', read_only=True)

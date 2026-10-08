@@ -12,7 +12,7 @@ from bioapi_sdk import (
     TermRelationType,
 )
 import modulector_sdk as modulector
-from modulector_sdk import PaginatedResponse
+from modulector_sdk import PaginatedResponse, SupportType
 
 
 class MRNAService(object):
@@ -100,6 +100,29 @@ class MRNAService(object):
         except Exception as ex:
             logging.exception(ex)
             return self._paginated_to_dict(None)
+
+    def get_mirna_target_validations(
+            self,
+            mirna: Optional[str] = None,
+            target: Optional[str] = None,
+            support_type: Optional[str] = None,
+            experiment: Optional[str] = None,
+            ordering: Optional[str] = None,
+            page: Optional[int] = None,
+            page_size: Optional[int] = None,
+    ) -> Dict:
+        """Get experimentally validated miRNA-target interactions from miRTarBase."""
+        result = modulector.get_mirna_target_validations(
+            mirna=mirna,
+            target=target,
+            support_type=cast(Optional[SupportType], support_type),
+            experiment=experiment,
+            ordering=ordering,
+            page=page,
+            page_size=page_size,
+            base_url=self._modulector_base_url,
+        )
+        return self._paginated_to_dict(result)
 
     def get_diseases(self, mirna: Optional[str] = None, page: Optional[int] = None,
                      page_size: Optional[int] = None) -> Dict:
