@@ -45,7 +45,7 @@ const HomepageHeading = () => {
                         </Grid.Column>
                         <Grid.Column>
                             <Button
-                                color='orange'
+                                color='green'
                                 size='huge'
                                 fluid
                                 as='a'
