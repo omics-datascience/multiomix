@@ -19,6 +19,7 @@ interface Props {
 
 /**
  * Renders the modal for editing a user's profile.
+ * @param props Component props
  * @returns Component
  */
 export const UpdateUserModal = (props: Props) => {
