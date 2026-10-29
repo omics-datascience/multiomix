@@ -34,3 +34,25 @@
 }
 
 .headerContent{ width: 100% !important}
+
+@media only screen and (max-width: 767.98px) {
+    #institutions-app .ui.grid > .column > .ui.segment > .ui.stackable.grid {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #institutions-app .ui.segment .ui.form > .fields.custom-form {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #institutions-app .ui.grid > .column > .ui.segment > .ui.stackable.grid > .row:first-child > .left.aligned.column > .ui.header {
+        text-align: center;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1023.98px) {
+    #institutions-app .ui.segment .ui.form .entries-select-table {
+        min-width: max-content;
+    }
+}

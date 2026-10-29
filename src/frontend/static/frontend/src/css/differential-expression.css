@@ -5,6 +5,28 @@
     height: 100%;
 }
 
+@media only screen and (max-width: 767.98px) {
+    #differential-expression-app .ui.grid.biomarkers--modal--container > .column > .ui.stackable.grid {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #differential-expression-app .ui.form > .fields.custom-form {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #differential-expression-app .biomarkers--modal--container > .twelve.wide.column > .ui.stackable.grid .left.aligned.column > .ui.header {
+        text-align: center;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1023.98px) {
+    #differential-expression-app .ui.form .entries-select-table {
+        min-width: max-content;
+    }
+}
+
 .diff--side--bar--container--item--margin {
     margin: 0.5rem 0;
 }

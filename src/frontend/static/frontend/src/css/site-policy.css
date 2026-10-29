@@ -6,3 +6,7 @@
 	text-align: justify;
     font-size: large;
 }
+
+#site-policy-content a {
+    overflow-wrap: anywhere;
+}

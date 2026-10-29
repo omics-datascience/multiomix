@@ -127,3 +127,25 @@
 .renderer-rectangle:hover {
 	fill: rgb(167, 211, 241);
 }
+
+@media only screen and (max-width: 767.98px) {
+    #biomarkers-app #files-manager-result-column > .ui.stackable.grid {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #biomarkers-app #files-manager-result-column .ui.form > .fields.custom-form {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #biomarkers-app #files-manager-result-column > .ui.stackable.grid > .row:first-child > .left.aligned.column > .ui.header {
+        text-align: center;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1023.98px) {
+    #biomarkers-app #files-manager-result-column .ui.form .entries-select-table {
+        min-width: max-content;
+    }
+}
