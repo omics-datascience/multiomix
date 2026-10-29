@@ -92,6 +92,23 @@ export const GeneGemModalMenu = (props: GeneGemModalMenuProps) => {
                     </Menu.Item>
 
                     <Menu.Item
+                        active={props.activeItem === ActiveItemMenu.MIRNA_TARGET_VALIDATION}
+                        onClick={() => props.setActiveItem(ActiveItemMenu.MIRNA_TARGET_VALIDATION)}
+                    >
+                        {intl.formatMessage({ id: 'geneGemModalMenu.mirnaTargetValidation' })}
+
+                        <InfoPopup
+                            content={intl.formatMessage(
+                                { id: 'geneGemModalMenu.mirnaTargetValidation.info' },
+                                { gene: props.gene, gem: props.gem }
+                            )}
+                            onTop={false}
+                            onEvent='hover'
+                            extraClassName='margin-left-5'
+                        />
+                    </Menu.Item>
+
+                    <Menu.Item
                         active={props.activeItem === ActiveItemMenu.MIRNA_INTERACTION}
                         onClick={() => props.setActiveItem(ActiveItemMenu.MIRNA_INTERACTION)}
                     >

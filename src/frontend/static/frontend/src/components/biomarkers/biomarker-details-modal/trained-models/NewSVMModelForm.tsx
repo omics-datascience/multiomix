@@ -77,7 +77,7 @@ export const NewSVMModelForm = (props: NewSVMModelFormProps) => {
                             />
                         </InputLabel>
                     )}
-                    placeholder={intl.formatMessage({ id: 'common.integerNumber' })}
+                    placeholder={intl.formatMessage({ id: 'common.integerPlaceholder' })}
                     type='number'
                     step={1}
                     min={0}

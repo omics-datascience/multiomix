@@ -167,7 +167,7 @@ export const InferenceExperimentsTable = (props: InferenceExperimentsTableProps)
             {/* Modal to confirm deleting the InferenceExperiment */}
             {getDeletionConfirmModal()}
             <PaginatedTable<InferenceExperimentForTable>
-                headerTitle={intl.formatMessage({ id: 'inference.experiments.table.title' })}
+                headerTitle={intl.formatMessage({ id: 'inference.table.title' })}
                 headers={[
                     { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name', width: 3 },
                     { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description', width: 4 },

@@ -2,6 +2,7 @@ export default {
     // Common actions
     'common.cancel': 'Cancelar',
     'common.delete': 'Eliminar',
+    'common.download': 'Descargar',
     'common.stop': 'Detener',
     'common.save': 'Guardar',
     'common.close': 'Cerrar',
@@ -32,6 +33,7 @@ export default {
     'common.basicData': 'Datos básicos',
     'common.descriptionOptional': 'Descripción (opcional)',
     'common.continue': 'Continuar',
+    'common.numberOfFolds': 'Número de particiones',
     // common Tables and states
     'common.state': 'Estado',
     'common.cluster': 'Cluster',
@@ -117,18 +119,20 @@ export default {
     'inference.charts.noAttribute': 'No se seleccionó ningún atributo clínico',
     'inference.charts.selectAttribute': 'Por favor, selecciona uno en el selector de la derecha.',
     // 9.SamplesAndTimeInferenceTable.tsx
-    'inference.timeTable.columns.predictedTime': 'Tiempo predicho',
+    'inference.timeTable.columns.predictedTime': 'Predicción',
     'inference.timeTable.filter.range.label': 'Rango',
     'inference.timeTable.filter.range.placeholder': 'Filtrar por rango',
     'inference.timeTable.menu.table': 'Tabla',
     'inference.timeTable.menu.charts': 'Gráficos',
-    'inference.timeTable.menu.table.info': 'Tabla con todas las muestras y su tiempo de riesgo/supervivencia predicho',
+    'inference.timeTable.menu.table.info': 'Tabla con cada muestra y la predicción del modelo',
     'inference.timeTable.menu.charts.info': 'Muestra gráficos con las muestras y su tiempo de riesgo/supervivencia predicho agrupado por alguna condición',
     'inference.timeTable.addRangeLabels': 'Agregar etiquetas de rango',
     // 10.molecules/GeneOntologyCytoscapeChart.tsx
     'geneOntology.form.ontologyType': 'Tipo de ontología',
     'geneOntology.form.generalDepth': 'Profundidad general',
+    'geneOntology.form.generalDepth.info': 'Profundidad máxima del grafo alrededor del término. Un valor mayor muestra términos más lejanos; uno menor mantiene la vista acotada. Ninguno es mejor por sí mismo.',
     'geneOntology.form.hierarchicalDepth': 'Profundidad jerárquica hacia hijos',
+    'geneOntology.form.hierarchicalDepth.info': 'Cantidad de niveles descendientes que se muestran. Un valor mayor incluye más términos hijos, pero hace el grafo más denso; ninguno es mejor por sí mismo.',
     'geneOntology.form.toRoot': 'Hasta la raíz',
     'geneOntology.relation.hasPart': 'Tiene parte',
     'geneOntology.relation.isA': 'Es un',
@@ -140,6 +144,7 @@ export default {
     'geneOntology.panel.filterType.union': 'Unión',
     'geneOntology.panel.filterType.enrichment': 'Enriquecimiento',
     'geneOntology.panel.pValueThreshold': 'Umbral de valor p',
+    'geneOntology.panel.pValueThreshold.info': 'Valor p máximo aceptado para enriquecimiento. Un umbral menor es más estricto y devuelve menos términos; uno mayor es más permisivo.',
     'geneOntology.panel.correctionMethod': 'Método de corrección',
     'geneOntology.panel.correctionMethod.analytical': 'Analítico',
     'geneOntology.panel.correctionMethod.bonferroni': 'Bonferroni',
@@ -156,7 +161,7 @@ export default {
     'geneOntology.panel.table.term': 'Término',
     'geneOntology.panel.table.ontologyType': 'Tipo de ontología',
     // 12GENES.ActionableCancerGenesPanel.tsx
-    'actionableGenes.panel.title': 'Panel de genes de cáncer accionables',
+    'actionableCancerGenes.panel.title': 'Panel de genes de cáncer accionables',
     // 13.GeneAssociationsNetworkPanel
     'geneAssociations.relation.fusion': 'Fusión',
     'geneAssociations.relation.coOccurrence': 'Co-ocurrencia',
@@ -165,7 +170,7 @@ export default {
     'geneAssociations.relation.database': 'Base de datos',
     'geneAssociations.relation.coExpression': 'Co-expresión',
     'geneAssociations.form.minCombinedScore': 'Puntuación combinada mínima',
-    'geneAssociations.infoPopup.text': 'La puntuación combinada se calcula combinando las probabilidades de los diferentes canales de evidencia y se corrige por la probabilidad de observar una interacción al azar. Para una descripción más detallada consulte von Mering, et al. Nucleic Acids Res. 2005',
+    'geneAssociations.infoPopup.text': 'Una puntuación combinada STRING mayor indica más confianza en la asociación, no un efecto biológico más fuerte. Un umbral mínimo mayor muestra menos asociaciones, pero de mayor confianza. Ver',
     // 14.GeneInformation
     'geneInformation.context.gene': 'para este gen',
     'geneInformation.summary': 'Resumen',
@@ -178,6 +183,7 @@ export default {
     'pathwaysInformation.context.gene': 'para este gen',
     'pathwaysInformation.context.pathways': 'para este gen',
     // 17.MethylationInformation.tsx
+    'methylationInformation.context.site': 'para este sitio de metilación',
     'methylationInformation.noDetails': 'No se encontraron detalles para este sitio de metilación',
     'methylationInformation.infoPopup.aliases': 'Alias de metilación y posición cromosómica',
     'methylationInformation.header': 'Información de metilación',
@@ -220,7 +226,7 @@ export default {
     'samplesAndGroupsTable.search.label': 'Muestra',
     // 22.StatisticalValidationResultBestFeatures.tsx
     'statValidationBestFeatures.axis.molecule': 'Molécula',
-    'statValidationBestFeatures.context.features': 'características significativas para esta validación estadística',
+    'statValidationBestFeatures.context.features': 'coeficientes de Cox para esta validación estadística',
     // 23.StatisticalValidationResultKaplanMeier.tsx
     'kaplanMeier.axis.time': 'Tiempo',
     'kaplanMeier.axis.probability': 'Probabilidad',
@@ -244,11 +250,11 @@ export default {
     'newStatValidation.step.trainedModel': 'Paso 1: Modelo entrenado',
     'newStatValidation.step.validationDatasets': 'Paso 2: Conjuntos de validación',
     // 26.StatisticalValidationMenu.tsx
-    'statValidationMenu.bestFeatures': 'Características más significativas',
-    'statValidationMenu.bestFeatures.info': 'Características más significativas para el análisis de supervivencia',
-    'statValidationMenu.kaplanMeier.info': 'Curva mostrando supervivencia o hazard ratio',
+    'statValidationMenu.bestFeatures': 'Coeficientes de Cox de mayor valor absoluto',
+    'statValidationMenu.bestFeatures.info': 'Moléculas con los coeficientes de Cox de mayor valor absoluto. La magnitud indica asociación por unidad, no significancia estadística.',
+    'statValidationMenu.kaplanMeier.info': 'Probabilidad estimada de supervivencia por grupo a lo largo del tiempo. Una curva más alta indica mayor supervivencia estimada al mismo tiempo.',
     'statValidationMenu.heatmap': 'Mapa de calor',
-    'statValidationMenu.heatmap.info': 'Mapa de calor para cada muestra y molécula',
+    'statValidationMenu.heatmap.info': 'Mediciones moleculares por muestra. Los colores indican valores menores o mayores en la escala mostrada; si son favorables depende del contexto.',
     // 27.StatisticalValidationsTable.tsx
     'statValidationsTable.stopValidation.header': 'Detener validación estadística',
     'statValidationsTable.stopValidation.confirm': '¿Está seguro de que desea detener la validación estadística {name}?',
@@ -270,7 +276,7 @@ export default {
     'newClusteringForm.placeholder.scoringMethod': 'Seleccione un método',
     'newClusteringForm.info.algorithm': 'K-Means: agrupa datos minimizando la varianza intra-cluster; útil para RNA y miRNA. Spectral Clustering: usa similitud basada en grafos para patrones complejos; ideal para metilación y CNA. BK-Means: variación jerárquica de K-Means, adecuada para datasets clínicos y multi-ómicos. Método de Ward: minimiza la varianza en clustering jerárquico; útil para combinar RNA y metilación.',
     'newClusteringForm.info.metric': 'Cox Regression: modelo de riesgos proporcionales para asociaciones entre multi-ómicos y resultados clínicos. Log-Rank Test: prueba no paramétrica para comparar distribuciones de supervivencia; actualmente no disponible.',
-    'newClusteringForm.info.scoringMethod': 'C-Index: medida de concordancia entre resultados predichos y observados; valores altos indican mejor desempeño. Log Likelihood: probabilidad de observar los datos dado el modelo; valores bajos indican mejor desempeño.',
+    'newClusteringForm.info.scoringMethod': 'El índice C ordena los resultados de supervivencia; más alto es mejor (0,5 se acerca al azar). La log-verosimilitud parcial de Cox mide el ajuste; más alta (menos negativa) es mejor sobre los mismos datos.',
     'newClusteringForm.info.randomState': 'Semilla usada por el generador aleatorio para asegurar reproducibilidad.',
     'newClusteringForm.info.penalizer': 'Útil cuando hay pocas muestras o eventos observados; aumenta la robustez del modelo evitando problemas con valores NaN.',
     // 29.NewRFModelForm.tsx
@@ -308,7 +314,7 @@ export default {
     'biomarkerTrainedModelsTable.confirm.deleteBiomarker': '¿Está seguro de que desea eliminar el biomarcador {modelName}?',
     'biomarkerTrainedModelsTable.header.trainedModels': 'Modelos entrenados',
     'biomarkerTrainedModelsTable.header.model': 'Modelo',
-    'biomarkerTrainedModelsTable.header.bestCVMetric': 'Mejor métrica de validación cruzada',
+    'biomarkerTrainedModelsTable.header.bestCVMetric': 'Mejor puntaje del modelo',
     'biomarkerTrainedModelsTable.header.datasets': 'Conjuntos de datos',
     'biomarkerTrainedModelsTable.header.actions': 'Acciones',
     'biomarkerTrainedModelsTable.filter.modelType': 'Tipo de modelo',
@@ -322,6 +328,29 @@ export default {
     'modelDetails.svm.task': 'Tarea:',
     'modelDetails.rf.numberOfEstimators': 'Número de estimadores:',
     'modelDetails.rf.maxDepth': 'Profundidad máxima:',
+    'metricInfo.mse': 'Diferencia cuadrática media entre la salida del modelo y el tiempo de supervivencia observado. Menor es mejor (0 es exacto), pero un puntaje de riesgo no predice tiempo; compará solo casos equivalentes.',
+    'metricInfo.cIndex': 'Mide si el riesgo predicho ordena correctamente resultados de supervivencia comparables. Cerca de 0,5 equivale al azar; 1 es perfecto. Mayor es mejor.',
+    'metricInfo.r2': 'Ajuste de la salida del modelo al tiempo observado: 1 es exacto, 0 equivale a predecir la media y un valor negativo es peor. Interpretar con cautela si la salida es un puntaje de riesgo.',
+    'metricInfo.partialLogLikelihood': 'Log-verosimilitud parcial promedio de Cox. Mayor (menos negativa) indica mejor ajuste sobre los mismos datos; no se comparan directamente conjuntos distintos.',
+    'metricInfo.coxCoefficient': 'Coeficiente log-riesgo de Cox: positivo indica asociación entre un valor molecular mayor y mayor riesgo; negativo, menor riesgo. Un valor absoluto mayor indica asociación más fuerte por unidad, no necesariamente mejor pronóstico.',
+    'metricInfo.expression.label': 'Valores moleculares',
+    'metricInfo.expression': 'Cada celda es una medición molecular en una muestra. Mayor o menor no es universalmente mejor; compará valores de la misma molécula y escala.',
+    'metricInfo.clusterId': 'Identificador arbitrario de grupo. Un número mayor no implica mejor, peor ni mayor riesgo; compará las curvas de supervivencia de los grupos.',
+    'metricInfo.inferencePrediction': 'Random Forest y SVM de ranking devuelven puntajes de riesgo: más alto indica mayor riesgo predicho. SVM de regresión devuelve puntajes de tiempo de supervivencia transformado: más alto sugiere mayor supervivencia. Compará solo dentro del mismo modelo.',
+    'trainedModels.info.fitnessMetric': 'Puntaje usado para elegir el modelo: el índice C ordena el riesgo de supervivencia y la log-verosimilitud parcial de Cox mide el ajuste. En ambos, mayor es mejor.',
+    'trainedModels.info.bestScore': 'Puntaje registrado para el modelo elegido durante entrenamiento o validación. Mayor es mejor para estas métricas; compará modelos con los mismos datos y métrica.',
+    'modelDetails.info.model': 'Algoritmo usado para generar predicciones. Su nombre no tiene una dirección mejor o peor.',
+    'modelDetails.info.bestCIndex': 'Índice C registrado para el modelo elegido durante entrenamiento o validación. Mayor es mejor; cerca de 0,5 equivale al azar y 1 es perfecto.',
+    'modelDetails.info.bestClusteringCIndex': 'Índice C de Cox registrado para el clustering elegido durante entrenamiento o validación. Mayor es mejor; cerca de 0,5 equivale al azar.',
+    'modelDetails.info.bestLogLikelihood': 'Log-verosimilitud parcial de Cox registrada para el clustering elegido durante entrenamiento o validación. Mayor (menos negativa) es mejor sobre los mismos datos.',
+    'modelDetails.info.randomState': 'Semilla aleatoria para reproducir una ejecución. Un número mayor o menor no implica mejor desempeño.',
+    'modelDetails.info.algorithm': 'Método usado para formar grupos. Ninguno es siempre mejor; compará los resultados de validación.',
+    'modelDetails.info.scoringMethod': 'Puntaje usado para elegir parámetros de clustering: un índice C mayor o una log-verosimilitud parcial de Cox mayor es mejor sobre los mismos datos.',
+    'modelDetails.info.nClusters': 'Cantidad de grupos formados. Más grupos dan divisiones más finas, pero no garantizan mejor separación de supervivencia.',
+    'modelDetails.info.kernel': 'Función de similitud de SVM. Su nombre no tiene una dirección mejor o peor; compará el desempeño validado.',
+    'modelDetails.info.task': 'Ranking predice riesgo relativo; regresión predice tiempo de supervivencia transformado. El tipo de tarea no tiene una dirección mejor o peor.',
+    'modelDetails.info.nEstimators': 'Cantidad de árboles del bosque. Más árboles pueden estabilizar predicciones, pero cuestan más cómputo; más no siempre es mejor.',
+    'modelDetails.info.maxDepth': 'Profundidad máxima de los árboles. Mayor profundidad permite patrones más complejos, pero puede sobreajustar; no hay un valor universalmente mejor.',
     // 34.BiomarkerStateLabel
     'biomarkerState.completed': 'El experimento está completo',
     'biomarkerState.finishedWithError': 'El experimento terminó con errores. Intenta nuevamente',
@@ -753,6 +782,15 @@ export default {
     'files.manager.tooltip.edit': 'Editar',
     'files.manager.tooltip.download': 'Descargar archivo',
     'files.manager.tooltip.nanWarning': 'El dataset contiene valores NaN',
+    'files.manager.sharedInstitutions.action': 'Administrar instituciones compartidas',
+    'files.manager.sharedInstitutions.title': 'Instituciones compartidas del dataset',
+    'files.manager.sharedInstitutions.select': 'Seleccione una institución para compartir',
+    'files.manager.sharedInstitutions.add': 'Agregar institución',
+    'files.manager.sharedInstitutions.addTitle': 'Compartir dataset',
+    'files.manager.sharedInstitutions.addConfirm': '¿Está seguro de compartir este dataset con la institución?',
+    'files.manager.sharedInstitutions.remove': 'Eliminar institución',
+    'files.manager.sharedInstitutions.removeTitle': 'Dejar de compartir dataset',
+    'files.manager.sharedInstitutions.removeConfirm': '¿Está seguro de dejar de compartir este dataset con la institución?',
     // 83.InstitutionsDropdown
     'institutionsDropdown.label': 'Instituciones',
     'institutionsDropdown.placeholder': 'Instituciones (opcional)',
@@ -866,15 +904,14 @@ export default {
     'openSource.publications.sub': 'Además de nuestro software de código abierto, publicamos regularmente artículos científicos revisados por pares que documentan las metodologías, innovaciones y hallazgos detrás de nuestras herramientas. Te invitamos a explorar nuestras publicaciones para comprender mejor el impacto científico de nuestro trabajo.',
     'openSource.publications.multiomix.description': 'Una plataforma basada en la nube para inferir eventos genómicos y epigenómicos del cáncer asociados con la modulación de la expresión génica',
     'openSource.publications.modulector.description': 'Una plataforma como servicio para el acceso a bases de datos de microARNs',
-
-    'openSource.intro.title': 'En Omicsdatascience creemos en la ciencia abierta. Explora nuestros proyectos de código abierto, disponibles libremente para la comunidad con el fin de fomentar la colaboración, la transparencia y la innovación en la investigación biomédica. Disponibles en nuestra organización de GitHub.',
+    'openSource.intro.title': 'En <organizationLink>Omicsdatascience</organizationLink> creemos en la ciencia abierta. Explora nuestros proyectos de código abierto, disponibles libremente para la comunidad con el fin de fomentar la colaboración, la transparencia y la innovación en la investigación biomédica. Disponibles en nuestra <githubLink>organización de GitHub</githubLink>.',
     'openSource.intro.description': 'Estos repositorios representan algunas de nuestras iniciativas de código abierto más destacadas, desarrolladas para brindar a la comunidad científica herramientas bioinformáticas accesibles y de vanguardia.',
 
     'openSource.multiomix.description': 'Plataforma basada en la nube para inferir eventos genómicos y epigenómicos del cáncer asociados con la modulación de la expresión génica.',
     'openSource.modulector.description': 'Modulector es una plataforma abierta que proporciona información sobre miRNAs, genes y sitios de metilación basada en la recopilación de información de diferentes recursos.',
     'openSource.bioapi.description': 'Una potente abstracción de bases de datos genómicas. BioApi es una API REST que proporciona datos relacionados con nomenclatura génica, expresión génica y rutas metabólicas.',
 
-    'openSource.publications.title': 'Descubre nuestras contribuciones científicas',
+    'openSource.publications.title': 'Descubre nuestras <contributionsLink>contribuciones científicas</contributionsLink>',
     'openSource.publications.description': 'Además de nuestro software de código abierto, publicamos regularmente artículos científicos revisados por pares que documentan las metodologías, innovaciones y hallazgos detrás de nuestras herramientas. Te invitamos a explorar nuestras publicaciones para comprender mejor el impacto científico de nuestro trabajo.',
 
     'openSource.publication.multiomix.description': 'Una plataforma basada en la nube para inferir eventos genómicos y epigenómicos del cáncer asociados con la modulación de la expresión génica',
@@ -954,7 +991,11 @@ export default {
     'sharedUsers.stopSharing': 'Dejar de compartir con el usuario',
     'sharedUsers.confirmStopSharing': '¿Está seguro de dejar de compartir el experimento con el usuario?',
     // 97. SourcePopup
-    'sourcePopup.cgdsDataset': 'Dataset de cBioPortal (versión {version})',
+    'sourcePopup.cgdsDataset': 'Dataset de cBioPortal',
+    'sourcePopup.unnamedSource': 'Fuente sin nombre',
+    'sourcePopup.version': 'Versión: {version}',
+    'sourcePopup.tissue': 'Tissue: {tissue}',
+    'sourcePopup.cgdsDownloadUnavailable': 'Descarga no disponible para cBioPortal',
     'sourcePopup.syncDate': 'Fecha de sincronización: {date}',
     'sourcePopup.sourceProperties': 'Propiedades de la fuente',
     'sourcePopup.samples': 'Muestras: {count}',
@@ -1088,6 +1129,8 @@ export default {
 
     'geneGemModalMenu.interaction': 'Interacción {gem}-{gene}',
     'geneGemModalMenu.interaction.info': 'Puntuaciones proporcionadas por bases de datos externas que miden la asociación entre {gene} y {gem}',
+    'geneGemModalMenu.mirnaTargetValidation': 'Validación miRTarBase',
+    'geneGemModalMenu.mirnaTargetValidation.info': 'Evidencia experimental de la interacción entre {gem} y {gene} en miRTarBase',
 
     'geneGemModalMenu.mirnaInteraction': 'Interacción de {gem}',
     'geneGemModalMenu.mirnaInteraction.info': 'Encuentra interacciones objetivo con {gem} en bases de datos externas de miRNA',
@@ -1157,7 +1200,7 @@ export default {
     'miRNAInteractionPanel.gene': 'Gen',
     'miRNAInteractionPanel.sources': 'Fuentes',
     'miRNAInteractionPanel.mirDIPScore': 'Puntuación mirDIP',
-    'miRNAInteractionPanel.mirDIPScoreInfo': 'Las puntuaciones mirDIP de las predicciones de objetivos de microARN humanos se clasifican en cuatro niveles de confianza (Muy alta, Alta, Media y Baja)',
+    'miRNAInteractionPanel.mirDIPScoreInfo': 'Una puntuación mirDIP mayor indica más confianza en la interacción miRNA-gen predicha; una menor, evidencia más débil. La predicción no prueba la interacción experimentalmente.',
     'miRNAInteractionPanel.mirDIPScoreClass': 'Clase de puntuación mirDIP',
     'miRNAInteractionPanel.pubmed': 'PubMed',
 
@@ -1167,6 +1210,12 @@ export default {
 
     'miRNAInteractionPanel.includePubmeds': 'Incluir PubMed',
     'miRNAInteractionPanel.seeMorePapers': 'Ver más artículos',
+    'miRNATargetValidationPanel.headerTitle': 'Validaciones experimentales para {miRNA} y {gene}',
+    'miRNATargetValidationPanel.mirtarbaseId': 'ID de miRTarBase',
+    'miRNATargetValidationPanel.supportType': 'Tipo de soporte',
+    'miRNATargetValidationPanel.experiments': 'Experimentos',
+    'miRNATargetValidationPanel.targetGeneEntrezId': 'ID Entrez del gen objetivo',
+    'miRNATargetValidationPanel.pubmed': 'PubMed',
     // 122.MiRNATargetInteractionPanel
     'miRNATargetInteractionPanel.noData': 'No se encontraron datos para este miRNA y gen',
 
@@ -1229,7 +1278,7 @@ export default {
     'lastExperimentTagInfo.edit': 'Editar',
     // 130.UserLastExperiments
     'userLastExperiments.lastAnalysis': 'Últimos análisis',
-    'userDatasetsModal.selectDataset': 'Seleccionar conjunto de datos de {fileType}',
+    'userDatasetsModal.selectDataset': 'Seleccionar datos de {fileType}',
     // 131.UserDatasetsModal
     'userDatasetsModal.numberOfSurvivalTuples': 'Número de tuplas de supervivencia',
     'userDatasetsModal.uploadDate': 'Fecha de carga',
@@ -1324,7 +1373,7 @@ export default {
     'pipelineForm.preparingAnalysis': 'Preparando análisis',
     'pipelineForm.saveChanges': 'Guardar cambios',
     'pipelineForm.runAnalysis': 'Ejecutar análisis',
-    'pipelineForm.selectDataset': 'Seleccionar conjunto de datos...',
+    'pipelineForm.selectDataset': 'Seleccionar datos...',
     'pipelineForm.mrnaProfile': 'Perfil de mRNA',
     'pipelineForm.profile': 'Perfil de {profile}',
     'pipelineForm.samplesMrna': 'Muestras mRNA: {count}',
@@ -1354,10 +1403,10 @@ export default {
     'sourceForm.all': 'Todos',
     'sourceForm.private': 'Privado',
     'sourceForm.public': 'Público',
-    'sourceForm.selectDatasetPlaceholder': 'Seleccionar conjunto de datos...',
-    'sourceForm.fromYourDatasets': 'Desde tus conjuntos de datos',
+    'sourceForm.selectDatasetPlaceholder': 'Seleccionar datos...',
+    'sourceForm.fromYourDatasets': 'Desde tus datos',
     'sourceForm.fromCBioPortal': 'Desde cBioPortal',
-    'sourceForm.uploadDataset': 'Subir conjunto de datos',
+    'sourceForm.uploadDataset': 'Subir datos',
     // 141 SitePolicy
     'sitePolicy.header': 'Multiomix implementa un conjunto de medidas de seguridad para proteger el acceso a los conjuntos de datos cargados. Estas medidas se complementan con algunas recomendaciones para proteger la privacidad de los datos:',
     'sitePolicy.authentication': 'Multiomix implementa autenticación —verificando la identidad del usuario— y autorización —determinando a qué datos o recursos puede acceder un usuario autenticado respetando el nivel de acceso definido.',
@@ -1415,6 +1464,7 @@ export default {
     'mainNavbar.aboutUs': 'Sobre nosotros',
     'mainNavbar.faq': 'Preguntas frecuentes',
     'mainNavbar.openSource': 'Código abierto',
+    'mainNavbar.language': 'Idioma',
 
     'mainNavbar.homepage': 'Página principal de Multiomix',
     // 148.UpdateUserModal

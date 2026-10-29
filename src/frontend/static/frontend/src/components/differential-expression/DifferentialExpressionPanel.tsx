@@ -17,6 +17,8 @@ import ky from 'ky'
 import { EditIcon } from '../common/EditIcon'
 import { DifferentialExpressionModalResults } from './DifferentialExpressionModalResults'
 import { useIntl } from 'react-intl'
+import { SharedUsers, SharedUsersProps } from '../pipeline/all-experiments-view/SharedUsers'
+import { SharedInstitutions, SharedInstitutionsProps } from '../pipeline/all-experiments-view/SharedInstitutions'
 
 declare const urlDifferentialExpressionList:string
 declare const urlDifferentialExpressionStop:string
@@ -31,6 +33,8 @@ interface DifferentialExpressionPanelState {
         differentialExpressionAnalysis: DifferentialExpressionAnalysis | null
         isOpen: boolean
     }
+    modalUsers: SharedUsersProps
+    modalInstitutions: SharedInstitutionsProps
 }
 
 /**
@@ -47,6 +51,20 @@ const DifferentialExpressionPanelWrapper = () => {
         modalResult: {
             differentialExpressionAnalysis: null,
             isOpen: false
+        },
+        modalUsers: {
+            isOpen: false,
+            users: [],
+            experimentId: 0,
+            isAdding: false,
+            user: { id: 0, username: '' }
+        },
+        modalInstitutions: {
+            isOpen: false,
+            institutions: [],
+            experimentId: 0,
+            isAdding: false,
+            user: { id: 0, username: '' }
         }
     })
 
@@ -189,6 +207,22 @@ const DifferentialExpressionPanelWrapper = () => {
         }))
     }
 
+    /** Closes the shared-users modal and clears its selected experiment. */
+    const handleCloseUsersModal = () => {
+        setState(prevState => ({
+            ...prevState,
+            modalUsers: { ...prevState.modalUsers, isOpen: false, experimentId: 0 }
+        }))
+    }
+
+    /** Closes the shared-institutions modal and clears its selected experiment. */
+    const handleCloseInstitutionsModal = () => {
+        setState(prevState => ({
+            ...prevState,
+            modalInstitutions: { ...prevState.modalInstitutions, isOpen: false, experimentId: 0 }
+        }))
+    }
+
     return (
         <>
             <Grid columns={2} padded stackable divided className='biomarkers--modal--container'>
@@ -210,6 +244,7 @@ const DifferentialExpressionPanelWrapper = () => {
                             { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', width: 1, textAlign: 'center' },
                             { name: intl.formatMessage({ id: 'differentialExpression.panel.sources' }) },
                             { name: intl.formatMessage({ id: 'differentialExpression.panel.public' }), width: 1 },
+                            { name: intl.formatMessage({ id: 'allExperimentsView.table.shared' }), width: 1 },
                             { name: intl.formatMessage({ id: 'common.actions' }), width: 2 }
                         ]}
                         defaultSortProp={{ sortField: 'created_at', sortOrderAscendant: false }}
@@ -297,6 +332,44 @@ const DifferentialExpressionPanelWrapper = () => {
                                                     />
                                                 )
                                         }
+                                    </TableCell>
+                                    <TableCell textAlign='center'>
+                                        <Icon
+                                            name='building'
+                                            color='green'
+                                            className='clickable'
+                                            title={intl.formatMessage({ id: 'allExperimentsView.shared.institutions' })}
+                                            onClick={() => setState(prevState => ({
+                                                ...prevState,
+                                                modalInstitutions: {
+                                                    ...prevState.modalInstitutions,
+                                                    isOpen: true,
+                                                    experimentId: differentialExpressionAnalysis.id,
+                                                    user: {
+                                                        id: differentialExpressionAnalysis.user.id ?? 0,
+                                                        username: differentialExpressionAnalysis.user.username ?? ''
+                                                    }
+                                                }
+                                            }))}
+                                        />
+                                        <Icon
+                                            name='users'
+                                            color='teal'
+                                            className='clickable'
+                                            title={intl.formatMessage({ id: 'allExperimentsView.shared.users' })}
+                                            onClick={() => setState(prevState => ({
+                                                ...prevState,
+                                                modalUsers: {
+                                                    ...prevState.modalUsers,
+                                                    isOpen: true,
+                                                    experimentId: differentialExpressionAnalysis.id,
+                                                    user: {
+                                                        id: differentialExpressionAnalysis.user.id ?? 0,
+                                                        username: differentialExpressionAnalysis.user.username ?? ''
+                                                    }
+                                                }
+                                            }))}
+                                        />
                                     </TableCell>
                                     <TableCell>
                                         {/* See results button */}
@@ -398,6 +471,16 @@ const DifferentialExpressionPanelWrapper = () => {
                     ...prevState,
                     modalResult: { differentialExpressionAnalysis: null, isOpen: false }
                 }))}
+            />
+            <SharedUsers
+                {...state.modalUsers}
+                handleClose={handleCloseUsersModal}
+                handleChangeConfirmModalState={handleChangeConfirmModalState}
+            />
+            <SharedInstitutions
+                {...state.modalInstitutions}
+                handleClose={handleCloseInstitutionsModal}
+                handleChangeConfirmModalState={handleChangeConfirmModalState}
             />
         </>
     )

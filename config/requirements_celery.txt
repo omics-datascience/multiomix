@@ -34,3 +34,6 @@ langchain-huggingface==0.1.0
 pgvector==0.3.6
 sentence-transformers==3.0.0
 openai==1.50.0
+biomcp-cli==0.8.22
+modulector-sdk==2.6.5
+bioapi-sdk==0.1.0

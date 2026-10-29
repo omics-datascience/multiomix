@@ -296,28 +296,27 @@ export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsN
         cy.fit(undefined, 30)
     }
 
-    const getRelatedGenes = async (gene: BiomarkerMolecule, score: number) => {
+    const getRelatedGenes = (gene: BiomarkerMolecule, score: number) => {
         abortControllerRef.current?.abort()
-        abortControllerRef.current = new AbortController()
+        const abortController = new AbortController()
+        abortControllerRef.current = abortController
 
-        try {
-            const response = await ky.get(urlGeneAssociationsNetwork, {
-                searchParams: {
-                    gene_id: gene.identifier,
-                    min_combined_score: score
-                } as any,
-                signal: abortControllerRef.current.signal
+        return ky.get(urlGeneAssociationsNetwork, {
+            searchParams: {
+                gene_id: gene.identifier,
+                min_combined_score: score
+            } as any,
+            signal: abortController.signal
+        })
+            .json<{ data: CytoscapeResponseData }>()
+            .then(data => applyElements(data.data))
+            .catch(err => {
+                if (!abortController.signal.aborted) {
+                    alertGeneralError()
+                }
+
+                console.log('Error getting experiment', err)
             })
-
-            const data = await response.json<{ data: CytoscapeResponseData }>()
-            applyElements(data.data)
-        } catch (err) {
-            if (!abortControllerRef.current?.signal.aborted) {
-                alertGeneralError()
-            }
-
-            console.log('Error getting experiment', err)
-        }
     }
 
     useEffect(() => {
@@ -358,7 +357,7 @@ export const GeneAssociationsNetworkPanel = ({ selectedGene }: GeneAssociationsN
                     <InfoPopup
                         content={(
                             <span>
-                                The combined score is computed by combining the probabilities from the different evidence channels and corrected for the probability of randomly observing an interaction. For a more detailed description please see{' '}
+                                {intl.formatMessage({ id: 'geneAssociations.infoPopup.text' })}{' '}
                                 <ExternalLink href='https://pubmed.ncbi.nlm.nih.gov/15608232/'>
                                     von Mering, et al. Nucleic Acids Res. 2005
                                 </ExternalLink>

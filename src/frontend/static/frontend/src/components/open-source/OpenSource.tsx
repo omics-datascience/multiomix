@@ -1,7 +1,7 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Container, Divider, Grid, Header, HeaderSubheader, List, ListContent, ListDescription, ListHeader, ListIcon, ListItem } from 'semantic-ui-react'
-import { useIntl } from 'react-intl'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 /**
  * Wrapper to make Context.Provider work.
@@ -17,16 +17,16 @@ const OpenSourceWrapper = () => {
                     <Grid.Row columns={1}>
                         <Grid.Column>
                             <Header as='h1'>
-                                {intl.formatMessage({ id: 'openSource.header.main' })}{' '}
-                                <a href='https://omicsdatascience.org/' rel='noreferrer' target='_blank'>
-                                    Omicsdatascience
-                                </a>{' '}
-                                <a href='https://github.com/omics-datascience' rel='noreferrer' target='_blank'>
-                                    GitHub
-                                </a>.
+                                <FormattedMessage
+                                    id='openSource.intro.title'
+                                    values={{
+                                        organizationLink: chunks => <a href='https://omicsdatascience.org/' rel='noreferrer' target='_blank'>{chunks}</a>,
+                                        githubLink: chunks => <a href='https://github.com/omics-datascience' rel='noreferrer' target='_blank'>{chunks}</a>
+                                    }}
+                                />
                             </Header>
                             <HeaderSubheader>
-                                {intl.formatMessage({ id: 'openSource.header.sub' })}
+                                {intl.formatMessage({ id: 'openSource.intro.description' })}
                             </HeaderSubheader>
                             <List>
                                 <ListItem>
@@ -56,10 +56,15 @@ const OpenSourceWrapper = () => {
                     <Grid.Row columns={1}>
                         <Grid.Column>
                             <Header as='h2'>
-                                {intl.formatMessage({ id: 'openSource.publications.title' })}{' '} <a href='https://omicsdatascience.org/?page_id=15' rel='noreferrer' target='_blank'>contributions</a>
+                                <FormattedMessage
+                                    id='openSource.publications.title'
+                                    values={{
+                                        contributionsLink: chunks => <a href='https://omicsdatascience.org/?page_id=15' rel='noreferrer' target='_blank'>{chunks}</a>
+                                    }}
+                                />
                             </Header>
                             <HeaderSubheader>
-                                {intl.formatMessage({ id: 'openSource.publications.sub' })}
+                                {intl.formatMessage({ id: 'openSource.publications.description' })}
                             </HeaderSubheader>
                             <List>
                                 <ListItem>
@@ -69,7 +74,7 @@ const OpenSourceWrapper = () => {
                                             Multiomix
                                         </ListHeader>
                                         <ListDescription>
-                                            {intl.formatMessage({ id: 'openSource.publications.multiomix.description' })}
+                                            {intl.formatMessage({ id: 'openSource.publication.multiomix.description' })}
                                         </ListDescription>
                                     </ListContent>
                                 </ListItem>
@@ -80,7 +85,7 @@ const OpenSourceWrapper = () => {
                                             Modulector
                                         </ListHeader>
                                         <ListDescription>
-                                            {intl.formatMessage({ id: 'openSource.publications.modulector.description' })}
+                                            {intl.formatMessage({ id: 'openSource.publication.modulector.description' })}
                                         </ListDescription>
                                     </ListContent>
                                 </ListItem>

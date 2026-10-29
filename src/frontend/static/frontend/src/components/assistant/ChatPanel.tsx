@@ -274,23 +274,27 @@ const ChatPanel = (props: ChatPanelProps) => {
             }
 
             loadConversations()
-        }).catch(async err => {
-            let detail = err?.message ?? String(err)
-
-            if (err?.response) {
-                try {
-                    const body = await err.response.json()
-                    detail = body?.detail ?? body?.error ?? JSON.stringify(body)
-                } catch {
-                    detail = `HTTP ${err.response.status}`
-                }
+        }).catch(err => {
+            const appendErrorMessage = (detail: string) => {
+                console.error('Error sending message:', detail, err)
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: `Error: ${detail}`,
+                }])
             }
 
-            console.error('Error sending message:', detail, err)
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: `Error: ${detail}`,
-            }])
+            if (!err?.response) {
+                appendErrorMessage(err?.message ?? String(err))
+                return
+            }
+
+            return err.response.json().then(
+                (body: { detail?: string; error?: string }) => {
+                    const detail = body?.detail ?? body?.error ?? JSON.stringify(body) ?? String(body)
+                    appendErrorMessage(detail)
+                },
+                () => appendErrorMessage(`HTTP ${err.response.status}`)
+            )
         }).finally(() => {
             setIsLoading(false)
         })

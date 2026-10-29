@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 
 from .models import Conversation
 from .serializers import ConversationListSerializer, ConversationSerializer
-from .services.llm_service import run_chat
 
 
 class ChatView(APIView):
@@ -15,6 +14,8 @@ class ChatView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
+        from .services.llm_service import run_chat
+
         message = request.data.get('message', '').strip()
         conversation_id = request.data.get('conversation_id')
 

@@ -1,12 +1,15 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Header, Modal, Button, Table, Icon } from 'semantic-ui-react'
-import { DjangoCGDSStudy, RowHeader } from '../../../utils/django_interfaces'
+import { DjangoCGDSStudy, DjangoTissue, RowHeader } from '../../../utils/django_interfaces'
 import { FileType, Nullable } from '../../../utils/interfaces'
 import { formatDateLocale } from '../../../utils/util_functions'
 import { PaginatedTable } from '../../common/PaginatedTable'
 import { useIntl } from 'react-intl'
+import ky from 'ky'
+import { getTissueDropdownOptions, TissueLabels } from '../../common/TissueLabels'
 
 declare const urlCGDSStudiesCRUD: string
+declare const urlTissuesCRUD: string
 
 /**
  * Component's props
@@ -33,6 +36,21 @@ interface CGDSDatasetsModalProps {
  */
 const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
     const intl = useIntl()
+    const [tissues, setTissues] = useState<DjangoTissue[]>([])
+
+    useEffect(() => {
+        if (!props.showCGDSDatasetsModal) {
+            return
+        }
+
+        ky.get(urlTissuesCRUD).then((response) => {
+            response.json<DjangoTissue[]>().then(setTissues).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
+    }, [props.showCGDSDatasetsModal])
 
     if (!props.showCGDSDatasetsModal) {
         return null
@@ -46,6 +64,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
         const headersList: RowHeader<DjangoCGDSStudy>[] = [
             { name: intl.formatMessage({ id: 'common.name' }), serverCodeToSort: 'name' },
             { name: intl.formatMessage({ id: 'common.description' }), serverCodeToSort: 'description' },
+            { name: 'Tissue' },
             { name: intl.formatMessage({ id: 'common.version' }), serverCodeToSort: 'version' },
             { name: intl.formatMessage({ id: 'sourcePopup.syncDate' }), serverCodeToSort: 'date_last_synchronization' },
             { name: intl.formatMessage({ id: 'cgdsDatasetsModal.studyInfo' }) }
@@ -63,6 +82,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                     showSearchInput
                     urlToRetrieveData={urlCGDSStudiesCRUD}
                     customFilters={[
+                        { label: 'Tissue', keyForServer: 'tissue', defaultValue: '', placeholder: 'Select tissue', options: getTissueDropdownOptions(tissues), width: 3 },
                         { label: intl.formatMessage({ id: 'cgdsDatasetsModal.onlyLastVersion' }), keyForServer: 'only_last_version', defaultValue: true, type: 'checkbox' }
                     ]}
                     queryParams={{ file_type: props.selectingFileType }}
@@ -77,6 +97,7 @@ const CGDSDatasetsModal = (props: CGDSDatasetsModalProps) => {
                             >
                                 <Table.Cell>{CGDSStudy.name}</Table.Cell>
                                 <Table.Cell>{CGDSStudy.description}</Table.Cell>
+                                <Table.Cell><TissueLabels tissues={CGDSStudy.tissue} tissueOptions={tissues} /></Table.Cell>
                                 <Table.Cell>{CGDSStudy.version}</Table.Cell>
                                 <Table.Cell collapsing>{CGDSStudy.date_last_synchronization
                                     ? formatDateLocale(CGDSStudy.date_last_synchronization)

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Segment, Header, Icon, Button, Select, Container, Label, Checkbox, Input, TextArea, Message, Form, DropdownItemProps } from 'semantic-ui-react'
+import { useIntl } from 'react-intl'
 import { TextAreaMolecules } from './TextAreaMolecules'
 import { BiomarkerType, FormBiomarkerData, MoleculesSectionData, MoleculesTypeOfSelection } from './../../../types'
 import { ButtonsForTypeOfInsert } from './ButtonsForTypeOfInsert'
@@ -38,7 +39,6 @@ interface NewBiomarkerFormProps {
     biomarkerForm: FormBiomarkerData,
     /** Value for Checkbox. */
     checkedIgnoreProposedAlias: boolean,
-    tagOptions: DropdownItemProps[],
     tags: DjangoTag[],
     /** Handle change for Checkbox. */
     handleChangeIgnoreProposedAlias: (value: boolean) => void,
@@ -61,8 +61,16 @@ interface NewBiomarkerFormProps {
  * @returns Component
  */
 export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
+    const intl = useIntl()
     const { haveInvalid, haveAmbiguous } = props.handleValidateForm()
     const canEditMolecules = props.biomarkerForm.canEditMolecules
+    const tagOptions: DropdownItemProps[] = [
+        { key: 'no_tag', value: '', text: intl.formatMessage({ id: 'biomarkersPanel.tags.noTag' }) },
+        ...props.tags.map((tag) => {
+            const id = tag.id as number
+            return { key: id, value: id, text: tag.name }
+        })
+    ]
 
     return (
         <Segment className='biomarkers--side--bar--container table-bordered'>
@@ -116,7 +124,7 @@ export const NewBiomarkerForm = (props: NewBiomarkerFormProps) => {
                     <Form.Dropdown
                         fluid
                         width={16}
-                        options={props.tagOptions}
+                        options={tagOptions}
                         search
                         selection
                         clearable

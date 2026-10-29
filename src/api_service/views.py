@@ -1,5 +1,6 @@
 import json
 import logging
+import requests
 from typing import Optional, Dict, Tuple, List, Type, OrderedDict, Union, cast, Any
 
 import numpy as np
@@ -8,6 +9,7 @@ from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, Http404
@@ -15,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,6 +30,11 @@ from common.functions import get_enum_from_value, get_integer_enum_from_value, e
     request_bool_to_python_bool, get_intersection, create_survival_columns_from_json, get_intersection_clinical
 from common.pagination import StandardResultsSetPagination
 from common.response import ResponseStatus, generate_json_response_or_404
+from common.access_control import (
+    can_edit_shared_resource,
+    can_view_shared_resource,
+    shared_resource_visibility_q,
+)
 from datasets_synchronization.models import CGDSStudy, CGDSDataset, SurvivalColumnsTupleCGDSDataset, \
     SurvivalColumnsTupleUserFile
 from genes.models import Gene
@@ -46,7 +54,7 @@ from .ordering import CustomExperimentResultCombinationsOrdering, annotate_by_co
 from .permissions import ExperimentIsNotRunning
 from .serializers import ExperimentSerializer, ExperimentSerializerDetail, \
     GeneMiRNACombinationSerializer, GeneCNACombinationSerializer, GeneMethylationCombinationSerializer, \
-    ExperimentClinicalSourceSerializer, LimitedUserSerializer
+    ExperimentClinicalSourceSerializer, LimitedUserSerializer, MirnaTargetValidationSerializer
 from .tasks import eval_mrna_gem_experiment
 from .utils import get_experiment_source, file_type_to_experiment_type, get_cgds_dataset
 from institutions.models import Institution
@@ -181,12 +189,7 @@ class ExperimentList(generics.ListAPIView):
         @param user: The user for whom the experiments are retrieved.
         @return: Queryset of experiments visible to the user.
         """
-        return Experiment.objects.filter(
-            Q(user=user) |
-            Q(is_public=True) |
-            Q(shared_institutions__institutionadministration__user=user) |
-            Q(shared_users=user)
-        ).distinct()
+        return Experiment.objects.filter(shared_resource_visibility_q(user)).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -208,13 +211,7 @@ class ExperimentResultCombinationsDetails(generics.ListAPIView):
 
         try:
             experiment: Experiment = Experiment.objects.filter(
-                Q(pk=experiment_id) &
-                (
-                        Q(user=user) |
-                        Q(is_public=True) |
-                        Q(shared_institutions__institutionadministration__user=user) |
-                        Q(shared_users=user)
-                )
+                Q(pk=experiment_id) & shared_resource_visibility_q(user)
             ).distinct().get()
             combinations_queryset = experiment.combinations
 
@@ -278,7 +275,7 @@ class FullExperimentDetail(generics.RetrieveAPIView):
     """REST endpoint: get for Experiment model"""
 
     def get_queryset(self):
-        return Experiment.objects.filter(user=self.request.user)
+        return Experiment.objects.filter(shared_resource_visibility_q(self.request.user)).distinct()
 
     serializer_class = ExperimentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -310,11 +307,8 @@ class RemoveInstitutionFromExperimentView(APIView):
         experiment_id = data.get('experimentId')
         institution_id = data.get('institutionId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(experiment, request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         institution = get_object_or_404(Institution, id=institution_id)
 
@@ -347,11 +341,8 @@ class RemoveUserFromExperimentView(APIView):
         experiment_id = data.get('experimentId')
         user_id = data.get('userId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(experiment, request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         user = get_object_or_404(User, id=user_id)
 
@@ -383,11 +374,8 @@ class ToggleExperimentPublicView(APIView):
         data = request.data
         experiment_id = data.get('experimentId')
         experiment = get_object_or_404(Experiment, id=experiment_id)
-        if experiment.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(experiment, request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         experiment.is_public = not experiment.is_public
         experiment.save(update_fields=['is_public'])
@@ -411,6 +399,8 @@ class InstitutionNonExperimentsSharedListView(generics.ListAPIView):
         experiment_id = self.kwargs.get('experiment_id')
         user = self.request.user
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         user_institutions = Institution.objects.filter(users=user)
         return user_institutions.exclude(
             id__in=experiment.shared_institutions.values_list('id', flat=True)
@@ -430,6 +420,8 @@ class UsersNonExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, self.request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
 
         associated_user_ids = experiment.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
@@ -448,6 +440,8 @@ class UsersExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_view_shared_resource(experiment, self.request.user):
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_users
 
 
@@ -464,6 +458,8 @@ class InstitutionExperimentsSharedListView(generics.ListAPIView):
         """
         experiment_id = self.kwargs.get('experiment_id')
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_view_shared_resource(experiment, self.request.user):
+            raise PermissionDenied('You do not have permission to access this experiment.')
         return experiment.shared_institutions
 
 
@@ -486,6 +482,8 @@ class AddInstitutionToExperimentView(APIView):
             )
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         institution = get_object_or_404(Institution, id=institution_id)
 
         experiment.shared_institutions.add(institution)
@@ -513,6 +511,8 @@ class AddUserToExperimentView(APIView):
             )
 
         experiment = get_object_or_404(Experiment, id=experiment_id)
+        if not can_edit_shared_resource(experiment, request.user):
+            raise PermissionDenied('You do not have permission to modify this experiment.')
         user = get_object_or_404(User, id=user_id)
 
         experiment.shared_users.add(user)
@@ -914,21 +914,23 @@ def get_number_samples_in_common_action_one_front(request):
 @login_required
 def mirna_data_action(request):
     """Gets miRNA data from Modulector"""
-    data = global_mrna_service.get_modulector_service_content('mirna', request.GET, is_paginated=False)
+    data = global_mrna_service.get_mirna_details(mirna=request.GET.get('mirna', ''))
     return generate_json_response_or_404(data)
 
 
 @login_required
 def methylation_data_action(request):
     """Gets Methylation site data from Modulector"""
-    data = global_mrna_service.get_modulector_service_content('methylation', request.GET, is_paginated=False)
+    data = global_mrna_service.get_methylation_details(
+        methylation_site=request.GET.get('methylation_site', '')
+    )
     return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_target_interaction_action(request):
     """
-    Searches in papers an specific miRNA interaction.  
+    Searches in papers an specific miRNA interaction.
 
     Examples:
     http://127.0.0.1:8000/api-service/mirna-target-interaction?gene=BRCA1&mirna=hsa-miR-132-3p&include_pubmeds=true
@@ -939,48 +941,68 @@ def get_mirna_target_interaction_action(request):
     """
     gene = request.GET.get('gene')
     mirna = request.GET.get('mirna')
-    include_pubmeds = request.GET.get('include_pubmeds')
 
     if not gene and not mirna:
         return JsonResponse(data={"error": "Param 'mirna' or 'gene' are mandatory"}, status=400)
-    if gene and not mirna:
-        params = {'gene': gene}
-    elif not gene and mirna:
-        params = {'mirna': mirna}
-    else:
-        params = {'mirna': mirna, 'gene': gene}
 
-    score = request.GET.get('score')
-    if score:
-        params['score'] = score
+    data = global_mrna_service.get_mirna_target_interactions(
+        mirna=mirna,
+        gene=gene,
+        score=request.GET.get('score'),
+        include_pubmeds=request.GET.get('include_pubmeds', '').lower() == 'true',
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
+    return JsonResponse(data)
 
-    if include_pubmeds:
-        if include_pubmeds.lower() == "true":
-            params['include_pubmeds'] = "true"
 
-    # Gets include_pubmeds flag
-    include_pubmeds = request.GET.get('include_pubmeds') == 'true'
-    if include_pubmeds:
-        params['include_pubmeds'] = 'true'
+@login_required
+@require_http_methods(['GET'])
+def get_mirna_target_validation_action(request):
+    """Return experimentally validated miRNA-target interactions from miRTarBase."""
+    mirna = request.GET.get('mirna')
+    target = request.GET.get('target')
 
-    data = global_mrna_service.get_modulector_service_content('mirna-target-interactions',
-                                                              request_params=params,
-                                                              is_paginated=True,
-                                                              method='get')
+    if not mirna and not target:
+        return JsonResponse(data={"error": "Param 'mirna' or 'target' are mandatory"}, status=400)
+
+    try:
+        data = global_mrna_service.get_mirna_target_validations(
+            mirna=mirna,
+            target=target,
+            support_type=request.GET.get('support_type'),
+            experiment=request.GET.get('experiment'),
+            ordering=request.GET.get('ordering'),
+            page=request.GET.get('page'),
+            page_size=request.GET.get('page_size'),
+        )
+    except (requests.RequestException, ValueError):
+        logging.exception('Modulector miRNA-target validation request failed')
+        return JsonResponse({'error': 'Modulector validation service is unavailable'}, status=502)
+
+    data['results'] = MirnaTargetValidationSerializer(instance=data['results'], many=True).data
     return JsonResponse(data)
 
 
 @login_required
 def get_mirna_diseases_action(request):
     """Searches in papers miRNA associations with diseases"""
-    data = global_mrna_service.get_modulector_service_content('diseases', request.GET, is_paginated=True)
+    data = global_mrna_service.get_diseases(
+        mirna=request.GET.get('mirna'),
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
     return generate_json_response_or_404(data)
 
 
 @login_required
 def get_mirna_drugs_action(request):
     """Searches in papers miRNA associations with drugs"""
-    data = global_mrna_service.get_modulector_service_content('drugs', request.GET, is_paginated=True)
+    data = global_mrna_service.get_drugs(
+        mirna=request.GET.get('mirna'),
+        page=request.GET.get('page'),
+        page_size=request.GET.get('page_size'),
+    )
     return generate_json_response_or_404(data)
 
 
@@ -1033,7 +1055,9 @@ def generate_result_file_response(
 @login_required
 def download_full_result(request, pk: int):
     """Downloads all the combinations resulting from an analysis"""
-    experiment = get_object_or_404(Experiment, pk=pk, user=request.user)
+    experiment = get_object_or_404(Experiment, pk=pk)
+    if not can_view_shared_resource(experiment, request.user):
+        raise DjangoPermissionDenied('You do not have permission to access this experiment.')
 
     def format_combination_object(combination: Type[GeneGEMCombination]) -> Dict:
         """
@@ -1070,7 +1094,9 @@ def download_full_result(request, pk: int):
 def download_result_with_filters(request: Request):
     """Downloads the combinations resulting from an analysis with filters applied"""
     experiment_id = request.GET.get('experiment_id')
-    experiment = get_object_or_404(Experiment, pk=experiment_id, user=request.user)
+    experiment = get_object_or_404(Experiment, pk=experiment_id)
+    if not can_view_shared_resource(experiment, request.user):
+        raise DjangoPermissionDenied('You do not have permission to access this experiment.')
 
     comb_dict: List[OrderedDict] = ExperimentResultCombinationsDetails.as_view()(
         request=request

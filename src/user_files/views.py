@@ -8,9 +8,12 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from common.pagination import StandardResultsSetPagination
+from common.access_control import can_edit_user_file, can_view_user_file, user_file_visibility_q
+from institutions.models import Institution
+from institutions.serializers import InstitutionSimpleSerializer
 from user_files.serializers import UserFileSerializer, UserFileWithoutFileObjSerializer
 from .models import UserFile
 from rest_framework.response import Response
@@ -70,16 +73,13 @@ def get_an_user_file(user: AbstractBaseUser, user_file_pk: int) -> UserFile:
     return get_object_or_404(queryset, pk=user_file_pk)
 
 
-def get_own_or_as_admin_user_files(user: AbstractBaseUser):
+def get_own_user_files(user: AbstractBaseUser):
     """
-    Returns only the User's Files which were uploaded by himself or belongs to an Institution which his is the admin of
+    Returns only the User's Files which were uploaded by himself.
     @param user: User to retrieve his Datasets
     @return: User's Files
     """
-    return UserFile.objects.filter(Q(user=user) | (
-            Q(institutions__institutionadministration__user=user)
-            & Q(institutions__institutionadministration__is_institution_admin=True)
-    )).distinct()
+    return UserFile.objects.filter(user=user)
 
 
 def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool, with_survival_only: bool) -> QuerySet:
@@ -87,23 +87,21 @@ def get_user_files(user: AbstractBaseUser, public_only: bool, private_only: bool
     Returns the User's files objects from DB
     @param user: User to retrieve his Datasets
     @param public_only: If True retrieves only the public Datasets
-    @param private_only: If True retrieves only the uploaded Datasets by the User, otherwise, returns all his datasets
-    and the Datasets of the Institutions the user belongs to. If public_only is set to True, this parameter is ignored
+    @param private_only: If True retrieves only the uploaded Datasets by the User, otherwise, returns all public
+    datasets and the Datasets of the Institutions the user belongs to. If public_only is set to True, this parameter
+    is ignored
     @param with_survival_only: If True retrieves only the clinical Datasets which have at least on survival column tuple
     @return: QuerySet of UserFile objects
     """
     if public_only:
         # Gets public Datasets
         filter_condition = Q(is_public=True)
-    else:
-        # Gets UserFiles which belongs to current user
+    elif private_only:
+        # Gets UserFiles which belong to the current user
         filter_condition = Q(user=user)
-        if not private_only:
-            # Gets public datasets too
-            filter_condition |= Q(is_public=True)
-
-            # In some cases, gets the Datasets of the Institutions the user belongs to
-            filter_condition |= Q(institutions__institutionadministration__user=user)
+    else:
+        # Gets public and institution datasets too
+        filter_condition = user_file_visibility_q(user)
 
     # Filters by survival data
     user_files_objects = UserFile.objects
@@ -149,7 +147,7 @@ class UserFileList(generics.ListAPIView):
     serializer_class = UserFileWithoutFileObjSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['tag', 'file_type', 'institutions', 'tissues']
+    filterset_fields = ['tag', 'file_type', 'institutions', 'tissue']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'description', 'upload_date', 'tag', 'user', 'file_type']
     pagination_class = StandardResultsSetPagination
@@ -157,15 +155,105 @@ class UserFileList(generics.ListAPIView):
 
 class UserFileDetail(generics.RetrieveUpdateDestroyAPIView):
     """
-    REST endpoint: get, modify or delete for UserFile model. A User can modify or delete ONLY the files which were
-    uploaded by himself or belongs to an Institution which his is the admin of
+    REST endpoint: get, modify or delete for UserFile model. Only the owner
+    can modify or delete a UserFile; institutional visibility is read-only.
     """
 
     def get_queryset(self):
-        return get_own_or_as_admin_user_files(self.request.user)
+        if self.request.method == 'GET':
+            return UserFile.objects.filter(user_file_visibility_q(self.request.user)).distinct()
+        return get_own_user_files(self.request.user)
 
     serializer_class = UserFileSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class InstitutionNonUserFilesSharedListView(generics.ListAPIView):
+    """List the current user's institutions not shared with a dataset."""
+
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return the current user's institutions not already shared with the dataset."""
+        user_file_id = self.kwargs.get('user_file_id')
+        user_file = get_object_or_404(UserFile, pk=user_file_id)
+        if not can_edit_user_file(user_file, self.request.user):
+            raise PermissionDenied('You do not have permission to modify this dataset.')
+
+        shared_institution_ids = user_file.institutions.values_list('pk', flat=True)
+        return Institution.objects.filter(users=self.request.user).exclude(pk__in=shared_institution_ids)
+
+
+class UserFileSharedInstitutionsListView(generics.ListAPIView):
+    """List the institutions with which a dataset is shared."""
+
+    serializer_class = InstitutionSimpleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return the institutions shared with the dataset when the user can view it."""
+        user_file_id = self.kwargs.get('user_file_id')
+        user_file = get_object_or_404(UserFile, pk=user_file_id)
+        if not can_view_user_file(user_file, self.request.user):
+            raise PermissionDenied('You do not have permission to access this dataset.')
+        return user_file.institutions.all()
+
+
+class AddInstitutionToUserFileView(APIView):
+    """Share a dataset with one of the owner's institutions."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def post(request):
+        """Share a dataset with an institution belonging to the requesting owner."""
+        institution_id = request.data.get('institutionId')
+        user_file_id = request.data.get('userFileId')
+
+        if not institution_id or not user_file_id:
+            return Response(
+                {"error": "Both 'institutionId' and 'userFileId' are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_file = get_object_or_404(UserFile, pk=user_file_id)
+        if not can_edit_user_file(user_file, request.user):
+            raise PermissionDenied('You do not have permission to modify this dataset.')
+
+        institution = get_object_or_404(
+            Institution,
+            pk=institution_id,
+            users=request.user
+        )
+        user_file.institutions.add(institution)
+        return Response(InstitutionSimpleSerializer(institution).data)
+
+
+class RemoveInstitutionFromUserFileView(APIView):
+    """Stop sharing a dataset with an institution."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def post(request):
+        """Remove an institution from a dataset owned by the requesting user."""
+        institution_id = request.data.get('institutionId')
+        user_file_id = request.data.get('userFileId')
+        user_file = get_object_or_404(UserFile, pk=user_file_id)
+
+        if not can_edit_user_file(user_file, request.user):
+            raise PermissionDenied('You do not have permission to modify this dataset.')
+
+        institution = get_object_or_404(Institution, pk=institution_id)
+        if not user_file.institutions.filter(pk=institution.pk).exists():
+            return Response(
+                {"error": "This institution is not associated with the dataset."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_file.institutions.remove(institution)
+        return Response({"message": f"Institution {institution.pk} removed from dataset {user_file.pk}."})
 
 
 class DownloadUserFile(APIView):
@@ -203,11 +291,8 @@ class ToggleFilePublicView(APIView):
 
         user_file_id = data.get('userFileId')
         user_file: UserFile = get_object_or_404(UserFile, id=user_file_id)
-        if user_file.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this user file."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_user_file(user_file, request.user):
+            raise PermissionDenied('You do not have permission to modify this user file.')
 
         user_file.is_public = not user_file.is_public
         user_file.save(update_fields=['is_public'])

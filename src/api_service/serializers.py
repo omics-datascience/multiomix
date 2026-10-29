@@ -2,10 +2,23 @@ from datasets_synchronization.serializers import SimpleCGDSDatasetSerializer
 from genes.serializers import GeneForResultTableSerializer
 from tags.serializers import TagSerializer
 from user_files.serializers import SimpleUserFileSerializer, UserFileSerializer
+from tissues.serializers import SimpleTissueSerializer
 from .models import Experiment, ExperimentSource, GeneGEMCombination, GeneMiRNACombination, GeneCNACombination, \
     GeneMethylationCombination, ExperimentClinicalSource
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+
+
+class MirnaTargetValidationSerializer(serializers.Serializer):
+    """Read-only representation of one miRTarBase validation record."""
+    id = serializers.IntegerField(read_only=True)
+    mirtarbase_id = serializers.CharField(read_only=True)
+    mirna = serializers.CharField(read_only=True)
+    gene = serializers.CharField(read_only=True)
+    target_gene_entrez_id = serializers.JSONField(read_only=True, allow_null=True)
+    experiments = serializers.ListField(child=serializers.CharField(), read_only=True)
+    support_type = serializers.CharField(read_only=True)
+    pmid = serializers.JSONField(read_only=True, allow_null=True)
 
 
 class GeneGEMCombinationSerializer(serializers.ModelSerializer):
@@ -49,7 +62,7 @@ class ExperimentSerializerDetail(serializers.ModelSerializer):
 
     class Meta:
         model = Experiment
-        fields = ['id', 'name', 'description', 'tag']
+        fields = ['id', 'name', 'description', 'tag', 'tissue']
 
 
 class ExperimentSourceSerializer(serializers.ModelSerializer):
@@ -78,6 +91,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
     gem_source = ExperimentSourceSerializer()
     user = LimitedUserSerializer()
     tag = TagSerializer()
+    tissue = SimpleTissueSerializer(read_only=True)
 
     class Meta:
         model = Experiment
@@ -99,7 +113,8 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'tag',
             'clinical_source_id',
             'is_public',
-            'user'
+            'user',
+            'tissue'
         ]
 
 

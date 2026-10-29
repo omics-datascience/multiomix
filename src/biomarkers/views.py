@@ -7,6 +7,7 @@ from django.db import transaction
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -19,7 +20,12 @@ from biomarkers.serializers import BiomarkerFromCorrelationAnalysisSerializer, B
     BiomarkerSimpleSerializer, BiomarkerSimpleUpdateSerializer
 from common.pagination import StandardResultsSetPagination
 from common.response import generate_json_response_or_404
-from django.db.models import QuerySet, Q
+from common.access_control import (
+    biomarker_visibility_q,
+    can_edit_shared_resource,
+    can_view_biomarker,
+)
+from django.db.models import QuerySet
 from institutions.serializers import InstitutionSimpleSerializer, InstitutionSerializer
 from institutions.models import Institution
 from django.contrib.auth import get_user_model
@@ -31,12 +37,7 @@ class BiomarkerList(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         only_successful = self.request.GET.get('onlySuccessful') == 'true'
-        biomarkers = Biomarker.objects.filter(
-            Q(is_public=True) |
-            Q(user=user) |
-            Q(shared_institutions__institutionadministration__user=user) |
-            Q(shared_users=user)
-        ).distinct()
+        biomarkers = Biomarker.objects.filter(biomarker_visibility_q(user)).distinct()
 
         if only_successful:
             # FIXME: this is VERY slow. Taking more than 20secs in production. Must parametrize the DB, maybe
@@ -79,12 +80,9 @@ class BiomarkerDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Biomarker.objects.filter(
-            Q(is_public=True) |
-            Q(user=user) |
-            Q(shared_institutions__institutionadministration__user=user) |
-            Q(shared_users=user)
-        ).distinct()
+        if self.request.method == 'GET':
+            return Biomarker.objects.filter(biomarker_visibility_q(user)).distinct()
+        return Biomarker.objects.filter(user=user)
 
     serializer_class = BiomarkerSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -153,12 +151,7 @@ def biomarkers_action(request):
 
 def get_gene_aliases(genes_ids: List[str]) -> Optional[Dict]:
     """Get the aliases for a list of genes from BioAPI"""
-    return global_mrna_service.get_bioapi_service_content(
-        'gene-symbols',
-        request_params={'gene_ids': genes_ids},
-        is_paginated=False,
-        method='post'
-    )
+    return global_mrna_service.get_gene_symbols(gene_ids=genes_ids)
 
 
 def find_genes_from_request(request: Request) -> List[Dict]:
@@ -166,8 +159,13 @@ def find_genes_from_request(request: Request) -> List[Dict]:
     Generates the structure for the frontend for a list of genes. The needed structure is a list of dicts with
     the following keys: molecule, standard
     """
-    genes_found = global_mrna_service.get_bioapi_service_content('gene-symbols-finder',
-                                                                 request.GET, is_paginated=False)
+    limit = request.GET.get('limit')
+    genes_found = global_mrna_service.find_gene_symbols(
+        query=request.GET.get('query', ''),
+        limit=int(limit) if limit else 50,
+    )
+    if not genes_found:
+        return []
     aliases = get_gene_aliases(genes_found)
     return [{'molecule': gene, 'standard': aliases.get(gene, [None])[0]} for gene in genes_found]
 
@@ -197,17 +195,11 @@ class MiRNACodes(APIView):
     @staticmethod
     def __get_mirna_aliases(mirna_codes: List[str]) -> Optional[Dict]:
         """Get the aliases for a list of miRNAs through Modulector"""
-        return global_mrna_service.get_modulector_service_content(
-            'mirna-codes',
-            request_params={'mirna_codes': mirna_codes},
-            is_paginated=False,
-            method='post'
-        )
+        return global_mrna_service.get_mirna_codes(mirna_codes=mirna_codes)
 
     def get(self, request):
         """Generates a query to search miRNAs through Modulector"""
-        mirnas_found = global_mrna_service.get_modulector_service_content('mirna-codes-finder',
-                                                                          request.GET, is_paginated=False)
+        mirnas_found = global_mrna_service.find_mirna_codes(query=request.GET.get('query', ''))
 
         # Generates the structure for the frontend
         aliases = self.__get_mirna_aliases(mirnas_found)
@@ -235,23 +227,12 @@ class MethylationSites(APIView):
     @staticmethod
     def __get_methylation_sites_aliases(methylation_sites: List[str]) -> Optional[Dict]:
         """Get the aliases for a list of Methylation sites through Modulector"""
-        return global_mrna_service.get_modulector_service_content(
-            'methylation-sites',
-            request_params={'methylation_sites': methylation_sites},
-            is_paginated=False,
-            method='post'
-        )
+        return global_mrna_service.get_methylation_sites(methylation_sites=methylation_sites)
 
     def get(self, request: Request):
         """Generates a query to search Methylation sites through Modulector"""
-        # methylation_sites = request.GET.get('methylation_sites', '')
-
         # Gets the Methylation sites
-        sites_found = global_mrna_service.get_modulector_service_content(
-            'methylation-sites-finder',
-            request_params=request.GET,
-            is_paginated=False
-        )
+        sites_found = global_mrna_service.find_methylation_sites(query=request.GET.get('query', ''))
 
         # Generates the structure for the frontend
         aliases = self.__get_methylation_sites_aliases(sites_found)
@@ -283,6 +264,8 @@ class BiomarkerMolecules(generics.ListAPIView):
     def get_queryset(self):
         biomarker_pk = self.request.GET.get('biomarker_pk')
         biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+        if not can_view_biomarker(biomarker, self.request.user):
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         molecule_type = self.request.GET.get('type')
         return biomarker.all_molecules(molecule_type=molecule_type)
 
@@ -326,6 +309,8 @@ class InstitutionNonExperimentsSharedBiomarkerListView(generics.ListAPIView):
         biomarker_id = self.kwargs.get('biomarker_id')
         user = self.request.user
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_edit_shared_resource(biomarker, self.request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         user_institutions = Institution.objects.filter(users=user)
         return user_institutions.exclude(
             id__in=biomarker.shared_institutions.values_list('id', flat=True)
@@ -349,6 +334,8 @@ class AddInstitutionToBiomarkerView(APIView):
             )
         
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_edit_shared_resource(biomarker, request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         institution = get_object_or_404(Institution, id=institution_id)
 
         biomarker.shared_institutions.add(institution)
@@ -368,6 +355,8 @@ class UsersSharedBiomarkerListView(generics.ListAPIView):
         """
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_view_biomarker(biomarker, self.request.user):
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.shared_users
 
 class RemoveInstitutionFromBiomarkerView(APIView):
@@ -385,11 +374,8 @@ class RemoveInstitutionFromBiomarkerView(APIView):
         biomarker_id = data.get('biomarkerId')
         institution_id = data.get('institutionId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
-        if biomarker.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this experiment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(biomarker, request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         institution = get_object_or_404(Institution, id=institution_id)
 
@@ -418,6 +404,8 @@ class InstitutionBiomarkersSharedListView(generics.ListAPIView):
         """
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_view_biomarker(biomarker, self.request.user):
+            raise PermissionDenied('You do not have permission to access this biomarker.')
         return biomarker.shared_institutions
 
 class RemoveUserFromBiomarkerView(APIView):
@@ -435,11 +423,8 @@ class RemoveUserFromBiomarkerView(APIView):
         biomarker_id = data.get('biomarkerId')
         user_id = data.get('userId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
-        if biomarker.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(biomarker, request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         user = get_object_or_404(User, id=user_id)
 
@@ -468,6 +453,8 @@ class UsersNonBiomarkersSharedListView(generics.ListAPIView):
         """
         biomarker_id = self.kwargs.get('biomarker_id')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_edit_shared_resource(biomarker, self.request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         associated_user_ids = biomarker.shared_users.values_list('id', flat=True)
         return get_user_model().objects.exclude(id__in=associated_user_ids)
@@ -490,6 +477,8 @@ class AddUserToBiomarkerView(APIView):
             )
         
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
+        if not can_edit_shared_resource(biomarker, request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
         user = get_object_or_404(User, id=user_id)
 
         biomarker.shared_users.add(user)
@@ -511,11 +500,8 @@ class ToggleBiomarkerPublicView(APIView):
         data = request.data
         biomarker_id = data.get('biomarkerId')
         biomarker = get_object_or_404(Biomarker, id=biomarker_id)
-        if biomarker.user.id != request.user.id:
-            return Response(
-                {"error": "You do not have permission to modify this biomarker."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if not can_edit_shared_resource(biomarker, request.user):
+            raise PermissionDenied('You do not have permission to modify this biomarker.')
 
         biomarker.is_public = not biomarker.is_public
         biomarker.save(update_fields=['is_public'])

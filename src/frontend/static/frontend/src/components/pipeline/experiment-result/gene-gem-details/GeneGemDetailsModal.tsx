@@ -16,6 +16,7 @@ import { GeneGemModalMenu } from './GeneGemModalMenu'
 import { NoClinicalData } from './survival-analysis/NoClinicalData'
 import { KaplanMeierChart } from './survival-analysis/KaplanMeier'
 import { MiRNATargetInteractionPanel } from './MiRNATargetInteractionPanel'
+import { MiRNATargetValidationPanel } from './MiRNATargetValidationPanel'
 import { TryAgainSegment } from '../../../common/TryAgainSegment'
 import { COLOR_YELLOW_FILL, COLOR_YELLOW_STROKE } from '../../../../utils/constants'
 import { useIntl, IntlShape } from 'react-intl'
@@ -38,6 +39,7 @@ enum ActiveItemMenu {
     STATISTICAL_PROPERTIES,
     ASSUMPTIONS,
     MIRNA_TARGET_INTERACTION,
+    MIRNA_TARGET_VALIDATION,
     MIRNA_INTERACTION,
     DISEASES_ASSOCIATION,
     DRUGS_ASSOCIATION,
@@ -245,6 +247,8 @@ class GeneGemDetailsModal extends React.Component<GeneGemDetailsModalProps, Gene
                         miRNA={gem}
                     />
                 )
+            case ActiveItemMenu.MIRNA_TARGET_VALIDATION:
+                return <MiRNATargetValidationPanel gene={gene} miRNA={gem} />
             case ActiveItemMenu.MIRNA_INTERACTION:
                 // NOTE: it's inside a React.Fragment to force componentDidMount execution
                 // in PaginatedTable component. Otherwise, React will see miRNA interaction

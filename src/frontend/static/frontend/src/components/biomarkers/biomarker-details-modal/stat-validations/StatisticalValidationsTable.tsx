@@ -186,7 +186,7 @@ export const StatisticalValidationsTable = (props: StatisticalValidationsTablePr
                 searchPlaceholder={intl.formatMessage({ id: 'common.search' }) + ' ' + intl.formatMessage({ id: 'common.name' }) + ' / ' + intl.formatMessage({ id: 'common.description' })}
                 urlToRetrieveData={urlBiomarkerStatisticalValidations}
                 customElements={[
-                    <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'statValidationsTable.newStatValidation' })}>
+                    <Form.Field key={1} className='custom-table-field' title={intl.formatMessage({ id: 'statValidationsTable.newValidation' })}>
                         <Button primary icon onClick={() => { props.setOpenModalNewStatValidation(true) }}>
                             <Icon name='add' />
                         </Button>

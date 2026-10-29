@@ -5,6 +5,7 @@ import { DjangoUser } from '../utils/django_interfaces'
 import { Nullable } from '../utils/interfaces'
 import { Footer } from './Footer'
 import { IntlProvider } from 'react-intl'
+import { ChatWidget } from './assistant/ChatWidget'
 
 // Locales
 import es from '../locales/es'
@@ -16,10 +17,15 @@ import '../css/base.css'
 import '../css/responsive.css'
 
 const messages = { en, es }
+const LOCALE_STORAGE_KEY = 'multiomix_locale'
+
+const LOCALES = ['en', 'es'] as const
+type Locale = typeof LOCALES[number]
+const LANG_SET: Set<Locale> = new Set(LOCALES)
 
 interface LocaleContextType {
-    locale: 'en' | 'es',
-    setLocale: React.Dispatch<React.SetStateAction<'en' | 'es'>>
+    locale: Locale,
+    setLocale: (locale: Locale) => void
 }
 const LocaleContext = React.createContext<LocaleContextType>({
     locale: 'es',
@@ -51,7 +57,15 @@ const Base = (props: BaseProps) => {
     const [currentUser, setUser] = useState<Nullable<DjangoUser>>(null)
     const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState<boolean>(true)
     // State that defines the current language ('es' or 'en') for <IntlProvider>, used to display the interface in the selected locale
-    const [locale, setLocale] = useState<'en' | 'es'>('es')
+    const [locale, setLocaleState] = useState<Locale>(() => {
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale
+        return LANG_SET.has(storedLocale) ? storedLocale : 'es'
+    })
+
+    const setLocale = (newLocale: Locale) => {
+        localStorage.setItem(LOCALE_STORAGE_KEY, newLocale)
+        setLocaleState(newLocale)
+    }
 
     /**
      * Method which is executed when the component has mounted
@@ -111,10 +125,13 @@ const Base = (props: BaseProps) => {
                     {/* Footer */}
                     {/* TODO: add license */}
                     <Footer />
+
+                    {/* AI Assistant floating widget */}
+                    {currentUser && !currentUser.is_anonymous && <ChatWidget />}
                 </IntlProvider>
             </LocaleContext.Provider>
         </CurrentUserContext.Provider>
     )
 }
 
-export { Base, CurrentUserContext }
+export { Base, CurrentUserContext, LocaleContext }

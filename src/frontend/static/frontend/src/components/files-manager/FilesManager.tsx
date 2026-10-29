@@ -1,20 +1,22 @@
 import React from 'react'
 import { Base } from '../Base'
 import { Grid, Header, Button, Modal, DropdownItemProps, Table, Icon } from 'semantic-ui-react'
-import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader } from '../../utils/django_interfaces'
+import { DjangoTag, DjangoUserFile, TagType, DjangoInstitution, DjangoMethylationPlatform, DjangoResponseUploadUserFileError, DjangoUserFileUploadErrorInternalCode, DjangoSurvivalColumnsTupleSimple, RowHeader, DjangoTissue, DjangoInstitutionSimple } from '../../utils/django_interfaces'
 import ky, { HTTPError } from 'ky'
-import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, getDefaultNewTag, copyObject, formatDateLocale, getFileTypeName, getInputFileCSVColumns } from '../../utils/util_functions'
-import { TagsPanel } from './TagsPanel'
+import { getDjangoHeader, alertGeneralError, getFileTypeSelectOptions, formatDateLocale, getFileTypeName, getInputFileCSVColumns, getUserTagsByType, getDefaultNewTag } from '../../utils/util_functions'
 import { FileType, Nullable } from '../../utils/interfaces'
 import { NewFileForm } from './NewFileForm'
 import { startUpload, UploadState } from '../../utils/file_uploader'
 import { PaginatedTable, PaginationCustomFilter } from '../common/PaginatedTable'
 import { TableCellWithTitle } from '../common/TableCellWithTitle'
 import { TagLabel } from '../common/TagLabel'
+import { TagDropdown } from '../common/TagDropdown'
 import { PopupIcons } from '../common/PopupIcons'
 import { SwitchPublicButton } from '../common/SwitchPublicButton'
-import { DeleteButton } from '../common/DeleteButton'
 import { useIntl, IntlShape } from 'react-intl'
+import { DeleteButton } from '../common/DeleteButton'
+import { getTissueDropdownOptions, getTissueIds } from '../common/TissueLabels'
+import { SharedInstitutionsUserFile } from './SharedInstitutionsUserFile'
 
 /** Structure returned from the chunk upload service. */
 type UploadResponse = {
@@ -25,9 +27,9 @@ type UploadResponse = {
 }
 
 // URLs defined in files.html
-declare const urlTagsCRUD: string
 declare const urlUserFilesCRUD: string
 declare const urlUserInstitutions: string
+declare const urlTissuesCRUD: string
 declare const urlChunkUpload: string
 declare const urlChunkUploadComplete: string
 declare const downloadFileURL: string
@@ -46,6 +48,7 @@ interface NewFile {
     platform: DjangoMethylationPlatform,
     newTag: Nullable<number>,
     institutions: number[],
+    tissue: Nullable<number>,
     survivalColumns: DjangoSurvivalColumnsTupleSimple[]
 }
 
@@ -56,20 +59,24 @@ interface FilesManagerState {
     tags: DjangoTag[],
     files: DjangoUserFile[],
     userInstitutions: DjangoInstitution[],
-    newTag: DjangoTag,
-    showDeleteTagModal: boolean,
     showDeleteFileModal: boolean,
-    selectedTagToDelete: Nullable<DjangoTag>,
     selectedFileToDelete: Nullable<DjangoUserFile>,
-    deletingTag: boolean,
     deletingFile: boolean,
     uploadingFile: boolean,
     newFile: NewFile,
-    addingTag: boolean,
     uploadPercentage: number,
     uploadState: Nullable<UploadState>
-    /** posibles values for survival tuple */
+    /** Possible values for survival tuple */
     survivalTuplesPossiblesValues: string[],
+    tissues: DjangoTissue[],
+    newTag: DjangoTag,
+    showDeleteTagModal: boolean,
+    selectedTagToDelete: Nullable<DjangoTag>,
+    deletingTag: boolean,
+    addingTag: boolean,
+    selectedFileToShare: Nullable<DjangoUserFile>,
+    showShareInstitutionsModal: boolean,
+    sharedInstitutionsByFile: { [fileId: number]: DjangoInstitutionSimple[] },
 }
 
 /**
@@ -93,19 +100,23 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             tags: [],
             files: [],
             userInstitutions: [],
-            newTag: getDefaultNewTag(),
-            showDeleteTagModal: false,
             showDeleteFileModal: false,
-            selectedTagToDelete: null,
             selectedFileToDelete: null,
-            deletingTag: false,
             deletingFile: false,
             uploadingFile: false,
             newFile: this.getDefaultNewFile(),
-            addingTag: false,
             uploadPercentage: 0,
             uploadState: null,
-            survivalTuplesPossiblesValues: []
+            survivalTuplesPossiblesValues: [],
+            tissues: [],
+            newTag: getDefaultNewTag(),
+            showDeleteTagModal: false,
+            selectedTagToDelete: null,
+            deletingTag: false,
+            addingTag: false,
+            selectedFileToShare: null,
+            showShareInstitutionsModal: false,
+            sharedInstitutionsByFile: {}
         }
     }
 
@@ -130,6 +141,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             newFileType: FileType.MRNA,
             newTag: null,
             institutions: [],
+            tissue: null,
             isCpGSiteId: false,
             platform: DjangoMethylationPlatform.PLATFORM_450,
             survivalColumns: []
@@ -185,6 +197,22 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         window.addEventListener('beforeunload', this.onUnload)
         this.getUserTags()
         this.getUserInstitutions()
+        this.getTissues()
+    }
+
+    /**
+     * Fetches the available tissues.
+     */
+    getTissues () {
+        ky.get(urlTissuesCRUD, { signal: this.abortController.signal }).then((response) => {
+            response.json<DjangoTissue[]>().then((tissues) => {
+                this.setState({ tissues })
+            }).catch((err) => {
+                console.log('Error parsing JSON ->', err)
+            })
+        }).catch((err) => {
+            console.log('Error getting tissues ->', err)
+        })
     }
 
     /** Removes event on component unmount and Abort controller if component unmount. */
@@ -212,97 +240,10 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
      * Fetches the User's defined tags
      */
     getUserTags () {
-        // Gets only File's Tags
-        const searchParams = {
-            type: TagType.FILE
-        }
-
-        ky.get(urlTagsCRUD, { searchParams, signal: this.abortController.signal }).then((response) => {
-            response.json<DjangoTag[]>().then((tags) => {
-                this.setState({ tags })
-            }).catch((err) => {
-                console.log('Error parsing JSON ->', err)
-            })
+        getUserTagsByType(TagType.FILE, this.abortController.signal).then((tags) => {
+            this.setState({ tags })
         }).catch((err) => {
             console.log("Error getting user's tags ->", err)
-        })
-    }
-
-    /**
-     * Selects a new Tag to edit
-     * @param selectedTag Tag to edit
-     */
-    editTag = (selectedTag: DjangoTag) => { this.setState({ newTag: copyObject(selectedTag) }) }
-
-    /**
-     * Does a request to add a new Tag
-     */
-    addOrEditTag () {
-        if (this.state.addingTag) {
-            return
-        }
-
-        // Sets the Request's Headers
-        const myHeaders = getDjangoHeader()
-
-        // If exists an id then we are editing, otherwise It's a new Tag
-        let addOrEditURL, requestMethod: typeof ky.post | typeof ky.patch
-
-        if (this.state.newTag.id !== null) {
-            addOrEditURL = `${urlTagsCRUD}${this.state.newTag.id}/`
-            requestMethod = ky.patch
-        } else {
-            addOrEditURL = urlTagsCRUD
-            requestMethod = ky.post
-        }
-
-        this.setState({ addingTag: true }, () => {
-            requestMethod(addOrEditURL, { headers: myHeaders, json: this.state.newTag }).then((response) => {
-                this.setState({ addingTag: false })
-                response.json<DjangoTag>().then((responseJSON) => {
-                    if (responseJSON && responseJSON.id) {
-                        // If all is OK, resets the form and gets the User's tag to refresh the list
-                        this.setState({ newTag: getDefaultNewTag() })
-                        this.getUserTags()
-                    }
-                }).catch((err) => {
-                    alertGeneralError()
-                    console.log('Error parsing JSON ->', err)
-                })
-            }).catch((err) => {
-                this.setState({ addingTag: false })
-                alertGeneralError()
-                console.log('Error adding new Tag ->', err)
-            })
-        })
-    }
-
-    /**
-     * Makes a request to delete a Tag
-     */
-    deleteTag = () => {
-        if (this.state.selectedTagToDelete === null) {
-            return
-        }
-
-        // Sets the Request's Headers
-        const myHeaders = getDjangoHeader()
-        const deleteURL = `${urlTagsCRUD}${this.state.selectedTagToDelete.id}`
-        this.setState({ deletingTag: true }, () => {
-            ky.delete(deleteURL, { headers: myHeaders }).then((response) => {
-                // If OK is returned refresh the tags
-                if (response.ok) {
-                    this.setState({
-                        deletingTag: false,
-                        showDeleteTagModal: false
-                    })
-                    this.getUserTags()
-                }
-            }).catch((err) => {
-                this.setState({ deletingTag: false })
-                alertGeneralError()
-                console.log('Error deleting Tag ->', err)
-            })
         })
     }
 
@@ -340,48 +281,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     /**
-     * Handles New Tag Input changes
-     * @param name State field to change
-     * @param value Value to assign to the specified field
-     */
-    handleAddTagInputsChange = (name: string, value) => {
-        const newTag = this.state.newTag
-        newTag[name] = value
-        this.setState(prevState => ({
-            newTag: {
-                ...prevState.newTag,
-                [name]: value,
-            }
-        }))
-    }
-
-    /**
-     * Handles New Tag Input Key Press
-     * @param e Event of change
-     */
-    handleKeyDown = (e) => {
-        // If pressed Enter key submits the new Tag
-        if (e.which === 13 || e.keyCode === 13) {
-            this.addOrEditTag()
-        } else {
-            if (e.which === 27 || e.keyCode === 27) {
-                this.setState({ newTag: getDefaultNewTag() })
-            }
-        }
-    }
-
-    /**
-     * Show a modal to confirm a Tag deletion
-     * @param tag Selected Tag to delete
-     */
-    confirmTagDeletion = (tag: DjangoTag) => {
-        this.setState({
-            selectedTagToDelete: tag,
-            showDeleteTagModal: true
-        })
-    }
-
-    /**
      * Show a modal to confirm a File deletion
      * @param file Selected Tag to delete
      */
@@ -390,6 +289,77 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             selectedFileToDelete: file,
             showDeleteFileModal: true
         })
+    }
+
+    /**
+     * Opens the institution-sharing modal for a dataset.
+     * @param file Dataset whose sharing configuration will be managed.
+     */
+    openShareInstitutions = (file: DjangoUserFile) => {
+        this.setState({
+            selectedFileToShare: file,
+            showShareInstitutionsModal: true
+        })
+    }
+
+    /** Closes the institution-sharing modal and clears the selected dataset. */
+    closeShareInstitutions = () => {
+        this.setState({
+            selectedFileToShare: null,
+            showShareInstitutionsModal: false
+        })
+    }
+
+    /**
+     * Persists a Tag change for an existing UserFile.
+     * @param userFile UserFile to update.
+     * @param tagId New Tag id, or null to clear it.
+     */
+    updateUserFileTag = (userFile: DjangoUserFile, tagId: Nullable<number>) => {
+        const formData = new FormData()
+        formData.append('name', userFile.name)
+        formData.append('description', userFile.description ?? '')
+        formData.append('file_type', userFile.file_type.toString())
+        formData.append('is_cpg_site_id', userFile.is_cpg_site_id.toString())
+
+        if (userFile.is_cpg_site_id && userFile.platform) {
+            formData.append('platform', userFile.platform.toString())
+        }
+
+        userFile.institutions.forEach((institution) => {
+            formData.append('institutions', institution.id.toString())
+        })
+
+        if (userFile.survival_columns && userFile.survival_columns.length > 0) {
+            formData.append('survival_columns', JSON.stringify(userFile.survival_columns))
+        }
+
+        if (tagId !== null) {
+            formData.append('tag', tagId.toString())
+        }
+
+        ky.patch(`${urlUserFilesCRUD}${userFile.id}/`, {
+            headers: getDjangoHeader(),
+            body: formData,
+            timeout: false
+        }).catch((err) => {
+            alertGeneralError()
+            console.log('Error updating UserFile Tag ->', err)
+        })
+    }
+
+    /**
+     * Updates the table cache after the shared institutions of a dataset change.
+     * @param fileId Dataset identifier.
+     * @param institutions Current institutions shared with the dataset.
+     */
+    updateSharedInstitutions = (fileId: number, institutions: DjangoInstitutionSimple[]) => {
+        this.setState(prevState => ({
+            sharedInstitutionsByFile: {
+                ...prevState.sharedInstitutionsByFile,
+                [fileId]: institutions
+            }
+        }))
     }
 
     /**
@@ -518,6 +488,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
             formData.append('institutions', institutionId.toString())
         })
 
+        // Adds the Tissue's id, if selected
+        if (newFileForm.tissue) {
+            formData.append('tissue', newFileForm.tissue.toString())
+        }
+
         // Adds the survival columns tuples, if needed
         if (newFileForm.survivalColumns.length > 0) {
             formData.append('survival_columns', JSON.stringify(newFileForm.survivalColumns))
@@ -570,35 +545,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     })
             }
         })
-    }
-
-    /**
-     * Generates the modal to confirm a Tag deletion
-     * @returns Modal component. Null if no Tag was selected to delete
-     */
-    getTagDeletionConfirmModals () {
-        const { intl } = this.props
-
-        if (!this.state.selectedTagToDelete) {
-            return null
-        }
-
-        return (
-            <Modal size='small' open={this.state.showDeleteTagModal} onClose={this.handleClose} centered={false}>
-                <Header icon='trash' content='Delete tag' />
-                <Modal.Content>
-                    <p>{intl.formatMessage({ id: 'files.manager.delete.tag.confirm' }, { tagName: this.state.selectedTagToDelete.name })}</p>
-                </Modal.Content>
-                <Modal.Actions>
-                    <Button onClick={this.handleClose}>
-                        {intl.formatMessage({ id: 'common.cancel' })}
-                    </Button>
-                    <Button color='red' onClick={this.deleteTag} loading={this.state.deletingTag} disabled={this.state.deletingTag}>
-                        {intl.formatMessage({ id: 'common.delete' })}
-                    </Button>
-                </Modal.Actions>
-            </Modal>
-        )
     }
 
     /**
@@ -656,6 +602,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             isCpGSiteId: fileToEdit.is_cpg_site_id,
                             platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                             institutions: fileToEdit.institutions.map((institution) => institution.id),
+                            tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                             survivalColumns: fileToEdit.survival_columns ?? []
                         }
                     })
@@ -678,6 +625,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                     isCpGSiteId: fileToEdit.is_cpg_site_id,
                     platform: fileToEdit.platform ? fileToEdit.platform : DjangoMethylationPlatform.PLATFORM_450,
                     institutions: fileToEdit.institutions.map((institution) => institution.id),
+                    tissue: getTissueIds(fileToEdit.tissue)[0] ?? null,
                     survivalColumns: fileToEdit.survival_columns ?? []
                 }
             })
@@ -768,6 +716,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueOptions = getTissueDropdownOptions(this.state.tissues)
 
         return [
             {
@@ -795,6 +744,14 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                 width: 3
             },
             {
+                label: 'Tissue',
+                keyForServer: 'tissue',
+                defaultValue: '',
+                placeholder: 'Select tissue',
+                options: tissueOptions,
+                width: 3
+            },
+            {
                 label: intl.formatMessage({ id: 'files.manager.filter.fileType.label' }),
                 keyForServer: 'file_type',
                 defaultValue: FileType.ALL,
@@ -806,11 +763,11 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
     }
 
     render () {
-        // Tag and File deletion modals
+        // File deletion modal
         const { intl } = this.props
-        const tagDeletionConfirmModal = this.getTagDeletionConfirmModals()
         const fileDeletionConfirmModal = this.getFileDeletionConfirmModals()
         const fileTypeOptions = getFileTypeSelectOptions(false)
+        const selectedFileToShare = this.state.selectedFileToShare
         const tagOptions: DropdownItemProps[] = this.state.tags.map((tag) => {
             const id = tag.id as number
             return { key: id, value: id, text: tag.name }
@@ -821,14 +778,23 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
         const institutionsOptions: DropdownItemProps[] = this.state.userInstitutions.map((institution) => {
             return { key: institution.id, value: institution.id, text: institution.name }
         })
+        const tissueFormOptions = getTissueDropdownOptions(this.state.tissues, true)
 
         return (
             <Base activeItem='files' wrapperClass='wrapper'>
-                {/* Tag deletion modal */}
-                {tagDeletionConfirmModal}
-
                 {/* File deletion modal */}
                 {fileDeletionConfirmModal}
+
+                {selectedFileToShare && (
+                    <SharedInstitutionsUserFile
+                        isOpen={this.state.showShareInstitutionsModal}
+                        userFileId={selectedFileToShare.id as number}
+                        user={selectedFileToShare.user}
+                        handleClose={this.closeShareInstitutions}
+                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                        onInstitutionsChange={(institutions) => this.updateSharedInstitutions(selectedFileToShare.id as number, institutions)}
+                    />
+                )}
 
                 <Grid columns={2} padded stackable textAlign='center' divided>
                     <Grid.Column width={3} textAlign='left'>
@@ -839,6 +805,7 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             fileTypeOptions={fileTypeOptions}
                             tagOptions={tagOptions}
                             institutionsOptions={institutionsOptions}
+                            tissueOptions={tissueFormOptions}
                             uploadingFile={this.state.uploadingFile}
                             uploadPercentage={this.state.uploadPercentage}
                             uploadState={this.state.uploadState}
@@ -851,16 +818,6 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             addSurvivalFormTuple={this.addSurvivalFormTuple}
                             removeSurvivalFormTuple={this.removeSurvivalFormTuple}
                             survivalTuplesPossiblesValues={this.state.survivalTuplesPossiblesValues}
-                        />
-
-                        <TagsPanel
-                            tags={this.state.tags}
-                            newTag={this.state.newTag}
-                            addingTag={this.state.addingTag}
-                            handleAddTagInputsChange={this.handleAddTagInputsChange}
-                            handleKeyDown={this.handleKeyDown}
-                            confirmTagDeletion={this.confirmTagDeletion}
-                            editTag={this.editTag}
                         />
                     </Grid.Column>
 
@@ -879,116 +836,150 @@ class FilesManager extends React.Component<FilesManagerProps, FilesManagerState>
                             searchPlaceholder={intl.formatMessage({ id: 'files.manager.search.placeholder' })}
                             urlToRetrieveData={urlUserFilesCRUD}
                             updateWSKey='update_user_files'
-                            mapFunction={(userFileRow: DjangoUserFile) => (
-                                <Table.Row key={userFileRow.id as number}>
-                                    <TableCellWithTitle value={userFileRow.name} />
-                                    <TableCellWithTitle value={userFileRow.description} />
-                                    <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
-                                    <TableCellWithTitle value={formatDateLocale(userFileRow.upload_date as string, 'L')} />
-                                    <Table.Cell>
-                                        {userFileRow.institutions.length > 0 && (
-                                            <Icon
-                                                name='building'
-                                                size='large'
-                                                title={intl.formatMessage(
-                                                    { id: 'files.manager.tooltip.sharedWith' },
-                                                    { list: userFileRow.institutions.map((i) => i.name).join(', ') }
-                                                )}
-                                            />
-                                        )}
-                                    </Table.Cell>
-                                    <Table.Cell><TagLabel tag={userFileRow.tag} /> </Table.Cell>
-                                    <Table.Cell textAlign='center'>
-                                        {
-                                            userFileRow.is_public
+                            mapFunction={(userFileRow: DjangoUserFile) => {
+                                const sharedInstitutions = this.state.sharedInstitutionsByFile[userFileRow.id as number] ?? userFileRow.institutions
+
+                                return (
+                                    <Table.Row key={userFileRow.id as number}>
+                                        <TableCellWithTitle value={userFileRow.name} />
+                                        <TableCellWithTitle value={userFileRow.description} />
+                                        <Table.Cell>{getFileTypeName(userFileRow.file_type)}</Table.Cell>
+                                        <TableCellWithTitle value={userFileRow.upload_date ? formatDateLocale(userFileRow.upload_date, 'L') : '-'} />
+                                        <Table.Cell textAlign='center'>
+                                            {sharedInstitutions.length > 0
                                                 ? (
                                                     <Icon
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.public' })}
-                                                        name='check'
-                                                        color='green'
+                                                        name='building'
+                                                        size='large'
+                                                        title={intl.formatMessage(
+                                                            { id: 'files.manager.tooltip.sharedWith' },
+                                                            { list: sharedInstitutions.map((i) => i.name).join(', ') }
+                                                        )}
                                                     />
                                                 )
-                                                : (
-                                                    <Icon
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.privateVisibility' })}
-                                                        name='close'
-                                                        color='red'
-                                                    />
-                                                )
-                                        }
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        {/* Extra information: */}
-                                        <Icon
-                                            name='info'
-                                            className='margin-left-2'
-                                            color='blue'
-                                            title={intl.formatMessage(
-                                                { id: 'files.manager.tooltip.indexColumn' },
-                                                { columnName: userFileRow.column_used_as_index }
-                                            )}
-                                        />
-                                        {/* Users can modify or delete own files or the ones which belongs to an
-                                        Institution which the user is admin of */}
-                                        {userFileRow.is_private_or_institution_admin && (
-                                            <>
-                                                {/* Shows a edit button if specified */}
-                                                <Icon
-                                                    name='pencil'
-                                                    className='clickable margin-left-5'
-                                                    color='yellow'
-                                                    title={intl.formatMessage({ id: 'common.edit' })}
-                                                    onClick={() => this.editFile(userFileRow)}
-                                                />
-                                            </>
-                                        )}
+                                                : '-'}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {userFileRow.is_owner
+                                                ? (
+                                                    <TagDropdown
+                                                        selectedTagId={userFileRow.tag ? userFileRow.tag.id : null}
+                                                        trigger={<TagLabel tag={userFileRow.tag} />}
+                                                        tagType={TagType.FILE}
+                                                        onTagSelect={(tagId) => this.updateUserFileTag(userFileRow, tagId)}
+                                                        onTagCreated={() => this.getUserTags()}
+                                                        onTagEdited={() => this.getUserTags()}
+                                                        onTagDeleted={(deletedTagId) => {
+                                                            if (this.state.newFile.newTag === deletedTagId) {
+                                                                this.handleAddFileInputsChange('newTag', null)
+                                                            }
 
-                                        <PopupIcons
-                                            content={(
-                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                                                    {/* Shows a download button if specified */}
-                                                    <Icon
-                                                        name='cloud download'
-                                                        color='blue'
-                                                        className='clickable margin-left-5'
-                                                        title={intl.formatMessage({ id: 'files.manager.tooltip.download' })}
-                                                        onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
-                                                    />
-                                                    {/* Public switch */}
-                                                    <SwitchPublicButton
-                                                        publicButtonEntity={{
-                                                            id: userFileRow.id as number,
-                                                            user: { id: userFileRow.user.id },
-                                                            is_public: userFileRow.is_public
+                                                            this.getUserTags()
                                                         }}
-                                                        nameEntity='file'
-                                                        publicKey='userFileId'
-                                                        handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
                                                     />
-                                                    {/* Shows a delete button if specified */}
-                                                    {!userFileRow.is_public && (
-                                                        <DeleteButton
-                                                            title={intl.formatMessage({ id: 'common.delete' })}
-                                                            onClick={() => this.confirmFileDeletion(userFileRow)}
-                                                            ownerId={userFileRow.user.id}
+                                                )
+                                                : <TagLabel tag={userFileRow.tag} />}
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='center'>
+                                            {
+                                                userFileRow.is_public
+                                                    ? (
+                                                        <Icon
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.public' })}
+                                                            name='check'
+                                                            color='green'
                                                         />
-                                                    )}
-                                                </div>
-                                            )}
-                                        />
-
-                                        {/* NaNs warning */}
-                                        {userFileRow.contains_nan_values && (
+                                                    )
+                                                    : (
+                                                        <Icon
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.privateVisibility' })}
+                                                            name='close'
+                                                            color='red'
+                                                        />
+                                                    )
+                                            }
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {/* Extra information: */}
                                             <Icon
-                                                name='warning sign'
+                                                name='info'
                                                 className='margin-left-2'
-                                                color='yellow'
-                                                title={intl.formatMessage({ id: 'files.manager.tooltip.nanWarning' })}
+                                                color='blue'
+                                                title={intl.formatMessage(
+                                                    { id: 'files.manager.tooltip.indexColumn' },
+                                                    { columnName: userFileRow.column_used_as_index }
+                                                )}
                                             />
-                                        )}
-                                    </Table.Cell>
-                                </Table.Row>
-                            )}
+                                            {userFileRow.is_owner && (
+                                                <Icon
+                                                    name='share alternate'
+                                                    className='clickable margin-left-5'
+                                                    color='blue'
+                                                    title={intl.formatMessage({ id: 'files.manager.sharedInstitutions.action' })}
+                                                    onClick={() => this.openShareInstitutions(userFileRow)}
+                                                />
+                                            )}
+                                            {/* Only the dataset owner can modify or delete it. */}
+                                            {userFileRow.is_owner && (
+                                                <>
+                                                    {/* Shows a edit button if specified */}
+                                                    <Icon
+                                                        name='pencil'
+                                                        className='clickable margin-left-5'
+                                                        color='yellow'
+                                                        title={intl.formatMessage({ id: 'common.edit' })}
+                                                        onClick={() => this.editFile(userFileRow)}
+                                                    />
+                                                </>
+                                            )}
+
+                                            <PopupIcons
+                                                content={(
+                                                    <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
+                                                        {/* Shows a download button if specified */}
+                                                        <Icon
+                                                            name='cloud download'
+                                                            color='blue'
+                                                            className='clickable margin-left-5'
+                                                            title={intl.formatMessage({ id: 'files.manager.tooltip.download' })}
+                                                            onClick={() => window.open(`${downloadFileURL}${userFileRow.id}`, '_blank')}
+                                                        />
+                                                        {/* Public switch */}
+                                                        <SwitchPublicButton
+                                                            publicButtonEntity={{
+                                                                id: userFileRow.id as number,
+                                                                user: { id: userFileRow.user.id },
+                                                                is_public: userFileRow.is_public
+                                                            }}
+                                                            nameEntity='file'
+                                                            publicKey='userFileId'
+                                                            handleChangeConfirmModalState={this.props.handleChangeConfirmModalState}
+                                                        />
+                                                        {/* Shows a delete button if specified */}
+                                                        {!userFileRow.is_public && (
+                                                            <DeleteButton
+                                                                title={intl.formatMessage({ id: 'common.delete' })}
+                                                                onClick={() => this.confirmFileDeletion(userFileRow)}
+                                                                ownerId={userFileRow.user.id}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            />
+
+                                            {/* NaNs warning */}
+                                            {userFileRow.contains_nan_values && (
+                                                <Icon
+                                                    name='warning sign'
+                                                    className='margin-left-2'
+                                                    color='yellow'
+                                                    title={intl.formatMessage({ id: 'files.manager.tooltip.nanWarning' })}
+                                                />
+                                            )}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                )
+                            }}
                         />
                     </Grid.Column>
                 </Grid>

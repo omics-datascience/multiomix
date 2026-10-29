@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { PaginatedTable, PaginationCustomFilter } from '../../common/PaginatedTable'
-import { Biomarker, BiomarkerState, TrainedModelForTable, TrainedModelState } from '../types'
+import { Biomarker, BiomarkerState, FitnessFunction, TrainedModelForTable, TrainedModelState } from '../types'
 import { Button, Form, Header, Icon, Modal, Table } from 'semantic-ui-react'
 import { TableCellWithTitle } from '../../common/TableCellWithTitle'
 import { alertGeneralError, formatDateLocale, getDjangoHeader } from '../../../utils/util_functions'
@@ -14,6 +14,7 @@ import { StopExperimentButton } from '../../pipeline/all-experiments-view/StopEx
 import { DeleteButton } from '../../common/DeleteButton'
 import { TableCellSources } from '../../common/TableCellSources'
 import { useIntl } from 'react-intl'
+import { InfoPopup } from '../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 declare const urlBiomarkerTrainedModels: string
 declare const urlStopTrainedModel: string
@@ -221,8 +222,16 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                     { name: intl.formatMessage({ id: 'common.state' }), serverCodeToSort: 'state', width: 1 },
                     { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.model' }), serverCodeToSort: 'fitness_function', width: 1 },
                     { name: intl.formatMessage({ id: 'common.date' }), serverCodeToSort: 'created' },
-                    { name: intl.formatMessage({ id: 'common.metric' }), serverCodeToSort: 'fitness_metric' },
-                    { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.bestCVMetric' }), serverCodeToSort: 'best_fitness_value' },
+                    {
+                        name: intl.formatMessage({ id: 'common.metric' }),
+                        serverCodeToSort: 'fitness_metric',
+                        infoPopupContent: intl.formatMessage({ id: 'trainedModels.info.fitnessMetric' })
+                    },
+                    {
+                        name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.bestCVMetric' }),
+                        serverCodeToSort: 'best_fitness_value',
+                        infoPopupContent: intl.formatMessage({ id: 'trainedModels.info.bestScore' })
+                    },
                     { name: intl.formatMessage({ id: 'biomarkerTrainedModelsTable.header.datasets' }) },
                     ...actionColumn
 
@@ -261,6 +270,11 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                 mapFunction={(trainedModel: TrainedModelForTable) => {
                     const isInProcess = trainedModel.state === TrainedModelState.IN_PROCESS ||
                         trainedModel.state === TrainedModelState.WAITING_FOR_QUEUE
+                    const scoreInfoId = trainedModel.fitness_metric === 'Log Likelihood'
+                        ? 'modelDetails.info.bestLogLikelihood'
+                        : trainedModel.fitness_function === FitnessFunction.CLUSTERING
+                            ? 'modelDetails.info.bestClusteringCIndex'
+                            : 'modelDetails.info.bestCIndex'
 
                     return (
                         <Table.Row
@@ -282,7 +296,12 @@ export const BiomarkerTrainedModelsTable = (props: BiomarkerTrainedModelsPanelPr
                             <Table.Cell><FitnessFunctionLabel fitnessFunction={trainedModel.fitness_function} /></Table.Cell>
                             <TableCellWithTitle value={formatDateLocale(trainedModel.created as string, 'L')} />
                             <Table.Cell>{trainedModel.fitness_metric ?? '-'}</Table.Cell>
-                            <Table.Cell>{trainedModel.best_fitness_value ? trainedModel.best_fitness_value.toFixed(4) : '-'}</Table.Cell>
+                            <Table.Cell>
+                                {trainedModel.best_fitness_value != null ? trainedModel.best_fitness_value.toFixed(4) : '-'}
+                                {trainedModel.best_fitness_value != null && (
+                                    <InfoPopup content={intl.formatMessage({ id: scoreInfoId })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                                )}
+                            </Table.Cell>
                             <Table.Cell>
                                 <TableCellSources
                                     clinical_source={trainedModel.clinical_source}

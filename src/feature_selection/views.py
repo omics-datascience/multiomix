@@ -8,12 +8,13 @@ from typing import Optional, Any, Dict, Tuple
 import pandas as pd
 from common.enums import ResponseCode
 from common.response import ResponseStatus
+from common.access_control import can_edit_shared_resource
 from .tasks import eval_feature_selection_experiment
 from celery.contrib.abortable import AbortableAsyncResult
 from django.conf import settings
 from django.db import transaction
 from rest_framework import permissions
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -77,6 +78,8 @@ class FeatureSelectionSubmit(APIView):
             # Gets Biomarker instance
             biomarker_pk = request.POST.get('biomarkerPk')
             biomarker: Biomarker = get_object_or_404(Biomarker, pk=biomarker_pk)
+            if not can_edit_shared_resource(biomarker, request.user):
+                raise PermissionDenied('You do not have permission to use this biomarker.')
 
             # Clinical source
             clinical_source_type = get_source_pk(request.POST, 'clinicalType')

@@ -84,7 +84,7 @@ class CGDSStudyList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter, DjangoFilterBackend]
-    filterset_fields = ['tissues']
+    filterset_fields = ['tissue']
     search_fields = ['name', 'description']
     ordering_fields = '__all__'
 

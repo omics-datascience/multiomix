@@ -25,7 +25,12 @@ export const SamplesAndGroupsTable = (props: SamplesAndGroupsTableProps) => {
         <PaginatedTable<SampleAndCluster>
             headers={[
                 { name: intl.formatMessage({ id: 'common.sample' }), serverCodeToSort: 'sample', width: 3 },
-                { name: intl.formatMessage({ id: 'common.cluster' }), serverCodeToSort: 'cluster', width: 2 }
+                {
+                    name: intl.formatMessage({ id: 'common.cluster' }),
+                    serverCodeToSort: 'cluster',
+                    width: 2,
+                    infoPopupContent: intl.formatMessage({ id: 'metricInfo.clusterId' })
+                }
             ]}
             queryParams={{ statistical_validation_pk: props.selectedStatisticalValidation.id }}
             customFilters={[

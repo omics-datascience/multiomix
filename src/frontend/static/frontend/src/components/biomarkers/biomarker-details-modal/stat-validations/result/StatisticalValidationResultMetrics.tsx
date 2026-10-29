@@ -6,6 +6,7 @@ import { alertGeneralError } from '../../../../../utils/util_functions'
 import { Header, Placeholder, Segment, Statistic } from 'semantic-ui-react'
 import { ModelDetailsPanel } from '../../ModelDetailsPanels'
 import { useIntl } from 'react-intl'
+import { InfoPopup } from '../../../../pipeline/experiment-result/gene-gem-details/InfoPopup'
 
 declare const urlStatisticalValidationMetrics: string
 
@@ -106,16 +107,25 @@ export const StatisticalValidationResultMetrics = (props: StatisticalValidationR
                             <Header as='h2' dividing textAlign='left'>{intl.formatMessage({ id: 'statValidationMetrics.header.validationMetrics' })}</Header>
 
                             <Statistic size='tiny'>
-                                <Statistic.Value>{statValidationData.mean_squared_error ? statValidationData.mean_squared_error.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.mse' })}</Statistic.Label>
+                                <Statistic.Value>{statValidationData.mean_squared_error != null ? statValidationData.mean_squared_error.toFixed(3) : '-'}</Statistic.Value>
+                                <Statistic.Label>
+                                    {intl.formatMessage({ id: 'statValidationMetrics.metric.mse' })}
+                                    <InfoPopup content={intl.formatMessage({ id: 'metricInfo.mse' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                                </Statistic.Label>
                             </Statistic>
                             <Statistic size='tiny'>
-                                <Statistic.Value>{statValidationData.c_index ? statValidationData.c_index.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.cIndex' })}</Statistic.Label>
+                                <Statistic.Value>{statValidationData.c_index != null ? statValidationData.c_index.toFixed(3) : '-'}</Statistic.Value>
+                                <Statistic.Label>
+                                    {intl.formatMessage({ id: 'kaplanMeier.metric.cIndex' })}
+                                    <InfoPopup content={intl.formatMessage({ id: 'metricInfo.cIndex' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                                </Statistic.Label>
                             </Statistic>
                             <Statistic size='tiny'>
-                                <Statistic.Value>{statValidationData.r2_score ? statValidationData.r2_score.toFixed(3) : '-'}</Statistic.Value>
-                                <Statistic.Label>{intl.formatMessage({ id: 'statValidationMetrics.metric.r2Score' })}</Statistic.Label>
+                                <Statistic.Value>{statValidationData.r2_score != null ? statValidationData.r2_score.toFixed(3) : '-'}</Statistic.Value>
+                                <Statistic.Label>
+                                    {intl.formatMessage({ id: 'statValidationMetrics.metric.r2Score' })}
+                                    <InfoPopup content={intl.formatMessage({ id: 'metricInfo.r2' })} onTop={false} onEvent='hover' noBorder extraClassName='margin-left-5' />
+                                </Statistic.Label>
                             </Statistic>
                         </>
                     )}

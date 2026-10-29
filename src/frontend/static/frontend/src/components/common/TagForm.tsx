@@ -12,7 +12,8 @@ interface TagFormProps {
     disableInputs: boolean,
     loading: boolean,
     onHandleKeyDown: (any) => void,
-    onHandleAddTagInputsChange: (name: string, value: any) => void
+    onHandleAddTagInputsChange: (name: string, value: any) => void,
+    tabIndexStart?: number
 }
 
 /**
@@ -38,6 +39,7 @@ export const TagForm = (props: TagFormProps) => {
                 disabled={props.disableInputs}
                 placeholder={intl.formatMessage({ id: 'tagForm.newTag' })}
                 maxLength={20}
+                tabIndex={props.tabIndexStart}
             />
 
             <Input
@@ -50,6 +52,7 @@ export const TagForm = (props: TagFormProps) => {
                 disabled={props.disableInputs}
                 placeholder={intl.formatMessage({ id: 'common.descriptionOptional' })}
                 maxLength={60}
+                tabIndex={props.tabIndexStart !== undefined ? props.tabIndexStart + 1 : undefined}
             />
         </div>
     )

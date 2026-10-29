@@ -141,7 +141,7 @@ export const SharedUsersBiomarker = (props: SharedUsersBiomarkerProps) => {
             onClose={() => props.handleClose()}
             open={props.isOpen}
             closeIcon={<Icon name='close' size='large' onClick={() => props.handleClose()} />}
-            style={{ width: '80%' }}
+            style={{ width: '45%', maxWidth: '650px' }}
         >
             <ModalHeader>Shared users</ModalHeader>
             <ModalContent>
