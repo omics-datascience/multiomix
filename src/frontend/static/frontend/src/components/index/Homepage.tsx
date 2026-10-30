@@ -48,6 +48,7 @@ const HomepageHeading = () => {
                                 color='orange'
                                 size='huge'
                                 fluid
+                                style={{ backgroundColor: 'white' }}
                                 as='a'
                                 href='https://youtube.com/playlist?list=PL1P-aHbALFjuwUjNeyA5G7vhqJMRjuoAS'
                                 target='_blank'
