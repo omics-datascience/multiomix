@@ -45,7 +45,7 @@ const HomepageHeading = () => {
                         </Grid.Column>
                         <Grid.Column>
                             <Button
-                                color='orange'
+                                style={{ backgroundColor: 'white', color: '#333' }}
                                 size='huge'
                                 fluid
                                 as='a'
